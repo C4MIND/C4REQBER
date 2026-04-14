@@ -1,0 +1,5 @@
+export { Canvas } from './Canvas'
+export { C4VisualMap } from './C4VisualMap'
+export { ArchitectureDiagram } from './ArchitectureDiagram'
+export { SmallMultiples } from './SmallMultiples'
+export { default as exportCanvas, exportSimulationReport } from '../utils/export'

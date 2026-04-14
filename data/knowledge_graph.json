@@ -1,0 +1,3184 @@
+{
+  "nodes": [
+    {
+      "id": "discovery_1",
+      "node_id": "discovery_1",
+      "node_type": "discovery",
+      "created_at": "2026-04-11T02:45:12.341923",
+      "updated_at": "2026-04-11T02:45:12.341926",
+      "metadata": {
+        "problem": "increase solar panel efficiency",
+        "hypothesis": "\n[bold]Hypothesis:[/bold] Adaptive high absorption mechanism that dynamically optimizes \nbetween  and low thermal losses based on operational context.\n\n[bold]Mechanism:[/bold] Utilize C4 path tau+ \u2192 sigma \u2192 delta \u2192 lambda+ to transform the problem \nfrom present-concrete (trade-off) to future-meta (synergy).\n\n[bold]Key Innovation:[/bold] Context-aware switching eliminates the apparent \ncontradiction through temporal separation of requirements.\n",
+        "contradiction": {
+          "parameter": "high absorption",
+          "value_a": "",
+          "value_not_a": "low thermal losses",
+          "requirement_y": "performance",
+          "requirement_z": "reliability"
+        },
+        "c4_path": [
+          "tau+",
+          "sigma",
+          "delta",
+          "lambda+"
+        ],
+        "confidence_score": 0.94,
+        "domain": "energy",
+        "falsifiability_criteria": [],
+        "status": "validated",
+        "llm_provider": null,
+        "llm_model": null
+      },
+      "tags": [
+        "solar",
+        "physics"
+      ],
+      "embedding": null
+    },
+    {
+      "id": "analogy_1",
+      "node_id": "analogy_1",
+      "node_type": "analogy",
+      "created_at": "2026-04-11T12:44:38.802725",
+      "updated_at": "2026-04-11T12:44:38.802728",
+      "metadata": {
+        "source_domain": "biology",
+        "target_domain": "computer_science",
+        "source_concept": "DNA",
+        "target_concept": "code",
+        "mapping_type": "semantic",
+        "confidence": 0.8,
+        "semantic_similarity": null,
+        "structural_similarity": null,
+        "evidence": [
+          "conceptual_metaphor"
+        ],
+        "verified": false,
+        "usage_count": 0
+      },
+      "tags": [
+        "biology",
+        "computer_science"
+      ],
+      "embedding": null
+    },
+    {
+      "id": "domain_biology",
+      "node_type": "domain",
+      "name": "biology",
+      "created_at": "2026-04-11T02:52:40.699078"
+    },
+    {
+      "id": "domain_computer_science",
+      "node_type": "domain",
+      "name": "computer_science",
+      "created_at": "2026-04-11T02:52:40.699080"
+    },
+    {
+      "id": "analogy_2",
+      "node_id": "analogy_2",
+      "node_type": "analogy",
+      "created_at": "2026-04-11T12:44:38.802746",
+      "updated_at": "2026-04-11T12:44:38.802746",
+      "metadata": {
+        "source_domain": "biology",
+        "target_domain": "computer_science",
+        "source_concept": "gene",
+        "target_concept": "instruction",
+        "mapping_type": "semantic",
+        "confidence": 0.8,
+        "semantic_similarity": null,
+        "structural_similarity": null,
+        "evidence": [
+          "conceptual_metaphor"
+        ],
+        "verified": false,
+        "usage_count": 0
+      },
+      "tags": [
+        "biology",
+        "computer_science"
+      ],
+      "embedding": null
+    },
+    {
+      "id": "analogy_3",
+      "node_id": "analogy_3",
+      "node_type": "analogy",
+      "created_at": "2026-04-11T12:44:38.802759",
+      "updated_at": "2026-04-11T12:44:38.802759",
+      "metadata": {
+        "source_domain": "biology",
+        "target_domain": "computer_science",
+        "source_concept": "cell",
+        "target_concept": "unit",
+        "mapping_type": "semantic",
+        "confidence": 0.8,
+        "semantic_similarity": null,
+        "structural_similarity": null,
+        "evidence": [
+          "conceptual_metaphor"
+        ],
+        "verified": false,
+        "usage_count": 0
+      },
+      "tags": [
+        "biology",
+        "computer_science"
+      ],
+      "embedding": null
+    },
+    {
+      "id": "analogy_4",
+      "node_id": "analogy_4",
+      "node_type": "analogy",
+      "created_at": "2026-04-11T12:44:38.802770",
+      "updated_at": "2026-04-11T12:44:38.802771",
+      "metadata": {
+        "source_domain": "biology",
+        "target_domain": "computer_science",
+        "source_concept": "tissue",
+        "target_concept": "module",
+        "mapping_type": "semantic",
+        "confidence": 0.8,
+        "semantic_similarity": null,
+        "structural_similarity": null,
+        "evidence": [
+          "conceptual_metaphor"
+        ],
+        "verified": false,
+        "usage_count": 0
+      },
+      "tags": [
+        "biology",
+        "computer_science"
+      ],
+      "embedding": null
+    },
+    {
+      "id": "analogy_5",
+      "node_id": "analogy_5",
+      "node_type": "analogy",
+      "created_at": "2026-04-11T12:44:38.802785",
+      "updated_at": "2026-04-11T12:44:38.802785",
+      "metadata": {
+        "source_domain": "biology",
+        "target_domain": "computer_science",
+        "source_concept": "organ",
+        "target_concept": "component",
+        "mapping_type": "semantic",
+        "confidence": 0.8,
+        "semantic_similarity": null,
+        "structural_similarity": null,
+        "evidence": [
+          "conceptual_metaphor"
+        ],
+        "verified": false,
+        "usage_count": 0
+      },
+      "tags": [
+        "biology",
+        "computer_science"
+      ],
+      "embedding": null
+    },
+    {
+      "id": "domain_economics",
+      "node_type": "domain",
+      "name": "economics",
+      "created_at": "2026-04-11T02:52:40.699120"
+    },
+    {
+      "id": "analogy_6",
+      "node_id": "analogy_6",
+      "node_type": "analogy",
+      "created_at": "2026-04-11T12:44:38.802800",
+      "updated_at": "2026-04-11T12:44:38.802801",
+      "metadata": {
+        "source_domain": "biology",
+        "target_domain": "computer_science",
+        "source_concept": "brain",
+        "target_concept": "processor",
+        "mapping_type": "semantic",
+        "confidence": 0.8,
+        "semantic_similarity": null,
+        "structural_similarity": null,
+        "evidence": [
+          "conceptual_metaphor"
+        ],
+        "verified": false,
+        "usage_count": 0
+      },
+      "tags": [
+        "biology",
+        "computer_science"
+      ],
+      "embedding": null
+    },
+    {
+      "id": "analogy_7",
+      "node_id": "analogy_7",
+      "node_type": "analogy",
+      "created_at": "2026-04-11T12:44:38.802817",
+      "updated_at": "2026-04-11T12:44:38.802817",
+      "metadata": {
+        "source_domain": "biology",
+        "target_domain": "computer_science",
+        "source_concept": "photosynthesis",
+        "target_concept": "energy harvesting",
+        "mapping_type": "semantic",
+        "confidence": 0.8,
+        "semantic_similarity": null,
+        "structural_similarity": null,
+        "evidence": [
+          "conceptual_metaphor"
+        ],
+        "verified": false,
+        "usage_count": 0
+      },
+      "tags": [
+        "biology",
+        "computer_science"
+      ],
+      "embedding": null
+    },
+    {
+      "id": "domain_society",
+      "node_type": "domain",
+      "name": "society",
+      "created_at": "2026-04-11T02:52:40.699139"
+    },
+    {
+      "id": "analogy_8",
+      "node_id": "analogy_8",
+      "node_type": "analogy",
+      "created_at": "2026-04-11T12:44:38.802833",
+      "updated_at": "2026-04-11T12:44:38.802833",
+      "metadata": {
+        "source_domain": "biology",
+        "target_domain": "economics",
+        "source_concept": "metabolism",
+        "target_concept": "cash flow",
+        "mapping_type": "semantic",
+        "confidence": 0.8,
+        "semantic_similarity": null,
+        "structural_similarity": null,
+        "evidence": [
+          "conceptual_metaphor"
+        ],
+        "verified": false,
+        "usage_count": 0
+      },
+      "tags": [
+        "biology",
+        "economics"
+      ],
+      "embedding": null
+    },
+    {
+      "id": "domain_physics",
+      "node_type": "domain",
+      "name": "physics",
+      "created_at": "2026-04-11T02:52:40.699148"
+    },
+    {
+      "id": "analogy_9",
+      "node_id": "analogy_9",
+      "node_type": "analogy",
+      "created_at": "2026-04-11T12:44:38.802849",
+      "updated_at": "2026-04-11T12:44:38.802850",
+      "metadata": {
+        "source_domain": "biology",
+        "target_domain": "economics",
+        "source_concept": "ecosystem",
+        "target_concept": "market",
+        "mapping_type": "semantic",
+        "confidence": 0.8,
+        "semantic_similarity": null,
+        "structural_similarity": null,
+        "evidence": [
+          "conceptual_metaphor"
+        ],
+        "verified": false,
+        "usage_count": 0
+      },
+      "tags": [
+        "biology",
+        "economics"
+      ],
+      "embedding": null
+    },
+    {
+      "id": "analogy_10",
+      "node_id": "analogy_10",
+      "node_type": "analogy",
+      "created_at": "2026-04-11T12:44:38.802863",
+      "updated_at": "2026-04-11T12:44:38.802863",
+      "metadata": {
+        "source_domain": "biology",
+        "target_domain": "society",
+        "source_concept": "cell",
+        "target_concept": "individual",
+        "mapping_type": "semantic",
+        "confidence": 0.8,
+        "semantic_similarity": null,
+        "structural_similarity": null,
+        "evidence": [
+          "conceptual_metaphor"
+        ],
+        "verified": false,
+        "usage_count": 0
+      },
+      "tags": [
+        "biology",
+        "society"
+      ],
+      "embedding": null
+    },
+    {
+      "id": "domain_information_theory",
+      "node_type": "domain",
+      "name": "information_theory",
+      "created_at": "2026-04-11T02:52:40.699170"
+    },
+    {
+      "id": "analogy_11",
+      "node_id": "analogy_11",
+      "node_type": "analogy",
+      "created_at": "2026-04-11T12:44:38.802875",
+      "updated_at": "2026-04-11T12:44:38.802875",
+      "metadata": {
+        "source_domain": "biology",
+        "target_domain": "economics",
+        "source_concept": "population",
+        "target_concept": "workforce",
+        "mapping_type": "semantic",
+        "confidence": 0.8,
+        "semantic_similarity": null,
+        "structural_similarity": null,
+        "evidence": [
+          "conceptual_metaphor"
+        ],
+        "verified": false,
+        "usage_count": 0
+      },
+      "tags": [
+        "biology",
+        "economics"
+      ],
+      "embedding": null
+    },
+    {
+      "id": "domain_sociology",
+      "node_type": "domain",
+      "name": "sociology",
+      "created_at": "2026-04-11T02:52:40.699181"
+    },
+    {
+      "id": "analogy_12",
+      "node_id": "analogy_12",
+      "node_type": "analogy",
+      "created_at": "2026-04-11T12:44:38.802886",
+      "updated_at": "2026-04-11T12:44:38.802887",
+      "metadata": {
+        "source_domain": "biology",
+        "target_domain": "economics",
+        "source_concept": "predator",
+        "target_concept": "competitor",
+        "mapping_type": "semantic",
+        "confidence": 0.8,
+        "semantic_similarity": null,
+        "structural_similarity": null,
+        "evidence": [
+          "conceptual_metaphor"
+        ],
+        "verified": false,
+        "usage_count": 0
+      },
+      "tags": [
+        "biology",
+        "economics"
+      ],
+      "embedding": null
+    },
+    {
+      "id": "analogy_13",
+      "node_id": "analogy_13",
+      "node_type": "analogy",
+      "created_at": "2026-04-11T12:44:38.802898",
+      "updated_at": "2026-04-11T12:44:38.802898",
+      "metadata": {
+        "source_domain": "biology",
+        "target_domain": "economics",
+        "source_concept": "prey",
+        "target_concept": "customer",
+        "mapping_type": "semantic",
+        "confidence": 0.8,
+        "semantic_similarity": null,
+        "structural_similarity": null,
+        "evidence": [
+          "conceptual_metaphor"
+        ],
+        "verified": false,
+        "usage_count": 0
+      },
+      "tags": [
+        "biology",
+        "economics"
+      ],
+      "embedding": null
+    },
+    {
+      "id": "domain_chemistry",
+      "node_type": "domain",
+      "name": "chemistry",
+      "created_at": "2026-04-11T02:52:40.699204"
+    },
+    {
+      "id": "analogy_14",
+      "node_id": "analogy_14",
+      "node_type": "analogy",
+      "created_at": "2026-04-11T12:44:38.802910",
+      "updated_at": "2026-04-11T12:44:38.802910",
+      "metadata": {
+        "source_domain": "biology",
+        "target_domain": "economics",
+        "source_concept": "symbiosis",
+        "target_concept": "partnership",
+        "mapping_type": "semantic",
+        "confidence": 0.8,
+        "semantic_similarity": null,
+        "structural_similarity": null,
+        "evidence": [
+          "conceptual_metaphor"
+        ],
+        "verified": false,
+        "usage_count": 0
+      },
+      "tags": [
+        "biology",
+        "economics"
+      ],
+      "embedding": null
+    },
+    {
+      "id": "analogy_15",
+      "node_id": "analogy_15",
+      "node_type": "analogy",
+      "created_at": "2026-04-11T12:44:38.802921",
+      "updated_at": "2026-04-11T12:44:38.802922",
+      "metadata": {
+        "source_domain": "biology",
+        "target_domain": "economics",
+        "source_concept": "adaptation",
+        "target_concept": "innovation",
+        "mapping_type": "semantic",
+        "confidence": 0.8,
+        "semantic_similarity": null,
+        "structural_similarity": null,
+        "evidence": [
+          "conceptual_metaphor"
+        ],
+        "verified": false,
+        "usage_count": 0
+      },
+      "tags": [
+        "biology",
+        "economics"
+      ],
+      "embedding": null
+    },
+    {
+      "id": "analogy_16",
+      "node_id": "analogy_16",
+      "node_type": "analogy",
+      "created_at": "2026-04-11T12:44:38.802933",
+      "updated_at": "2026-04-11T12:44:38.802933",
+      "metadata": {
+        "source_domain": "biology",
+        "target_domain": "economics",
+        "source_concept": "selection",
+        "target_concept": "competition",
+        "mapping_type": "semantic",
+        "confidence": 0.8,
+        "semantic_similarity": null,
+        "structural_similarity": null,
+        "evidence": [
+          "conceptual_metaphor"
+        ],
+        "verified": false,
+        "usage_count": 0
+      },
+      "tags": [
+        "biology",
+        "economics"
+      ],
+      "embedding": null
+    },
+    {
+      "id": "analogy_17",
+      "node_id": "analogy_17",
+      "node_type": "analogy",
+      "created_at": "2026-04-11T12:44:38.802944",
+      "updated_at": "2026-04-11T12:44:38.802945",
+      "metadata": {
+        "source_domain": "biology",
+        "target_domain": "economics",
+        "source_concept": "homeostasis",
+        "target_concept": "market equilibrium",
+        "mapping_type": "semantic",
+        "confidence": 0.8,
+        "semantic_similarity": null,
+        "structural_similarity": null,
+        "evidence": [
+          "conceptual_metaphor"
+        ],
+        "verified": false,
+        "usage_count": 0
+      },
+      "tags": [
+        "biology",
+        "economics"
+      ],
+      "embedding": null
+    },
+    {
+      "id": "analogy_18",
+      "node_id": "analogy_18",
+      "node_type": "analogy",
+      "created_at": "2026-04-11T12:44:38.802956",
+      "updated_at": "2026-04-11T12:44:38.802956",
+      "metadata": {
+        "source_domain": "physics",
+        "target_domain": "economics",
+        "source_concept": "force",
+        "target_concept": "incentive",
+        "mapping_type": "semantic",
+        "confidence": 0.8,
+        "semantic_similarity": null,
+        "structural_similarity": null,
+        "evidence": [
+          "conceptual_metaphor"
+        ],
+        "verified": false,
+        "usage_count": 0
+      },
+      "tags": [
+        "physics",
+        "economics"
+      ],
+      "embedding": null
+    },
+    {
+      "id": "analogy_19",
+      "node_id": "analogy_19",
+      "node_type": "analogy",
+      "created_at": "2026-04-11T12:44:38.802967",
+      "updated_at": "2026-04-11T12:44:38.802968",
+      "metadata": {
+        "source_domain": "physics",
+        "target_domain": "economics",
+        "source_concept": "potential energy",
+        "target_concept": "potential profit",
+        "mapping_type": "semantic",
+        "confidence": 0.8,
+        "semantic_similarity": null,
+        "structural_similarity": null,
+        "evidence": [
+          "conceptual_metaphor"
+        ],
+        "verified": false,
+        "usage_count": 0
+      },
+      "tags": [
+        "physics",
+        "economics"
+      ],
+      "embedding": null
+    },
+    {
+      "id": "experiment_1",
+      "node_id": "experiment_1",
+      "node_type": "experiment",
+      "created_at": "2026-04-11T03:17:55.212964",
+      "updated_at": "2026-04-11T03:18:16.838747",
+      "metadata": {
+        "id": "experiment_1",
+        "discovery_id": "discovery_1",
+        "name": "Battery charging test",
+        "description": "Test adaptive charging hypothesis",
+        "falsifiability_criteria": [],
+        "status": "validated",
+        "created_at": "2026-04-11T03:17:55.212964",
+        "started_at": null,
+        "completed_at": "2026-04-11T03:18:16.838151",
+        "observations": [],
+        "expected_observations": 1,
+        "conclusion": "Adaptive charging works!",
+        "confidence_delta": 0.1399999999999999,
+        "researcher": "Kilo",
+        "tags": []
+      },
+      "tags": [
+        "experiment",
+        "discovery_1"
+      ],
+      "embedding": null
+    },
+    {
+      "id": "analogy_20",
+      "node_id": "analogy_20",
+      "node_type": "analogy",
+      "created_at": "2026-04-11T12:44:38.802980",
+      "updated_at": "2026-04-11T12:44:38.802980",
+      "metadata": {
+        "source_domain": "physics",
+        "target_domain": "economics",
+        "source_concept": "kinetic energy",
+        "target_concept": "active revenue",
+        "mapping_type": "semantic",
+        "confidence": 0.8,
+        "semantic_similarity": null,
+        "structural_similarity": null,
+        "evidence": [
+          "conceptual_metaphor"
+        ],
+        "verified": false,
+        "usage_count": 0
+      },
+      "tags": [
+        "physics",
+        "economics"
+      ],
+      "embedding": null
+    },
+    {
+      "id": "analogy_21",
+      "node_id": "analogy_21",
+      "node_type": "analogy",
+      "created_at": "2026-04-11T12:44:38.802996",
+      "updated_at": "2026-04-11T12:44:38.802996",
+      "metadata": {
+        "source_domain": "physics",
+        "target_domain": "information_theory",
+        "source_concept": "entropy",
+        "target_concept": "information_entropy",
+        "mapping_type": "semantic",
+        "confidence": 0.8,
+        "semantic_similarity": null,
+        "structural_similarity": null,
+        "evidence": [
+          "conceptual_metaphor"
+        ],
+        "verified": false,
+        "usage_count": 0
+      },
+      "tags": [
+        "physics",
+        "information_theory"
+      ],
+      "embedding": null
+    },
+    {
+      "id": "analogy_22",
+      "node_id": "analogy_22",
+      "node_type": "analogy",
+      "created_at": "2026-04-11T12:44:38.803012",
+      "updated_at": "2026-04-11T12:44:38.803013",
+      "metadata": {
+        "source_domain": "physics",
+        "target_domain": "sociology",
+        "source_concept": "resonance",
+        "target_concept": "viral phenomenon",
+        "mapping_type": "semantic",
+        "confidence": 0.8,
+        "semantic_similarity": null,
+        "structural_similarity": null,
+        "evidence": [
+          "conceptual_metaphor"
+        ],
+        "verified": false,
+        "usage_count": 0
+      },
+      "tags": [
+        "physics",
+        "sociology"
+      ],
+      "embedding": null
+    },
+    {
+      "id": "analogy_23",
+      "node_id": "analogy_23",
+      "node_type": "analogy",
+      "created_at": "2026-04-11T12:44:38.803026",
+      "updated_at": "2026-04-11T12:44:38.803026",
+      "metadata": {
+        "source_domain": "physics",
+        "target_domain": "sociology",
+        "source_concept": "wave",
+        "target_concept": "trend",
+        "mapping_type": "semantic",
+        "confidence": 0.8,
+        "semantic_similarity": null,
+        "structural_similarity": null,
+        "evidence": [
+          "conceptual_metaphor"
+        ],
+        "verified": false,
+        "usage_count": 0
+      },
+      "tags": [
+        "physics",
+        "sociology"
+      ],
+      "embedding": null
+    },
+    {
+      "id": "analogy_24",
+      "node_id": "analogy_24",
+      "node_type": "analogy",
+      "created_at": "2026-04-11T12:44:38.803040",
+      "updated_at": "2026-04-11T12:44:38.803040",
+      "metadata": {
+        "source_domain": "physics",
+        "target_domain": "economics",
+        "source_concept": "equilibrium",
+        "target_concept": "market equilibrium",
+        "mapping_type": "semantic",
+        "confidence": 0.8,
+        "semantic_similarity": null,
+        "structural_similarity": null,
+        "evidence": [
+          "conceptual_metaphor"
+        ],
+        "verified": false,
+        "usage_count": 0
+      },
+      "tags": [
+        "physics",
+        "economics"
+      ],
+      "embedding": null
+    },
+    {
+      "id": "analogy_25",
+      "node_id": "analogy_25",
+      "node_type": "analogy",
+      "created_at": "2026-04-11T12:44:38.803054",
+      "updated_at": "2026-04-11T12:44:38.803054",
+      "metadata": {
+        "source_domain": "physics",
+        "target_domain": "economics",
+        "source_concept": "friction",
+        "target_concept": "transaction cost",
+        "mapping_type": "semantic",
+        "confidence": 0.8,
+        "semantic_similarity": null,
+        "structural_similarity": null,
+        "evidence": [
+          "conceptual_metaphor"
+        ],
+        "verified": false,
+        "usage_count": 0
+      },
+      "tags": [
+        "physics",
+        "economics"
+      ],
+      "embedding": null
+    },
+    {
+      "id": "analogy_26",
+      "node_id": "analogy_26",
+      "node_type": "analogy",
+      "created_at": "2026-04-11T12:44:38.803068",
+      "updated_at": "2026-04-11T12:44:38.803068",
+      "metadata": {
+        "source_domain": "physics",
+        "target_domain": "economics",
+        "source_concept": "inertia",
+        "target_concept": "market resistance",
+        "mapping_type": "semantic",
+        "confidence": 0.8,
+        "semantic_similarity": null,
+        "structural_similarity": null,
+        "evidence": [
+          "conceptual_metaphor"
+        ],
+        "verified": false,
+        "usage_count": 0
+      },
+      "tags": [
+        "physics",
+        "economics"
+      ],
+      "embedding": null
+    },
+    {
+      "id": "analogy_27",
+      "node_id": "analogy_27",
+      "node_type": "analogy",
+      "created_at": "2026-04-11T12:44:38.803083",
+      "updated_at": "2026-04-11T12:44:38.803083",
+      "metadata": {
+        "source_domain": "physics",
+        "target_domain": "economics",
+        "source_concept": "momentum",
+        "target_concept": "market trend",
+        "mapping_type": "semantic",
+        "confidence": 0.8,
+        "semantic_similarity": null,
+        "structural_similarity": null,
+        "evidence": [
+          "conceptual_metaphor"
+        ],
+        "verified": false,
+        "usage_count": 0
+      },
+      "tags": [
+        "physics",
+        "economics"
+      ],
+      "embedding": null
+    },
+    {
+      "id": "analogy_28",
+      "node_id": "analogy_28",
+      "node_type": "analogy",
+      "created_at": "2026-04-11T12:44:38.803097",
+      "updated_at": "2026-04-11T12:44:38.803097",
+      "metadata": {
+        "source_domain": "physics",
+        "target_domain": "economics",
+        "source_concept": "pressure",
+        "target_concept": "market pressure",
+        "mapping_type": "semantic",
+        "confidence": 0.8,
+        "semantic_similarity": null,
+        "structural_similarity": null,
+        "evidence": [
+          "conceptual_metaphor"
+        ],
+        "verified": false,
+        "usage_count": 0
+      },
+      "tags": [
+        "physics",
+        "economics"
+      ],
+      "embedding": null
+    },
+    {
+      "id": "analogy_29",
+      "node_id": "analogy_29",
+      "node_type": "analogy",
+      "created_at": "2026-04-11T12:44:38.803110",
+      "updated_at": "2026-04-11T12:44:38.803111",
+      "metadata": {
+        "source_domain": "physics",
+        "target_domain": "economics",
+        "source_concept": "temperature",
+        "target_concept": "market heat",
+        "mapping_type": "semantic",
+        "confidence": 0.8,
+        "semantic_similarity": null,
+        "structural_similarity": null,
+        "evidence": [
+          "conceptual_metaphor"
+        ],
+        "verified": false,
+        "usage_count": 0
+      },
+      "tags": [
+        "physics",
+        "economics"
+      ],
+      "embedding": null
+    },
+    {
+      "id": "analogy_30",
+      "node_id": "analogy_30",
+      "node_type": "analogy",
+      "created_at": "2026-04-11T12:44:38.803125",
+      "updated_at": "2026-04-11T12:44:38.803125",
+      "metadata": {
+        "source_domain": "physics",
+        "target_domain": "energy",
+        "source_concept": "potential",
+        "target_concept": "storage capacity",
+        "mapping_type": "semantic",
+        "confidence": 0.8,
+        "semantic_similarity": null,
+        "structural_similarity": null,
+        "evidence": [
+          "conceptual_metaphor"
+        ],
+        "verified": false,
+        "usage_count": 0
+      },
+      "tags": [
+        "physics",
+        "energy"
+      ],
+      "embedding": null
+    },
+    {
+      "id": "domain_energy",
+      "node_type": "domain",
+      "name": "energy",
+      "created_at": "2026-04-11T12:44:38.803128"
+    },
+    {
+      "id": "analogy_31",
+      "node_id": "analogy_31",
+      "node_type": "analogy",
+      "created_at": "2026-04-11T12:44:38.803141",
+      "updated_at": "2026-04-11T12:44:38.803142",
+      "metadata": {
+        "source_domain": "physics",
+        "target_domain": "energy",
+        "source_concept": "flow",
+        "target_concept": "current",
+        "mapping_type": "semantic",
+        "confidence": 0.8,
+        "semantic_similarity": null,
+        "structural_similarity": null,
+        "evidence": [
+          "conceptual_metaphor"
+        ],
+        "verified": false,
+        "usage_count": 0
+      },
+      "tags": [
+        "physics",
+        "energy"
+      ],
+      "embedding": null
+    },
+    {
+      "id": "analogy_32",
+      "node_id": "analogy_32",
+      "node_type": "analogy",
+      "created_at": "2026-04-11T12:44:38.803156",
+      "updated_at": "2026-04-11T12:44:38.803156",
+      "metadata": {
+        "source_domain": "physics",
+        "target_domain": "energy",
+        "source_concept": "resistance",
+        "target_concept": "internal resistance",
+        "mapping_type": "semantic",
+        "confidence": 0.8,
+        "semantic_similarity": null,
+        "structural_similarity": null,
+        "evidence": [
+          "conceptual_metaphor"
+        ],
+        "verified": false,
+        "usage_count": 0
+      },
+      "tags": [
+        "physics",
+        "energy"
+      ],
+      "embedding": null
+    },
+    {
+      "id": "analogy_33",
+      "node_id": "analogy_33",
+      "node_type": "analogy",
+      "created_at": "2026-04-11T12:44:38.803174",
+      "updated_at": "2026-04-11T12:44:38.803174",
+      "metadata": {
+        "source_domain": "physics",
+        "target_domain": "energy",
+        "source_concept": "capacitor",
+        "target_concept": "battery",
+        "mapping_type": "semantic",
+        "confidence": 0.8,
+        "semantic_similarity": null,
+        "structural_similarity": null,
+        "evidence": [
+          "conceptual_metaphor"
+        ],
+        "verified": false,
+        "usage_count": 0
+      },
+      "tags": [
+        "physics",
+        "energy"
+      ],
+      "embedding": null
+    },
+    {
+      "id": "analogy_34",
+      "node_id": "analogy_34",
+      "node_type": "analogy",
+      "created_at": "2026-04-11T12:44:38.803189",
+      "updated_at": "2026-04-11T12:44:38.803189",
+      "metadata": {
+        "source_domain": "physics",
+        "target_domain": "energy",
+        "source_concept": "inductor",
+        "target_concept": "flywheel",
+        "mapping_type": "semantic",
+        "confidence": 0.8,
+        "semantic_similarity": null,
+        "structural_similarity": null,
+        "evidence": [
+          "conceptual_metaphor"
+        ],
+        "verified": false,
+        "usage_count": 0
+      },
+      "tags": [
+        "physics",
+        "energy"
+      ],
+      "embedding": null
+    },
+    {
+      "id": "analogy_35",
+      "node_id": "analogy_35",
+      "node_type": "analogy",
+      "created_at": "2026-04-11T12:44:38.803206",
+      "updated_at": "2026-04-11T12:44:38.803206",
+      "metadata": {
+        "source_domain": "chemistry",
+        "target_domain": "economics",
+        "source_concept": "catalyst",
+        "target_concept": "accelerator",
+        "mapping_type": "semantic",
+        "confidence": 0.8,
+        "semantic_similarity": null,
+        "structural_similarity": null,
+        "evidence": [
+          "conceptual_metaphor"
+        ],
+        "verified": false,
+        "usage_count": 0
+      },
+      "tags": [
+        "chemistry",
+        "economics"
+      ],
+      "embedding": null
+    },
+    {
+      "id": "analogy_36",
+      "node_id": "analogy_36",
+      "node_type": "analogy",
+      "created_at": "2026-04-11T12:44:38.803222",
+      "updated_at": "2026-04-11T12:44:38.803222",
+      "metadata": {
+        "source_domain": "chemistry",
+        "target_domain": "sociology",
+        "source_concept": "reaction",
+        "target_concept": "social change",
+        "mapping_type": "semantic",
+        "confidence": 0.8,
+        "semantic_similarity": null,
+        "structural_similarity": null,
+        "evidence": [
+          "conceptual_metaphor"
+        ],
+        "verified": false,
+        "usage_count": 0
+      },
+      "tags": [
+        "chemistry",
+        "sociology"
+      ],
+      "embedding": null
+    },
+    {
+      "id": "analogy_37",
+      "node_id": "analogy_37",
+      "node_type": "analogy",
+      "created_at": "2026-04-11T12:44:38.803248",
+      "updated_at": "2026-04-11T12:44:38.803248",
+      "metadata": {
+        "source_domain": "chemistry",
+        "target_domain": "society",
+        "source_concept": "bond",
+        "target_concept": "relationship",
+        "mapping_type": "semantic",
+        "confidence": 0.8,
+        "semantic_similarity": null,
+        "structural_similarity": null,
+        "evidence": [
+          "conceptual_metaphor"
+        ],
+        "verified": false,
+        "usage_count": 0
+      },
+      "tags": [
+        "chemistry",
+        "society"
+      ],
+      "embedding": null
+    },
+    {
+      "id": "analogy_38",
+      "node_id": "analogy_38",
+      "node_type": "analogy",
+      "created_at": "2026-04-11T12:44:38.803264",
+      "updated_at": "2026-04-11T12:44:38.803264",
+      "metadata": {
+        "source_domain": "chemistry",
+        "target_domain": "society",
+        "source_concept": "solution",
+        "target_concept": "resolution",
+        "mapping_type": "semantic",
+        "confidence": 0.8,
+        "semantic_similarity": null,
+        "structural_similarity": null,
+        "evidence": [
+          "conceptual_metaphor"
+        ],
+        "verified": false,
+        "usage_count": 0
+      },
+      "tags": [
+        "chemistry",
+        "society"
+      ],
+      "embedding": null
+    },
+    {
+      "id": "analogy_39",
+      "node_id": "analogy_39",
+      "node_type": "analogy",
+      "created_at": "2026-04-11T12:44:38.803282",
+      "updated_at": "2026-04-11T12:44:38.803283",
+      "metadata": {
+        "source_domain": "chemistry",
+        "target_domain": "society",
+        "source_concept": "compound",
+        "target_concept": "organization",
+        "mapping_type": "semantic",
+        "confidence": 0.8,
+        "semantic_similarity": null,
+        "structural_similarity": null,
+        "evidence": [
+          "conceptual_metaphor"
+        ],
+        "verified": false,
+        "usage_count": 0
+      },
+      "tags": [
+        "chemistry",
+        "society"
+      ],
+      "embedding": null
+    },
+    {
+      "id": "analogy_40",
+      "node_id": "analogy_40",
+      "node_type": "analogy",
+      "created_at": "2026-04-11T12:44:38.803300",
+      "updated_at": "2026-04-11T12:44:38.803301",
+      "metadata": {
+        "source_domain": "chemistry",
+        "target_domain": "society",
+        "source_concept": "crystal",
+        "target_concept": "structure",
+        "mapping_type": "semantic",
+        "confidence": 0.8,
+        "semantic_similarity": null,
+        "structural_similarity": null,
+        "evidence": [
+          "conceptual_metaphor"
+        ],
+        "verified": false,
+        "usage_count": 0
+      },
+      "tags": [
+        "chemistry",
+        "society"
+      ],
+      "embedding": null
+    },
+    {
+      "id": "analogy_41",
+      "node_id": "analogy_41",
+      "node_type": "analogy",
+      "created_at": "2026-04-11T12:44:38.803329",
+      "updated_at": "2026-04-11T12:44:38.803330",
+      "metadata": {
+        "source_domain": "computer_science",
+        "target_domain": "biology",
+        "source_concept": "algorithm",
+        "target_concept": "metabolic pathway",
+        "mapping_type": "semantic",
+        "confidence": 0.8,
+        "semantic_similarity": null,
+        "structural_similarity": null,
+        "evidence": [
+          "conceptual_metaphor"
+        ],
+        "verified": false,
+        "usage_count": 0
+      },
+      "tags": [
+        "computer_science",
+        "biology"
+      ],
+      "embedding": null
+    },
+    {
+      "id": "analogy_42",
+      "node_id": "analogy_42",
+      "node_type": "analogy",
+      "created_at": "2026-04-11T12:44:38.803353",
+      "updated_at": "2026-04-11T12:44:38.803353",
+      "metadata": {
+        "source_domain": "computer_science",
+        "target_domain": "biology",
+        "source_concept": "memory",
+        "target_concept": "memory",
+        "mapping_type": "semantic",
+        "confidence": 0.8,
+        "semantic_similarity": null,
+        "structural_similarity": null,
+        "evidence": [
+          "conceptual_metaphor"
+        ],
+        "verified": false,
+        "usage_count": 0
+      },
+      "tags": [
+        "computer_science",
+        "biology"
+      ],
+      "embedding": null
+    },
+    {
+      "id": "analogy_43",
+      "node_id": "analogy_43",
+      "node_type": "analogy",
+      "created_at": "2026-04-11T12:44:38.803373",
+      "updated_at": "2026-04-11T12:44:38.803374",
+      "metadata": {
+        "source_domain": "computer_science",
+        "target_domain": "sociology",
+        "source_concept": "protocol",
+        "target_concept": "ritual",
+        "mapping_type": "semantic",
+        "confidence": 0.8,
+        "semantic_similarity": null,
+        "structural_similarity": null,
+        "evidence": [
+          "conceptual_metaphor"
+        ],
+        "verified": false,
+        "usage_count": 0
+      },
+      "tags": [
+        "computer_science",
+        "sociology"
+      ],
+      "embedding": null
+    },
+    {
+      "id": "analogy_44",
+      "node_id": "analogy_44",
+      "node_type": "analogy",
+      "created_at": "2026-04-11T12:44:38.803391",
+      "updated_at": "2026-04-11T12:44:38.803392",
+      "metadata": {
+        "source_domain": "computer_science",
+        "target_domain": "biology",
+        "source_concept": "virus",
+        "target_concept": "virus",
+        "mapping_type": "semantic",
+        "confidence": 0.8,
+        "semantic_similarity": null,
+        "structural_similarity": null,
+        "evidence": [
+          "conceptual_metaphor"
+        ],
+        "verified": false,
+        "usage_count": 0
+      },
+      "tags": [
+        "computer_science",
+        "biology"
+      ],
+      "embedding": null
+    },
+    {
+      "id": "analogy_45",
+      "node_id": "analogy_45",
+      "node_type": "analogy",
+      "created_at": "2026-04-11T12:44:38.803409",
+      "updated_at": "2026-04-11T12:44:38.803410",
+      "metadata": {
+        "source_domain": "computer_science",
+        "target_domain": "biology",
+        "source_concept": "firewall",
+        "target_concept": "immune system",
+        "mapping_type": "semantic",
+        "confidence": 0.8,
+        "semantic_similarity": null,
+        "structural_similarity": null,
+        "evidence": [
+          "conceptual_metaphor"
+        ],
+        "verified": false,
+        "usage_count": 0
+      },
+      "tags": [
+        "computer_science",
+        "biology"
+      ],
+      "embedding": null
+    },
+    {
+      "id": "analogy_46",
+      "node_id": "analogy_46",
+      "node_type": "analogy",
+      "created_at": "2026-04-11T12:44:38.803428",
+      "updated_at": "2026-04-11T12:44:38.803428",
+      "metadata": {
+        "source_domain": "computer_science",
+        "target_domain": "biology",
+        "source_concept": "cache",
+        "target_concept": "short-term memory",
+        "mapping_type": "semantic",
+        "confidence": 0.8,
+        "semantic_similarity": null,
+        "structural_similarity": null,
+        "evidence": [
+          "conceptual_metaphor"
+        ],
+        "verified": false,
+        "usage_count": 0
+      },
+      "tags": [
+        "computer_science",
+        "biology"
+      ],
+      "embedding": null
+    },
+    {
+      "id": "analogy_47",
+      "node_id": "analogy_47",
+      "node_type": "analogy",
+      "created_at": "2026-04-11T12:44:38.803447",
+      "updated_at": "2026-04-11T12:44:38.803447",
+      "metadata": {
+        "source_domain": "computer_science",
+        "target_domain": "biology",
+        "source_concept": "database",
+        "target_concept": "long-term memory",
+        "mapping_type": "semantic",
+        "confidence": 0.8,
+        "semantic_similarity": null,
+        "structural_similarity": null,
+        "evidence": [
+          "conceptual_metaphor"
+        ],
+        "verified": false,
+        "usage_count": 0
+      },
+      "tags": [
+        "computer_science",
+        "biology"
+      ],
+      "embedding": null
+    },
+    {
+      "id": "analogy_48",
+      "node_id": "analogy_48",
+      "node_type": "analogy",
+      "created_at": "2026-04-11T12:44:38.803467",
+      "updated_at": "2026-04-11T12:44:38.803467",
+      "metadata": {
+        "source_domain": "computer_science",
+        "target_domain": "biology",
+        "source_concept": "network",
+        "target_concept": "nervous system",
+        "mapping_type": "semantic",
+        "confidence": 0.8,
+        "semantic_similarity": null,
+        "structural_similarity": null,
+        "evidence": [
+          "conceptual_metaphor"
+        ],
+        "verified": false,
+        "usage_count": 0
+      },
+      "tags": [
+        "computer_science",
+        "biology"
+      ],
+      "embedding": null
+    },
+    {
+      "id": "analogy_49",
+      "node_id": "analogy_49",
+      "node_type": "analogy",
+      "created_at": "2026-04-11T12:44:38.803491",
+      "updated_at": "2026-04-11T12:44:38.803492",
+      "metadata": {
+        "source_domain": "computer_science",
+        "target_domain": "biology",
+        "source_concept": "bandwidth",
+        "target_concept": "nerve capacity",
+        "mapping_type": "semantic",
+        "confidence": 0.8,
+        "semantic_similarity": null,
+        "structural_similarity": null,
+        "evidence": [
+          "conceptual_metaphor"
+        ],
+        "verified": false,
+        "usage_count": 0
+      },
+      "tags": [
+        "computer_science",
+        "biology"
+      ],
+      "embedding": null
+    },
+    {
+      "id": "analogy_50",
+      "node_id": "analogy_50",
+      "node_type": "analogy",
+      "created_at": "2026-04-11T12:44:38.803515",
+      "updated_at": "2026-04-11T12:44:38.803516",
+      "metadata": {
+        "source_domain": "computer_science",
+        "target_domain": "energy",
+        "source_concept": "load balancing",
+        "target_concept": "grid management",
+        "mapping_type": "semantic",
+        "confidence": 0.8,
+        "semantic_similarity": null,
+        "structural_similarity": null,
+        "evidence": [
+          "conceptual_metaphor"
+        ],
+        "verified": false,
+        "usage_count": 0
+      },
+      "tags": [
+        "computer_science",
+        "energy"
+      ],
+      "embedding": null
+    },
+    {
+      "id": "analogy_51",
+      "node_id": "analogy_51",
+      "node_type": "analogy",
+      "created_at": "2026-04-11T12:44:38.803537",
+      "updated_at": "2026-04-11T12:44:38.803537",
+      "metadata": {
+        "source_domain": "computer_science",
+        "target_domain": "energy",
+        "source_concept": "queue",
+        "target_concept": "storage buffer",
+        "mapping_type": "semantic",
+        "confidence": 0.8,
+        "semantic_similarity": null,
+        "structural_similarity": null,
+        "evidence": [
+          "conceptual_metaphor"
+        ],
+        "verified": false,
+        "usage_count": 0
+      },
+      "tags": [
+        "computer_science",
+        "energy"
+      ],
+      "embedding": null
+    },
+    {
+      "id": "analogy_52",
+      "node_id": "analogy_52",
+      "node_type": "analogy",
+      "created_at": "2026-04-11T12:44:38.803559",
+      "updated_at": "2026-04-11T12:44:38.803559",
+      "metadata": {
+        "source_domain": "computer_science",
+        "target_domain": "energy",
+        "source_concept": "scheduler",
+        "target_concept": "load dispatcher",
+        "mapping_type": "semantic",
+        "confidence": 0.8,
+        "semantic_similarity": null,
+        "structural_similarity": null,
+        "evidence": [
+          "conceptual_metaphor"
+        ],
+        "verified": false,
+        "usage_count": 0
+      },
+      "tags": [
+        "computer_science",
+        "energy"
+      ],
+      "embedding": null
+    },
+    {
+      "id": "analogy_53",
+      "node_id": "analogy_53",
+      "node_type": "analogy",
+      "created_at": "2026-04-11T12:44:38.803580",
+      "updated_at": "2026-04-11T12:44:38.803580",
+      "metadata": {
+        "source_domain": "computer_science",
+        "target_domain": "energy",
+        "source_concept": "optimization",
+        "target_concept": "efficiency tuning",
+        "mapping_type": "semantic",
+        "confidence": 0.8,
+        "semantic_similarity": null,
+        "structural_similarity": null,
+        "evidence": [
+          "conceptual_metaphor"
+        ],
+        "verified": false,
+        "usage_count": 0
+      },
+      "tags": [
+        "computer_science",
+        "energy"
+      ],
+      "embedding": null
+    },
+    {
+      "id": "analogy_54",
+      "node_id": "analogy_54",
+      "node_type": "analogy",
+      "created_at": "2026-04-11T12:44:38.803603",
+      "updated_at": "2026-04-11T12:44:38.803603",
+      "metadata": {
+        "source_domain": "mathematics",
+        "target_domain": "energy",
+        "source_concept": "optimization",
+        "target_concept": "efficiency maximization",
+        "mapping_type": "semantic",
+        "confidence": 0.8,
+        "semantic_similarity": null,
+        "structural_similarity": null,
+        "evidence": [
+          "conceptual_metaphor"
+        ],
+        "verified": false,
+        "usage_count": 0
+      },
+      "tags": [
+        "mathematics",
+        "energy"
+      ],
+      "embedding": null
+    },
+    {
+      "id": "domain_mathematics",
+      "node_type": "domain",
+      "name": "mathematics",
+      "created_at": "2026-04-11T12:44:38.803607"
+    },
+    {
+      "id": "analogy_55",
+      "node_id": "analogy_55",
+      "node_type": "analogy",
+      "created_at": "2026-04-11T12:44:38.803633",
+      "updated_at": "2026-04-11T12:44:38.803634",
+      "metadata": {
+        "source_domain": "mathematics",
+        "target_domain": "economics",
+        "source_concept": "gradient",
+        "target_concept": "marginal change",
+        "mapping_type": "semantic",
+        "confidence": 0.8,
+        "semantic_similarity": null,
+        "structural_similarity": null,
+        "evidence": [
+          "conceptual_metaphor"
+        ],
+        "verified": false,
+        "usage_count": 0
+      },
+      "tags": [
+        "mathematics",
+        "economics"
+      ],
+      "embedding": null
+    },
+    {
+      "id": "analogy_56",
+      "node_id": "analogy_56",
+      "node_type": "analogy",
+      "created_at": "2026-04-11T12:44:38.803661",
+      "updated_at": "2026-04-11T12:44:38.803661",
+      "metadata": {
+        "source_domain": "mathematics",
+        "target_domain": "physics",
+        "source_concept": "convergence",
+        "target_concept": "equilibrium",
+        "mapping_type": "semantic",
+        "confidence": 0.8,
+        "semantic_similarity": null,
+        "structural_similarity": null,
+        "evidence": [
+          "conceptual_metaphor"
+        ],
+        "verified": false,
+        "usage_count": 0
+      },
+      "tags": [
+        "mathematics",
+        "physics"
+      ],
+      "embedding": null
+    },
+    {
+      "id": "analogy_57",
+      "node_id": "analogy_57",
+      "node_type": "analogy",
+      "created_at": "2026-04-11T12:44:38.803688",
+      "updated_at": "2026-04-11T12:44:38.803688",
+      "metadata": {
+        "source_domain": "mathematics",
+        "target_domain": "physics",
+        "source_concept": "divergence",
+        "target_concept": "instability",
+        "mapping_type": "semantic",
+        "confidence": 0.8,
+        "semantic_similarity": null,
+        "structural_similarity": null,
+        "evidence": [
+          "conceptual_metaphor"
+        ],
+        "verified": false,
+        "usage_count": 0
+      },
+      "tags": [
+        "mathematics",
+        "physics"
+      ],
+      "embedding": null
+    },
+    {
+      "id": "analogy_58",
+      "node_id": "analogy_58",
+      "node_type": "analogy",
+      "created_at": "2026-04-11T12:44:38.803718",
+      "updated_at": "2026-04-11T12:44:38.803719",
+      "metadata": {
+        "source_domain": "mathematics",
+        "target_domain": "computer_science",
+        "source_concept": "graph",
+        "target_concept": "network",
+        "mapping_type": "semantic",
+        "confidence": 0.8,
+        "semantic_similarity": null,
+        "structural_similarity": null,
+        "evidence": [
+          "conceptual_metaphor"
+        ],
+        "verified": false,
+        "usage_count": 0
+      },
+      "tags": [
+        "mathematics",
+        "computer_science"
+      ],
+      "embedding": null
+    },
+    {
+      "id": "analogy_59",
+      "node_id": "analogy_59",
+      "node_type": "analogy",
+      "created_at": "2026-04-11T12:44:38.803743",
+      "updated_at": "2026-04-11T12:44:38.803744",
+      "metadata": {
+        "source_domain": "mathematics",
+        "target_domain": "biology",
+        "source_concept": "graph",
+        "target_concept": "food web",
+        "mapping_type": "semantic",
+        "confidence": 0.8,
+        "semantic_similarity": null,
+        "structural_similarity": null,
+        "evidence": [
+          "conceptual_metaphor"
+        ],
+        "verified": false,
+        "usage_count": 0
+      },
+      "tags": [
+        "mathematics",
+        "biology"
+      ],
+      "embedding": null
+    },
+    {
+      "id": "analogy_60",
+      "node_id": "analogy_60",
+      "node_type": "analogy",
+      "created_at": "2026-04-11T12:44:38.803765",
+      "updated_at": "2026-04-11T12:44:38.803766",
+      "metadata": {
+        "source_domain": "materials",
+        "target_domain": "energy",
+        "source_concept": "conductor",
+        "target_concept": "electrode",
+        "mapping_type": "semantic",
+        "confidence": 0.8,
+        "semantic_similarity": null,
+        "structural_similarity": null,
+        "evidence": [
+          "conceptual_metaphor"
+        ],
+        "verified": false,
+        "usage_count": 0
+      },
+      "tags": [
+        "materials",
+        "energy"
+      ],
+      "embedding": null
+    },
+    {
+      "id": "domain_materials",
+      "node_type": "domain",
+      "name": "materials",
+      "created_at": "2026-04-11T12:44:38.803768"
+    },
+    {
+      "id": "analogy_61",
+      "node_id": "analogy_61",
+      "node_type": "analogy",
+      "created_at": "2026-04-11T12:44:38.803789",
+      "updated_at": "2026-04-11T12:44:38.803789",
+      "metadata": {
+        "source_domain": "materials",
+        "target_domain": "energy",
+        "source_concept": "insulator",
+        "target_concept": "separator",
+        "mapping_type": "semantic",
+        "confidence": 0.8,
+        "semantic_similarity": null,
+        "structural_similarity": null,
+        "evidence": [
+          "conceptual_metaphor"
+        ],
+        "verified": false,
+        "usage_count": 0
+      },
+      "tags": [
+        "materials",
+        "energy"
+      ],
+      "embedding": null
+    },
+    {
+      "id": "analogy_62",
+      "node_id": "analogy_62",
+      "node_type": "analogy",
+      "created_at": "2026-04-11T12:44:38.803811",
+      "updated_at": "2026-04-11T12:44:38.803811",
+      "metadata": {
+        "source_domain": "materials",
+        "target_domain": "energy",
+        "source_concept": "crystal",
+        "target_concept": "lattice structure",
+        "mapping_type": "semantic",
+        "confidence": 0.8,
+        "semantic_similarity": null,
+        "structural_similarity": null,
+        "evidence": [
+          "conceptual_metaphor"
+        ],
+        "verified": false,
+        "usage_count": 0
+      },
+      "tags": [
+        "materials",
+        "energy"
+      ],
+      "embedding": null
+    },
+    {
+      "id": "analogy_63",
+      "node_id": "analogy_63",
+      "node_type": "analogy",
+      "created_at": "2026-04-11T12:44:38.803835",
+      "updated_at": "2026-04-11T12:44:38.803835",
+      "metadata": {
+        "source_domain": "materials",
+        "target_domain": "energy",
+        "source_concept": "composite",
+        "target_concept": "hybrid system",
+        "mapping_type": "semantic",
+        "confidence": 0.8,
+        "semantic_similarity": null,
+        "structural_similarity": null,
+        "evidence": [
+          "conceptual_metaphor"
+        ],
+        "verified": false,
+        "usage_count": 0
+      },
+      "tags": [
+        "materials",
+        "energy"
+      ],
+      "embedding": null
+    },
+    {
+      "id": "analogy_64",
+      "node_id": "analogy_64",
+      "node_type": "analogy",
+      "created_at": "2026-04-11T12:44:38.803857",
+      "updated_at": "2026-04-11T12:44:38.803858",
+      "metadata": {
+        "source_domain": "materials",
+        "target_domain": "energy",
+        "source_concept": "fatigue",
+        "target_concept": "degradation",
+        "mapping_type": "semantic",
+        "confidence": 0.8,
+        "semantic_similarity": null,
+        "structural_similarity": null,
+        "evidence": [
+          "conceptual_metaphor"
+        ],
+        "verified": false,
+        "usage_count": 0
+      },
+      "tags": [
+        "materials",
+        "energy"
+      ],
+      "embedding": null
+    },
+    {
+      "id": "analogy_65",
+      "node_id": "analogy_65",
+      "node_type": "analogy",
+      "created_at": "2026-04-11T12:44:38.803880",
+      "updated_at": "2026-04-11T12:44:38.803881",
+      "metadata": {
+        "source_domain": "materials",
+        "target_domain": "energy",
+        "source_concept": "corrosion",
+        "target_concept": "electrolyte breakdown",
+        "mapping_type": "semantic",
+        "confidence": 0.8,
+        "semantic_similarity": null,
+        "structural_similarity": null,
+        "evidence": [
+          "conceptual_metaphor"
+        ],
+        "verified": false,
+        "usage_count": 0
+      },
+      "tags": [
+        "materials",
+        "energy"
+      ],
+      "embedding": null
+    },
+    {
+      "id": "analogy_66",
+      "node_id": "analogy_66",
+      "node_type": "analogy",
+      "created_at": "2026-04-11T12:44:38.803905",
+      "updated_at": "2026-04-11T12:44:38.803905",
+      "metadata": {
+        "source_domain": "energy",
+        "target_domain": "biology",
+        "source_concept": "storage",
+        "target_concept": "fat storage",
+        "mapping_type": "semantic",
+        "confidence": 0.8,
+        "semantic_similarity": null,
+        "structural_similarity": null,
+        "evidence": [
+          "conceptual_metaphor"
+        ],
+        "verified": false,
+        "usage_count": 0
+      },
+      "tags": [
+        "energy",
+        "biology"
+      ],
+      "embedding": null
+    },
+    {
+      "id": "analogy_67",
+      "node_id": "analogy_67",
+      "node_type": "analogy",
+      "created_at": "2026-04-11T12:44:38.803928",
+      "updated_at": "2026-04-11T12:44:38.803929",
+      "metadata": {
+        "source_domain": "energy",
+        "target_domain": "biology",
+        "source_concept": "grid",
+        "target_concept": "circulatory system",
+        "mapping_type": "semantic",
+        "confidence": 0.8,
+        "semantic_similarity": null,
+        "structural_similarity": null,
+        "evidence": [
+          "conceptual_metaphor"
+        ],
+        "verified": false,
+        "usage_count": 0
+      },
+      "tags": [
+        "energy",
+        "biology"
+      ],
+      "embedding": null
+    },
+    {
+      "id": "analogy_68",
+      "node_id": "analogy_68",
+      "node_type": "analogy",
+      "created_at": "2026-04-11T12:44:38.803953",
+      "updated_at": "2026-04-11T12:44:38.803953",
+      "metadata": {
+        "source_domain": "energy",
+        "target_domain": "biology",
+        "source_concept": "peak load",
+        "target_concept": "stress response",
+        "mapping_type": "semantic",
+        "confidence": 0.8,
+        "semantic_similarity": null,
+        "structural_similarity": null,
+        "evidence": [
+          "conceptual_metaphor"
+        ],
+        "verified": false,
+        "usage_count": 0
+      },
+      "tags": [
+        "energy",
+        "biology"
+      ],
+      "embedding": null
+    },
+    {
+      "id": "analogy_69",
+      "node_id": "analogy_69",
+      "node_type": "analogy",
+      "created_at": "2026-04-11T12:44:38.803986",
+      "updated_at": "2026-04-11T12:44:38.803986",
+      "metadata": {
+        "source_domain": "energy",
+        "target_domain": "biology",
+        "source_concept": "baseload",
+        "target_concept": "metabolic rate",
+        "mapping_type": "semantic",
+        "confidence": 0.8,
+        "semantic_similarity": null,
+        "structural_similarity": null,
+        "evidence": [
+          "conceptual_metaphor"
+        ],
+        "verified": false,
+        "usage_count": 0
+      },
+      "tags": [
+        "energy",
+        "biology"
+      ],
+      "embedding": null
+    },
+    {
+      "id": "analogy_70",
+      "node_id": "analogy_70",
+      "node_type": "analogy",
+      "created_at": "2026-04-11T12:44:38.804011",
+      "updated_at": "2026-04-11T12:44:38.804011",
+      "metadata": {
+        "source_domain": "energy",
+        "target_domain": "biology",
+        "source_concept": "renewable",
+        "target_concept": "sustainable resource",
+        "mapping_type": "semantic",
+        "confidence": 0.8,
+        "semantic_similarity": null,
+        "structural_similarity": null,
+        "evidence": [
+          "conceptual_metaphor"
+        ],
+        "verified": false,
+        "usage_count": 0
+      },
+      "tags": [
+        "energy",
+        "biology"
+      ],
+      "embedding": null
+    },
+    {
+      "id": "concept_energy_solid_state_battery",
+      "node_type": "concept",
+      "domain": "energy",
+      "concept": "solid state battery",
+      "created_at": "2026-04-11T12:44:38.804022"
+    },
+    {
+      "id": "analogy_71",
+      "node_id": "analogy_71",
+      "node_type": "analogy",
+      "created_at": "2026-04-11T12:44:49.538585",
+      "updated_at": "2026-04-11T12:44:49.538587",
+      "metadata": {
+        "source_domain": "biology",
+        "target_domain": "computer_science",
+        "source_concept": "neuron",
+        "target_concept": "node",
+        "mapping_type": "semantic",
+        "confidence": 0.8,
+        "semantic_similarity": null,
+        "structural_similarity": null,
+        "evidence": [
+          "conceptual_metaphor"
+        ],
+        "verified": false,
+        "usage_count": 0
+      },
+      "tags": [
+        "biology",
+        "computer_science"
+      ],
+      "embedding": null
+    },
+    {
+      "id": "analogy_72",
+      "node_id": "analogy_72",
+      "node_type": "analogy",
+      "created_at": "2026-04-11T12:44:49.538621",
+      "updated_at": "2026-04-11T12:44:49.538622",
+      "metadata": {
+        "source_domain": "biology",
+        "target_domain": "computer_science",
+        "source_concept": "neural network",
+        "target_concept": "artificial neural network",
+        "mapping_type": "semantic",
+        "confidence": 0.8,
+        "semantic_similarity": null,
+        "structural_similarity": null,
+        "evidence": [
+          "conceptual_metaphor"
+        ],
+        "verified": false,
+        "usage_count": 0
+      },
+      "tags": [
+        "biology",
+        "computer_science"
+      ],
+      "embedding": null
+    },
+    {
+      "id": "analogy_73",
+      "node_id": "analogy_73",
+      "node_type": "analogy",
+      "created_at": "2026-04-11T12:44:49.538652",
+      "updated_at": "2026-04-11T12:44:49.538652",
+      "metadata": {
+        "source_domain": "biology",
+        "target_domain": "computer_science",
+        "source_concept": "evolution",
+        "target_concept": "genetic algorithm",
+        "mapping_type": "semantic",
+        "confidence": 0.8,
+        "semantic_similarity": null,
+        "structural_similarity": null,
+        "evidence": [
+          "conceptual_metaphor"
+        ],
+        "verified": false,
+        "usage_count": 0
+      },
+      "tags": [
+        "biology",
+        "computer_science"
+      ],
+      "embedding": null
+    },
+    {
+      "id": "analogy_74",
+      "node_id": "analogy_74",
+      "node_type": "analogy",
+      "created_at": "2026-04-11T12:44:49.538679",
+      "updated_at": "2026-04-11T12:44:49.538679",
+      "metadata": {
+        "source_domain": "biology",
+        "target_domain": "computer_science",
+        "source_concept": "immune system",
+        "target_concept": "intrusion detection",
+        "mapping_type": "semantic",
+        "confidence": 0.8,
+        "semantic_similarity": null,
+        "structural_similarity": null,
+        "evidence": [
+          "conceptual_metaphor"
+        ],
+        "verified": false,
+        "usage_count": 0
+      },
+      "tags": [
+        "biology",
+        "computer_science"
+      ],
+      "embedding": null
+    }
+  ],
+  "edges": [
+    {
+      "source": "analogy_1",
+      "target": "domain_biology",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_1",
+      "target": "domain_computer_science",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_2",
+      "target": "domain_biology",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_2",
+      "target": "domain_computer_science",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_3",
+      "target": "domain_biology",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_3",
+      "target": "domain_computer_science",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_4",
+      "target": "domain_biology",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_4",
+      "target": "domain_computer_science",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_5",
+      "target": "domain_biology",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_5",
+      "target": "domain_economics",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_5",
+      "target": "domain_computer_science",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_6",
+      "target": "domain_biology",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_6",
+      "target": "domain_economics",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_6",
+      "target": "domain_computer_science",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_7",
+      "target": "domain_biology",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_7",
+      "target": "domain_society",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_7",
+      "target": "domain_computer_science",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_8",
+      "target": "domain_physics",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_8",
+      "target": "domain_economics",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_8",
+      "target": "domain_biology",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_9",
+      "target": "domain_physics",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_9",
+      "target": "domain_economics",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_9",
+      "target": "domain_biology",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_10",
+      "target": "domain_physics",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_10",
+      "target": "domain_information_theory",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_10",
+      "target": "domain_biology",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_10",
+      "target": "domain_society",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_11",
+      "target": "domain_physics",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_11",
+      "target": "domain_sociology",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_11",
+      "target": "domain_biology",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_11",
+      "target": "domain_economics",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_12",
+      "target": "domain_physics",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_12",
+      "target": "domain_sociology",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_12",
+      "target": "domain_biology",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_12",
+      "target": "domain_economics",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_13",
+      "target": "domain_chemistry",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_13",
+      "target": "domain_economics",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_13",
+      "target": "domain_biology",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_14",
+      "target": "domain_chemistry",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_14",
+      "target": "domain_sociology",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_14",
+      "target": "domain_biology",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_14",
+      "target": "domain_economics",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_15",
+      "target": "domain_chemistry",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_15",
+      "target": "domain_economics",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_15",
+      "target": "domain_biology",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_16",
+      "target": "domain_computer_science",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_16",
+      "target": "domain_biology",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_16",
+      "target": "domain_economics",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_17",
+      "target": "domain_computer_science",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_17",
+      "target": "domain_biology",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_17",
+      "target": "domain_economics",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_18",
+      "target": "domain_computer_science",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_18",
+      "target": "domain_sociology",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_18",
+      "target": "domain_physics",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_18",
+      "target": "domain_economics",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_19",
+      "target": "domain_biology",
+      "edge_type": "maps_from",
+      "weight": 0.85
+    },
+    {
+      "source": "analogy_19",
+      "target": "domain_computer_science",
+      "edge_type": "maps_to",
+      "weight": 0.85
+    },
+    {
+      "source": "analogy_19",
+      "target": "domain_physics",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_19",
+      "target": "domain_economics",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "experiment_1",
+      "target": "discovery_1",
+      "edge_type": "tests",
+      "weight": 1.0,
+      "metadata": {},
+      "timestamp": "2026-04-11T03:17:55.212973"
+    },
+    {
+      "source": "analogy_20",
+      "target": "domain_physics",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_20",
+      "target": "domain_economics",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_21",
+      "target": "domain_physics",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_21",
+      "target": "domain_information_theory",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_22",
+      "target": "domain_physics",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_22",
+      "target": "domain_sociology",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_23",
+      "target": "domain_physics",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_23",
+      "target": "domain_sociology",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_24",
+      "target": "domain_physics",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_24",
+      "target": "domain_economics",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_25",
+      "target": "domain_physics",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_25",
+      "target": "domain_economics",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_26",
+      "target": "domain_physics",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_26",
+      "target": "domain_economics",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_27",
+      "target": "domain_physics",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_27",
+      "target": "domain_economics",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_28",
+      "target": "domain_physics",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_28",
+      "target": "domain_economics",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_29",
+      "target": "domain_physics",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_29",
+      "target": "domain_economics",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_30",
+      "target": "domain_physics",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_30",
+      "target": "domain_energy",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_31",
+      "target": "domain_physics",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_31",
+      "target": "domain_energy",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_32",
+      "target": "domain_physics",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_32",
+      "target": "domain_energy",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_33",
+      "target": "domain_physics",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_33",
+      "target": "domain_energy",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_34",
+      "target": "domain_physics",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_34",
+      "target": "domain_energy",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_35",
+      "target": "domain_chemistry",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_35",
+      "target": "domain_economics",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_36",
+      "target": "domain_chemistry",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_36",
+      "target": "domain_sociology",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_37",
+      "target": "domain_chemistry",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_37",
+      "target": "domain_society",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_38",
+      "target": "domain_chemistry",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_38",
+      "target": "domain_society",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_39",
+      "target": "domain_chemistry",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_39",
+      "target": "domain_society",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_40",
+      "target": "domain_chemistry",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_40",
+      "target": "domain_society",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_41",
+      "target": "domain_computer_science",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_41",
+      "target": "domain_biology",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_42",
+      "target": "domain_computer_science",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_42",
+      "target": "domain_biology",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_43",
+      "target": "domain_computer_science",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_43",
+      "target": "domain_sociology",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_44",
+      "target": "domain_computer_science",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_44",
+      "target": "domain_biology",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_45",
+      "target": "domain_computer_science",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_45",
+      "target": "domain_biology",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_46",
+      "target": "domain_computer_science",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_46",
+      "target": "domain_biology",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_47",
+      "target": "domain_computer_science",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_47",
+      "target": "domain_biology",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_48",
+      "target": "domain_computer_science",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_48",
+      "target": "domain_biology",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_49",
+      "target": "domain_computer_science",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_49",
+      "target": "domain_biology",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_50",
+      "target": "domain_computer_science",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_50",
+      "target": "domain_energy",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_51",
+      "target": "domain_computer_science",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_51",
+      "target": "domain_energy",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_52",
+      "target": "domain_computer_science",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_52",
+      "target": "domain_energy",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_53",
+      "target": "domain_computer_science",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_53",
+      "target": "domain_energy",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_54",
+      "target": "domain_mathematics",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_54",
+      "target": "domain_energy",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_55",
+      "target": "domain_mathematics",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_55",
+      "target": "domain_economics",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_56",
+      "target": "domain_mathematics",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_56",
+      "target": "domain_physics",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_57",
+      "target": "domain_mathematics",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_57",
+      "target": "domain_physics",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_58",
+      "target": "domain_mathematics",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_58",
+      "target": "domain_computer_science",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_59",
+      "target": "domain_mathematics",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_59",
+      "target": "domain_biology",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_60",
+      "target": "domain_materials",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_60",
+      "target": "domain_energy",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_61",
+      "target": "domain_materials",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_61",
+      "target": "domain_energy",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_62",
+      "target": "domain_materials",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_62",
+      "target": "domain_energy",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_63",
+      "target": "domain_materials",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_63",
+      "target": "domain_energy",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_64",
+      "target": "domain_materials",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_64",
+      "target": "domain_energy",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_65",
+      "target": "domain_materials",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_65",
+      "target": "domain_energy",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_66",
+      "target": "domain_energy",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_66",
+      "target": "domain_biology",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_67",
+      "target": "domain_energy",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_67",
+      "target": "domain_biology",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_68",
+      "target": "domain_energy",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_68",
+      "target": "domain_biology",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_69",
+      "target": "domain_energy",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_69",
+      "target": "domain_biology",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_70",
+      "target": "domain_energy",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_70",
+      "target": "domain_biology",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "concept_energy_solid_state_battery",
+      "target": "domain_energy",
+      "edge_type": "belongs_to",
+      "weight": 1.0,
+      "metadata": {},
+      "timestamp": "2026-04-11T12:44:38.804026"
+    },
+    {
+      "source": "analogy_71",
+      "target": "domain_biology",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_71",
+      "target": "domain_computer_science",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_72",
+      "target": "domain_biology",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_72",
+      "target": "domain_computer_science",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_73",
+      "target": "domain_biology",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_73",
+      "target": "domain_computer_science",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_74",
+      "target": "domain_biology",
+      "edge_type": "maps_from",
+      "weight": 0.8
+    },
+    {
+      "source": "analogy_74",
+      "target": "domain_computer_science",
+      "edge_type": "maps_to",
+      "weight": 0.8
+    }
+  ],
+  "metadata": {
+    "counters": {
+      "discovery": 0,
+      "project": 0,
+      "reference": 0,
+      "analogy": 74,
+      "operator": 0,
+      "experiment": 0
+    },
+    "saved_at": "2026-04-11T12:45:00.324187",
+    "node_count": 88,
+    "edge_count": 171
+  }
+}

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TURBO-CDI v6.0 Canvas Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #0f0f1a;
+            color: #ffffff;
+            font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+            overflow-x: hidden;
+        }
+        
+        #root {
+            min-height: 100vh;
+        }
+        
+        /* Loading state */
+        .loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background: #0f0f1a;
+        }
+        
+        .loading-text {
+            color: #4ECDC4;
+            font-size: 24px;
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+        }
+        
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid #1a1a2e;
+            border-top-color: #4ECDC4;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div id="root">
+        <div class="loading">
+            <div class="loading-text">◈ TURBO-CDI v6.0</div>
+            <div class="loading-spinner"></div>
+            <div style="color: #6c757d; margin-top: 20px; font-size: 14px;">
+                Loading Canvas Module...
+            </div>
+        </div>
+    </div>
+    
+    <!-- React will hydrate this -->
+    <script type="module" src="/src/demo.tsx"></script>
+</body>
+</html>

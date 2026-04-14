@@ -1,0 +1,467 @@
+#!/usr/bin/env python3
+"""
+TURBO-CDI v8.3 CLI — Cognitive Operating System
+
+Usage: turbo-cdi [command] [options]
+
+Commands:
+  navigate     Plan transformation through C4 space
+  falsify      Run Popper-style falsification suite
+  meta         Meta-system commands
+  discover     Discovery and analysis (v8.3)
+  upload       Upload document for RAG (v8.3)
+  ask          Query knowledge base (v8.3)
+  plan-gap     Transform gap to C4 plan (v8.3)
+  generate     Generate domain from description
+  wholeness    Assess living structure (Alexander)
+  server       Start WebSocket server for real-time updates
+"""
+
+import click
+from rich.console import Console
+from rich.table import Table
+from rich.progress import Progress, SpinnerColumn, TextColumn
+from rich.panel import Panel
+from rich.text import Text
+from typing import Optional
+import asyncio
+
+from core.orchestrator import TurboCDIv8Sync
+from modules import C4State, TimeAxis, ScaleAxis, AgencyAxis, SeptetObject
+
+console = Console()
+
+def get_turbo():
+    """Get configured turbo instance"""
+    turbo = TurboCDIv8Sync()
+    turbo.set_user("cli_user")
+    return turbo
+
+
+def parse_c4_state(state_str: str) -> C4State:
+    """Parse C4 state from string like '(P,0,0)' or 'P00'"""
+    clean = state_str.strip().replace('C4', '').replace('(', '').replace(')', '')
+
+    parts = [p.strip() for p in clean.split(',')]
+
+    if len(parts) == 3:
+        time_char = parts[0].upper()
+        scale_val = int(parts[1])
+        agency_val = int(parts[2])
+    elif len(parts) == 1 and len(clean) == 3:
+        time_char = clean[0].upper()
+        scale_val = int(clean[1])
+        agency_val = int(clean[2])
+    else:
+        raise click.BadParameter(f"Invalid state format: {state_str}. Use 'P00' or '(P,0,0)'")
+
+    time_map = {'P': TimeAxis.PAST, 'C': TimeAxis.PRESENT, 'F': TimeAxis.FUTURE}
+    time = time_map.get(time_char, TimeAxis.PRESENT)
+
+    scale_map = {0: ScaleAxis.CONCRETE, 1: ScaleAxis.ABSTRACT, 2: ScaleAxis.META}
+    scale = scale_map.get(scale_val, ScaleAxis.CONCRETE)
+
+    agency_map = {0: AgencyAxis.SELF, 1: AgencyAxis.OTHER, 2: AgencyAxis.SYSTEM}
+    agency = agency_map.get(agency_val, AgencyAxis.SELF)
+
+    return C4State(time, scale, agency)
+
+
+@click.group()
+@click.option('--no-emoji', is_flag=True, help='Disable emoji in output')
+@click.pass_context
+def cli(ctx, no_emoji):
+    """TURBO-CDI v8.3 — Cognitive Operating System"""
+    ctx.ensure_object(dict)
+    ctx.obj['no_emoji'] = no_emoji
+    ctx.obj['turbo'] = get_turbo()
+
+def get_cli_turbo(ctx):
+    """Get turbo instance from context"""
+    return ctx.obj['turbo']
+
+
+@cli.command()
+@click.option('--from', 'from_state', required=True, help='Start state (e.g., "P00")')
+@click.option('--to', 'to_state', required=True, help='Target state (e.g., "F12")')
+@click.option('--domain', default='general', help='Domain context')
+@click.option('--interactive', is_flag=True, help='Interactive mode')
+@click.pass_context
+def navigate(ctx, from_state, to_state, domain, interactive):
+    """Plan transformation through C4 space"""
+    turbo = get_cli_turbo(ctx)
+    try:
+        if interactive:
+            console.print(Panel.fit("🧠 Interactive C4 Navigation Mode", style="bold blue"))
+            console.print("Select dimensions for your transformation journey:")
+
+            time = click.prompt("Time dimension", type=click.Choice(['P', 'C', 'F']),
+                              default='P', show_choices=True)
+            scale = click.prompt("Scale dimension", type=click.Choice(['0', '1', '2']),
+                               default='0', show_choices=True)
+            agency = click.prompt("Agency dimension", type=click.Choice(['0', '1', '2']),
+                                default='0', show_choices=True)
+
+            from_state = f"{time}{scale}{agency}"
+
+            time = click.prompt("Target time dimension", type=click.Choice(['P', 'C', 'F']),
+                              default='F', show_choices=True)
+            scale = click.prompt("Target scale dimension", type=click.Choice(['0', '1', '2']),
+                               default='2', show_choices=True)
+            agency = click.prompt("Target agency dimension", type=click.Choice(['0', '1', '2']),
+                                default='2', show_choices=True)
+
+            to_state = f"{time}{scale}{agency}"
+
+        start_state = parse_c4_state(from_state)
+        end_state = parse_c4_state(to_state)
+
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            transient=True,
+        ) as progress:
+            task = progress.add_task("Planning transformation...", total=1)
+
+            plan = turbo.plan_transformation(
+                from_state=start_state,
+                to_state=end_state,
+                domain=domain,
+                target=SeptetObject.STATE
+            )
+
+            progress.update(task, advance=1)
+
+        # Rich output
+        table = Table(title=f"🌉 C4 Transformation: {from_state} → {to_state}")
+        table.add_column("Step", style="cyan", no_wrap=True)
+        table.add_column("Operation", style="magenta")
+        table.add_column("Resonance", style="green")
+
+        for i, step in enumerate(plan.path[:5], 1):  # Show first 5 steps
+            table.add_row(
+                str(i),
+                f"{step.get('operator', 'Unknown')}",
+                ".2f"
+            )
+
+        if len(plan.path) > 5:
+            table.add_row("...", f"+{len(plan.path)-5} more steps", "")
+
+        console.print(table)
+
+        # Bias warnings
+        if plan.bias_warnings:
+            console.print(f"\n🛡️  [bold yellow]Cognitive Bias Warnings:[/bold yellow]")
+            for bias in plan.bias_warnings[:3]:  # Show top 3
+                console.print(f"  • {bias.type}: {bias.description}")
+            if len(plan.bias_warnings) > 3:
+                console.print(f"  • ... and {len(plan.bias_warnings)-3} more")
+
+        # RAG context
+        if plan.rag_context:
+            console.print(f"\n📚 [bold blue]Knowledge Context:[/bold blue] {len(plan.rag_context)} sources")
+
+    except Exception as e:
+        console.print(f"[red]Error:[/red] {e}", style="bold red")
+        raise click.Abort()
+
+
+@cli.command()
+@click.option('--trials', type=int, default=1000, help='Number of trials (100-10000)')
+@click.pass_context
+def falsify(ctx, trials):
+    """Run Popper-style falsification suite"""
+    turbo = get_cli_turbo(ctx)
+    trials = max(100, min(10000, trials))
+
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        transient=True,
+    ) as progress:
+        task = progress.add_task(f"Running falsification suite ({trials} trials)...", total=trials)
+
+        try:
+            report = turbo.run_falsification_suite(n_trials=trials)
+
+            for i in range(0, trials, 100):
+                progress.update(task, advance=min(100, trials - i))
+
+            progress.update(task, completed=trials)
+
+            # Results
+            table = Table(title="🎯 Falsification Results")
+            table.add_column("Hypothesis", style="cyan")
+            table.add_column("Status", style="green")
+            table.add_column("Survival Rate")
+
+            hypotheses = [
+                ("Theorem 11 (≤6 steps)", report.theorem_11_survival, "100%"),
+                ("Pentad Universal", report.pentad_survival, "100%"),
+                ("Septet Exhaustive", report.septet_survival, "100%"),
+                ("Resonance³ Model", report.resonance_survival, ".1%"),
+                ("Bridge Six", report.bridge_survival, "100%"),
+                ("MODULATE Dominance", report.modulate_survival, "100%"),
+                ("STRUCTURE Dominance", report.structure_survival, ".1%"),
+            ]
+
+            for hypo, survived, rate in hypotheses:
+                status = "[green]SURVIVED[/green]" if survived else "[red]FALSIFIED[/red]"
+                table.add_row(hypo, status, rate)
+
+            console.print(table)
+            console.print(f"\n📊 [bold]Overall Survival Rate: {report.overall_survival:.1%}[/bold]")
+
+        except Exception as e:
+            progress.update(task, completed=trials)
+            console.print(f"[red]Falsification failed:[/red] {e}", style="bold red")
+
+
+@cli.command()
+@click.option('--query', required=True, help='Query for discovery')
+@click.option('--domain', default='general', help='Domain context')
+@click.pass_context
+def discover(ctx, query, domain):
+    """Discover knowledge gaps in a domain"""
+    turbo = get_cli_turbo(ctx)
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        transient=True,
+    ) as progress:
+        task = progress.add_task("Discovering knowledge gaps...", total=1)
+
+        try:
+            result = turbo.discover_domain(query, domain)
+
+            progress.update(task, advance=1)
+
+            console.print(f"🔍 [bold]Discovery Results:[/bold]")
+            console.print(f"Query: {result['query']}")
+            console.print(f"Domain: {result['domain']}")
+            console.print(f"Gaps found: {len(result['gaps'])}")
+
+            if result['gaps']:
+                table = Table(title="🕸️ Knowledge Gap Network")
+                table.add_column("#", style="cyan", no_wrap=True)
+                table.add_column("Gap", style="white")
+                table.add_column("Impact", style="yellow")
+                table.add_column("Relations", style="magenta")
+
+                for i, gap in enumerate(result['gaps'][:5], 1):
+                    relations = []
+                    gap_text = gap['description'].lower()
+
+                    # Find related gaps by keyword overlap
+                    for j, other_gap in enumerate(result['gaps']):
+                        if i-1 != j:  # Not the same gap
+                            other_text = other_gap['description'].lower()
+                            gap_words = set(gap_text.split())
+                            other_words = set(other_text.split())
+                            overlap = len(gap_words.intersection(other_words))
+                            if overlap > 2:  # Significant overlap
+                                relations.append(f"#{j+1}")
+
+                    relations_str = ", ".join(relations[:3]) if relations else "—"
+                    impact = gap.get('impact', 'medium')
+                    table.add_row(str(i), gap['description'][:60], impact, relations_str)
+
+                console.print(table)
+
+                if len(result['gaps']) > 5:
+                    console.print(f"... and {len(result['gaps'])-5} more gaps")
+
+        except Exception as e:
+            progress.update(task, advance=1)
+            console.print(f"[red]Discovery failed:[/red] {e}", style="bold red")
+
+
+@cli.command()
+@click.argument('file_path', type=click.Path(exists=True))
+@click.pass_context
+def upload(ctx, file_path):
+    """Upload document for RAG processing"""
+    turbo = get_cli_turbo(ctx)
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        transient=True,
+    ) as progress:
+        task = progress.add_task("Uploading and processing document...", total=1)
+
+        try:
+            result = turbo.ingest_document(file_path)
+
+            progress.update(task, advance=1)
+
+            console.print("✅ [green]Document uploaded successfully![/green]")
+            console.print(f"Title: {result['title']}")
+            console.print(f"Chunks: {result['chunks']}")
+            console.print(f"Document ID: {result['doc_id']}")
+
+        except Exception as e:
+            progress.update(task, advance=1)
+            console.print(f"[red]Upload failed:[/red] {e}", style="bold red")
+
+
+@cli.command()
+@click.argument('query')
+@click.option('--sources', default='scientific,user_docs', help='Sources to query')
+@click.option('--top-k', type=int, default=5, help='Number of results')
+@click.pass_context
+def ask(ctx, query, sources, top_k):
+    """Query the knowledge base"""
+    turbo = get_cli_turbo(ctx)
+    sources_list = [s.strip() for s in sources.split(',')]
+
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        transient=True,
+    ) as progress:
+        task = progress.add_task("Querying knowledge base...", total=1)
+
+        try:
+            result = turbo.query_knowledge_base(query, sources_list, top_k)
+
+            progress.update(task, advance=1)
+
+            if result['results']:
+                table = Table(title=f"🔍 Query Results: '{query}'")
+                table.add_column("Source", style="cyan", no_wrap=True)
+                table.add_column("Title", style="magenta")
+                table.add_column("Relevance", style="green", no_wrap=True)
+
+                for r in result['results']:
+                    score_val = r['score']
+                    if score_val >= 0.8:
+                        score_display = ".3f" + " (high)"
+                    elif score_val >= 0.6:
+                        score_display = ".3f" + " (medium)"
+                    else:
+                        score_display = ".3f" + " (low)"
+                    table.add_row(r['source'], r['title'][:50], score_display)
+
+                console.print(table)
+
+                # Show top result preview
+                top_result = result['results'][0]
+                console.print(f"\n📄 [bold]Top Result:[/bold] {top_result['title']}")
+                preview = top_result['text'][:200] + "..." if len(top_result['text']) > 200 else top_result['text']
+                console.print(f"[dim]{preview}[/dim]")
+            else:
+                console.print("[yellow]No results found[/yellow]")
+
+        except Exception as e:
+            progress.update(task, advance=1)
+            console.print(f"[red]Query failed:[/red] {e}", style="bold red")
+
+
+@cli.command()
+@click.argument('gap_id', required=False)
+@click.option('--domain', default='general', help='Domain context')
+@click.option('--interactive', is_flag=True, help='Interactive gap selection')
+@click.pass_context
+def plan_gap(ctx, gap_id, domain, interactive):
+    """Transform discovered gap into C4 plan"""
+    turbo = get_cli_turbo(ctx)
+
+    if interactive:
+        console.print("🔍 [bold]Interactive Gap Selection Mode[/bold]")
+        console.print("Let's discover gaps first...")
+
+        # Run discovery
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            transient=True,
+        ) as progress:
+            task = progress.add_task("Discovering gaps in domain...", total=1)
+            discovery_result = turbo.discover_domain(f"gaps in {domain}", domain)
+            progress.update(task, advance=1)
+
+        if discovery_result['gaps']:
+            console.print(f"\n📋 Found {len(discovery_result['gaps'])} gaps:")
+            table = Table(title="Available Gaps")
+            table.add_column("#", style="cyan", no_wrap=True)
+            table.add_column("Description", style="white")
+
+            for i, gap in enumerate(discovery_result['gaps'], 1):
+                table.add_row(str(i), gap['description'][:80])
+
+            console.print(table)
+
+            # Let user choose
+            choice = click.prompt("Select gap number", type=int, min=1, max=len(discovery_result['gaps']))
+            selected_gap = discovery_result['gaps'][choice - 1]
+            gap_id = selected_gap['id']
+            console.print(f"Selected: {selected_gap['description']}")
+        else:
+            console.print("[yellow]No gaps found. Using default gap_0[/yellow]")
+            gap_id = "gap_0"
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        transient=True,
+    ) as progress:
+        task = progress.add_task("Planning gap transformation...", total=1)
+
+        try:
+            result = turbo.select_gap_and_plan(gap_id, domain)
+
+            progress.update(task, advance=1)
+
+            console.print("🌉 [bold]Gap Transformation Plan[/bold]")
+            console.print(f"Gap: {gap_id}")
+            console.print(f"From: {result['from_state']} (current knowledge)")
+            console.print(f"To: {result['to_state']} (target breakthrough)")
+
+            # Show temporal wayfinding
+            console.print("\n🧭 [bold]Knowledge Space Navigation:[/bold]")
+            console.print("🌍 [green]Known Space:[/green] What we currently understand")
+            console.print("🌌 [blue]Unknown Space:[/blue] The gap we're bridging")
+            console.print("   ↑")
+            console.print(f"   You're here: {result['from_state']}")
+            console.print("   ↓")
+            console.print(f"   Target: {result['to_state']}")
+            console.print("\n💡 This transformation will expand your understanding of the domain.")
+
+            if result['plan'] and hasattr(result['plan'], 'path'):
+                table = Table(title="Plan Steps")
+                table.add_column("Step", style="cyan", no_wrap=True)
+                table.add_column("Operation", style="magenta")
+
+                for i, step in enumerate(result['plan'].path[:3], 1):
+                    table.add_row(str(i), f"{step.get('operator', 'Unknown')}")
+
+                console.print(table)
+
+        except Exception as e:
+            progress.update(task, advance=1)
+            console.print(f"[red]Gap planning failed:[/red] {e}", style="bold red")
+
+
+@cli.command()
+@click.option('--port', type=int, default=8765, help='WebSocket port')
+@click.pass_context
+def server(ctx, port):
+    """Start WebSocket server for real-time updates"""
+    turbo = get_cli_turbo(ctx)
+    console.print(f"🌐 Starting WebSocket server on ws://localhost:{port}")
+    console.print("Commands: navigate, meta, falsify, discover, upload_doc, query_rag, select_gap, subscribe, ping")
+
+    try:
+        turbo.start_websocket_server(port=port)
+    except KeyboardInterrupt:
+        console.print("\n👋 Server stopped")
+
+
+# Aliases for common commands
+cli.add_command(navigate, name='nav')
+cli.add_command(discover, name='disc')
+cli.add_command(ask, name='q')
+
+
+if __name__ == '__main__':
+    cli()

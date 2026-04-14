@@ -1,0 +1,137 @@
+# TURBO-CDI GitIgnore
+# ===================
+
+# Environment & Secrets
+.env
+.env.local
+.env.*.local
+!.env.example
+*.pem
+*.key
+secrets/
+config/secrets/
+
+# API Keys & Tokens
+*api_key*
+*apikey*
+*token*
+*secret*
+openrouter_key.txt
+ollama_config.yaml
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environments
+.venv/
+venv/
+ENV/
+env/
+.venv
+env/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+*.log
+logs/
+log/
+
+# Databases
+*.db
+*.sqlite
+*.sqlite3
+data/*.db
+data/*.sqlite
+
+# Vector Stores (Large Files)
+vectors/
+chroma_db/
+*.chromadb
+
+# Cache
+.cache/
+.ruff_cache/
+.pytest_cache/
+.mypy_cache/
+__pycache__/
+
+# Node.js / Frontend
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# Build outputs
+dist/
+build/
+*.tsbuildinfo
+
+# Testing
+coverage/
+htmlcov/
+.coverage
+.tox/
+
+# Docker volumes
+postgres_data/
+redis_data/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Model files (large)
+*.pkl
+*.h5
+*.onnx
+*.pt
+*.pth
+
+# Documentation builds
+docs/_build/
+site/
+
+# Archive - exclude historical reports
+archive/v8-reports/
+archive/audits/*.md
+archive/planning/*.md
+
+# Large data files
+data/corpora/*.json
+data/raw/*.csv
+data/processed/
+*.dump
+
+# Specific to TURBO-CDI
+.v8_discovery.db
+v8_discovery.db
+*.session.sql

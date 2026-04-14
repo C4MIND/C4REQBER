@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TURBO-CDI - Scientific Discovery Platform</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            min-height: 100vh;
+        }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        header {
+            text-align: center;
+            padding: 40px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        h1 { font-size: 3rem; background: linear-gradient(90deg, #4ECDC4, #FF6B6B); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .tagline { color: #888; margin-top: 10px; }
+        .card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 16px;
+            padding: 30px;
+            margin: 20px 0;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .input-group { display: flex; gap: 10px; margin: 20px 0; }
+        input, textarea {
+            flex: 1;
+            padding: 15px;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 8px;
+            background: rgba(0,0,0,0.3);
+            color: #fff;
+            font-size: 16px;
+        }
+        textarea { min-height: 120px; resize: vertical; }
+        button {
+            padding: 15px 30px;
+            background: linear-gradient(90deg, #4ECDC4, #44A08D);
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        button:hover { transform: translateY(-2px); }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .metric {
+            background: rgba(255,255,255,0.05);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        .metric-value { font-size: 2rem; font-weight: bold; color: #4ECDC4; }
+        .metric-label { color: #888; font-size: 0.9rem; margin-top: 5px; }
+        .hypothesis {
+            background: rgba(78, 205, 196, 0.1);
+            border-left: 4px solid #4ECDC4;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 8px;
+        }
+        .confidence { color: #FFE66D; font-weight: bold; }
+        .method { color: #FF6B6B; font-size: 0.9rem; }
+        .loading {
+            text-align: center;
+            padding: 40px;
+        }
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(255,255,255,0.1);
+            border-top-color: #4ECDC4;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .error { color: #FF6B6B; padding: 20px; background: rgba(255,107,107,0.1); border-radius: 8px; }
+        nav {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            padding: 20px;
+            background: rgba(0,0,0,0.2);
+        }
+        nav a {
+            color: #888;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+        nav a:hover, nav a.active { color: #4ECDC4; background: rgba(78,205,196,0.1); }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        
+        // API client
+        const API_BASE = window.location.origin.replace(':3000', ':8000');
+        
+        const api = {
+            async discover(problem) {
+                const res = await fetch(`${API_BASE}/discover`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ problem, max_hypotheses: 5 })
+                });
+                return res.json();
+            },
+            async getMetrics() {
+                const res = await fetch(`${API_BASE}/metrics`);
+                return res.json();
+            },
+            async searchPapers(query) {
+                const res = await fetch(`${API_BASE}/search/papers`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query, limit: 5 })
+                });
+                return res.json();
+            }
+        };
+        
+        // Components
+        function Header() {
+            return (
+                <header>
+                    <h1>🔬 TURBO-CDI</h1>
+                    <p className="tagline">Scientific Hypothesis Generation Platform</p>
+                </header>
+            );
+        }
+        
+        function Navigation({ activeTab, setActiveTab }) {
+            const tabs = ['discover', 'search', 'dashboard'];
+            return (
+                <nav>
+                    {tabs.map(tab => (
+                        <a
+                            key={tab}
+                            href="#"
+                            className={activeTab === tab ? 'active' : ''}
+                            onClick={(e) => { e.preventDefault(); setActiveTab(tab); }}
+                        >
+                            {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                        </a>
+                    ))}
+                </nav>
+            );
+        }
+        
+        function MetricsCard() {
+            const [metrics, setMetrics] = useState(null);
+            
+            useEffect(() => {
+                api.getMetrics().then(setMetrics);
+                const interval = setInterval(() => api.getMetrics().then(setMetrics), 30000);
+                return () => clearInterval(interval);
+            }, []);
+            
+            if (!metrics) return <div className="loading"><div className="spinner"></div></div>;
+            
+            return (
+                <div className="card">
+                    <h2>📊 System Metrics</h2>
+                    <div className="metrics">
+                        <div className="metric">
+                            <div className="metric-value">{metrics.total_discoveries}</div>
+                            <div className="metric-label">Discoveries</div>
+                        </div>
+                        <div className="metric">
+                            <div className="metric-value">{metrics.total_hypotheses}</div>
+                            <div className="metric-label">Hypotheses</div>
+                        </div>
+                        <div className="metric">
+                            <div className="metric-value">{(metrics.validation_rate * 100).toFixed(0)}%</div>
+                            <div className="metric-label">Validation Rate</div>
+                        </div>
+                        <div className="metric">
+                            <div className="metric-value">{(metrics.avg_confidence * 100).toFixed(0)}%</div>
+                            <div className="metric-label">Avg Confidence</div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+        
+        function DiscoverTab() {
+            const [problem, setProblem] = useState('');
+            const [loading, setLoading] = useState(false);
+            const [result, setResult] = useState(null);
+            const [error, setError] = useState(null);
+            
+            const handleDiscover = async () => {
+                if (!problem.trim()) return;
+                setLoading(true);
+                setError(null);
+                try {
+                    const data = await api.discover(problem);
+                    if (data.detail) throw new Error(data.detail);
+                    setResult(data);
+                } catch (err) {
+                    setError(err.message);
+                } finally {
+                    setLoading(false);
+                }
+            };
+            
+            return (
+                <div>
+                    <div className="card">
+                        <h2>🔍 Enter Research Problem</h2>
+                        <textarea
+                            placeholder="Describe your research problem... (e.g., 'How to increase battery energy density without losing safety?')"
+                            value={problem}
+                            onChange={(e) => setProblem(e.target.value)}
+                        />
+                        <div className="input-group">
+                            <button onClick={handleDiscover} disabled={loading}>
+                                {loading ? 'Discovering...' : '🔬 Start Discovery'}
+                            </button>
+                        </div>
+                    </div>
+                    
+                    {loading && (
+                        <div className="card loading">
+                            <div className="spinner"></div>
+                            <p>Analyzing problem and generating hypotheses...</p>
+                            <p style={{color: '#888', fontSize: '0.9rem'}}>Using C4 + TRIZ + Multi-Agent System</p>
+                        </div>
+                    )}
+                    
+                    {error && <div className="card error">Error: {error}</div>}
+                    
+                    {result && (
+                        <div className="card">
+                            <h2>✨ Generated Hypotheses</h2>
+                            <p style={{marginBottom: '20px', color: '#888'}}>
+                                Duration: {result.duration_seconds.toFixed(1)}s | 
+                                Est. Cost: ${result.estimated_cost.toFixed(0)}
+                            </p>
+                            {result.hypotheses.map((h, i) => (
+                                <div key={i} className="hypothesis">
+                                    <div className="method">{h.method.toUpperCase()}</div>
+                                    <p>{h.hypothesis}</p>
+                                    <p className="confidence">
+                                        Confidence: {(h.confidence * 100).toFixed(0)}%
+                                    </p>
+                                    {h.c4_path && (
+                                        <p style={{fontSize: '0.85rem', color: '#888'}}>
+                                            C4 Path: {h.c4_path.join(' → ')}
+                                        </p>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            );
+        }
+        
+        function SearchTab() {
+            const [query, setQuery] = useState('');
+            const [results, setResults] = useState(null);
+            const [loading, setLoading] = useState(false);
+            
+            const handleSearch = async () => {
+                if (!query.trim()) return;
+                setLoading(true);
+                const data = await api.searchPapers(query);
+                setResults(data);
+                setLoading(false);
+            };
+            
+            return (
+                <div>
+                    <div className="card">
+                        <h2>📚 Search Academic Papers</h2>
+                        <div className="input-group">
+                            <input
+                                type="text"
+                                placeholder="Search Semantic Scholar (200M+ papers)..."
+                                value={query}
+                                onChange={(e) => setQuery(e.target.value)}
+                                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                            />
+                            <button onClick={handleSearch} disabled={loading}>
+                                {loading ? 'Searching...' : 'Search'}
+                            </button>
+                        </div>
+                    </div>
+                    
+                    {results && (
+                        <div className="card">
+                            <h3>Found {results.total} papers</h3>
+                            {results.papers.map((p, i) => (
+                                <div key={i} className="hypothesis" style={{borderLeftColor: '#FF6B6B'}}>
+                                    <h4>{p.title}</h4>
+                                    <p style={{fontSize: '0.9rem', color: '#888'}}>
+                                        {p.authors.join(', ')} • {p.year} • Citations: {p.citation_count}
+                                    </p>
+                                    <p style={{marginTop: '10px', fontSize: '0.9rem'}}>{p.abstract}</p>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            );
+        }
+        
+        function DashboardTab() {
+            return <MetricsCard />;
+        }
+        
+        function App() {
+            const [activeTab, setActiveTab] = useState('discover');
+            
+            return (
+                <div className="container">
+                    <Header />
+                    <Navigation activeTab={activeTab} setActiveTab={setActiveTab} />
+                    
+                    {activeTab === 'discover' && <DiscoverTab />}
+                    {activeTab === 'search' && <SearchTab />}
+                    {activeTab === 'dashboard' && <DashboardTab />}
+                </div>
+            );
+        }
+        
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>

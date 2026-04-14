@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TURBO-CDI v8.4 - Cognitive Discovery Intelligence</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            padding: 60px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+        }
+        .logo {
+            font-size: 3.5em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+            margin-bottom: 30px;
+        }
+        .status {
+            display: inline-block;
+            padding: 10px 20px;
+            background: rgba(76, 237, 196, 0.2);
+            border: 1px solid rgba(76, 237, 196, 0.5);
+            border-radius: 25px;
+            font-weight: 500;
+        }
+        .status.healthy { border-color: #4ecdc4; background: rgba(78, 205, 196, 0.2); }
+        .status.warning { border-color: #ffd93d; background: rgba(255, 217, 61, 0.2); }
+        .status.error { border-color: #ff6b6b; background: rgba(255, 107, 107, 0.2); }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 25px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: transform 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        .card-title {
+            font-size: 1.4em;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        .card-content {
+            opacity: 0.9;
+            line-height: 1.5;
+        }
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: 500;
+            transition: transform 0.3s ease;
+            margin-right: 10px;
+        }
+        .btn:hover {
+            transform: scale(1.05);
+        }
+        .btn.secondary {
+            background: linear-gradient(45deg, #45b7d1, #96ceb7);
+        }
+        .features {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        .features h3 {
+            margin-top: 0;
+            color: #4ecdc4;
+        }
+        .feature-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+        }
+        .feature-item {
+            display: flex;
+            align-items: center;
+            padding: 5px 0;
+        }
+        .feature-item::before {
+            content: "✓";
+            color: #4ecdc4;
+            margin-right: 10px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">TURBO-CDI v8.4</div>
+            <div class="subtitle">Cognitive Discovery Intelligence Platform</div>
+            <div class="status {{ 'healthy' if system_info.health == 'healthy' else 'warning' if system_info.health == 'warning' else 'error' }}">
+                System Status: {{ system_info.health|default('unknown')|upper }}
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <div class="card-title">🚀 API Documentation</div>
+                <div class="card-content">
+                    Interactive API documentation with OpenAPI 3.0 specification.
+                    Test all endpoints directly from your browser.
+                </div>
+                <a href="/api/v1/docs" class="btn">Swagger UI</a>
+                <a href="/api/v1/redoc" class="btn secondary">ReDoc</a>
+            </div>
+
+            <div class="card">
+                <div class="card-title">🔍 Knowledge Discovery</div>
+                <div class="card-content">
+                    Access powerful cognitive discovery algorithms.
+                    Analyze corpora, detect anomalies, and transform knowledge.
+                </div>
+                <a href="/api/v1/discovery" class="btn">Discovery API</a>
+            </div>
+
+            <div class="card">
+                <div class="card-title">📚 Corpus Management</div>
+                <div class="card-content">
+                    Manage knowledge corpora, facts, theories, and relationships.
+                    Full CRUD operations with validation and constraints.
+                </div>
+                <a href="/api/v1/corpora" class="btn">Corpus API</a>
+            </div>
+
+            <div class="card">
+                <div class="card-title">🔒 Authentication</div>
+                <div class="card-content">
+                    Secure JWT-based authentication with role-based access control.
+                    Login with demo accounts (admin:admin123, researcher:researcher123).
+                </div>
+                <a href="/api/v1/auth" class="btn">Auth API</a>
+            </div>
+
+            <div class="card">
+                <div class="card-title">🩺 System Health</div>
+                <div class="card-content">
+                    Real-time monitoring of system components, performance metrics,
+                    and operational status across all services.
+                </div>
+                <a href="/api/v1/health" class="btn">Health Check</a>
+                <a href="/dashboard" class="btn secondary">Dashboard</a>
+            </div>
+
+            <div class="card">
+                <div class="card-title">🌐 Real-time Processing</div>
+                <div class="card-content">
+                    WebSocket connections for live discovery streams and
+                    real-time system monitoring updates.
+                </div>
+                <span class="btn" onclick="openWebSocketDemo()">WebSocket Demo</span>
+            </div>
+        </div>
+
+        <div class="features">
+            <h3>🎯 Enterprise Features</h3>
+            <div class="feature-list">
+                <div class="feature-item">Clean Architecture (4-layer hexagonal)</div>
+                <div class="feature-item">CQRS Pattern Implementation</div>
+                <div class="feature-item">Domain-Driven Design</div>
+                <div class="feature-item">JWT Authentication & RBAC</div>
+                <div class="feature-item">Real-time WebSocket Support</div>
+                <div class="feature-item">Comprehensive Health Monitoring</div>
+                <div class="feature-item">Async Performance Architecture</div>
+                <div class="feature-item">PostgreSQL + Redis Integration</div>
+                <div class="feature-item">OpenAPI 3.0 Documentation</div>
+                <div class="feature-item">Docker & Kubernetes Ready</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openWebSocketDemo() {
+            // Simple WebSocket demo
+            const ws = new WebSocket(`ws://${window.location.host}/discovery/demo-${Date.now()}`);
+
+            ws.onopen = function() {
+                console.log('Connected to discovery WebSocket');
+                ws.send(JSON.stringify({
+                    command: 'start_discovery',
+                    corpus_id: 'demo_corpus'
+                }));
+            };
+
+            ws.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                console.log('Received:', data);
+            };
+
+            ws.onclose = function() {
+                console.log('Disconnected from discovery WebSocket');
+            };
+
+            alert('WebSocket demo started! Check browser console for real-time updates.');
+        }
+    </script>
+</body>
+</html>

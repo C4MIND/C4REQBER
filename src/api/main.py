@@ -25,6 +25,13 @@ app.add_middleware(
 
 import os
 import glob
+import sys
+
+# Ensure src/ is on path for pattern runner
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+from patterns.runner import get_runner
+
+pattern_runner = get_runner()
 
 
 # Root endpoint - API info
@@ -37,6 +44,7 @@ async def root():
         "web_ui": "http://localhost:3000",
         "docs": "/docs",
         "health": "/health",
+        "patterns_api": "/patterns",
     }
 
 
@@ -44,125 +52,153 @@ async def root():
 @app.get("/patterns")
 async def list_patterns():
     """List available scientific patterns from v6 engine"""
-    patterns_dir = "/app/src/patterns/v6_legacy"
-    if not os.path.exists(patterns_dir):
-        return {"patterns": [], "count": 0, "version": "v6.5"}
+    patterns = pattern_runner.list_patterns()
+    errors = pattern_runner.get_errors()
 
-    pattern_files = [
-        f.replace(".py", "")
-        for f in os.listdir(patterns_dir)
-        if f.endswith(".py")
-        and not f.startswith("_")
-        and f not in ["base.py", "loader.py"]
-    ]
+    def categorize(p: str) -> str:
+        physics = [
+            "cfd",
+            "fdtd",
+            "maxwell",
+            "n_body",
+            "plasma",
+            "quantum",
+            "wave",
+            "thermal",
+            "elasticity",
+            "acoustic",
+            "poisson",
+            "rigid_body",
+            "dft",
+            "qft",
+        ]
+        biology = [
+            "neural",
+            "gene",
+            "epidemic",
+            "enzyme",
+            "protein",
+            "connectome",
+            "evolutionary",
+            "synaptic",
+            "signal",
+            "hodgkin",
+            "pharmacokinetics",
+            "age_structured",
+            "lotka",
+        ]
+        economics = [
+            "dsge",
+            "garch",
+            "game_theory",
+            "portfolio",
+            "credit",
+            "supply_chain",
+            "economic",
+            "input_output",
+            "gravity_trade",
+            "market_microstructure",
+            "option_pricing",
+            "prospect_theory",
+            "overlapping_generations",
+            "search_matching",
+            "herding",
+            "heterogeneous",
+        ]
+        earth = [
+            "climate",
+            "ocean",
+            "seismic",
+            "wildfire",
+            "air_quality",
+            "biogeochemistry",
+            "cloud",
+            "groundwater",
+            "land_surface",
+            "land_use",
+            "mantle",
+            "geomagnetic",
+            "sea_ice",
+            "surface_water",
+        ]
+        engineering = [
+            "mpc",
+            "kalman",
+            "slam",
+            "path_planning",
+            "pid",
+            "circuit",
+            "composite",
+            "crystal",
+            "fem",
+            "continuum",
+            "inverse_kinematics",
+            "model_predictive",
+            "circuit_simulation",
+        ]
+        social = [
+            "social_network",
+            "opinion",
+            "cultural",
+            "migration",
+            "urban",
+            "conflict",
+            "collaborative",
+            "pedestrian",
+            "rumor",
+            "language",
+        ]
+        for cat, keys in [
+            ("physics", physics),
+            ("biology", biology),
+            ("economics", economics),
+            ("earth_science", earth),
+            ("engineering", engineering),
+            ("social", social),
+        ]:
+            if any(k in p for k in keys):
+                return cat
+        return "other"
+
+    categories: dict = {}
+    for p in patterns:
+        cat = categorize(p)
+        categories.setdefault(cat, []).append(p)
 
     return {
-        "patterns": sorted(pattern_files),
-        "count": len(pattern_files),
+        "patterns": patterns,
+        "count": len(patterns),
+        "total_files": len(patterns) + len(errors),
         "version": "v6.5",
-        "categories": {
-            "physics": [
-                p
-                for p in pattern_files
-                if any(
-                    x in p
-                    for x in [
-                        "cfd",
-                        "fdtd",
-                        "maxwell",
-                        "n_body",
-                        "plasma",
-                        "quantum",
-                        "wave",
-                        "thermal",
-                        "elasticity",
-                        "acoustic",
-                    ]
-                )
-            ],
-            "biology": [
-                p
-                for p in pattern_files
-                if any(
-                    x in p
-                    for x in [
-                        "neural",
-                        "gene",
-                        "epidemic",
-                        "enzyme",
-                        "protein",
-                        "connectome",
-                        "evolutionary",
-                        "synaptic",
-                        "signal",
-                    ]
-                )
-            ],
-            "economics": [
-                p
-                for p in pattern_files
-                if any(
-                    x in p
-                    for x in [
-                        "dsge",
-                        "garch",
-                        "game_theory",
-                        "portfolio",
-                        "credit",
-                        "supply_chain",
-                    ]
-                )
-            ],
-            "earth_science": [
-                p
-                for p in pattern_files
-                if any(
-                    x in p
-                    for x in [
-                        "climate",
-                        "ocean",
-                        "seismic",
-                        "wildfire",
-                        "air_quality",
-                        "biogeochemistry",
-                        "cloud",
-                    ]
-                )
-            ],
-            "engineering": [
-                p
-                for p in pattern_files
-                if any(
-                    x in p
-                    for x in [
-                        "mpc",
-                        "kalman",
-                        "slam",
-                        "path_planning",
-                        "pid",
-                        "circuit",
-                        "composite",
-                        "crystal",
-                    ]
-                )
-            ],
-            "social": [
-                p
-                for p in pattern_files
-                if any(
-                    x in p
-                    for x in [
-                        "social_network",
-                        "opinion",
-                        "cultural",
-                        "migration",
-                        "urban",
-                        "conflict",
-                    ]
-                )
-            ],
-        },
+        "categories": categories,
+        "load_errors": len(errors),
     }
+
+
+@app.get("/patterns/{pattern_id}")
+async def get_pattern(pattern_id: str):
+    """Get pattern metadata"""
+    meta = pattern_runner.get_metadata(pattern_id)
+    if meta is None:
+        raise HTTPException(status_code=404, detail="Pattern not found")
+    meta["resources"] = pattern_runner.estimate_resources(pattern_id)
+    return meta
+
+
+@app.post("/patterns/{pattern_id}/run")
+async def run_pattern(pattern_id: str, payload: dict = None):
+    """Execute a simulation pattern"""
+    payload = payload or {}
+    if pattern_id not in pattern_runner.list_patterns():
+        raise HTTPException(
+            status_code=404, detail="Pattern not found or failed to load"
+        )
+    result = await pattern_runner.run_pattern(
+        pattern_id,
+        hypothesis=payload.get("hypothesis"),
+        params=payload.get("params"),
+    )
+    return result
 
 
 # Health check endpoint

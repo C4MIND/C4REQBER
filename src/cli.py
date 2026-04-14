@@ -8,8 +8,9 @@ import argparse
 import sys
 import os
 
-# Add src to path
-sys.path.insert(0, "/Users/figuramax/LocalProjects/TURBO-CDI/src")
+# Add src to path (works both locally and inside Docker)
+_SRC_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, _SRC_DIR)
 
 from core.cdi_engine import (
     CDIEngine,

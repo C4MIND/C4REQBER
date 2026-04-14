@@ -21,6 +21,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.responses import JSONResponse
 import uvicorn
+import math
 
 from src.api.models import (
     DiscoveryRequest,
@@ -481,7 +482,7 @@ async def run_pattern(pattern_id: str, payload: dict = None):
         hypothesis=payload.get("hypothesis"),
         params=payload.get("params"),
     )
-    return result
+    return sanitize_json(result)
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -535,6 +536,19 @@ async def handle_discovery_stream(websocket: WebSocket, payload: dict):
 # ═══════════════════════════════════════════════════════════════════
 # HELPERS
 # ═══════════════════════════════════════════════════════════════════
+
+
+def sanitize_json(obj: Any) -> Any:
+    """Recursively replace NaN/Inf float values with None for JSON compliance."""
+    if isinstance(obj, dict):
+        return {k: sanitize_json(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [sanitize_json(item) for item in obj]
+    if isinstance(obj, float):
+        if math.isnan(obj) or math.isinf(obj):
+            return None
+        return obj
+    return obj
 
 
 async def check_database() -> bool:

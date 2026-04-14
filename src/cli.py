@@ -35,11 +35,11 @@ def get_llm_client():
 def print_banner():
     """Print welcome banner."""
     print("""
-╔═══════════════════════════════════════════════════════════════╗
-║  TURBO-CDI v2.1                                                ║
-║  Scientific Hypothesis Generation Engine                       ║
-║  Z₃³ = 27 operators | ≤6 steps | LLM synthesis | Falsifiability ║
-╚═══════════════════════════════════════════════════════════════╝
+╔══════════════════════════════════════════════════════════════════╗
+║  TURBO-CDI v8.4 "Prometheus"                                     ║
+║  Scientific Discovery Intelligence Platform                      ║
+║  C4³ = 27 operators | 100+ v6 Patterns | Discovery Agent | Auth  ║
+╚══════════════════════════════════════════════════════════════════╝
 """)
 
 
@@ -220,6 +220,97 @@ def cmd_demo(args):
     return 0
 
 
+async def cmd_discover(args):
+    """Run full discovery cycle with pattern simulation."""
+    print_banner()
+    from solver.one_shot import get_one_shot_solver
+
+    solver = get_one_shot_solver()
+    result = await solver.solve(
+        problem=args.problem,
+        max_hypotheses=args.max_hypotheses,
+        include_validation=not args.no_validation,
+        literature_search=not args.no_literature,
+        consensus_analysis=not args.no_consensus,
+    )
+
+    print(solver.render_summary(result))
+
+    if result.top_hypothesis:
+        sim = result.top_hypothesis.get("simulation")
+        if sim and sim.get("pattern_id"):
+            print(
+                f"\n[bold]Pattern Simulation:[/bold] {sim['pattern_id']} → {sim['status']}"
+            )
+            if sim.get("metrics"):
+                for k, v in sim["metrics"].items():
+                    print(f"  {k}: {v}")
+
+    if args.output:
+        solver.export_report(result, args.output, format=args.format)
+
+    return 0
+
+
+def cmd_patterns(args):
+    """List or run v6 simulation patterns."""
+    from patterns.runner import get_runner
+
+    runner = get_runner()
+
+    if args.subcommand == "list":
+        print("\n" + "=" * 60)
+        print("V6 SIMULATION PATTERNS")
+        print("=" * 60)
+        patterns = runner.list_patterns()
+        print(f"\nTotal loaded: {len(patterns)}\n")
+        for pid in patterns:
+            meta = runner.get_metadata(pid)
+            print(f"  {pid:30} | {meta['class'] if meta else 'Unknown'}")
+        print("\n" + "=" * 60 + "\n")
+
+    elif args.subcommand == "info":
+        meta = runner.get_metadata(args.pattern_id)
+        if not meta:
+            print(f"Pattern '{args.pattern_id}' not found.")
+            return 1
+        resources = runner.estimate_resources(args.pattern_id)
+        print("\n" + "=" * 60)
+        print(f"PATTERN: {args.pattern_id}")
+        print("=" * 60)
+        print(f"  Class:       {meta['class']}")
+        print(f"  Domain:      {meta.get('domain', 'unknown')}")
+        print(f"  Description: {meta.get('description', 'N/A')}")
+        print(f"  Memory:      {resources.get('memory_mb', 100)} MB")
+        print(f"  GPU:         {'Yes' if resources.get('gpu_required') else 'No'}")
+        print(f"  Est. time:   {resources.get('estimated_time_seconds', 60)}s")
+        print("=" * 60 + "\n")
+
+    elif args.subcommand == "run":
+        import asyncio
+
+        print(f"\nRunning pattern: {args.pattern_id}...")
+        result = asyncio.run(
+            runner.run_pattern(
+                args.pattern_id,
+                hypothesis={"title": args.hypothesis, "description": args.hypothesis},
+                params={},
+            )
+        )
+        print(f"Status: {result['status']}")
+        print(f"Time:   {result.get('execution_time_seconds', 0):.3f}s")
+        if result.get("result"):
+            metrics = result["result"].get("metrics", {})
+            if metrics:
+                print("\nMetrics:")
+                for k, v in metrics.items():
+                    print(f"  {k}: {v}")
+        if result.get("error"):
+            print(f"\nError: {result['error']}")
+
+    return 0
+
+
 def cmd_operators(args):
     """List all 27 operators."""
     from core.operators import Operators
@@ -306,6 +397,45 @@ def main():
         help="Specific example to run",
     )
 
+    # Discover command
+    discover_parser = subparsers.add_parser(
+        "discover", help="Run full discovery cycle with simulations"
+    )
+    discover_parser.add_argument("problem", help="Research problem to solve")
+    discover_parser.add_argument(
+        "--max-hypotheses", type=int, default=5, help="Max hypotheses to generate"
+    )
+    discover_parser.add_argument(
+        "--no-validation", action="store_true", help="Skip validation planning"
+    )
+    discover_parser.add_argument(
+        "--no-literature", action="store_true", help="Skip literature search"
+    )
+    discover_parser.add_argument(
+        "--no-consensus", action="store_true", help="Skip consensus analysis"
+    )
+    discover_parser.add_argument("--output", help="Export report to file path")
+    discover_parser.add_argument(
+        "--format",
+        choices=["json", "markdown"],
+        default="markdown",
+        help="Export format",
+    )
+
+    # Patterns command
+    patterns_parser = subparsers.add_parser(
+        "patterns", help="Manage v6 simulation patterns"
+    )
+    pattern_sub = patterns_parser.add_subparsers(
+        dest="subcommand", help="Pattern commands"
+    )
+    pattern_sub.add_parser("list", help="List all available patterns")
+    info_parser = pattern_sub.add_parser("info", help="Show pattern metadata")
+    info_parser.add_argument("pattern_id", help="Pattern ID")
+    run_parser = pattern_sub.add_parser("run", help="Run a simulation pattern")
+    run_parser.add_argument("pattern_id", help="Pattern ID")
+    run_parser.add_argument("hypothesis", help="Hypothesis text to simulate")
+
     # Operators command
     subparsers.add_parser("operators", help="List all 27 C4 operators")
 
@@ -322,10 +452,16 @@ def main():
         "solve": cmd_solve,
         "validate": cmd_validate,
         "demo": cmd_demo,
+        "discover": cmd_discover,
+        "patterns": cmd_patterns,
         "operators": cmd_operators,
         "test-llm": cmd_test_llm,
     }
 
+    import asyncio
+
+    if args.command == "discover":
+        return asyncio.run(commands[args.command](args))
     return commands[args.command](args)
 
 

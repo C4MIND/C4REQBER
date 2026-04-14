@@ -1,272 +1,212 @@
-# TURBO-CDI v6.0 "Prometheus"
+# TURBO-CDI v8.4 "Prometheus"
 
-## Meta-Simulation Engine for Scientific Discovery
+## Enterprise Multi-Agent AI Platform for Scientific Discovery
 
-[![Version](https://img.shields.io/badge/version-6.0.0-blue)](./)
+[![Version](https://img.shields.io/badge/version-8.4.0-blue)](./)
 [![License](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
 [![C4](https://img.shields.io/badge/C4-Z₃³%2027--operators-orange)]()
+[![Patterns](https://img.shields.io/badge/v6_patterns-100+-purple)]()
 [![Docker](https://img.shields.io/badge/docker-ready-blue)]()
-[![K8s](https://img.shields.io/badge/kubernetes-ready-blue)]()
 
-> **"Visualize, Simulate, Validate - The Complete Research Platform"**
-
----
-
-## 🚀 What is TURBO-CDI v6.0?
-
-**TURBO-CDI v6.0 "Prometheus"** is a production-grade meta-simulation platform that combines:
-
-- **Interactive Canvas** - 3D C4 visualization, architecture diagrams, small multiples
-- **Meta-Simulation Engine** - 4 pattern types with real-time execution
-- **Validation Hierarchy** - Formal methods → Model checking → Property testing → Monte Carlo
-- **Evolution Engine** - NSGA-II genetic algorithm for hypothesis optimization
-- **Production Deployment** - Docker, Kubernetes, auto-scaling
+> **"Visualize, Simulate, Validate — The Complete Research Platform"**
 
 ---
 
-## ✨ Key Features
+## What is TURBO-CDI v8.4?
 
-### 1. Visual Canvas
-```bash
-# Launch interactive visualization
-cd v6/canvas && npm run dev
-```
-- **C4 Visual Map** - 3D isometric 27-state navigation
-- **Architecture Diagrams** - Auto-generated C4/UML with export
-- **Small Multiples** - Side-by-side simulation comparison
-- **Export** - PNG, SVG, PDF, JSON
+**TURBO-CDI v8.4** is an enterprise-grade scientific discovery platform that unifies:
 
-### 2. Simulation Patterns
-| Pattern | Category | Use Case |
-|---------|----------|----------|
-| **Monte Carlo** | Stochastic | Risk analysis, uncertainty quantification |
-| **Agent-Based** | Agent | Social dynamics, emergence, networks |
-| **System Dynamics** | Differential | Epidemics, population, feedback loops |
-| **Circuit** | Physical | Electronics, signal processing |
-
-### 3. Real-Time API
-```python
-import requests
-
-# Run simulation
-response = requests.post('http://localhost:8000/simulate', json={
-    'hypothesis': {
-        'title': 'Epidemic Model',
-        'parameters': {'model_type': 'epidemic', 'S0': 990, 'I0': 10}
-    },
-    'pattern_id': 'system_dynamics'
-})
-```
-
-**Endpoints:**
-- `GET /patterns` - List available patterns
-- `POST /simulate` - Run simulation
-- `POST /validate` - Full validation hierarchy
-- `WS /ws` - WebSocket for real-time updates
-
-### 4. Production Deployment
-
-**Docker Compose:**
-```bash
-docker-compose up -d
-```
-
-**Kubernetes:**
-```bash
-cd k8s && ./deploy.sh
-```
-
-**Features:**
-- Auto-scaling (3-20 replicas)
-- Health checks
-- Persistent storage
-- Resource limits (2-4 CPU, 2-4GB RAM)
+- **C4³ Cognitive Engine** — 27-state navigation for hypothesis generation
+- **v6 Pattern Library** — 100+ runnable simulation patterns (physics, biology, economics, engineering, earth science, social science)
+- **Discovery Agent** — Autonomous C4+TRIZ+Analogy pipeline with real-time pattern simulation
+- **Validation Hierarchy** — Formal methods → Model checking → Property testing → Monte Carlo
+- **Ghost in the Shell Web UI** — Russian-localized interface with matrix/terminal aesthetics
+- **Production Auth & API** — JWT-based auth, rate limiting, PostgreSQL+Redis, Docker-only deployment
 
 ---
 
-## 🚀 Quick Start
+## Key Features
 
-### Local Development
+### 1. Web Interface (Ghost in the Shell Theme)
+- **3-file architecture**: `index.html` + `css/main.css` + `js/app.js`
+- **Russian localization** — all navigation, buttons, labels, and status messages
+- **ASCII terminal header** with live clock, matrix rain, hex grid, scan lines
+- **C4 ASCII visualization panel** with Z₃³ state space geometry
+- **Interactive pattern browser & launcher** — browse 100 patterns by category and run simulations directly from the browser
+
+Access: `http://localhost:3000`
+
+### 2. v6 Scientific Patterns (100+ Simulations)
+
+Integrated domains:
+
+| Domain | Example Patterns |
+|--------|------------------|
+| **Physics** | CFD, FDTD, Maxwell equations, N-body gravity, quantum circuits, thermal analysis |
+| **Biology** | Neural networks, connectome dynamics, epidemic SEIR, protein folding, enzyme kinetics |
+| **Economics** | DSGE, GARCH, game theory, portfolio optimization, supply chain |
+| **Engineering** | FEM, MPC, Kalman filter, SLAM, circuit simulation, PID tuning |
+| **Earth Science** | Climate GCM, ocean circulation, seismic waves, wildfire, air quality |
+| **Social Science** | Social network diffusion, opinion dynamics, conflict models, urban growth |
+
+### 3. Discovery Engine with Pattern Simulation
+
+The `/discover` endpoint now automatically:
+1. Generates hypotheses via C4+TRIZ+Analogy
+2. **Matches each hypothesis to the best v6 pattern**
+3. **Runs the simulation** and blends the result into confidence scoring
+4. Returns re-ranked hypotheses with simulation metrics
+
+### 4. REST API (FastAPI + WebSocket)
+
+**Public endpoints:**
+- `GET /health` — System health
+- `GET /patterns` — List all 100 patterns by category
+- `GET /patterns/{id}` — Pattern metadata
+- `POST /patterns/{id}/run` — Execute a simulation
+
+**Authenticated endpoints:**
+- `POST /auth/register` — Create user
+- `POST /auth/login` — Get JWT token
+- `POST /discover` — Full discovery cycle
+- `GET /discoveries` — List user's discoveries
+- `POST /search/papers` — Academic paper search
+- `WS /ws/{client_id}` — Real-time progress streaming
+
+### 5. CLI Commands
+
+```bash
+# Run discovery with automatic pattern simulation
+python src/cli.py discover "Optimize fluid flow in a pipe" --max-hypotheses 5
+
+# List all patterns
+python src/cli.py patterns list
+
+# Run a specific pattern
+python src/cli.py patterns run cfd "Flow in a cylindrical pipe"
+
+# Show pattern metadata
+python src/cli.py patterns info cfd
+```
+
+---
+
+## Quick Start
+
+### Prerequisites
+- Docker & Docker Compose
+- `.env` file with `DATABASE_URL`, `JWT_SECRET`, `POSTGRES_PASSWORD`
+
+### Run Everything
+
 ```bash
 cd /Users/figuramax/LocalProjects/TURBO-CDI
 
-# Option 1: Direct
-python v6/engine/server.py
+# Start all services (API, Web, PostgreSQL, Redis)
+docker compose up -d --build
 
-# Option 2: Docker
-docker-compose up -d
-
-# Option 3: Kubernetes
-cd k8s && ./deploy.sh
-```
-
-### API Usage
-```bash
 # Check health
 curl http://localhost:8000/health
 
-# List patterns
-curl http://localhost:8000/patterns
+# Open Web UI
+open http://localhost:3000
+```
 
-# Run simulation
-curl -X POST http://localhost:8000/simulate \
+### Register a Test User
+
+```bash
+curl -X POST http://localhost:8000/auth/register \
   -H "Content-Type: application/json" \
-  -d '{
-    "hypothesis": {
-      "title": "Market diffusion",
-      "parameters": {"n_agents": 100, "network_type": "small_world"}
-    },
-    "pattern_id": "agent_based"
-  }'
+  -d '{"email":"user@example.com","password":"secret","name":"Researcher"}'
+```
+
+### Run a Discovery
+
+```bash
+TOKEN=$(curl -s -X POST http://localhost:8000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"user@example.com","password":"secret"}' | jq -r '.access_token')
+
+curl -X POST http://localhost:8000/discover \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"problem":"Optimize fluid flow in a pipe","max_hypotheses":3}'
 ```
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 TURBO-CDI/
-├── v6/
-│   ├── canvas/               # React visualization
-│   │   └── src/
-│   │       ├── components/
-│   │       │   ├── Canvas.tsx
-│   │       │   ├── C4VisualMap.tsx
-│   │       │   ├── ArchitectureDiagram.tsx
-│   │       │   └── SmallMultiples.tsx
-│   │       └── utils/
-│   │           └── export.ts
-│   └── engine/               # Python simulation engine
-│       └── src/
-│           ├── api/          # FastAPI + WebSocket
-│           │   ├── server.py
-│           │   └── bridge.py
-│           ├── patterns/     # Simulation patterns
-│           │   ├── monte_carlo.py
-│           │   ├── agent_based.py
-│           │   ├── system_dynamics.py
-│           │   └── circuit_simulation.py
-│           ├── evolution/    # Genetic algorithms
-│           ├── validation/   # Validation hierarchy
-│           └── backends/     # Formal methods stubs
-├── k8s/                      # Kubernetes manifests
-│   ├── namespace.yaml
-│   ├── deployment.yaml
-│   ├── service.yaml
-│   └── hpa.yaml
-├── Dockerfile
+├── web/                      # Ghost in the Shell web UI
+│   ├── index.html            # Pure HTML structure (Russian)
+│   ├── css/
+│   │   ├── main.css          # All extracted styles
+│   │   ├── ghost-terminal.css
+│   │   └── c4-design-system.css
+│   └── js/
+│       ├── app.js            # Application logic + pattern launcher
+│       ├── c4-cube.js
+│       ├── liquid-animator.js
+│       └── turbo-websocket.js
+├── src/
+│   ├── api/                  # FastAPI production server
+│   │   ├── server.py         # Main API (auth, discover, patterns, ws)
+│   │   ├── auth.py           # JWT + bcrypt
+│   │   ├── database.py       # Async PostgreSQL
+│   │   ├── cache.py          # Redis cache
+│   │   └── models.py         # Pydantic schemas
+│   ├── patterns/             # v6 pattern integration
+│   │   ├── core.py           # Compatibility bridge
+│   │   ├── runner.py         # Unified pattern execution API
+│   │   └── v6_legacy/        # 100 simulation patterns
+│   ├── agent/                # Scientific discovery agent
+│   ├── solver/               # One-shot discovery solver
+│   ├── validation/           # Consensus meter & falsifiability
+│   ├── search/               # Semantic Scholar client
+│   └── cli.py                # Command-line interface
+├── migrations/
+│   └── init.sql              # PostgreSQL schema (users, discoveries, hypotheses)
 ├── docker-compose.yml
-└── docs/                     # Documentation
+├── Dockerfile.simple
+├── nginx.conf
+└── docs/
+    └── ARCHITECTURE.md
 ```
 
 ---
 
-## 🏗️ Architecture
+## Environment Variables
 
-```
-┌─────────────┐     HTTP/WS      ┌──────────────┐
-│   Canvas    │◄────────────────►│  FastAPI     │
-│  (React)    │                  │   Server     │
-└─────────────┘                  └──────┬───────┘
-                                        │
-                              ┌─────────▼──────────┐
-                              │  Meta-Simulation   │
-                              │      Engine        │
-                              │  ┌──────────────┐  │
-                              │  │   Patterns   │  │
-                              │  │  Evolution   │  │
-                              │  │  Validation  │  │
-                              │  └──────────────┘  │
-                              └────────────────────┘
-                                        │
-                           ┌────────────┼────────────┐
-                           ▼            ▼            ▼
-                      ┌────────┐   ┌────────┐   ┌────────┐
-                      │ Docker │   │   K8s  │   │  Bare  │
-                      └────────┘   └────────┘   └────────┘
-```
-
----
-
-## 📊 Performance
-
-| Metric | Value |
-|--------|-------|
-| API Response | <100ms (health) |
-| Simulation | 1000 agent-steps/sec |
-| Docker Image | ~300MB |
-| K8s Scaling | 3-20 replicas |
-| Memory/Pod | 2-4 GB |
-
----
-
-## 🧪 Testing
+Create `.env` in project root:
 
 ```bash
-# Run all tests
-python -m pytest tests/ -v
+# Database
+DATABASE_URL=postgresql://turbo:turbo_secret@localhost:5432/turbo_cdi
+POSTGRES_USER=turbo
+POSTGRES_PASSWORD=turbo_secret
+POSTGRES_DB=turbo_cdi
 
-# Run specific pattern tests
-python -m pytest tests/test_v6_patterns.py -v
+# Security
+JWT_SECRET=your-64-char-hex-secret
+API_KEY=your-32-char-api-key
 
-# API test
-python -c "
-from v6.engine.src.api import app
-from fastapi.testclient import TestClient
-client = TestClient(app)
-print(client.get('/health').json())
-"
+# AI Providers
+OPENROUTER_API_KEY=sk-or-...
+GROQ_API_KEY=gsk_...
+XAI_API_KEY=xai-...
+MISTRAL_API_KEY=...
 ```
 
 ---
 
-## 📖 Documentation
+## Architecture
 
-- `docs/V6_FINAL_COMPLETION.md` - Complete project summary
-- `docs/V6_PATTERNS_IMPLEMENTATION.md` - Pattern library details
-- `docs/V6_INTEGRATION_PHASE3.md` - API integration guide
+See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for detailed system design, data flow diagrams, and component descriptions.
 
 ---
 
-## 🛠️ Tech Stack
+## License
 
-**Frontend:**
-- React + TypeScript
-- SVG Canvas (custom)
-
-**Backend:**
-- Python 3.11
-- FastAPI
-- NumPy / SciPy
-- WebSocket
-
-**Deployment:**
-- Docker
-- Kubernetes
-- Horizontal Pod Autoscaler
-
----
-
-## 🎯 Roadmap
-
-**v6.1:**
-- [ ] GPU acceleration
-- [ ] More patterns (FEM, CFD)
-- [ ] Real-time collaboration
-
-**v6.2:**
-- [ ] Cloud deployment templates
-- [ ] Plugin marketplace
-- [ ] SaaS offering
-
----
-
-## 📜 License
-
-MIT License - TURBO-CDI Team 2026
-
----
-
-**Status: PRODUCTION READY** 🚀
-
-Built with ❤️ for scientific discovery.
+MIT License — TURBO-CDI Team 2026

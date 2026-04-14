@@ -1,370 +1,313 @@
-# TURBO-CDI v6.0 "Prometheus" Architecture
+# TURBO-CDI v8.4 "Prometheus" Architecture
 
-**Version:** 6.0.0  
+**Version:** 8.4.0  
 **Code Name:** Prometheus  
-**Last Updated:** 2026-04-11
+**Last Updated:** 2026-04-14
 
 ---
 
 ## Executive Summary
 
-TURBO-CDI v6.0 is a **production-grade Meta-Simulation Engine** that combines interactive visualization, multi-domain simulation patterns, genetic evolution, and formal validation hierarchy. Built for researchers who need to simulate, validate, and evolve complex hypotheses.
+TURBO-CDI v8.4 is an **enterprise multi-agent AI platform** for scientific discovery. It unifies a C4³ cognitive engine, 100+ v6 simulation patterns, an autonomous discovery agent, JWT-authenticated REST API, and a Ghost in the Shell-themed web UI. The platform is deployed **exclusively via Docker Compose**.
 
 ---
 
-## System Architecture (v6.0)
+## System Architecture (v8.4)
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                        VISUAL LAYER (Canvas)                            │
+│                     CLIENT LAYER                                        │
 ├─────────────────────────────────────────────────────────────────────────┤
-│  React + TypeScript         │  Real-time Updates     │  Export          │
-│  • C4 Visual Map (3D)       │  • WebSocket /ws       │  • PNG/SVG/PDF   │
-│  • Architecture Diagrams    │  • Progress streaming  │  • JSON/Report   │
-│  • Small Multiples          │  • Metrics updates     │  • Mermaid/UML   │
-│  • Interactive Controls     │  • Phase transitions   │                  │
+│  Web UI (Russian)              │  CLI Tool            │  External Apps  │
+│  ──────────────────────────    │  ─────────────────   │  ─────────────  │
+│  • Ghost in the Shell theme    │  • discover          │  • Jupyter      │
+│  • Pattern browser & runner    │  • patterns list/run │  • Postman      │
+│  • C4³ ASCII visualization     │  • solve / validate  │  • Custom bots  │
+│  • Three.js C4 cube            │                      │                 │
+│  Files: index.html / main.css  │                      │                 │
+│         / app.js               │                      │                 │
 └─────────────────────────────────────────────────────────────────────────┘
                                     │
                                     │ HTTP / WebSocket
                                     ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                        API LAYER (FastAPI)                              │
+│                     API GATEWAY (nginx + FastAPI)                       │
 ├─────────────────────────────────────────────────────────────────────────┤
-│  REST Endpoints              │  WebSocket Bridge      │  Health          │
-│  • GET /patterns             │  • start_simulation    │  • /health       │
-│  • POST /simulate            │  • stop_simulation     │  • /metrics      │
-│  • POST /validate            │  • progress updates    │                  │
-│  • GET /status/{id}          │  • completion events   │                  │
-├─────────────────────────────────────────────────────────────────────────┤
-│  CORS → Rate Limit → Cache → Engine → Response                         │
+│  nginx (port 3000)            │  FastAPI (port 8000)                     │
+│  ────────────────             │  ───────────────────                     │
+│  • Serve static web/          │  • Auth (JWT + bcrypt)                   │
+│  • Reverse proxy /api         │  • Discovery (/discover)                 │
+│  • Disable cache (dev)        │  • Patterns (/patterns/*)                │
+│                               │  • Search (/search/papers)               │
+│                               │  • WebSocket (/ws/{id})                  │
+│                               │  • Health / Metrics                      │
 └─────────────────────────────────────────────────────────────────────────┘
                                     │
                                     ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                     META-SIMULATION ENGINE                              │
+│                     SERVICE LAYER                                       │
 ├─────────────────────────────────────────────────────────────────────────┤
-│                                                                         │
-│  ┌─────────────────────────────────────────────────────────────────┐   │
-│  │                    SIMULATION PATTERNS (4)                       │   │
-│  │  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌───────────┐  │   │
-│  │  │Monte Carlo  │ │Agent-Based  │ │System Dyn.  │ │Circuit    │  │   │
-│  │  │─────────────│ │─────────────│ │─────────────│ │───────────│  │   │
-│  │  │• Stratified │ │• 5 behaviors│ │• ODE solvers│ │• SPICE    │  │   │
-│  │  │• Importance │ │• Networks   │ │• SIR models │ │• RC/RLC   │  │   │
-│  │  │• Sobol seq. │ │• Emergence  │ │• Chaos det. │ │• MC toler.│  │   │
-│  │  │• Variance ↓ │ │• Gini coeff │ │• Stability  │ │• Filters  │  │   │
-│  │  └─────────────┘ └─────────────┘ └─────────────┘ └───────────┘  │   │
-│  └─────────────────────────────────────────────────────────────────┘   │
-│                                                                         │
-│  ┌────────────────────────┐  ┌───────────────────────────────────────┐ │
-│  │   EVOLUTION ENGINE     │  │      VALIDATION HIERARCHY             │ │
-│  │   (NSGA-II)            │  │      (Dijkstra's 5 Levels)            │ │
-│  │  ┌──────────────────┐  │  │  ┌─────────────────────────────────┐  │ │
-│  │  │• Multi-objective │  │  │  │ L0: Formal (Agda/Coq)          │  │ │
-│  │  │• Novelty search  │  │  │  │ L1: Model Check (TLA+)         │  │ │
-│  │  │• Genetic ops     │  │  │  │ L2: Property Test (Hypothesis) │  │ │
-│  │  │• Pareto front    │  │  │  │ L3: Monte Carlo                │  │ │
-│  │  └──────────────────┘  │  │  │ L4: Empirical                  │  │ │
-│  └────────────────────────┘  │  └─────────────────────────────────┘  │ │
-│                              └───────────────────────────────────────┘ │
-│                                                                         │
-│  ┌─────────────────────────────────────────────────────────────────┐   │
-│  │                    PATTERN REGISTRY                              │   │
-│  │  Auto-discovery via @simulation_pattern decorator               │   │
-│  │  Composable patterns (Alexander's Pattern Language)             │   │
-│  └─────────────────────────────────────────────────────────────────┘   │
-│                                                                         │
+│  AuthManager                  │  RateLimiter         │  CacheManager    │
+│  ───────────                  │  ───────────         │  ───────────     │
+│  • bcrypt hash/verify         │  • Per-user limits   │  • Redis backend │
+│  • JWT encode/decode          │  • Tier-based rules  │  • TTL caching   │
+│  • PostgreSQL users table     │                      │                  │
+├─────────────────────────────────────────────────────────────────────────┤
+│  Discovery Agent              │  One-Shot Solver     │  Pattern Runner  │
+│  ───────────────              │  ───────────────     │  ─────────────   │
+│  • C4+TRIZ generation         │  • Literature search │  • 100 patterns  │
+│  • Cross-domain analogies     │  • Consensus meter   │  • Auto-match    │
+│  • Falsifiability scoring     │  • Pattern sim       │  • Async run     │
 └─────────────────────────────────────────────────────────────────────────┘
                                     │
                                     ▼
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                    DEPLOYMENT LAYER                                     │
+│                     DATA & INFRASTRUCTURE LAYER                        │
 ├─────────────────────────────────────────────────────────────────────────┤
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────────────┐  │
-│  │   Docker     │  │  Kubernetes  │  │      Resources               │  │
-│  │  ──────────  │  │  ──────────  │  │  ─────────────────────────   │  │
-│  │• Dockerfile  │  │• Deployment  │  │  • 2-4 CPU cores/pod         │  │
-│  │• Compose     │  │• Service/LB  │  │  • 2-4 GB RAM/pod            │  │
-│  │• Healthcheck │  │• HPA (3-20)  │  │  • Auto-scaling on CPU/mem   │  │
-│  │• Redis cache │  │• Ingress     │  │  • Persistent storage 10GB   │  │
-│  └──────────────┘  └──────────────┘  └──────────────────────────────┘  │
+│  PostgreSQL 15                │  Redis 7             │  Docker Volumes  │
+│  ───────────                  │  ───────             │  ─────────────   │
+│  • users                      │  • Session cache     │  • postgres_data │
+│  • discoveries                │  • Result cache      │  • redis_data    │
+│  • hypotheses                 │  • Rate limit counters                  │
+│  • api_logs                   │                                          │
+│  Init: migrations/init.sql    │                                          │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## What Are Simulation Patterns?
+## v6 Pattern Integration
 
-### Concept: Pattern Language (Christopher Alexander)
+### What Changed in v8.4
 
-Patterns are **reusable solutions** to recurring problems in a context. Each pattern has:
-- **Context** - When to apply (via `can_simulate()`)
-- **Forces** - Trade-offs considered
-- **Solution** - Implementation (via `run()`)
+The orphaned v6 engine (`/Users/figuramax/LocalProjects/v6/`) contained **104 scientific simulation pattern files** (~57,000 lines). In v8.4:
 
-### Why 4 Patterns?
+1. **All patterns were copied** into `src/patterns/v6_legacy/`
+2. **A compatibility bridge** (`src/patterns/core.py`) was created to normalize `SimulationPattern`/`BasePattern`/`Hypothesis`/`SimulationResult` between v6 and v8
+3. **A unified runner** (`src/patterns/runner.py`) dynamically discovers and executes all patterns
+4. **100 patterns load and run successfully** via the API
 
-These 4 patterns cover **80%+ of scientific simulation needs**:
+### Pattern Categories
 
-| # | Pattern | Domain | Use Cases | Why Included |
-|---|---------|--------|-----------|--------------|
-| 1 | **Monte Carlo** | Stochastic | Risk, uncertainty, probabilistic systems | Most common statistical method |
-| 2 | **Agent-Based** | Agent | Social dynamics, markets, epidemics | Emergent behavior modeling |
-| 3 | **System Dynamics** | Differential | Populations, feedback loops, physics | Continuous system modeling |
-| 4 | **Circuit** | Physical | Electronics, sensors, signal processing | Hardware design validation |
+```
+Physics         → CFD, Maxwell FDTD, N-body gravity, Quantum circuits,
+                  Thermal, Elasticity 3D, Acoustic waves, Plasma PIC
+Biology         → Neural network, Connectome, Epidemic SEIR, Protein folding,
+                  Enzyme kinetics, Gene regulatory, Synaptic plasticity
+Economics       → DSGE, GARCH, Game theory, Portfolio optimization,
+                  Supply chain, Input-output, Market microstructure
+Engineering     → FEM, MPC, Kalman filter, SLAM, Circuit simulation,
+                  PID tuning, Inverse kinematics, Composite mechanics
+Earth Science   → Climate GCM, Ocean circulation, Seismic waves, Wildfire,
+                  Air quality, Biogeochemistry, Land surface
+Social Science  → Social network, Opinion dynamics, Conflict, Urban growth,
+                  Migration, Cultural diffusion, Language evolution
+```
 
-### Pattern Composition
+### Pattern Execution Flow
 
-Patterns can be **composed** for complex simulations:
-```python
-# Example: Epidemic with uncertainty
-# Agent-Based (spread) + Monte Carlo (parameter uncertainty)
-
-result = await engine.simulate(
-    hypothesis,
-    pattern_ids=['agent_based', 'monte_carlo']
-)
+```
+User Request
+    │
+    ▼
+┌─────────────────────────────────────┐
+│  POST /patterns/{id}/run            │
+│  or POST /discover (auto-matched)   │
+└─────────────┬───────────────────────┘
+              │
+              ▼
+┌─────────────────────────────────────┐
+│  PatternRunner.get_runner()         │
+│  • Lazy load module                 │
+│  • Instantiate pattern class        │
+│  • Build Hypothesis dataclass       │
+│  • Detect config signature          │
+│  • Call pattern.run()               │
+└─────────────┬───────────────────────┘
+              │
+              ▼
+┌─────────────────────────────────────┐
+│  SimulationResult                   │
+│  • metrics (dict)                   │
+│  • confidence_score                 │
+│  • execution_time                   │
+│  • status (completed/failed)        │
+└─────────────────────────────────────┘
 ```
 
 ---
 
-## Module Structure (v6.0)
+## Discovery Data Flow
+
+```
+POST /discover
+    │
+    ▼
+┌─────────────────────────────────────────────────────────────┐
+│  1. AUTH & RATE LIMIT                                       │
+│     JWT validation → tier check → allow/deny                │
+└─────────────────────────────────────────────────────────────┘
+    │
+    ▼
+┌─────────────────────────────────────────────────────────────┐
+│  2. LITERATURE SEARCH (Semantic Scholar)                    │
+│     Query problem → fetch papers → rank by citations        │
+└─────────────────────────────────────────────────────────────┘
+    │
+    ▼
+┌─────────────────────────────────────────────────────────────┐
+│  3. CONSENSUS ANALYSIS                                      │
+│     Classify evidence → calculate consensus score           │
+└─────────────────────────────────────────────────────────────┘
+    │
+    ▼
+┌─────────────────────────────────────────────────────────────┐
+│  4. HYPOTHESIS GENERATION                                   │
+│     C4+TRIZ path → cross-domain analogies → hybrid merge    │
+└─────────────────────────────────────────────────────────────┘
+    │
+    ▼
+┌─────────────────────────────────────────────────────────────┐
+│  5. PATTERN SIMULATION (v6 integration)                     │
+│     Match keyword → run pattern → blend confidence          │
+└─────────────────────────────────────────────────────────────┘
+    │
+    ▼
+┌─────────────────────────────────────────────────────────────┐
+│  6. VALIDATION PLANNING                                     │
+│     Generate falsifiability criteria + cost estimates       │
+└─────────────────────────────────────────────────────────────┘
+    │
+    ▼
+┌─────────────────────────────────────────────────────────────┐
+│  7. SAVE & CACHE                                            │
+│     PostgreSQL persistence → Redis cache (TTL 1h)           │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Module Structure (v8.4)
 
 ```
 TURBO-CDI/
-├── v6/
-│   ├── canvas/                          # Interactive Visualization
-│   │   └── src/
-│   │       ├── components/
-│   │       │   ├── Canvas.tsx           # Base SVG canvas
-│   │       │   ├── C4VisualMap.tsx      # 3D isometric C4 grid
-│   │       │   ├── ArchitectureDiagram.tsx  # Auto-generated diagrams
-│   │       │   └── SmallMultiples.tsx   # Simulation comparison
-│   │       ├── utils/
-│   │       │   └── export.ts            # PNG/SVG/PDF/JSON export
-│   │       └── types/
-│   │           └── index.ts             # TypeScript definitions
+├── web/                              # Ghost in the Shell UI
+│   ├── index.html                    # Structure (Russian)
+│   ├── css/
+│   │   ├── main.css                  # All styles
+│   │   ├── ghost-terminal.css        # Matrix / terminal fx
+│   │   └── c4-design-system.css      # Design tokens
+│   └── js/
+│       ├── app.js                    # Logic + pattern launcher
+│       ├── c4-cube.js                # Three.js 3D cube
+│       ├── liquid-animator.js        # Transitions
+│       └── turbo-websocket.js        # WS client
+│
+├── src/
+│   ├── api/                          # FastAPI production server
+│   │   ├── server.py                 # Main API app
+│   │   ├── auth.py                   # JWT + bcrypt
+│   │   ├── database.py               # Async PostgreSQL
+│   │   ├── cache.py                  # Redis manager
+│   │   ├── rate_limiter.py           # Request throttling
+│   │   ├── models.py                 # Pydantic schemas
+│   │   └── websocket.py              # Connection manager
 │   │
-│   └── engine/                          # Python Simulation Engine
-│       └── src/
-│           ├── api/                     # FastAPI + WebSocket
-│           │   ├── server.py            # HTTP endpoints
-│           │   ├── bridge.py            # WebSocket bridge
-│           │   └── __init__.py
-│           │
-│           ├── patterns/                # Simulation Patterns (4)
-│           │   ├── __init__.py          # Pattern registry
-│           │   ├── monte_carlo.py       # Stochastic simulation
-│           │   ├── agent_based.py       # Multi-agent systems
-│           │   ├── system_dynamics.py   # ODE/continuous
-│           │   └── circuit_simulation.py # Electrical circuits
-│           │
-│           ├── evolution/               # Genetic Algorithms
-│           │   └── engine.py            # NSGA-II implementation
-│           │
-│           ├── validation/              # Validation Hierarchy
-│           │   └── hierarchy.py         # 5-level validation
-│           │
-│           ├── backends/                # Formal Methods (stubs)
-│           │   ├── agda_stub.py         # Agda proof assistant
-│           │   └── tla_stub.py          # TLA+ model checker
-│           │
-│           ├── core.py                  # Core engine + registry
-│           └── __init__.py              # Main exports
+│   ├── patterns/                     # v6 integration
+│   │   ├── core.py                   # Compatibility bridge
+│   │   ├── runner.py                 # Unified execution API
+│   │   └── v6_legacy/                # 100 pattern modules
+│   │       ├── cfd.py
+│   │       ├── monte_carlo.py
+│   │       ├── agent_based.py
+│   │       ├── quantum.py
+│   │       ├── neural_network.py
+│   │       └── ... (100 total)
+│   │
+│   ├── agent/                        # Discovery agent
+│   │   └── discovery_agent.py        # C4+TRIZ+Analogy pipeline
+│   │
+│   ├── solver/                       # One-shot solver
+│   │   └── one_shot.py               # Full cycle + pattern sim
+│   │
+│   ├── validation/                   # Scientific validation
+│   │   ├── consensus_meter.py        # Evidence scoring
+│   │   └── tracker.py                # Experiment lifecycle
+│   │
+│   ├── search/                       # Literature search
+│   │   └── semantic_scholar.py       # Academic paper client
+│   │
+│   ├── graph/                        # Knowledge graph
+│   │   └── knowledge_graph.py        # NetworkX backend
+│   │
+│   ├── analogy/                      # Cross-domain reasoning
+│   │   └── engine.py                 # TF-IDF / Word2Vec
+│   │
+│   ├── triz/                         # TRIZ bridge
+│   │   └── bridge.py                 # C4-TRIZ mappings
+│   │
+│   └── cli.py                        # Command-line interface
 │
-├── k8s/                                 # Kubernetes Manifests
-│   ├── namespace.yaml
-│   ├── deployment.yaml                  # 3-20 replicas
-│   ├── service.yaml                     # LoadBalancer
-│   ├── hpa.yaml                         # Auto-scaling
-│   └── deploy.sh                        # One-command deploy
+├── migrations/
+│   └── init.sql                      # DB schema (users, discoveries, hypotheses)
 │
-├── docs/                                # Documentation
-│   ├── V6_FINAL_COMPLETION.md           # Complete summary
-│   ├── V6_PATTERNS_IMPLEMENTATION.md    # Pattern details
-│   ├── V6_INTEGRATION_PHASE3.md         # API guide
-│   └── ARCHITECTURE.md                  # This file
+├── archive/                          # Historical reports
+│   └── v8-reports/                   # Moved v8 MD files
 │
-├── Dockerfile                           # Multi-stage build
-├── docker-compose.yml                   # Local development
-├── server.py                            # Startup script
-└── README.md                            # Main documentation
+├── docker-compose.yml                # 4-service orchestration
+├── Dockerfile.simple                 # API container build
+├── nginx.conf                        # Static file server + proxy
+└── docs/
+    └── ARCHITECTURE.md               # This file
 ```
 
 ---
 
-## Data Flow
-
-### 1. Simulation Flow
+## Authentication Flow
 
 ```
-User (Canvas)
-    │
-    │ POST /simulate
-    ▼
-┌─────────────────┐
-│  FastAPI Server │
-│  • Validate     │
-│  • Route        │
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────────────────────────────────────────────┐
-│              META-SIMULATION ENGINE                     │
-│  ┌──────────────────────────────────────────────────┐   │
-│  │  1. SELECT PATTERN                               │   │
-│  │     registry.find_compatible(hypothesis)         │   │
-│  └────────────────────────┬─────────────────────────┘   │
-│                           │                             │
-│  ┌────────────────────────▼─────────────────────────┐   │
-│  │  2. EXECUTE SIMULATION                           │   │
-│  │     pattern.run(hypothesis)                      │   │
-│  │     • Monte Carlo: sampling + variance reduction │   │
-│  │     • Agent-Based: agents + networks + emergence │   │
-│  │     • System Dyn:  ODE solver + stability        │   │
-│  │     • Circuit:     SPICE/fallback analysis       │   │
-│  └────────────────────────┬─────────────────────────┘   │
-│                           │                             │
-│  ┌────────────────────────▼─────────────────────────┐   │
-│  │  3. STREAM PROGRESS (WebSocket)                  │   │
-│  │     bridge.broadcast(progress)                   │   │
-│  └────────────────────────┬─────────────────────────┘   │
-│                           │                             │
-│  ┌────────────────────────▼─────────────────────────┐   │
-│  │  4. RETURN RESULTS                               │   │
-│  │     • metrics (dict)                             │   │
-│  │     • confidence_score (float)                   │   │
-│  │     • logs (list)                                │   │
-│  └──────────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────┘
-         │
-         │ WebSocket update
-         ▼
-┌─────────────────┐
-│  Canvas Update  │
-│  • Progress bar │
-│  • Metrics      │
-│  • Completion   │
-└─────────────────┘
-```
-
-### 2. Evolution Flow
-
-```
-Seed Hypotheses
+POST /auth/register
     │
     ▼
-┌────────────────────────────────────────┐
-│           EVOLUTION ENGINE             │
-│  ┌──────────────────────────────────┐  │
-│  │  NSGA-II Algorithm               │  │
-│  │  • Population: 100 individuals   │  │
-│  │  • Generations: 50               │  │
-│  │  • Objectives: fitness + novelty │  │
-│  │  • Selection: tournament         │  │
-│  │  • Crossover: uniform            │  │
-│  │  • Mutation: gaussian            │  │
-│  └──────────────────────────────────┘  │
-│                   │                    │
-│         ┌─────────┴─────────┐          │
-│         ▼                   ▼          │
-│  ┌─────────────┐     ┌─────────────┐   │
-│  │ Simulation  │     │ Simulation  │   │
-│  │ (parallel)  │     │ (parallel)  │   │
-│  └──────┬──────┘     └──────┬──────┘   │
-│         │                   │          │
-│         └─────────┬─────────┘          │
-│                   ▼                    │
-│  ┌──────────────────────────────────┐  │
-│  │  Non-dominated Sorting (Pareto)  │  │
-│  └──────────────────────────────────┘  │
-│                   │                    │
-│                   ▼                    │
-│  ┌──────────────────────────────────┐  │
-│  │  Return Pareto Frontier          │  │
-│  └──────────────────────────────────┘  │
-└────────────────────────────────────────┘
+┌─────────────────────────────────────┐
+│  AuthManager.hash_password()        │
+│  bcrypt → asyncpg INSERT users      │
+└─────────────────────────────────────┘
+
+POST /auth/login
+    │
+    ▼
+┌─────────────────────────────────────┐
+│  AuthManager.authenticate()         │
+│  Fetch hash → bcrypt.checkpw()      │
+│  Create JWT (HS256, 24h expiry)     │
+└─────────────────────────────────────┘
+
+Authenticated Request
+    │
+    ▼
+┌─────────────────────────────────────┐
+│  get_current_user() dependency      │
+│  Decode JWT → fetch user row        │
+│  Return user dict or 401            │
+└─────────────────────────────────────┘
 ```
 
 ---
 
-## Validation Hierarchy (Dijkstra's Levels)
+## Docker Compose Services
 
-```
-┌────────────────────────────────────────────────────────────┐
-│  L0: FORMAL ★★★★★                                          │
-│  Agda/Coq proofs - Mathematical certainty                  │
-│  Status: Stub (generates proof scripts)                    │
-├────────────────────────────────────────────────────────────┤
-│  L1: MODEL CHECKING ★★★★☆                                  │
-│  TLA+/Alloy - Exhaustive state exploration                 │
-│  Status: Stub (generates TLA+ specs)                       │
-├────────────────────────────────────────────────────────────┤
-│  L2: PROPERTY TESTING ★★★☆☆                                │
-│  Hypothesis/QuickCheck - Randomized testing                │
-│  Status: Planned                                           │
-├────────────────────────────────────────────────────────────┤
-│  L3: MONTE CARLO ★★☆☆☆                                     │
-│  Statistical simulation - Confidence intervals             │
-│  Status: ✅ IMPLEMENTED                                    │
-├────────────────────────────────────────────────────────────┤
-│  L4: EMPIRICAL ★☆☆☆☆                                       │
-│  Real-world experiments - Physical validation              │
-│  Status: Protocol generation                               │
-└────────────────────────────────────────────────────────────┘
-```
+| Service | Image | Port | Purpose |
+|---------|-------|------|---------|
+| **api** | `turbo-cdi-api` (Dockerfile.simple) | 8000 | FastAPI server |
+| **web** | `nginx:alpine` | 3000 | Static Ghost UI |
+| **postgres** | `postgres:15-alpine` | 5432 | User + discovery data |
+| **redis** | `redis:7-alpine` | 6379 | Cache + rate limits |
 
-**Strategy:** Start at highest possible level, escalate if confidence insufficient, stop when threshold met.
-
----
-
-## Deployment Options
-
-### Option 1: Docker Compose (Local Development)
-```bash
-docker-compose up -d
-# Access: http://localhost:8000
-```
-
-### Option 2: Kubernetes (Production)
-```bash
-cd k8s
-./deploy.sh
-# Access: http://turbo-cdi.local (via ingress)
-```
-
-### Option 3: Direct (Development)
-```bash
-python v6/engine/server.py
-# Access: http://localhost:8000
-```
-
----
-
-## Key Design Decisions
-
-### 1. Why Pattern Language?
-- **Composable:** Patterns work together
-- **Extensible:** Easy to add new patterns
-- **Discoverable:** Auto-registration via decorators
-- **Proven:** Christopher Alexander's methodology
-
-### 2. Why 4 Patterns?
-- **Coverage:** 80%+ of scientific simulation needs
-- **Complexity:** Manageable implementation
-- **Performance:** Each optimized for its domain
-- **Extensibility:** Framework ready for more
-
-### 3. Why WebSocket + REST?
-- **REST:** Simple request/response
-- **WebSocket:** Real-time progress for long simulations
-- **Best of both:** Flexibility for different use cases
-
-### 4. Why NSGA-II for Evolution?
-- **Multi-objective:** Fitness + novelty
-- **Proven:** Industry standard genetic algorithm
-- **Efficient:** O(MN²) complexity
-- **Diverse:** Pareto frontier, not single solution
+### Health Checks
+- API: `curl -f http://localhost:8000/health`
+- PostgreSQL: `pg_isready`
+- Redis: `redis-cli ping`
 
 ---
 
@@ -372,115 +315,67 @@ python v6/engine/server.py
 
 | Metric | Value | Notes |
 |--------|-------|-------|
-| API Response (health) | <100ms | Lightweight endpoint |
-| Pattern Registration | O(n) | n = number of patterns |
-| Monte Carlo (10k samples) | ~2s | Stratified sampling |
-| Agent-Based (100 agents, 1k steps) | ~5s | Grid network |
-| System Dynamics (100 time steps) | ~500ms | RK45 solver |
-| Circuit Analysis | ~100ms | Analytical fallback |
-| Evolution (50 gen × 100 pop) | ~2min | Parallel evaluation |
-| Docker Image Size | ~300MB | Python 3.11 slim |
-| K8s Pod Startup | ~5s | Cold start |
-| Auto-scaling | 30s | HPA reaction time |
+| API cold start | ~3s | Python 3.11 + pattern discovery |
+| Health check | <50ms | Lightweight DB ping |
+| Pattern list | ~100ms | 100 modules already loaded |
+| CFD simulation (50×50) | ~700ms | Potential flow solver |
+| Agent-Based (100 agents, 1k steps) | ~300ms | Simplified ABM |
+| Full discovery cycle | 2–10s | Depends on literature search |
+| Docker image size | ~350MB | scipy + numpy + asyncpg |
+
+---
+
+## Security Model
+
+| Layer | Implementation |
+|-------|----------------|
+| **Transport** | HTTPS recommended in production (nginx TLS) |
+| **Authentication** | JWT (HS256), 24h expiration |
+| **Passwords** | bcrypt with auto salt |
+| **Rate Limiting** | Per-user request windows (Redis-backed) |
+| **Input Validation** | Pydantic v2 models on all endpoints |
+| **SQL Safety** | asyncpg parameterized queries |
+| **Secrets** | `.env` excluded from git via `.gitignore` |
 
 ---
 
 ## Scaling Strategy
 
-### Horizontal (API + Engine)
-```
-┌─────────────────────────────────────────────────────────┐
-│  Load Balancer (nginx/traefik)                          │
-└─────────────┬─────────────────────────┬─────────────────┘
-              │                         │
-    ┌─────────▼────────┐    ┌──────────▼────────┐
-    │  Pod 1           │    │  Pod 2            │
-    │  • FastAPI       │    │  • FastAPI        │
-    │  • Patterns      │    │  • Patterns       │
-    │  • State: local  │    │  • State: local   │
-    └──────────────────┘    └───────────────────┘
-```
+### Current: Single Node Docker Compose
+Suitable for local development and small teams.
 
-### Vertical (Within Pod)
-- CPU: 2-4 cores per pod
-- Memory: 2-4 GB per pod
-- Simulations: Parallel batch processing
-
-### Future: Distributed
-- MPI for cross-pod simulation
-- Redis for shared state
-- Celery for task queue
-
----
-
-## Security Considerations
-
-### Current
-- CORS configured
-- No auth (development mode)
-
-### Production Additions
-```yaml
-# TODO: Add to deployment
-- JWT authentication
-- API key management
-- Rate limiting (per user)
-- Request validation (Pydantic)
-- SQL injection prevention
-- XSS protection
-```
-
----
-
-## Monitoring & Observability
-
-### Metrics to Track
-- API request rate/latency
-- Simulation queue depth
-- Pattern utilization
-- Error rate by pattern
-- WebSocket connection count
-- Resource usage (CPU/memory)
-
-### Logging
-- Structured JSON logs
-- Correlation IDs
-- Simulation lifecycle events
-- Error stack traces
-
-### Alerts
-- Error rate > 1%
-- Latency > 2s
-- Queue depth > 100
-- Memory usage > 90%
+### Future: Kubernetes
+- Horizontal Pod Autoscaling (3–20 replicas)
+- Shared PostgreSQL + Redis cluster
+- Celery task queue for long-running pattern simulations
+- GPU nodes for CUDA-accelerated patterns
 
 ---
 
 ## Roadmap
 
-### v6.1 (Near-term)
-- [ ] GPU acceleration (CUDA)
-- [ ] Additional patterns (FEM, CFD)
-- [ ] Real-time collaboration
-- [ ] WebSocket reconnection
+### v8.5 (Near-term)
+- [ ] Web UI dark-mode toggle independent of Ghost theme
+- [ ] Pattern parameter forms (auto-generated from pattern metadata)
+- [ ] Discovery result visualization charts
+- [ ] Export discoveries to PDF/JSON from web UI
 
-### v6.2 (Mid-term)
-- [ ] Full Agda integration
-- [ ] Full TLA+ integration
-- [ ] Cloud templates (AWS/GCP/Azure)
-- [ ] Plugin marketplace
+### v9.0 (Mid-term)
+- [ ] Multi-user collaboration on discoveries
+- [ ] Real-time WebSocket pattern progress bars
+- [ ] Plugin system for custom patterns
+- [ ] Cloud deployment templates (AWS/GCP)
 
-### v6.3 (Long-term)
-- [ ] Auto-experiment design
-- [ ] Lab equipment integration
-- [ ] Federated learning
-- [ ] SaaS offering
+### v10.0 (Long-term)
+- [ ] Auto-experiment design from validated hypotheses
+- [ ] Integration with lab equipment APIs
+- [ ] Federated discovery across institutions
 
 ---
 
 ## License
 
-MIT License - TURBO-CDI Team 2026
+MIT License — TURBO-CDI Team 2026
 
 ---
 

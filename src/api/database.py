@@ -99,12 +99,26 @@ class Database:
         async with self.pool.acquire() as conn:
             rows = await conn.fetch(
                 """
-                SELECT * FROM discoveries 
-                WHERE user_id = $1 
+                SELECT * FROM discoveries
+                WHERE user_id = $1
                 ORDER BY created_at DESC
                 OFFSET $2 LIMIT $3
                 """,
                 user_id,
+                skip,
+                limit,
+            )
+            return [dict(r) for r in rows]
+
+    async def get_all_discoveries(self, skip: int, limit: int) -> List[Dict]:
+        """Get all discoveries (for unauthenticated access)."""
+        async with self.pool.acquire() as conn:
+            rows = await conn.fetch(
+                """
+                SELECT * FROM discoveries
+                ORDER BY created_at DESC
+                OFFSET $1 LIMIT $2
+                """,
                 skip,
                 limit,
             )

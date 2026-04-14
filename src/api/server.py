@@ -46,7 +46,7 @@ from src.patterns.runner import get_runner as get_pattern_runner
 
 
 # Security
-security = HTTPBearer()
+security = HTTPBearer(auto_error=False)
 
 # Connection manager for WebSockets
 ws_manager = ConnectionManager()
@@ -106,6 +106,15 @@ async def get_current_user(
             detail="Invalid authentication credentials",
         )
     return user
+
+
+async def get_current_user_optional(
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
+) -> Optional[dict]:
+    """Optional JWT validation — returns user if token is valid, else None."""
+    if not credentials:
+        return None
+    return await auth_manager.get_user_from_token(credentials.credentials)
 
 
 async def check_rate_limit(user: dict = Depends(get_current_user)):
@@ -187,6 +196,26 @@ async def login(credentials: UserCreate):
     return TokenResponse(access_token=token, token_type="bearer")
 
 
+@app.post("/settings/keys")
+async def update_api_keys(payload: dict):
+    """Update runtime API keys."""
+    openrouter_key = payload.get("openrouter_api_key")
+    if openrouter_key is not None:
+        os.environ["OPENROUTER_API_KEY"] = str(openrouter_key)
+        # Also update any already-imported LLM clients that read env lazily
+        try:
+            from src.llm.client import LLMClient
+
+            if hasattr(LLMClient, "_global_api_key"):
+                LLMClient._global_api_key = str(openrouter_key)
+        except Exception:
+            pass
+    return {
+        "status": "ok",
+        "keys_updated": ["openrouter_api_key"] if openrouter_key is not None else [],
+    }
+
+
 # ═══════════════════════════════════════════════════════════════════
 # DISCOVERY ENDPOINTS
 # ═══════════════════════════════════════════════════════════════════
@@ -194,7 +223,7 @@ async def login(credentials: UserCreate):
 
 @app.post("/discover", response_model=DiscoveryResponse)
 async def create_discovery(
-    request: DiscoveryRequest, user: dict = Depends(check_rate_limit)
+    request: DiscoveryRequest, user: Optional[dict] = Depends(get_current_user_optional)
 ):
     """Create new scientific discovery."""
     # Check cache
@@ -213,7 +242,9 @@ async def create_discovery(
 
     # Save to database
     db = await get_db()
-    discovery_id = await db.save_discovery(result, user_id=user["id"])
+    discovery_id = await db.save_discovery(
+        result, user_id=(user["id"] if user else None)
+    )
 
     response = DiscoveryResponse(
         id=discovery_id,
@@ -246,19 +277,28 @@ async def create_discovery(
 
 @app.get("/discoveries", response_model=List[DiscoveryResponse])
 async def list_discoveries(
-    skip: int = 0, limit: int = 20, user: dict = Depends(get_current_user)
+    skip: int = 0,
+    limit: int = 20,
+    user: Optional[dict] = Depends(get_current_user_optional),
 ):
-    """List user's discoveries."""
+    """List discoveries."""
     db = await get_db()
-    discoveries = await db.get_user_discoveries(user["id"], skip, limit)
+    if user:
+        discoveries = await db.get_user_discoveries(user["id"], skip, limit)
+    else:
+        discoveries = await db.get_all_discoveries(skip, limit)
     return discoveries
 
 
 @app.get("/discoveries/{discovery_id}", response_model=DiscoveryResponse)
-async def get_discovery(discovery_id: str, user: dict = Depends(get_current_user)):
+async def get_discovery(
+    discovery_id: str, user: Optional[dict] = Depends(get_current_user_optional)
+):
     """Get specific discovery."""
     db = await get_db()
-    discovery = await db.get_discovery(discovery_id, user_id=user["id"])
+    discovery = await db.get_discovery(
+        discovery_id, user_id=(user["id"] if user else None)
+    )
 
     if not discovery:
         raise HTTPException(status_code=404, detail="Discovery not found")

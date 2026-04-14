@@ -23,94 +23,146 @@ app.add_middleware(
 )
 
 
-# Root endpoint - serve the web interface
-@app.get("/", response_class=HTMLResponse)
+import os
+import glob
+
+
+# Root endpoint - API info
+@app.get("/")
 async def root():
-    """Main web interface"""
-    return """
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>TURBO-CDI v8.4</title>
-        <style>
-            body {
-                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-                margin: 0;
-                padding: 0;
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                min-height: 100vh;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                color: white;
-            }
-            .container {
-                text-align: center;
-                max-width: 800px;
-                padding: 40px;
-                background: rgba(255, 255, 255, 0.1);
-                border-radius: 20px;
-                backdrop-filter: blur(10px);
-                box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
-            }
-            h1 {
-                font-size: 3em;
-                margin-bottom: 20px;
-                text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-            }
-            .subtitle {
-                font-size: 1.2em;
-                margin-bottom: 30px;
-                opacity: 0.9;
-            }
-            .links {
-                display: flex;
-                gap: 20px;
-                justify-content: center;
-                flex-wrap: wrap;
-            }
-            a {
-                color: white;
-                text-decoration: none;
-                padding: 12px 24px;
-                background: rgba(255, 255, 255, 0.2);
-                border-radius: 10px;
-                transition: all 0.3s ease;
-                border: 1px solid rgba(255, 255, 255, 0.3);
-            }
-            a:hover {
-                background: rgba(255, 255, 255, 0.3);
-                transform: translateY(-2px);
-                box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            }
-            .status {
-                margin-top: 30px;
-                padding: 20px;
-                background: rgba(0, 255, 0, 0.2);
-                border-radius: 10px;
-            }
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <h1>⚡ TURBO-CDI v8.4</h1>
-            <div class="subtitle">Enterprise Multi-Agent AI Platform</div>
-            <div class="status">
-                <strong>✅ System Status: OPERATIONAL</strong><br>
-                All services running • AI models loaded • Database connected
-            </div>
-            <div class="links">
-                <a href="/docs">📚 API Docs</a>
-                <a href="/health">🏥 Health Check</a>
-                <a href="/ai/status">🤖 AI Models</a>
-                <a href="/discovery/status">🔍 Discovery Engine</a>
-            </div>
-        </div>
-    </body>
-    </html>
-    """
+    """API root - web interface served by nginx"""
+    return {
+        "name": "TURBO-CDI v8.4",
+        "description": "Enterprise Multi-Agent AI Platform",
+        "web_ui": "http://localhost:3000",
+        "docs": "/docs",
+        "health": "/health",
+    }
+
+
+# V6 Patterns integration
+@app.get("/patterns")
+async def list_patterns():
+    """List available scientific patterns from v6 engine"""
+    patterns_dir = "/app/src/patterns/v6_legacy"
+    if not os.path.exists(patterns_dir):
+        return {"patterns": [], "count": 0, "version": "v6.5"}
+
+    pattern_files = [
+        f.replace(".py", "")
+        for f in os.listdir(patterns_dir)
+        if f.endswith(".py")
+        and not f.startswith("_")
+        and f not in ["base.py", "loader.py"]
+    ]
+
+    return {
+        "patterns": sorted(pattern_files),
+        "count": len(pattern_files),
+        "version": "v6.5",
+        "categories": {
+            "physics": [
+                p
+                for p in pattern_files
+                if any(
+                    x in p
+                    for x in [
+                        "cfd",
+                        "fdtd",
+                        "maxwell",
+                        "n_body",
+                        "plasma",
+                        "quantum",
+                        "wave",
+                        "thermal",
+                        "elasticity",
+                        "acoustic",
+                    ]
+                )
+            ],
+            "biology": [
+                p
+                for p in pattern_files
+                if any(
+                    x in p
+                    for x in [
+                        "neural",
+                        "gene",
+                        "epidemic",
+                        "enzyme",
+                        "protein",
+                        "connectome",
+                        "evolutionary",
+                        "synaptic",
+                        "signal",
+                    ]
+                )
+            ],
+            "economics": [
+                p
+                for p in pattern_files
+                if any(
+                    x in p
+                    for x in [
+                        "dsge",
+                        "garch",
+                        "game_theory",
+                        "portfolio",
+                        "credit",
+                        "supply_chain",
+                    ]
+                )
+            ],
+            "earth_science": [
+                p
+                for p in pattern_files
+                if any(
+                    x in p
+                    for x in [
+                        "climate",
+                        "ocean",
+                        "seismic",
+                        "wildfire",
+                        "air_quality",
+                        "biogeochemistry",
+                        "cloud",
+                    ]
+                )
+            ],
+            "engineering": [
+                p
+                for p in pattern_files
+                if any(
+                    x in p
+                    for x in [
+                        "mpc",
+                        "kalman",
+                        "slam",
+                        "path_planning",
+                        "pid",
+                        "circuit",
+                        "composite",
+                        "crystal",
+                    ]
+                )
+            ],
+            "social": [
+                p
+                for p in pattern_files
+                if any(
+                    x in p
+                    for x in [
+                        "social_network",
+                        "opinion",
+                        "cultural",
+                        "migration",
+                        "urban",
+                        "conflict",
+                    ]
+                )
+            ],
+        },
+    }
 
 
 # Health check endpoint

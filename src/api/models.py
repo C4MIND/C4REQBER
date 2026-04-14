@@ -72,6 +72,7 @@ class HypothesisResponse(BaseModel):
     method: str
     c4_path: List[str]
     triz_principles: List[int]
+    simulation: Optional[Dict[str, Any]] = None
 
 
 class DiscoveryResponse(BaseModel):

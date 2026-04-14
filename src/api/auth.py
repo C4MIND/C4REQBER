@@ -31,7 +31,7 @@ class AuthManager:
     def create_token(self, user_id: str) -> str:
         """Create JWT token."""
         payload = {
-            "user_id": user_id,
+            "user_id": str(user_id),
             "exp": datetime.utcnow() + timedelta(hours=self.token_expire_hours),
             "iat": datetime.utcnow(),
         }

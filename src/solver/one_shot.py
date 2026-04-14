@@ -142,6 +142,24 @@ class OneShotSolver:
                 result.top_hypothesis = hypotheses[0]
             progress.update(task3, completed=100)
 
+            # Phase 3b: Pattern Simulation (v6 integration)
+            if result.hypotheses:
+                task3b = progress.add_task(
+                    "[cyan]Phase 3b: Running Pattern Simulations...",
+                    total=len(result.hypotheses),
+                )
+                await self._run_pattern_simulations(result.hypotheses, problem=problem)
+                # Re-rank after simulation results
+                result.hypotheses = sorted(
+                    result.hypotheses,
+                    key=lambda h: h.get("simulation", {}).get(
+                        "confidence", h.get("confidence", 0.5)
+                    ),
+                    reverse=True,
+                )
+                result.top_hypothesis = result.hypotheses[0]
+                progress.update(task3b, completed=len(result.hypotheses))
+
             # Phase 4: Validation Planning
             if include_validation and result.top_hypothesis:
                 task4 = progress.add_task(
@@ -318,6 +336,111 @@ class OneShotSolver:
             console.print(f"[yellow]Warning: Validation planning failed: {e}[/yellow]")
             return {}
 
+    async def _run_pattern_simulations(
+        self, hypotheses: List[Dict[str, Any]], problem: str = ""
+    ):
+        """Run v6 pattern simulations for hypotheses to enrich confidence."""
+        try:
+            from src.patterns.runner import get_runner
+
+            runner = get_runner()
+
+            for h in hypotheses:
+                pattern_id = self._match_pattern(h, problem=problem)
+                if pattern_id and pattern_id in runner.list_patterns():
+                    try:
+                        sim_result = await runner.run_pattern(
+                            pattern_id,
+                            hypothesis={
+                                "title": h.get("hypothesis", ""),
+                                "description": h.get("mechanism", ""),
+                            },
+                            params={},
+                        )
+                        h["simulation"] = {
+                            "pattern_id": pattern_id,
+                            "status": sim_result.get("status"),
+                            "metrics": sim_result.get("result", {}).get("metrics", {}),
+                            "execution_time_seconds": sim_result.get(
+                                "execution_time_seconds", 0
+                            ),
+                        }
+                        # Boost confidence if simulation succeeded
+                        if sim_result.get("status") == "completed":
+                            sim_metrics = sim_result.get("result", {}).get(
+                                "metrics", {}
+                            )
+                            confidence_score = sim_result.get("result", {}).get(
+                                "confidence_score", 0.5
+                            )
+                            # Blend original confidence with simulation confidence
+                            h["confidence"] = min(
+                                0.99, h["confidence"] * 0.6 + confidence_score * 0.4
+                            )
+                            h["simulation"]["confidence"] = h["confidence"]
+                        else:
+                            h["simulation"]["confidence"] = h["confidence"]
+                    except Exception as e:
+                        console.print(
+                            f"[yellow]Pattern {pattern_id} simulation failed: {e}[/yellow]"
+                        )
+                        h["simulation"] = {
+                            "pattern_id": pattern_id,
+                            "status": "failed",
+                            "error": str(e),
+                            "confidence": h["confidence"],
+                        }
+                else:
+                    h["simulation"] = {
+                        "pattern_id": None,
+                        "status": "no_match",
+                        "confidence": h["confidence"],
+                    }
+        except Exception as e:
+            console.print(
+                f"[yellow]Warning: Pattern simulation phase failed: {e}[/yellow]"
+            )
+
+    def _match_pattern(
+        self, hypothesis: Dict[str, Any], problem: str = ""
+    ) -> Optional[str]:
+        """Match hypothesis to best v6 pattern based on keywords."""
+        text = f"{problem} {hypothesis.get('hypothesis', '')} {hypothesis.get('mechanism', '')}".lower()
+
+        keyword_map = {
+            "agent_based": ["agent", "behavior", "individual", "crowd"],
+            "cfd": ["fluid", "flow", "aerodynamic", "navier-stokes"],
+            "monte_carlo": ["random", "stochastic", "probability", "statistical"],
+            "system_dynamics": ["feedback", "stock", "flow", "system"],
+            "circuit_simulation": ["circuit", "electronic", "voltage", "current"],
+            "neural_network": ["neuron", "brain", "spiking", "synapse", "neural"],
+            "fem": ["finite element", "stress", "structural", "mechanics"],
+            "dsge": ["macroeconomic", "policy", "rbc", "keynesian", "economy"],
+            "garch": ["volatility", "financial risk", "variance"],
+            "game_theory": ["nash", "equilibrium", "strategy", "auction"],
+            "social_network": ["network", "diffusion", "viral", "social"],
+            "supply_chain": ["supply chain", "logistics", "inventory"],
+            "epidemic_seir": ["epidemic", "infection", "disease", "virus"],
+            "connectome": ["brain", "connectome", "network", "neural"],
+            "quantum": ["quantum", "qubit", "superposition"],
+            "n_body": ["gravity", "orbit", "planetary", "celestial"],
+            "thermal": ["heat", "temperature", "thermal"],
+            "cfd": ["fluid", "aerodynamic", "flow"],
+            "elasticity_3d": ["elastic", "deformation", "solid"],
+            "evolutionary": ["evolution", "genetic", "selection"],
+            "optimization": ["optimize", "linear programming", "lp"],
+        }
+
+        scores = {}
+        for pattern_id, keywords in keyword_map.items():
+            scores[pattern_id] = sum(1 for kw in keywords if kw in text)
+
+        if scores:
+            best = max(scores, key=scores.get)
+            if scores[best] > 0:
+                return best
+        return None
+
     def _generate_recommendations(self, result: OneShotResult) -> List[str]:
         """Generate actionable recommendations."""
         recs = []
@@ -327,6 +450,14 @@ class OneShotSolver:
             recs.append(
                 f"Start with hypothesis {h['id']} (confidence: {h['confidence']:.0%})"
             )
+
+            sim = h.get("simulation")
+            if sim and sim.get("pattern_id") and sim.get("status") == "completed":
+                recs.append(
+                    f"Pattern simulation '{sim['pattern_id']}' completed successfully"
+                )
+            elif sim and sim.get("status") == "failed":
+                recs.append("Simulation failed - review hypothesis assumptions")
 
             if h.get("validation_cost"):
                 recs.append(f"Budget ${h['validation_cost']:,.0f} for validation")
@@ -411,6 +542,11 @@ class OneShotSolver:
                     f"Method: {h['method']} | Confidence: {h['confidence']:.0%}",
                 ]
             )
+            sim = h.get("simulation")
+            if sim and sim.get("pattern_id"):
+                lines.append(
+                    f"Simulation: {sim['pattern_id']} ({sim.get('status', 'unknown')})"
+                )
 
         # Recommendations
         if result.recommendations:

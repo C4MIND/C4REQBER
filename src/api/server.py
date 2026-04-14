@@ -41,6 +41,7 @@ from src.api.auth import AuthManager
 from src.api.cache import CacheManager
 from src.api.rate_limiter import RateLimiter
 from src.api.websocket import ConnectionManager
+from src.patterns.runner import get_runner as get_pattern_runner
 
 
 # Security
@@ -224,6 +225,7 @@ async def create_discovery(
                 method=h["method"],
                 c4_path=h.get("c4_path", []),
                 triz_principles=h.get("triz_principles", []),
+                simulation=h.get("simulation"),
             )
             for h in result.hypotheses
         ],
@@ -321,6 +323,165 @@ async def validate_hypothesis(
     )
 
     return {"status": "success", "discovery_id": discovery_id}
+
+
+# ═══════════════════════════════════════════════════════════════════
+# PATTERN ENDPOINTS (v6 Legacy Integration)
+# ═══════════════════════════════════════════════════════════════════
+
+
+pattern_runner = get_pattern_runner()
+
+
+@app.get("/patterns")
+async def list_patterns():
+    """List available scientific patterns from v6 engine."""
+    patterns = pattern_runner.list_patterns()
+
+    def categorize(p: str) -> str:
+        physics = [
+            "cfd",
+            "fdtd",
+            "maxwell",
+            "n_body",
+            "plasma",
+            "quantum",
+            "wave",
+            "thermal",
+            "elasticity",
+            "acoustic",
+            "poisson",
+            "rigid_body",
+            "dft",
+            "qft",
+        ]
+        biology = [
+            "neural",
+            "gene",
+            "epidemic",
+            "enzyme",
+            "protein",
+            "connectome",
+            "evolutionary",
+            "synaptic",
+            "signal",
+            "hodgkin",
+            "pharmacokinetics",
+            "age_structured",
+            "lotka",
+        ]
+        economics = [
+            "dsge",
+            "garch",
+            "game_theory",
+            "portfolio",
+            "credit",
+            "supply_chain",
+            "economic",
+            "input_output",
+            "gravity_trade",
+            "market_microstructure",
+            "option_pricing",
+            "prospect_theory",
+            "overlapping_generations",
+            "search_matching",
+            "herding",
+            "heterogeneous",
+        ]
+        earth = [
+            "climate",
+            "ocean",
+            "seismic",
+            "wildfire",
+            "air_quality",
+            "biogeochemistry",
+            "cloud",
+            "groundwater",
+            "land_surface",
+            "land_use",
+            "mantle",
+            "geomagnetic",
+            "sea_ice",
+            "surface_water",
+        ]
+        engineering = [
+            "mpc",
+            "kalman",
+            "slam",
+            "path_planning",
+            "pid",
+            "circuit",
+            "composite",
+            "crystal",
+            "fem",
+            "continuum",
+            "inverse_kinematics",
+            "model_predictive",
+            "circuit_simulation",
+        ]
+        social = [
+            "social_network",
+            "opinion",
+            "cultural",
+            "migration",
+            "urban",
+            "conflict",
+            "collaborative",
+            "pedestrian",
+            "rumor",
+            "language",
+        ]
+        for cat, keys in [
+            ("physics", physics),
+            ("biology", biology),
+            ("economics", economics),
+            ("earth_science", earth),
+            ("engineering", engineering),
+            ("social", social),
+        ]:
+            if any(k in p for k in keys):
+                return cat
+        return "other"
+
+    categories = {}
+    for p in patterns:
+        cat = categorize(p)
+        categories.setdefault(cat, []).append(p)
+
+    return {
+        "patterns": patterns,
+        "count": len(patterns),
+        "total_files": len(patterns),
+        "version": "v6.5",
+        "categories": categories,
+        "load_errors": 0,
+    }
+
+
+@app.get("/patterns/{pattern_id}")
+async def get_pattern(pattern_id: str):
+    """Get pattern metadata."""
+    meta = pattern_runner.get_metadata(pattern_id)
+    if meta is None:
+        raise HTTPException(status_code=404, detail="Pattern not found")
+    meta["resources"] = pattern_runner.estimate_resources(pattern_id)
+    return meta
+
+
+@app.post("/patterns/{pattern_id}/run")
+async def run_pattern(pattern_id: str, payload: dict = None):
+    """Execute a simulation pattern."""
+    payload = payload or {}
+    if pattern_id not in pattern_runner.list_patterns():
+        raise HTTPException(
+            status_code=404, detail="Pattern not found or failed to load"
+        )
+    result = await pattern_runner.run_pattern(
+        pattern_id,
+        hypothesis=payload.get("hypothesis"),
+        params=payload.get("params"),
+    )
+    return result
 
 
 # ═══════════════════════════════════════════════════════════════════

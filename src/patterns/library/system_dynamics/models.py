@@ -149,7 +149,7 @@ def create_ode_function(stocks: dict[str, Stock], flows: list[Flow]) -> Callable
                 local_vars = {**state, "t": t, "np": np}
                 evaluator = SafeExpressionEvaluator(local_vars)
                 flow_values[flow.name] = evaluator.evaluate(flow.rate_expression)
-            except (ValueError, SyntaxError) as e:
+            except (ValueError, SyntaxError, ZeroDivisionError) as e:
                 logger = logging.getLogger(__name__)
                 logger.debug("Failed to evaluate flow expression '%s': %s", flow.rate_expression, e)
                 flow_values[flow.name] = 0.0

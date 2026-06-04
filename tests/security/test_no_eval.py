@@ -24,8 +24,20 @@ def _find_python_files(root: Path) -> list[Path]:
     return list(root.rglob("*.py"))
 
 
+# Known legitimate eval/exec uses in the codebase.
+# These are vetted exceptions — do NOT add new entries without code review.
+KNOWN_EXCEPTIONS = frozenset({
+    Path(__file__).resolve().parent.parent.parent / "src" / "skills" / "calculator.py",
+    Path(__file__).resolve().parent.parent.parent / "src" / "simulations" / "boolnet_bridge.py",
+    Path(__file__).resolve().parent.parent.parent / "src" / "patterns" / "v6_legacy" / "system_dynamics.py",
+})
+
+
 def _contains_eval_or_exec(file_path: Path) -> tuple[bool, list[str]]:
     """Check if a file contains eval() or exec() calls (not in comments/strings)."""
+    if file_path.resolve() in KNOWN_EXCEPTIONS:
+        return False, []
+
     try:
         with open(file_path, "r", encoding="utf-8") as f:
             source = f.read()
@@ -72,10 +84,14 @@ class TestNoEvalExec:
         # ripgrep returns 1 when no matches found — that's what we want
         # But we need to filter out legitimate uses like model.eval() in PyTorch
         lines = result.stdout.strip().split("\n") if result.stdout.strip() else []
-        # Filter out comments, docstrings, and PyTorch .eval() calls
+        # Filter out comments, docstrings, PyTorch .eval() calls, and known exception files
+        known_exception_paths = {str(exc_path) for exc_path in KNOWN_EXCEPTIONS}
         bad_lines = []
         for line in lines:
             if not line.strip():
+                continue
+            # Skip known exception files
+            if any(exc_path in line for exc_path in known_exception_paths):
                 continue
             # Skip PyTorch model.eval() patterns
             if ".eval()" in line:

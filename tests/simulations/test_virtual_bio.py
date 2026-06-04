@@ -18,7 +18,7 @@ REQUIRED_DOMAINS = [
     "quantum_chemistry",
 ]
 
-REQUIRED_ENGINES = ["openmm", "vina", "boolean_net", "cobra", "slim", "psi4"]
+REQUIRED_ENGINES = ["openmm", "vina", "boolnet", "cobra", "slim", "psi4"]
 
 
 class TestSimulationCatalog:
@@ -73,10 +73,10 @@ class TestSimulationCatalog:
                 f"Non-positive memory for {domain}: {cfg.memory_required_gb}"
             )
 
-    def test_all_configs_have_install_check(self):
+    def test_all_configs_have_adapter_class(self):
         for domain, cfg in SIMULATION_CATALOG.items():
-            assert cfg.install_check and isinstance(cfg.install_check, str), (
-                f"Missing or invalid install_check for {domain}"
+            assert cfg.adapter_class and isinstance(cfg.adapter_class, str), (
+                f"Missing or invalid adapter_class for {domain}"
             )
 
 
@@ -165,7 +165,7 @@ class TestBioSimConfigDataClass:
             estimated_runtime_seconds=100,
             vastai_cost_per_hour=0.0,
             memory_required_gb=1,
-            install_check="echo test",
+            adapter_class="test.Adapter",
         )
         assert cfg.domain == "test"
         assert cfg.engine == "test_engine"
@@ -177,7 +177,7 @@ class TestBioSimConfigDataClass:
         field_names = {f.name for f in fields(BioSimConfig)}
         expected = {
             "domain", "engine", "gpu_required", "estimated_runtime_seconds",
-            "vastai_cost_per_hour", "memory_required_gb", "install_check",
+            "vastai_cost_per_hour", "memory_required_gb", "adapter_class",
         }
         assert field_names == expected
 

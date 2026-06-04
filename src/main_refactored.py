@@ -160,7 +160,7 @@ def solve_command(
     print_section_header("Top Hypotheses", ICONS["hypothesis"])
     for hyp, conf, method in sample_hypotheses[:3]:
         ResultDisplay.hypothesis_card(hyp, conf, method)
-        print_empty_line()
+        print()
 
     # Metrics
     metrics = {

@@ -76,25 +76,23 @@ class TestNoEvalExec:
             )
 
     def test_grep_confirms_zero_eval_exec(self) -> None:
-        """Use grep/ripgrep to confirm no eval/exec in src/ (excluding comments/docstrings)."""
+        """Use ripgrep to confirm no eval/exec in src/ (excluding comments/docstrings).
+
+        This test requires ripgrep (rg) for accurate word-boundary matching.
+        The AST-based test_zero_eval_exec_in_src is the primary security check;
+        this test is a secondary confirmation and is skipped when rg is unavailable.
+        """
+        if not shutil.which("rg"):
+            pytest.skip("ripgrep (rg) not available — relying on AST-based check above")
+            return
+
         known_exception_paths = {str(exc_path) for exc_path in KNOWN_EXCEPTIONS}
 
-        # Prefer ripgrep, fall back to grep
-        if shutil.which("rg"):
-            result = subprocess.run(
-                ["rg", "-n", "\beval\b|\bexec\b", str(PROJECT_ROOT), "--type", "py"],
-                capture_output=True,
-                text=True,
-            )
-        elif shutil.which("grep"):
-            result = subprocess.run(
-                ["grep", "-rn", "-E", "\\beval\\b|\\bexec\\b", "--include=*.py", str(PROJECT_ROOT)],
-                capture_output=True,
-                text=True,
-            )
-        else:
-            pytest.skip("Neither ripgrep nor grep available in this environment")
-            return
+        result = subprocess.run(
+            ["rg", "-n", "\beval\b|\bexec\b", str(PROJECT_ROOT), "--type", "py"],
+            capture_output=True,
+            text=True,
+        )
 
         lines = result.stdout.strip().split("\n") if result.stdout.strip() else []
         bad_lines = []
@@ -113,5 +111,5 @@ class TestNoEvalExec:
             bad_lines.append(line)
 
         assert len(bad_lines) == 0, (
-            f"Found potential eval/exec usage:\n" + "\n".join(bad_lines)
+            f"ripgrep found potential eval/exec usage:\n" + "\n".join(bad_lines)
         )

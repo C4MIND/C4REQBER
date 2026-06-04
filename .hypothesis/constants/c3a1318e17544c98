@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/api/v6_routers/llm_providers_v6.py
+# hypothesis_version: 6.141.1
+
+[200, 400, '/provider-presets', '/provider-route/test', '/providers', 'Custom preset', 'Say hello', '_', 'balanced', 'config', 'content', 'cost', 'description', 'error', 'hybrid_deep', 'hybrid_fast', 'id', 'local_only', 'name', 'preset', 'presets', 'prompt', 'provider_used', 'quality', 'response', 'synthesis', 'v6-llm-providers']

@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>C4Reqber — Cognitive Exoskeleton for AI Agents | Demo</title>
+<meta name="description" content="First formally verified cognitive architecture. 24 scientist paths. 12-step discovery pipeline demo.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#9670;</text></svg>">
+<link rel="stylesheet" href="demo.css">
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════
+     HERO
+     ═══════════════════════════════════════════════════ -->
+
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="orb orb-cyan"></div>
+  <div class="orb orb-magenta"></div>
+  <div class="hero-content container">
+     <div class="badge"><span class="badge-dot"></span>v5.4.1 · PRODUCTION</div>
+    <h1><span class="gradient-text">C4Reqber</span><span class="cursor"></span></h1>
+    <p class="hero-sub">Cognitive Exoskeleton for AI Agents.<br>Think. Simulate. Prove. Discover.</p>
+    <p class="hero-tag">UNIVERSAL PROBLEM-SOLVING ENGINE · CREATIVE & DISRUPTIVE INSIGHTS CATALYST</p>
+    <div class="btn-row">
+      <a href="#pipeline" class="btn btn-primary run-btn">▶ Run Demo Pipeline</a>
+      <a href="https://github.com/c4reqber/turbo-cdi" class="btn btn-secondary">GitHub</a>
+      <a href="../index.html" class="btn btn-secondary">Docs</a>
+    </div>
+    <p class="hero-meta">Z₃³ · 27 states · 6 operators · Ø=3 · 24 scientist paths · <b>12-Step Pipeline</b> · AGPL-3.0</p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════
+     STATS
+     ═══════════════════════════════════════════════════ -->
+
+<section class="section section-dark">
+  <div class="container">
+    <div class="stat-grid">
+      <div class="stat-card"><div class="stat-value c">27</div><div class="stat-label">Cognitive States</div></div>
+      <div class="stat-card"><div class="stat-value m">6</div><div class="stat-label">C4 Operators</div></div>
+      <div class="stat-card"><div class="stat-value a">28</div><div class="stat-label">Knowledge Sources</div></div>
+      <div class="stat-card"><div class="stat-value c">24</div><div class="stat-label">Scientist Paths</div></div>
+      <div class="stat-card"><div class="stat-value m">18</div><div class="stat-label">MCP Tools</div></div>
+      <div class="stat-card"><div class="stat-value a">12</div><div class="stat-label">Pipeline Steps</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════
+     4-MODE BLAST
+     ═══════════════════════════════════════════════════ -->
+
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label">Capabilities</span>
+      <h2 class="section-title">4-Mode BLAST System</h2>
+      <p class="section-desc">Auto-routing pipeline: one command, four discovery modes.</p>
+    </div>
+    <div class="mode-grid">
+      <div class="mode-card mode-solve">
+        <div class="mode-icon">⬡</div>
+        <h3>blast solve</h3>
+        <p>Strategic artifact generation — PRD, blueprints, architecture, code.</p>
+        <div class="mode-tags"><span class="tag">12-stage</span><span class="tag">Observer</span></div>
+      </div>
+      <div class="mode-card mode-turbo">
+        <div class="mode-icon">◇</div>
+        <h3>blast turbo</h3>
+        <p>Paradigm-shifting research proposals with full C4 cognition.</p>
+        <div class="mode-tags"><span class="tag">HIL Pipeline</span><span class="tag">28 sources</span></div>
+      </div>
+      <div class="mode-card mode-flash">
+        <div class="mode-icon">▲</div>
+        <h3>blast flash</h3>
+        <p>Quick LLM answers with optional USP cognitive analysis.</p>
+        <div class="mode-tags"><span class="tag">Fast</span><span class="tag">Deep mode</span></div>
+      </div>
+      <div class="mode-card mode-factory">
+        <div class="mode-icon">◆</div>
+        <h3>blast turbofactory</h3>
+        <p>Parallel paradigm factory — 5 to 100 concurrent pipelines.</p>
+        <div class="mode-tags"><span class="tag">Parallel</span><span class="tag">Scale</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════
+     ANIMATED PIPELINE DEMO
+     ═══════════════════════════════════════════════════ -->
+
+<section id="pipeline" class="section section-dark">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label">Live Demo</span>
+      <h2 class="section-title">12-Step Discovery Pipeline</h2>
+      <p class="section-desc">
+        Watch the language gene transfer paradigm discovery unfold.
+        Based on real data from <code style="color:var(--cyan)">discovery/batch_v5/exports/</code>.
+      </p>
+      <div style="margin-top:16px;">
+        <button id="run-pipeline" class="btn btn-primary run-btn small-btn">▶ Run Pipeline</button>
+        <button id="reset-pipeline" class="btn btn-secondary small-btn">↺ Reset</button>
+      </div>
+    </div>
+
+    <div id="pipeline-timeline" class="pipeline-timeline">
+      <!-- Steps rendered by demo.js -->
+    </div>
+
+    <div id="final-result" class="final-result">
+      <div class="result-icon"></div>
+      <div class="result-text"></div>
+      <div class="result-detail"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════
+     C4 ARCHITECTURE
+     ═══════════════════════════════════════════════════ -->
+
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label">Architecture</span>
+      <h2 class="section-title">C4-META: 27 States, Z₃³, 6 Operators</h2>
+    </div>
+    <div class="c4-grid">
+      <div class="cube-viz">
+        Z₃³ COGNITIVE CUBE (3×3×3)
+        ┌─────────────┐
+        │  T=2  ◆     │
+        │  T=1  ▲     │  ──── S-axis
+        │  T=0  ○     │
+        └─────────────┘
+          │  │  │
+          A0 A1 A2
+
+        Operators:
+        T  = tau (time shift)
+        T_INV = tau⁻¹ (reverse)
+        S  = sigma (scale shift)
+        S_INV = sigma⁻¹ (reverse)
+        A  = alpha (abstraction shift)
+        A_INV = alpha⁻¹ (reverse)
+
+        Theorem 11: undirected Ø=3, directed fwd=6
+      </div>
+      <div class="c4-info">
+        <h3>How C4 Works</h3>
+        <p>Every problem is classified into one of 27 cognitive states in a Z₃³ cube. The C4 engine then finds the optimal sequence of operators to navigate from the problem state to the discovery state.</p>
+        <p>Each state encodes three dimensions: <b style="color:var(--cyan)">Temporal</b> (past/present/future), <b style="color:var(--magenta)">Scale</b> (micro/meso/macro), and <b style="color:var(--amber)">Abstraction</b> (concrete/symbolic/meta).</p>
+        <div class="c4-operators">
+          <div class="op-chip">T: Temporal Shift</div>
+          <div class="op-chip">T_INV: Reverse Temporal</div>
+          <div class="op-chip">S: Scale Shift</div>
+          <div class="op-chip">S_INV: Reverse Scale</div>
+          <div class="op-chip">A: Abstraction Shift</div>
+          <div class="op-chip">A_INV: Reverse Abstract</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════
+     SCIENTIST PATHS
+     ═══════════════════════════════════════════════════ -->
+
+<section class="section section-dark">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label">Cognitive Routing</span>
+      <h2 class="section-title">24 Scientist Paths</h2>
+      <p class="section-desc">Each discovery traces a unique cognitive journey through C4 space, mapped to historical scientific breakthroughs.</p>
+    </div>
+    <div class="path-grid">
+      <div class="path-card">
+        <div class="scientist-name">Einstein</div>
+        <div class="scientist-path">Contradiction</div>
+        <div class="c4-coords">T₁S₂A₂ → T₂S₀A₀</div>
+      </div>
+      <div class="path-card">
+        <div class="scientist-name">Darwin</div>
+        <div class="scientist-path">Observation</div>
+        <div class="c4-coords">T₁S₁A₀ → T₀S₂A₁</div>
+      </div>
+      <div class="path-card">
+        <div class="scientist-name">Tesla</div>
+        <div class="scientist-path">Invention</div>
+        <div class="c4-coords">T₂S₁A₂ → T₁S₁A₀</div>
+      </div>
+      <div class="path-card">
+        <div class="scientist-name">Shannon</div>
+        <div class="scientist-path">Abstraction</div>
+        <div class="c4-coords">T₁S₀A₂ → T₀S₁A₁</div>
+      </div>
+      <div class="path-card">
+        <div class="scientist-name">Curie</div>
+        <div class="scientist-path">Empiricism</div>
+        <div class="c4-coords">T₁S₂A₀ → T₀S₀A₁</div>
+      </div>
+      <div class="path-card">
+        <div class="scientist-path">meta-path</div>
+        <div class="scientist-name">Gödel</div>
+        <div class="c4-coords">T₂S₂A₂ → meta-level</div>
+      </div>
+      <div class="path-card">
+        <div class="scientist-name">Pasteur</div>
+        <div class="scientist-path">Falsification</div>
+        <div class="c4-coords">T₁S₂A₁ → T₀S₁A₀</div>
+      </div>
+      <div class="path-card">
+        <div class="scientist-name">Hassabis</div>
+        <div class="scientist-path">Simulation</div>
+        <div class="c4-coords">T₂S₂A₂ → T₁S₁A₂</div>
+      </div>
+    </div>
+    <p style="text-align:center;color:var(--dim);font-family:var(--mono);font-size:11px;margin-top:16px;">
+      +16 more paths: Turing, Feynman, Crick, Fermi, Ramanujan, Nash, Lovelace, von Neumann, Bohr, Mendeleev, Karikó, Moser, Doudna, Baker, Hinton, Planck
+    </p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════
+     COMPARISON TABLE
+     ═══════════════════════════════════════════════════ -->
+
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label">Competitive Analysis</span>
+      <h2 class="section-title">How C4Reqber Compares</h2>
+      <p class="section-desc">48 competitors tracked across 6 categories. Full report: <code style="color:var(--cyan)">archive/plans/c4reqber_competitive_intelligence_report/</code></p>
+    </div>
+    <div style="overflow-x:auto">
+      <table class="cmp-table">
+        <thead>
+          <tr>
+            <th>Feature</th>
+            <th>C4Reqber</th>
+            <th>Sakana AI-Scientist</th>
+            <th>CrewAI</th>
+            <th>Perplexity</th>
+            <th>Claude Code</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>12-step pipeline</td>
+            <td><span class="cmp-icon-check">✓</span></td>
+            <td><span class="cmp-icon-maybe">~6</span></td>
+            <td><span class="cmp-icon-none">—</span></td>
+            <td><span class="cmp-icon-none">—</span></td>
+            <td><span class="cmp-icon-none">—</span></td>
+          </tr>
+          <tr>
+            <td>Formal verification (Lean4/Coq)</td>
+            <td><span class="cmp-icon-check">✓</span></td>
+            <td><span class="cmp-icon-none">—</span></td>
+            <td><span class="cmp-icon-none">—</span></td>
+            <td><span class="cmp-icon-none">—</span></td>
+            <td><span class="cmp-icon-none">—</span></td>
+          </tr>
+          <tr>
+            <td>C4 Z₃³ topology</td>
+            <td><span class="cmp-icon-check">✓</span></td>
+            <td><span class="cmp-icon-none">—</span></td>
+            <td><span class="cmp-icon-none">—</span></td>
+            <td><span class="cmp-icon-none">—</span></td>
+            <td><span class="cmp-icon-none">—</span></td>
+          </tr>
+          <tr>
+            <td>24 scientist paths</td>
+            <td><span class="cmp-icon-check">✓</span></td>
+            <td><span class="cmp-icon-none">—</span></td>
+            <td><span class="cmp-icon-none">—</span></td>
+            <td><span class="cmp-icon-none">—</span></td>
+            <td><span class="cmp-icon-none">—</span></td>
+          </tr>
+          <tr>
+            <td>40 TRIZ principles</td>
+            <td><span class="cmp-icon-check">✓</span></td>
+            <td><span class="cmp-icon-none">—</span></td>
+            <td><span class="cmp-icon-none">—</span></td>
+            <td><span class="cmp-icon-none">—</span></td>
+            <td><span class="cmp-icon-none">—</span></td>
+          </tr>
+          <tr>
+            <td>28 knowledge sources</td>
+            <td><span class="cmp-icon-check">✓</span></td>
+            <td><span class="cmp-icon-none">—</span></td>
+            <td><span class="cmp-icon-none">—</span></td>
+            <td><span class="cmp-icon-check">✓</span></td>
+            <td><span class="cmp-icon-none">—</span></td>
+          </tr>
+          <tr>
+            <td>Physics simulation</td>
+            <td><span class="cmp-icon-check">✓</span></td>
+            <td><span class="cmp-icon-check">✓</span></td>
+            <td><span class="cmp-icon-none">—</span></td>
+            <td><span class="cmp-icon-none">—</span></td>
+            <td><span class="cmp-icon-none">—</span></td>
+          </tr>
+          <tr>
+            <td>WASM plugin runtime</td>
+            <td><span class="cmp-icon-check">✓</span></td>
+            <td><span class="cmp-icon-none">—</span></td>
+            <td><span class="cmp-icon-none">—</span></td>
+            <td><span class="cmp-icon-none">—</span></td>
+            <td><span class="cmp-icon-none">—</span></td>
+          </tr>
+          <tr>
+            <td>Paradigm shift detection</td>
+            <td><span class="cmp-icon-check">✓</span></td>
+            <td><span class="cmp-icon-none">—</span></td>
+            <td><span class="cmp-icon-none">—</span></td>
+            <td><span class="cmp-icon-none">—</span></td>
+            <td><span class="cmp-icon-none">—</span></td>
+          </tr>
+          <tr>
+            <td>Open-source (AGPL-3.0)</td>
+            <td><span class="cmp-icon-check">✓</span></td>
+            <td><span class="cmp-icon-none">—</span></td>
+            <td><span class="cmp-icon-check">✓</span></td>
+            <td><span class="cmp-icon-none">—</span></td>
+            <td><span class="cmp-icon-none">—</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════
+     CTA
+     ═══════════════════════════════════════════════════ -->
+
+<section class="cta-section section-dark">
+  <div class="container">
+    <h2>Ready to Discover?</h2>
+    <p>Install via pip. Bring your own keys. Start discovering in 3 commands.</p>
+    <div class="btn-row">
+      <a href="https://github.com/c4reqber/turbo-cdi" class="btn btn-primary">GitHub →</a>
+      <a href="../index.html" class="btn btn-secondary">Documentation</a>
+      <a href="https://pypi.org/project/c4reqber/" class="btn btn-secondary">PyPI</a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════
+     FOOTER
+     ═══════════════════════════════════════════════════ -->
+
+<footer class="footer">
+  <div class="container">
+    <p>C4Reqber v5.4.1 · First formally verified cognitive architecture ·
+       <a href="https://github.com/c4reqber/c4reqber">GitHub</a> ·
+       AGPL-3.0</p>
+  </div>
+</footer>
+
+<script src="demo.js"></script>
+</body>
+</html>

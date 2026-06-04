@@ -3,8 +3,10 @@ TURBO-CDI: Validation Tests
 Tests for experiment tracking and Bayesian updating
 """
 
-import pytest
 from datetime import datetime
+
+import pytest
+
 from src.validation.tracker import (
     BayesianUpdater,
     CalibrationTracker,
@@ -68,8 +70,8 @@ class TestCalibrationTracker:
 
     def setup_method(self):
         """Set up tracker with temp file."""
-        import tempfile
         import os
+        import tempfile
 
         self.temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".json")
         self.temp_file.close()
@@ -89,9 +91,9 @@ class TestCalibrationTracker:
         for _ in range(2):
             self.tracker.record(0.8, False)
 
-        # Should be well calibrated
+        # Should be reasonably calibrated (Brier = 0.16 for this distribution)
         brier = self.tracker.brier_score()
-        assert brier < 0.1
+        assert brier < 0.2
 
     def test_brier_score_overconfident(self):
         """Test Brier score with overconfidence."""

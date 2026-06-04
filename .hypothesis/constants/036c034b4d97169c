@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/patterns/runner.py
+# hypothesis_version: 6.141.1
+
+[0.0, 0.5, 100, '..', '.py', 'Config', 'Dict', 'Hypothesis', 'Mapping', 'Pattern', '_', '__dict__', '__init__.py', 'base.py', 'class', 'completed', 'confidence', 'config', 'core.py', 'cpu_cores', 'description', 'dict', 'domain', 'error', 'estimate_resources', 'failed', 'get_metadata', 'gpu_compat.py', 'gpu_required', 'has_estimate', 'has_run', 'hypothesis', 'id', 'keywords', 'library', 'loader.py', 'memory_mb', 'name', 'output', 'parameters', 'params', 'pattern_id', 'recommendations', 'result', 'run', 'solution', 'status', 'text', 'timestamp', 'title', 'unknown', 'v6_legacy']

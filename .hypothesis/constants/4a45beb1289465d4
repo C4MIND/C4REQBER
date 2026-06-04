@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/agents/synthesis/strategies.py
+# hypothesis_version: 6.141.1
+
+[0.0, 0.01, 0.03, 0.05, 0.1, 0.3, 0.35, 0.6, ' → ', '; ', 'Creative Explorer', 'Critical Analyst', 'Pragmatic Executor', 'QZ-01', 'QZ-02', 'QZ-03', 'QZ-04', 'QZ-05', 'QZ-06', 'QZ-07', 'QZ-08', 'QZ-09', 'QZ-10', 'QZ-11', 'QZ-12', 'QZ-13', 'QZ-14', 'Systems Thinker', 'abstract, conceptual', 'actionable', 'alternative', 'another perspective', 'assumption', 'break', 'c4_coords', 'c4_state', 'caution', 'concrete, actionable', 'confidence', 'constraint', 'different domain', 'falsify', 'feedback', 'gestalt', 'meta-level, systemic', 'mitigation', 'momentum', 'paradigm', 'pattern', 'perspectives_used', 'practical', 'quick win', 'qzrf_operators', 'resource', 'rigorous', 'risk', 'step', 'tactical', 'total_insights', 'urgent', 'validation']

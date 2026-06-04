@@ -1,0 +1,11 @@
+{
+  "problem": "novel approach to carbon capture from atmosphere",
+  "domain": "climate",
+  "mode": "discover",
+  "hypothesis_len": 3810,
+  "triz": 8,
+  "sims": 3,
+  "bayesian": 0.999,
+  "paper_chars": 5152,
+  "time": 35.1
+}

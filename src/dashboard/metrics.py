@@ -1,19 +1,16 @@
-"""
-TURBO-CDI: Dashboard Module
-Business metrics, ROI tracking, and analytics
-"""
+"""C4REQBER Dashboard Module."""
+from __future__ import annotations
 
-from typing import List, Dict, Any, Optional
+import json
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
-import json
+from typing import Any
 
 from rich.console import Console
-from rich.table import Table
-from rich.panel import Panel
 from rich.layout import Layout
-from rich.progress import Progress, BarColumn
+from rich.panel import Panel
+from rich.table import Table
 
 
 console = Console()
@@ -49,15 +46,15 @@ class DashboardMetrics:
     active_experiments: int
 
     # Domain breakdown
-    domain_distribution: Dict[str, int]
+    domain_distribution: dict[str, int]
 
     # Method effectiveness
-    method_success_rates: Dict[str, float]
+    method_success_rates: dict[str, float]
 
 
 class Dashboard:
     """
-    TURBO-CDI Analytics Dashboard.
+    C4REQBER Analytics Dashboard.
 
     Tracks business metrics:
     - Time-to-hypothesis
@@ -67,17 +64,17 @@ class Dashboard:
     - Method effectiveness
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.kg = None  # Lazy import
-        self.metrics_cache: Optional[DashboardMetrics] = None
-        self.last_update: Optional[datetime] = None
+        self.metrics_cache: DashboardMetrics | None = None
+        self.last_update: datetime | None = None
 
-    def _get_kg(self):
+    def _get_kg(self) -> Any:
         """Lazy import knowledge graph."""
         if self.kg is None:
             from src.graph.knowledge_graph import get_knowledge_graph
 
-            self.kg = get_knowledge_graph()
+            self.kg = get_knowledge_graph()  # type: ignore[assignment]
         return self.kg
 
     def calculate_metrics(self, force_refresh: bool = False) -> DashboardMetrics:
@@ -122,7 +119,7 @@ class Dashboard:
         self.last_update = datetime.now()
         return metrics
 
-    def _count_validated(self, discoveries: List[Dict]) -> int:
+    def _count_validated(self, discoveries: list[dict]) -> int:  # type: ignore[type-arg]
         """Count validated discoveries."""
         count = 0
         for d in discoveries:
@@ -131,7 +128,7 @@ class Dashboard:
                 count += 1
         return count
 
-    def _count_falsified(self, discoveries: List[Dict]) -> int:
+    def _count_falsified(self, discoveries: list[dict]) -> int:  # type: ignore[type-arg]
         """Count falsified discoveries."""
         count = 0
         for d in discoveries:
@@ -140,17 +137,27 @@ class Dashboard:
                 count += 1
         return count
 
-    def _calc_avg_time_to_hypothesis(self, discoveries: List[Dict]) -> float:
+    def _calc_avg_time_to_hypothesis(self, discoveries: list[dict]) -> float:  # type: ignore[type-arg]
         """Calculate average time to generate hypothesis."""
-        # Placeholder - would track actual generation time
-        return 2.5  # minutes
+        durations = []
+        for d in discoveries:
+            meta = d.get("metadata", {})
+            t = meta.get("time_to_hypothesis_minutes")
+            if isinstance(t, (int, float)):
+                durations.append(float(t))
+        return round(sum(durations) / len(durations), 2) if durations else 0.0
 
-    def _calc_avg_time_to_validation(self, experiments: List[Dict]) -> float:
+    def _calc_avg_time_to_validation(self, experiments: list[dict]) -> float:  # type: ignore[type-arg]
         """Calculate average time to validate."""
-        # Placeholder
-        return 14.0  # days
+        durations = []
+        for e in experiments:
+            meta = e.get("metadata", {})
+            t = meta.get("time_to_validation_days")
+            if isinstance(t, (int, float)):
+                durations.append(float(t))
+        return round(sum(durations) / len(durations), 2) if durations else 0.0
 
-    def _calc_validation_rate(self, discoveries: List[Dict]) -> float:
+    def _calc_validation_rate(self, discoveries: list[dict]) -> float:  # type: ignore[type-arg]
         """Calculate validation rate."""
         total = len(discoveries)
         if total == 0:
@@ -162,17 +169,18 @@ class Dashboard:
 
         return decided / total if total > 0 else 0.0
 
-    def _calc_avg_confidence(self, discoveries: List[Dict]) -> float:
+    def _calc_avg_confidence(self, discoveries: list[dict]) -> float:  # type: ignore[type-arg]
         """Calculate average confidence score."""
         if not discoveries:
             return 0.0
 
         scores = []
         for d in discoveries:
-            score = d.get("metadata", {}).get("confidence_score", 0.5)
-            scores.append(score)
+            score = d.get("metadata", {}).get("confidence_score")
+            if isinstance(score, (int, float)):
+                scores.append(float(score))
 
-        return sum(scores) / len(scores) if scores else 0.0
+        return round(sum(scores) / len(scores), 3) if scores else 0.0
 
     def _calc_calibration_score(self) -> float:
         """Get calibration score from validation tracker."""
@@ -181,31 +189,27 @@ class Dashboard:
 
             tracker = get_validation_tracker()
             # Brier score (lower is better, so we invert)
-            brier = tracker.calibration_tracker.calculate_brier_score()
-            return max(0, 1 - brier)  # Convert to 0-1 scale
-        except (ImportError, AttributeError, ZeroDivisionError) as e:
+            brier = tracker.calibration_tracker.calculate_brier_score()  # type: ignore[attr-defined]
+            return max(0, 1 - brier)  # type: ignore  # Convert to 0-1 scale
+        except (ImportError, AttributeError, ZeroDivisionError):
             return 0.5
 
-    def _calc_total_cost(self, discoveries: List[Dict]) -> float:
+    def _calc_total_cost(self, discoveries: list[dict]) -> float:  # type: ignore[type-arg]
         """Calculate total estimated validation cost."""
         total = 0.0
         for d in discoveries:
-            cost = d.get("metadata", {}).get("estimated_validation_cost", 5000)
-            total += cost
-        return total
+            cost = d.get("metadata", {}).get("estimated_validation_cost")
+            if isinstance(cost, (int, float)):
+                total += float(cost)
+        return round(total, 2)
 
-    def _calc_avg_cost(self, discoveries: List[Dict]) -> float:
+    def _calc_avg_cost(self, discoveries: list[dict]) -> float:  # type: ignore[type-arg]
         """Calculate average cost per hypothesis."""
         if not discoveries:
             return 0.0
         return self._calc_total_cost(discoveries) / len(discoveries)
 
-    def _estimate_roi(self, discoveries: List[Dict]) -> float:
-        """Estimate ROI based on validation rates."""
-        validation_rate = self._calc_validation_rate(discoveries)
-        # Simplified ROI model
-        # Assume validated hypotheses worth $100k on average
-        # Total cost is investment
+    def _estimate_roi(self, discoveries: list[dict]) -> float:  # type: ignore[type-arg]
         total_cost = self._calc_total_cost(discoveries)
         if total_cost == 0:
             return 0.0
@@ -214,7 +218,7 @@ class Dashboard:
         roi = (validated_value - total_cost) / total_cost * 100
         return roi
 
-    def _count_recent(self, discoveries: List[Dict], days: int) -> int:
+    def _count_recent(self, discoveries: list[dict], days: int) -> int:  # type: ignore[type-arg]
         """Count discoveries from last N days."""
         cutoff = datetime.now() - timedelta(days=days)
         count = 0
@@ -231,7 +235,7 @@ class Dashboard:
 
         return count
 
-    def _count_active_experiments(self, experiments: List[Dict]) -> int:
+    def _count_active_experiments(self, experiments: list[dict]) -> int:  # type: ignore[type-arg]
         """Count currently active experiments."""
         count = 0
         for e in experiments:
@@ -240,15 +244,15 @@ class Dashboard:
                 count += 1
         return count
 
-    def _calc_domain_distribution(self, discoveries: List[Dict]) -> Dict[str, int]:
+    def _calc_domain_distribution(self, discoveries: list[dict]) -> dict[str, int]:  # type: ignore[type-arg]
         """Calculate distribution across domains."""
-        distribution = {}
+        distribution: Any = {}
         for d in discoveries:
             domain = d.get("metadata", {}).get("domain", "general")
             distribution[domain] = distribution.get(domain, 0) + 1
-        return distribution
+        return distribution  # type: ignore[no-any-return]
 
-    def _calc_method_success_rates(self, discoveries: List[Dict]) -> Dict[str, float]:
+    def _calc_method_success_rates(self, discoveries: list[dict]) -> dict[str, float]:  # type: ignore[type-arg]
         """Calculate success rate by generation method."""
         # Group by method
         by_method = {}
@@ -272,7 +276,7 @@ class Dashboard:
 
         return rates
 
-    def render_dashboard(self):
+    def render_dashboard(self) -> None:
         """Render full dashboard to console."""
         metrics = self.calculate_metrics()
 
@@ -291,7 +295,7 @@ class Dashboard:
         # Header
         layout["header"].update(
             Panel(
-                "[bold blue]🔬 TURBO-CDI Analytics Dashboard[/bold blue]",
+                "[bold blue]🔬 C4REQBER Analytics Dashboard[/bold blue]",
                 subtitle=f"Last updated: {self.last_update.strftime('%H:%M:%S') if self.last_update else 'Never'}",
             )
         )
@@ -369,20 +373,13 @@ class Dashboard:
         ):
             method_table.add_row(method, f"{rate:.1%}")
 
-        # Recent activity
-        activity_text = (
-            f"This week: [cyan]{metrics.discoveries_this_week}[/] discoveries\n"
-            f"This month: [cyan]{metrics.discoveries_this_month}[/] discoveries\n"
-            f"Active experiments: [yellow]{metrics.active_experiments}[/]"
-        )
-
         from rich.columns import Columns
 
         content = Columns([domain_table, method_table])
 
         return Panel(content, title="[bold]Breakdown[/bold]")
 
-    def export_metrics(self, output_path: str, format: str = "json"):
+    def export_metrics(self, output_path: str, format: str = "json") -> None:
         """Export metrics to file."""
         metrics = self.calculate_metrics(force_refresh=True)
 
@@ -415,13 +412,7 @@ class Dashboard:
         console.print(f"[green]✓ Metrics exported to {output_path}[/green]")
 
 
-# Singleton
-_dashboard: Optional[Dashboard] = None
-
-
 def get_dashboard() -> Dashboard:
-    """Get singleton dashboard instance."""
-    global _dashboard
-    if _dashboard is None:
-        _dashboard = Dashboard()
-    return _dashboard
+    """Get singleton dashboard instance (backed by DI container)."""
+    from src.di.container import get_container
+    return get_container().get_or_register("dashboard", Dashboard)

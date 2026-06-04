@@ -1,0 +1,620 @@
+from __future__ import annotations
+
+import logging
+import re
+from typing import Any
+
+
+logger = logging.getLogger("c44tcdi.knowledge.multi_source")
+
+# ─── Domain Classification Keywords ───────────────────────────────────────
+
+DOMAIN_KEYWORDS: dict[str, list[str]] = {
+    "cognitive_science": [
+        "cognitive", "memory", "forgetting", "learning", "attention", "perception",
+        "consciousness", "neuroscience", "brain", "neural", "cognition", "executive function",
+        "working memory", "long-term memory", "encoding", "retrieval", "metacognition",
+    ],
+    "psychology": [
+        "psychology", "behavior", "behavioral", "emotion", "motivation", "personality",
+        "social", "developmental", "clinical", "psychopathology", "therapy", "counseling",
+    ],
+    "computer_science": [
+        "algorithm", "machine learning", "deep learning", "neural network", "artificial intelligence",
+        "nlp", "computer vision", "data mining", "software", "programming", "computation",
+        "reinforcement learning", "transformer", "llm", "language model",
+    ],
+    "neuroscience": [
+        "neuron", "synaptic", "dendrite", "axon", "cortex", "hippocampus", "amygdala",
+        "fmri", "eeg", "meg", "optogenetics", "neurotransmitter", "dopamine", "serotonin",
+        "synaptic plasticity", "long-term potentiation", "ltd", "spike", "oscillation",
+    ],
+    "biology": [
+        "gene", "protein", "cell", "molecular", "dna", "rna", "genome", "evolution",
+        "species", "enzyme", "receptor", "pathway", "metabolism", "transcription",
+    ],
+    "medicine": [
+        "clinical", "patient", "disease", "treatment", "therapy", "diagnosis", "surgery",
+        "pharmacology", "drug", "trial", "randomized", "cohort", "epidemiology", "symptom",
+    ],
+    "physics": [
+        "quantum", "relativity", "particle", "wave", "field", "energy", "thermodynamics",
+        "entropy", "spacetime", "gravitational", "electromagnetic", "nuclear",
+    ],
+    "mathematics": [
+        "theorem", "proof", "algebra", "topology", "geometry", "calculus", "statistics",
+        "probability", "number theory", "combinatorics", "optimization", "differential equation",
+    ],
+    "philosophy": [
+        "epistemology", "ontology", "ethics", "logic", "metaphysics", "phenomenology",
+        "philosophy of mind", "philosophy of science", "free will", "consciousness",
+    ],
+    "education": [
+        "pedagogy", "curriculum", "teaching", "learning", "assessment", "education",
+        "student", "classroom", "instruction", "literacy", "educational technology",
+    ],
+}
+
+# ─── Source Registry ──────────────────────────────────────────────────────
+
+SOURCE_REGISTRY: dict[str, dict[str, Any]] = {
+    # TIER 1 — Free, no API key needed
+    "semantic_scholar": {
+        "name": "Semantic Scholar",
+        "tier": 1,
+        "url": "https://api.semanticscholar.org/graph/v1/paper/search",
+        "coverage": "200M+ papers",
+        "rate_limit": 100.0 / 300.0,
+        "timeout": 20.0,
+        "needs_key": False,
+        "enabled": True,
+        "api_key_env": "SEMANTIC_SCHOLAR_API_KEY",
+        "api_key_url": "https://www.semanticscholar.org/product/api",
+    },
+    "openalex": {
+        "name": "OpenAlex",
+        "tier": 1,
+        "url": "https://api.openalex.org/works",
+        "coverage": "250M+ works",
+        "rate_limit": 10.0,
+        "timeout": 20.0,
+        "needs_key": False,
+        "enabled": True,
+        "api_key_env": "OPENALEX_API_KEY",
+        "api_key_url": "https://openalex.org/api",
+    },
+    "crossref": {
+        "name": "CrossRef",
+        "tier": 1,
+        "url": "https://api.crossref.org/works",
+        "coverage": "140M+ records",
+        "rate_limit": 3.0,
+        "timeout": 15.0,
+        "needs_key": False,
+        "enabled": True,
+        "api_key_env": "CROSSREF_PLUS_API_KEY",
+        "api_key_url": "https://www.crossref.org/services/metadata-delivery_plus/",
+    },
+    "arxiv": {
+        "name": "arXiv",
+        "tier": 1,
+        "url": "https://export.arxiv.org/api/query",
+        "coverage": "2M+ preprints",
+        "rate_limit": 0.33,
+        "timeout": 30.0,
+        "needs_key": False,
+        "enabled": True,
+    },
+    "pubmed": {
+        "name": "PubMed",
+        "tier": 1,
+        "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils",
+        "coverage": "36M+ citations",
+        "rate_limit": 3.0,
+        "timeout": 15.0,
+        "needs_key": False,
+        "enabled": True,
+    },
+    "doaj": {
+        "name": "DOAJ",
+        "tier": 1,
+        "url": "https://doaj.org/api/v2/search/articles",
+        "coverage": "20K+ journals",
+        "rate_limit": 2.0,
+        "timeout": 15.0,
+        "needs_key": False,
+        "enabled": True,
+    },
+    "europe_pmc": {
+        "name": "Europe PMC",
+        "tier": 1,
+        "url": "https://www.ebi.ac.uk/europepmc/webservices/rest",
+        "coverage": "41M+ abstracts",
+        "rate_limit": 1.0,
+        "timeout": 15.0,
+        "needs_key": False,
+        "enabled": True,
+    },
+    "dblp": {
+        "name": "DBLP",
+        "tier": 1,
+        "url": "https://dblp.org/search/publ/api",
+        "coverage": "7M+ CS publications",
+        "rate_limit": 2.0,
+        "timeout": 15.0,
+        "needs_key": False,
+        "enabled": True,
+    },
+    "datacite": {
+        "name": "DataCite",
+        "tier": 1,
+        "url": "https://api.datacite.org/dois",
+        "coverage": "50M+ DOIs",
+        "rate_limit": 5.0,
+        "timeout": 15.0,
+        "needs_key": False,
+        "enabled": True,
+    },
+    "zenodo": {
+        "name": "Zenodo",
+        "tier": 1,
+        "url": "https://zenodo.org/api/records",
+        "coverage": "2M+ records",
+        "rate_limit": 3.0,
+        "timeout": 15.0,
+        "needs_key": False,
+        "enabled": True,
+    },
+    "figshare": {
+        "name": "Figshare",
+        "tier": 1,
+        "url": "https://api.figshare.com/v2/articles/search",
+        "coverage": "10M+ items",
+        "rate_limit": 3.0,
+        "timeout": 15.0,
+        "needs_key": False,
+        "enabled": True,
+    },
+    # TIER 2 — Free with API key
+    "brave": {
+        "name": "Brave Search",
+        "tier": 2,
+        "url": "https://api.search.brave.com/res/v1/web/search",
+        "coverage": "6B+ indexed pages, academic focus",
+        "rate_limit": 1.0,
+        "timeout": 15.0,
+        "needs_key": True,
+        "enabled": True,
+        "api_key_env": "BRAVE_API_KEY",
+        "api_key_url": "https://brave.com/search/api/",
+    },
+    "core": {
+        "name": "CORE",
+        "tier": 2,
+        "url": "https://api.core.ac.uk/v3/search/works",
+        "coverage": "10M+ open access",
+        "rate_limit": 5.0,
+        "timeout": 15.0,
+        "needs_key": True,
+        "enabled": True,
+        "api_key_env": "CORE_API_KEY",
+        "api_key_url": "https://core.ac.uk/api-keys/register",
+    },
+    "base": {
+        "name": "BASE",
+        "tier": 2,
+        "url": "https://api.base-search.net/cgi-bin/BaseHttpSearch",
+        "coverage": "150M+ documents",
+        "rate_limit": 2.0,
+        "timeout": 15.0,
+        "needs_key": True,
+        "enabled": True,
+        "api_key_url": "https://api.base-search.net/",
+    },
+    "unpaywall": {
+        "name": "Unpaywall",
+        "tier": 2,
+        "url": "https://api.unpaywall.org/v2",
+        "coverage": "40M+ OA articles",
+        "rate_limit": 5.0,
+        "timeout": 15.0,
+        "needs_key": False,
+        "enabled": True,
+        "api_key_env": "UNPAYWALL_EMAIL",
+        "api_key_url": "https://unpaywall.org/products/api",
+    },
+    "oa_mg": {
+        "name": "OA.mg",
+        "tier": 2,
+        "url": "https://api.oa.mg/v2",
+        "coverage": "250M+ papers",
+        "rate_limit": 1.0,
+        "timeout": 15.0,
+        "needs_key": True,
+        "enabled": True,
+        "api_key_url": "https://oa.mg/api",
+    },
+    # TIER 3 — Specialized
+    "lens_org": {
+        "name": "Lens.org",
+        "tier": 3,
+        "url": "https://api.lens.org/scholarly/search",
+        "coverage": "225M+ scholarly works",
+        "rate_limit": 1.0,
+        "timeout": 20.0,
+        "needs_key": True,
+        "enabled": True,
+        "api_key_url": "https://www.lens.org/lens/user/subscriptions",
+    },
+    "inspire_hep": {
+        "name": "INSPIRE-HEP",
+        "tier": 3,
+        "url": "https://inspirehep.net/api/literature",
+        "coverage": "1.5M+ HEP records",
+        "rate_limit": 5.0,
+        "timeout": 15.0,
+        "needs_key": False,
+        "enabled": True,
+    },
+    "scimatic": {
+        "name": "SciMatic",
+        "tier": 2,
+        "url": "https://scimatic.org",
+        "coverage": "Scientific social network",
+        "rate_limit": 3.0,
+        "timeout": 15.0,
+        "needs_key": False,
+        "enabled": True,
+    },
+    "arxivgg": {
+        "name": "arXiv.gg",
+        "tier": 1,
+        "url": "https://arxiv.gg",
+        "coverage": "arXiv with extra features",
+        "rate_limit": 2.0,
+        "timeout": 15.0,
+        "needs_key": False,
+        "enabled": True,
+    },
+    # P6 Tier-2 Biomedical / Materials / General
+    "ncbi_eutils": {
+        "name": "NCBI E-utilities",
+        "tier": 2,
+        "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils",
+        "coverage": "Gene, GEO, ClinVar, dbGaP",
+        "rate_limit": 3.0,
+        "timeout": 15.0,
+        "needs_key": True,
+        "enabled": True,
+        "api_key_env": "NCBI_API_KEY",
+    },
+    "pubchem": {
+        "name": "PubChem",
+        "tier": 2,
+        "url": "https://pubchem.ncbi.nlm.nih.gov/rest/pug",
+        "coverage": "Chemical structures, bioactivity",
+        "rate_limit": 5.0,
+        "timeout": 15.0,
+        "needs_key": False,
+        "enabled": True,
+    },
+    "chembl": {
+        "name": "ChEMBL",
+        "tier": 2,
+        "url": "https://www.ebi.ac.uk/chembl/api/data",
+        "coverage": "Bioactive molecules, SAR data",
+        "rate_limit": 5.0,
+        "timeout": 15.0,
+        "needs_key": False,
+        "enabled": True,
+    },
+    "materials_project": {
+        "name": "Materials Project",
+        "tier": 2,
+        "url": "https://api.materialsproject.org",
+        "coverage": "DFT-calculated materials",
+        "rate_limit": 2.0,
+        "timeout": 20.0,
+        "needs_key": True,
+        "enabled": True,
+        "api_key_env": "MATERIALS_PROJECT_API_KEY",
+    },
+    "aflow": {
+        "name": "AFLOW",
+        "tier": 2,
+        "url": "https://aflowlib.duke.edu/search/API",
+        "coverage": "Computational materials data",
+        "rate_limit": 2.0,
+        "timeout": 60.0,
+        "needs_key": False,
+        "enabled": True,
+    },
+    "kaggle": {
+        "name": "Kaggle",
+        "tier": 2,
+        "url": "https://www.kaggle.com/api/v1",
+        "coverage": "Datasets, notebooks, competitions",
+        "rate_limit": 1.0,
+        "timeout": 30.0,
+        "needs_key": True,
+        "enabled": True,
+        "api_key_env": "KAGGLE_USERNAME",
+    },
+    "uci_ml": {
+        "name": "UCI ML Repository",
+        "tier": 1,
+        "url": "https://archive.ics.uci.edu/api",
+        "coverage": "Classic ML datasets",
+        "rate_limit": 3.0,
+        "timeout": 15.0,
+        "needs_key": False,
+        "enabled": True,
+    },
+    "harvard_dataverse": {
+        "name": "Harvard Dataverse",
+        "tier": 2,
+        "url": "https://dataverse.harvard.edu/api",
+        "coverage": "Research datasets",
+        "rate_limit": 2.0,
+        "timeout": 15.0,
+        "needs_key": True,
+        "enabled": True,
+        "api_key_env": "HARVARD_DATAVERSE_API_KEY",
+    },
+    "re3data": {
+        "name": "re3data",
+        "tier": 1,
+        "url": "https://www.re3data.org/api/beta",
+        "coverage": "Registry of research data repositories",
+        "rate_limit": 2.0,
+        "timeout": 15.0,
+        "needs_key": False,
+        "enabled": True,
+    },
+    # ─── NEW: Open no-key sources (2026-05-31 batch) ────────────────────────
+    "string_db": {
+        "name": "STRING DB",
+        "tier": 2,
+        "url": "https://string-db.org/api",
+        "coverage": "PPI networks, 24.6M proteins",
+        "rate_limit": 1.0,
+        "timeout": 30.0,
+        "needs_key": False,
+        "enabled": True,
+    },
+    "clinicaltrials": {
+        "name": "ClinicalTrials.gov",
+        "tier": 1,
+        "url": "https://clinicaltrials.gov/api/v2",
+        "coverage": "460,000+ clinical trials",
+        "rate_limit": 2.0,
+        "timeout": 30.0,
+        "needs_key": False,
+        "enabled": True,
+    },
+    "gbif": {
+        "name": "GBIF",
+        "tier": 1,
+        "url": "https://api.gbif.org/v1",
+        "coverage": "2.5B+ species occurrence records",
+        "rate_limit": 2.0,
+        "timeout": 30.0,
+        "needs_key": False,
+        "enabled": True,
+    },
+    "allen_brain": {
+        "name": "Allen Brain Atlas",
+        "tier": 2,
+        "url": "https://api.brain-map.org/api/v2",
+        "coverage": "Neuroanatomy, gene expression",
+        "rate_limit": 2.0,
+        "timeout": 30.0,
+        "needs_key": False,
+        "enabled": True,
+    },
+    "usgs": {
+        "name": "USGS",
+        "tier": 1,
+        "url": "https://earthquake.usgs.gov/fdsnws/event/1",
+        "coverage": "Earthquakes, geology, hydrology",
+        "rate_limit": 2.0,
+        "timeout": 30.0,
+        "needs_key": False,
+        "enabled": True,
+    },
+    "cern_opendata": {
+        "name": "CERN Open Data",
+        "tier": 2,
+        "url": "https://opendata.cern.ch/api",
+        "coverage": "LHC experiment data",
+        "rate_limit": 1.0,
+        "timeout": 30.0,
+        "needs_key": False,
+        "enabled": True,
+    },
+    "oeis": {
+        "name": "OEIS",
+        "tier": 1,
+        "url": "https://oeis.org",
+        "coverage": "360,000+ integer sequences",
+        "rate_limit": 2.0,
+        "timeout": 30.0,
+        "needs_key": False,
+        "enabled": True,
+    },
+    "conceptnet": {
+        "name": "ConceptNet",
+        "tier": 1,
+        "url": "http://api.conceptnet.io",
+        "coverage": "General semantic network",
+        "rate_limit": 1.0,
+        "timeout": 30.0,
+        "needs_key": False,
+        "enabled": True,
+    },
+    "uspto_patentsview": {
+        "name": "USPTO PatentsView",
+        "tier": 1,
+        "url": "https://api.patentsview.org",
+        "coverage": "12M+ US patents",
+        "rate_limit": 2.0,
+        "timeout": 30.0,
+        "needs_key": False,
+        "enabled": True,
+    },
+    "huggingface_datasets": {
+        "name": "HuggingFace Datasets",
+        "tier": 1,
+        "url": "https://datasets-server.huggingface.co",
+        "coverage": "500,000+ public datasets",
+        "rate_limit": 2.0,
+        "timeout": 30.0,
+        "needs_key": False,
+        "enabled": True,
+    },
+    "openreview": {
+        "name": "OpenReview",
+        "tier": 1,
+        "url": "https://api2.openreview.net",
+        "coverage": "NeurIPS, ICML, ICLR papers",
+        "rate_limit": 2.0,
+        "timeout": 30.0,
+        "needs_key": False,
+        "enabled": True,
+    },
+    # ─── NEW: Key-based sources (keys collected) ────────────────────────────
+    "bibsonomy": {
+        "name": "BibSonomy",
+        "tier": 2,
+        "url": "https://www.bibsonomy.org/api",
+        "coverage": "Social bookmarking for publications",
+        "rate_limit": 2.0,
+        "timeout": 15.0,
+        "needs_key": True,
+        "enabled": True,
+        "api_key_env": "BIBSONOMY_API_KEY",
+        "api_key_url": "https://www.bibsonomy.org/settings",
+    },
+    "noaa": {
+        "name": "NOAA",
+        "tier": 2,
+        "url": "https://www.ncdc.noaa.gov/cdo-web/api/v2",
+        "coverage": "Climate and weather data",
+        "rate_limit": 2.0,
+        "timeout": 15.0,
+        "needs_key": True,
+        "enabled": True,
+        "api_key_env": "NOAA_API_KEY",
+        "api_key_url": "https://www.ncdc.noaa.gov/cdo-web/token",
+    },
+    "orcid": {
+        "name": "ORCID",
+        "tier": 2,
+        "url": "https://pub.orcid.org/v3.0",
+        "coverage": "Researcher profiles and works",
+        "rate_limit": 2.0,
+        "timeout": 30.0,
+        "needs_key": True,
+        "enabled": True,
+        "api_key_env": "ORCID_CLIENT_SECRET",
+        "api_key_url": "https://orcid.org/developer-tools",
+    },
+    "openfda": {
+        "name": "OpenFDA",
+        "tier": 2,
+        "url": "https://api.fda.gov",
+        "coverage": "FAERS adverse events, drug labels",
+        "rate_limit": 1.0,
+        "timeout": 30.0,
+        "needs_key": True,
+        "enabled": True,
+        "api_key_env": "OPENFDA_API_KEY",
+    },
+    "nasa_earthdata": {
+        "name": "NASA Earthdata",
+        "tier": 2,
+        "url": "https://cmr.earthdata.nasa.gov/search",
+        "coverage": "Satellite data, CMR",
+        "rate_limit": 1.0,
+        "timeout": 60.0,
+        "needs_key": True,
+        "enabled": True,
+        "api_key_env": "NASA_EARTHDATA_TOKEN",
+    },
+    # ─── NEW: Russian sources ───────────────────────────────────────────────
+    "cyberleninka": {
+        "name": "CyberLeninka",
+        "tier": 2,
+        "url": "https://cyberleninka.ru",
+        "coverage": "Russian open-access journals",
+        "rate_limit": 1.0,
+        "timeout": 30.0,
+        "needs_key": False,
+        "enabled": True,
+    },
+    "mathnet_ru": {
+        "name": "Math-Net.Ru",
+        "tier": 2,
+        "url": "https://www.mathnet.ru",
+        "coverage": "Russian mathematical portal",
+        "rate_limit": 1.0,
+        "timeout": 30.0,
+        "needs_key": False,
+        "enabled": True,
+    },
+}
+
+# ─── Domain-Aware Source Selection ────────────────────────────────────────
+
+DOMAIN_SOURCES: dict[str, set[str]] = {
+    "cognitive_science": {"pubmed", "europe_pmc", "openalex", "crossref"},
+    "psychology": {"pubmed", "europe_pmc", "openalex", "crossref", "datacite"},
+    "computer_science": {"dblp", "openreview", "arxiv", "openalex", "crossref"},
+    "neuroscience": {"pubmed", "europe_pmc", "allen_brain", "openalex", "crossref"},
+    "biology": {"pubmed", "europe_pmc", "ncbi_eutils", "pubchem", "string_db", "gbif", "openalex"},
+    "medicine": {"pubmed", "europe_pmc", "clinicaltrials", "openalex", "crossref"},
+    "physics": {"inspire_hep", "arxiv", "openalex", "crossref"},
+    "mathematics": {"mathnet_ru", "arxiv", "openalex", "crossref", "oeis"},
+    "philosophy": {"openalex", "crossref", "datacite"},
+    "education": {"openalex", "crossref", "pubmed", "datacite"},
+    "general": {"openalex", "crossref", "pubmed", "dblp", "datacite"},
+}
+
+# ─── Helpers ──────────────────────────────────────────────────────────────
+
+
+def _strip_html(text: str) -> str:
+    return re.sub(r"<[^>]+>", "", text)
+
+
+def _extract_arxiv_id(text: str) -> str | None:
+    m = re.search(r"(\d{4}\.\d{4,5}(v\d+)?)", text)
+    if m:
+        return m.group(1)
+    m = re.search(r"arxiv:([a-z-]+/\d+)", text, re.IGNORECASE)
+    if m:
+        return m.group(1)
+    return None
+
+
+def _extract_doi(text: str) -> str | None:
+    m = re.search(r"(10\.\d{4,}/[^\s]+)", text)
+    return m.group(1).rstrip(".,;:") if m else None
+
+
+def _norm_title(title: str) -> str:
+    return re.sub(r"\s+", " ", title.strip().lower().rstrip("."))
+
+
+def _title_similarity(a: str, b: str) -> float:
+    a_n, b_n = _norm_title(a), _norm_title(b)
+    if not a_n or not b_n:
+        return 0.0
+    if a_n == b_n:
+        return 1.0
+    words_a = set(a_n.split())
+    words_b = set(b_n.split())
+    if not words_a or not words_b:
+        return 0.0
+    intersection = words_a & words_b
+    return len(intersection) / max(len(words_a), len(words_b))

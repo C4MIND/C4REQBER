@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/patterns/library/enzyme_kinetics/config.py
+# hypothesis_version: 6.141.1
+
+[0.0, 0.01, 1.0, 10.0, 50.0, 100.0, 1000.0, 'E0', 'ES0', 'I0', 'Kd', 'Ki', 'Km', 'L', 'P0', 'S0', 'Vmax', 'briggs_haldane', 'c', 'dt', 'hill', 'k1', 'k2', 'k_1', 'michaelis_menten', 'model', 'mwc', 'n', 'num_points', 'substrate_range', 't_max']

@@ -2,43 +2,75 @@
 Ghost in the Shell TUI - Minimal Version
 Run with: python src/tui/ghost_tui.py
 """
+from __future__ import annotations
 
 import sys
+from pathlib import Path
 
-sys.path.insert(0, "/Users/figuramax/LocalProjects/TURBO-CDI")
 
-from textual.app import App, ComposeResult
-from textual.containers import Container, Horizontal, Vertical, Grid
-from textual.widgets import Static, Button, Input, Label, ProgressBar
-from textual.reactive import reactive
-from textual.binding import Binding
+_project_root = Path(__file__).resolve().parent.parent.parent
+if str(_project_root) not in sys.path:
+    sys.path.insert(0, str(_project_root))
+
 import asyncio
 from datetime import datetime
 
+from textual.app import App, ComposeResult
+from textual.binding import Binding
+from textual.containers import Horizontal, Vertical
+from textual.reactive import reactive
+from textual.widgets import Button, Input, Label, ProgressBar, Static
 
-class GhostHeader(Static):
-    """Futuristic status bar"""
+
+class GhostHeader(Static):  # type: ignore[misc]
+    """Futuristic status bar with live mascot state"""
 
     def compose(self) -> ComposeResult:
         with Horizontal():
-            yield Label("◈ TURBO-CDI", classes="logo")
-            yield Label("v5.0", classes="version")
+            yield Label("◈ C4REQBER", classes="logo")
+            yield Label("v5.4.0", classes="version")
             yield Label("◉ ONLINE", classes="status")
+            yield Label(id="mascot", classes="mascot")
             yield Label(id="clock", classes="clock")
 
     def on_mount(self) -> None:
+        """On mount."""
         self.update_clock()
         self.set_interval(1, self.update_clock)
+        self.update_mascot()
+        self.set_interval(3, self.update_mascot)
+        self._apply_night_mode()
+
+    def _apply_night_mode(self) -> None:
+        try:
+            from src.tui.delight import NightMode
+            if NightMode.is_night():
+                self.styles.background = "#1a1a2e"
+                self.query_one("#clock", Label).styles.color = "#4ECDC4"
+        except Exception:
+            pass
 
     def update_clock(self) -> None:
         self.query_one("#clock", Label).update(datetime.now().strftime("◔ %H:%M:%S"))
 
+    def update_mascot(self) -> None:
+        try:
+            from src.cli.cube_mascot import CubeMascot
+            mascot = CubeMascot()
+            emoji = {"idle":"▫▫▫","thinking":"▫◈▫","processing":"◈▣▫","discovery":"◈▣◈","error":"✖▫▫","done":"◈▣◈ ✓","paradigm":"✦◈▣◈✦"}.get(mascot.state, "▫▫▫")
+            self.query_one("#mascot", Label).update(emoji)
+        except Exception:
+            self.query_one("#mascot", Label).update("▫▫▫")
 
-class C4Visualizer(Static):
+
+class C4Visualizer(Static):  # type: ignore[misc]
     """ASCII C4 27-state cube visualization"""
 
     def render(self) -> str:
-        return """
+        from src.c4.state import C4State
+
+        selected = C4State(T=1, S=1, A=1)
+        return f"""
 ┌─────────────────────────────────────────────────────────────────┐
 │                    C4 COGNITIVE GEOMETRY                        │
 │                         Z₃³ STATE SPACE                         │
@@ -58,14 +90,14 @@ class C4Visualizer(Static):
 │  [Self] [Other] [System]  ← Agency Dimension                   │
 │   (0)    (1)     (2)                                           │
 │                                                                 │
-│  Selected: 111 (Present × Abstract × Self)                      │
+│  Selected: {selected.to_tuple()} ({selected.time_label} × {selected.scale_label} × {selected.agency_label})                      │
 │  Mode: Collaborative Abstraction                                │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
         """
 
 
-class DiscoveryWorkflow(Static):
+class DiscoveryWorkflow(Static):  # type: ignore[misc]
     """Interactive discovery panel"""
 
     stage = reactive(0)
@@ -82,6 +114,7 @@ class DiscoveryWorkflow(Static):
     ]
 
     def compose(self) -> ComposeResult:
+        """Compose."""
         yield Label("[ DISCOVERY WORKFLOW ]", classes="title")
         yield Input(placeholder="Enter research problem...", id="problem")
         yield ProgressBar(total=100, show_eta=False, id="progress")
@@ -97,12 +130,16 @@ class DiscoveryWorkflow(Static):
             asyncio.create_task(self.run_discovery())
 
     async def run_discovery(self) -> None:
+        """Run discovery."""
         self.running = True
         btn = self.query_one("#start", Button)
         btn.disabled = True
         progress = self.query_one("#progress", ProgressBar)
 
-        for i, stage in enumerate(self.STAGES):
+        from src.agents.pipeline import UniversalSolvePipeline
+
+        pipeline = UniversalSolvePipeline()
+        for i, _stage in enumerate(self.STAGES):
             # Update visual
             for j in range(i + 1):
                 label = self.query_one(f"#s{j}", Label)
@@ -113,18 +150,25 @@ class DiscoveryWorkflow(Static):
                     label.update(f"◉ {self.STAGES[j]}")
                     label.add_class("active")
 
-            # Animate progress
-            for p in range(0, 100, 20):
-                progress.update(progress=p + (i * 100))
-                await asyncio.sleep(0.1)
+            if i == 2:
+                problem = self.query_one("#problem", Input).value.strip()
+                if not problem:
+                    await self._safe_status("Please enter a problem.")
+                    break
+                result = await pipeline.solve(problem=problem, mode="autopilot")
+                await self._safe_status(f"Hypothesis: {result.final_solution[:120]}")
+            await asyncio.sleep(0.1)
 
-        progress.update(progress=100)
-        btn.disabled = False
-        btn.label = "▶ NEW DISCOVERY"
-        self.running = False
+    async def _safe_status(self, message: str) -> None:
+        try:
+            self.query_one("#progress", ProgressBar).update(progress=100)
+            await self.query_one("#start", Button).update(label="▶ NEW DISCOVERY")  # type: ignore[attr-defined]
+            await self.query_one("#stages", Vertical).mount(Label(message))
+        except Exception:
+            pass
 
 
-class HypothesisList(Static):
+class HypothesisList(Static):  # type: ignore[misc]
     """List of generated hypotheses"""
 
     def render(self) -> str:
@@ -146,106 +190,16 @@ class HypothesisList(Static):
         """
 
 
-class GhostTUI(App):
-    """Ghost in the Shell inspired TUI for TURBO-CDI"""
+class GhostTUI(App):  # type: ignore[misc]
+    """Ghost in the Shell inspired TUI for C4REQBER"""
 
     CSS = """
-    Screen {
-        background: #0f0f1a;
-        color: #ffffff;
-    }
-    
-    GhostHeader {
-        height: 1;
-        background: #0f0f1a;
-        color: #4ECDC4;
-        border-bottom: solid #4ECDC4;
-    }
-    
-    GhostHeader .logo { 
-        width: 15; 
-        text-style: bold; 
-        color: #4ECDC4;
-    }
-    GhostHeader .version { 
-        width: 5; 
-        color: #6c757d; 
-    }
-    GhostHeader .status { 
-        width: 10; 
-        color: #2ecc71; 
-        text-style: bold;
-    }
-    GhostHeader .clock { 
-        width: 12; 
-        text-align: right;
-        color: #FFE66D;
-    }
-    
-    #main {
-        layout: grid;
-        grid-size: 2;
-        grid-columns: 1fr 1fr;
-        padding: 1;
-    }
-    
-    .title {
-        text-style: bold underline;
-        color: #4ECDC4;
-        height: 2;
-    }
-    
-    DiscoveryWorkflow {
-        padding: 1;
-        border: solid #1a1a2e;
-    }
-    
-    DiscoveryWorkflow .stage {
-        height: 1;
-        color: #6c757d;
-    }
-    DiscoveryWorkflow .stage.active {
-        color: #4ECDC4;
-        text-style: bold;
-    }
-    DiscoveryWorkflow .stage.complete {
-        color: #2ecc71;
-    }
-    
-    C4Visualizer, HypothesisList {
-        padding: 1;
-        border: solid #1a1a2e;
-    }
-    
-    Button {
-        background: #4ECDC4;
-        color: #0f0f1a;
-        border: none;
-    }
-    Button:hover {
-        background: #6EDDD4;
-    }
-    Button:disabled {
-        background: #1a1a2e;
-        color: #6c757d;
-    }
-    
-    ProgressBar {
-        background: #1a1a2e;
-        color: #4ECDC4;
-    }
-    ProgressBar > .bar {
-        background: #4ECDC4;
-    }
-    
-    Input {
-        background: #1a1a2e;
-        border: solid #4ECDC4;
-        color: #ffffff;
-    }
-    Input:focus {
-        border: solid #FFE66D;
-    }
+    .logo { color: #00d4ff; text-style: bold; }
+    .version { color: #ffd700; }
+    .status { color: #00ff41; }
+    .mascot { color: #ffd700; text-style: bold; }
+    .clock { color: #888888; }
+    Screen { background: #0a0a1a; }
     """
 
     BINDINGS = [
@@ -256,6 +210,7 @@ class GhostTUI(App):
     ]
 
     def compose(self) -> ComposeResult:
+        """Compose."""
         yield GhostHeader()
 
         with Horizontal(id="main"):
@@ -285,7 +240,7 @@ class GhostTUI(App):
   Click or Tab to navigate
   Enter to activate buttons
         """,
-            title="[ TURBO-CDI TUI ]",
+            title="[ C4REQBER TUI ]",
             severity="information",
         )
 

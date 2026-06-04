@@ -1,0 +1,140 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${DB_USER:-turbo_cdi}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-changeme}
+      POSTGRES_DB: ${DB_NAME:-turbo_cdi}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./migrations/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    restart: unless-stopped
+    networks:
+      - turbo-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-turbo_cdi} -d ${DB_NAME:-turbo_cdi}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # c4-cdi-turbo API Server
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - ENV=production
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET required}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - OLLAMA_URL=${OLLAMA_URL:-}
+      - LM_STUDIO_URL=${LM_STUDIO_URL:-}
+      - CORS_ORIGINS=${CORS_ORIGINS:-https://turbo-cdi.org}
+      - LLM_PROVIDER=${LLM_PROVIDER:-openrouter}
+      - LLM_MODEL=${LLM_MODEL:-anthropic/claude-3.5-sonnet}
+      - API_WORKERS=4
+      - PYTHONUNBUFFERED=1
+      # PostgreSQL configuration
+      - DATABASE_URL=postgresql://${DB_USER:-turbo_cdi}:${DB_PASSWORD:-changeme}@postgres:5432/${DB_NAME:-turbo_cdi}
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=${DB_NAME:-turbo_cdi}
+      - DB_USER=${DB_USER:-turbo_cdi}
+      - DB_PASSWORD=${DB_PASSWORD:-changeme}
+      # Connection pooling
+      - POOL_SIZE=${POOL_SIZE:-10}
+      - MAX_OVERFLOW=${MAX_OVERFLOW:-20}
+      - POOL_TIMEOUT=${POOL_TIMEOUT:-30}
+      - POOL_RECYCLE=${POOL_RECYCLE:-1800}
+      - POOL_PRE_PING=true
+      - CACHE_BACKEND=memory
+      - API_RELOAD=false
+    volumes:
+      - turbo_data:/app/data
+    restart: unless-stopped
+    networks:
+      - turbo-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.api.rule=Host(`api.turbo-cdi.org`)"
+      - "traefik.http.routers.api.tls.certresolver=letsencrypt"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Web UI v2 (React + Vite production build)
+  web:
+    build:
+      context: ./web-v2
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=https://api.turbo-cdi.org
+    depends_on:
+      - api
+    restart: unless-stopped
+    networks:
+      - turbo-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.web.rule=Host(`turbo-cdi.org`)"
+      - "traefik.http.routers.web.tls.certresolver=letsencrypt"
+
+  # Traefik Reverse Proxy (SSL termination)
+  traefik:
+    image: traefik:v3.0
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.letsencrypt.acme.tlschallenge=true"
+      - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL:-admin@turbo-cdi.org}"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./letsencrypt:/letsencrypt
+    restart: unless-stopped
+    networks:
+      - turbo-network
+
+  # Database backups (daily cron)
+  backup:
+    image: postgres:16-alpine
+    command: |
+      /bin/sh -c "
+      while true; do
+        sleep 86400
+        pg_dump -h db -U turbo_cdi turbo_cdi -Fc > /backups/turbo_cdi_\$(date +%Y%m%d).dump
+        find /backups -mtime +30 -delete
+      done
+      "
+    volumes:
+      - backup_data:/backups
+    environment:
+      PGPASSWORD: ${DB_PASSWORD}
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:
+  turbo_data:
+  backup_data:
+
+networks:
+  turbo-network:
+    driver: bridge

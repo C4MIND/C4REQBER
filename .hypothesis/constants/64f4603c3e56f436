@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/patterns/library/system_dynamics/results.py
+# hypothesis_version: 6.141.1
+
+[0.1, 0.15, 0.2, 0.95, 100, 'final_values', 'initial_values', 'integration_success', 'is_chaotic', 'is_stable', 'logs', 'max_eigenvalue_real', 'metrics', 'n_events', 'n_function_evals', 'n_steps', 'nfev', 'sensitivity']

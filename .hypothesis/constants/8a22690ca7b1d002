@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/integrations/prior_art.py
+# hypothesis_version: 6.141.1
+
+[0.0, 0.05, 0.1, 0.2, 0.3, 0.5, 0.7, 0.9, 1.0, 8.0, 300, 500, 1000, '...', 'abstract', 'arxiv', 'authors', 'citation_count', 'confidence', 'duration_ms', 'id', 'max_confidence', 'patents', 'pubmed', 'query', 'recommendation', 'relevance_score', 'results', 'semantic_scholar', 'source', 'title', 'top_result', 'total_results', 'turbo_cdi.prior_art', 'url', 'year']

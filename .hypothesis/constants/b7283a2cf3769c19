@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/graph/queries.py
+# hypothesis_version: 6.141.1
+
+['KnowledgeGraph', 'cites', 'discovery', 'domain', 'edge_type', 'edges', 'embedding', 'from', 'metadata', 'node_id', 'nodes', 'reference', 'source', 'tags', 'target', 'to']

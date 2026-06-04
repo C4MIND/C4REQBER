@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/patterns/library/connectome/core.py
+# hypothesis_version: 6.141.1
+
+[0.0, 0.1, 0.5, 0.7, 0.8, 3.0, 1000, 'activity_variance', 'fc_mean', 'fc_variance', 'fitzhugh_nagumo', 'hopf', 'integration', 'logs', 'mean_activity', 'mean_amplitude', 'mean_order_parameter', 'metastability', 'metrics', 'model', 'order_global', 'order_variance', 'sc_fc_correlation', 'segregation', 'wilson_cowan']

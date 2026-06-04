@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/graph/operations/mutations.py
+# hypothesis_version: 6.141.1
+
+[0.0, 'KnowledgeGraph', 'add_node', 'analogy', 'confidence', 'data', 'description', 'design', 'discovery_id', 'domain', 'domain_node', 'edges', 'evidence', 'experiment', 'from_state', 'id', 'mapping_type', 'maps_from', 'maps_to', 'name', 'nodes', 'op', 'operator', 'operator_name', 'researcher', 'semantic_similarity', 'source_concept', 'source_domain', 'status', 'success_rate', 'target_concept', 'target_domain', 'timestamp', 'to', 'to_state', 'transform_vector', 'type', 'usage_count', 'verified', 'weight']

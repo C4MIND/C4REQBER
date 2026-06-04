@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/archetypes/__init__.py
+# hypothesis_version: 6.141.1
+
+['ARCHETYPE_MAP', 'C4State', 'build_agent_prompt', 'build_synergy_matrix', 'get_all_archetypes', 'get_archetype', 'get_neighbors', 'get_optimal_team']

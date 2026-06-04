@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/llm/providers/others.py
+# hypothesis_version: 6.141.1
+
+[0.01, 0.7, 10.0, 60.0, 100, 1000, 2000, 'DEEPSEEK_API_KEY', 'MISTRAL_API_KEY', 'MOONSHOT_API_KEY', 'XAI_API_KEY', 'completion_tokens', 'max_tokens', 'messages', 'mock', 'mock-model', 'model', 'prompt_tokens', 'temperature']

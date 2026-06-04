@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/agents/pipeline/steps/step_02_prior_art.py
+# hypothesis_version: 6.141.1
+
+[0.0, 30.0, 1000, 'Search failed', 'completed', 'error', 'max_confidence', 'prior_art_confidence', 'problem', 'recommendation', 'top_results', 'total_results']

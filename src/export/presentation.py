@@ -1,12 +1,12 @@
 """
-TURBO-CDI: Presentation Mode
+C4REQBER: Presentation Mode
 Export discoveries to slide decks
 """
+from __future__ import annotations
 
-from typing import List, Dict, Any, Optional
 from dataclasses import dataclass
 from pathlib import Path
-import json
+from typing import Optional
 
 
 @dataclass
@@ -15,7 +15,7 @@ class Slide:
 
     title: str
     content: str
-    bullet_points: List[str]
+    bullet_points: list[str]
     notes: str = ""
 
 
@@ -29,12 +29,12 @@ class PresentationExporter:
     - PowerPoint (via python-pptx)
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         pass
 
     def create_presentation(
         self, discovery_id: str, title: str = "Research Discovery"
-    ) -> List[Slide]:
+    ) -> list[Slide]:
         """
         Create slides from a discovery.
 
@@ -76,9 +76,7 @@ class PresentationExporter:
                 title="Research Problem",
                 content="The challenge we set out to solve",
                 bullet_points=[
-                    f"Problem: {problem}",
-                    "Key constraints and requirements",
-                    "Why existing solutions are insufficient",
+                    problem,
                 ],
                 notes="Set up the problem context",
             )
@@ -105,8 +103,6 @@ class PresentationExporter:
                 content="Our proposed solution",
                 bullet_points=[
                     hypothesis[:200] + "..." if len(hypothesis) > 200 else hypothesis,
-                    "Key innovation: Context-aware mechanism",
-                    "Eliminates apparent contradiction",
                 ],
                 notes="Present the core hypothesis",
             )
@@ -143,8 +139,8 @@ class PresentationExporter:
         return slides
 
     def export_to_markdown(
-        self, slides: List[Slide], output_path: str, theme: str = "default"
-    ):
+        self, slides: list[Slide], output_path: str, theme: str = "default"
+    ) -> None:
         """
         Export slides to Markdown (Marp/Slidev format).
 
@@ -155,7 +151,7 @@ class PresentationExporter:
         """
         md_lines = [
             "---",
-            f"marp: true",
+            "marp: true",
             f"theme: {theme}",
             "paginate: true",
             "---",
@@ -179,7 +175,7 @@ class PresentationExporter:
 
         Path(output_path).write_text("\n".join(md_lines))
 
-    def export_to_html(self, slides: List[Slide], output_path: str):
+    def export_to_html(self, slides: list[Slide], output_path: str) -> None:
         """
         Export slides to HTML (reveal.js format).
 
@@ -221,13 +217,7 @@ class PresentationExporter:
         Path(output_path).write_text(html)
 
 
-# Singleton
-_exporter: Optional[PresentationExporter] = None
-
-
 def get_presentation_exporter() -> PresentationExporter:
-    """Get singleton presentation exporter."""
-    global _exporter
-    if _exporter is None:
-        _exporter = PresentationExporter()
-    return _exporter
+    """Get singleton presentation exporter (backed by DI container)."""
+    from src.di.container import get_container
+    return get_container().get_or_register("presentation_exporter", PresentationExporter)

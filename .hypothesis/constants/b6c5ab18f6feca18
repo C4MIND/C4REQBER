@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/patterns/library/ising_model.py
+# hypothesis_version: 6.141.1
+
+[-5.0, -2.0, 0.0, 0.1, 0.2, 0.3, 0.5, 0.9, 1.0, 2.0, 2.27, 2.3, 5.0, 10.0, 1000000.0, 100, 256, 1000, 10000, 50000, 1000000, 'Ising Model', 'J', 'Size of L×L lattice', 'abs_magnetization', 'algorithm', 'autocorrelation', 'binder cumulant', 'binder_cumulant', 'cpu_cores', 'critical', 'curie', 'energy', 'energy_squared', 'ferromagnet', 'finite size scaling', 'float', 'gpu_required', 'h', 'int', 'ising', 'ising_model', 'lattice', 'lattice_size', 'logs', 'magnet', 'magnetization', 'mcmc', 'measure_every', 'memory_gb', 'metrics', 'metropolis', 'monte carlo', 'n_measurements', 'n_sweeps', 'paramagnet', 'phase transition', 'physics', 'random_seed', 'select', 'specific heat', 'specific_heat', 'spin', 'spontaneous symmetry', 'susceptibility', 'swendsen_wang', 'temperature', 'thermalization', 'wolff']

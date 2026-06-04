@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/patterns/library/conflict.py
+# hypothesis_version: 6.141.1
+
+[0.0, 0.01, 0.05, 0.1, 0.5, 0.9, 1.0, 3.0, 10.0, 100.0, 1000.0, 100, 500, 800, 1000, '6.0.0', 'A', 'B', 'Conflict', 'EXTENDED', 'Game Theory', 'Homogeneous forces', 'Military Science', 'No terrain effects', 'O(T)', 'Security Studies', '__main__', 'accuracy', 'actual', 'assumptions', 'casualties', 'casualty_rates', 'category', 'config', 'conflict', 'conservation_error', 'default', 'description', 'domain', 'draw', 'duration', 'enum', 'fad_end', 'fad_start', 'final_forces', 'float', 'force_a_initial', 'force_b_initial', 'force_history', 'id', 'lanchester_linear', 'lanchester_metrics', 'lanchester_mixed', 'lanchester_square', 'lethality_a', 'lethality_b', 'milliseconds', 'model', 'name', 'options', 'outcome_prediction', 'parameters', 'predicted', 'prediction_correct', 'salvo', 'time', 'type', 'typical_runtime', 'version', 'winner']

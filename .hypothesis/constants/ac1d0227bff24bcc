@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/validation/empirical_layer.py
+# hypothesis_version: 6.141.1
+
+[0.001, 0.12, 0.18, 0.37, 0.42, 0.8, 0.85, 0.9, 0.92, 0.935, 0.94, 1.0, 3.07, 'avg_reachability', 'benchmark', 'bert_state_acc', 'biology_to_cyber', 'confidence', 'cross_domain', 'domain', 'einstein_relativity', 'einstein_test', 'historical', 'id_index', 'level_config', 'model_dump', 'phi_convergence_rate', 'physics', 'problem', 'safety', 'steps', 'target_state', 'type']

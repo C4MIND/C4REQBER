@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/patterns/library/cultural_diffusion.py
+# hypothesis_version: 6.141.1
+
+[0.001, 0.01, 0.5, 1.0, 100, 400, 1000, 10000, 30000, 50000, 100000, '6.0.0', 'Anthropology', 'Cultural Diffusion', 'Cultural Studies', 'EXTENDED', 'High (agent-based)', 'Number of agents', 'O(S·N·F)', 'Sociology', '__main__', 'accuracy', 'assumptions', 'category', 'config', 'convergence', 'cultural_diffusion', 'cultural_diversity', 'culture', 'default', 'description', 'diversity', 'domain', 'final_culture', 'final_step', 'frozen', 'global_consensus', 'grid_size', 'history', 'id', 'int', 'interaction_radius', 'largest_region', 'n_agents', 'n_features', 'n_regions', 'n_traits', 'name', 'parameters', 'polarized', 'region_sizes', 'seconds to minutes', 'step', 'total_interactions', 'trait_distribution', 'type', 'typical_runtime', 'version']

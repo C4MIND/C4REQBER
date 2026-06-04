@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/metamodels/mp/profiles.py
+# hypothesis_version: 6.141.1
+
+[0.0, 0.2, 0.7, 1.0, 100, 1000, 'Creative Explorer', 'Critical Analyst', 'Pragmatic Executor', 'Systems Thinker', 'Unknown blind spots', 'agent_id', 'analysis', 'blind_spots', 'c4_state', 'c4_state_label', 'confidence', 'consensus_score', 'duration_ms', 'key_insights', 'perspectives', 'problem', 'profile_name', 'profile_name_ru', 'synthesized_view', 'total_duration_ms']

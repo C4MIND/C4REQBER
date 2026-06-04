@@ -1,12 +1,12 @@
-"""
-TURBO-CDI: Falsifiability Criteria Generator
-Generate testable criteria for hypothesis falsification (Popper-style)
-"""
+"""Falsifiability Criteria Generator.
 
-from typing import List, Dict, Optional
+Generate testable criteria for hypothesis falsification (Popper-style).
+"""
+from __future__ import annotations
+
 from dataclasses import dataclass
 
-from .client import LLMClient, MockLLMClient
+from .client import LLMClient
 
 
 @dataclass
@@ -25,7 +25,7 @@ class FalsifiabilityReport:
     """Complete falsifiability analysis."""
 
     hypothesis: str
-    criteria: List[FalsifiabilityCriterion]
+    criteria: list[FalsifiabilityCriterion]
     confidence_if_passed: float  # Confidence increase if all criteria pass
     summary: str
 
@@ -58,8 +58,10 @@ For each criterion provide:
 
 Generate 3-5 falsifiability criteria. Be harsh - think like a skeptical reviewer trying to disprove the hypothesis."""
 
-    def __init__(self, llm_client: Optional[LLMClient] = None):
-        self.llm = llm_client or MockLLMClient()
+    def __init__(self, llm_client: LLMClient | None = None) -> None:
+        if llm_client is None:
+            raise RuntimeError("LLMClient required for FalsifiabilityGenerator")
+        self.llm = llm_client
 
     def generate(
         self, hypothesis: str, domain: str = "general", num_criteria: int = 3
@@ -122,7 +124,7 @@ Also provide a brief summary of what passing all these criteria would mean for t
             "required": ["criteria", "summary"],
         }
 
-        response = self.llm.generate_structured(
+        response = self.llm.generate_structured(  # type: ignore[call-arg]
             prompt=prompt,
             schema=schema,
             temperature=0.4,  # More deterministic for criteria
@@ -146,7 +148,7 @@ Also provide a brief summary of what passing all these criteria would mean for t
             summary=response.get("summary", ""),
         )
 
-    def generate_quick(self, hypothesis: str) -> List[str]:
+    def generate_quick(self, hypothesis: str) -> list[str]:
         """
         Generate simple falsifiability statements (strings only).
 
@@ -159,13 +161,12 @@ Be specific with numbers. One sentence each."""
 
         response = self.llm.generate(prompt=prompt, temperature=0.3, max_tokens=300)
 
-        # Parse bullet points
-        lines = [l.strip() for l in response.content.split("\n") if l.strip()]
-        criteria = [l for l in lines if l.startswith(("-", "•", "*", "If"))]
+        lines = [line.strip() for line in response.content.split("\n") if line.strip()]
+        criteria = [line for line in lines if line.startswith(("-", "•", "*", "If"))]
 
         return criteria if criteria else ["Could not generate falsifiability criteria"]
 
-    def evaluate_testability(self, hypothesis: str) -> Dict[str, any]:
+    def evaluate_testability(self, hypothesis: str) -> dict[str, any]:  # type: ignore[valid-type]
         """
         Evaluate how testable a hypothesis is.
 
@@ -201,14 +202,18 @@ class ExperimentDesigner:
     Design experiments to test falsifiability criteria.
     """
 
-    def __init__(self, llm_client: Optional[LLMClient] = None):
-        self.llm = llm_client or MockLLMClient()
+    def __init__(self, llm_client: LLMClient | None = None) -> None:
+        if llm_client is not None:
+            self.llm = llm_client
+        else:
+            from src.llm.multi_provider import OpenRouterClient
+            self.llm = OpenRouterClient()  # type: ignore[assignment]
 
     def design_experiment(
         self,
         criterion: FalsifiabilityCriterion,
         budget_level: str = "medium",  # "low", "medium", "high", "unlimited"
-    ) -> Dict[str, any]:
+    ) -> dict[str, any]:  # type: ignore[valid-type]
         """
         Design experiment to test a falsifiability criterion.
 

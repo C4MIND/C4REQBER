@@ -1,10 +1,12 @@
 """
-TURBO-CDI: 27 Functors / Operators
+C4REQBER: 27 Functors / Operators
 9 Base + 18 Composed (from system-prompts-en.md)
 """
+from __future__ import annotations
 
-from typing import Callable, Dict, List, Optional
+from collections.abc import Callable
 from dataclasses import dataclass
+
 from .c4_state import C4State
 
 
@@ -89,12 +91,12 @@ class Operators:
     All 27 Operators: 9 Base + 18 Composed
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.base = self._create_base()
         self.composed = self._create_composed()
         self.all = {**self.base, **self.composed}
 
-    def _create_base(self) -> Dict[str, C4Operator]:
+    def _create_base(self) -> dict[str, C4Operator]:
         """Create 9 base operators."""
         b = BaseOperators()
         return {
@@ -112,7 +114,7 @@ class Operators:
             "kappa-": C4Operator("kappa-minus", "κ-", b.kappa_minus, "Agency contract"),
         }
 
-    def _create_composed(self) -> Dict[str, C4Operator]:
+    def _create_composed(self) -> dict[str, C4Operator]:
         """Create 18 composed operators."""
         b = BaseOperators()
         composed = {}
@@ -258,15 +260,15 @@ class Operators:
 
         return composed
 
-    def get(self, name: str) -> Optional[C4Operator]:
+    def get(self, name: str) -> C4Operator | None:
         """Get operator by name."""
         return self.all.get(name)
 
-    def list_all(self) -> List[str]:
+    def list_all(self) -> list[str]:
         """List all operator names."""
         return list(self.all.keys())
 
-    def apply_sequence(self, state: C4State, sequence: List[str]) -> C4State:
+    def apply_sequence(self, state: C4State, sequence: list[str]) -> C4State:
         """Apply sequence of operators to state."""
         current = state
         for op_name in sequence:

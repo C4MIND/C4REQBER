@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/paradigm/anomaly.py
+# hypothesis_version: 6.141.1
+
+[0.0, 0.62, 0.65, 0.68, 0.7, 0.72, 0.74, 0.75, 0.78, 0.8, 0.82, 0.85, 0.88, 0.9, 600, 800, 950, 1100, 1200, 1500, 1800, 2100, 2200, 2500, 3200, 3800, 4500, 5000, '2019-03-15', '2019-09-12', '2020-06-01', '2020-11-01', '2021-02-28', '2021-04-07', '2021-07-15', '2021-12-03', '2022-01-08', '2022-04-07', '2022-06-20', '2022-08-15', '2022-11-05', '2023-01-20', '2023-02-14', '2023-03-10', 'AMOC slowdown', 'Groking phenomenon', 'Hubble tension', 'Muon g-2 anomaly', 'a1', 'a10', 'a11', 'a12', 'a13', 'a14', 'a15', 'a16', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7', 'a8', 'a9', 'ai', 'anomaly_count', 'avg_severity', 'biology', 'climate_science', 'field', 'max_severity', 'neuroscience', 'physics', 'total_citations']

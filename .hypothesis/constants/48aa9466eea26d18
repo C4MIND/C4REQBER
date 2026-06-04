@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/patterns/library/enzyme_kinetics/core.py
+# hypothesis_version: 6.141.1
+
+[0.01, 100, 'EC50', 'I0', 'Kd', 'Ki', 'Km', 'Km_apparent', 'L', 'RK45', 'T0_R0_ratio', 'Vmax', 'apparent_Km', 'apparent_Vmax', 'briggs_haldane', 'c', 'catalytic_efficiency', 'cooperativity', 'enzyme_substrate', 'final_product', 'final_substrate', 'fitted_Km', 'fitted_Vmax', 'fraction_active', 'free_enzyme', 'hill', 'hill_plot_x', 'hill_plot_y', 'hill_slope_fitted', 'inhibition_factor', 'initial_velocity', 'input_Km', 'input_Vmax', 'k1', 'k2', 'k_1', 'lineweaver_S', 'lineweaver_v', 'logs', 'max_ES', 'metrics', 'michaelis_menten', 'model', 'mwc', 'n', 'negative', 'none', 'percent_inhibition', 'positive', 'product', 'reaction_extent', 'saturation_S', 'saturation_v', 'saturation_v_control', 'substrate', 'time', 'velocity']

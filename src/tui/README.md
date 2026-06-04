@@ -1,109 +1,61 @@
-# TURBO-CDI Ghost in the Shell TUI
+# C4REQBER Terminal User Interface
 
-Futuristic Terminal User Interface inspired by Ghost in the Shell universe.
+The official TUI for C4REQBER — a keyboard-driven, themeable, i18n-aware terminal interface for cognitive discovery.
 
-![Ghost in the Shell aesthetic](https://img.shields.io/badge/aesthetic-cyberpunk-4ECDC4)
-![Terminal UI](https://img.shields.io/badge/interface-TUI-FF6B6B)
+## Current Version: v8 (Go)
 
-## Design Philosophy
+TUI v8 is built in **Go** using [Bubble Tea](https://github.com/charmbracelet/bubbletea) and [Lipgloss](https://github.com/charmbracelet/lipgloss). It replaces the previous Python/Textual stack (v6/v7) with a statically compiled, allocation-optimized implementation.
 
-Following the **Council of Geniuses** synthesis:
-
-- **Dieter Rams**: "Less but better" — minimal, functional aesthetic
-- **Edward Tufte**: Maximum data-ink ratio — dense information display
-- **M.C. Escher**: Spatial visualizations in constrained 2D terminal space
-- **Ken Thompson**: Unix philosophy — composable, focused components
-- **Daniel Kahneman**: System 1 intuition — spatial stability, consistent patterns
-
-## Features
-
-### Visualizations
-- **C4 State Grid** — ASCII representation of 27 cognitive states (Z₃³)
-- **Discovery Workflow** — Real-time progress with 7 stages
-- **Confidence Sparklines** — Braille-based density visualization
-- **Hypothesis Cards** — Compact, information-dense displays
-
-### Interaction
-- **Vim-like navigation** — `hjkl` for power users
-- **Mouse support** — Clickable elements for discoverability
-- **Keyboard shortcuts** — `/` for command palette
-- **Real-time updates** — WebSocket integration for live data
+- **Location**: `src/tui/v8/`
+- **Binary**: `c4tui-v8`
+- **Build**: `cd src/tui/v8 && go build -o c4tui-v8 .`
+- **Launch**: `./launch_tui_v8.sh` or `cd src/tui/v8 && ./c4tui-v8`
 
 ## Quick Start
 
 ```bash
-# Install dependencies
-pip install textual
+# Build
+cd src/tui/v8
+go build -o c4tui-v8 .
 
-# Run the TUI
-python src/tui/ghost_tui.py
+# Run
+./c4tui-v8
+
+# With options
+./c4tui-v8 --api http://localhost:8000 --lang ru --theme matrix
 ```
+
+## Features
+
+- **7-phase discovery pipeline** with real-time SSE updates
+- **3×3×3 C4 Cognitive Cube** — interactive navigation with theme-aware colors
+- **7 languages** — cycle with `L`
+- **3 themes** — Dark, Matrix, Paper — cycle with `T`
+- **Responsive layout** — adapts to any terminal size
+- **Quantum mascot** — animated companion cube
+- **Export** — Markdown, JSON, HTML, BibTeX
 
 ## Keyboard Shortcuts
 
 | Key | Action |
 |-----|--------|
-| `q` | Quit |
-| `d` | Focus Discovery |
-| `c` | Focus C4 |
-| `?` | Show help |
-| `Tab` | Next element |
-| `Enter` | Activate button |
+| `Enter` | Submit query |
+| `Tab` / `←→↑↓` | Navigate C4 cube |
+| `Shift+↑↓` | Agency axis |
+| `Ctrl+Enter` | Start pipeline |
+| `F1`–`F12` | Overlays (help, chat, dashboard, export, etc.) |
+| `T` | Cycle theme |
+| `L` | Cycle language |
+| `Esc` | Close overlay / quit |
 
 ## Architecture
 
-```
-GhostTUI (App)
-├── GhostHeader (status bar)
-├── Main Container
-│   ├── DiscoveryWorkflow (7-stage progress)
-│   ├── C4Visualizer (27-state grid)
-│   └── HypothesisList (results)
-└── Footer (shortcuts)
-```
+See [`IMPLEMENTATION.md`](IMPLEMENTATION.md) for the full architecture deep-dive.
 
-## Color Scheme
+## Legacy
 
-```python
-# Dark theme (Ghost in the Shell)
-background = "#0f0f1a"      # Deep void
-primary    = "#4ECDC4"      # Cyan accent
-secondary  = "#FF6B6B"      # Coral alert
-accent     = "#FFE66D"      # Yellow highlight
-success    = "#2ecc71"      # Green status
-surface    = "#1a1a2e"      # Card background
-```
-
-## Visual Language
-
-### Symbols
-- `◈` — Primary action / C4
-- `◉` — Status indicator / TRIZ
-- `●` — Complete / Active
-- `○` — Pending
-- `◔` — Clock / Time
-
-### Braille Patterns
-For high-density sparklines:
-```
-⣀ ⡠ ⡄ ⡆ ⡇ ⣇ ⣏ ⣟ ⣿
-```
-4x density vs standard block characters.
-
-## Future Enhancements
-
-- [ ] Force-directed graph visualization
-- [ ] Real-time WebSocket data
-- [ ] Customizable color schemes
-- [ ] Vim-mode command palette
-- [ ] Multi-panel layouts
-
-## References
-
-- **Textual**: https://textual.textualize.io/
-- **Ghost in the Shell**: 1995 anime cyberpunk aesthetic
-- **TUIs of the future**: https://github.com/rothgar/awesome-tuis
+v6 and v7 (Python/Textual) have been removed. Python shims in `src/tui/__init__.py`, `app.py`, and `entry.py` now delegate to the Go binary.
 
 ## License
 
-MIT
+Dual-licensed under AGPL-3.0 and Commercial License. See project root.

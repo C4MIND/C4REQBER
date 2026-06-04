@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url>
+    <loc>https://c4reqber.org/</loc>
+    <lastmod>2026-05-29</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="en" href="https://c4reqber.org/"/>
+    <xhtml:link rel="alternate" hreflang="ru" href="https://c4reqber.org/"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://c4reqber.org/"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://c4reqber.org/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://c4reqber.org/"/>
+    <xhtml:link rel="alternate" hreflang="ar" href="https://c4reqber.org/"/>
+    <xhtml:link rel="alternate" hreflang="hi" href="https://c4reqber.org/"/>
+  </url>
+</urlset>

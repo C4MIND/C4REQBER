@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Research Audiences — c4reqber Docs</title>
+<meta name="description" content="Who is c4reqber for? PhD students, interdisciplinary researchers, engineers, psychologists, and more.">
+<meta property="og:title" content="Research Audiences — c4reqber Docs">
+<meta property="og:type" content="website">
+<link rel="canonical" href="https://c4reqber.org/docs/guides/audiences.html">
+<meta name="theme-color" content="#0F1117">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' https: data:; connect-src 'self' https://api.github.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800,900&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#9670;</text></svg>">
+<link rel="manifest" href="../../manifest.json">
+<link rel="stylesheet" href="../../css/main.css">
+<style>
+.doc-content{max-width:800px;margin:0 auto;padding:0 24px}
+.doc-content h2{font-size:28px;font-weight:800;margin:60px 0 20px;color:var(--accent)}
+.doc-content h3{font-size:20px;font-weight:700;margin:32px 0 12px;color:var(--primary)}
+.doc-content h4{font-size:16px;font-weight:700;margin:24px 0 8px;color:var(--fg)}
+.doc-content p{color:var(--fg-2);line-height:1.8;margin-bottom:16px}
+.doc-content ul{margin:16px 0;padding-left:24px;color:var(--fg-2)}
+.doc-content li{margin-bottom:8px;line-height:1.7}
+.doc-content code{background:var(--bg-3);padding:2px 8px;border-radius:4px;font-family:var(--mono);font-size:13px;color:var(--primary)}
+.doc-content pre{background:var(--bg-4);border-radius:var(--radius);padding:20px;overflow-x:auto;border:1px solid rgba(255,255,255,.06);margin:20px 0}
+.doc-content pre code{background:none;padding:0;color:var(--fg-2)}
+.doc-content table{width:100%;border-collapse:collapse;margin:20px 0;font-size:14px}
+.doc-content th{background:var(--bg-3);padding:10px 12px;text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--fg-3);border-bottom:1px solid rgba(255,255,255,.08)}
+.doc-content td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.04);color:var(--fg-2)}
+
+.breadcrumb{display:flex;gap:8px;align-items:center;font-size:13px;color:var(--fg-3);margin-bottom:24px}
+.breadcrumb a{color:var(--fg-3);text-decoration:none}
+.breadcrumb a:hover{color:var(--primary)}
+</style>
+</head>
+<body>
+
+<div id="site-header"></div>
+
+<main>
+
+<section class="hero" style="min-height:35vh;padding-top:100px">
+  <div class="hero-bg"></div>
+  <div class="container" style="text-align:center;position:relative;z-index:2">
+    <div class="badge"><span class="dot"></span> <span data-i18n="badge_guide">Guide</span></div>
+    <h1 style="font-size:clamp(32px,5vw,52px);margin-bottom:16px"><span class="gradient-text">Research Audiences</span></h1>
+    <p class="hero-sub" style="max-width:600px;margin:0 auto">Who is c4reqber for? Honest assessment by research domain and TRL level.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="doc-content">
+    <nav class="breadcrumb">
+      <a href="../../" data-i18n="breadcrumb_home">Home</a> <span>/</span> <a href="../">Docs</a> <span>/</span> <span>Audiences</span>
+    </nav>
+
+    <h2>TRL Assessment</h2>
+    <table>
+      <tr><th>Level</th><th>Meaning</th><th>Can c4reqber help?</th></tr>
+      <tr><td><strong>TRL 1</strong> — Basic principles</td><td>Identify fundamental principles</td><td>Yes. C4 navigation + 33+ source literature search finds theory gaps</td></tr>
+      <tr><td><strong>TRL 2</strong> — Concept formulation</td><td>Formulate a hypothesis</td><td>Yes. LLM generation with falsifiable predictions is a core feature</td></tr>
+      <tr><td><strong>TRL 3</strong> — Proof of concept</td><td>Analytical or simulation proof</td><td>Partially. 36 simulation engines show direction, but these are toy models</td></tr>
+      <tr><td><strong>TRL 4</strong> — Lab validation</td><td>Laboratory validation</td><td>No. The system has no hands, eyes, or reagents</td></tr>
+      <tr><td><strong>TRL 5–9</strong></td><td>Pilot, field validation, commercialization</td><td>No. Out of scope</td></tr>
+    </table>
+    <p><strong>Conclusion:</strong> c4reqber operates at TRL 1–3. It helps move from "I have a problem" to "I have a structured hypothesis with mechanism, predictions, and literature list." Everything beyond that requires a human with a lab, data, or mathematical apparatus.</p>
+
+    <h2>1. PhD Students and Early-Career Researchers (Year 1–3)</h2>
+    <p><strong>Problem:</strong> "I know I'm interested in X, but I don't understand what's already been done and where the gaps are."</p>
+    <p><strong>What c4reqber provides:</strong></p>
+    <ul>
+      <li>Literature review in 2 minutes instead of 2 weeks — 33 sources: arXiv, PubMed, Semantic Scholar, OpenAlex, Europe PMC, Crossref, Zenodo, and more</li>
+      <li>Structured gaps with potential assessment</li>
+      <li>Formulation of 3–5 competing hypotheses with falsifiable predictions</li>
+      <li>List of control experiments (DoE design)</li>
+    </ul>
+    <p><strong>Honesty:</strong> This is a starting point, not a final review. Hypotheses require expert verification — LLMs can hallucinate mechanisms.</p>
+
+    <h2>2. Interdisciplinary Researchers</h2>
+    <p><strong>Problem:</strong> "I'm a biologist, but my problem requires physics/math/computer science. I don't know which tools from neighboring disciplines are applicable."</p>
+    <p><strong>What c4reqber provides:</strong></p>
+    <ul>
+      <li>TRIZ analysis: 40 inventive principles applied to your problem</li>
+      <li>Isomorphisms: "Here are 3 similar problems from chemistry, solved with methods you don't know as a biologist"</li>
+      <li>C4 navigation across 27 cognitive states — structures chaotic thinking</li>
+      <li>Transfer pipeline: automatic analogy search between domains</li>
+    </ul>
+    <p><strong>Honesty:</strong> Works best when disciplines are close (biochemistry → biophysics). Quality drops for distant bridges (quantum mechanics → sociology).</p>
+
+    <h2>3. Engineers and R&D Managers</h2>
+    <p><strong>Problem:</strong> "We need to improve a product/process, but the team is stuck in a local optimum."</p>
+    <p><strong>What c4reqber provides:</strong></p>
+    <ul>
+      <li>TRIZ contradictions: "Increase speed without increasing energy consumption"</li>
+      <li>Patent landscape analysis (USPTO, OpenReview, Google Patents)</li>
+      <li>Structured "paradoxes" with proposed solutions</li>
+      <li>Simulations: CFD (OpenFOAM, FEniCSx), molecular dynamics (GROMACS, LAMMPS), multi-physics (MuJoCo, PyBullet)</li>
+    </ul>
+
+    <h2>4. Psychologists and Social Scientists</h2>
+    <p><strong>Problem:</strong> "My field is hard to formalize. Can AI even help study human behavior, therapy, or social phenomena?"</p>
+    <p><strong>What c4reqber provides:</strong></p>
+    <ul>
+      <li><strong>Literature search</strong> across psychological databases: PubMed (psychiatry), ClinicalTrials.gov, OpenReview, Harvard Dataverse, Kaggle</li>
+      <li><strong>Causal inference</strong> (DoWhy, EconML, gCastle): "Does X affect Y?" with confounder control — critical for A/B tests in therapy</li>
+      <li><strong>Agent models</strong> (Mesa, SimPy): modeling group behavior, norm diffusion, herding effects</li>
+      <li><strong>Contradiction mining</strong>: finding contradictory claims in literature</li>
+      <li><strong>TRIZ for social systems</strong>: 40 principles applicable to organizational problems</li>
+    </ul>
+    <p><strong>Honesty:</strong> c4reqber does <strong>not diagnose patients</strong> and does <strong>not replace a therapist</strong>. In social sciences, quality depends on data quality — if your niche has few peer-reviewed articles, LLMs will hallucinate. But for literature review, hypothesis structuring, and causal modeling, it is a powerful tool.</p>
+
+    <h2>5. Clinical Researchers / Medical Doctors</h2>
+    <p><strong>Problem:</strong> "Need to design an RCT, find biomarkers, understand drug mechanism of action."</p>
+    <p><strong>What c4reqber provides:</strong></p>
+    <ul>
+      <li>PubMed + Europe PMC + ClinicalTrials.gov + STRING + ChEMBL + PubChem</li>
+      <li>Causal inference for observational data: "Which factor actually causes the side effect?"</li>
+      <li>Simulations: pharmacokinetics (COPASI, Tellurium), PBPK models</li>
+      <li>Network pharmacology: STRING + Cytoscape-compatible output</li>
+    </ul>
+
+    <h2>6. Ecologists, Climatologists, Geographers</h2>
+    <p><strong>Problem:</strong> "Complex multi-factor systems, long time series, uncertainty in models."</p>
+    <p><strong>What c4reqber provides:</strong></p>
+    <ul>
+      <li>GBIF (biodiversity), NASA Earthdata (satellite), USGS (geology), CERN (physics)</li>
+      <li>Bayesian models (PyMC, Stan): uncertainty quantification</li>
+      <li>Agent models: ecosystem simulations (predator-prey, invasive species)</li>
+      <li>Simulations: WRF (weather), FEniCSx (fluid dynamics for ocean modeling)</li>
+    </ul>
+
+    <h2>7. Data Scientists and ML Researchers</h2>
+    <p><strong>Problem:</strong> "Feature engineering, model selection, interpretation, causal claims from correlation data."</p>
+    <p><strong>What c4reqber provides:</strong></p>
+    <ul>
+      <li>Kaggle + UCI ML Repository + Harvard Dataverse: dataset search</li>
+      <li>Causal inference: "Is this feature actually causal or just correlated?"</li>
+      <li>AutoML: automatic model enumeration (autoresearch layer)</li>
+      <li>Bayesian models: uncertainty quantification, model comparison (BMA)</li>
+      <li>Simulations: synthetic data generation for edge cases</li>
+    </ul>
+
+    <h2>8. Formal Verifiers / Theorists</h2>
+    <p><strong>Problem:</strong> "I have an idea, but I want to check it for contradictions formally."</p>
+    <p><strong>What c4reqber provides:</strong></p>
+    <ul>
+      <li>Auto-generation of formal specification from natural language (Lean4, Coq, Dafny, Z3, Hoare)</li>
+      <li>Iterative compilation error correction (LLM → compile → error → fix loop)</li>
+      <li>Export proofs to .lean, .v, .smt2</li>
+      <li>MathDetector: automatic categorization of mathematical statements</li>
+    </ul>
+    <p><strong>Honesty:</strong> Auto-generation from natural language is not yet fully implemented. Works best if you explicitly provide the theorem statement.</p>
+
+    <h2>Who It Does NOT Help (and Why)</h2>
+    <table>
+      <tr><th>Who</th><th>Why it won't help</th></tr>
+      <tr><td>Experimenters who need data</td><td>The system does not run experiments. It will say "you need to measure X" but won't measure X for you</td></tr>
+      <tr><td>Ultra-niche researchers</td><td>If your niche has &lt;100 papers in 10 years, LLMs aren't trained on this data. Hypotheses will be generic or hallucinated</td></tr>
+      <tr><td>Those expecting guaranteed publishable results</td><td>LLM generation is a creative trigger, not peer-reviewed science</td></tr>
+      <tr><td>Those who don't want to think</td><td>The system requires critical evaluation of output. Blind trust = noise</td></tr>
+      <tr><td>Practicing clinicians (treating patients)</td><td>c4reqber is a research tool, not a diagnostic system. Do not use for diagnosis or treatment without peer review</td></tr>
+    </table>
+
+    <h2>Honest Comparison with Analogues</h2>
+    <table>
+      <tr><th>Tool</th><th>What it does</th><th>Where c4reqber is better</th><th>Where c4reqber is worse</th></tr>
+      <tr><td>Elicit / Consensus</td><td>Literature search + summarization</td><td>Structured hypothesis with predictions, not just summary</td><td>UX is simpler in Elicit</td></tr>
+      <tr><td>SciSpace</td><td>Reading papers with AI assistant</td><td>Cross-paper synthesis + contradiction detection + 33 sources</td><td>No inline PDF reader</td></tr>
+      <tr><td>ChatGPT / Claude</td><td>Generic Q&A</td><td>Domain-aware simulation (36 engines), formal verification, TRIZ, causal inference, structured pipeline</td><td>Generic Q&A is sometimes more accurate for simple questions</td></tr>
+      <tr><td>MATLAB / Mathematica</td><td>Simulations and computation</td><td>Hypothesis generation + literature search. MATLAB does neither</td><td>MATLAB has decades of industrial-grade solver refinement; our 36 engines span broader scientific domains at research-grade fidelity</td></tr>
+    </table>
+
+    <h2>Summary</h2>
+    <p>c4reqber is a <strong>research assistant at the level of "a very smart PhD student who read 200 papers over the weekend and proposed 5 hypotheses."</strong></p>
+    <ul>
+      <li><strong>Does not replace:</strong> experiments, expertise, peer review, scientist intuition, therapeutic care</li>
+      <li><strong>Accelerates:</strong> literature review, hypothesis formulation, structuring thinking, contradiction search, causal modeling, interdisciplinary transfer</li>
+    </ul>
+    <p>If you expect c4reqber to "discover a new law of physics" — you will be disappointed.<br>
+    If you expect c4reqber to "systematize your chaos of thoughts and point where to look next" — you will get exactly that.</p>
+  </div>
+</section>
+
+</main>
+
+<div id="site-footer"></div>
+
+<script src="../../js/components.js"></script>
+<script src="../../js/main.js"></script>
+<script>
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('../../sw.js').catch(()=>{});
+}
+</script>
+
+</body>
+</html>

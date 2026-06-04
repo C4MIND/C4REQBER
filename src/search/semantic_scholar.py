@@ -1,12 +1,13 @@
 """
-TURBO-CDI: Semantic Scholar Integration
+C4REQBER: Semantic Scholar Integration
 Search 200M+ papers from Semantic Scholar API
 """
+from __future__ import annotations
 
 import os
-from typing import List, Dict, Any, Optional
 from dataclasses import dataclass
-import asyncio
+from typing import Any
+
 
 try:
     import httpx
@@ -22,14 +23,14 @@ class SemanticPaper:
 
     paper_id: str
     title: str
-    authors: List[str]
+    authors: list[str]
     year: int
     abstract: str
     citation_count: int
     reference_count: int
-    fields_of_study: List[str]
-    publication_types: List[str]
-    open_access_pdf: Optional[str] = None
+    fields_of_study: list[str]
+    publication_types: list[str]
+    open_access_pdf: str | None = None
     venue: str = ""
     tldr: str = ""  # AI-generated TL;DR
 
@@ -44,19 +45,30 @@ class SemanticScholarClient:
 
     BASE_URL = "https://api.semanticscholar.org/graph/v1"
 
-    def __init__(self, api_key: Optional[str] = None):
+    def __init__(self, api_key: str | None = None) -> None:
         self.api_key = api_key or os.environ.get("SEMANTIC_SCHOLAR_API_KEY")
         self.client = None
+        self._last_request: float = 0.0
+        self._rate_limit = 1.0 / 3.5  # ~3.5 sec between requests for free tier safety
         if HAS_HTTPX:
             headers = {}
             if self.api_key:
                 headers["x-api-key"] = self.api_key
             self.client = httpx.AsyncClient(headers=headers, timeout=30.0)
 
-    async def __aenter__(self):
+    async def _rate_limit_wait(self) -> None:
+        import time
+        import asyncio
+        now = time.monotonic()
+        wait = self._last_request + (1.0 / self._rate_limit) - now
+        if wait > 0:
+            await asyncio.sleep(wait)
+        self._last_request = time.monotonic()
+
+    async def __aenter__(self) -> Any:
         return self
 
-    async def __aexit__(self, *args):
+    async def __aexit__(self, *args: Any) -> None:
         if self.client:
             await self.client.aclose()
 
@@ -64,11 +76,11 @@ class SemanticScholarClient:
         self,
         query: str,
         limit: int = 10,
-        fields: Optional[List[str]] = None,
-        year_start: Optional[int] = None,
-        year_end: Optional[int] = None,
+        fields: list[str] | None = None,
+        year_start: int | None = None,
+        year_end: int | None = None,
         open_access_only: bool = False,
-    ) -> List[SemanticPaper]:
+    ) -> list[SemanticPaper]:
         """
         Search for papers on Semantic Scholar.
 
@@ -117,7 +129,17 @@ class SemanticScholarClient:
         if open_access_only:
             params["openAccessPdf"] = "true"
 
-        response = await self.client.get(url, params=params)
+        await self._rate_limit_wait()
+        response = await self.client.get(url, params=params)  # type: ignore[arg-type, union-attr]
+        if response.status_code == 429:
+            import asyncio
+            await asyncio.sleep(5)
+            await self._rate_limit_wait()
+        response = await self.client.get(url, params=params)  # type: ignore[arg-type, union-attr]
+        if response.status_code == 429:
+            import asyncio
+            await asyncio.sleep(5)
+            response = await self.client.get(url, params=params)  # type: ignore[arg-type, union-attr]
         response.raise_for_status()
 
         data = response.json()
@@ -158,7 +180,7 @@ class SemanticScholarClient:
 
         return papers
 
-    async def get_paper_details(self, paper_id: str) -> Optional[SemanticPaper]:
+    async def get_paper_details(self, paper_id: str) -> SemanticPaper | None:
         """Get detailed information about a specific paper."""
         if not HAS_HTTPX:
             raise ImportError("httpx required for Semantic Scholar")
@@ -168,9 +190,14 @@ class SemanticScholarClient:
             "fields": "paperId,title,authors,year,abstract,citationCount,referenceCount,fieldsOfStudy,publicationTypes,openAccessPdf,venue,tldr"
         }
 
-        response = await self.client.get(url, params=params)
+        await self._rate_limit_wait()
+        response = await self.client.get(url, params=params)  # type: ignore[union-attr]
         if response.status_code == 404:
             return None
+        if response.status_code == 429:
+            import asyncio
+            await asyncio.sleep(5)
+            response = await self.client.get(url, params=params)  # type: ignore[union-attr]
 
         response.raise_for_status()
         item = response.json()
@@ -208,7 +235,7 @@ class SemanticScholarClient:
 
     async def get_citations(
         self, paper_id: str, limit: int = 10
-    ) -> List[SemanticPaper]:
+    ) -> list[SemanticPaper]:
         """Get papers that cite the given paper."""
         if not HAS_HTTPX:
             raise ImportError("httpx required for Semantic Scholar")
@@ -219,7 +246,7 @@ class SemanticScholarClient:
             "fields": "paperId,title,authors,year,abstract,citationCount,venue",
         }
 
-        response = await self.client.get(url, params=params)
+        response = await self.client.get(url, params=params)  # type: ignore[arg-type, union-attr]
         response.raise_for_status()
 
         data = response.json()
@@ -252,7 +279,7 @@ class SemanticScholarClient:
 
     async def find_related_hypotheses(
         self, problem: str, top_k: int = 5
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Find papers related to a research problem.
         Returns papers with relevance scores.
@@ -286,17 +313,11 @@ class SemanticScholarClient:
             )
 
         # Sort by score
-        results.sort(key=lambda x: x["relevance_score"], reverse=True)
+        results.sort(key=lambda x: x["relevance_score"], reverse=True)  # type: ignore[arg-type, return-value]
         return results
 
 
-# Singleton instance
-_client: Optional[SemanticScholarClient] = None
-
-
 def get_semantic_scholar_client() -> SemanticScholarClient:
-    """Get singleton Semantic Scholar client."""
-    global _client
-    if _client is None:
-        _client = SemanticScholarClient()
-    return _client
+    """Get singleton Semantic Scholar client (backed by DI container)."""
+    from src.di.container import get_container
+    return get_container().get_or_register("semantic_scholar_client", SemanticScholarClient)

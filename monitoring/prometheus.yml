@@ -2,15 +2,7 @@ global:
   scrape_interval: 15s
 
 scrape_configs:
-  - job_name: 'turbo-cdi-api'
+  - job_name: 'c4reqber-api'
     static_configs:
-      - targets: ['api:8000']
+      - targets: ['localhost:8000']
     metrics_path: '/metrics'
-    
-  - job_name: 'postgres'
-    static_configs:
-      - targets: ['postgres:5432']
-    
-  - job_name: 'redis'
-    static_configs:
-      - targets: ['redis:6379']

@@ -1,0 +1,6 @@
+FROM python:3.11-slim
+RUN pip install --no-cache-dir numpy scipy matplotlib
+RUN useradd -m turbo
+USER turbo
+WORKDIR /home/turbo
+ENTRYPOINT ["python3", "-c", "import numpy; print('c4-cdi-turbo GPU ready: numpy', numpy.__version__)"]

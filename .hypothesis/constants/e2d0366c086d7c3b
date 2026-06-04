@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/patterns/library/model_predictive/__init__.py
+# hypothesis_version: 6.141.1
+
+['ActiveSetSolver', 'MPCConfig', 'QPSolver', 'QPSolverBase', 'SystemType']

@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/agents/mp_llm_generator.py
+# hypothesis_version: 6.141.1
+
+[0.0, 0.7, 0.75, 1500, 'A', 'S', 'T', 'Unknown', '```', 'blind_spots', 'c4_bias', 'cognitive_style', 'content', 'key_insights', 'mp_rotation', 'profile_name', 'turbo_cdi.pipeline']

@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/theorem/prover.py
+# hypothesis_version: 6.141.1
+
+[0.0, 0.3, 0.7, '.', 'Introduce hypothesis', '[^\\w]', '_', 'accuracy', 'agda', 'all', 'always true', 'by definition', 'cost', 'disproved', 'end TurboCDI\n', 'error', 'exists', 'follows from', 'for all', 'formalizing', 'general', 'haskell', 'if', 'implies', 'intro', 'lean', 'manual_review', 'obvious', 'pending', 'proved', 'proving', 'reliability', 'simp', 'simulation', 'speed', 'step-1', 'step-2', 'straightforward', 'there exists', 'timeout', 'trivial', '⊢ True']

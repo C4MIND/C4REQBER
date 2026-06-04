@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/api/routers/validation_single.py
+# hypothesis_version: 6.141.1
+
+['discovery_id', 'status', 'success', 'validation']

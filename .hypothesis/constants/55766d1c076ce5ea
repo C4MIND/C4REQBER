@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/cache/tier2_memory.py
+# hypothesis_version: 6.141.1
+
+[1000, 'data', 'hits', 'max_size', 'misses', 'size', 'ts', 'ttl']

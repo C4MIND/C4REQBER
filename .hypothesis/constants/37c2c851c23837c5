@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/patterns/library/inverse_kinematics/core.py
+# hypothesis_version: 6.141.1
+
+[-1.0, 0.0, 1e-10, 1e-06, 1.0, 1000, '6.0.0', 'Animation', 'Biomechanics', 'Computer Graphics', 'EXTENDED', 'Inverse Kinematics', 'O(n²) per iteration', 'Robotics', 'accuracy', 'assumptions', 'category', 'ccd', 'config', 'converged', 'convergence_rate', 'damped_least_squares', 'default', 'description', 'domain', 'end_effector', 'enum', 'error', 'final_position', 'float', 'id', 'int', 'inverse_kinematics', 'iteration', 'iterations', 'jacobian_nullspace', 'jacobian_transpose', 'joint_angles', 'joint_positions', 'link_lengths', 'max_iterations', 'mean_error', 'n_dof', 'n_points', 'name', 'options', 'parameters', 'planar_2r', 'planar_3r', 'position_error', 'puma_560', 'results', 'robot_type', 'scara', 'solution', 'solver', 'target', 'tolerance', 'trajectory', 'trajectory_mode', 'type', 'typical_runtime', 'version']

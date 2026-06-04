@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/triz/bridge.py
+# hypothesis_version: 6.141.1
+
+['Unknown', 'c4_operator', 'c4_operators', 'c4_path', 'c4_to_triz', 'config', 'contradiction', 'contradictions', 'delta', 'estimated_steps', 'explanation', 'improve', 'iota', 'lambda+', 'mappings', 'principle_details', 'principles', 'problem', 'reverse_mappings', 'rho', 'sigma', 'step', 'steps', 'tau+', 'triz_name', 'triz_principle', 'triz_principles', 'triz_to_c4', 'within_theorem_11', 'worsen']

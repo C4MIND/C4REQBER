@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  # Backend API
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    ports:
+      - "8000:8000"
+    environment:
+      - JWT_SECRET=supersecretkey123
+      - DATABASE_URL=postgresql://user:pass@db:5432/turbocdi
+      - REDIS_URL=redis://redis:6379
+      - COMPLEXITY_DEFAULT_LEVEL=lite
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - ./src:/app/src  # Hot reload
+    command: uvicorn api.server:app --host 0.0.0.0 --port 8000 --reload
+
+  # Frontend
+  web:
+    build:
+      context: ./web-v2
+      dockerfile: Dockerfile.web
+    ports:
+      - "3001:3000"
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    volumes:
+      - ./web-v2/src:/app/src  # Hot reload
+    command: npm run dev
+    depends_on:
+      - api
+
+  # PostgreSQL
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: turbocdi
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # Redis
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+volumes:
+  postgres_data:
+  redis_data:

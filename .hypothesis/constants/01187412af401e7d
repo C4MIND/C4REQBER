@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/llm/config.py
+# hypothesis_version: 6.141.1
+
+[0.7, 60.0, 2000, 'DEEPSEEK_API_KEY', 'DEEPSEEK_BASE_URL', 'MISTRAL_API_KEY', 'MISTRAL_BASE_URL', 'MOONSHOT_API_KEY', 'MOONSHOT_BASE_URL', 'OPENROUTER_API_KEY', 'OPENROUTER_BASE_URL', 'XAI_API_KEY', 'XAI_BASE_URL', 'auto', 'balanced', 'cost', 'deepseek', 'deepseek-chat', 'grok-2-latest', 'https://api.x.ai/v1', 'hybrid_deep', 'hybrid_fast', 'lm_studio', 'local-model', 'local_only', 'mistral', 'mistral-large-latest', 'mock', 'moonshot', 'moonshot-v1-8k', 'ollama', 'openrouter', 'quality', 'qwen2.5:14b', 'unknown', 'xai']

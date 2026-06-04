@@ -1,14 +1,13 @@
 """
-TURBO-CDI: CDI Engine
+C4REQBER: CDI Engine
 Creative & Destructive Insights Algorithm
 """
+from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import List, Dict, Optional, Tuple
 from enum import Enum
-import asyncio
 
-from .c4_state import C4State, C4Space
+from .c4_state import C4Space, C4State
 from .operators import Operators
 
 
@@ -57,12 +56,12 @@ class CDISolution:
     """Output of CDI algorithm."""
 
     hypothesis: str
-    c4_path: List[C4Transition]
+    c4_path: list[C4Transition]
     steps_taken: int
     contradiction: PhysicalContradiction
     confidence_score: float
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         assert self.steps_taken <= 6, f"Theorem 11 violated: {self.steps_taken} > 6"
 
 
@@ -79,14 +78,14 @@ class CDIEngine:
     5. Synthesize Solution
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.c4_space = C4Space()
         self.operators = Operators()
 
     def solve(
         self,
         contradiction: PhysicalContradiction,
-        current_state: Optional[C4State] = None,
+        current_state: C4State | None = None,
     ) -> CDISolution:
         """
         Execute CDI algorithm on a physical contradiction.
@@ -161,7 +160,7 @@ class CDIEngine:
         # Default target: Meta-level, Future-oriented, System perspective
         return C4State(T=2, S=2, A=2)
 
-    def _compute_route(self, start: C4State, end: C4State) -> List[C4Transition]:
+    def _compute_route(self, start: C4State, end: C4State) -> list[C4Transition]:
         """
         Compute shortest path through C4 space.
 
@@ -183,7 +182,7 @@ class CDIEngine:
                 op = None
 
             if op:
-                new_state = self.operators.get(op)(current)
+                new_state = self.operators.get(op)(current)  # type: ignore[misc]
                 path.append(C4Transition(op, current, new_state))
                 current = new_state
 
@@ -198,7 +197,7 @@ class CDIEngine:
                 op = None
 
             if op:
-                new_state = self.operators.get(op)(current)
+                new_state = self.operators.get(op)(current)  # type: ignore[misc]
                 path.append(C4Transition(op, current, new_state))
                 current = new_state
 
@@ -213,13 +212,13 @@ class CDIEngine:
                 op = None
 
             if op:
-                new_state = self.operators.get(op)(current)
+                new_state = self.operators.get(op)(current)  # type: ignore[misc]
                 path.append(C4Transition(op, current, new_state))
                 current = new_state
 
         return path
 
-    def _execute_path(self, start: C4State, path: List[C4Transition]) -> C4State:
+    def _execute_path(self, start: C4State, path: list[C4Transition]) -> C4State:
         """Execute path and return final state."""
         if not path:
             return start
@@ -229,7 +228,7 @@ class CDIEngine:
         self,
         contradiction: PhysicalContradiction,
         final_state: C4State,
-        path: List[C4Transition],
+        path: list[C4Transition],
     ) -> str:
         """
         Generate hypothesis text from navigation path.
@@ -248,7 +247,7 @@ class CDIEngine:
         return hypothesis
 
     def _calculate_confidence(
-        self, path: List[C4Transition], contradiction: PhysicalContradiction
+        self, path: list[C4Transition], contradiction: PhysicalContradiction
     ) -> float:
         """
         Calculate confidence score (0-1).
@@ -274,7 +273,7 @@ class EinsteinValidator:
     GTR: 6 steps expected (maximum)
     """
 
-    def __init__(self, engine: CDIEngine):
+    def __init__(self, engine: CDIEngine) -> None:
         self.engine = engine
 
     def validate_str(self) -> CDISolution:

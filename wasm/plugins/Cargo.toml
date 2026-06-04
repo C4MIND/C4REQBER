@@ -1,0 +1,8 @@
+[workspace]
+members = [
+    "monte_carlo_pi",
+    "hash_fingerprint",
+    "modular_math",
+    "matrix_mult",
+    "text_distance",
+]

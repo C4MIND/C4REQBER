@@ -1,13 +1,15 @@
 """
-TURBO-CDI: Search Module
+c4-cdi-turbo: Search Module
 Paper search and literature review capabilities
 """
+from __future__ import annotations
 
 from src.search.semantic_scholar import (
-    SemanticScholarClient,
     SemanticPaper,
+    SemanticScholarClient,
     get_semantic_scholar_client,
 )
+
 
 __all__ = [
     "SemanticScholarClient",

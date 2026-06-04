@@ -1,23 +1,20 @@
-"""
-TURBO-CDI: Hypothesis Synthesizer
-Generate scientific hypotheses using CDI path + LLM
-"""
+"""Hypothesis Synthesizer.
 
-from typing import List, Dict, Optional
-import json
+Generate scientific hypotheses using CDI path + LLM.
+"""
+from __future__ import annotations
 
-from .client import LLMClient, MockLLMClient
+from .client import LLMClient
+
 
 try:
-    from ..core.cdi_engine import CDISolution, C4Transition
-    from ..core.c4_state import C4State
+    from ..core.cdi_engine import CDISolution
 except ImportError:
-    import sys
     import os
+    import sys
 
     sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    from core.cdi_engine import CDISolution, C4Transition
-    from core.c4_state import C4State
+    from core.cdi_engine import CDISolution  # type: ignore[no-redef]
 
 
 class HypothesisSynthesizer:
@@ -27,7 +24,7 @@ class HypothesisSynthesizer:
     Uses LLM to transform C4 path + contradiction into concrete hypothesis.
     """
 
-    SYSTEM_PROMPT = """You are TURBO-CDI, a scientific hypothesis generation engine.
+    SYSTEM_PROMPT = """You are C4REQBER, a scientific hypothesis generation engine.
 
 Your task: Transform a physical contradiction into a novel scientific hypothesis using C4 cognitive navigation.
 
@@ -41,7 +38,7 @@ PRINCIPLES:
 C4 COGNITIVE OPERATORS REFERENCE:
 - τ (tau): Time shifts (past/present/future)
 - σ (sigma): Integration/connection
-- δ (delta): Differentiation/separation  
+- δ (delta): Differentiation/separation
 - ρ (rho): Pattern recognition
 - ι (iota): Inversion/perspective flip
 - λ (lambda): Abstraction/generalization
@@ -50,8 +47,10 @@ C4 COGNITIVE OPERATORS REFERENCE:
 
 RESPOND ONLY with the hypothesis statement. Be concise (2-4 sentences)."""
 
-    def __init__(self, llm_client: Optional[LLMClient] = None):
-        self.llm = llm_client or MockLLMClient()
+    def __init__(self, llm_client: LLMClient | None = None) -> None:
+        if llm_client is None:
+            raise RuntimeError("LLMClient required for HypothesisSynthesizer")
+        self.llm = llm_client
 
     def synthesize(
         self,
@@ -122,8 +121,8 @@ HYPOTHESIS:"""
         return prompt
 
     def synthesize_batch(
-        self, solutions: List[CDISolution], domain: str = "general"
-    ) -> List[str]:
+        self, solutions: list[CDISolution], domain: str = "general"
+    ) -> list[str]:
         """Synthesize hypotheses for multiple solutions."""
         return [self.synthesize(sol, domain) for sol in solutions]
 
@@ -149,12 +148,16 @@ class ResearchContextEnricher:
     Enrich hypothesis with research context from literature.
     """
 
-    def __init__(self, llm_client: Optional[LLMClient] = None):
-        self.llm = llm_client or MockLLMClient()
+    def __init__(self, llm_client: LLMClient | None = None) -> None:
+        if llm_client is not None:
+            self.llm = llm_client
+        else:
+            from src.llm.multi_provider import OpenRouterClient
+            self.llm = OpenRouterClient()  # type: ignore[assignment]
 
     def enrich(
-        self, hypothesis: str, domain: str, key_papers: Optional[List[str]] = None
-    ) -> Dict[str, str]:
+        self, hypothesis: str, domain: str, key_papers: list[str] | None = None
+    ) -> dict[str, str]:
         """
         Enrich hypothesis with research context.
 

@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/api/v6_routers/mp_v6.py
+# hypothesis_version: 6.141.1
+
+[400, '/mp', '/profiles', '/programs', '/rotate', 'description', 'dimension', 'id', 'name', 'name_ru', 'pole_a', 'pole_b', 'settings_count', 'v6-mp']

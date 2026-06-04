@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/api/agents_router.py
+# hypothesis_version: 6.141.1
+
+[0.15, 0.25, 0.35, 0.7, 404, 2000, ',', '/', '/agents', '/council', '/devil', '/select', '/synergy/matrix', '/team', '/{code}', '/{code}/neighbors', '/{code}/prompt', '666', 'Invalid agent code', 'X-Forwarded-For', 'abduction', 'agent', 'agent1', 'agent2', 'agents', 'analogy', 'biological', 'collective', 'complexity', 'confidence_reduction', 'counterarguments', 'critique', 'deduction', 'distance', 'economic', 'en', 'individual', 'induction', 'json', 'language', 'neighbors', 'physical', 'prompt', 'risk', 'scale', 'social', 'synergy', 'systemic', 'technological', 'time', 'uncertainty', 'unknown', 'weaknesses']

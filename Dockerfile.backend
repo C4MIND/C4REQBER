@@ -1,0 +1,42 @@
+# TURBO-CDI v8.0 - Production Dockerfile (Backend)
+FROM python:3.11-slim as backend-base
+
+LABEL version="8.0.0"
+LABEL description="TURBO-CDI API Server"
+LABEL maintainer="TURBO-CDI Team"
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Copy requirements first (leverage cache)
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir structlog>=23.0.0
+
+# Copy source
+COPY src/ ./src/
+COPY migrations/ ./migrations/
+COPY alembic.ini .
+COPY pyproject.toml .
+
+# Environment
+ENV JWT_SECRET=${JWT_SECRET}
+ENV ENV="production"
+ENV API_PORT=8000
+ENV API_HOST="0.0.0.0"
+ENV PYTHONUNBUFFERED=1
+
+# Expose ports
+EXPOSE 8000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+# Run
+CMD ["uvicorn", "src.api.server:app", "--host", "0.0.0.0", "--port", "8000"]

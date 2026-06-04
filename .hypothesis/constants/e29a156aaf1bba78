@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/api/routers/websocket.py
+# hypothesis_version: 6.141.1
+
+[0.5, 0.8, 200, 4001, 100000, '/ws/{client_id}', 'Bearer ', 'Invalid JSON format.', 'Message too large.', 'Pipeline error', 'Pipeline started', 'Unauthorized', 'agentName', 'agent_done', 'analyzing', 'authorization', 'autopilot', 'complete', 'confidence', 'discover', 'discovery_stream', 'error', 'event', 'final_solution', 'h1', 'hypotheses', 'hypothesis', 'id', 'message', 'mode', 'ping', 'pong', 'problem', 'progress', 'provider_preset', 'query', 'result', 'stage', 'start', 'started', 'step_complete', 'step_start', 'token', 'type', 'websocket']

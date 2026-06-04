@@ -1,11 +1,12 @@
 """
-TURBO-CDI: Consensus Meter
+C4REQBER: Consensus Meter
 Visual for/against evidence display inspired by Consensus.app
 """
+from __future__ import annotations
 
-from typing import List, Dict, Any, Optional
 from dataclasses import dataclass
 from enum import Enum
+from typing import Any
 
 
 class EvidenceType(Enum):
@@ -37,7 +38,7 @@ class Evidence:
     citation_count: int = 0
     year: int = 0
     methodology: str = ""
-    sample_size: Optional[int] = None
+    sample_size: int | None = None
     peer_reviewed: bool = True
 
 
@@ -68,7 +69,7 @@ class ConsensusScore:
     methodology_score: float  # 0-100
 
     # Evidence breakdown
-    evidence: List[Evidence]
+    evidence: list[Evidence]
 
 
 class ConsensusMeter:
@@ -86,11 +87,11 @@ class ConsensusMeter:
         "contested": (-100, 0, "🔴 Contested"),
     }
 
-    def __init__(self):
+    def __init__(self) -> None:
         pass
 
     def calculate_consensus(
-        self, hypothesis_id: str, hypothesis_text: str, evidence_list: List[Evidence]
+        self, hypothesis_id: str, hypothesis_text: str, evidence_list: list[Evidence]
     ) -> ConsensusScore:
         """
         Calculate consensus metrics from evidence.
@@ -111,7 +112,8 @@ class ConsensusMeter:
         neutral = [e for e in evidence_list if e.type == EvidenceType.NEUTRAL]
 
         # Calculate weighted scores
-        def weighted_score(evidence_list: List[Evidence]) -> float:
+        def weighted_score(evidence_list: list[Evidence]) -> float:
+            """Weighted score."""
             if not evidence_list:
                 return 0.0
 
@@ -124,15 +126,15 @@ class ConsensusMeter:
                 if e.citation_count > 0:
                     import math
 
-                    weight *= 1 + min(math.log10(e.citation_count) / 10, 1.0)
+                    weight *= 1 + min(math.log10(e.citation_count) / 10, 1.0)  # type: ignore[assignment]
 
                 # Boost for peer review
                 if e.peer_reviewed:
-                    weight *= 1.5
+                    weight *= 1.5  # type: ignore[assignment]
 
                 # Boost for recency
                 if e.year >= 2020:
-                    weight *= 1.2
+                    weight *= 1.2  # type: ignore[assignment]
 
                 total += weight
 
@@ -236,7 +238,6 @@ class ConsensusMeter:
 
     def render_rich_meter(self, score: ConsensusScore) -> str:
         """Render Rich-compatible consensus meter."""
-        from rich.text import Text
 
         # Get consensus level display
         level_info = self.CONSENSUS_LEVELS.get(
@@ -252,7 +253,7 @@ class ConsensusMeter:
             f"[red]{score.contradicting_count} contradicting[/red] | "
             f"[yellow]{score.neutral_count} neutral[/yellow]",
             "",
-            f"Quality Metrics:",
+            "Quality Metrics:",
             f"  • Avg citations: {score.avg_citation_count:.0f}",
             f"  • Recency: {score.recency_score:.0f}%",
             f"  • Methodology: {score.methodology_score:.0f}%",
@@ -291,9 +292,55 @@ class ConsensusMeter:
 
         return templates.get(score.consensus_level, templates["none"])
 
+    def _classify_consensus(self, hypothesis: str, abstract: str) -> dict[str, Any]:
+        """Classify consensus between hypothesis and scientific abstract."""
+        import re
+
+        def extract_terms(text: str) -> set[str]:
+            """Extract terms."""
+            words = re.findall(r"\b[a-zA-Z]{4,}\b", text.lower())
+            stop_words = {"that", "with", "from", "this", "what", "when", "where", "which", "would", "could", "should", "about", "their", "there", "these", "those"}
+            return {w for w in words if w not in stop_words}
+
+        h_terms = extract_terms(hypothesis)
+        a_terms = extract_terms(abstract)
+
+        if not h_terms or not a_terms:
+            return {"classification": "INSUFFICIENT_DATA", "confidence": 0.0}
+
+        intersection = h_terms & a_terms
+        union = h_terms | a_terms
+        jaccard = len(intersection) / len(union) if union else 0.0
+
+        h_set = set(h_terms)
+        a_word_count = len(a_terms)
+        matched = sum(1 for w in a_terms if w in h_set)
+        coverage = matched / a_word_count if a_word_count > 0 else 0.0
+
+        consensus_score = 0.4 * jaccard + 0.3 * coverage + 0.3 * min(1.0, len(intersection) / 5)
+
+        if consensus_score > 0.6:
+            classification = "SUPPORTING"
+        elif consensus_score > 0.3:
+            classification = "PARTIALLY_SUPPORTING"
+        elif consensus_score > 0.1:
+            classification = "WEAKLY_RELATED"
+        else:
+            classification = "UNRELATED"
+
+        return {
+            "classification": classification,
+            "confidence": round(consensus_score, 3),
+            "jaccard_similarity": round(jaccard, 3),
+            "term_overlap": round(coverage, 3),
+            "shared_terms": sorted(list(intersection))[:10],
+            "method": "TERM_FREQUENCY_ANALYSIS",
+            "note": "Statistical classification. For LLM-enhanced classification, configure an API provider.",
+        }
+
     def extract_evidence_from_papers(
-        self, papers: List[Dict[str, Any]], hypothesis: str
-    ) -> List[Evidence]:
+        self, papers: list[dict[str, Any]], hypothesis: str
+    ) -> list[Evidence]:
         """
         Extract evidence from Semantic Scholar papers.
 
@@ -310,21 +357,16 @@ class ConsensusMeter:
             abstract = getattr(paper, "abstract", "") or ""
             title = getattr(paper, "title", "") or ""
 
-            # Very naive classification (placeholder for LLM)
-            hypothesis_words = set(hypothesis.lower().split())
-            text = (title + " " + abstract).lower()
-
-            word_matches = sum(1 for word in hypothesis_words if word in text)
-            match_ratio = (
-                word_matches / len(hypothesis_words) if hypothesis_words else 0
-            )
-
-            if match_ratio > 0.5:
-                ev_type = EvidenceType.SUPPORTING
-            elif match_ratio > 0.2:
-                ev_type = EvidenceType.NEUTRAL
-            else:
-                ev_type = EvidenceType.CONTRADICTING
+            # Classify using term frequency analysis
+            classification = self._classify_consensus(hypothesis, abstract)
+            class_map = {
+                "SUPPORTING": EvidenceType.SUPPORTING,
+                "PARTIALLY_SUPPORTING": EvidenceType.SUPPORTING,
+                "WEAKLY_RELATED": EvidenceType.NEUTRAL,
+                "UNRELATED": EvidenceType.CONTRADICTING,
+                "INSUFFICIENT_DATA": EvidenceType.INCONCLUSIVE,
+            }
+            ev_type = class_map.get(classification["classification"], EvidenceType.NEUTRAL)
 
             ev = Evidence(
                 source=getattr(paper, "title", "Unknown"),
@@ -345,13 +387,7 @@ class ConsensusMeter:
         return evidence
 
 
-# Singleton
-_meter: Optional[ConsensusMeter] = None
-
-
 def get_consensus_meter() -> ConsensusMeter:
-    """Get singleton consensus meter."""
-    global _meter
-    if _meter is None:
-        _meter = ConsensusMeter()
-    return _meter
+    """Get singleton consensus meter (backed by DI container)."""
+    from src.di.container import get_container
+    return get_container().get_or_register("consensus_meter", ConsensusMeter)

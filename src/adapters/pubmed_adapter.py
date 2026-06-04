@@ -1,13 +1,18 @@
 """
-TURBO-CDI: PubMed Adapter
+C4REQBER: PubMed Adapter
 Search and retrieve papers from PubMed
 """
+from __future__ import annotations
 
-import urllib.request
-import urllib.parse
+import asyncio
 import json
-from typing import List, Dict, Optional
+import logging
+import urllib.parse
 from dataclasses import dataclass
+
+import httpx
+
+logger = logging.getLogger("c4reqber.adapters.pubmed")
 
 
 @dataclass
@@ -17,11 +22,11 @@ class PubMedPaper:
     pmid: str
     title: str
     abstract: str
-    authors: List[str]
+    authors: list[str]
     journal: str
     pub_date: str
     doi: str
-    mesh_terms: List[str]
+    mesh_terms: list[str]
 
 
 class PubMedAdapter:
@@ -33,36 +38,24 @@ class PubMedAdapter:
 
     BASE_URL = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils"
 
-    def __init__(self, api_key: Optional[str] = None):
+    def __init__(self, api_key: str | None = None) -> None:
         self.api_key = api_key
-        self.last_request_time = 0
+        self.last_request_time = 0.0
 
     def search(
         self,
         query: str,
         max_results: int = 10,
-        sort: str = "relevance",  # relevance, pub_date
-    ) -> List[PubMedPaper]:
-        """
-        Search PubMed for papers.
-
-        Args:
-            query: Search query (PubMed syntax)
-            max_results: Maximum papers to return
-            sort: Sort order
-
-        Returns:
-            List of PubMedPaper objects
-        """
-        # Rate limiting (3 requests per second without key)
+        sort: str = "relevance",
+    ) -> list[PubMedPaper]:
+        """Search PubMed papers (sync version for executor compatibility)."""
         import time
 
         current_time = time.time()
-        delay = 0.34 if self.api_key else 0.4  # Slightly longer without key
+        delay = 0.34 if self.api_key else 0.4
         if current_time - self.last_request_time < delay:
             time.sleep(delay - (current_time - self.last_request_time))
 
-        # Step 1: Search for IDs
         search_params = {
             "db": "pubmed",
             "term": query,
@@ -78,10 +71,10 @@ class PubMedAdapter:
             search_url = (
                 f"{self.BASE_URL}/esearch.fcgi?{urllib.parse.urlencode(search_params)}"
             )
-            req = urllib.request.Request(search_url)
 
+            req = urllib.request.Request(search_url)
             with urllib.request.urlopen(req, timeout=30) as response:
-                search_data = json.loads(response.read().decode())
+                search_data = json.loads(response.read().decode("utf-8"))
                 self.last_request_time = time.time()
 
             id_list = search_data.get("esearchresult", {}).get("idlist", [])
@@ -89,23 +82,22 @@ class PubMedAdapter:
             if not id_list:
                 return []
 
-            # Step 2: Fetch details for IDs
-            return self._fetch_details(id_list)
+            return self._fetch_details_sync(id_list)
 
-        except Exception as e:
-            print(f"PubMed search error: {e}")
+        except Exception:
+            logger.warning("PubMed search failed", exc_info=True)
             return []
 
     def search_by_mesh(
         self, mesh_term: str, max_results: int = 10
-    ) -> List[PubMedPaper]:
+    ) -> list[PubMedPaper]:
         """Search by MeSH term."""
         query = f"{mesh_term}[MeSH Terms]"
         return self.search(query, max_results)
 
     def get_recent(
         self, topic: str, days: int = 30, max_results: int = 20
-    ) -> List[PubMedPaper]:
+    ) -> list[PubMedPaper]:
         """Get recent papers on a topic."""
         # PubMed date format: YYYY/MM/DD
         from datetime import datetime, timedelta
@@ -115,12 +107,54 @@ class PubMedAdapter:
         query = f"{topic} AND ({date_cutoff}[PDAT] : 3000[PDAT])"
         return self.search(query, max_results, sort="pub_date")
 
-    def _fetch_details(self, pmids: List[str]) -> List[PubMedPaper]:
-        """Fetch detailed info for PMIDs."""
+    async def async_search(
+        self,
+        query: str,
+        max_results: int = 10,
+        sort: str = "relevance",
+    ) -> list[PubMedPaper]:
+        """Async wrapper for search (runs sync call in thread pool)."""
+        return await asyncio.to_thread(self.search, query, max_results, sort)
+
+    async def _fetch_details(self, pmids: list[str]) -> list[PubMedPaper]:
         if not pmids:
             return []
 
+        current_time = asyncio.get_event_loop().time()
+        delay = 0.34 if self.api_key else 0.4
+        if current_time - self.last_request_time < delay:
+            await asyncio.sleep(delay - (current_time - self.last_request_time))
+
+        fetch_params = {
+            "db": "pubmed",
+            "id": ",".join(pmids),
+            "retmode": "xml",
+        }
+
+        if self.api_key:
+            fetch_params["api_key"] = self.api_key
+
+        try:
+            fetch_url = (
+                f"{self.BASE_URL}/efetch.fcgi?{urllib.parse.urlencode(fetch_params)}"
+            )
+
+            async with httpx.AsyncClient() as client:
+                response = await client.get(fetch_url, timeout=30)
+                xml_data = response.text
+                self.last_request_time = asyncio.get_event_loop().time()
+                return self._parse_pubmed_xml(xml_data)
+
+        except Exception:
+            logger.warning("PubMed fetch failed", exc_info=True)
+            return []
+
+    def _fetch_details_sync(self, pmids: list[str]) -> list[PubMedPaper]:
+        """Fetch paper details (sync version)."""
         import time
+
+        if not pmids:
+            return []
 
         current_time = time.time()
         delay = 0.34 if self.api_key else 0.4
@@ -141,9 +175,8 @@ class PubMedAdapter:
                 f"{self.BASE_URL}/efetch.fcgi?{urllib.parse.urlencode(fetch_params)}"
             )
             req = urllib.request.Request(fetch_url)
-
             with urllib.request.urlopen(req, timeout=30) as response:
-                xml_data = response.read().decode()
+                xml_data = response.read().decode("utf-8")
                 self.last_request_time = time.time()
                 return self._parse_pubmed_xml(xml_data)
 
@@ -151,7 +184,7 @@ class PubMedAdapter:
             print(f"PubMed fetch error: {e}")
             return []
 
-    def _parse_pubmed_xml(self, xml_data: str) -> List[PubMedPaper]:
+    def _parse_pubmed_xml(self, xml_data: str) -> list[PubMedPaper]:
         """Parse PubMed XML response."""
         import xml.etree.ElementTree as ET
 
@@ -211,13 +244,13 @@ class PubMedAdapter:
 
                 papers.append(
                     PubMedPaper(
-                        pmid=pmid,
-                        title=title,
+                        pmid=pmid,  # type: ignore[arg-type]
+                        title=title,  # type: ignore[arg-type]
                         abstract=abstract,
                         authors=authors,
-                        journal=journal,
+                        journal=journal,  # type: ignore[arg-type]
                         pub_date=pub_date,
-                        doi=doi,
+                        doi=doi,  # type: ignore[arg-type]
                         mesh_terms=mesh_terms,
                     )
                 )
@@ -227,7 +260,7 @@ class PubMedAdapter:
 
         return papers
 
-    def format_for_context(self, papers: List[PubMedPaper]) -> str:
+    def format_for_context(self, papers: list[PubMedPaper]) -> str:
         """Format papers as context for LLM."""
         if not papers:
             return "No relevant papers found."
@@ -239,7 +272,7 @@ class PubMedAdapter:
             context += f"    Journal: {paper.journal} ({paper.pub_date})\n"
             context += f"    Authors: {', '.join(paper.authors[:3])}"
             if len(paper.authors) > 3:
-                context += f" et al."
+                context += " et al."
             context += "\n"
             if paper.abstract:
                 context += f"    Abstract: {paper.abstract[:300]}...\n"

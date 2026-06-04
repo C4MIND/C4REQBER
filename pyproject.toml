@@ -1,0 +1,137 @@
+[project]
+name = "c4reqber"
+version = "5.6.0"
+requires-python = ">=3.11"
+dependencies = [
+    "openai",
+    "tenacity",
+    "anthropic",
+    "pyjwt",
+    "bcrypt",
+    "cachetools",
+    "prompt-toolkit",
+    "gensim",
+    "structlog",
+    "httpx",
+    "fastapi",
+    "uvicorn",
+    "pydantic",
+    "pydantic-settings",
+    "numpy",
+    "pandas",
+    "scipy",
+    "matplotlib",
+    "plotly",
+    "rich",
+    "typer",
+    "click",
+    "jinja2",
+    "markdown",
+    "toml",
+    "pyyaml",
+    "jsonschema",
+    "pytest",
+    "pytest-asyncio",
+    "anyio",
+    "sniffio",
+    "certifi",
+    "charset-normalizer",
+    "idna",
+    "urllib3",
+    "packaging",
+    "setuptools",
+    "wheel",
+    "build",
+    "hatchling",
+    "poetry-core",
+    "flit-core",
+    "mcp",
+    "aiofiles",
+    "prometheus-client>=0.25.0",
+    "z3-solver>=4.16.0.0",
+]
+
+[project.scripts]
+c4reqber = "src.cli.blast_app:app"
+blast = "src.cli.blast_app:app"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "W", "UP"]
+ignore = ["E402", "E722", "F401", "F841", "E741", "E501", "UP035", "B008"]
+fixable = ["ALL"]
+
+[tool.ruff.lint.isort]
+lines-after-imports = 2
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = false
+warn_unused_configs = true
+disallow_untyped_defs = false
+ignore_missing_imports = true
+warn_unreachable = true
+show_error_codes = true
+exclude = ["tests/", "archive/", "wasm/", "src/patterns/v6_legacy/", "alembic/", "scripts/", "fix_.*\\.py$", "split_patterns\\.py$", "test-ws-client\\.py$"]
+
+[[tool.mypy.overrides]]
+module = ["src.patterns.library.*", "src.patterns.*"]
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = ["src.simulations.*"]
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = ["src.api.v6_routers.*", "src.api.v7_routers.*"]
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = ["src.mcp_server.*"]
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = ["src.agents.soul", "src.agents.policy", "src.agents.qa", "src.agents.guardian", "src.agents.__init__"]
+ignore_errors = false
+disallow_untyped_defs = true
+warn_return_any = true
+
+# Legacy agents — deferred type fix
+[[tool.mypy.overrides]]
+module = ["src.agents.functors.*", "src.agents.functor_orchestrator", "src.agents.discovery.*", "src.agents.discovery_agent", "src.agents.discovery_loop", "src.agents.mp_llm_generator", "src.agents.orchestrator", "src.agents.paradigm_coordinator", "src.agents.pipeline.*", "src.agents.synthesis_fallback"]
+ignore_errors = true
+
+[tool.ruff.lint.per-file-ignores]
+"src/patterns/v6_legacy/*" = ["ALL"]
+"archive/**" = ["ALL"]
+"tests/**" = ["E501", "UP017"]
+"src/llm/local_client.py" = ["E501"]
+"src/api/server.py" = ["E501"]
+"src/conceptual_blending/router.py" = ["B008"]
+"src/temporal_kg/router.py" = ["B008"]
+# Legacy agents — cleanup deferred
+"src/agents/discovery/**" = ["F401", "F841"]
+"src/agents/discovery_agent.py" = ["F401"]
+"src/agents/discovery_loop.py" = ["F841"]
+"src/agents/functor_orchestrator.py" = ["F401"]
+"src/agents/functors/**" = ["F401"]
+"src/agents/mp_llm_generator.py" = ["F401"]
+"src/agents/orchestrator.py" = ["F401"]
+"src/agents/paradigm_coordinator.py" = ["F401", "F841"]
+"src/agents/pipeline.py" = ["F401"]
+"src/agents/pipeline/steps/step_05b_cross_domain_transfer.py" = ["F401"]
+"src/agents/pipeline/steps/step_08_synthesis.py" = ["F841"]
+
+[tool.coverage.run]
+source = ["src"]
+branch = true
+
+[tool.coverage.report]
+fail_under = 60
+show_missing = true

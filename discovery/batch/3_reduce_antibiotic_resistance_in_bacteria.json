@@ -1,0 +1,11 @@
+{
+  "problem": "reduce antibiotic resistance in bacterial populations",
+  "domain": "medicine",
+  "mode": "discover",
+  "hypothesis_len": 3312,
+  "triz": 8,
+  "sims": 3,
+  "bayesian": 0.999,
+  "paper_chars": 4694,
+  "time": 23.0
+}

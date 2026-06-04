@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/patterns/library/path_planning/config.py
+# hypothesis_version: 6.141.1
+
+[0.0, 0.3, 0.5, 0.6, 1.5, 2.0, 9.5, 10.0, 500, 5000, 'a_star', 'cluttered', 'custom', 'dijkstra', 'empty', 'maze', 'prm', 'random_obstacles', 'rrt', 'rrt_star']

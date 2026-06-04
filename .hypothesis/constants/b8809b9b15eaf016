@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/patterns/library/input_output.py
+# hypothesis_version: 6.141.1
+
+[0.001, 0.01, 0.05, 0.08, 0.1, 0.12, 0.15, 0.18, 0.2, 0.25, 0.3, 100, 150, 180, 200, 300, 400, 500, 600, 800, 1936, '\nMetadata:', '=', 'Input-Output Model', 'Macroeconomics', 'RUNNING UNIT TESTS', 'Wassily Leontief', '__main__', 'applications', 'author', 'backward_linkages', 'category', 'demand_shock_impact', 'description', 'economic_planning', 'final_demand', 'forward_linkages', 'impact_analysis', 'income_multipliers', 'intermediate_demand', 'intermediate_matrix', 'key_sectors', 'leontief_inverse', 'linkages', 'model_type', 'multipliers', 'n_sectors', 'name', 'output_multipliers', 'outputs', 'parameters', 'pattern_id', 'total_output', 'trade_policy', 'value_added', 'year']

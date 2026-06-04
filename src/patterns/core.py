@@ -1,14 +1,16 @@
 """
-TURBO-CDI v6.5 - Core Module
+C4REQBER v6.5 - Core Module
 Base classes and utilities for simulation patterns
 """
+from __future__ import annotations
 
 import logging
-from typing import Dict, Any, Optional, List
-from dataclasses import dataclass, field
-from enum import Enum
 from abc import ABC, abstractmethod
+from dataclasses import dataclass, field
 from datetime import datetime
+from enum import Enum
+from typing import Any
+
 
 logger = logging.getLogger(__name__)
 
@@ -41,9 +43,9 @@ class SimulationParameter:
     type: str
     default: Any = None
     description: str = ""
-    min: Optional[float] = None  # Using 'min' to match pattern usage
-    max: Optional[float] = None  # Using 'max' to match pattern usage
-    options: Optional[list] = None  # For enum-type parameters
+    min: float | None = None  # Using 'min' to match pattern usage
+    max: float | None = None  # Using 'max' to match pattern usage
+    options: list | None = None  # type: ignore  # For enum-type parameters
 
 
 @dataclass
@@ -53,13 +55,13 @@ class Hypothesis:
     text: str = ""
     title: str = ""
     description: str = ""
-    parameters: Dict[str, Any] = field(default_factory=dict)
+    parameters: dict[str, Any] = field(default_factory=dict)
     confidence: float = 0.5
-    keywords: List[str] = None
+    keywords: list[str] = None  # type: ignore[assignment]
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if self.keywords is None:
-            self.keywords = []
+            self.keywords = []  # type: ignore[unreachable]
 
 
 @dataclass
@@ -69,14 +71,14 @@ class SimulationResult:
     simulation_id: str = ""
     pattern_id: str = ""
     status: SimulationStatus = SimulationStatus.PENDING
-    start_time: Optional[datetime] = None
-    end_time: Optional[datetime] = None
-    data: Dict[str, Any] = field(default_factory=dict)
-    metrics: Dict[str, float] = field(default_factory=dict)
+    start_time: datetime | None = None
+    end_time: datetime | None = None
+    data: dict[str, Any] = field(default_factory=dict)
+    metrics: dict[str, float] = field(default_factory=dict)
     execution_time: float = 0.0
     validation_score: float = 0.0
     confidence_score: float = 0.0
-    logs: List[str] = field(default_factory=list)
+    logs: list[str] = field(default_factory=list)
     validation_level: ValidationLevel = ValidationLevel.EMPIRICAL
     error_message: str = ""
 
@@ -92,17 +94,17 @@ class SimulationPattern(ABC):
     PATTERN_VERSION: str = "6.5.0"
     PATTERN_CATEGORY: str = "EXTENDED"
 
-    def __init__(self, config: Any = None):
+    def __init__(self, config: Any = None) -> None:
         self.config = config
         self.logger = logging.getLogger(self.__class__.__name__)
 
     @abstractmethod
-    async def run(self, hypothesis: Optional[Hypothesis] = None) -> SimulationResult:
+    async def run(self, hypothesis: Hypothesis | None = None) -> SimulationResult:
         """Execute the simulation pattern"""
         pass
 
     @classmethod
-    def get_metadata(cls) -> Dict[str, Any]:
+    def get_metadata(cls) -> dict[str, Any]:
         """Return pattern metadata"""
         return {
             "id": cls.PATTERN_ID,
@@ -116,7 +118,7 @@ class SimulationPattern(ABC):
         """Check if this pattern can simulate the hypothesis"""
         return False
 
-    def estimate_resources(self) -> Dict[str, Any]:
+    def estimate_resources(self) -> dict[str, Any]:
         """Estimate computational resources needed"""
         return {
             "memory_mb": 100,
@@ -126,11 +128,12 @@ class SimulationPattern(ABC):
         }
 
 
-def simulation_pattern(cls=None, **kwargs):
+def simulation_pattern(cls=None, **kwargs: Any) -> Any:  # type: ignore[no-untyped-def]
     """Decorator to register a simulation pattern"""
 
-    def decorator(cls):
+    def decorator(cls) -> Any:  # type: ignore[no-untyped-def]
         # Set metadata from kwargs
+        """Decorator."""
         if "id" in kwargs:
             cls.PATTERN_ID = kwargs["id"]
             cls.id = kwargs["id"]  # Compatibility alias
@@ -157,21 +160,21 @@ def simulation_pattern(cls=None, **kwargs):
 class PatternRegistry:
     """Registry for simulation patterns"""
 
-    _patterns: Dict[str, type] = {}
+    _patterns: dict[str, type] = {}
 
     @classmethod
-    def register(cls, pattern_class: type):
+    def register(cls, pattern_class: type) -> None:
         """Register a pattern class"""
         pattern_id = getattr(pattern_class, "PATTERN_ID", pattern_class.__name__)
         cls._patterns[pattern_id] = pattern_class
         logger.info(f"Registered pattern: {pattern_id}")
 
     @classmethod
-    def get(cls, pattern_id: str) -> Optional[type]:
+    def get(cls, pattern_id: str) -> type | None:
         """Get a pattern by ID"""
         return cls._patterns.get(pattern_id)
 
     @classmethod
-    def list_patterns(cls) -> List[str]:
+    def list_patterns(cls) -> list[str]:
         """List all registered pattern IDs"""
         return list(cls._patterns.keys())

@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/patterns/library/kalman_filter/utils.py
+# hypothesis_version: 6.141.1
+
+[1e-06, 0.01, '6.0.0', 'EXTENDED', 'Gaussian noise', 'Kalman Filter', 'Known system model', 'Navigation', 'O(n³) per update', 'Q', 'R', 'Robotics', 'Signal Processing', 'State Estimation', 'accuracy', 'assumptions', 'category', 'config', 'constant_velocity', 'covariance_trace', 'default', 'description', 'domain', 'dt', 'ekf', 'enum', 'error', 'estimated_state', 'filter_type', 'final_covariance', 'final_error', 'final_estimate', 'float', 'history', 'id', 'int', 'kalman_filter', 'kf', 'max_error', 'mean_error', 'mean_nees', 'measurement', 'measurement_dim', 'name', 'noise_parameters', 'nonlinear_pendulum', 'options', 'parameters', 'performance_metrics', 'rmse', 'simulation_steps', 'state_dim', 'system_model', 'time', 'true_state', 'type', 'typical_runtime', 'ukf', 'version']

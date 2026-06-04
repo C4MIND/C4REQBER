@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/cache/config.py
+# hypothesis_version: 6.141.1
+
+[0.5, 5.0, 30.0, 300, 1000, 3600, 'CACHE_PROMOTION_TTL', 'CACHE_TIER1_TTL', 'CACHE_TIER2_MAX_SIZE', 'CACHE_TIER2_TTL', 'CACHE_TIER3_TTL', 'CACHE_TIER4_RETRIES', 'CACHE_TIER4_TIMEOUT', 'REDIS_URL']

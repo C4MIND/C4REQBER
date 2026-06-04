@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/patterns/library/monte_carlo.py
+# hypothesis_version: 6.141.1
+
+[0.001, 0.01, 0.1, 0.4, 0.6, 0.8, 0.95, 0.999, 1.0, 2.0, 100, 1000, 10000, 100000, 10000000, '_', 'base_value', 'ci_lower', 'ci_upper', 'confidence', 'confidence_level', 'control_variates', 'cpu_cores', 'default', 'distribution', 'ess', 'failure rate', 'float', 'gpu_required', 'importance', 'int', 'mean', 'memory_gb', 'monte carlo', 'monte_carlo', 'n_samples', 'noise_scale', 'none', 'probability', 'random', 'reliability', 'risk', 'select', 'sobol', 'std', 'stochastic', 'stratified', 'uncertainty', 'variance', 'variance_reduction']

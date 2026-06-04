@@ -1,10 +1,9 @@
-# TURBO-CDI GitIgnore
-# ===================
+# c4reqber GitIgnore
+# ==================
 
-# Environment & Secrets
+# Environment & Secrets — NEVER commit
 .env
-.env.local
-.env.*.local
+.env.*
 !.env.example
 *.pem
 *.key
@@ -46,8 +45,6 @@ wheels/
 venv/
 ENV/
 env/
-.venv
-env/
 
 # IDEs
 .vscode/
@@ -56,18 +53,19 @@ env/
 *.swo
 *~
 .DS_Store
+Thumbs.db
 
 # Logs
 *.log
 logs/
 log/
 
-# Databases
+# Databases & Runtime Data
 *.db
 *.sqlite
 *.sqlite3
-data/*.db
-data/*.sqlite
+data/
+!data/.gitkeep
 
 # Vector Stores (Large Files)
 vectors/
@@ -79,7 +77,7 @@ chroma_db/
 .ruff_cache/
 .pytest_cache/
 .mypy_cache/
-__pycache__/
+.hypothesis/
 
 # Node.js / Frontend
 node_modules/
@@ -92,6 +90,7 @@ yarn.lock
 # Build outputs
 dist/
 build/
+gen/
 *.tsbuildinfo
 
 # Testing
@@ -110,28 +109,137 @@ temp/
 *.tmp
 
 # Model files (large)
+models/
 *.pkl
 *.h5
 *.onnx
 *.pt
 *.pth
+*.gguf
+*.safetensors
 
 # Documentation builds
 docs/_build/
 site/
+docs-site/
 
-# Archive - exclude historical reports
+# Archive — exclude historical reports
 archive/v8-reports/
 archive/audits/*.md
 archive/planning/*.md
+archive/web-v2/
+archive/web-20260505/
+archive/old-ui/
 
 # Large data files
-data/corpora/*.json
-data/raw/*.csv
-data/processed/
 *.dump
 
-# Specific to TURBO-CDI
+# Rust WASM build artifacts
+wasm/plugins/target/
+
+# Frontend build sites (not needed in repo)
+web-v2/
+web/
+
+# Archive — keep roadmap, hide competitive intel & plans
+archive/plans/c4reqber_competitive_intelligence_report/
+archive/plans/c4reqber_microfeatures_competitive_analysis.md
+archive/plans/c4reqber_PRD_v6.0.0.md
+archive/plans/BACKEND_COMPLETION_PLAN.md
+archive/plans/BUSINESS_ANALYSIS.md
+archive/plans/COMPETITOR_ANALYSIS.md
+archive/plans/council_verification_debate.md
+archive/plans/INTERFACE_AUDIT_REPORT.md
+archive/plans/MEGA_PLAN_v7.md
+archive/plans/MISSING_FEATURES_FIXES.md
+archive/plans/PATTERNS_PLUGINS_PLAN.md
+archive/plans/PLAN_FOR_FINAL_IMPLEMENTATION.md
+archive/plans/PROGRADE_PLAN_v7.md
+
+# Internal working docs — not for public repo
+docs/archive/
+docs/audit/
+docs/drafts/
+docs/launch/
+docs/check-this-out/
+docs/planning/
+
+# Kilo CLI workspace
+.kilo/
+
+# Audit & planning artifacts (internal only)
+AUDIT*.md
+CODEBASE_AUDIT.md
+CODE_REVIEW_REPORT.md
+PLAN*.md
+PRD*.md
+REMAINING*.md
+TECHNICAL_DEBT*.md
+C4REQBER_REMEDIATION_PLAN*.md
+
+# Audit directories
+audit/
+archive/audit/
+
+# Assets (generated / large files)
+assets/
+
+# Generated / temp files
+bin/
+*.txt
+!requirements.txt
+!README.txt
+
+# Archive backups & temp docs
+archive/*.backup
+archive/*.md
+!archive/README.md
+!archive/LICENSE-COMMERCIAL.md
+!archive/TURBO_*.md
+!archive/FUNCGRADE_*.md
+!archive/big-problems.md
+!archive/harness/*.md
+
+# Kilo CLI configs
+.kilo/node_modules/
+
+# Exports & generated artifacts (keep README)
+exports/*
+!exports/.gitkeep
+
+# Dissertations & discovery outputs (keep README)
+dissertations/*
+!dissertations/README.md
+discovery/*
+!discovery/README.md
+
+# Dead code (already removed, keep in ignore)
+migrations/
+alembic/
+structural_memory/
+
+# Legacy / experimental
+proto/
+k8s/
+
+# Specific to c4reqber
+src/payments/
+.env.development
+.env.dontredact
 .v8_discovery.db
 v8_discovery.db
 *.session.sql
+*.db-shm
+*.db-wal
+
+# Go build artifacts (platform-specific, rebuild in 2s)
+src/tui/v8/c4tui*
+src/tui/v8/bin/
+
+# Backup files
+*.bak
+docs/*.backup.*
+docs/design-system/*-backup.*
+
+# Runtime artifacts
+discoveries_run.json

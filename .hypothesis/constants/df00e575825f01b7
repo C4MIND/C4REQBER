@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/archetypes/engine.py
+# hypothesis_version: 6.141.1
+
+[0.0, 0.1, 0.15, 0.25, 0.3, 0.4, 1.0, '000', '001', '002', '010', '011', '012', '020', '021', '022', '100', '101', '102', '110', '111', '112', '120', '121', '122', '200', '201', '202', '210', '211', '212', '220', '221', '222', 'Abstract', 'Concrete', 'Future', 'Meta', 'Other', 'Past', 'Present', 'Self', 'System', 'abstract', 'agency', 'collaborate', 'concept', 'current', 'design', 'en', 'evolve', 'experience', 'forecast', 'future', 'goal', 'group', 'history', 'innovation', 'learn', 'memory', 'meta', 'model', 'now', 'past', 'personal', 'plan', 'predict', 'present', 'ru', 'scale', 'self', 'strategy', 'structure', 'system', 'team', 'theory', 'time', 'today', 'transform', 'vision']

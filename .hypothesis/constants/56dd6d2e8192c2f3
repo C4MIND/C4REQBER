@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/patterns/library/queueing_networks/pattern.py
+# hypothesis_version: 6.141.1
+
+[1.5, 10000.0, '6.0.0', 'Computer Networks', 'EXTENDED', 'Manufacturing', 'Operations Research', 'Queueing Networks', 'accuracy', 'arrival_rate', 'assumptions', 'category', 'default', 'description', 'deterministic', 'domain', 'enum', 'erlang', 'exponential', 'float', 'id', 'name', 'options', 'parameters', 'queueing_networks', 'seconds to minutes', 'service_dist', 'simulation_time', 'type', 'typical_runtime', 'uniform', 'version']

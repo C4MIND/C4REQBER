@@ -1,618 +1,108 @@
 """
-TURBO-CDI: FastAPI Server
-Production-ready REST API with WebSocket support
+C4REQBER API: FastAPI Server
+Production-ready REST API with structured logging, security, and health endpoints.
 """
+from __future__ import annotations
 
-import asyncio
-from contextlib import asynccontextmanager
-from typing import Optional, List, Dict, Any
-from datetime import datetime
 import os
+from pathlib import Path
 
-from fastapi import (
-    FastAPI,
-    HTTPException,
-    Depends,
-    WebSocket,
-    WebSocketDisconnect,
-    status,
-)
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from fastapi.responses import JSONResponse
+
+# Load .env file before anything else
+try:
+    from dotenv import load_dotenv
+    _root = Path(__file__).resolve().parent.parent.parent
+    _env_path = _root / ".env"
+    if _env_path.exists():
+        load_dotenv(_env_path)
+    # Explicit opt-in: load .env.dontredact for additional API keys
+    _dontredact_path = _root / ".env.dontredact"
+    if _dontredact_path.exists():
+        load_dotenv(_dontredact_path, override=False)
+except ImportError:
+    pass
+
 import uvicorn
-import math
+from fastapi import FastAPI
 
-from src.api.models import (
-    DiscoveryRequest,
-    DiscoveryResponse,
-    HypothesisResponse,
-    ValidationRequest,
-    SearchRequest,
-    SearchResponse,
-    HealthResponse,
-    MetricsResponse,
-    UserCreate,
-    UserResponse,
-    TokenResponse,
-    WebSocketMessage,
+from src import __version__
+from src.api.lifespan import lifespan
+from src.api.middleware.cors import setup_cors
+from src.api.middleware.security import setup_security_middleware
+from src.api.routers import (
+    auth,
+    bridge,
+    discoveries,
+    discovery_list,
+    graph,
+    health,
+    metrics,
+    patterns,
+    search,
+    theorems,
+    validation_single,
+    validations,
+    websocket,
 )
-from src.api.database import get_db, Database
-from src.api.auth import AuthManager
-from src.api.cache import CacheManager
-from src.api.rate_limiter import RateLimiter
-from src.api.websocket import ConnectionManager
-from src.patterns.runner import get_runner as get_pattern_runner
+
+# Import structured logging
+from src.core.logging import configure_logging, get_logger, get_request_id_middleware
 
 
-# Security
-security = HTTPBearer(auto_error=False)
-
-# Connection manager for WebSockets
-ws_manager = ConnectionManager()
-
-# Cache manager
-cache = CacheManager()
-
-# Rate limiter
-rate_limiter = RateLimiter()
+# Configure logging on startup
+configure_logging()
+logger = get_logger(__name__)
 
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    """Application lifespan handler."""
-    # Startup
-    await cache.connect()
-    yield
-    # Shutdown
-    await cache.disconnect()
+_env = os.getenv("ENV", "development")
+_docs_url = "/docs" if _env != "production" else None
+_redoc_url = "/redoc" if _env != "production" else None
 
-
-# Create FastAPI app
 app = FastAPI(
-    title="TURBO-CDI API",
-    description="Scientific Hypothesis Generation Platform",
-    version="4.5.0",
+    title="c4reqber API",
+    description="Cognitive Exoskeleton for AI Agents — Scientific Hypothesis Generation Platform",
+    version=__version__,
     lifespan=lifespan,
+    docs_url=_docs_url,
+    redoc_url=_redoc_url,
 )
 
-# CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # Configure for production
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# Register centralized error handlers
+from src.api.errors import register_error_handlers
+register_error_handlers(app)
 
-# Auth manager
-auth_manager = AuthManager()
+# Add request ID middleware for structured logging
+app.middleware("http")(get_request_id_middleware())
 
+setup_security_middleware(app)
+setup_cors(app)
 
-# ═══════════════════════════════════════════════════════════════════
-# DEPENDENCIES
-# ═══════════════════════════════════════════════════════════════════
+logger.info("api_server_initializing", env=_env, version=__version__)
 
+# Include routers
+app.include_router(health.router)
+app.include_router(metrics.router)
+app.include_router(auth.router)
+app.include_router(discoveries.router)
+app.include_router(discovery_list.router)
+app.include_router(search.router)
+app.include_router(patterns.router)
+app.include_router(bridge.router)
+app.include_router(theorems.router)
+app.include_router(graph.router)
+app.include_router(validations.router)
+app.include_router(validation_single.router)
+app.include_router(websocket.router)
 
-async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
-):
-    """Validate JWT token and return user."""
-    token = credentials.credentials
-    user = await auth_manager.get_user_from_token(token)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid authentication credentials",
-        )
-    return user
+# Include v1 routers
+from src.api.agents_router import router as agents_router
+from src.api.v8_router import router as v8_router
 
 
-async def get_current_user_optional(
-    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
-) -> Optional[dict]:
-    """Optional JWT validation — returns user if token is valid, else None."""
-    if not credentials:
-        return None
-    return await auth_manager.get_user_from_token(credentials.credentials)
+app.include_router(agents_router)
+app.include_router(v8_router)
 
 
-async def check_rate_limit(user: dict = Depends(get_current_user)):
-    """Check API rate limits."""
-    allowed = await rate_limiter.check_limit(user["id"])
-    if not allowed:
-        raise HTTPException(
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="Rate limit exceeded"
-        )
-    return user
-
-
-# ═══════════════════════════════════════════════════════════════════
-# HEALTH & METRICS
-# ═══════════════════════════════════════════════════════════════════
-
-
-@app.get("/health", response_model=HealthResponse)
-async def health_check():
-    """Health check endpoint."""
-    db_status = await check_database()
-    cache_status = await check_cache()
-
-    return HealthResponse(
-        status="healthy" if db_status and cache_status else "degraded",
-        version="4.5.0",
-        timestamp=datetime.utcnow(),
-        services={
-            "database": "up" if db_status else "down",
-            "cache": "up" if cache_status else "down",
-            "api": "up",
-        },
-    )
-
-
-@app.get("/metrics", response_model=MetricsResponse)
-async def get_metrics():
-    """Get system metrics."""
-    db = await get_db()
-
-    return MetricsResponse(
-        total_discoveries=await db.count_discoveries(),
-        total_hypotheses=await db.count_hypotheses(),
-        active_experiments=await db.count_active_experiments(),
-        validation_rate=await db.get_validation_rate(),
-        avg_confidence=await db.get_avg_confidence(),
-        api_requests_24h=await rate_limiter.get_request_count(hours=24),
-        cache_hit_rate=await cache.get_hit_rate(),
-    )
-
-
-# ═══════════════════════════════════════════════════════════════════
-# AUTHENTICATION
-# ═══════════════════════════════════════════════════════════════════
-
-
-@app.post("/auth/register", response_model=UserResponse)
-async def register(user_data: UserCreate):
-    """Register new user."""
-    user = await auth_manager.create_user(
-        email=user_data.email, password=user_data.password, name=user_data.name
-    )
-    return UserResponse(
-        id=user["id"],
-        email=user["email"],
-        name=user["name"],
-        created_at=user["created_at"],
-    )
-
-
-@app.post("/auth/login", response_model=TokenResponse)
-async def login(credentials: UserCreate):
-    """Login and get JWT token."""
-    token = await auth_manager.authenticate(credentials.email, credentials.password)
-    if not token:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials"
-        )
-    return TokenResponse(access_token=token, token_type="bearer")
-
-
-@app.post("/settings/keys")
-async def update_api_keys(payload: dict):
-    """Update runtime API keys."""
-    openrouter_key = payload.get("openrouter_api_key")
-    if openrouter_key is not None:
-        os.environ["OPENROUTER_API_KEY"] = str(openrouter_key)
-        # Also update any already-imported LLM clients that read env lazily
-        try:
-            from src.llm.client import LLMClient
-
-            if hasattr(LLMClient, "_global_api_key"):
-                LLMClient._global_api_key = str(openrouter_key)
-        except Exception:
-            pass
-    return {
-        "status": "ok",
-        "keys_updated": ["openrouter_api_key"] if openrouter_key is not None else [],
-    }
-
-
-# ═══════════════════════════════════════════════════════════════════
-# DISCOVERY ENDPOINTS
-# ═══════════════════════════════════════════════════════════════════
-
-
-@app.post("/discover", response_model=DiscoveryResponse)
-async def create_discovery(
-    request: DiscoveryRequest, user: Optional[dict] = Depends(get_current_user_optional)
-):
-    """Create new scientific discovery."""
-    # Check cache
-    cache_key = f"discovery:{hash(request.problem)}"
-    cached = await cache.get(cache_key)
-    if cached:
-        return DiscoveryResponse(**cached)
-
-    # Run discovery
-    from src.solver.one_shot import get_one_shot_solver
-
-    solver = get_one_shot_solver()
-    result = await solver.solve(
-        problem=request.problem, max_hypotheses=request.max_hypotheses or 5
-    )
-
-    # Save to database
-    db = await get_db()
-    discovery_id = await db.save_discovery(
-        result, user_id=(user["id"] if user else None)
-    )
-
-    response = DiscoveryResponse(
-        id=discovery_id,
-        problem=result.problem,
-        hypotheses=[
-            HypothesisResponse(
-                id=h["id"],
-                hypothesis=h["hypothesis"],
-                confidence=h["confidence"],
-                method=h["method"],
-                c4_path=h.get("c4_path", []),
-                triz_principles=h.get("triz_principles", []),
-                simulation=h.get("simulation"),
-            )
-            for h in result.hypotheses
-        ],
-        top_hypothesis=result.hypotheses[0]["hypothesis"]
-        if result.hypotheses
-        else None,
-        duration_seconds=result.duration_seconds,
-        estimated_cost=result.estimated_cost_usd,
-        created_at=datetime.utcnow(),
-    )
-
-    # Cache result
-    await cache.set(cache_key, response.dict(), ttl=3600)
-
-    return response
-
-
-@app.get("/discoveries", response_model=List[DiscoveryResponse])
-async def list_discoveries(
-    skip: int = 0,
-    limit: int = 20,
-    user: Optional[dict] = Depends(get_current_user_optional),
-):
-    """List discoveries."""
-    db = await get_db()
-    if user:
-        discoveries = await db.get_user_discoveries(user["id"], skip, limit)
-    else:
-        discoveries = await db.get_all_discoveries(skip, limit)
-    return discoveries
-
-
-@app.get("/discoveries/{discovery_id}", response_model=DiscoveryResponse)
-async def get_discovery(
-    discovery_id: str, user: Optional[dict] = Depends(get_current_user_optional)
-):
-    """Get specific discovery."""
-    db = await get_db()
-    discovery = await db.get_discovery(
-        discovery_id, user_id=(user["id"] if user else None)
-    )
-
-    if not discovery:
-        raise HTTPException(status_code=404, detail="Discovery not found")
-
-    return DiscoveryResponse(**discovery)
-
-
-# ═══════════════════════════════════════════════════════════════════
-# SEARCH ENDPOINTS
-# ═══════════════════════════════════════════════════════════════════
-
-
-@app.post("/search/papers", response_model=SearchResponse)
-async def search_papers(request: SearchRequest, user: dict = Depends(check_rate_limit)):
-    """Search academic papers."""
-    from src.search.semantic_scholar import get_semantic_scholar_client
-
-    client = get_semantic_scholar_client()
-    papers = await client.search_papers(
-        query=request.query,
-        limit=request.limit or 10,
-        year_start=request.year_start,
-        year_end=request.year_end,
-    )
-
-    return SearchResponse(
-        query=request.query,
-        total=len(papers),
-        papers=[
-            {
-                "title": p.title,
-                "authors": p.authors,
-                "year": p.year,
-                "citation_count": p.citation_count,
-                "abstract": p.abstract[:200] + "..."
-                if len(p.abstract) > 200
-                else p.abstract,
-            }
-            for p in papers
-        ],
-    )
-
-
-# ═══════════════════════════════════════════════════════════════════
-# VALIDATION ENDPOINTS
-# ═══════════════════════════════════════════════════════════════════
-
-
-@app.post("/validate/{discovery_id}")
-async def validate_hypothesis(
-    discovery_id: str,
-    request: ValidationRequest,
-    user: dict = Depends(get_current_user),
-):
-    """Submit validation result for hypothesis."""
-    db = await get_db()
-
-    await db.update_discovery_status(
-        discovery_id=discovery_id,
-        status=request.outcome,
-        notes=request.notes,
-        user_id=user["id"],
-    )
-
-    return {"status": "success", "discovery_id": discovery_id}
-
-
-# ═══════════════════════════════════════════════════════════════════
-# PATTERN ENDPOINTS (v6 Legacy Integration)
-# ═══════════════════════════════════════════════════════════════════
-
-
-pattern_runner = get_pattern_runner()
-
-
-@app.get("/patterns")
-async def list_patterns():
-    """List available scientific patterns from v6 engine."""
-    patterns = pattern_runner.list_patterns()
-
-    def categorize(p: str) -> str:
-        physics = [
-            "cfd",
-            "fdtd",
-            "maxwell",
-            "n_body",
-            "plasma",
-            "quantum",
-            "wave",
-            "thermal",
-            "elasticity",
-            "acoustic",
-            "poisson",
-            "rigid_body",
-            "dft",
-            "qft",
-        ]
-        biology = [
-            "neural",
-            "gene",
-            "epidemic",
-            "enzyme",
-            "protein",
-            "connectome",
-            "evolutionary",
-            "synaptic",
-            "signal",
-            "hodgkin",
-            "pharmacokinetics",
-            "age_structured",
-            "lotka",
-        ]
-        economics = [
-            "dsge",
-            "garch",
-            "game_theory",
-            "portfolio",
-            "credit",
-            "supply_chain",
-            "economic",
-            "input_output",
-            "gravity_trade",
-            "market_microstructure",
-            "option_pricing",
-            "prospect_theory",
-            "overlapping_generations",
-            "search_matching",
-            "herding",
-            "heterogeneous",
-        ]
-        earth = [
-            "climate",
-            "ocean",
-            "seismic",
-            "wildfire",
-            "air_quality",
-            "biogeochemistry",
-            "cloud",
-            "groundwater",
-            "land_surface",
-            "land_use",
-            "mantle",
-            "geomagnetic",
-            "sea_ice",
-            "surface_water",
-        ]
-        engineering = [
-            "mpc",
-            "kalman",
-            "slam",
-            "path_planning",
-            "pid",
-            "circuit",
-            "composite",
-            "crystal",
-            "fem",
-            "continuum",
-            "inverse_kinematics",
-            "model_predictive",
-            "circuit_simulation",
-        ]
-        social = [
-            "social_network",
-            "opinion",
-            "cultural",
-            "migration",
-            "urban",
-            "conflict",
-            "collaborative",
-            "pedestrian",
-            "rumor",
-            "language",
-        ]
-        for cat, keys in [
-            ("physics", physics),
-            ("biology", biology),
-            ("economics", economics),
-            ("earth_science", earth),
-            ("engineering", engineering),
-            ("social", social),
-        ]:
-            if any(k in p for k in keys):
-                return cat
-        return "other"
-
-    categories = {}
-    for p in patterns:
-        cat = categorize(p)
-        categories.setdefault(cat, []).append(p)
-
-    return {
-        "patterns": patterns,
-        "count": len(patterns),
-        "total_files": len(patterns),
-        "version": "v6.5",
-        "categories": categories,
-        "load_errors": 0,
-    }
-
-
-@app.get("/patterns/{pattern_id}")
-async def get_pattern(pattern_id: str):
-    """Get pattern metadata."""
-    meta = pattern_runner.get_metadata(pattern_id)
-    if meta is None:
-        raise HTTPException(status_code=404, detail="Pattern not found")
-    meta["resources"] = pattern_runner.estimate_resources(pattern_id)
-    return meta
-
-
-@app.post("/patterns/{pattern_id}/run")
-async def run_pattern(pattern_id: str, payload: dict = None):
-    """Execute a simulation pattern."""
-    payload = payload or {}
-    if pattern_id not in pattern_runner.list_patterns():
-        raise HTTPException(
-            status_code=404, detail="Pattern not found or failed to load"
-        )
-    result = await pattern_runner.run_pattern(
-        pattern_id,
-        hypothesis=payload.get("hypothesis"),
-        params=payload.get("params"),
-    )
-    return sanitize_json(result)
-
-
-# ═══════════════════════════════════════════════════════════════════
-# WEBSOCKET ENDPOINT
-# ═══════════════════════════════════════════════════════════════════
-
-
-@app.websocket("/ws/{client_id}")
-async def websocket_endpoint(websocket: WebSocket, client_id: str):
-    """WebSocket for real-time updates."""
-    await ws_manager.connect(websocket, client_id)
-
-    try:
-        while True:
-            # Receive message
-            data = await websocket.receive_json()
-            message = WebSocketMessage(**data)
-
-            # Handle different message types
-            if message.type == "discover":
-                # Start discovery and stream progress
-                await handle_discovery_stream(websocket, message.payload)
-
-            elif message.type == "ping":
-                await websocket.send_json({"type": "pong"})
-
-    except WebSocketDisconnect:
-        ws_manager.disconnect(client_id)
-
-
-async def handle_discovery_stream(websocket: WebSocket, payload: dict):
-    """Stream discovery progress via WebSocket."""
-    problem = payload.get("problem", "")
-
-    # Send progress updates
-    stages = [
-        ("analyzing", "Analyzing problem..."),
-        ("searching", "Searching literature..."),
-        ("generating", "Generating hypotheses..."),
-        ("evaluating", "Evaluating solutions..."),
-        ("complete", "Discovery complete!"),
-    ]
-
-    for stage, message in stages:
-        await websocket.send_json(
-            {"type": "progress", "stage": stage, "message": message}
-        )
-        await asyncio.sleep(0.5)  # Simulate work
-
-
-# ═══════════════════════════════════════════════════════════════════
-# HELPERS
-# ═══════════════════════════════════════════════════════════════════
-
-
-def sanitize_json(obj: Any) -> Any:
-    """Recursively replace NaN/Inf float values with None for JSON compliance."""
-    if isinstance(obj, dict):
-        return {k: sanitize_json(v) for k, v in obj.items()}
-    if isinstance(obj, list):
-        return [sanitize_json(item) for item in obj]
-    if isinstance(obj, float):
-        if math.isnan(obj) or math.isinf(obj):
-            return None
-        return obj
-    return obj
-
-
-async def check_database() -> bool:
-    """Check database connectivity."""
-    try:
-        db = await get_db()
-        await db.ping()
-        return True
-    except:
-        return False
-
-
-async def check_cache() -> bool:
-    """Check cache connectivity."""
-    try:
-        await cache.ping()
-        return True
-    except:
-        return False
-
-
-# ═══════════════════════════════════════════════════════════════════
-# MAIN
-# ═══════════════════════════════════════════════════════════════════
 
 if __name__ == "__main__":
     uvicorn.run(

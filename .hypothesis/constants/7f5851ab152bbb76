@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/__init__.py
+# hypothesis_version: 6.141.1
+
+['2.0.0', 'C4Operator', 'C4Space', 'C4State', 'C4Transition', 'CDIEngine', 'CDISolution', 'ContradictionLibrary', 'ContradictionType', 'EinsteinValidator', 'Operators', 'TURBO-CDI Team']

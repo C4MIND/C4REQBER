@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/patterns/library/geomagnetic.py
+# hypothesis_version: 6.141.1
+
+[0.0, 1e-07, 1e-06, 1e-05, 0.001, 0.01, 0.1, 0.35, 0.5, 1.0, 2.0, 5.0, 1000000.0, 100, 1000, '6.0.0', 'Colatitude points', 'E', 'Ekman number', 'Ekman_number', 'Geomagnetic Dynamo', 'Geophysics', 'Longitude points', 'MHD approximation', 'Magnetic Prandtl', 'O(N³)', 'ON_DEMAND', 'Planetary Science', 'Pm', 'Ra', 'Radial points', 'Rayleigh number', 'Rayleigh_number', '__main__', 'accuracy', 'assumptions', 'category', 'config', 'default', 'description', 'dipole_moment', 'dipole_tilt', 'domain', 'final_state', 'float', 'geomagnetic', 'grid', 'hours to days', 'id', 'ij', 'int', 'kinetic_energy', 'magnetic_Prandtl', 'magnetic_energy', 'max_B_r', 'max_time', 'name', 'nphi', 'nr', 'ntheta', 'parameters', 'reversal_rate', 'time', 'type', 'typical_runtime', 'version']

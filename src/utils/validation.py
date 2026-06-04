@@ -1,18 +1,19 @@
 """
-TURBO-CDI: Startup Validation
+C4REQBER: Startup Validation
 Validates configuration before starting services
 """
+from __future__ import annotations
 
 import os
 import sys
-from typing import List, Tuple
+from typing import Any
 
 
 class StartupValidator:
     """Validates system configuration on startup."""
 
     @staticmethod
-    def validate_api_keys() -> Tuple[bool, List[str]]:
+    def validate_api_keys() -> tuple[bool, list[str]]:
         """
         Validate required API keys.
 
@@ -52,12 +53,12 @@ class StartupValidator:
 
         is_valid = len(critical_missing) == 0
 
-        return is_valid, critical_missing + missing, warnings
+        return is_valid, critical_missing + missing, warnings  # type: ignore[return-value]
 
     @staticmethod
-    def print_validation_report():
+    def print_validation_report() -> Any:
         """Print validation report and exit if critical errors."""
-        is_valid, errors, warnings = StartupValidator.validate_api_keys()
+        is_valid, errors, warnings = StartupValidator.validate_api_keys()  # type: ignore[misc]
 
         if warnings:
             print("⚠️  Warnings:")
@@ -77,9 +78,9 @@ class StartupValidator:
         return True
 
 
-def validate_on_startup():
+def validate_on_startup() -> None:
     """Run validation on module import."""
     # Only validate in API mode
-    if os.getenv("TURBO_CDI_MODE") == "api":
+    if os.getenv("C4REQBER_MODE") == "api":
         if not StartupValidator.print_validation_report():
             sys.exit(1)

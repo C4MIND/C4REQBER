@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/patterns/library/rigid_body.py
+# hypothesis_version: 6.141.1
+
+[-9.81, 0.0, 1e-10, 0.001, 0.01, 0.1, 0.3, 0.5, 1.0, 2.0, 1000, '6.5.0', 'Rigid Body Dynamics', 'body_idx', 'complexity', 'constraint', 'context', 'domain', 'dt: Time step size', 'energies', 'energy_drift', 'final_positions', 'final_quaternions', 'final_velocities', 'forces', 'kinetic', 'mean_position', 'mean_velocity', 'name', 'normal', 'offset', 'parameters', 'pattern_id', 'penetration', 'plane', 'point', 'positions', 'potential', 'quaternions', 'rigid_body_dynamics', 'sequential', 'solution', 'step', 'total', 'total_collisions', 'trajectory', 'type', 'velocities', 'version']

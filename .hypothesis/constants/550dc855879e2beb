@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/api/v6_routers/metamodels_v6.py
+# hypothesis_version: 6.141.1
+
+[0.01, 0.5, 100, '/compass', '/impact', '/matrix-dream', '/matrix-dream/match', '/metamodels', '/tote', 'completed', 'description', 'duration', 'id', 'matches', 'name', 'outputs', 'phase', 'phases', 'problem', 'score', 'status', 'total_duration', 'type', 'v6-metamodels', 'variation']

@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/paradigm/temporal.py
+# hypothesis_version: 6.141.1
+
+[0.0, 0.1, 0.4, 0.7, '%Y-%m-%d', 'acceleration', 'avg_severity', 'count', 'data_points', 'decreasing', 'descriptions', 'direction', 'escalating', 'first_date', 'flat', 'increasing', 'last_date', 'moderate', 'severity_range', 'stable', 'trend']

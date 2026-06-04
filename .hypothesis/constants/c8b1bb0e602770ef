@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/patterns/library/collaborative_filtering.py
+# hypothesis_version: 6.141.1
+
+[0.01, 0.02, 0.1, 0.2, 0.5, 0.7, 0.8, 0.9, 0.95, 0.99, 1.0, 2.0, 5.0, 100, '6.0.0', 'Content Platforms', 'E-commerce', 'EXTENDED', 'Personalization', '__main__', 'accuracy', 'algorithm', 'als', 'assumptions', 'category', 'config', 'data_stats', 'default', 'description', 'domain', 'dominant_factors', 'enum', 'factor_analysis', 'final_rmse', 'float', 'history', 'id', 'int', 'item_factor_variance', 'learning_rate', 'mae', 'n_epochs', 'n_factors', 'n_items', 'n_ratings_test', 'n_ratings_train', 'n_users', 'name', 'nmf', 'options', 'parameters', 'predicted_ratings', 'predictions_sample', 'recommended_items', 'regularization', 'seconds to minutes', 'sgd', 'sparsity', 'svd', 'test', 'test_rmse', 'train', 'train_loss', 'train_rmse', 'type', 'typical_runtime', 'user', 'user_factor_variance', 'version']

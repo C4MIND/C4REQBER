@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/cache/tier4_upstream.py
+# hypothesis_version: 6.141.1
+
+[0.5, 30.0, 'calls', 'errors', 'retries', 'timeout']

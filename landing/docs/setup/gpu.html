@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GPU Setup — c4reqber Docs</title>
+<meta name="description" content="Configure GPU acceleration for c4reqber. NVIDIA CUDA, Apple Metal, AMD ROCm, and cloud GPU via vast.ai.">
+<meta property="og:title" content="GPU Setup — c4reqber Docs">
+<meta property="og:type" content="website">
+<link rel="canonical" href="https://c4reqber.org/docs/setup/gpu.html">
+<meta name="theme-color" content="#0F1117">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' https: data:; connect-src 'self' https://api.github.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800,900&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#9670;</text></svg>">
+<link rel="manifest" href="../../manifest.json">
+<link rel="stylesheet" href="../../css/main.css">
+<style>
+.doc-content{max-width:800px;margin:0 auto;padding:0 24px}
+.doc-content h2{font-size:28px;font-weight:800;margin:60px 0 20px;color:var(--accent)}
+.doc-content h3{font-size:20px;font-weight:700;margin:32px 0 12px;color:var(--primary)}
+.doc-content p{color:var(--fg-2);line-height:1.8;margin-bottom:16px}
+.doc-content ul{margin:16px 0;padding-left:24px;color:var(--fg-2)}
+.doc-content li{margin-bottom:8px;line-height:1.7}
+.doc-content code{background:var(--bg-3);padding:2px 8px;border-radius:4px;font-family:var(--mono);font-size:13px;color:var(--primary)}
+.doc-content pre{background:var(--bg-4);border-radius:var(--radius);padding:20px;overflow-x:auto;border:1px solid rgba(255,255,255,.06);margin:20px 0;position:relative}
+.doc-content pre code{background:none;padding:0;color:var(--fg-2)}
+.doc-content table{width:100%;border-collapse:collapse;margin:20px 0;font-size:14px}
+.doc-content th{background:var(--bg-3);padding:10px 12px;text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--fg-3);border-bottom:1px solid rgba(255,255,255,.08)}
+.doc-content td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.04);color:var(--fg-2)}
+
+.copy-btn{position:absolute;top:8px;right:8px;background:rgba(255,255,255,.08);border:none;color:var(--fg-3);padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer;opacity:0;transition:opacity .2s}
+.doc-content pre:hover .copy-btn{opacity:1}
+.copy-btn:hover{background:rgba(78,205,196,.15);color:var(--primary)}
+
+.breadcrumb{display:flex;gap:8px;align-items:center;font-size:13px;color:var(--fg-3);margin-bottom:24px}
+.breadcrumb a{color:var(--fg-3);text-decoration:none}
+.breadcrumb a:hover{color:var(--primary)}
+
+[data-theme="light"] .doc-content pre{background:#f8f9fa;border-color:rgba(0,0,0,.08)}
+</style>
+</head>
+<body>
+
+<div id="site-header"></div>
+
+<main>
+
+<section class="hero" style="min-height:35vh;padding-top:100px">
+  <div class="hero-bg"></div>
+  <div class="container" style="text-align:center;position:relative;z-index:2">
+    <div class="badge"><span class="dot"></span> <span data-i18n="badge_setup">Setup</span></div>
+    <h1 style="font-size:clamp(32px,5vw,52px);margin-bottom:16px"><span class="gradient-text">GPU Setup</span></h1>
+    <p class="hero-sub" style="max-width:600px;margin:0 auto">Local GPU auto-detect, engine installation, and cloud fallback.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="doc-content">
+    <nav class="breadcrumb">
+      <a href="../../" data-i18n="breadcrumb_home">Home</a> <span>/</span> <a href="../">Docs</a> <span>/</span> <span>GPU Setup</span>
+    </nav>
+
+    <h2>Local GPU Auto-Detect</h2>
+    <pre><button class="copy-btn" data-copy>copy</button><code>blast simulate --engine openmm --detect-gpu</code></pre>
+    <p>Supported backends:</p>
+    <ul>
+      <li><strong>NVIDIA CUDA</strong> — <code>nvidia-smi</code> detection, cuDNN auto-check</li>
+      <li><strong>Apple Metal / MPS</strong> — <code>torch.backends.mps.is_available()</code></li>
+      <li><strong>AMD ROCm</strong> — experimental, via <code>HIP_VISIBLE_DEVICES</code></li>
+    </ul>
+    <p>If not detected, the engine prints exact install commands:</p>
+    <pre><button class="copy-btn" data-copy>copy</button><code># conda install -c conda-forge openmm
+# pip install openmm</code></pre>
+
+    <h2>Engine Categories</h2>
+    <table>
+      <tr><th>Category</th><th>Engines</th><th>Typical Install</th></tr>
+      <tr><td><strong>Molecular Dynamics</strong></td><td>GROMACS, LAMMPS, OpenMM, MDAnalysis</td><td><code>conda install -c conda-forge gromacs</code></td></tr>
+      <tr><td><strong>Quantum Chemistry</strong></td><td>PySCF, Psi4, Quantum ESPRESSO</td><td><code>pip install pyscf</code></td></tr>
+      <tr><td><strong>CFD</strong></td><td>OpenFOAM, FEniCSx</td><td><code>conda install -c conda-forge fenics</code></td></tr>
+      <tr><td><strong>Neuroscience</strong></td><td>NEURON, Brian2, Jaxley</td><td><code>pip install neuron</code></td></tr>
+      <tr><td><strong>Systems Biology</strong></td><td>COPASI, Tellurium</td><td><code>pip install tellurium</code></td></tr>
+      <tr><td><strong>Multi-physics</strong></td><td>MuJoCo, PyBullet, Taichi</td><td><code>pip install mujoco</code></td></tr>
+      <tr><td><strong>Astrophysics</strong></td><td>Rebound, AMUSE</td><td><code>pip install rebound</code></td></tr>
+      <tr><td><strong>ML/MD</strong></td><td>JAX MD, JAX-LaB</td><td><code>pip install jax-md</code></td></tr>
+    </table>
+
+    <h2>Cloud GPU (vast.ai)</h2>
+    <p>For engines too large for local hardware:</p>
+    <pre><button class="copy-btn" data-copy>copy</button><code>blast simulate --engine gromacs --estimate-cost</code></pre>
+    <p>Example output:</p>
+    <pre><code>Local: 8h on RTX 4090 ($0)
+vast.ai: 1h on A100 ($0.80)
+vast.ai: 2h on RTX 3090 ($0.40)</code></pre>
+    <p><strong>Workflow:</strong></p>
+    <ol style="color:var(--fg-2);line-height:1.8;padding-left:24px">
+      <li><code>blast simulate --engine &lt;name&gt; --dry-run</code> — shows exact conda/pip commands</li>
+      <li>Install locally OR rent on vast.ai</li>
+      <li>Re-run without <code>--dry-run</code></li>
+    </ol>
+
+    <h2>Honest Fallback</h2>
+    <p>If an engine is not installed, c4reqber automatically falls back to:</p>
+    <ul>
+      <li>Toy analytical model (same physics equations, coarse grid)</li>
+      <li>Clear labeling: <code>[FALLBACK: toy model — install &lt;engine&gt; for full simulation]</code></li>
+      <li>No fake data — equations are real, just lower resolution</li>
+    </ul>
+  </div>
+</section>
+
+</main>
+
+<div id="site-footer"></div>
+
+<script src="../../js/components.js"></script>
+<script src="../../js/main.js"></script>
+<script>
+document.querySelectorAll('.copy-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const code = btn.nextElementSibling.textContent;
+    navigator.clipboard.writeText(code).then(() => {
+      const orig = btn.textContent;
+      btn.textContent = 'copied!';
+      setTimeout(() => btn.textContent = orig, 1200);
+    });
+  });
+});
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('../../sw.js').catch(()=>{});
+}
+</script>
+
+</body>
+</html>

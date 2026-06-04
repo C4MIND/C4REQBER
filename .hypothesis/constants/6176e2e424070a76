@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/api/routers/__init__.py
+# hypothesis_version: 6.141.1
+
+['auth', 'bridge', 'discoveries', 'graph', 'health', 'patterns', 'search', 'theorems', 'validation_single', 'validations', 'websocket']

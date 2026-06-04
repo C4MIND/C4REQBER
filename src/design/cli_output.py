@@ -4,21 +4,21 @@ Standardized CLI output components using design tokens.
 Provides consistent, beautiful output formatting for the CLI interface
 with proper semantic styling for different content types.
 """
+from __future__ import annotations
 
+from enum import Enum
+from typing import Any
+
+from rich.box import ROUNDED, Box
+from rich.columns import Columns
+from rich.console import Console
 from rich.panel import Panel
+from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
 from rich.table import Table
 from rich.tree import Tree
-from rich.console import Console
-from rich.layout import Layout
-from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
-from rich.text import Text
-from rich.columns import Columns
-from rich.box import Box, ROUNDED, DOUBLE, HEAVY
-from enum import Enum
-from typing import Optional, List, Any, Dict, Union
-import math
 
-from .tokens import DesignTokens, ICONS, get_color_by_status
+from .tokens import ICONS, DesignTokens, get_color_by_status
+
 
 console = Console()
 
@@ -76,8 +76,8 @@ class StyledPanel:
         content: Any,
         title: str,
         panel_type: PanelType = PanelType.NEUTRAL,
-        subtitle: Optional[str] = None,
-        padding: tuple = (1, 2),
+        subtitle: str | None = None,
+        padding: tuple[Any, ...] = (1, 2),
         box_style: Box = ROUNDED,
         expand: bool = True,
     ) -> Panel:
@@ -97,32 +97,32 @@ class StyledPanel:
         )
 
     @staticmethod
-    def info(content: Any, title: str = "Info", **kwargs) -> Panel:
+    def info(content: Any, title: str = "Info", **kwargs: Any) -> Panel:
         """Create an info panel."""
         return StyledPanel.create(content, title, PanelType.INFO, **kwargs)
 
     @staticmethod
-    def success(content: Any, title: str = "Success", **kwargs) -> Panel:
+    def success(content: Any, title: str = "Success", **kwargs: Any) -> Panel:
         """Create a success panel."""
         return StyledPanel.create(content, title, PanelType.SUCCESS, **kwargs)
 
     @staticmethod
-    def warning(content: Any, title: str = "Warning", **kwargs) -> Panel:
+    def warning(content: Any, title: str = "Warning", **kwargs: Any) -> Panel:
         """Create a warning panel."""
         return StyledPanel.create(content, title, PanelType.WARNING, **kwargs)
 
     @staticmethod
-    def error(content: Any, title: str = "Error", **kwargs) -> Panel:
+    def error(content: Any, title: str = "Error", **kwargs: Any) -> Panel:
         """Create an error panel."""
         return StyledPanel.create(content, title, PanelType.ERROR, **kwargs)
 
     @staticmethod
-    def result(content: Any, title: str = "Result", **kwargs) -> Panel:
+    def result(content: Any, title: str = "Result", **kwargs: Any) -> Panel:
         """Create a result panel."""
         return StyledPanel.create(content, title, PanelType.RESULT, **kwargs)
 
     @staticmethod
-    def discovery(content: Any, title: str = "Discovery", **kwargs) -> Panel:
+    def discovery(content: Any, title: str = "Discovery", **kwargs: Any) -> Panel:
         """Create a discovery panel."""
         return StyledPanel.create(content, title, PanelType.DISCOVERY, **kwargs)
 
@@ -148,7 +148,7 @@ class StyledTable:
     @staticmethod
     def create(
         title: str,
-        columns: List[Dict[str, Any]],
+        columns: list[dict[str, Any]],
         show_header: bool = True,
         box_style: Box = ROUNDED,
         expand: bool = True,
@@ -329,10 +329,10 @@ class ErrorDisplay:
     @staticmethod
     def show_error(
         message: str,
-        suggestion: Optional[str] = None,
+        suggestion: str | None = None,
         exit_code: int = 1,
         raise_exception: bool = True,
-    ):
+    ) -> None:
         """Display standardized error."""
         content = f"[bold]{message}[/bold]"
         if suggestion:
@@ -349,7 +349,7 @@ class ErrorDisplay:
             raise SystemExit(exit_code)
 
     @staticmethod
-    def show_warning(message: str, suggestion: Optional[str] = None):
+    def show_warning(message: str, suggestion: str | None = None) -> None:
         """Display standardized warning."""
         content = f"[bold]{message}[/bold]"
         if suggestion:
@@ -363,7 +363,7 @@ class ErrorDisplay:
         console.print(panel)
 
     @staticmethod
-    def show_info(message: str, title: str = "Info"):
+    def show_info(message: str, title: str = "Info") -> None:
         """Display standardized info."""
         panel = StyledPanel.create(
             message,
@@ -381,9 +381,9 @@ class ResultDisplay:
         hypothesis: str,
         confidence: float,
         method: str,
-        c4_path: Optional[List[str]] = None,
-        supporting_evidence: Optional[List[str]] = None,
-    ):
+        c4_path: list[str] | None = None,
+        supporting_evidence: list[str] | None = None,
+    ) -> None:
         """Display a hypothesis result card."""
         confidence_pct = int(confidence * 100)
         filled_blocks = confidence_pct // 10
@@ -403,7 +403,7 @@ class ResultDisplay:
             content += f"[bold]C4 Path:[/bold]       {path_str}\n"
 
         if supporting_evidence:
-            content += f"\n[bold]Supporting Evidence:[/bold]\n"
+            content += "\n[bold]Supporting Evidence:[/bold]\n"
             for i, evidence in enumerate(supporting_evidence[:3], 1):
                 content += f"  {i}. {evidence}\n"
 
@@ -419,8 +419,8 @@ class ResultDisplay:
         problem: str,
         hypotheses_count: int,
         avg_confidence: float,
-        methods_used: List[str],
-    ):
+        methods_used: list[str],
+    ) -> None:
         """Display a discovery summary."""
         confidence_pct = int(avg_confidence * 100)
 
@@ -439,7 +439,7 @@ class ResultDisplay:
         console.print(panel)
 
     @staticmethod
-    def metrics_grid(metrics: Dict[str, Any], columns: int = 4):
+    def metrics_grid(metrics: dict[str, Any], columns: int = 4) -> None:
         """Display metrics in a grid."""
         metric_panels = []
 
@@ -471,9 +471,9 @@ class ResultDisplay:
     def agent_result(
         agent_name: str,
         result: str,
-        confidence: Optional[float] = None,
-        execution_time: Optional[float] = None,
-    ):
+        confidence: float | None = None,
+        execution_time: float | None = None,
+    ) -> None:
         """Display an agent result."""
         content = f"[bold]{result}[/bold]"
 
@@ -542,7 +542,7 @@ class TreeDisplay:
         return tree
 
     @staticmethod
-    def add_c4_path(tree: Tree, path: List[Dict[str, str]]):
+    def add_c4_path(tree: Tree, path: list[dict[str, str]]) -> None:
         """Add a C4 path to a tree."""
         for step in path:
             label = (
@@ -557,7 +557,7 @@ class ConfirmationPrompt:
     @staticmethod
     def confirm(
         action: str,
-        details: Optional[str] = None,
+        details: str | None = None,
         default: bool = False,
     ) -> bool:
         """Show a confirmation prompt."""
@@ -574,7 +574,7 @@ class ConfirmationPrompt:
         return default
 
     @staticmethod
-    def destructive(action: str, details: Optional[str] = None) -> bool:
+    def destructive(action: str, details: str | None = None) -> bool:
         """Show a destructive action confirmation."""
         content = (
             f"[bold {DesignTokens.ERROR.hex}]{ICONS['error']} "
@@ -591,7 +591,7 @@ class ConfirmationPrompt:
         return False
 
 
-def print_section_header(title: str, icon: Optional[str] = None):
+def print_section_header(title: str, icon: str | None = None) -> None:
     """Print a section header."""
     icon_str = f"{icon} " if icon else ""
     console.print(f"\n[bold {DesignTokens.PRIMARY.hex}]{'━' * 60}[/]")
@@ -599,11 +599,11 @@ def print_section_header(title: str, icon: Optional[str] = None):
     console.print(f"[bold {DesignTokens.PRIMARY.hex}]{'━' * 60}[/]\n")
 
 
-def print_divider(style: str = DesignTokens.GRAY_600.hex):
+def print_divider(style: str = DesignTokens.GRAY_600.hex) -> None:
     """Print a divider line."""
     console.print(f"[{style}]{'─' * 60}[/]")
 
 
-def print_empty_line():
+def print_empty_line() -> None:
     """Print an empty line."""
     console.print()

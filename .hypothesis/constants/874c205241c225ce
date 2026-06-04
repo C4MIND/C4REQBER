@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/auth/dev_mode.py
+# hypothesis_version: 6.141.1
+
+[401, '1', 'DEV_MODE', 'DEV_USER_ID', 'DEV_USER_NAME', 'Developer', 'dev-user-001', 'dev@turbo-cdi.local', 'on', 'token', 'true', 'turbo_cdi_token', 'yes']

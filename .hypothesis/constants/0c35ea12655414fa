@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/patterns/library/qft_lattice.py
+# hypothesis_version: 6.141.1
+
+[0.0, 1e-20, 1e-10, 8e-09, 0.1, 0.2, 0.3, 0.5, 0.85, 1.0, 10.0, 500000.0, 100, 500, 1000, 10000, 'Gauge group', 'Lattice QFT', 'Measure Wilson loops', 'SU(2)', 'action_density', 'avg_plaquette', 'beta', 'bool', 'compact qed', 'confinement', 'cpu_cores', 'critical coupling', 'float', 'gauge theory', 'gauge_group', 'gpu_required', 'int', 'lattice gauge', 'lattice qft', 'lattice_size', 'lattice_volume', 'logs', 'markov chain', 'measure_wilson_loop', 'memory_gb', 'metrics', 'monte carlo', 'n_measurements', 'n_thermalization', 'none', 'note', 'phase transition', 'plaquette', 'polyakov loop', 'polyakov_loop', 'qft_lattice', 'quantum', 'quark confinement', 'select', 'staggered', 'std_plaquette', 'string tension', 'string_tension', 'su2', 'su3', 'susceptibility', 'u1', 'wilson', 'wilson loop', 'wilson_loop_1x1', 'wilson_loop_2x2']

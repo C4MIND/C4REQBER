@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/triz/mappings.py
+# hypothesis_version: 6.141.1
+
+['accuracy', 'adaptability', 'automation', 'battery_life', 'complexity', 'convenience', 'cost', 'delta', 'delta_iota', 'delta_phi', 'ease_of_use', 'energy_loss', 'features', 'iota', 'iota_lambda', 'kappa+', 'kappa-', 'kappa_phi', 'kappa_sigma', 'lambda+', 'lambda-', 'lambda_iota', 'lambda_kappa', 'lambda_sigma', 'mu_phi', 'performance', 'power', 'precision', 'productivity', 'reliability', 'rho', 'rho_iota', 'rho_phi', 'rho_tau', 'security', 'sigma', 'sigma_iota', 'sigma_phi', 'simplicity', 'size', 'speed', 'strength', 'tau+', 'tau-', 'tau_delta', 'tau_rho', 'tau_sigma', 'temperature', 'weight']

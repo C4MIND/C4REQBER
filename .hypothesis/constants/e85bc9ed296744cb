@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/llm/cache.py
+# hypothesis_version: 6.141.1
+
+[3600, '0', '1', '3600', 'CACHE_BACKEND', 'CACHE_ENABLED', 'CACHE_SQLITE_PATH', 'CACHE_TTL', 'REDIS_URL', 'auto', 'data/llm_cache.db', 'false', 'llm:cache:*', 'no', 'off', 'on', 'redis', 'sqlite', 'true', 'utf-8', 'yes']

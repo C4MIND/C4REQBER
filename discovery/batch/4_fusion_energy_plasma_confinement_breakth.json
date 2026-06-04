@@ -1,0 +1,11 @@
+{
+  "problem": "fusion energy plasma confinement breakthrough",
+  "domain": "physics",
+  "mode": "invent",
+  "hypothesis_len": 2927,
+  "triz": 8,
+  "sims": 3,
+  "bayesian": 0.999,
+  "paper_chars": 4223,
+  "time": 24.6
+}

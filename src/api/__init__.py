@@ -1,26 +1,29 @@
 """
-TURBO-CDI API: Module Initialization
+c4-cdi-turbo API: Module Initialization
 """
 
-from src.api.models import (
-    HealthResponse,
-    MetricsResponse,
-    UserCreate,
-    UserResponse,
-    TokenResponse,
+from __future__ import annotations
+
+from .auth import AuthManager
+from .cache import CacheManager
+from .db_manager import get_db
+from .models import (
     DiscoveryRequest,
     DiscoveryResponse,
+    HealthResponse,
     HypothesisResponse,
+    MetricsResponse,
     SearchRequest,
     SearchResponse,
+    TokenResponse,
+    UserCreate,
+    UserResponse,
     ValidationRequest,
     WebSocketMessage,
 )
-from src.api.database import Database, get_db
-from src.api.auth import AuthManager
-from src.api.cache import CacheManager
-from src.api.rate_limiter import RateLimiter
-from src.api.websocket import ConnectionManager
+from .rate_limiter import RateLimiter, WebSocketRateLimiter
+from .websocket import ConnectionManager
+
 
 __all__ = [
     "HealthResponse",
@@ -35,10 +38,10 @@ __all__ = [
     "SearchResponse",
     "ValidationRequest",
     "WebSocketMessage",
-    "Database",
     "get_db",
     "AuthManager",
     "CacheManager",
     "RateLimiter",
+    "WebSocketRateLimiter",
     "ConnectionManager",
 ]

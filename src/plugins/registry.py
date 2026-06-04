@@ -1,13 +1,19 @@
+from __future__ import annotations
+
+
 """
-TURBO-CDI: Tool Plugin System
+C4REQBER: Tool Plugin System
 Extensible plugin framework for custom tools
 """
-
-from typing import List, Dict, Any, Optional, Callable
-from dataclasses import dataclass
-from abc import ABC, abstractmethod
 import importlib
+import logging
 import pkgutil
+from abc import ABC, abstractmethod
+from collections.abc import Callable
+from dataclasses import dataclass
+from typing import Any
+
+from src.di.container import get_container
 
 
 @dataclass
@@ -18,7 +24,7 @@ class ToolMetadata:
     version: str
     description: str
     author: str
-    requires: List[str]  # Dependencies
+    requires: list[str]  # Dependencies
 
 
 class ToolPlugin(ABC):
@@ -31,15 +37,15 @@ class ToolPlugin(ABC):
         pass
 
     @abstractmethod
-    def execute(self, **kwargs) -> Any:
+    def execute(self, **kwargs: Any) -> Any:
         """Execute the tool."""
         pass
 
-    def validate_input(self, **kwargs) -> bool:
+    def validate_input(self, **kwargs: Any) -> bool:
         """Validate input parameters."""
         return True
 
-    def get_schema(self) -> Dict[str, Any]:
+    def get_schema(self) -> dict[str, Any]:
         """Get JSON schema for tool parameters."""
         return {"type": "object", "properties": {}}
 
@@ -51,29 +57,29 @@ class PluginRegistry:
     Manages loading and execution of custom tools.
     """
 
-    def __init__(self):
-        self._plugins: Dict[str, ToolPlugin] = {}
-        self._hooks: Dict[str, List[Callable]] = {}
+    def __init__(self) -> None:
+        self._plugins: dict[str, ToolPlugin] = {}
+        self._hooks: dict[str, list[Callable]] = {}  # type: ignore[type-arg]
 
-    def register(self, plugin: ToolPlugin):
+    def register(self, plugin: ToolPlugin) -> None:
         """Register a plugin."""
         name = plugin.metadata.name
         self._plugins[name] = plugin
 
-    def unregister(self, name: str):
+    def unregister(self, name: str) -> None:
         """Unregister a plugin."""
         if name in self._plugins:
             del self._plugins[name]
 
-    def get_plugin(self, name: str) -> Optional[ToolPlugin]:
+    def get_plugin(self, name: str) -> ToolPlugin | None:
         """Get a plugin by name."""
         return self._plugins.get(name)
 
-    def list_plugins(self) -> List[ToolMetadata]:
+    def list_plugins(self) -> list[ToolMetadata]:
         """List all registered plugins."""
         return [p.metadata for p in self._plugins.values()]
 
-    def execute(self, name: str, **kwargs) -> Any:
+    def execute(self, name: str, **kwargs: Any) -> Any:
         """Execute a plugin."""
         plugin = self._plugins.get(name)
         if not plugin:
@@ -84,18 +90,18 @@ class PluginRegistry:
 
         return plugin.execute(**kwargs)
 
-    def register_hook(self, event: str, callback: Callable):
+    def register_hook(self, event: str, callback: Callable) -> None:  # type: ignore[type-arg]
         """Register a hook for an event."""
         if event not in self._hooks:
             self._hooks[event] = []
         self._hooks[event].append(callback)
 
-    def trigger_hook(self, event: str, **kwargs):
+    def trigger_hook(self, event: str, **kwargs: Any) -> None:
         """Trigger all hooks for an event."""
         for callback in self._hooks.get(event, []):
             callback(**kwargs)
 
-    def discover_plugins(self, package_name: str = "turbo_cdi.plugins"):
+    def discover_plugins(self, package_name: str = "c4_cdi_turbo.plugins") -> None:
         """Auto-discover plugins in a package."""
         try:
             package = importlib.import_module(package_name)
@@ -104,7 +110,7 @@ class PluginRegistry:
                     module = importlib.import_module(f"{package_name}.{name}")
                     # Look for Plugin class
                     if hasattr(module, "Plugin"):
-                        plugin_class = getattr(module, "Plugin")
+                        plugin_class = module.Plugin
                         plugin = plugin_class()
                         self.register(plugin)
                 except Exception as e:
@@ -125,11 +131,11 @@ class WebSearchPlugin(ToolPlugin):
             name="web_search",
             version="1.0.0",
             description="Search the web for information",
-            author="TURBO-CDI",
+            author="C4Reqber",
             requires=[],
         )
 
-    def execute(self, query: str, max_results: int = 5) -> List[Dict]:
+    def execute(self, query: str, max_results: int = 5) -> list[dict]:  # type: ignore[override, type-arg]
         """Execute web search."""
         # Placeholder - would integrate with search API
         return [
@@ -147,34 +153,35 @@ class CalculatorPlugin(ToolPlugin):
             name="calculator",
             version="1.0.0",
             description="Perform mathematical calculations",
-            author="TURBO-CDI",
+            author="C4Reqber",
             requires=[],
         )
 
-    def execute(self, expression: str) -> float:
+    def execute(self, expression: str) -> float:  # type: ignore[override]
         """Evaluate mathematical expression."""
-        # Safe evaluation - only allow basic math
-        allowed = {
-            "__builtins__": {},
-            "abs": abs,
-            "max": max,
-            "min": min,
-            "pow": pow,
-            "round": round,
-        }
-        return eval(expression, allowed)
+        from src.utils.safe_eval import safe_eval
 
-
-# Singleton
-_registry: Optional[PluginRegistry] = None
+        try:
+            return safe_eval(expression.strip(), {
+                "abs": abs,
+                "max": max,
+                "min": min,
+                "pow": pow,
+                "round": round,
+            })
+        except Exception as e:
+            logger = logging.getLogger(__name__)
+            logger.warning("Calculator expression evaluation failed: %s", e)
+            raise
 
 
 def get_plugin_registry() -> PluginRegistry:
-    """Get singleton plugin registry."""
-    global _registry
-    if _registry is None:
-        _registry = PluginRegistry()
+    """Get singleton plugin registry (backed by DI container)."""
+    container = get_container()
+    if not container.has("plugin_registry"):
+        registry = PluginRegistry()
         # Register built-in plugins
-        _registry.register(WebSearchPlugin())
-        _registry.register(CalculatorPlugin())
-    return _registry
+        registry.register(WebSearchPlugin())
+        registry.register(CalculatorPlugin())
+        container.register("plugin_registry", registry)
+    return container.resolve("plugin_registry")

@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/validation/rules.py
+# hypothesis_version: 6.141.1
+
+[0.0, 0.5, 'brier_score', 'by_status', 'calibration', 'completed_at', 'conclusion', 'confidence_delta', 'confidence_score', 'context', 'created_at', 'delta', 'description', 'design', 'discovery_id', 'experiment', 'falsified', 'inconclusive', 'metadata', 'name', 'new_confidence', 'node_id', 'node_type', 'notes', 'observations', 'old_confidence', 'outcome', 'researcher', 'started_at', 'status', 'tags', 'tests', 'timestamp', 'total_experiments', 'total_predictions', 'unit', 'updated_at', 'validated', 'validation_rate', 'value']

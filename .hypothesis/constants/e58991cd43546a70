@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/api/routers/theorems.py
+# hypothesis_version: 6.141.1
+
+[400, 404, '/stats', '/theorems', '/{theorem_id}', '/{theorem_id}/prove', 'Theorem not found', 'backend', 'confidence', 'created_at', 'domain', 'error_message', 'formal_statement', 'general', 'goal_after', 'goal_before', 'hypothesis', 'hypothesis required', 'hypothesis_id', 'id', 'justification', 'line_number', 'proof_steps', 'proved_at', 'simulation', 'statement', 'status', 'tactic', 'theorems']

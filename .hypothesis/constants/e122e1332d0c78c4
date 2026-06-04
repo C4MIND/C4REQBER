@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/patterns/library/system_dynamics/core.py
+# hypothesis_version: 6.141.1
+
+[0.0, 0.001, 0.1, 1.0, 100.0, 10000.0, 10000, 'BDF', 'DOP853', 'LSODA', 'ODE solver method', 'RK23', 'RK45', 'Radau', 'Simulation end time', 'Time step for output', 'accumulation', 'bool', 'compartmental', 'cpu_cores', 'custom', 'decay', 'detect_chaos', 'differential', 'dt', 'dynamic', 'epidemic', 'equilibrium', 'feedback', 'float', 'flow', 'generic', 'gpu_required', 'growth', 'logistic_growth', 'logs', 'lotka volterra', 'memory_gb', 'metrics', 'model_type', 'n_sensitivity_runs', 'ode', 'oscillation', 'parameter_variation', 'population', 'population dynamics', 'predator prey', 'predator_prey', 'random_seed', 'rate', 'resources', 'select', 'sensitivity_analysis', 'solver', 'stability_analysis', 'steady state', 'stock', 'stocks', 'system dynamics', 'system_dynamics', 't_end', 't_start', 'time derivative', 'units']

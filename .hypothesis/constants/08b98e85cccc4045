@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/patterns/library/adaptive_filter.py
+# hypothesis_version: 6.141.1
+
+[-0.3, -0.1, 1e-10, 0.001, 0.01, 0.05, 0.1, 0.2, 0.5, 0.8, 0.99, 1.0, 1.1, 20.0, -1000, -100, 100, 2000, 3000, 5000, 10000, '\n--- Demo Run ---', '6.0.0', 'Adaptive Filter', 'Communications', 'Control Systems', 'EXTENDED', 'LMS step size', 'NLMS became unstable', 'Signal Processing', '__main__', 'accuracy', 'adaptive_filter', 'algorithm', 'assumptions', 'category', 'config', 'convergence_samples', 'default', 'description', 'domain', 'enum', 'error_history', 'filter_order', 'final_mse', 'final_weights', 'float', 'id', 'int', 'lambda_factor', 'learning_curve', 'lms', 'mean_output', 'misadjustment', 'mse_history', 'mu', 'n_samples', 'name', 'nlms', 'noise_power', 'options', 'output_variance', 'parameters', 'rls', 'rls_forgetting', 'same', 'seconds', 'type', 'typical_runtime', 'unknown_system', 'version', 'weight_error']

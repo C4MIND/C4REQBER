@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/patterns/library/language_evolution.py
+# hypothesis_version: 6.141.1
+
+[0.0, 0.01, 0.02, 0.05, 0.5, 0.9, 1.0, 1.5, 100, '6.0.0', 'Cultural Evolution', 'EXTENDED', 'Language Evolution', 'Linguistics', 'O(G·N·U)', 'Sociolinguistics', '__main__', 'accuracy', 'assumptions', 'bayesian', 'category', 'communities', 'config', 'default', 'description', 'domain', 'dominant_forms', 'entropy', 'entropy_trajectory', 'enum', 'evolution_dynamics', 'final_frequencies', 'fitness_landscape', 'frequency', 'frequency_history', 'functional', 'generations', 'id', 'int', 'language_evolution', 'learning_algorithm', 'max_frequency', 'n_fixed_forms', 'n_generations', 'n_speakers', 'n_utterances', 'name', 'neutral', 'normalized_entropy', 'options', 'parameters', 'prestige', 'seconds', 'social', 'statistics', 'type', 'typical_runtime', 'version']

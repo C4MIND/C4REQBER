@@ -1,15 +1,17 @@
 """
-TURBO-CDI: References Module
+c4-cdi-turbo: References Module
 Reference manager integration
 """
+from __future__ import annotations
 
 from src.references.manager import (
-    ReferenceManager,
-    ReferenceImport,
-    ZoteroImporter,
     MendeleyImporter,
+    ReferenceImport,
+    ReferenceManager,
+    ZoteroImporter,
     get_reference_manager,
 )
+
 
 __all__ = [
     "ReferenceManager",

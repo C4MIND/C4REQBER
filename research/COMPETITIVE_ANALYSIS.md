@@ -46,7 +46,7 @@ Rigor
 ### 1.1 Heinrich (NickScherbakov/Heinrich-The-Inventing-Machine)
 
 **Repository:** https://github.com/NickScherbakov/Heinrich-The-Inventing-Machine  
-**License:** MIT  
+**License:** MIT (third-party competitor)  
 **Stars:** ~500  
 **Last Update:** 2025
 
@@ -355,7 +355,7 @@ Chain-of-thought reasoning models with extended thinking time.
 ### 4.2 DeepSeek-R1
 
 **Repository:** https://github.com/deepseek-ai/DeepSeek-R1  
-**License:** MIT  
+**License:** MIT (third-party competitor)  
 **Description:** Open-source reasoning model with chain-of-thought.
 
 **Strengths:**

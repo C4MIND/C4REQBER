@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/graph/operations/core.py
+# hypothesis_version: 6.141.1
+
+[1.0, 'KnowledgeGraph', 'abstract', 'active', 'add_node', 'authors', 'c4_path', 'citation_count', 'confidence_score', 'contains', 'contradiction', 'data', 'description', 'discovery', 'discovery_ids', 'domain', 'edges', 'general', 'hypothesis', 'id', 'llm_model', 'llm_provider', 'name', 'nodes', 'objectives', 'op', 'pending', 'problem', 'project', 'reference', 'source', 'source_id', 'status', 'timestamp', 'title', 'to', 'type', 'url', 'year']

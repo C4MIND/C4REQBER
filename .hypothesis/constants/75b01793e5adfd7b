@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/graph/io.py
+# hypothesis_version: 6.141.1
+
+['KnowledgeGraph', 'edges', 'id', 'nodes', 'source', 'target', 'w']

@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/patterns/library/system_dynamics/analysis.py
+# hypothesis_version: 6.141.1
+
+[0.0, 1e-08, 1e-06, 0.01, 0.8, 1.0, 100, 'chaos_indicator_k', 'damped_frequency', 'is_chaotic', 'is_stable', 'lyapunov_estimate', 'max_eigenvalue_real', 'n_equilibria', 'state', 'time']

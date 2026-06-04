@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/patterns/library/queueing_networks/core.py
+# hypothesis_version: 6.141.1
+
+[0.0, 0.5, 1.0, 1.5, 'analytical', 'arrival', 'arrival_times', 'arrivals', 'blocked', 'busy_server_samples', 'costs', 'customer', 'departure', 'departure_time', 'departures', 'deterministic', 'erlang', 'exponential', 'holding_cost', 'id', 'inf', 'is_stable', 'last_event_time', 'little_L', 'mean_queue_length', 'mean_system_time', 'n_nodes', 'node', 'node_results', 'queue_length_samples', 'server', 'server_cost', 'simulation_time', 'std_system_time', 'system_metrics', 'throughput', 'total', 'total_customers', 'total_queue_time', 'total_service_time', 'uniform', 'utilization', 'wait_times', 'warmup_time']

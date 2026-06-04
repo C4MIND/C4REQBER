@@ -1,0 +1,118 @@
+stages:
+  - test
+  - build
+  - deploy
+
+variables:
+  PYTHON_VERSION: "3.11"
+  NODE_VERSION: "20"
+  DOCKER_DRIVER: overlay2
+
+# ═══════════════════════════════════════════════════════════════
+# TEST JOBS
+# ═══════════════════════════════════════════════════════════════
+
+test-backend:
+  stage: test
+  image: python:3.11-slim
+  before_script:
+    - apt-get update && apt-get install -y curl git
+    - pip install --upgrade pip
+    - pip install -r requirements.txt
+    - pip install pytest pytest-asyncio ruff
+  script:
+    - ruff check src/ --exclude="archive/"
+    - PYTHONPATH=. pytest tests/ -v --tb=short
+  variables:
+    DATABASE_URL: "sqlite:///tmp/test.db"
+    CACHE_BACKEND: "memory"
+    JWT_SECRET: "test-secret-min-32-chars-long"
+  artifacts:
+    when: always
+    reports:
+      junit: report.xml
+    paths:
+      - report.xml
+
+test-frontend:
+  stage: test
+  image: node:20-alpine
+  before_script:
+    - cd web-v2
+    - npm ci --legacy-peer-deps
+  script:
+    - npm run lint
+    - npx tsc --noEmit
+    - npm run test
+    - npm run build
+  artifacts:
+    paths:
+      - web-v2/dist
+
+# ═══════════════════════════════════════════════════════════════
+# BUILD JOBS
+# ═══════════════════════════════════════════════════════════════
+
+build-api:
+  stage: build
+  image: docker:24
+  services:
+    - docker:24-dind
+  needs:
+    - test-backend
+  script:
+    - docker build -t $CI_REGISTRY_IMAGE/api:$CI_COMMIT_SHA .
+    - docker build -t $CI_REGISTRY_IMAGE/api:latest .
+  only:
+    - main
+    - develop
+
+build-web:
+  stage: build
+  image: docker:24
+  services:
+    - docker:24-dind
+  needs:
+    - test-frontend
+  script:
+    - cd web-v2
+    - docker build -t $CI_REGISTRY_IMAGE/web:$CI_COMMIT_SHA .
+    - docker build -t $CI_REGISTRY_IMAGE/web:latest .
+  only:
+    - main
+    - develop
+
+# ═══════════════════════════════════════════════════════════════
+# DEPLOY JOBS
+# ═══════════════════════════════════════════════════════════════
+
+deploy-staging:
+  stage: deploy
+  image: alpine:latest
+  needs:
+    - build-api
+    - build-web
+  script:
+    - echo "Deploy to staging environment"
+    - echo "docker-compose -f docker-compose.yml up -d"
+  environment:
+    name: staging
+    url: https://staging.turbo-cdi.org
+  only:
+    - develop
+
+deploy-production:
+  stage: deploy
+  image: alpine:latest
+  needs:
+    - build-api
+    - build-web
+  script:
+    - echo "Deploy to production environment"
+    - echo "docker-compose -f docker-compose.prod.yml up -d"
+  environment:
+    name: production
+    url: https://turbo-cdi.org
+  only:
+    - main
+  when: manual

@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/api/v6_routers/factory_v6.py
+# hypothesis_version: 6.141.1
+
+[400, '/design', '/factory', '/pipeline/export', '/pipeline/import', '/pipeline/templates', '/pipeline/validate', 'academic', 'analysis', 'art', 'audit', 'brainstorm', 'c4_fingerprint', 'config', 'creative', 'deep', 'deep_analysis', 'default', 'description', 'design', 'design_id', 'error', 'exported_count', 'fast', 'filename', 'impact', 'isomorphism', 'json', 'literature', 'mp', 'mp_rotation', 'multi', 'name', 'obsidian', 'output_dir', 'output_type', 'paper', 'perspective', 'prior art', 'prior_art', 'quick', 'qzrf_select', 'rapid', 'requirements', 'research', 'science', 'steps_count', 'structural_memory', 'synthesis', 'test', 'thorough', 'urgent', 'v6-factory', 'valid', 'validation']

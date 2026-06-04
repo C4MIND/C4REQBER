@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/llm/retry_pkg/policies.py
+# hypothesis_version: 6.141.1
+
+[0.0, 0.01, 500, 1000, 'backoff_base', 'completion_tokens', 'enabled', 'fallback', 'fallback_order', 'max_retries', 'none', 'prompt_tokens', 'provider_ranking', 'stats']

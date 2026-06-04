@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/patterns/library/game_theory.py
+# hypothesis_version: 6.141.1
+
+[0.01, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.9, 100, 1000, 10000, 'Game Theory', 'Number of rounds', 'Type of game', 'battle of sexes', 'battle_of_sexes', 'chicken', 'converged', 'cooperate', 'coordination', 'coordination_problem', 'cpu_cores', 'defect', 'dominant strategy', 'dominant_strategy', 'economics', 'efficiency_loss', 'equilibrium', 'equilibrium_type', 'football', 'game theory', 'game_theory', 'game_type', 'gpu_required', 'hawk-dove', 'hawk_dove', 'int', 'logs', 'memory_gb', 'metrics', 'mixed', 'mixed_equilibrium_p', 'nash', 'nash_equilibrium', 'num_players', 'num_rounds', 'opera', 'payoff', "prisoner's dilemma", 'prisoners_dilemma', 'pure_equilibria', 'select', 'strategy']

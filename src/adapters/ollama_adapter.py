@@ -1,12 +1,17 @@
 """
-TURBO-CDI: Ollama Adapter
+C4REQBER: Ollama Adapter
 Local LLM support via Ollama
 """
+from __future__ import annotations
 
+import asyncio
 import json
+import logging
 import urllib.request
-from typing import Optional, Dict, Any, List
 from dataclasses import dataclass
+from typing import Any
+
+logger = logging.getLogger("c4reqber.adapters.ollama")
 
 
 @dataclass
@@ -31,7 +36,7 @@ class OllamaAdapter:
 
     DEFAULT_URL = "http://localhost:11434"
 
-    # Recommended models for TURBO-CDI
+    # Recommended models for C4REQBER
     RECOMMENDED_MODELS = {
         "reasoning": "qwen2.5:14b",  # Good reasoning, fits in 16GB
         "fast": "qwen2.5:7b",  # Fast, good for prototyping
@@ -40,7 +45,7 @@ class OllamaAdapter:
         "small": "phi3:medium",  # For low-end machines
     }
 
-    def __init__(self, base_url: str = DEFAULT_URL):
+    def __init__(self, base_url: str = DEFAULT_URL) -> None:
         self.base_url = base_url.rstrip("/")
 
     def is_available(self) -> bool:
@@ -48,11 +53,21 @@ class OllamaAdapter:
         try:
             req = urllib.request.Request(f"{self.base_url}/api/tags", method="GET")
             with urllib.request.urlopen(req, timeout=5) as response:
-                return response.status == 200
+                return response.status == 200  # type: ignore[no-any-return]
+        except (ConnectionError, TimeoutError, OSError):
+            return False
+
+    async def async_is_available(self) -> bool:
+        """Async check if Ollama server is running."""
+        try:
+            import httpx
+            async with httpx.AsyncClient(timeout=5.0) as client:
+                response = await client.get(f"{self.base_url}/api/tags")
+                return response.status_code == 200
         except Exception:
             return False
 
-    def list_models(self) -> List[OllamaModel]:
+    def list_models(self) -> list[OllamaModel]:
         """List available models."""
         try:
             req = urllib.request.Request(f"{self.base_url}/api/tags", method="GET")
@@ -79,15 +94,19 @@ class OllamaAdapter:
 
                 return models
 
-        except Exception as e:
-            print(f"Failed to list models: {e}")
+        except (ConnectionError, TimeoutError, OSError, ValueError):
+            logger.warning("Failed to list Ollama models", exc_info=True)
             return []
+
+    async def async_list_models(self) -> list[OllamaModel]:
+        """Async list available models."""
+        return await asyncio.to_thread(self.list_models)
 
     def generate(
         self,
         prompt: str,
         model: str = "qwen2.5:14b",
-        system: Optional[str] = None,
+        system: str | None = None,
         temperature: float = 0.7,
         max_tokens: int = 2000,
     ) -> str:
@@ -127,14 +146,28 @@ class OllamaAdapter:
         try:
             with urllib.request.urlopen(req, timeout=120) as response:
                 result = json.loads(response.read().decode())
-                return result.get("response", "")
+                return result.get("response", "")  # type: ignore[no-any-return]
 
-        except Exception as e:
-            return f"[Ollama Error: {e}]"
+        except (ConnectionError, TimeoutError, OSError, ValueError):
+            logger.warning("Ollama generation failed", exc_info=True)
+            return "[Ollama Error: generation failed]"
+
+    async def async_generate(
+        self,
+        prompt: str,
+        model: str = "qwen2.5:14b",
+        system: str | None = None,
+        temperature: float = 0.7,
+        max_tokens: int = 2000,
+    ) -> str:
+        """Async wrapper for generate."""
+        return await asyncio.to_thread(
+            self.generate, prompt, model, system, temperature, max_tokens
+        )
 
     def generate_structured(
-        self, prompt: str, schema: Dict[str, Any], model: str = "qwen2.5:14b", **kwargs
-    ) -> Dict[str, Any]:
+        self, prompt: str, schema: dict[str, Any], model: str = "qwen2.5:14b", **kwargs: Any
+    ) -> dict[str, Any]:
         """
         Generate structured JSON response.
         """
@@ -157,7 +190,7 @@ Respond ONLY with JSON, no markdown, no explanations."""
             elif "```" in text:
                 text = text.split("```")[1].split("```")[0]
 
-            return json.loads(text.strip())
+            return json.loads(text.strip())  # type: ignore[no-any-return]
         except json.JSONDecodeError:
             # Return empty schema-compliant structure
             return {
@@ -181,8 +214,8 @@ Respond ONLY with JSON, no markdown, no explanations."""
         try:
             with urllib.request.urlopen(req, timeout=600) as response:
                 result = json.loads(response.read().decode())
-                return result.get("status") == "success"
-        except Exception as e:
+                return result.get("status") == "success"  # type: ignore[no-any-return]
+        except (ConnectionError, TimeoutError, OSError, ValueError) as e:
             print(f"Failed to pull model: {e}")
             return False
 
@@ -191,7 +224,7 @@ Respond ONLY with JSON, no markdown, no explanations."""
         for unit in ["B", "KB", "MB", "GB"]:
             if size_bytes < 1024:
                 return f"{size_bytes:.1f} {unit}"
-            size_bytes /= 1024
+            size_bytes /= 1024  # type: ignore[assignment]
         return f"{size_bytes:.1f} TB"
 
     @classmethod
@@ -218,15 +251,14 @@ class LLMProvider:
     Priority:
     1. OpenRouter (cloud, multi-model)
     2. Ollama (local)
-    3. Mock (fallback)
     """
 
     def __init__(
         self,
-        openrouter_key: Optional[str] = None,
+        openrouter_key: str | None = None,
         ollama_url: str = "http://localhost:11434",
         prefer_local: bool = False,
-    ):
+    ) -> None:
         self.prefer_local = prefer_local
 
         # Try Ollama first if preferred
@@ -241,17 +273,17 @@ class LLMProvider:
 
                 self.openrouter = LLMClient(openrouter_key)
             except ImportError:
-                import sys
                 import os
+                import sys
 
                 sys.path.insert(
                     0, os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
                 )
-                from llm.client import LLMClient
+                from llm.client import LLMClient  # type: ignore[no-redef]
 
                 self.openrouter = LLMClient(openrouter_key)
 
-        # Select active provider
+        # Select active provider — never silently fall back to mock
         if prefer_local and self.ollama_available:
             self.active = "ollama"
         elif self.openrouter:
@@ -259,41 +291,35 @@ class LLMProvider:
         elif self.ollama_available:
             self.active = "ollama"
         else:
-            try:
-                from ..llm.client import MockLLMClient
+            self.active = "none"
 
-                self.openrouter = MockLLMClient()
-            except ImportError:
-                import sys
-                import os
-
-                sys.path.insert(
-                    0, os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-                )
-                from llm.client import MockLLMClient
-
-                self.openrouter = MockLLMClient()
-            self.active = "mock"
-
-    def generate(self, prompt: str, **kwargs) -> str:
-        """Generate text using active provider."""
+    def generate(self, prompt: str, **kwargs: Any) -> str:
+        """Generate text using active provider. Raises RuntimeError if no provider."""
         if self.active == "ollama":
             model = kwargs.pop("model", "qwen2.5:14b")
             return self.ollama.generate(prompt, model=model, **kwargs)
+        elif self.active == "openrouter":
+            return self.openrouter.generate(prompt, **kwargs)  # type: ignore[return-value, union-attr]
         else:
-            return self.openrouter.generate(prompt, **kwargs)
+            raise RuntimeError(
+                "No LLM provider available. Set OPENROUTER_API_KEY or start Ollama."
+            )
 
-    def generate_structured(self, prompt: str, schema: Dict, **kwargs) -> Dict:
-        """Generate structured response."""
+    def generate_structured(self, prompt: str, schema: dict[str, Any], **kwargs: Any) -> dict[str, Any]:
+        """Generate structured response. Raises RuntimeError if no provider."""
         if self.active == "ollama":
             model = kwargs.pop("model", "qwen2.5:14b")
             return self.ollama.generate_structured(
                 prompt, schema, model=model, **kwargs
             )
+        elif self.active == "openrouter":
+            return self.openrouter.generate_structured(prompt, schema, **kwargs)  # type: ignore[union-attr]
         else:
-            return self.openrouter.generate_structured(prompt, schema, **kwargs)
+            raise RuntimeError(
+                "No LLM provider available. Set OPENROUTER_API_KEY or start Ollama."
+            )
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """Get provider status."""
         return {
             "active_provider": self.active,

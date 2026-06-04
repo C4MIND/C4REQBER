@@ -1,16 +1,24 @@
 """
-TURBO-CDI v8.4 - v6 Pattern Runner
+C4REQBER v8.4 - v6 Pattern Runner
 Dynamic discovery and execution of v6 legacy simulation patterns.
 """
 
+from __future__ import annotations
+
+import asyncio
+import importlib
+import inspect
+import logging
 import os
 import sys
-import inspect
-import importlib
-import asyncio
-import logging
-from typing import Dict, Any, List, Optional
 from datetime import datetime
+from typing import Any
+
+from .resource_estimator import (
+    ResourceCheckError,
+    get_estimator,
+)
+
 
 logger = logging.getLogger(__name__)
 
@@ -24,26 +32,29 @@ class PatternRunner:
     Discovers pattern classes dynamically and provides a consistent execution API.
     """
 
-    def __init__(self):
-        self._patterns: Dict[str, Any] = {}
-        self._metadata: Dict[str, Dict[str, Any]] = {}
-        self._load_errors: Dict[str, str] = {}
+    def __init__(self) -> None:
+        self._patterns: dict[str, Any] = {}
+        self._metadata: dict[str, dict[str, Any]] = {}
+        self._load_errors: dict[str, str] = {}
         self._discover_patterns()
 
-    def _discover_patterns(self):
+    def _discover_patterns(self) -> None:
         """Dynamically discover and load all pattern modules."""
-        patterns_dir = os.path.join(os.path.dirname(__file__), "v6_legacy")
+        # Try library directory first, then v6_legacy fallback
+        patterns_dir = os.path.join(os.path.dirname(__file__), "library")
         if not os.path.exists(patterns_dir):
-            logger.warning("v6_legacy patterns directory not found")
+            patterns_dir = os.path.join(os.path.dirname(__file__), "v6_legacy")
+        if not os.path.exists(patterns_dir):
+            logger.warning("No patterns directory found")
             return
 
         for filename in sorted(os.listdir(patterns_dir)):
             if not filename.endswith(".py") or filename.startswith("_"):
                 continue
-            if filename in ["base.py", "loader.py", "core.py"]:
+            if filename in ["base.py", "loader.py", "core.py", "__init__.py", "gpu_compat.py"]:
                 continue
 
-            module_name = f"patterns.v6_legacy.{filename[:-3]}"
+            module_name = f"src.patterns.library.{filename[:-3]}"
             pattern_id = filename.replace(".py", "")
 
             try:
@@ -79,7 +90,7 @@ class PatternRunner:
                     "has_estimate": hasattr(instance, "estimate_resources"),
                 }
 
-            except Exception as e:
+            except (ImportError, AttributeError, TypeError, ValueError) as e:
                 logger.warning(f"Failed to load pattern {pattern_id}: {e}")
                 self._load_errors[pattern_id] = str(e)
 
@@ -88,7 +99,7 @@ class PatternRunner:
             f"{len(self._load_errors)} failed"
         )
 
-    def _find_pattern_class(self, module, filename: str):
+    def _find_pattern_class(self, module: Any, filename: str) -> Any:
         """Find the main pattern class in a module."""
         candidates = []
         expected_prefix = filename.replace(".py", "").replace("_", "")
@@ -113,28 +124,28 @@ class PatternRunner:
         candidates.sort(key=lambda x: x[2])
         return candidates[0][1]
 
-    def list_patterns(self) -> List[str]:
+    def list_patterns(self) -> list[str]:
         """List all loaded pattern IDs."""
         return sorted(self._patterns.keys())
 
-    def get_metadata(self, pattern_id: str) -> Optional[Dict[str, Any]]:
+    def get_metadata(self, pattern_id: str) -> dict[str, Any] | None:
         """Get pattern metadata."""
         return self._metadata.get(pattern_id)
 
-    def get_instance(self, pattern_id: str) -> Optional[Any]:
+    def get_instance(self, pattern_id: str) -> Any | None:
         """Get pattern instance."""
         return self._patterns.get(pattern_id)
 
-    def get_errors(self) -> Dict[str, str]:
+    def get_errors(self) -> dict[str, str]:
         """Get loading errors."""
         return self._load_errors
 
     async def run_pattern(
         self,
         pattern_id: str,
-        hypothesis: Optional[Dict[str, Any]] = None,
-        params: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
+        hypothesis: dict[str, Any] | None = None,
+        params: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """Execute a pattern with optional hypothesis and parameters."""
         instance = self._patterns.get(pattern_id)
         if instance is None:
@@ -142,6 +153,21 @@ class PatternRunner:
 
         if not hasattr(instance, "run"):
             raise ValueError(f"Pattern '{pattern_id}' does not have a run() method")
+
+        # Resource estimation check
+        estimator = get_estimator()
+        try:
+            estimator.check_or_raise(pattern_id, params)
+        except ResourceCheckError as e:
+            logger.warning(f"Resource check failed for {pattern_id}: {e}")
+            return {
+                "pattern_id": pattern_id,
+                "status": "failed",
+                "error": str(e),
+                "recommendations": e.recommendations,
+                "execution_time_seconds": 0.0,
+                "timestamp": datetime.now().isoformat(),
+            }
 
         start_time = datetime.now()
 
@@ -153,9 +179,8 @@ class PatternRunner:
             kwargs = {}
             if "hypothesis" in sig.parameters:
                 hyp_param = sig.parameters["hypothesis"]
-                if (
-                    hyp_param.annotation is not inspect.Parameter.empty
-                    and "Hypothesis" in str(hyp_param.annotation)
+                if hyp_param.annotation is not inspect.Parameter.empty and "Hypothesis" in str(
+                    hyp_param.annotation
                 ):
                     from patterns.core import Hypothesis
 
@@ -177,7 +202,7 @@ class PatternRunner:
                 config = self._build_config(instance, params or {})
                 kwargs["config"] = config
 
-            if asyncio.iscoroutinefunction(run_method):
+            if inspect.iscoroutinefunction(run_method):
                 result = await run_method(**kwargs)
             else:
                 # Run synchronous run() in thread pool to avoid blocking
@@ -202,9 +227,9 @@ class PatternRunner:
                 "timestamp": datetime.now().isoformat(),
             }
 
-        except Exception as e:
+        except (ImportError, AttributeError, TypeError) as e:
             execution_time = (datetime.now() - start_time).total_seconds()
-            logger.exception(f"Pattern {pattern_id} execution failed")
+            logger.exception(f"Pattern {pattern_id} execution failed: {e}")
             return {
                 "pattern_id": pattern_id,
                 "status": "failed",
@@ -213,7 +238,7 @@ class PatternRunner:
                 "timestamp": datetime.now().isoformat(),
             }
 
-    def _build_config(self, instance, params: Dict[str, Any]) -> Any:
+    def _build_config(self, instance: Any, params: dict[str, Any]) -> Any:
         """Build a config object for patterns that require one."""
         run_method = instance.run
         sig = inspect.signature(run_method)
@@ -258,16 +283,17 @@ class PatternRunner:
                 elif param.default is not inspect.Parameter.empty:
                     kwargs[param_name] = param.default
             return config_class(**kwargs)
-        except Exception:
+        except (TypeError, AttributeError):
             return config_class()
 
-    def estimate_resources(self, pattern_id: str) -> Dict[str, Any]:
+
+    def estimate_resources(self, pattern_id: str) -> dict[str, Any]:
         """Estimate resources for a pattern."""
         instance = self._patterns.get(pattern_id)
         if instance and hasattr(instance, "estimate_resources"):
             try:
-                return instance.estimate_resources()
-            except Exception:
+                return instance.estimate_resources()  # type: ignore[no-any-return]
+            except (TypeError, AttributeError, ValueError):
                 pass
         return {
             "memory_mb": 100,
@@ -277,12 +303,7 @@ class PatternRunner:
         }
 
 
-# Singleton instance
-_runner: Optional[PatternRunner] = None
-
-
 def get_runner() -> PatternRunner:
-    global _runner
-    if _runner is None:
-        _runner = PatternRunner()
-    return _runner
+    """Get singleton pattern runner (backed by DI container)."""
+    from src.di.container import get_container
+    return get_container().get_or_register("pattern_runner", PatternRunner)

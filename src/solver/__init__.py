@@ -1,13 +1,15 @@
 """
-TURBO-CDI: Solver Module
+c4-cdi-turbo: Solver Module
 One-shot scientific discovery solver
 """
+from __future__ import annotations
 
 from src.solver.one_shot import (
-    OneShotSolver,
     OneShotResult,
+    OneShotSolver,
     get_one_shot_solver,
 )
+
 
 __all__ = [
     "OneShotSolver",

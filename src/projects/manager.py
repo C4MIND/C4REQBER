@@ -1,18 +1,20 @@
 """
-TURBO-CDI: Research Project Manager
+C4REQBER: Research Project Manager
 Manage research projects, milestones, and tasks
 """
+from __future__ import annotations
 
-import sqlite3
 import json
-from datetime import datetime, timedelta
-from typing import List, Optional, Dict, Any
-from dataclasses import dataclass, asdict
+import sqlite3
+from dataclasses import dataclass
+from datetime import datetime
 from enum import Enum
 from pathlib import Path
+from typing import Any
 
 
 class ProjectStatus(Enum):
+    """ProjectStatus."""
     ACTIVE = "active"
     COMPLETED = "completed"
     ON_HOLD = "on_hold"
@@ -20,6 +22,7 @@ class ProjectStatus(Enum):
 
 
 class TaskStatus(Enum):
+    """TaskStatus."""
     TODO = "todo"
     IN_PROGRESS = "in_progress"
     DONE = "done"
@@ -28,44 +31,47 @@ class TaskStatus(Enum):
 
 @dataclass
 class Task:
-    id: Optional[int]
+    """Task."""
+    id: int | None
     project_id: int
     title: str
     description: str
     status: str
     priority: int  # 1-5
-    due_date: Optional[str]
+    due_date: str | None
     created_at: str
-    completed_at: Optional[str] = None
-    tags: List[str] = None
+    completed_at: str | None = None
+    tags: list[str] = None  # type: ignore[assignment]
 
 
 @dataclass
 class Milestone:
-    id: Optional[int]
+    """Milestone."""
+    id: int | None
     project_id: int
     title: str
     description: str
     target_date: str
-    completed_date: Optional[str] = None
-    deliverables: List[str] = None
+    completed_date: str | None = None
+    deliverables: list[str] = None  # type: ignore[assignment]
 
 
 @dataclass
 class ResearchProject:
-    id: Optional[int]
+    """ResearchProject."""
+    id: int | None
     name: str
     description: str
     domain: str
     status: str
     created_at: str
     updated_at: str
-    start_date: Optional[str] = None
-    end_date: Optional[str] = None
-    objectives: List[str] = None
-    hypotheses: List[int] = None  # Discovery IDs
-    collaborators: List[str] = None
-    tags: List[str] = None
+    start_date: str | None = None
+    end_date: str | None = None
+    objectives: list[str] = None  # type: ignore[assignment]
+    hypotheses: list[int] = None  # type: ignore  # Discovery IDs
+    collaborators: list[str] = None  # type: ignore[assignment]
+    tags: list[str] = None  # type: ignore[assignment]
     notes: str = ""
 
 
@@ -74,16 +80,16 @@ class ProjectManager:
     Manage research projects with tasks, milestones, and timeline.
     """
 
-    def __init__(self, db_path: Optional[str] = None):
+    def __init__(self, db_path: str | None = None) -> None:
         if db_path is None:
             data_dir = Path(__file__).parent.parent / "data"
             data_dir.mkdir(exist_ok=True)
-            db_path = data_dir / "projects.db"
+            db_path = data_dir / "projects.db"  # type: ignore[assignment]
 
         self.db_path = str(db_path)
         self._init_db()
 
-    def _init_db(self):
+    def _init_db(self) -> None:
         """Initialize project database."""
         with sqlite3.connect(self.db_path) as conn:
             # Projects table
@@ -158,7 +164,7 @@ class ProjectManager:
         with sqlite3.connect(self.db_path) as conn:
             now = datetime.now().isoformat()
             cursor = conn.execute(
-                """INSERT INTO projects 
+                """INSERT INTO projects
                    (name, description, domain, status, created_at, updated_at,
                     start_date, end_date, objectives, hypotheses, collaborators, tags, notes)
                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
@@ -181,9 +187,9 @@ class ProjectManager:
                 ),
             )
             conn.commit()
-            return cursor.lastrowid
+            return cursor.lastrowid  # type: ignore[return-value]
 
-    def get_project(self, project_id: int) -> Optional[ResearchProject]:
+    def get_project(self, project_id: int) -> ResearchProject | None:
         """Get project by ID."""
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.execute("SELECT * FROM projects WHERE id = ?", (project_id,))
@@ -191,8 +197,8 @@ class ProjectManager:
             return self._row_to_project(row) if row else None
 
     def list_projects(
-        self, status: Optional[str] = None, domain: Optional[str] = None
-    ) -> List[ResearchProject]:
+        self, status: str | None = None, domain: str | None = None
+    ) -> list[ResearchProject]:
         """List projects with filters."""
         with sqlite3.connect(self.db_path) as conn:
             query = "SELECT * FROM projects WHERE 1=1"
@@ -212,18 +218,18 @@ class ProjectManager:
             rows = cursor.fetchall()
             return [self._row_to_project(row) for row in rows]
 
-    def update_project_status(self, project_id: int, status: str):
+    def update_project_status(self, project_id: int, status: str) -> None:
         """Update project status."""
         with sqlite3.connect(self.db_path) as conn:
             conn.execute(
-                """UPDATE projects 
+                """UPDATE projects
                    SET status = ?, updated_at = ?
                    WHERE id = ?""",
                 (status, datetime.now().isoformat(), project_id),
             )
             conn.commit()
 
-    def add_hypothesis_to_project(self, project_id: int, discovery_id: int):
+    def add_hypothesis_to_project(self, project_id: int, discovery_id: int) -> None:
         """Link a discovery/hypothesis to project."""
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.execute(
@@ -250,7 +256,7 @@ class ProjectManager:
         """Create task in project."""
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.execute(
-                """INSERT INTO tasks 
+                """INSERT INTO tasks
                    (project_id, title, description, status, priority, due_date, created_at, tags)
                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
                 (
@@ -273,11 +279,11 @@ class ProjectManager:
             )
             conn.commit()
 
-            return cursor.lastrowid
+            return cursor.lastrowid  # type: ignore[return-value]
 
     def get_project_tasks(
-        self, project_id: int, status: Optional[str] = None
-    ) -> List[Task]:
+        self, project_id: int, status: str | None = None
+    ) -> list[Task]:
         """Get tasks for project."""
         with sqlite3.connect(self.db_path) as conn:
             query = "SELECT * FROM tasks WHERE project_id = ?"
@@ -285,7 +291,7 @@ class ProjectManager:
 
             if status:
                 query += " AND status = ?"
-                params.append(status)
+                params.append(status)  # type: ignore[arg-type]
 
             query += " ORDER BY priority DESC, due_date ASC"
 
@@ -293,11 +299,11 @@ class ProjectManager:
             rows = cursor.fetchall()
             return [self._row_to_task(row) for row in rows]
 
-    def complete_task(self, task_id: int):
+    def complete_task(self, task_id: int) -> None:
         """Mark task as completed."""
         with sqlite3.connect(self.db_path) as conn:
             conn.execute(
-                """UPDATE tasks 
+                """UPDATE tasks
                    SET status = 'done', completed_at = ?
                    WHERE id = ?""",
                 (datetime.now().isoformat(), task_id),
@@ -309,7 +315,7 @@ class ProjectManager:
         """Create project milestone."""
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.execute(
-                """INSERT INTO milestones 
+                """INSERT INTO milestones
                    (project_id, title, description, target_date, deliverables)
                    VALUES (?, ?, ?, ?, ?)""",
                 (
@@ -323,14 +329,14 @@ class ProjectManager:
                 ),
             )
             conn.commit()
-            return cursor.lastrowid
+            return cursor.lastrowid  # type: ignore[return-value]
 
-    def get_project_milestones(self, project_id: int) -> List[Milestone]:
+    def get_project_milestones(self, project_id: int) -> list[Milestone]:
         """Get milestones for project."""
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.execute(
-                """SELECT * FROM milestones 
-                   WHERE project_id = ? 
+                """SELECT * FROM milestones
+                   WHERE project_id = ?
                    ORDER BY target_date ASC""",
                 (project_id,),
             )
@@ -343,13 +349,13 @@ class ProjectManager:
         project_id: int,
         entry_type: str,
         content: str,
-        tags: Optional[List[str]] = None,
-        related_discoveries: Optional[List[int]] = None,
+        tags: list[str] | None = None,
+        related_discoveries: list[int] | None = None,
     ) -> int:
         """Add entry to research log."""
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.execute(
-                """INSERT INTO research_log 
+                """INSERT INTO research_log
                    (project_id, date, entry_type, content, tags, related_discoveries)
                    VALUES (?, ?, ?, ?, ?, ?)""",
                 (
@@ -362,11 +368,11 @@ class ProjectManager:
                 ),
             )
             conn.commit()
-            return cursor.lastrowid
+            return cursor.lastrowid  # type: ignore[return-value]
 
     def get_research_log(
-        self, project_id: int, entry_type: Optional[str] = None
-    ) -> List[Dict]:
+        self, project_id: int, entry_type: str | None = None
+    ) -> list[dict]:  # type: ignore[type-arg]
         """Get research log entries."""
         with sqlite3.connect(self.db_path) as conn:
             query = "SELECT * FROM research_log WHERE project_id = ?"
@@ -374,7 +380,7 @@ class ProjectManager:
 
             if entry_type:
                 query += " AND entry_type = ?"
-                params.append(entry_type)
+                params.append(entry_type)  # type: ignore[arg-type]
 
             query += " ORDER BY date DESC"
 
@@ -382,7 +388,7 @@ class ProjectManager:
             return [self._row_to_log_entry(row) for row in cursor.fetchall()]
 
     # Statistics
-    def get_project_stats(self, project_id: int) -> Dict[str, Any]:
+    def get_project_stats(self, project_id: int) -> dict[str, Any]:
         """Get project statistics."""
         with sqlite3.connect(self.db_path) as conn:
             stats = {}
@@ -402,7 +408,7 @@ class ProjectManager:
 
             # Completed milestones
             cursor = conn.execute(
-                """SELECT COUNT(*) FROM milestones 
+                """SELECT COUNT(*) FROM milestones
                    WHERE project_id = ? AND completed_date IS NOT NULL""",
                 (project_id,),
             )
@@ -423,7 +429,7 @@ class ProjectManager:
             return stats
 
     # Helper methods
-    def _row_to_project(self, row) -> ResearchProject:
+    def _row_to_project(self, row: Any) -> ResearchProject:
         return ResearchProject(
             id=row[0],
             name=row[1],
@@ -441,7 +447,7 @@ class ProjectManager:
             notes=row[13] if row[13] else "",
         )
 
-    def _row_to_task(self, row) -> Task:
+    def _row_to_task(self, row: Any) -> Task:
         return Task(
             id=row[0],
             project_id=row[1],
@@ -455,7 +461,7 @@ class ProjectManager:
             tags=json.loads(row[9]) if row[9] else [],
         )
 
-    def _row_to_milestone(self, row) -> Milestone:
+    def _row_to_milestone(self, row: Any) -> Milestone:
         return Milestone(
             id=row[0],
             project_id=row[1],
@@ -466,7 +472,7 @@ class ProjectManager:
             deliverables=json.loads(row[6]) if row[6] else [],
         )
 
-    def _row_to_log_entry(self, row) -> Dict:
+    def _row_to_log_entry(self, row: Any) -> dict[str, Any]:
         return {
             "id": row[0],
             "project_id": row[1],

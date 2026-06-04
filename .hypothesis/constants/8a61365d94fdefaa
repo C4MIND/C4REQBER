@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/patterns/library/pedestrian.py
+# hypothesis_version: 6.141.1
+
+[1e-06, 0.01, 0.08, 0.3, 0.5, 1.0, 1.34, 5.0, 10.0, 15.0, 20.0, 80.0, 2000.0, 120000.0, 240000.0, 100, 500, 1000, 2000, '6.0.0', 'A', 'Architecture', 'Continuous space', 'Deterministic forces', 'EXTENDED', 'O(T·N²)', 'Pedestrian', 'Repulsion strength', 'Safety Engineering', 'Transportation', '__main__', 'accuracy', 'arrival_rate', 'arrived', 'assumptions', 'bottleneck', 'category', 'config', 'corridor', 'crossing', 'default', 'density', 'description', 'desired_speed', 'domain', 'enum', 'evacuation', 'final_positions', 'final_velocities', 'float', 'flow', 'fundamental_diagram', 'id', 'int', 'max_speed', 'mean_speed', 'min_speed', 'n_pedestrians', 'name', 'options', 'parameters', 'pedestrian', 'scenario', 'seconds to minutes', 'speed_variance', 'statistics', 'tau', 'trajectory', 'type', 'typical_runtime', 'version']

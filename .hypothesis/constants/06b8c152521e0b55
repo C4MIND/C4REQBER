@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/patterns/library/n_body.py
+# hypothesis_version: 6.141.1
+
+[-0.25, 0.0, 6.6743e-11, 0.001, 0.01, 0.1, 0.5, 1.0, 1.01, 100, 1000, '6.5.0', 'N-Body Gravity', 'com', 'complexity', 'context', 'disk', 'domain', 'energies', 'energy_drift', 'euler', 'final_positions', 'final_velocities', 'forces', 'gpu_accelerated', 'kinetic', 'leapfrog', 'masses', 'mean_velocity', 'n_body_gravity', 'name', 'parameters', 'pattern_id', 'plummer', 'potential', 'rk4', 'solution', 'step', 'total', 'trajectory', 'version', 'virial_ratio']

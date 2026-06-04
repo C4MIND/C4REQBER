@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Showcase — c4reqber</title>
+<meta name="description" content="See c4reqber in action: research discoveries, C4-META visualizations, TRIZ matrices, and real-world results.">
+<meta property="og:title" content="Showcase — c4reqber">
+<meta property="og:type" content="website">
+<link rel="canonical" href="https://c4reqber.org/showcase/">
+<meta name="theme-color" content="#0F1117">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' https: data:; connect-src 'self' https://api.github.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800,900&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#9670;</text></svg>">
+<link rel="manifest" href="../manifest.json">
+<link rel="stylesheet" href="../css/main.css">
+<style>
+.showcase-hero{text-align:center;padding:120px 24px 60px}
+.showcase-hero h1{font-size:clamp(36px,6vw,64px);font-weight:800;margin-bottom:16px}
+.showcase-hero p{max-width:600px;margin:0 auto;color:var(--fg-2);line-height:1.7}
+
+.demo-steps{max-width:800px;margin:0 auto;padding:0 24px}
+.demo-step{display:flex;gap:24px;margin-bottom:48px}
+.demo-step-num{flex-shrink:0;width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--accent));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;color:#fff}
+.demo-step-content{flex:1}
+.demo-step-content h3{font-size:20px;font-weight:700;margin-bottom:8px;color:var(--fg)}
+.demo-step-content p{color:var(--fg-2);line-height:1.7;margin-bottom:12px}
+.demo-frame{background:var(--bg-2);border:1px solid rgba(255,255,255,.06);border-radius:var(--radius);padding:20px;font-family:var(--mono);font-size:13px;color:var(--fg-2);overflow-x:auto}
+.demo-frame .prompt{color:var(--primary)}
+.demo-frame .output{color:var(--fg-3)}
+.demo-frame .highlight{color:var(--accent);font-weight:600}
+
+.showcase-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:24px;max-width:1100px;margin:0 auto;padding:0 24px}
+.showcase-card{background:var(--bg-2);border:1px solid rgba(255,255,255,.06);border-radius:var(--radius);padding:28px;transition:all .3s}
+.showcase-card:hover{border-color:rgba(78,205,196,.2);transform:translateY(-2px)}
+.showcase-card .tag{display:inline-block;background:rgba(78,205,196,.12);color:var(--primary);padding:3px 12px;border-radius:100px;font-size:12px;font-weight:600;margin-bottom:14px}
+.showcase-card h3{font-size:18px;font-weight:700;margin-bottom:10px;color:var(--fg)}
+.showcase-card p{color:var(--fg-2);font-size:14px;line-height:1.7;margin:0}
+.showcase-card .meta{display:flex;gap:16px;margin-top:16px;font-size:12px;color:var(--fg-3)}
+
+.breadcrumb{display:flex;gap:8px;align-items:center;font-size:13px;color:var(--fg-3);margin-bottom:24px}
+.breadcrumb a{color:var(--fg-3);text-decoration:none}
+.breadcrumb a:hover{color:var(--primary)}
+
+@media(max-width:600px){
+  .demo-step{flex-direction:column;gap:12px}
+}
+
+[data-theme="light"] .showcase-card,[data-theme="light"] .demo-frame{background:#fff;border-color:rgba(0,0,0,.08)}
+</style>
+</head>
+<body>
+
+<div id="site-header"></div>
+
+<main>
+
+<section class="hero" style="min-height:45vh;padding-top:100px">
+  <div class="hero-bg"></div>
+  <div class="container" style="text-align:center;position:relative;z-index:2">
+    <div class="badge"><span class="dot"></span> <span data-i18n="badge_live_demos">Live Demos</span></div>
+    <h1 style="font-size:clamp(36px,6vw,64px);margin-bottom:16px"><span class="gradient-text">Showcase</span></h1>
+    <p class="hero-sub" style="max-width:700px;margin:0 auto 32px">See c4reqber in action. Real queries, real discoveries, real visualizations.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="demo-steps">
+    <nav class="breadcrumb">
+      <a href="../" data-i18n="breadcrumb_home">Home</a> <span>/</span> <span>Showcase</span>
+    </nav>
+
+    <h2 style="font-size:28px;font-weight:800;margin-bottom:40px;color:var(--accent)">Turbo-CDI Demo: 2 Minutes</h2>
+
+    <div class="demo-step">
+      <div class="demo-step-num">1</div>
+      <div class="demo-step-content">
+        <h3>Open the Dashboard</h3>
+        <p>Launch the TUI and see your research landscape at a glance. Active problems, engine status, and recent discoveries.</p>
+        <div class="demo-frame">
+<span class="prompt">$</span> c4reqber tui<br>
+<span class="output">Active Problems: 3 | Engines: 36 | Sources: 33</span><br>
+<span class="output">Last discovery: 2 min ago</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="demo-step">
+      <div class="demo-step-num">2</div>
+      <div class="demo-step-content">
+        <h3>Run the Solve Pipeline</h3>
+        <p>Submit a research question and watch c4reqber traverse the Z3 cognitive space, running 36 engines across 33 sources.</p>
+        <div class="demo-frame">
+<span class="prompt">$</span> blast solve "Novel battery chemistry beyond lithium-ion"<br>
+<span class="output">Classifying: F(2,1,2) - Future, Abstract, System</span><br>
+<span class="output">Engines: [thermodynamics, chemistry, optimization]</span><br>
+<span class="output">Sources: [arxiv, nature, patents]</span><br>
+<span class="highlight">3 novel approaches found</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="demo-step">
+      <div class="demo-step-num">3</div>
+      <div class="demo-step-content">
+        <h3>Explore C4-META Visualization</h3>
+        <p>See exactly which cognitive states were visited, which engines contributed, and how the solution was synthesized.</p>
+        <div class="demo-frame">
+<span class="output">States visited: 7/27</span><br>
+<span class="output">Path: 000 -> 100 -> 110 -> 111 -> 211 -> 221 -> 222</span><br>
+<span class="output">Distance: 6 (optimal per Theorem 11)</span><br>
+<span class="highlight">Paradigm shift detected</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="demo-step">
+      <div class="demo-step-num">4</div>
+      <div class="demo-step-content">
+        <h3>Review TRIZ Matrix</h3>
+        <p>Contradictions resolved, principles applied, and inventive solutions ranked by novelty score.</p>
+        <div class="demo-frame">
+<span class="output">Contradictions: 4 found</span><br>
+<span class="output">Principles: Segmentation, Asymmetry, Nesting</span><br>
+<span class="output">Novelty score: 0.87 (top 3%)</span><br>
+<span class="highlight">Patent-worthy: YES</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="demo-step">
+      <div class="demo-step-num">5</div>
+      <div class="demo-step-content">
+        <h3>Export Results</h3>
+        <p>Generate a full research report with citations, methodology, and next steps.</p>
+        <div class="demo-frame">
+<span class="prompt">$</span> blast export --format markdown<br>
+<span class="output">report.md | 12 pages | 47 citations</span><br>
+<span class="highlight">Ready for peer review</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section section-dark">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label">Real Results</span>
+      <h2 class="section-title">Discovery Stories</h2>
+      <p class="section-desc">Problems solved by researchers using c4reqber.</p>
+    </div>
+
+    <div class="showcase-grid">
+      <div class="showcase-card">
+        <span class="tag">Cosmology</span>
+        <h3>Fine-tuning for Life</h3>
+        <p>Multi-source analysis across arXiv, NASA ADS, and OpenAlex synthesized the multiverse hypothesis, cosmological natural selection, and string theory landscape into a unified framework for understanding why physical constants permit life.</p>
+        <div class="meta"><span>10 citations</span><span>88 s</span><span>95% confidence</span></div>
+      </div>
+      <div class="showcase-card">
+        <span class="tag">Condensed Matter</span>
+        <h3>Room-Temperature Superconductivity</h3>
+        <p>Cross-domain synthesis of hydrides, topological materials, and AI-designed crystal structures identified 4 promising material classes with predicted critical temperatures above 273 K, including novel clathrate hydrides.</p>
+        <div class="meta"><span>10 citations</span><span>81 s</span><span>95% confidence</span></div>
+      </div>
+      <div class="showcase-card">
+        <span class="tag">Neuroscience</span>
+        <h3>Neural Basis of Consciousness</h3>
+        <p>Integrated Global Neuronal Workspace, Predictive Processing, and Integrated Information Theory through formal C4-state mapping. Revealed testable predictions distinguishing conscious from unconscious neural computation.</p>
+        <div class="meta"><span>10 citations</span><span>86 s</span><span>95% confidence</span></div>
+      </div>
+      <div class="showcase-card">
+        <span class="tag">Origin of Life</span>
+        <h3>Abiogenesis from Chemistry</h3>
+        <p>Synthesized hydrothermal vent theory, RNA-world hypothesis, and protocell models into a unified chemical pathway. Identified 3 experimentally testable transition stages from non-living chemistry to self-replication.</p>
+        <div class="meta"><span>10 citations</span><span>88 s</span><span>95% confidence</span></div>
+      </div>
+      <div class="showcase-card">
+        <span class="tag">Philosophy of Mind</span>
+        <h3>The Hard Problem of Qualia</h3>
+        <p>Applied meta-program rotation (analytic, phenomenological, computational perspectives) to decompose the explanatory gap. Produced a falsifiable multi-level model linking neural dynamics to subjective experience.</p>
+        <div class="meta"><span>10 citations</span><span>83 s</span><span>95% confidence</span></div>
+      </div>
+      <div class="showcase-card">
+        <span class="tag">Theoretical Physics</span>
+        <h3>Quantum Gravity Unification</h3>
+        <p>Compared loop quantum gravity, string theory, and emergent gravity approaches through formal verification criteria. Identified 2 convergent predictions (holographic entropy, Planck-scale Lorentz invariance) testable by next-gen interferometers.</p>
+        <div class="meta"><span>10 citations</span><span>79 s</span><span>95% confidence</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<div id="site-footer"></div>
+
+<script src="../js/components.js"></script>
+<script src="../js/main.js"></script>
+<script>
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('../sw.js').catch(()=>{});
+}
+</script>
+
+</body>
+</html>

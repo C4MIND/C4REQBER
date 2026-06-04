@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/metamodels/tote.py
+# hypothesis_version: 6.141.1
+
+[0.0, 0.01, 100, 1000, 'duration_ms', 'error', 'exit', 'final_state', 'initial', 'initial_state', 'iteration', 'iterations', 'mismatch_delta', 'operating', 'operation', 'success', 'target_state', 'test_1_passed', 'test_2_passed', 'testing_1', 'testing_2', 'total_duration_ms', 'total_iterations']

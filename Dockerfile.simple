@@ -1,4 +1,5 @@
-# TURBO-CDI v8.4 - Simplified Dockerfile for Testing
+# TURBO-CDI v6.0 — Simplified Dockerfile for Testing
+# Backend: FastAPI + SQLite
 
 FROM python:3.11-slim
 
@@ -9,19 +10,20 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy simple requirements first
-COPY requirements-simple.txt .
-RUN mv requirements-simple.txt requirements.txt
-
-# Install Python dependencies
+# Copy requirements first (for better caching)
+COPY requirements-simple.txt ./requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy source code
-COPY . .
+COPY src/ ./src/
+
+# Create data directory (will be mounted as volume)
+RUN mkdir -p /app/data
 
 # Set environment
 ENV PYTHONPATH=/app
 ENV PYTHONUNBUFFERED=1
+ENV SQLITE_PATH=/app/data/turbo_cdi.db
 
 # Expose HTTP port
 EXPOSE 8000
@@ -30,5 +32,5 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
-# Run FastAPI server
+# Run FastAPI server (2 workers for dev)
 CMD ["python", "-m", "uvicorn", "src.api.server:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2"]

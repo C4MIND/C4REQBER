@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>C4-META Theory — c4reqber</title>
+<meta name="description" content="C4-META Theory — ℤ₃³ cognitive topology, 27 states, 14 QZRF operators, UCOS 4-layer architecture, CDI algorithm, and Agda-verified formal proofs. Interactive 3D visualization.">
+<meta property="og:title" content="C4-META Theory — c4reqber">
+<meta property="og:type" content="website">
+<link rel="canonical" href="https://c4reqber.org/theory/">
+<meta name="theme-color" content="#0F1117">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' https: data:; connect-src 'self' https://api.github.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800,900&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#9670;</text></svg>">
+<link rel="manifest" href="../manifest.json">
+<link rel="stylesheet" href="../css/main.css">
+<style>
+/* Z3 Cube Visualization */
+.cube-scene{perspective:1200px;width:400px;height:400px;margin:0 auto;position:relative;cursor:grab;touch-action:none}
+.cube-scene:active{cursor:grabbing}
+.cube-wrapper{width:200px;height:200px;position:absolute;top:50%;left:50%;margin:-100px 0 0 -100px;transform-style:preserve-3d}
+.cube-cell{position:absolute;width:60px;height:60px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;font-family:var(--mono);color:#fff;cursor:pointer;transition:all .3s;border:1px solid rgba(255,255,255,.1);box-shadow:0 0 20px rgba(0,0,0,.3)}
+.cube-cell:hover{z-index:100;box-shadow:0 0 40px rgba(255,255,255,.2)}
+.cube-cell.active{background:var(--accent)!important;color:#000!important;box-shadow:0 0 50px var(--accent-glow)}
+.cube-cell.path{animation:pathPulse 1s ease infinite}
+@keyframes pathPulse{0%,100%{box-shadow:0 0 20px rgba(78,205,196,.3)}50%{box-shadow:0 0 40px rgba(78,205,196,.6)}}
+
+/* Cube colors by Agency */
+.agency-self{background:linear-gradient(135deg,#3b82f6,#1d4ed8)}
+.agency-other{background:linear-gradient(135deg,#10b981,#047857)}
+.agency-system{background:linear-gradient(135deg,#f59e0b,#b45309)}
+
+/* Tooltip */
+.cube-tooltip{position:absolute;background:var(--bg-3);border:1px solid rgba(255,255,255,.1);border-radius:var(--radius);padding:16px;min-width:220px;pointer-events:none;opacity:0;transition:opacity .2s;z-index:200;font-size:13px}
+.cube-tooltip.visible{opacity:1}
+.cube-tooltip h4{margin:0 0 4px;font-size:14px;color:var(--primary)}
+.cube-tooltip p{margin:0;color:var(--fg-3);line-height:1.5}
+
+/* Controls */
+.cube-controls{display:flex;gap:12px;justify-content:center;margin-top:24px;flex-wrap:wrap}
+.cube-btn{background:var(--bg-3);border:1px solid rgba(255,255,255,.1);color:var(--fg-2);padding:8px 16px;border-radius:100px;font-size:13px;cursor:pointer;transition:all .2s}
+.cube-btn:hover{background:rgba(255,255,255,.08);color:var(--fg)}
+.cube-btn.active{background:rgba(78,205,196,.15);color:var(--primary);border-color:rgba(78,205,196,.3)}
+
+/* Theory content */
+.theory-content{max-width:800px;margin:0 auto;padding:0 24px}
+.theory-content h2{font-size:28px;font-weight:800;margin:60px 0 20px;color:var(--accent)}
+.theory-content h3{font-size:20px;font-weight:700;margin:32px 0 12px;color:var(--primary)}
+.theory-content p{color:var(--fg-2);line-height:1.8;margin-bottom:16px}
+.theory-content ul{margin:16px 0;padding-left:24px;color:var(--fg-2)}
+.theory-content li{margin-bottom:8px;line-height:1.7}
+.theory-content code{background:var(--bg-3);padding:2px 8px;border-radius:4px;font-family:var(--mono);font-size:13px;color:var(--primary)}
+.theory-content pre{background:var(--bg-4);border-radius:var(--radius);padding:20px;overflow-x:auto;border:1px solid rgba(255,255,255,.06);margin:20px 0}
+.theory-content pre code{background:none;padding:0;color:var(--fg-2)}
+.theory-content table{width:100%;border-collapse:collapse;margin:20px 0;font-size:14px}
+.theory-content th{background:var(--bg-3);padding:10px 12px;text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--fg-3);border-bottom:1px solid rgba(255,255,255,.08)}
+.theory-content td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.04);color:var(--fg-2)}
+.breadcrumb{display:flex;gap:8px;align-items:center;font-size:13px;color:var(--fg-3);margin-bottom:24px}
+.breadcrumb a{color:var(--fg-3);text-decoration:none}
+.breadcrumb a:hover{color:var(--primary)}
+
+[data-theme="light"] .cube-cell{border-color:rgba(0,0,0,.1);box-shadow:0 0 20px rgba(0,0,0,.1)}
+[data-theme="light"] .agency-self{background:linear-gradient(135deg,#60a5fa,#3b82f6)}
+[data-theme="light"] .agency-other{background:linear-gradient(135deg,#34d399,#10b981)}
+[data-theme="light"] .agency-system{background:linear-gradient(135deg,#fbbf24,#f59e0b)}
+
+@media(max-width:768px){
+  .cube-scene{transform:scale(.7)}
+  .cube-controls{gap:8px}
+  .cube-btn{padding:6px 12px;font-size:12px}
+}
+</style>
+</head>
+<body>
+
+<div id="site-header"></div>
+
+<main>
+
+<!-- Hero -->
+<section class="hero" style="min-height:50vh;padding-top:100px">
+  <div class="hero-bg"></div>
+  <div class="container" style="text-align:center;position:relative;z-index:2">
+    <div class="badge"><span class="dot"></span> <span data-i18n="badge_formal_theory">Formal Theory Behind the Cognitive Engine</span></div>
+    <h1 style="font-size:clamp(36px,6vw,64px);margin-bottom:16px"><span class="gradient-text">C4-META Theory</span></h1>
+    <p class="hero-sub" style="max-width:700px;margin:0 auto 32px">Discrete group-theoretic cognitive space.<br>27 states across 3 axes — Time, Scale, Agency.<br>Mathematical topology with Agda-verified proofs.<br>Not neural networks. Not symbolic rules.<br>A coordinate system for general intelligence.</p>
+  </div>
+</section>
+
+<!-- Interactive Z3 Cube -->
+<section class="section section-dark">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label">Interactive</span>
+      <h2 class="section-title">Z₃³ Cognitive Cube</h2>
+      <p class="section-desc">27 discrete states across Time, Scale, and Agency. Click any state to explore. Drag to rotate.</p>
+    </div>
+
+    <div style="display:flex;justify-content:center;align-items:center;min-height:500px;position:relative">
+      <div class="cube-scene" id="cube-scene">
+        <div class="cube-wrapper" id="cube-wrapper"></div>
+        <div class="cube-tooltip" id="cube-tooltip">
+          <h4 id="tt-title"></h4>
+          <p id="tt-desc"></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="cube-controls">
+      <button class="cube-btn active" data-action="axis" data-arg="all" id="btn-all">All States</button>
+      <button class="cube-btn" data-action="axis" data-arg="time" id="btn-time">Time Axis</button>
+      <button class="cube-btn" data-action="axis" data-arg="scale" id="btn-scale">Scale Axis</button>
+      <button class="cube-btn" data-action="axis" data-arg="agency" id="btn-agency">Agency Axis</button>
+      <button class="cube-btn" data-action="path" id="btn-path">Theorem 11 Path</button>
+      <button class="cube-btn" data-action="reset">Reset</button>
+    </div>
+
+    <div style="display:flex;justify-content:center;gap:24px;margin-top:32px;flex-wrap:wrap;font-size:13px;color:var(--fg-3)">
+      <span><span style="display:inline-block;width:12px;height:12px;background:linear-gradient(135deg,#3b82f6,#1d4ed8);border-radius:3px;margin-right:6px"></span>Self</span>
+      <span><span style="display:inline-block;width:12px;height:12px;background:linear-gradient(135deg,#10b981,#047857);border-radius:3px;margin-right:6px"></span>Other</span>
+      <span><span style="display:inline-block;width:12px;height:12px;background:linear-gradient(135deg,#f59e0b,#b45309);border-radius:3px;margin-right:6px"></span>System</span>
+    </div>
+  </div>
+</section>
+
+<!-- Theory Content -->
+<section class="section">
+  <div class="theory-content">
+    <nav class="breadcrumb">
+      <a href="../" data-i18n="breadcrumb_home">Home</a> <span>/</span> <span>Theory</span>
+    </nav>
+
+    <h2 data-i18n="theory_why_title">What Is This Theory For?</h2>
+    <p data-i18n="theory_why_p1">Modern AI generates text. It does not <em>think</em>. c4reqber is built on a mathematical theory of cognition that treats thinking as navigation through a discrete state space — just like GPS navigates through coordinates.</p>
+    <p data-i18n="theory_why_p2">Every research problem gets a cognitive coordinate <code>F⟨Time, Scale, Agency⟩</code>. The system then computes the shortest path to a solution state, selects transformation operators, and validates each step against formal theorems. This is not metaphor — theorems are verified in ~3,600 lines of Agda across the adaptive-topology formal proofs repository.</p>
+
+    <h2 data-i18n="theory_ucos_title">UCOS: The 4-Layer Cognitive Analysis Framework</h2>
+    <p data-i18n="theory_ucos_desc">UCOS integrates every component into a single operational cycle. Think of it as the "stack" your mind runs on.</p>
+
+    <div style="display:flex;flex-direction:column;gap:0;max-width:700px;margin:24px auto;border-radius:var(--radius);overflow:hidden;border:1px solid rgba(255,255,255,.08)">
+      <div style="background:linear-gradient(135deg,rgba(245,158,11,.15),rgba(245,158,11,.05));padding:16px 20px;border-bottom:1px solid rgba(255,255,255,.06)">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#fbbf24;margin-bottom:4px">Layer 4 — Topology</div>
+        <div style="font-size:15px;font-weight:600;color:var(--fg)">C4 = ℤ₃³ — 27 Cognitive States</div>
+        <div style="font-size:13px;color:var(--fg-3);margin-top:4px">The coordinate system. Where you are and where you need to go.</div>
+      </div>
+      <div style="background:linear-gradient(135deg,rgba(59,130,246,.15),rgba(59,130,246,.05));padding:16px 20px;border-bottom:1px solid rgba(255,255,255,.06)">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#60a5fa;margin-bottom:4px">Layer 3 — Dynamics</div>
+        <div style="font-size:15px;font-weight:600;color:var(--fg)">14 QZRF Operators ← 72 Matrix Dream Patterns</div>
+        <div style="font-size:13px;color:var(--fg-3);margin-top:4px">How to move. Vector fields on the cognitive manifold.</div>
+      </div>
+      <div style="background:linear-gradient(135deg,rgba(139,92,246,.15),rgba(139,92,246,.05));padding:16px 20px;border-bottom:1px solid rgba(255,255,255,.06)">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#a78bfa;margin-bottom:4px">Layer 2 — Statics</div>
+        <div style="font-size:15px;font-weight:600;color:var(--fg)" data-i18n="theory_mp_title">23 Metaprograms → 3 Agent Profiles</div>
+        <div style="font-size:13px;color:var(--fg-3);margin-top:4px" data-i18n="theory_mp_desc">MPRotationStep creates 3 agent profiles with different MP combinations. Each generates key_insights and blind_spots. SynthesisStep integrates them to eliminate cognitive blind spots through perceptual filter rotation.</div>
+      </div>
+      <div style="background:linear-gradient(135deg,rgba(16,185,129,.15),rgba(16,185,129,.05));padding:16px 20px">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#34d399;margin-bottom:4px">Layer 1 — Process</div>
+        <div style="font-size:15px;font-weight:600;color:var(--fg)">IMPACT / COMPASS / TOTE Cycle</div>
+        <div style="font-size:13px;color:var(--fg-3);margin-top:4px">When thinking happens. Execution and control loops.</div>
+      </div>
+    </div>
+    <p data-i18n="theory_ucos_flow">A query enters at Layer 1 (Process), gets profiled by Layer 2 (23 core MPs), localized in Layer 4 (C4 coordinates), and transformed by Layer 3 (QZRF operators) until it reaches the target state.</p>
+
+    <h2 data-i18n="theory_c4_title">C4 / ℤ₃³ — The Cognitive Coordinate System</h2>
+    <p data-i18n="theory_c4_desc">Cognition operates in a discrete 3D space: <strong>Time × Scale × Agency</strong>, each with 3 values. Total: 27 states. This is the <em>minimal complete structure</em> for general intelligence — verified by group theory and category theory.</p>
+
+    <table>
+      <tr><th>Axis</th><th>Values</th><th>Meaning</th></tr>
+      <tr><td><strong>Time (Z₀)</strong></td><td>0=Past, 1=Present, 2=Future</td><td>Temporal perspective of the inquiry</td></tr>
+      <tr><td><strong>Scale (Z₁)</strong></td><td>0=Concrete, 1=Abstract, 2=Meta</td><td>Abstraction level of the problem</td></tr>
+      <tr><td><strong>Agency (Z₂)</strong></td><td>0=Self, 1=Other, 2=System</td><td>Actor perspective</td></tr>
+    </table>
+
+    <h3 data-i18n="theory_c4_examples">Example States</h3>
+    <ul>
+      <li><code>F⟨0,0,0⟩</code> — <strong>Past, Concrete, Self</strong>: Personal memories, historical experiments you ran</li>
+      <li><code>F⟨1,1,1⟩</code> — <strong>Present, Abstract, Other</strong>: Typical academic analysis (what most papers do)</li>
+      <li><code>F⟨2,2,2⟩</code> — <strong>Future, Meta, System</strong>: System-level future vision (paradigm-shifting)</li>
+    </ul>
+
+    <h3 data-i18n="theory_c4_operators">6 Fundamental Operators</h3>
+    <p>Every operator has <strong>period 3</strong> — applying it three times returns to the original state. They commute and form an abelian group.</p>
+    <pre><code>T̂(t,s,a) = ((t+1) mod 3, s, a)      -- Time shift
+Ŝ(t,s,a) = (t, (s+1) mod 3, a)      -- Scale shift
+Â(t,s,a) = (t, s, (a+1) mod 3)      -- Agency shift
+T̂⁻¹, Ŝ⁻¹, Â⁻¹                       -- Inverse shifts</code></pre>
+
+    <h2 data-i18n="theory_qzrf_title">QZRF — 14 Cognitive Meta-Operators</h2>
+    <p data-i18n="theory_qzrf_desc">QZRF (<strong>Q</strong>uantum <strong>Z</strong>one of <strong>R</strong>ecursive <strong>F</strong>luctuations) is the "pulse" between topological structure (C4) and static content (metaprograms). Its <strong>14 operators</strong> aggregate <strong>72 Matrix Dream micro-patterns</strong> into 5 phase-based transformation groups. Each operator targets a specific C4 state.</p>
+
+    <table>
+      <tr><th>Phase</th><th>Operator</th><th>Target C4 State</th><th>Function</th></tr>
+      <tr><td rowspan="3"><strong>Divergence</strong></td><td>Branching</td><td>F⟨2,0,2⟩</td><td>Decompose into independent sub-problems</td></tr>
+      <tr><td>Annealing</td><td>F⟨2,1,1⟩</td><td>Controlled randomness to escape local optima</td></tr>
+      <tr><td>Projection</td><td>F⟨2,2,2⟩</td><td>Project onto a different domain</td></tr>
+      <tr><td rowspan="3"><strong>Modulation</strong></td><td>Gradient Step</td><td>F⟨1,0,1⟩</td><td>Steepest improvement direction</td></tr>
+      <tr><td>Parametric Sweep</td><td>F⟨1,1,2⟩</td><td>Systematic parameter variation</td></tr>
+      <tr><td>Resonance Tuning</td><td>F⟨1,2,0⟩</td><td>Match natural frequencies / patterns</td></tr>
+      <tr><td rowspan="3"><strong>Network</strong></td><td>Graph Weave</td><td>F⟨1,1,2⟩</td><td>Connect partial solutions into network</td></tr>
+      <tr><td>Cross-Linking</td><td>F⟨2,2,1⟩</td><td>Unexpected connections between components</td></tr>
+      <tr><td>Eigenmode Extraction</td><td>F⟨1,2,2⟩</td><td>Find fundamental modes / structures</td></tr>
+      <tr><td rowspan="3"><strong>Integration</strong></td><td>Synthesis</td><td>F⟨1,2,2⟩</td><td>Merge partial solutions into whole</td></tr>
+      <tr><td>Harmonization</td><td>F⟨1,1,1⟩</td><td>Resolve conflicts between components</td></tr>
+      <tr><td>Crystallization</td><td>F⟨1,0,0⟩</td><td>Freeze solution into stable form</td></tr>
+      <tr><td rowspan="2"><strong>Topology</strong></td><td>Space Folding</td><td>F⟨2,2,2⟩</td><td>Change problem-space topology</td></tr>
+      <tr><td>Dimensional Lift</td><td>F⟨2,2,2⟩</td><td>Embed in higher-dimensional space</td></tr>
+    </table>
+
+    <h2 data-i18n="theory_cdi_title">CDI — Creative &amp; Destructive Insights</h2>
+    <p data-i18n="theory_cdi_desc">Breakthroughs do not come from incremental steps. They require <strong>controlled traversal of distant cognitive states</strong> — temporarily occupying incompatible positions that break current assumptions. CDI is a 6-step algorithm that exploits Theorem 11 (diameter ≤ 6) to guarantee bounded search.</p>
+
+    <h3 data-i18n="theory_cdi_steps">The 6 Steps</h3>
+    <ol>
+      <li><strong>Extract Physical Contradiction</strong> — Identify the "X must be A AND not-A" conflict</li>
+      <li><strong>Fingerprint</strong> — Map the contradiction to a C4 state coordinate</li>
+      <li><strong>Predict Solution Region</strong> — Default target: F⟨2,2,2⟩ (Future, Meta, System)</li>
+      <li><strong>Compute Route</strong> — Shortest path via Theorem 9 (Hamming distance)</li>
+      <li><strong>Execute Transforms</strong> — Apply QZRF operators along the path</li>
+      <li><strong>Synthesize &amp; Validate</strong> — Verify with Einstein tests and falsification</li>
+    </ol>
+
+    <h3 data-i18n="theory_cdi_validation">Validation: Einstein's Derivations</h3>
+    <table>
+      <tr><th>Theory</th><th>Steps</th><th>C4 Trajectory</th><th>Status</th></tr>
+      <tr><td>Special Relativity (STR)</td><td>4</td><td>F⟨0,0,2⟩ → F⟨0,1,2⟩ → F⟨1,1,2⟩ → F⟨1,2,2⟩ → F⟨2,2,2⟩</td><td>✓ Within bound</td></tr>
+      <tr><td>General Relativity (GTR)</td><td>6</td><td>Full diameter traversal + Domain Transformer</td><td>✓ At bound (maximum)</td></tr>
+    </table>
+    <p data-i18n="theory_cdi_einstein">Einstein's insights represent <strong>maximally distant conceptual leaps</strong> — exactly what C4 predicts for revolutionary breakthroughs. The search complexity is <strong>O(1)</strong> because the state space is bounded.</p>
+
+    <h2 data-i18n="theory_observer_title">Observer Position — O₀ / O₁ / O₂</h2>
+    <p data-i18n="theory_observer_desc">Cognition is not just about states — it is about <em>who observes</em> them. The Observer Position adds a meta-cognitive dimension modeled with modal logic ◯ₙ. Each level sees a different subset of the 27-state space.</p>
+
+    <table>
+      <tr><th>Level</th><th>Name</th><th>Visibility</th><th>Blind Spot</th></tr>
+      <tr><td><strong>O₀</strong></td><td>Immersed</td><td>6 neighbors only</td><td>Meta-level patterns invisible</td></tr>
+      <tr><td><strong>O₁</strong></td><td>Observing</td><td>All states within distance ≤ 2</td><td>Own cognitive bias hidden</td></tr>
+      <tr><td><strong>O₂</strong></td><td>Meta</td><td>All 27 states</td><td>Concrete emotional details lost</td></tr>
+    </table>
+    <p data-i18n="theory_observer_use">c4reqber uses observer shifts during pipeline execution: O₀ for normal processing, O₁ for self-diagnostic overlay (~10–20% overhead), O₂ for global architecture restructuring when stuck.</p>
+
+    <h2 data-i18n="theory_meta_title">C4-META — Observer as Invariant</h2>
+    <p data-i18n="theory_meta_desc">C4-META extends C4 with 6 theorems about the observer as an <strong>invariant isomorphism</strong> between cognitive universes. The framework is formalized in ~3,600 lines of Agda across 6 modules (safe mode, without K).</p>
+
+    <h3 data-i18n="theory_meta_theorems">The 6 Theorems</h3>
+    <ol>
+      <li><strong>Observer Bridge</strong> — O₂ induces isomorphism U ≅ U′ between cognitive universes</li>
+      <li><strong>Observer Invariant</strong> — Observer structure is preserved under universe isomorphism</li>
+      <li><strong>Non-Computability</strong> — O₂ cannot be computed by O₀/O₁ (type mismatch: SelfCode → SelfCode vs monitoring)</li>
+      <li><strong>Emergence Guarantee</strong> — Self-modifying architectures guarantee O₂ at fixpoint</li>
+      <li><strong>Observer Superposition</strong> — System exists in superposition of O-levels until "measured"</li>
+      <li><strong>Compassion Convergence</strong> — Aligned systems converge to Φ = F⟨1,1,1⟩; 9 dangerous states become unreachable</li>
+    </ol>
+
+    <h3 data-i18n="theory_phi_title">The Φ-Attractor</h3>
+    <pre><code>Φ = F⟨1, 1, 1⟩ = Present · Abstract · Other
+
+Attractor basin:   {s ∈ ℤ₃³ | d_H(s, Φ) ≤ 2}  → 18 states
+Unreachable zone:  {s ∈ ℤ₃³ | d_H(s, Φ) ≥ 3}  →  9 states</code></pre>
+    <p data-i18n="theory_phi_desc">A theoretical construct from C4-META: the convergence point where Present, Abstract, and Other align. The geometry of the 27-state space creates a natural basin around Φ, with 18 states within reach and 9 distant states. This is explored in the <a href="https://gitlab.com/cognitive-functors/Adaptive-topology/-/tree/main/formal-proofs?ref_type=heads" target="_blank" rel="noopener noreferrer">compassion-convergence.agda</a> proof module.</p>
+
+    <h2 data-i18n="theory_proofs_title">Formal Proofs</h2>
+    <p data-i18n="theory_proofs_desc">The core theorems are verified in multiple proof assistants. T1–T11 (C4 properties) and T12–T17 (categorical necessity, observer theorems) are machine-checked.</p>
+    <ul>
+      <li><strong>Agda</strong> — ~3,600 lines across 6 modules (<code>--safe --without-K</code>). Complete proofs in <a href="https://gitlab.com/cognitive-functors/Adaptive-topology/-/tree/main/formal-proofs?ref_type=heads" target="_blank" rel="noopener noreferrer">adaptive-topology/formal-proofs</a>. c4reqber includes a structural stub matching the verified theorems.</li>
+      <li><strong>Lean4</strong> — In progress. Formalizes C4Comp in dependent type theory.</li>
+      <li><strong>Coq</strong> — In progress. Inductive proofs for hardware-verification contexts.</li>
+    </ul>
+
+    <h2 data-i18n="theory_why3_title">Why ℤ₃³?</h2>
+    <table>
+      <tr><th>Structure</th><th>States</th><th>Utilization</th><th>Status</th></tr>
+      <tr><td>ℤ₂³</td><td>8</td><td>100%</td><td>Too coarse — loses cognitive distinctions</td></tr>
+      <tr><td><strong>ℤ₃³</strong></td><td><strong>27</strong></td><td><strong>100%</strong></td><td><strong>Optimal — minimal complete structure</strong></td></tr>
+      <tr><td>ℤ₄³</td><td>64</td><td>~42%</td><td>Too fine — most states unused in practice</td></tr>
+    </table>
+    <p data-i18n="theory_why3_desc">Three gradations are the <strong>minimum</strong> for nonlinear interpolation between polar opposites (past/future, concrete/meta, self/system). Binary is too coarse; quaternary wastes states. The 27-state space has been validated against 18 historical scientist discovery paths.</p>
+
+    <h2 data-i18n="theory_reading_title">Further Reading</h2>
+    <ul>
+      <li><a href="../architecture/" data-i18n="theory_reading_arch">System Stack</a> — TUI, CLI, API, simulation engines, and knowledge sources</li>
+      <li><a href="../docs/" data-i18n="theory_reading_docs">Documentation</a> — Install and run your first discovery pipeline</li>
+      <li><a href="../showcase/" data-i18n="theory_reading_showcase">Showcase</a> — Real discoveries made with c4reqber</li>
+    </ul>
+  </div>
+</section>
+
+</main>
+
+<div id="site-footer"></div>
+
+<script src="../js/components.js"></script>
+<script src="../js/main.js"></script>
+<script>
+// ═══════════════════════════════════════════════════════
+// Interactive Z₃³ Cube
+// ═══════════════════════════════════════════════════════
+
+const STATES = [];
+const LABELS = {
+  time: ['Past', 'Present', 'Future'],
+  scale: ['Concrete', 'Abstract', 'Meta'],
+  agency: ['Self', 'Other', 'System']
+};
+const DESCRIPTIONS = {
+  '000': 'Personal concrete memories. Historical experiments you ran.',
+  '001': 'Concrete memories of others. Historical data you observed.',
+  '002': 'Concrete system history. Raw experimental logs.',
+  '010': 'Personal abstract reflection. "What did I learn?"',
+  '011': 'Abstract analysis of others. Typical academic review.',
+  '012': 'Abstract system patterns. Meta-analysis of literature.',
+  '020': 'Personal meta-cognition. "How do I think?"',
+  '021': 'Meta-analysis of others. Theory of mind.',
+  '022': 'Meta-system thinking. Philosophy of science.',
+  '100': 'Present concrete self. Current experiment setup.',
+  '101': 'Present concrete other. Observing a colleague.',
+  '102': 'Present concrete system. Real-time monitoring.',
+  '110': 'Present abstract self. "What am I doing now?"',
+  '111': 'Present abstract other. Standard academic analysis.',
+  '112': 'Present abstract system. Systems thinking.',
+  '120': 'Present meta self. Mindfulness in research.',
+  '121': 'Present meta other. Collaborative meta-cognition.',
+  '122': 'Present meta system. Active paradigm construction.',
+  '200': 'Future concrete self. Personal research plan.',
+  '201': 'Future concrete other. Predicting a colleague\'s results.',
+  '202': 'Future concrete system. Engineering roadmaps.',
+  '210': 'Future abstract self. "Where is my field going?"',
+  '211': 'Future abstract other. Forecasting a competitor.',
+  '212': 'Future abstract system. Trend analysis.',
+  '220': 'Future meta self. Personal paradigm shift.',
+  '221': 'Future meta other. Predicting scientific revolutions.',
+  '222': 'Future meta system. Paradigm-shifting vision. The Einstein state.'
+};
+
+// Generate 27 states
+for (let t = 0; t < 3; t++) {
+  for (let s = 0; s < 3; s++) {
+    for (let a = 0; a < 3; a++) {
+      STATES.push({ t, s, a, key: `${t}${s}${a}` });
+    }
+  }
+}
+
+const wrapper = document.getElementById('cube-wrapper');
+const tooltip = document.getElementById('cube-tooltip');
+const ttTitle = document.getElementById('tt-title');
+const ttDesc = document.getElementById('tt-desc');
+const scene = document.getElementById('cube-scene');
+
+const SPACING = 70;
+const OFFSET = SPACING;
+
+// Create cells
+STATES.forEach(state => {
+  const cell = document.createElement('div');
+  cell.className = `cube-cell agency-${['self','other','system'][state.a]}`;
+  cell.textContent = state.key;
+  cell.dataset.key = state.key;
+  cell.dataset.t = state.t;
+  cell.dataset.s = state.s;
+  cell.dataset.a = state.a;
+
+  const x = (state.s - 1) * SPACING;
+  const y = (state.t - 1) * SPACING;
+  const z = (state.a - 1) * SPACING;
+
+  const baseTransform = `translate3d(${x + OFFSET}px, ${y + OFFSET}px, ${z}px)`;
+  cell.style.transform = baseTransform;
+
+  cell.addEventListener('mouseenter', (e) => {
+    cell.style.transform = baseTransform + ' scale(1.2)';
+    ttTitle.textContent = `F⟨${state.t},${state.s},${state.a}⟩ — ${LABELS.time[state.t]}, ${LABELS.scale[state.s]}, ${LABELS.agency[state.a]}`;
+    ttDesc.textContent = DESCRIPTIONS[state.key] || '';
+    tooltip.classList.add('visible');
+    positionTooltip(e, cell);
+  });
+
+  cell.addEventListener('mouseleave', () => {
+    cell.style.transform = baseTransform;
+    tooltip.classList.remove('visible');
+  });
+
+  cell.addEventListener('click', () => {
+    document.querySelectorAll('.cube-cell').forEach(c => c.classList.remove('active'));
+    cell.classList.add('active');
+  });
+
+  wrapper.appendChild(cell);
+});
+
+function positionTooltip(e, cell) {
+  const rect = cell.getBoundingClientRect();
+  const sceneRect = scene.getBoundingClientRect();
+  tooltip.style.left = (rect.left - sceneRect.left + rect.width / 2 - tooltip.offsetWidth / 2) + 'px';
+  tooltip.style.top = (rect.top - sceneRect.top - tooltip.offsetHeight - 10) + 'px';
+}
+
+// Rotation drag
+let rotX = -20, rotY = 45;
+let isDragging = false, startX, startY;
+let rafId = null;
+let velX = 0, velY = 0;
+const FRICTION = 0.92;
+
+function updateRotation() {
+  wrapper.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+}
+updateRotation();
+
+function scheduleUpdate() {
+  if (rafId) return;
+  rafId = requestAnimationFrame(() => {
+    rafId = null;
+    rotX += velX;
+    rotY += velY;
+    velX *= FRICTION;
+    velY *= FRICTION;
+    if (Math.abs(velX) > 0.01 || Math.abs(velY) > 0.01) {
+      scheduleUpdate();
+    }
+    updateRotation();
+  });
+}
+
+scene.addEventListener('mousedown', e => {
+  isDragging = true;
+  velX = 0;
+  velY = 0;
+  startX = e.clientX;
+  startY = e.clientY;
+  scene.style.cursor = 'grabbing';
+});
+document.addEventListener('mouseup', () => {
+  isDragging = false;
+  scene.style.cursor = 'grab';
+  scheduleUpdate();
+});
+document.addEventListener('mousemove', e => {
+  if (!isDragging) return;
+  const dx = (e.clientX - startX) * 0.5;
+  const dy = (e.clientY - startY) * 0.5;
+  rotY += dx;
+  rotX -= dy;
+  velY = dx;
+  velX = -dy;
+  startX = e.clientX;
+  startY = e.clientY;
+  updateRotation();
+});
+
+// Touch support
+scene.addEventListener('touchstart', e => {
+  isDragging = true;
+  velX = 0;
+  velY = 0;
+  startX = e.touches[0].clientX;
+  startY = e.touches[0].clientY;
+});
+document.addEventListener('touchend', () => {
+  isDragging = false;
+  scheduleUpdate();
+});
+document.addEventListener('touchmove', e => {
+  if (!isDragging) return;
+  const dx = (e.touches[0].clientX - startX) * 0.5;
+  const dy = (e.touches[0].clientY - startY) * 0.5;
+  rotY += dx;
+  rotX -= dy;
+  velY = dx;
+  velX = -dy;
+  startX = e.touches[0].clientX;
+  startY = e.touches[0].clientY;
+  updateRotation();
+});
+
+// Axis filtering
+function showAxis(axis) {
+  document.querySelectorAll('.cube-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('btn-' + axis).classList.add('active');
+
+  document.querySelectorAll('.cube-cell').forEach(cell => {
+    cell.style.opacity = '1';
+    if (axis === 'all') return;
+    const val = parseInt(cell.dataset[axis[0]]);
+    cell.style.opacity = val === 1 ? '1' : '0.2';
+  });
+}
+
+// Path demo (Theorem 11)
+function demoPath() {
+  document.querySelectorAll('.cube-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('btn-path').classList.add('active');
+
+  document.querySelectorAll('.cube-cell').forEach(c => {
+    c.classList.remove('active', 'path');
+    c.style.opacity = '0.3';
+  });
+
+  // Path from 000 to 222 (Einstein GTR)
+  const path = ['000', '100', '110', '111', '211', '221', '222'];
+  let i = 0;
+  function step() {
+    if (i >= path.length) return;
+    const cell = document.querySelector(`.cube-cell[data-key="${path[i]}"]`);
+    if (cell) {
+      cell.style.opacity = '1';
+      cell.classList.add('path');
+      if (i === path.length - 1) cell.classList.add('active');
+    }
+    i++;
+    setTimeout(step, 400);
+  }
+  step();
+}
+
+function resetCube() {
+  document.querySelectorAll('.cube-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('btn-all').classList.add('active');
+  document.querySelectorAll('.cube-cell').forEach(c => {
+    c.classList.remove('active', 'path');
+    c.style.opacity = '1';
+  });
+  rotX = -20; rotY = 45;
+  updateRotation();
+}
+
+// Cube controls via event delegation (no inline handlers)
+document.querySelector('.cube-controls').addEventListener('click', (e) => {
+  const btn = e.target.closest('.cube-btn');
+  if (!btn) return;
+  const action = btn.dataset.action;
+  const arg = btn.dataset.arg;
+  if (action === 'axis') showAxis(arg);
+  else if (action === 'path') demoPath();
+  else if (action === 'reset') resetCube();
+});
+
+// Service Worker
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('../sw.js').catch(()=>{});
+}
+</script>
+
+</body>
+</html>

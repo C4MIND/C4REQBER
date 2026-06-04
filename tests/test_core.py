@@ -1,15 +1,23 @@
+from pathlib import Path
 """
 Tests for TURBO-CDI core functionality
 """
 
-import pytest
 import sys
 
-sys.path.insert(0, "/Users/figuramax/LocalProjects/TURBO-CDI/src")
+import pytest
 
-from core.c4_state import C4State, C4Space
+
+_root = Path(__file__).resolve().parent
+project_root = _root.parent
+if str(project_root) not in sys.path:
+    sys.path.insert(0, str(project_root))
+if str(project_root / "src") not in sys.path:
+    sys.path.insert(0, str(project_root / "src"))
+
+from core.c4_state import C4Space, C4State
+from core.cdi_engine import CDIEngine, ContradictionType, PhysicalContradiction
 from core.operators import Operators
-from core.cdi_engine import CDIEngine, PhysicalContradiction, ContradictionType
 from extractors.contradiction import ContradictionExtractor
 
 

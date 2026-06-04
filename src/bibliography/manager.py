@@ -1,39 +1,40 @@
 """
-TURBO-CDI: Bibliography Manager
+C4REQBER: Bibliography Manager
 Reference management, citations, BibTeX export
 """
+from __future__ import annotations
 
-import sqlite3
 import json
 import re
-from datetime import datetime
-from typing import List, Optional, Dict, Any
+import sqlite3
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 
 @dataclass
 class Reference:
     """Academic reference/citation."""
 
-    id: Optional[int]
+    id: int | None
     entry_type: str  # article, book, inproceedings, etc.
     cite_key: str
     title: str
-    authors: List[str]
+    authors: list[str]
     year: int
-    journal: Optional[str] = None
-    volume: Optional[str] = None
-    number: Optional[str] = None
-    pages: Optional[str] = None
-    doi: Optional[str] = None
-    url: Optional[str] = None
-    publisher: Optional[str] = None
-    abstract: Optional[str] = None
-    keywords: List[str] = None
-    tags: List[str] = None
+    journal: str | None = None
+    volume: str | None = None
+    number: str | None = None
+    pages: str | None = None
+    doi: str | None = None
+    url: str | None = None
+    publisher: str | None = None
+    abstract: str | None = None
+    keywords: list[str] = None  # type: ignore[assignment]
+    tags: list[str] = None  # type: ignore[assignment]
     notes: str = ""
-    project_ids: List[int] = None
+    project_ids: list[int] = None  # type: ignore[assignment]
     added_at: str = ""
 
 
@@ -42,16 +43,16 @@ class BibliographyManager:
     Manage academic references and generate citations.
     """
 
-    def __init__(self, db_path: Optional[str] = None):
+    def __init__(self, db_path: str | None = None) -> None:
         if db_path is None:
             data_dir = Path(__file__).parent.parent / "data"
             data_dir.mkdir(exist_ok=True)
-            db_path = data_dir / "bibliography.db"
+            db_path = data_dir / "bibliography.db"  # type: ignore[assignment]
 
         self.db_path = str(db_path)
         self._init_db()
 
-    def _init_db(self):
+    def _init_db(self) -> None:
         """Initialize bibliography database."""
         with sqlite3.connect(self.db_path) as conn:
             conn.execute("""
@@ -97,9 +98,9 @@ class BibliographyManager:
         """Add reference to library."""
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.execute(
-                """INSERT INTO 'references' 
-                   (entry_type, cite_key, title, authors, year, journal, volume, 
-                    number, pages, doi, url, publisher, abstract, keywords, tags, 
+                """INSERT INTO 'references'
+                   (entry_type, cite_key, title, authors, year, journal, volume,
+                    number, pages, doi, url, publisher, abstract, keywords, tags,
                     notes, project_ids, added_at)
                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                 (
@@ -124,35 +125,35 @@ class BibliographyManager:
                 ),
             )
             conn.commit()
-            return cursor.lastrowid
+            return cursor.lastrowid  # type: ignore[return-value]
 
     def search_references(
         self,
         query: str,
-        tags: Optional[List[str]] = None,
-        year_from: Optional[int] = None,
-        year_to: Optional[int] = None,
-    ) -> List[Reference]:
+        tags: list[str] | None = None,
+        year_from: int | None = None,
+        year_to: int | None = None,
+    ) -> list[Reference]:
         """Search references."""
         with sqlite3.connect(self.db_path) as conn:
-            sql = """SELECT * FROM 'references' 
+            sql = """SELECT * FROM 'references'
                      WHERE (title LIKE ? OR authors LIKE ? OR abstract LIKE ?)"""
             params = [f"%{query}%", f"%{query}%", f"%{query}%"]
 
             if year_from:
                 sql += " AND year >= ?"
-                params.append(year_from)
+                params.append(year_from)  # type: ignore[arg-type]
 
             if year_to:
                 sql += " AND year <= ?"
-                params.append(year_to)
+                params.append(year_to)  # type: ignore[arg-type]
 
             sql += " ORDER BY year DESC"
 
             cursor = conn.execute(sql, params)
             return [self._row_to_reference(row) for row in cursor.fetchall()]
 
-    def get_by_cite_key(self, cite_key: str) -> Optional[Reference]:
+    def get_by_cite_key(self, cite_key: str) -> Reference | None:
         """Get reference by citation key."""
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.execute(
@@ -161,7 +162,7 @@ class BibliographyManager:
             row = cursor.fetchone()
             return self._row_to_reference(row) if row else None
 
-    def generate_bibtex(self, ref_id: Optional[int] = None) -> str:
+    def generate_bibtex(self, ref_id: int | None = None) -> str:
         """Generate BibTeX entry."""
         with sqlite3.connect(self.db_path) as conn:
             if ref_id:
@@ -250,7 +251,7 @@ class BibliographyManager:
 
         return f"[{cite_key}]"
 
-    def import_from_bibtex(self, bibtex_text: str) -> List[int]:
+    def import_from_bibtex(self, bibtex_text: str) -> list[int]:
         """Import references from BibTeX."""
         ids = []
 
@@ -265,9 +266,10 @@ class BibliographyManager:
                 # Extract fields
                 cite_key = entry_text.split(",")[0].strip()
 
-                def extract_field(field_name: str) -> Optional[str]:
+                def extract_field(field_name: str, _entry_text: str = entry_text) -> str | None:
+                    """Extract field."""
                     pattern = rf"{field_name}\s*=\s*\{{([^}}]+)\}}"
-                    match = re.search(pattern, entry_text, re.IGNORECASE)
+                    match = re.search(pattern, _entry_text, re.IGNORECASE)
                     return match.group(1).strip() if match else None
 
                 title = extract_field("title") or "Unknown"
@@ -303,7 +305,7 @@ class BibliographyManager:
 
         return ids
 
-    def export_to_file(self, filepath: str, format: str = "bibtex"):
+    def export_to_file(self, filepath: str, format: str = "bibtex") -> None:
         """Export bibliography to file."""
         if format == "bibtex":
             content = self.generate_bibtex()
@@ -318,7 +320,7 @@ class BibliographyManager:
             with open(filepath, "w") as f:
                 json.dump(refs, f, indent=2)
 
-    def _row_to_reference(self, row) -> Reference:
+    def _row_to_reference(self, row: Any) -> Reference:
         return Reference(
             id=row[0],
             entry_type=row[1],
@@ -341,7 +343,7 @@ class BibliographyManager:
             added_at=row[18],
         )
 
-    def _row_to_dict(self, row) -> Dict:
+    def _row_to_dict(self, row: Any) -> dict[str, Any]:
         """Convert row to dictionary."""
         return {
             "id": row[0],

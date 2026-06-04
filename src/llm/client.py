@@ -1,14 +1,15 @@
-"""
-TURBO-CDI: LLM Client
+"""LLM Client.
+
 Multi-provider LLM interface (OpenRouter, Claude, local)
 """
+from __future__ import annotations
 
-import os
 import json
-import urllib.request
+import os
 import urllib.error
-from typing import Optional, Dict, Any, List
+import urllib.request
 from dataclasses import dataclass
+from typing import Any
 
 
 @dataclass
@@ -17,8 +18,8 @@ class LLMResponse:
 
     content: str
     model: str
-    usage: Dict[str, int]
-    raw_response: Optional[Dict] = None
+    usage: dict[str, int]
+    raw_response: dict | None = None  # type: ignore[type-arg]
 
 
 class LLMClient:
@@ -41,19 +42,19 @@ class LLMClient:
         "cheap": "openai/gpt-4o-mini",  # Cost-effective
     }
 
-    def __init__(self, api_key: Optional[str] = None):
+    def __init__(self, api_key: str | None = None) -> None:
         self.api_key = api_key or os.getenv("OPENROUTER_API_KEY")
         self.base_url = "https://openrouter.ai/api/v1"
-        self.referer = "https://turbo-cdi.org"  # Required by OpenRouter
+        self.referer = "https://c4reqber.org"  # Required by OpenRouter
 
     def generate(
         self,
         prompt: str,
-        model: Optional[str] = None,
+        model: str | None = None,
         temperature: float = 0.7,
         max_tokens: int = 2000,
-        system_prompt: Optional[str] = None,
-        response_format: Optional[str] = None,
+        system_prompt: str | None = None,
+        response_format: str | None = None,
     ) -> LLMResponse:
         """
         Generate text using LLM.
@@ -96,7 +97,7 @@ class LLMClient:
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
             "HTTP-Referer": self.referer,
-            "X-Title": "TURBO-CDI",
+            "X-Title": "C4Reqber",
         }
 
         req = urllib.request.Request(
@@ -118,13 +119,13 @@ class LLMClient:
                 )
         except urllib.error.HTTPError as e:
             error_body = e.read().decode()
-            raise RuntimeError(f"LLM API error: {e.code} - {error_body}")
-        except Exception as e:
-            raise RuntimeError(f"LLM request failed: {e}")
+            raise RuntimeError(f"LLM API error: {e.code} - {error_body}") from e
+        except (ConnectionError, TimeoutError, OSError, ValueError) as e:
+            raise RuntimeError(f"LLM request failed: {e}") from e
 
     def generate_structured(
-        self, prompt: str, schema: Dict[str, Any], model: Optional[str] = None
-    ) -> Dict[str, Any]:
+        self, prompt: str, schema: dict[str, Any], model: str | None = None
+    ) -> dict[str, Any]:
         """
         Generate structured JSON response.
 
@@ -150,50 +151,28 @@ Respond ONLY with JSON, no markdown formatting, no explanations."""
         )
 
         try:
-            return json.loads(response.content)
-        except json.JSONDecodeError as e:
+            return json.loads(response.content)  # type: ignore[no-any-return]
+        except json.JSONDecodeError:
             # Try to extract JSON from markdown
             content = response.content
             if "```json" in content:
                 content = content.split("```json")[1].split("```")[0]
             elif "```" in content:
                 content = content.split("```")[1].split("```")[0]
-            return json.loads(content.strip())
+            return json.loads(content.strip())  # type: ignore[no-any-return]
 
     def test_connection(self) -> bool:
         """Test API connectivity."""
         try:
             response = self.generate(
-                prompt="Respond with 'TURBO-CDI connected'",
+                prompt="Respond with 'C4Reqber connected'",
                 max_tokens=10,
                 temperature=0,
             )
-            return "TURBO-CDI" in response.content
-        except Exception:
+            return "C4Reqber" in response.content
+        except (ConnectionError, TimeoutError, OSError, ValueError):
             return False
 
 
-class MockLLMClient(LLMClient):
-    """Mock client for testing without API calls."""
-
-    def __init__(self):
-        self.api_key = "mock"
-
-    def generate(self, prompt: str, **kwargs) -> LLMResponse:
-        return LLMResponse(
-            content=f"[MOCK] Generated hypothesis for: {prompt[:50]}...",
-            model="mock-model",
-            usage={"prompt_tokens": 100, "completion_tokens": 50},
-        )
-
-    def generate_structured(self, prompt: str, schema: Dict, **kwargs) -> Dict:
-        # Return schema-compliant mock data
-        result = {}
-        for key, value in schema.get("properties", {}).items():
-            if value.get("type") == "array":
-                result[key] = [f"mock_{key}_item"]
-            elif value.get("type") == "string":
-                result[key] = f"mock_{key}"
-            elif value.get("type") == "number":
-                result[key] = 0.5
-        return result
+# MockLLMClient intentionally omitted — use real providers only in production.
+        # For testing, register a test provider explicitly.

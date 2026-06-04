@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/api/middleware/cors.py
+# hypothesis_version: 6.141.1
+
+[600, '*', ',', 'ALLOWED_ORIGINS', 'Authorization', 'Content-Type', 'DELETE', 'ENV', 'GET', 'OPTIONS', 'POST', 'PUT', 'X-API-Key', 'X-RateLimit-Limit', 'X-Request-ID', 'X-Trace-ID', 'production']

@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/patterns/library/urban_growth.py
+# hypothesis_version: 6.141.1
+
+[0.0, 0.01, 0.02, 0.05, 0.1, 0.2, 0.3, 0.5, 0.8, 1.0, 2.0, 100, 1000, '6.0.0', 'EXTENDED', 'Geography', 'O(T·W·H)', 'Regional Science', 'Static road network', 'Urban Growth', 'Urban Planning', '__main__', 'accuracy', 'assumptions', 'breed', 'business', 'category', 'center_of_mass', 'commercial', 'config', 'default', 'description', 'diffusion', 'domain', 'final_grid', 'final_land_use', 'final_population', 'final_urban', 'float', 'grid_size', 'growth_rate', 'height', 'history', 'id', 'industrial', 'inf', 'initial_urban', 'int', 'land_use', 'land_use_final', 'n_patches', 'n_steps', 'name', 'parameters', 'resident', 'residential', 'road_cells', 'satisfaction', 'seconds to minutes', 'spatial_spread', 'statistics', 'time', 'type', 'typical_runtime', 'urban_cells', 'urban_growth', 'version', 'width', 'x', 'y']

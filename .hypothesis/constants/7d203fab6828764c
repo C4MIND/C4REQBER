@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/api/database.py
+# hypothesis_version: 6.141.1
+
+[0.0, 100, ' AND user_id = ?', ',', 'DATABASE_URL', 'SELECT 1', 'c4_path', 'confidence', 'data', 'duration_seconds', 'estimated_cost_usd', 'hypotheses', 'hypothesis', 'method', 'postgresql://', 'problem', 'triz_principles', 'turbo_cdi.db']

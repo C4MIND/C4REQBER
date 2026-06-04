@@ -1,12 +1,12 @@
 """
-TURBO-CDI: Trends of Evolution
+C4REQBER: Trends of Evolution
 TRIZ S-curve analysis and technology forecasting
 """
+from __future__ import annotations
 
-from typing import List, Dict, Any, Optional, Tuple
+import math
 from dataclasses import dataclass
 from enum import Enum
-import math
 
 
 class EvolutionStage(Enum):
@@ -32,8 +32,8 @@ class SCurveAnalysis:
     market_growth: str  # high/medium/low
 
     # Predictions
-    time_to_maturity: Optional[int]  # years
-    next_paradigm: Optional[str]
+    time_to_maturity: int | None  # years
+    next_paradigm: str | None
 
     # Recommendations
     strategy: str
@@ -60,11 +60,11 @@ class TrendsOfEvolution:
         "controllability": "Controllability evolution",
     }
 
-    def __init__(self):
+    def __init__(self) -> None:
         pass
 
     def analyze_technology(
-        self, technology: str, metrics: Optional[List[float]] = None
+        self, technology: str, metrics: list[float] | None = None
     ) -> SCurveAnalysis:
         """
         Analyze technology maturity using S-curve.
@@ -108,7 +108,7 @@ class TrendsOfEvolution:
             investment_recommendation=investment,
         )
 
-    def _estimate_from_keywords(self, technology: str) -> Tuple[EvolutionStage, float]:
+    def _estimate_from_keywords(self, technology: str) -> tuple[EvolutionStage, float]:
         """Estimate maturity from technology keywords."""
         tech_lower = technology.lower()
 
@@ -141,8 +141,8 @@ class TrendsOfEvolution:
         return EvolutionStage.GROWTH, 50.0
 
     def _calculate_from_metrics(
-        self, metrics: List[float]
-    ) -> Tuple[EvolutionStage, float]:
+        self, metrics: list[float]
+    ) -> tuple[EvolutionStage, float]:
         """Calculate maturity from performance metrics."""
         if len(metrics) < 2:
             return EvolutionStage.GROWTH, 50.0
@@ -203,7 +203,7 @@ class TrendsOfEvolution:
 
     def _predict_time_to_maturity(
         self, stage: EvolutionStage, maturity: float
-    ) -> Optional[int]:
+    ) -> int | None:
         """Predict years to full maturity."""
         if stage == EvolutionStage.DECLINE:
             return 0
@@ -222,7 +222,7 @@ class TrendsOfEvolution:
 
     def _predict_next_paradigm(
         self, technology: str, stage: EvolutionStage
-    ) -> Optional[str]:
+    ) -> str | None:
         """Predict next technological paradigm."""
         paradigms = {
             "lithium-ion": "solid-state batteries",
@@ -324,13 +324,7 @@ class TrendsOfEvolution:
         return "\n".join(lines)
 
 
-# Singleton
-_trends: Optional[TrendsOfEvolution] = None
-
-
 def get_trends_analyzer() -> TrendsOfEvolution:
-    """Get singleton trends analyzer."""
-    global _trends
-    if _trends is None:
-        _trends = TrendsOfEvolution()
-    return _trends
+    """Get singleton trends analyzer (backed by DI container)."""
+    from src.di.container import get_container
+    return get_container().get_or_register("trends_analyzer", TrendsOfEvolution)

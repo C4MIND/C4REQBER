@@ -1,0 +1,2340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>c4reqber — Cognitive Exoskeleton for AI Agents</title>
+<meta name="description" content="The missing cognitive layer for the agentic era. 36 simulation engines, 6 formal verifiers, 33 knowledge sources, 20 MCP tools with JSON Schema. Think. Simulate. Prove. Discover.">
+<meta property="og:title" content="c4reqber — Cognitive Exoskeleton for AI Agents">
+<meta property="og:description" content="Think. Simulate. Prove. Discover.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://c4reqber.org">
+<meta name="twitter:card" content="summary_large_image">
+<meta property="og:image" content="https://c4reqber.org/og-image.png">
+<meta name="twitter:image" content="https://c4reqber.org/og-image.png">
+<link rel="canonical" href="https://c4reqber.org">
+<link rel="alternate" hreflang="en" href="https://c4reqber.org/">
+<link rel="alternate" hreflang="ru" href="https://c4reqber.org/">
+<link rel="alternate" hreflang="zh" href="https://c4reqber.org/">
+<link rel="alternate" hreflang="ja" href="https://c4reqber.org/">
+<link rel="alternate" hreflang="de" href="https://c4reqber.org/">
+<link rel="alternate" hreflang="ar" href="https://c4reqber.org/">
+<link rel="alternate" hreflang="hi" href="https://c4reqber.org/">
+<link rel="alternate" hreflang="x-default" href="https://c4reqber.org/">
+<meta property="og:locale" content="en_US">
+<meta name="theme-color" content="#0F1117">
+<meta name="msapplication-TileColor" content="#0F1117">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' https: data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#9670;</text></svg>">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "c4reqber",
+  "description": "Cognitive Exoskeleton for Humans and AI Agents. 27 states, 36 engines, 6 verifiers, 162+ patterns.",
+  "applicationCategory": "ScientificApplication",
+  "operatingSystem": "macOS, Linux",
+  "softwareVersion": "5.5.0",
+  "license": "https://www.gnu.org/licenses/agpl-3.0.html",
+  "url": "https://c4reqber.org",
+  "author": {
+    "@type": "Organization",
+    "name": "c4reqber"
+  },
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {"@type": "Question", "name": "What is c4reqber?", "acceptedAnswer": {"@type": "Answer", "text": "c4reqber is a cognitive exoskeleton for AI agents and human researchers. It combines 36 simulation engines, 33 knowledge sources, formal verification (Lean4, Coq, Dafny), and a Z₃³ cognitive topology to transform research questions into paradigm-shifting dissertations."}},
+    {"@type": "Question", "name": "How much does c4reqber cost?", "acceptedAnswer": {"@type": "Answer", "text": "c4reqber is free and open-source (AGPL-3.0). You only pay for the LLM API calls you use. A full pipeline run costs between $0.002 (Budget tier, DeepSeek) and $0.11 (Premium tier, Claude Opus). The recommended balanced tier costs approximately $0.35 per run."}},
+    {"@type": "Question", "name": "Is c4reqber open source?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. c4reqber is licensed under AGPL-3.0. The entire codebase, including 20 MCP tools, 36 simulation engine bridges, and 6 formal verification backends, is publicly available on GitHub."}},
+    {"@type": "Question", "name": "What operating systems are supported?", "acceptedAnswer": {"@type": "Answer", "text": "macOS and Linux are fully tested and supported. Windows is not tested but may work under WSL2. External simulation engines (GROMACS, OpenFOAM, etc.) require separate installation per engine."}},
+    {"@type": "Question", "name": "Do I need a GPU to use c4reqber?", "acceptedAnswer": {"@type": "Answer", "text": "No. GPU is optional. Apple Silicon (MLX) and NVIDIA CUDA are supported for accelerated simulation, but the core pipeline runs entirely on CPU. Minimum requirements: 4 GB RAM (8 GB recommended), 2 CPU cores (4+ for simulation workloads)."}}
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {"@type": "ListItem", "position": 1, "name": "Home", "item": "https://c4reqber.org/"},
+    {"@type": "ListItem", "position": 2, "name": "c4reqber", "item": "https://c4reqber.org/"}
+  ]
+}
+</script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0F1117;--bg-2:#1A1B26;--bg-3:#222436;--bg-4:#1A1B26;
+  --fg:#FFFFFF;--fg-2:#6C7086;--fg-3:#6C7086;
+  --primary:#4ECDC4;--primary-glow:rgba(78,205,196,.3);
+  --secondary:#FF6B6B;
+  --accent:#FFD93D;--accent-glow:rgba(255,217,61,.3);
+  --green:#4ADE80;--blue:#3b82f6;--pink:#FF6B6B;--amber:#FFD93D;--red:#FF6B6B;
+  --cyan:#4ECDC4;
+  --border:#2E3042;
+  --radius:10px;--radius-lg:16px;--mono:'JetBrains Mono','SF Mono','Fira Code',monospace;
+  --tui-primary:#00FF41;--tui-secondary:#00D4FF;--tui-accent:#FF006E;
+}
+html{scroll-behavior:smooth;scroll-padding-top:72px;background:var(--bg);color:var(--fg);font-family:'Inter',system-ui,-apple-system,sans-serif;line-height:1.6}
+body{overflow-x:hidden}
+
+/* Hero */
+.hero{position:relative;min-height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.hero-bg{background:radial-gradient(circle,rgba(78,205,196,.08)1px,transparent 1px);background-size:40px 40px;position:absolute;inset:0;z-index:0;animation:gridMove 30s linear infinite}
+@keyframes gridMove{0%{background-position:0 0}100%{background-position:40px 40px}}
+.orb{position:absolute;border-radius:50%;filter:blur(80px);opacity:.25;z-index:1}
+.orb-1{width:400px;height:400px;background:var(--accent);top:10%;left:-10%}
+.orb-2{width:300px;height:300px;background:var(--pink);bottom:10%;right:-5%}
+.orb-3{width:200px;height:200px;background:var(--blue);top:50%;left:60%}
+.container{max-width:1200px;margin:0 auto;padding:0 24px;position:relative;z-index:2}
+.hero-content{text-align:center;animation:fadeUp 1s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+.badge{display:inline-flex;align-items:center;gap:8px;background:rgba(78,205,196,.15);border:1px solid rgba(78,205,196,.3);border-radius:100px;padding:6px 18px;font-size:13px;margin-bottom:32px;color:var(--primary)}
+.badge .dot{width:8px;height:8px;background:#10b981;border-radius:50%;animation:pulse 2s ease infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.3)}}
+.hero h1{font-size:clamp(48px,8vw,96px);font-weight:900;letter-spacing:-2px;line-height:1;margin-bottom:16px}
+.gradient-text{background:linear-gradient(135deg,var(--primary),var(--secondary),var(--accent),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;background-size:200% 200%;animation:gradientShift 4s ease infinite}
+@keyframes gradientShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+.hero-sub{font-size:clamp(18px,2.5vw,24px);color:var(--fg-2);max-width:600px;margin:0 auto 32px}
+.hero-meta{font-size:13px;color:var(--fg-3);margin-top:24px}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:14px 32px;border-radius:var(--radius);font-weight:600;font-size:15px;text-decoration:none;transition:all .2s;cursor:pointer;border:none}
+.btn-primary{background:var(--accent);color:#0F1117;box-shadow:0 0 40px var(--accent-glow)}
+.btn-primary:hover{background:#e6c435;transform:translateY(-2px);box-shadow:0 0 60px var(--accent-glow)}
+.btn-secondary{background:rgba(255,255,255,.08);color:var(--fg);border:1px solid rgba(255,255,255,.1)}
+.btn-secondary:hover{background:rgba(255,255,255,.12);transform:translateY(-2px)}
+.hero-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;align-items:center}
+
+/* Lang switcher */
+.lang-switcher{position:fixed;top:16px;right:16px;z-index:1000;display:flex;gap:6px;background:rgba(10,10,15,.8);backdrop-filter:blur(12px);padding:6px;border-radius:100px;border:1px solid rgba(255,255,255,.08)}
+.lang-btn{background:transparent;border:none;color:var(--fg-3);font-size:11px;cursor:pointer;padding:4px 8px;border-radius:100px;transition:all .2s;font-family:var(--mono)}
+.lang-btn:hover{color:var(--fg)}
+.lang-btn.active{background:rgba(78,205,196,.25);color:var(--primary)}
+
+/* Sections */
+.section{padding:100px 0}
+.section-dark{background:var(--bg-2)}
+.section-header{text-align:center;margin-bottom:60px}
+.section-label{font-size:13px;text-transform:uppercase;letter-spacing:2px;color:var(--accent);margin-bottom:12px;display:block}
+.section-title{font-size:clamp(28px,4vw,42px);font-weight:800;margin-bottom:12px}
+.section-desc{color:var(--fg-2);font-size:17px;max-width:600px;margin:0 auto}
+
+/* Feature grid */
+.feature-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px}
+.feature-card{background:linear-gradient(135deg,var(--bg-3)0%,var(--bg-2)100%);border:1px solid rgba(255,255,255,.06);border-radius:var(--radius-lg);padding:32px;transition:all .3s;position:relative;overflow:hidden}
+.feature-card:hover{transform:translateY(-4px);border-color:rgba(78,205,196,.4);box-shadow:0 20px 60px rgba(0,0,0,.3),0 0 40px rgba(78,205,196,.1)}
+.feature-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),transparent);opacity:0;transition:opacity .3s}
+.feature-card:hover::before{opacity:1}
+.feature-icon{font-size:32px;margin-bottom:16px}
+.feature-card h3{font-size:18px;margin-bottom:8px;color:var(--primary)}
+.feature-card p{color:var(--fg-2);font-size:14px;line-height:1.7}
+.feature-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:16px}
+.tag{background:rgba(255,255,255,.06);border-radius:6px;padding:4px 10px;font-size:12px;color:var(--fg-3);font-family:var(--mono)}
+
+/* Stats */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:20px}
+.stat-card{text-align:center;padding:32px 16px;background:var(--bg-3);border-radius:var(--radius);border:1px solid rgba(255,255,255,.06);transition:all .3s}
+.stat-card:hover{transform:translateY(-4px)}
+.stat-card.accent:hover{box-shadow:0 20px 60px rgba(0,0,0,.3),0 0 40px rgba(78,205,196,.15);border-color:rgba(78,205,196,.3)}
+.stat-card.green:hover{box-shadow:0 20px 60px rgba(0,0,0,.3),0 0 40px rgba(16,185,129,.15);border-color:rgba(16,185,129,.3)}
+.stat-card.blue:hover{box-shadow:0 20px 60px rgba(0,0,0,.3),0 0 40px rgba(59,130,246,.15);border-color:rgba(59,130,246,.3)}
+.stat-card.pink:hover{box-shadow:0 20px 60px rgba(0,0,0,.3),0 0 40px rgba(236,72,153,.15);border-color:rgba(236,72,153,.3)}
+.stat-card.amber:hover{box-shadow:0 20px 60px rgba(0,0,0,.3),0 0 40px rgba(245,158,11,.15);border-color:rgba(245,158,11,.3)}
+.stat-value{font-size:40px;font-weight:900;margin-bottom:4px;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.stat-value.accent{background:linear-gradient(135deg,var(--primary),#3b82f6)}
+.stat-value.green{background:linear-gradient(135deg,#34d399,#10b981)}
+.stat-value.blue{background:linear-gradient(135deg,#60a5fa,#3b82f6)}
+.stat-value.pink{background:linear-gradient(135deg,#f472b6,#ec4899)}
+.stat-value.amber{background:linear-gradient(135deg,#fbbf24,#f59e0b)}
+.stat-label{font-size:13px;color:var(--fg-3)}
+
+/* Sticky tables */
+.table-scroll{overflow-x:auto;margin-top:32px;border:1px solid rgba(255,255,255,.06);border-radius:var(--radius);position:relative}
+.comp-table{width:100%;border-collapse:separate;border-spacing:0;font-size:13px;min-width:900px}
+.comp-table th{background:var(--bg-3);padding:10px 12px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--fg-3);border-bottom:1px solid rgba(255,255,255,.08);position:sticky;top:0;z-index:10}
+.comp-table th:first-child,.comp-table th:nth-child(2){z-index:12}
+.comp-table td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.04);vertical-align:top}
+.comp-table tr:nth-child(even) td{background:rgba(255,255,255,.015)}
+.comp-table tr:nth-child(even) td:first-child,.comp-table tr:nth-child(even) td:nth-child(2){background:var(--bg-2)}
+.comp-table tr:hover td{background:rgba(255,255,255,.02)}
+.comp-table th:first-child,.comp-table td:first-child{position:sticky;left:0;background:var(--bg-2);z-index:11;border-right:1px solid rgba(255,255,255,.06)}
+.comp-table th:nth-child(2),.comp-table td:nth-child(2){position:sticky;left:var(--sticky-2,120px);background:var(--bg-2);z-index:11;border-right:1px solid rgba(255,255,255,.06)}
+.win{color:var(--cyan);font-weight:700}
+.partial{color:var(--amber)}
+.none{color:var(--red)}
+
+/* Phase table */
+.phase-table{width:100%;border-collapse:separate;border-spacing:0;margin-top:32px;font-size:14px}
+.phase-table th{text-align:left;padding:12px 16px;font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--fg-3);border-bottom:1px solid rgba(255,255,255,.08);background:var(--bg-3)}
+.phase-table td{padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.04)}
+.phase-table tr:hover td{background:rgba(255,255,255,.02)}
+.phase-table tr:nth-child(even) td{background:rgba(255,255,255,.015)}
+
+/* Terminal blocks */
+.term-block{background:var(--bg-4);border-radius:var(--radius);border:1px solid rgba(255,255,255,.06);overflow:hidden;margin-bottom:20px;transition:all .3s}
+.term-block:hover{border-color:rgba(78,205,196,.2);box-shadow:0 10px 40px rgba(0,0,0,.2)}
+.term-header{display:flex;align-items:center;gap:8px;padding:10px 16px;background:rgba(255,255,255,.03);border-bottom:1px solid rgba(255,255,255,.06)}
+.term-dot{width:10px;height:10px;border-radius:50%}
+.term-dot.red{background:var(--red)}
+.term-dot.yellow{background:var(--amber)}
+.term-dot.green{background:var(--green)}
+.term-title{font-size:12px;color:var(--fg-2);font-family:var(--mono)}
+.term-body{padding:16px;font-family:var(--mono);font-size:13px;line-height:1.8;color:var(--fg-2)}
+.term-body .comment{color:var(--fg-3)}
+.term-body .cmd{color:var(--primary)}
+.term-body .str{color:#34d399}
+
+/* Code block */
+.code-block{background:var(--bg-3);border-radius:var(--radius);padding:24px;overflow-x:auto;border:1px solid rgba(255,255,255,.06);position:relative}
+.copy-btn{position:absolute;top:12px;right:12px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);color:var(--fg-3);border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;transition:all .2s;font-family:var(--mono)}
+.copy-btn:hover{background:rgba(255,255,255,.15);color:var(--fg)}
+.copy-btn::after{content:'Copied!';position:absolute;top:-28px;left:50%;transform:translateX(-50%) scale(0);background:var(--bg-3);color:var(--fg);padding:4px 10px;border-radius:6px;font-size:11px;white-space:nowrap;border:1px solid rgba(255,255,255,.1);opacity:0;transition:all .2s;pointer-events:none}
+.copy-btn.show-tooltip::after{transform:translateX(-50%) scale(1);opacity:1}
+[data-theme="light"] .copy-btn::after{background:var(--bg-2);border-color:rgba(0,0,0,.08);color:var(--fg)}
+.code-block code{font-family:var(--mono);font-size:14px;line-height:1.8}
+
+/* Pricing */
+.pricing-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px}
+.pricing-card{background:var(--bg-3);border-radius:var(--radius);padding:24px;text-align:center;border:1px solid rgba(255,255,255,.06);transition:all .3s;position:relative;overflow:hidden}
+.pricing-card.recommended{box-shadow:0 0 40px rgba(16,185,129,.15);border-color:rgba(16,185,129,.3)}
+.pricing-card:hover{transform:translateY(-4px);border-color:rgba(124,58,237,.3)}
+.pricing-card.recommended{border-color:rgba(16,185,129,.3);position:relative}
+.pricing-card .rec-badge{position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--green);color:#000;padding:2px 16px;border-radius:100px;font-size:11px;font-weight:700}
+.pricing-tier{font-size:13px;text-transform:uppercase;letter-spacing:1px;color:var(--fg-3);margin-bottom:8px}
+.pricing-cost{font-size:32px;font-weight:900;margin-bottom:4px}
+
+/* Footer */
+.footer{padding:60px 0 40px;text-align:center;border-top:1px solid rgba(255,255,255,.04)}
+.footer p{color:var(--fg-3);font-size:13px}
+.footer a{color:var(--accent);text-decoration:none}
+
+/* Skip link */
+.skip-link{position:absolute;top:-40px;left:0;background:var(--primary);color:var(--bg);padding:8px 16px;font-size:13px;font-weight:600;text-decoration:none;border-radius:0 0 var(--radius) 0;z-index:1001;transition:top .2s}
+.skip-link:focus{top:0}
+
+/* Footer links hover */
+.footer-link{transition:color .2s}
+.footer-link:hover{color:var(--accent)!important}
+
+/* GitHub badge hover */
+.github-badge{transition:background .2s}
+.github-badge:hover{background:rgba(255,255,255,.1)!important}
+
+/* Navbar */
+.navbar{position:sticky;top:0;z-index:900;background:rgba(15,17,23,.85);backdrop-filter:blur(12px);border-bottom:1px solid rgba(255,255,255,.06);padding:0 24px}
+.navbar-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:56px}
+.navbar-brand{font-weight:800;font-size:18px;color:var(--fg);text-decoration:none;letter-spacing:-.5px}
+.navbar-brand span{color:var(--primary)}
+.navbar-links{display:flex;gap:24px;align-items:center}
+.navbar-links a{color:var(--fg-2);text-decoration:none;font-size:13px;transition:color .2s}
+.navbar-links a:hover{color:var(--fg)}
+@media(max-width:768px){.navbar-links{display:none}}
+
+/* Phase table extras */
+.phase-tag{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:6px;background:var(--primary);color:var(--bg);font-size:12px;font-weight:700;font-family:var(--mono)}
+.phase-mono{font-family:var(--mono);font-size:13px;color:var(--fg-2)}
+
+/* Gallery tabs */
+.gallery-tab{transition:all .2s}
+.gallery-tab.active{background:rgba(255,255,255,.06)!important;color:var(--fg)!important;border-color:rgba(255,255,255,.2)!important}
+
+/* Engine status badges */
+.engine-status{display:inline-block;padding:2px 10px;border-radius:100px;font-size:11px;font-weight:600;font-family:var(--mono);white-space:nowrap}
+.status-green{background:rgba(74,222,128,.15);color:var(--green)}
+.status-amber{background:rgba(255,217,61,.15);color:var(--amber)}
+[data-theme="light"] .status-green{background:rgba(64,192,87,.12);color:#2B8A3E}
+[data-theme="light"] .status-amber{background:rgba(252,196,25,.15);color:#E67700}
+
+/* Mascot */
+#mascot{position:fixed;bottom:20px;left:20px;z-index:999;pointer-events:none;font-family:var(--mono);font-size:11px;color:var(--tui-primary);opacity:.9;transition:opacity .3s}
+#mascot pre{margin:0;line-height:1.2;font-size:10px;letter-spacing:1px}
+#mascot-comment{margin-top:4px;font-size:10px;color:#8088a8;max-width:140px}
+
+/* Hamburger */
+.hamburger{display:none;background:none;border:none;cursor:pointer;padding:8px;z-index:901}
+.hamburger span{display:block;width:20px;height:2px;background:var(--fg);margin:4px 0;transition:all .3s;border-radius:1px}
+
+/* Responsive */
+@media(max-width:768px){
+  .hamburger{display:block}
+  .navbar-links{position:fixed;top:56px;left:0;right:0;background:rgba(15,17,23,.95);backdrop-filter:blur(12px);flex-direction:column;gap:0;padding:16px 24px;border-bottom:1px solid rgba(255,255,255,.06);transform:translateY(-100%);opacity:0;pointer-events:none;transition:all .3s;display:flex!important}
+  .navbar-links.open{transform:translateY(0);opacity:1;pointer-events:auto}
+  .navbar-links a{padding:12px 0;font-size:15px;border-bottom:1px solid rgba(255,255,255,.04)}
+  .hero h1{font-size:clamp(32px,10vw,48px)}
+  .section{padding:60px 0}
+  .feature-grid{grid-template-columns:1fr}
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+  .comp-table{min-width:600px}
+}
+
+/* Focus rings */
+:focus-visible{outline:2px solid var(--primary);outline-offset:2px;border-radius:4px}
+.lang-btn:focus-visible,.hamburger:focus-visible{border-radius:100px}
+
+/* Back to top */
+#back-to-top:hover{background:var(--bg-2);color:var(--fg);transform:translateY(-2px);border-color:rgba(255,255,255,.2)}
+
+/* Light theme */
+[data-theme="light"]{--bg:#FFFFFF;--bg-2:#F8F9FA;--bg-3:#F1F3F5;--bg-4:#F8F9FA;--fg:#212529;--fg-2:#495057;--fg-3:#868E96;--primary:#0CA678;--primary-glow:rgba(12,166,120,.2);--secondary:#FA5252;--accent:#F59F00;--accent-glow:rgba(245,159,0,.2);--green:#40C057;--blue:#339AF0;--pink:#FA5252;--amber:#FCC419;--red:#FA5252;--cyan:#0CA678;--border:#DEE2E6}
+[data-theme="light"] .hero-bg{background:radial-gradient(circle,rgba(12,166,120,.06)1px,transparent 1px)}
+[data-theme="light"] .feature-card{background:linear-gradient(135deg,#FFFFFF 0%,#F8F9FA 100%);border-color:rgba(0,0,0,.08)}
+[data-theme="light"] .feature-card:hover{border-color:rgba(12,166,120,.4);box-shadow:0 20px 60px rgba(0,0,0,.08),0 0 40px rgba(12,166,120,.08)}
+[data-theme="light"] .tag{background:rgba(0,0,0,.04);color:var(--fg-3)}
+[data-theme="light"] .stat-card{background:var(--bg-3);border-color:rgba(0,0,0,.06)}
+[data-theme="light"] .comp-table th:first-child,[data-theme="light"] .comp-table td:first-child,[data-theme="light"] .comp-table th:nth-child(2),[data-theme="light"] .comp-table td:nth-child(2){background:var(--bg-2)}
+[data-theme="light"] .term-block,[data-theme="light"] .code-block{background:var(--bg-4);border-color:rgba(0,0,0,.06)}
+[data-theme="light"] .pricing-card{background:var(--bg-3);border-color:rgba(0,0,0,.06)}
+[data-theme="light"] .navbar{background:rgba(255,255,255,.85);border-bottom-color:rgba(0,0,0,.06)}
+[data-theme="light"] .lang-switcher{background:rgba(255,255,255,.9);border-color:rgba(0,0,0,.08)}
+[data-theme="light"] .lang-btn{color:var(--fg-3)}
+[data-theme="light"] .lang-btn.active{background:rgba(12,166,120,.15);color:var(--primary)}
+[data-theme="light"] #back-to-top{background:var(--bg-3);border-color:rgba(0,0,0,.1);color:var(--fg-2)}
+[data-theme="light"] .btn-secondary{background:rgba(0,0,0,.04);color:var(--fg);border-color:rgba(0,0,0,.08)}
+[data-theme="light"] .btn-secondary:hover{background:rgba(0,0,0,.08)}
+[data-theme="light"] .gallery-tab.active{background:rgba(0,0,0,.06)!important;color:var(--fg)!important;border-color:rgba(0,0,0,.15)!important}
+[data-theme="light"] .skip-link{color:#fff}
+[data-theme="light"] .github-badge{background:rgba(0,0,0,.04)!important;border-color:rgba(0,0,0,.08)!important}
+[data-theme="light"] .github-badge:hover{background:rgba(0,0,0,.08)!important}
+
+/* Theme toggle */
+.theme-toggle{position:fixed;top:16px;right:180px;z-index:1000;width:36px;height:36px;border-radius:50%;background:rgba(10,10,15,.8);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.08);color:var(--fg-2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all .2s}
+.theme-toggle:hover{color:var(--fg);background:rgba(255,255,255,.12)}
+[data-theme="light"] .theme-toggle{background:rgba(255,255,255,.9);border-color:rgba(0,0,0,.08);color:var(--fg-3)}
+[data-theme="light"] .theme-toggle:hover{color:var(--fg);background:rgba(0,0,0,.06)}
+@media(max-width:768px){.theme-toggle{right:160px}}
+
+/* Reduced motion */
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+  .hero-bg{animation:none}
+  #mascot{opacity:0}
+}
+</style>
+</head>
+<body>
+
+<!-- Skip link -->
+<a href="#main" class="skip-link">Skip to content</a>
+
+<!-- Theme toggle -->
+<button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark/light">&#127769;</button>
+
+<!-- Language switcher -->
+<div class="lang-switcher">
+  <button class="lang-btn active" data-lang="en" title="English" aria-label="Switch to English">EN</button>
+  <button class="lang-btn" data-lang="ru" title="Русский" aria-label="Switch to Russian">RU</button>
+  <button class="lang-btn" data-lang="zh" title="中文" aria-label="Switch to Chinese">ZH</button>
+  <button class="lang-btn" data-lang="ja" title="日本語" aria-label="Switch to Japanese">JA</button>
+  <button class="lang-btn" data-lang="de" title="Deutsch" aria-label="Switch to German">DE</button>
+  <button class="lang-btn" data-lang="ar" title="العربية" aria-label="Switch to Arabic">AR</button>
+  <button class="lang-btn" data-lang="hi" title="हिन्दी" aria-label="Switch to Hindi">HI</button>
+</div>
+
+<!-- Navbar -->
+<nav class="navbar" aria-label="Main navigation">
+  <div class="navbar-inner">
+    <a href="#" class="navbar-brand">c4<span>reqber</span></a>
+    <button class="hamburger" aria-label="Toggle menu" aria-expanded="false"><span></span><span></span><span></span></button>
+    <div class="navbar-links">
+      <a href="#features">Features</a>
+      <a href="#pipeline">Pipeline</a>
+      <a href="#mcp">MCP</a>
+      <a href="#tui">TUI</a>
+      <a href="#engines">Engines</a>
+      <a href="#quickstart">Quickstart</a>
+      <a href="https://github.com/c4reqber/c4reqber" rel="noopener noreferrer" target="_blank">GitHub</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══════ MAIN ═══════ -->
+<main id="main">
+
+<!-- ═══════ HERO ═══════ -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+  <div class="hero-content">
+    <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:32px;flex-wrap:wrap">
+      <div class="badge"><span class="dot"></span> <span data-i18n="hero_badge">v5.5.0 · PRODUCTION · 0 mypy errors</span></div>
+      <a id="github-badge" class="github-badge" href="https://github.com/c4reqber/c4reqber" rel="noopener noreferrer" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:100px;padding:6px 16px;font-size:13px;color:var(--fg-2);text-decoration:none">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        <span data-i18n="github_stars">Be the first star!</span>
+      </a>
+    </div>
+    <h1><span class="gradient-text">c4reqber</span></h1>
+    <p class="hero-sub" data-i18n="hero_subtitle">The cognitive exoskeleton for <strong>humans and AI agents</strong>.<br>Think. Simulate. Prove. Discover.</p>
+    <p class="hero-meta" data-i18n="hero_tags">Z₃³ COGNITIVE EXOSKELETON · 27 STATES · 6 OPERATORS · 33+ SOURCES · 36 ENGINES · 20 MCP TOOLS</p>
+    <div class="hero-btns">
+      <a href="#quickstart" class="btn btn-primary" data-i18n="hero_cta_primary">pip install c4reqber</a>
+      <a href="https://github.com/c4reqber/c4reqber" class="btn btn-secondary" rel="noopener noreferrer" target="_blank" data-i18n="hero_cta_secondary">GitHub</a>
+    </div>
+    <p class="hero-meta" style="margin-top:16px;font-size:11px;opacity:.7" data-i18n="hero_meta">AGPL-3.0 · BYOK · Multi-Prompt Router · Terminal-First · OpenRouter · XAI · Mistral · Moonshot · DeepSeek · Liquid · NVIDIA · YandexGPT · Ollama · LM Studio · MLX</p>
+  </div>
+</section>
+
+<!-- ═══════ STATS ═══════ -->
+<section class="section section-dark">
+  <div class="container">
+    <div class="stats-grid">
+      <div class="stat-card accent"><div class="stat-value accent">27</div><div class="stat-label" data-i18n="stat_states">Cognitive States</div></div>
+      <div class="stat-card green"><div class="stat-value green">6</div><div class="stat-label" data-i18n="stat_operators">C4 Operators</div></div>
+      <div class="stat-card blue"><div class="stat-value blue">33+</div><div class="stat-label" data-i18n="stat_sources">Knowledge Sources</div></div>
+      <div class="stat-card pink"><div class="stat-value pink">36</div><div class="stat-label" data-i18n="stat_engines">Simulation Engines</div></div>
+      <div class="stat-card amber"><div class="stat-value amber">20</div><div class="stat-label" data-i18n="stat_mcp">MCP Tools</div></div>
+      <div class="stat-card accent"><div class="stat-value accent">10k+</div><div class="stat-label" data-i18n="stat_tests">Tests Passing</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ PROBLEM ═══════ -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label" data-i18n="fp_label">First Principles</span>
+      <h2 class="section-title" data-i18n="fp_title">Agents Can Talk. But Can They Think?</h2>
+      <p class="section-desc" data-i18n="fp_desc">AI agents have language. They lack cognition. c4reqber is the scientific body for the agentic mind.</p>
+    </div>
+    <div class="feature-grid">
+      <div class="feature-card"><div class="feature-icon">&#10060;</div><h3 data-i18n="fp_no_sim">No Simulation</h3><p data-i18n="fp_no_sim_desc">LLMs generate hypotheses but cannot test them. No physics engine, no statistical validation, no ground truth.</p></div>
+      <div class="feature-card"><div class="feature-icon">&#10060;</div><h3 data-i18n="fp_no_verify">No Verification</h3><p data-i18n="fp_no_verify_desc">ChatGPT "proves" theorems by generating convincing text. Formal verification requires Lean4, Coq, Dafny.</p></div>
+      <div class="feature-card"><div class="feature-icon">&#10060;</div><h3 data-i18n="fp_no_cog">No Meta-Reflection</h3><p data-i18n="fp_no_cog_desc">Agents lack meta-cognition. They cannot track their own thinking state or reconfigure strategy.</p></div>
+      <div class="feature-card"><div class="feature-icon">&#10060;</div><h3 data-i18n="fp_no_rigor">No Scientific Rigor</h3><p data-i18n="fp_no_rigor_desc">Falsifiability, real citations, reproducibility — the foundation of science. Absent from most agent frameworks.</p></div>
+    </div>
+    <p style="text-align:center;margin-top:40px;color:var(--fg-3);font-size:14px" data-i18n="fp_conclusion">c4reqber solves all four. Formal verification + 36 simulation engines + Z₃³ cognitive topology + real citations.</p>
+  </div>
+</section>
+
+<!-- ═══════ FEATURES ═══════ -->
+<section id="features" class="section section-dark">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label" data-i18n="features_label">Capabilities</span>
+      <h2 class="section-title" data-i18n="features_title">The Only AI Cognitive Exoskeleton</h2>
+      <p class="section-desc" data-i18n="features_desc">Not features. Cognitive organs. Each module is a real implementation.</p>
+    </div>
+    <div class="feature-grid">
+      <div class="feature-card"><div class="feature-icon">&#9670;</div><h3 data-i18n="feat_c4">Z₃³ Cognitive Topology</h3><p data-i18n="feat_c4_desc">27 discrete cognitive states across Time, Scale, and Agency dimensions. Every query is mapped, tracked, and navigable.</p><div class="feature-tags"><span class="tag">Z₃³</span><span class="tag">Theorem 9</span><span class="tag">Theorem 11</span></div></div>
+      <div class="feature-card"><div class="feature-icon">&#9632;</div><h3 data-i18n="feat_verify">Formal Verification Engine</h3><p data-i18n="feat_verify_desc">Lean4, Coq, Dafny, Agda, Z3, Hoare logic — your hypotheses don't just claim, they prove.</p><div class="feature-tags"><span class="tag">Lean4</span><span class="tag">Coq</span><span class="tag">Dafny</span><span class="tag">Z3</span></div></div>
+      <div class="feature-card"><div class="feature-icon">&#9733;</div><h3 data-i18n="feat_sim">36 Simulation Engines</h3><p data-i18n="feat_sim_desc">Molecular dynamics (GROMACS, OpenMM), quantum (PySCF), CFD (OpenFOAM), neuro (NEURON), and more.</p><div class="feature-tags"><span class="tag">GROMACS</span><span class="tag">OpenFOAM</span><span class="tag">PySCF</span><span class="tag">NEURON</span></div></div>
+      <div class="feature-card"><div class="feature-icon">&#9735;</div><h3 data-i18n="feat_kg">33 Knowledge Sources</h3><p data-i18n="feat_kg_desc">arXiv, PubMed, Semantic Scholar, OpenAlex, Europe PMC, Crossref, Zenodo, ClinicalTrials.gov, GBIF, NASA Earthdata, and 23 more.</p><div class="feature-tags"><span class="tag">arXiv</span><span class="tag">PubMed</span><span class="tag">DOI</span></div></div>
+      <div class="feature-card"><div class="feature-icon">&#9654;</div><h3 data-i18n="feat_pub">Automated Dissertation Generator</h3><p data-i18n="feat_pub_desc">LaTeX + BibTeX + Markdown + JSON + HTML exports. Ready for arXiv, bioRxiv, or your advisor's desk.</p><div class="feature-tags"><span class="tag">LaTeX</span><span class="tag">BibTeX</span><span class="tag">Markdown</span></div></div>
+      <div class="feature-card"><div class="feature-icon">&#9673;</div><h3 data-i18n="feat_mcp">MCP Server — 20 Tools</h3><p data-i18n="feat_mcp_desc">Expose full C4REQBER capability to AI agents. JSON Schema compliant. stdio JSON-RPC.</p><div class="feature-tags"><span class="tag">20 Tools</span><span class="tag">JSON Schema</span><span class="tag">Claude</span></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ USE CASES ═══════ -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label" data-i18n="usecases_label">Who Is It For</span>
+      <h2 class="section-title" data-i18n="usecases_title">Research Audiences</h2>
+      <p class="section-desc" data-i18n="usecases_desc">From hard science to social sciences — c4reqber adapts to your domain.</p>
+    </div>
+    <div class="feature-grid">
+      <div class="feature-card" style="border-color:rgba(59,130,246,.2)"><div class="feature-icon" style="color:#60a5fa">&#9670;</div><h3 data-i18n="uc_hard">Hard Science</h3><p data-i18n="uc_hard_desc">Physics, chemistry, biology, materials. TRIZ + 36 simulation engines + formal verification.</p><div class="feature-tags"><span class="tag">GROMACS</span><span class="tag">OpenFOAM</span><span class="tag">PySCF</span><span class="tag">Lean4</span></div></div>
+      <div class="feature-card" style="border-color:rgba(236,72,153,.2)"><div class="feature-icon" style="color:#f472b6">&#9829;</div><h3 data-i18n="uc_psych">Psychology & Social Sciences</h3><p data-i18n="uc_psych_desc">CBT meta-analysis, organizational behavior, political psychology. Causal inference + agent models.</p><div class="feature-tags"><span class="tag">RCT</span><span class="tag">SEM</span><span class="tag">Agent-based</span></div></div>
+      <div class="feature-card" style="border-color:rgba(16,185,129,.2)"><div class="feature-icon" style="color:#34d399">&#10010;</div><h3 data-i18n="uc_clinical">Clinical Research</h3><p data-i18n="uc_clinical_desc">RCT design, biomarkers, drug-drug interactions. PubMed + ClinicalTrials.gov + STRING.</p><div class="feature-tags"><span class="tag">PubMed</span><span class="tag">STRING</span><span class="tag">Trials</span></div></div>
+      <div class="feature-card" style="border-color:rgba(6,214,160,.2)"><div class="feature-icon" style="color:#06d6a0">&#127758;</div><h3 data-i18n="uc_eco">Climate & Ecology</h3><p data-i18n="uc_eco_desc">Biodiversity, climate modeling, ocean dynamics. GBIF + NASA Earthdata + WRF.</p><div class="feature-tags"><span class="tag">GBIF</span><span class="tag">NASA</span><span class="tag">WRF</span></div></div>
+      <div class="feature-card" style="border-color:rgba(245,158,11,.2)"><div class="feature-icon" style="color:#fbbf24">&#9878;</div><h3 data-i18n="uc_law">Law & Policy</h3><p data-i18n="uc_law_desc">Legal reasoning, precedent analysis, regulatory impact. Multi-jurisdiction + temporal reasoning.</p><div class="feature-tags"><span class="tag">Precedent</span><span class="tag">Regulatory</span><span class="tag">Temporal</span></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ C4-META COMPARISON ═══════ -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label" data-i18n="c4_label">Cognitive Architecture</span>
+      <h2 class="section-title" data-i18n="c4_title">C4-META vs. The Field</h2>
+      <p class="section-desc" data-i18n="c4_desc">Discrete group-theoretic cognitive space. Not neural networks. Not symbolic rules. Mathematical topology.</p>
+    </div>
+    <div class="table-scroll">
+      <table class="comp-table" style="--sticky-2:140px">
+        <thead><tr><th scope="col" data-i18n="comp_cog">Model</th><th scope="col" data-i18n="comp_formal">Formalism</th><th scope="col">C4-META</th><th scope="col">SOAR</th><th scope="col">ACT-R</th><th scope="col">GWT</th><th scope="col">IIT</th><th scope="col">PMCSF</th><th scope="col">ConSpaces</th><th scope="col">Freud</th><th scope="col">Plato</th></tr></thead>
+        <tbody>
+        <tr><th scope="row" data-i18n="c4_dim">Dimensions</th><td data-i18n="c4_dim">Dimensions</td><td class="win">3 (Z₃)</td><td class="partial">2</td><td class="partial">2</td><td class="none">1</td><td class="none">N</td><td class="none">17</td><td class="partial">3</td><td class="none">3</td><td class="none">3</td></tr>
+        <tr><th scope="row" data-i18n="c4_states2">States</th><td data-i18n="c4_states2">States</td><td class="win">27 (discrete)</td><td class="partial">Symbolic</td><td class="partial">Chunks</td><td class="none">Broadcast</td><td class="none">Φ</td><td class="none">Continuous</td><td class="partial">Regions</td><td class="none">Psychoanal.</td><td class="none">Forms</td></tr>
+        <tr><th scope="row" data-i18n="c4_repr">Representation</th><td data-i18n="c4_repr">Representation</td><td class="win">Discrete (Z₃³)</td><td class="partial">Symbolic (rules)</td><td class="partial">Symbolic (chunks)</td><td class="none">Continuous (broadcast)</td><td class="none">Continuous (Φ)</td><td class="none">Continuous (17D vectors)</td><td class="partial">Geometric (regions)</td><td class="none">Psychoanalytic</td><td class="none">Dialectical (forms)</td></tr>
+        <tr><th scope="row" data-i18n="c4_formalism">Formalism</th><td data-i18n="c4_formalism">Formalism</td><td class="win">Group theory</td><td class="partial">Production</td><td class="partial">Production</td><td class="none">Descriptive</td><td class="none">Info. theory</td><td class="none">Vectors</td><td class="partial">Geometry</td><td class="none">Clinical</td><td class="none">Philosophy</td></tr>
+        <tr><th scope="row" data-i18n="c4_verify2">Verification</th><td data-i18n="c4_verify2">Verification</td><td class="win">Lean4 + Coq</td><td class="none">No</td><td class="none">No</td><td class="none">No</td><td class="none">No</td><td class="none">No</td><td class="none">No</td><td class="none">No</td><td class="none">No</td></tr>
+        <tr><th scope="row" data-i18n="c4_nav">Navigation</th><td data-i18n="c4_nav">Navigation</td><td class="win">Theorem 9</td><td class="partial">Rules</td><td class="partial">Rules</td><td class="none">No</td><td class="none">No</td><td class="none">Gradient</td><td class="partial">Paths</td><td class="none">No</td><td class="none">No</td></tr>
+        <tr><th scope="row" data-i18n="c4_reach">Reachability</th><td data-i18n="c4_reach">Reachability</td><td class="win">Theorem 11</td><td class="none">No</td><td class="none">No</td><td class="none">No</td><td class="none">No</td><td class="none">No</td><td class="none">No</td><td class="none">No</td><td class="none">No</td></tr>
+        <tr><th scope="row" data-i18n="c4_cross">Cross-Domain</th><td data-i18n="c4_cross">Cross-Domain</td><td class="win">Universal</td><td class="partial">AI only</td><td class="partial">Cognitive</td><td class="none">Conscious.</td><td class="none">Conscious.</td><td class="none">NLP only</td><td class="partial">Spatial</td><td class="none">No</td><td class="none">No</td></tr>
+        <tr><th scope="row" data-i18n="c4_os2">Open Source</th><td data-i18n="c4_os2">Open Source</td><td class="win">AGPL-3.0</td><td class="partial">BSD</td><td class="partial">BSD</td><td class="none">No</td><td class="none">No</td><td class="none">No</td><td class="partial">MIT</td><td class="none">No</td><td class="none">No</td></tr>
+        <tr><th scope="row" data-i18n="c4_peer">Peer-Reviewed</th><td data-i18n="c4_peer">Peer-Reviewed</td><td class="win">arXiv (soon)</td><td class="partial">Yes</td><td class="partial">Yes</td><td class="partial">Yes</td><td class="partial">Yes</td><td class="partial">Yes</td><td class="partial">Yes</td><td class="none">No</td><td class="none">No</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ COMPETITOR COMPARISON ═══════ -->
+<section class="section section-dark">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label" data-i18n="comp_label">Competitive Analysis</span>
+      <h2 class="section-title" data-i18n="comp_title">c4reqber vs. The Market</h2>
+      <p class="section-desc" data-i18n="comp_desc">Not an LLM wrapper. A cognitive operating system.</p>
+    </div>
+    <div class="table-scroll">
+      <table class="comp-table" style="--sticky-2:140px">
+        <thead><tr><th scope="col" data-i18n="comp_term">Product</th><th scope="col" data-i18n="comp_cog">Cognition</th><th scope="col">ChatGPT</th><th scope="col">Claude</th><th scope="col">Perplexity</th><th scope="col">Elicit</th><th scope="col">Consensus</th><th scope="col">scite</th><th scope="col">Semantic</th><th scope="col">ResearchRabbit</th><th scope="col">ConnectedPapers</th><th scope="col">Galactica</th><th scope="col">Minerva</th><th scope="col">AlphaProof</th><th scope="col">AlphaGeometry</th><th scope="col">FunSearch</th><th scope="col">c4reqber</th></tr></thead>
+        <tbody>
+        <tr><th scope="row" data-i18n="comp_lit">Lit. Review</th><td data-i18n="comp_lit">Lit. Review</td><td class="partial">&#9679;</td><td class="partial">&#9679;</td><td class="win">&#9679;</td><td class="win">&#9679;</td><td class="win">&#9679;</td><td class="win">&#9679;</td><td class="partial">&#9679;</td><td class="partial">&#9679;</td><td class="partial">&#9679;</td><td class="partial">&#9679;</td><td class="none">&#9675;</td><td class="none">&#9675;</td><td class="none">&#9675;</td><td class="win">&#9679;</td></tr>
+        <tr><th scope="row" data-i18n="comp_hypo">Hypothesis</th><td data-i18n="comp_hypo">Hypothesis</td><td class="partial">&#9679;</td><td class="partial">&#9679;</td><td class="none">&#9675;</td><td class="partial">&#9679;</td><td class="none">&#9675;</td><td class="none">&#9675;</td><td class="none">&#9675;</td><td class="none">&#9675;</td><td class="none">&#9675;</td><td class="partial">&#9679;</td><td class="none">&#9675;</td><td class="none">&#9675;</td><td class="win">&#9679;</td><td class="win">&#9679;</td></tr>
+        <tr><th scope="row" data-i18n="comp_sim">Simulation</th><td data-i18n="comp_sim">Simulation</td><td class="none">&#9675;</td><td class="none">&#9675;</td><td class="none">&#9675;</td><td class="none">&#9675;</td><td class="none">&#9675;</td><td class="none">&#9675;</td><td class="none">&#9675;</td><td class="none">&#9675;</td><td class="none">&#9675;</td><td class="none">&#9675;</td><td class="none">&#9675;</td><td class="none">&#9675;</td><td class="none">&#9675;</td><td class="win">&#9679;</td></tr>
+        <tr><th scope="row" data-i18n="comp_formal">Formal Verify</th><td data-i18n="comp_formal">Formal Verify</td><td class="none">&#9675;</td><td class="none">&#9675;</td><td class="none">&#9675;</td><td class="none">&#9675;</td><td class="none">&#9675;</td><td class="none">&#9675;</td><td class="none">&#9675;</td><td class="none">&#9675;</td><td class="none">&#9675;</td><td class="none">&#9675;</td><td class="win">&#9679;</td><td class="win">&#9679;</td><td class="none">&#9675;</td><td class="win">&#9679;</td></tr>
+        <tr><th scope="row" data-i18n="comp_multi">Multi-Domain</th><td data-i18n="comp_multi">Multi-Domain</td><td class="partial">&#9679;</td><td class="partial">&#9679;</td><td class="partial">&#9679;</td><td class="none">&#9675;</td><td class="none">&#9675;</td><td class="none">&#9675;</td><td class="none">&#9675;</td><td class="none">&#9675;</td><td class="none">&#9675;</td><td class="partial">&#9679;</td><td class="none">&#9675;</td><td class="none">&#9675;</td><td class="none">&#9675;</td><td class="win">&#9679;</td></tr>
+        <tr><th scope="row" data-i18n="comp_out">Auto Publish</th><td data-i18n="comp_out">Auto Publish</td><td class="none">&#9675;</td><td class="none">&#9675;</td><td class="none">&#9675;</td><td class="none">&#9675;</td><td class="none">&#9675;</td><td class="none">&#9675;</td><td class="none">&#9675;</td><td class="none">&#9675;</td><td class="none">&#9675;</td><td class="none">&#9675;</td><td class="none">&#9675;</td><td class="none">&#9675;</td><td class="none">&#9675;</td><td class="win">&#9679;</td></tr>
+        <tr><th scope="row" data-i18n="comp_wasm">WASM Runtime</th><td data-i18n="comp_wasm">WASM Runtime</td><td class="none">&#9675;</td><td class="none">&#9675;</td><td class="none">&#9675;</td><td class="none">&#9675;</td><td class="none">&#9675;</td><td class="none">&#9675;</td><td class="none">&#9675;</td><td class="none">&#9675;</td><td class="none">&#9675;</td><td class="none">&#9675;</td><td class="none">&#9675;</td><td class="none">&#9675;</td><td class="none">&#9675;</td><td class="win">&#9679;</td></tr>
+        <tr><th scope="row" data-i18n="comp_mcp">MCP Server</th><td data-i18n="comp_mcp">MCP Server</td><td class="none">&#9675;</td><td class="none">&#9675;</td><td class="none">&#9675;</td><td class="none">&#9675;</td><td class="none">&#9675;</td><td class="none">&#9675;</td><td class="none">&#9675;</td><td class="none">&#9675;</td><td class="none">&#9675;</td><td class="none">&#9675;</td><td class="none">&#9675;</td><td class="none">&#9675;</td><td class="none">&#9675;</td><td class="win">&#9679;</td></tr>
+        <tr><th scope="row" data-i18n="comp_os">Open Source</th><td data-i18n="comp_os">Open Source</td><td class="none">&#10005;</td><td class="none">&#10005;</td><td class="none">&#10005;</td><td class="none">&#10005;</td><td class="none">&#10005;</td><td class="none">&#10005;</td><td class="none">&#10005;</td><td class="none">&#10005;</td><td class="none">&#10005;</td><td class="none">&#10005;</td><td class="none">&#10005;</td><td class="none">&#10005;</td><td class="none">&#10005;</td><td class="win">AGPL-3.0</td></tr>
+        <tr><th scope="row" data-i18n="comp_price">Price</th><td data-i18n="comp_price">Price</td><td class="none">$20/m</td><td class="none">$20/m</td><td class="none">$20/m</td><td class="none">$0</td><td class="none">$0</td><td class="none">$0</td><td class="none">$0</td><td class="none">$0</td><td class="none">$0</td><td class="none">Dead</td><td class="none">Internal</td><td class="none">Internal</td><td class="none">Internal</td><td class="win">~$0.35/run</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="text-align:center;margin-top:16px;font-size:12px;color:var(--fg-3)" data-i18n="comp_legend">&#9679; Yes · &#9675; No · ◐ Partial</p>
+  </div>
+</section>
+
+<!-- ═══════ PIPELINE ═══════ -->
+<section id="pipeline" class="section">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label" data-i18n="pt_label">Architecture</span>
+      <h2 class="section-title" data-i18n="pt_title">Pipeline Phases — Model per Stage</h2>
+      <p class="section-desc" data-i18n="pt_desc">7 phases. Each gets its own LLM model, plugins, and cognitive strategy.</p>
+    </div>
+    <div style="overflow-x:auto"><table class="phase-table">
+      <thead><tr><th scope="col" data-i18n="pt_phase">Phase</th><th scope="col" data-i18n="pt_stage">Stage</th><th scope="col" data-i18n="pt_model">Model</th><th scope="col" data-i18n="pt_engines">Plugins</th></tr></thead>
+      <tbody>
+      <tr><th scope="row"><span class="phase-tag">A</span></th><td data-i18n="pt_a">C4 Cognitive Framing</td><td class="phase-mono">claude-sonnet-4.6</td><td class="phase-mono">info_theory, dim_reduction</td></tr>
+      <tr><th scope="row"><span class="phase-tag">B</span></th><td data-i18n="pt_b">Knowledge Search</td><td class="phase-mono">qwen-2.5-72b</td><td class="phase-mono">text_distance, graph_metrics</td></tr>
+      <tr><th scope="row"><span class="phase-tag">C</span></th><td data-i18n="pt_c">Gap Analysis</td><td class="phase-mono">qwen-2.5-72b</td><td class="phase-mono">timeseries, text_distance</td></tr>
+      <tr><th scope="row"><span class="phase-tag">D</span></th><td data-i18n="pt_d">Hypothesis Generation</td><td class="phase-mono">claude-sonnet-4.6</td><td class="phase-mono">SWOT, Delphi, Red Team</td></tr>
+      <tr><th scope="row"><span class="phase-tag">E</span></th><td data-i18n="pt_e">Simulation & Verification</td><td class="phase-mono">(compute plugins)</td><td class="phase-mono">Monte Carlo, DFT, PCA, Nelder-Mead</td></tr>
+      <tr><th scope="row"><span class="phase-tag">F</span></th><td data-i18n="pt_f">Dissertation</td><td class="phase-mono">claude-sonnet-4.6</td><td class="phase-mono">hash_fingerprint</td></tr>
+      <tr><th scope="row"><span class="phase-tag">G</span></th><td data-i18n="pt_g">Quality Control</td><td class="phase-mono">gpt-4o-mini</td><td class="phase-mono">stat_tests, dist_analyzer</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+</section>
+
+<!-- ═══════ DATA FLOW ═══════ -->
+<section id="dataflow" class="section section-dark">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label">Data Flow</span>
+      <h2 class="section-title">From Question to Discovery</h2>
+      <p class="section-desc">7 stages. Each transforms, validates, and enriches. No black boxes.</p>
+    </div>
+    <div class="flow-section" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:16px;margin-top:32px">
+      <div class="flow-step" style="text-align:center;padding:24px 16px;background:var(--bg-3);border-radius:var(--radius);border:1px solid rgba(255,255,255,.06);position:relative">
+        <div style="font-size:28px;margin-bottom:8px">&#128274;</div>
+        <h4 style="font-size:14px;margin-bottom:4px">Sanitize</h4>
+        <p style="font-size:12px;color:var(--fg-3)">Strip HTML, normalize unicode, block injection</p>
+      </div>
+      <div class="flow-step" style="text-align:center;padding:24px 16px;background:var(--bg-3);border-radius:var(--radius);border:1px solid rgba(255,255,255,.06);position:relative">
+        <div style="font-size:28px;margin-bottom:8px">&#9670;</div>
+        <h4 style="font-size:14px;margin-bottom:4px">C4 Space</h4>
+        <p style="font-size:12px;color:var(--fg-3)">Fingerprint into Z₃³ cognitive coordinate</p>
+      </div>
+      <div class="flow-step" style="text-align:center;padding:24px 16px;background:var(--bg-3);border-radius:var(--radius);border:1px solid rgba(255,255,255,.06);position:relative">
+        <div style="font-size:28px;margin-bottom:8px">&#128214;</div>
+        <h4 style="font-size:14px;margin-bottom:4px">Knowledge</h4>
+        <p style="font-size:12px;color:var(--fg-3)">33 sources + QZRF/CDI analysis</p>
+      </div>
+      <div class="flow-step" style="text-align:center;padding:24px 16px;background:var(--bg-3);border-radius:var(--radius);border:1px solid rgba(255,255,255,.06);position:relative">
+        <div style="font-size:28px;margin-bottom:8px">&#128161;</div>
+        <h4 style="font-size:14px;margin-bottom:4px">Hypothesis</h4>
+        <p style="font-size:12px;color:var(--fg-3)">Multi-agent debate + TRIZ templates</p>
+      </div>
+      <div class="flow-step" style="text-align:center;padding:24px 16px;background:var(--bg-3);border-radius:var(--radius);border:1px solid rgba(255,255,255,.06);position:relative">
+        <div style="font-size:28px;margin-bottom:8px">&#9881;</div>
+        <h4 style="font-size:14px;margin-bottom:4px">Sim + Verify</h4>
+        <p style="font-size:12px;color:var(--fg-3)">36 engines + Lean4/Coq/Dafny</p>
+      </div>
+      <div class="flow-step" style="text-align:center;padding:24px 16px;background:var(--bg-3);border-radius:var(--radius);border:1px solid rgba(255,255,255,.06);position:relative">
+        <div style="font-size:28px;margin-bottom:8px">&#9989;</div>
+        <h4 style="font-size:14px;margin-bottom:4px">Quality Gates</h4>
+        <p style="font-size:12px;color:var(--fg-3)">8-gate scoring + self-critique</p>
+      </div>
+      <div class="flow-step" style="text-align:center;padding:24px 16px;background:var(--bg-3);border-radius:var(--radius);border:1px solid rgba(255,255,255,.06);position:relative">
+        <div style="font-size:28px;margin-bottom:8px">&#128221;</div>
+        <h4 style="font-size:14px;margin-bottom:4px">Output</h4>
+        <p style="font-size:12px;color:var(--fg-3)">Dissertation, article, code, report</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ OUTPUT GALLERY ═══════ -->
+<section id="gallery" class="section">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label">What You Get</span>
+      <h2 class="section-title">Output Examples Gallery</h2>
+      <p class="section-desc">6 export formats. Auto-detected by keywords.</p>
+    </div>
+    <div class="gallery-tabs" role="tablist" style="display:flex;gap:8px;justify-content:center;margin-bottom:24px;flex-wrap:wrap">
+      <button id="tab-dissertation" class="gallery-tab active" role="tab" aria-selected="true" aria-controls="panel-dissertation" style="padding:8px 16px;border-radius:100px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.06);color:var(--fg);cursor:pointer;font-size:13px">Dissertation</button>
+      <button id="tab-article" class="gallery-tab" role="tab" aria-selected="false" aria-controls="panel-article" style="padding:8px 16px;border-radius:100px;border:1px solid rgba(255,255,255,.1);background:transparent;color:var(--fg-3);cursor:pointer;font-size:13px">Article</button>
+      <button id="tab-blueprint" class="gallery-tab" role="tab" aria-selected="false" aria-controls="panel-blueprint" style="padding:8px 16px;border-radius:100px;border:1px solid rgba(255,255,255,.1);background:transparent;color:var(--fg-3);cursor:pointer;font-size:13px">Blueprint</button>
+      <button id="tab-code" class="gallery-tab" role="tab" aria-selected="false" aria-controls="panel-code" style="padding:8px 16px;border-radius:100px;border:1px solid rgba(255,255,255,.1);background:transparent;color:var(--fg-3);cursor:pointer;font-size:13px">Code</button>
+      <button id="tab-verify" class="gallery-tab" role="tab" aria-selected="false" aria-controls="panel-verify" style="padding:8px 16px;border-radius:100px;border:1px solid rgba(255,255,255,.1);background:transparent;color:var(--fg-3);cursor:pointer;font-size:13px">Verification</button>
+      <button id="tab-whitepaper" class="gallery-tab" role="tab" aria-selected="false" aria-controls="panel-whitepaper" style="padding:8px 16px;border-radius:100px;border:1px solid rgba(255,255,255,.1);background:transparent;color:var(--fg-3);cursor:pointer;font-size:13px">Whitepaper</button>
+    </div>
+    <div id="panel-dissertation" class="gallery-panel active" role="tabpanel" aria-labelledby="tab-dissertation" style="background:var(--bg-3);border-radius:var(--radius);padding:24px;font-family:var(--mono);font-size:13px;line-height:1.8;border:1px solid rgba(255,255,255,.06)">
+      <div style="color:var(--fg-3)">\documentclass[11pt,a4paper]{article}</div>
+      <div style="color:var(--fg-3)">\title{Quantum Biology in Photosynthesis}</div>
+      <div style="color:var(--fg-3)">\author{c4reqber v5.5.0}</div>
+      <div style="color:var(--primary)">\section{Abstract}</div>
+      <div>We propose a novel mechanism for quantum coherence...</div>
+      <div style="color:var(--primary)">\section{Methods}</div>
+      <div>TD-DFT calculations performed with PySCF...</div>
+    </div>
+    <div id="panel-article" class="gallery-panel" role="tabpanel" aria-labelledby="tab-article" style="display:none;background:var(--bg-3);border-radius:var(--radius);padding:24px;font-family:var(--mono);font-size:13px;line-height:1.8;border:1px solid rgba(255,255,255,.06)">
+      <div style="color:var(--primary)"># Quantum Biology in Photosynthesis</div>
+      <div style="color:var(--fg-3)">## Abstract</div>
+      <div>We propose a novel mechanism...</div>
+      <div style="color:var(--fg-3)">## References</div>
+      <div>[1] Engel et al. (2007) Nature 446, 782</div>
+    </div>
+    <div id="panel-blueprint" class="gallery-panel" role="tabpanel" aria-labelledby="tab-blueprint" style="display:none;background:var(--bg-3);border-radius:var(--radius);padding:24px;font-family:var(--mono);font-size:13px;line-height:1.8;border:1px solid rgba(255,255,255,.06)">
+      <div style="color:var(--primary)">GET /api/v8/discover</div>
+      <div style="color:var(--fg-3)"># Returns: C4Result</div>
+      <div>{</div>
+      <div>  "state": "F⟨Present,Abstract,Other⟩",</div>
+      <div>  "hypothesis": "...",</div>
+      <div>  "verification": "LEAN4_PASS"</div>
+      <div>}</div>
+    </div>
+    <div id="panel-code" class="gallery-panel" role="tabpanel" aria-labelledby="tab-code" style="display:none;background:var(--bg-3);border-radius:var(--radius);padding:24px;font-family:var(--mono);font-size:13px;line-height:1.8;border:1px solid rgba(255,255,255,.06)">
+      <div style="color:var(--tui-primary)">def</div> <div style="display:inline;color:var(--primary)">run_discovery</div>(query: str) -> C4Result:</div>
+      <div>    <div style="color:var(--fg-3)">"""Run 12-stage discovery pipeline."""</div></div>
+      <div>    state = c4.fingerprint(query)</div>
+      <div>    gaps = knowledge.search(query, sources=33)</div>
+      <div>    <div style="color:var(--tui-primary)">return</div> pipeline.run(state, gaps)</div>
+    </div>
+    <div id="panel-verify" class="gallery-panel" role="tabpanel" aria-labelledby="tab-verify" style="display:none;background:var(--bg-3);border-radius:var(--radius);padding:24px;font-family:var(--mono);font-size:13px;line-height:1.8;border:1px solid rgba(255,255,255,.06)">
+      <div style="color:var(--primary)">theorem coherence_time :</div>
+      <div>  forall (t : R), t > 0 -></div>
+      <div>  decoherence_rate t < 1e-12 :=</div>
+      <div style="color:var(--fg-3)">-- Proof: Z3 SMT + Hoare logic</div>
+      <div>  sorry  -- TODO: complete proof</div>
+    </div>
+    <div id="panel-whitepaper" class="gallery-panel" role="tabpanel" aria-labelledby="tab-whitepaper" style="display:none;background:var(--bg-3);border-radius:var(--radius);padding:24px;font-family:var(--mono);font-size:13px;line-height:1.8;border:1px solid rgba(255,255,255,.06)">
+      <div style="color:var(--primary)">C4REQBER Architecture v5.5</div>
+      <div style="color:var(--fg-3)">1. C4 State Space (Z₃³)</div>
+      <div style="color:var(--fg-3)">2. QZRF Operators (14)</div>
+      <div style="color:var(--fg-3)">3. Knowledge Orchestrator (33 sources)</div>
+      <div style="color:var(--fg-3)">4. Verification Layer (6 backends)</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ PARADIGM SHIFT ═══════ -->
+<section id="paradigm" class="section section-dark">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label">Proof of Work</span>
+      <h2 class="section-title">Paradigm Shifts Detected</h2>
+      <p class="section-desc">Real results. Real citations. Real verification.</p>
+    </div>
+    <div class="feature-grid" style="grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px">
+      <div class="result-card feature-card" style="border-left:3px solid var(--green)">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+          <span style="background:rgba(74,222,128,.15);color:var(--green);padding:4px 12px;border-radius:100px;font-size:12px;font-weight:600">ALREADY_SHIFTED</span>
+          <span style="font-size:12px;color:var(--fg-3)">100% confidence</span>
+        </div>
+        <h3>Sleep as Active Maintenance</h3>
+        <p style="color:var(--fg-2);font-size:14px;line-height:1.7;margin-bottom:12px">Detected that the hypothesis "sleep is active maintenance" has already been shifted by existing research. Consensus meter: 93.3%.</p>
+        <div style="font-family:var(--mono);font-size:12px;color:var(--fg-3);background:var(--bg-4);padding:12px;border-radius:6px">
+          Lean4: proof_skeleton.generated<br>
+          Sources: 10 verified citations<br>
+          Verdict: ALREADY_SHIFTED
+        </div>
+      </div>
+      <div class="result-card feature-card" style="border-left:3px solid var(--accent)">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+          <span style="background:rgba(255,217,61,.15);color:var(--accent);padding:4px 12px;border-radius:100px;font-size:12px;font-weight:600">SHIFTED</span>
+          <span style="font-size:12px;color:var(--fg-3)">66.67% confidence</span>
+        </div>
+        <h3>Language Horizontal Gene Transfer</h3>
+        <p style="color:var(--fg-2);font-size:14px;line-height:1.7;margin-bottom:12px">Full article (4,985 chars). 10 sources. Bayesian AUC: 0.32. Uncertainty: 0.34. Passed ALL gates.</p>
+        <div style="font-family:var(--mono);font-size:12px;color:var(--fg-3);background:var(--bg-4);padding:12px;border-radius:6px">
+          Article: LANG_EVOLUTION_DISSERTATION.md<br>
+          Sources: 10 · Bayesian AUC: 0.32<br>
+          Verdict: SHIFTED
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ MULTI-AGENT DEBATE ═══════ -->
+<section id="debate" class="section">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label">4 Minds, 1 Discovery</span>
+      <h2 class="section-title">Multi-Agent Debate</h2>
+      <p class="section-desc">Analyst, Scientist, Critic, Synthesizer. Each with a distinct cognitive role.</p>
+    </div>
+    <div class="debate-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px">
+      <div class="feature-card" style="border-top:3px solid #60a5fa">
+        <div style="font-size:32px;margin-bottom:12px">&#128300;</div>
+        <h3 style="color:#60a5fa">Analyst</h3>
+        <p style="color:var(--fg-2);font-size:14px;line-height:1.7">Breaks problem into entities, maps dependencies, ranks by centrality. SystemAnalyzer extracts the structure.</p>
+      </div>
+      <div class="feature-card" style="border-top:3px solid var(--primary)">
+        <div style="font-size:32px;margin-bottom:12px">&#128161;</div>
+        <h3 style="color:var(--primary)">Scientist</h3>
+        <p style="color:var(--fg-2);font-size:14px;line-height:1.7">Generates hypotheses via TRIZ, C4 navigation, literature gaps. Explores the unknown systematically.</p>
+      </div>
+      <div class="feature-card" style="border-top:3px solid var(--secondary)">
+        <div style="font-size:32px;margin-bottom:12px">&#128221;</div>
+        <h3 style="color:var(--secondary)">Critic</h3>
+        <p style="color:var(--fg-2);font-size:14px;line-height:1.7">Nature reviewer persona. Falsification engine. Platt's Strong Inference. Finds the holes before publication.</p>
+      </div>
+      <div class="feature-card" style="border-top:3px solid var(--accent)">
+        <div style="font-size:32px;margin-bottom:12px">&#9851;</div>
+        <h3 style="color:var(--accent)">Synthesizer</h3>
+        <p style="color:var(--fg-2);font-size:14px;line-height:1.7">Resolves contradictions (CDI), builds consensus, writes dissertation. Consensus meter: 93.3% typical.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ MCP SERVER ═══════ -->
+<section id="mcp" class="section section-dark">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label">Built for AI Agents</span>
+      <h2 class="section-title">MCP Native — 20 Tools</h2>
+      <p class="section-desc">JSON Schema compliant. stdio JSON-RPC. Claude, Cursor, Cline, Continue.dev.</p>
+    </div>
+    <div class="mcp-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:24px">
+      <div class="feature-card" style="padding:20px"><h4 style="font-size:14px;margin-bottom:4px">c4_solve</h4><p style="font-size:12px;color:var(--fg-3)">12-stage discovery pipeline</p></div>
+      <div class="feature-card" style="padding:20px"><h4 style="font-size:14px;margin-bottom:4px">c4_search</h4><p style="font-size:12px;color:var(--fg-3)">33+ knowledge sources</p></div>
+      <div class="feature-card" style="padding:20px"><h4 style="font-size:14px;margin-bottom:4px">c4_triz</h4><p style="font-size:12px;color:var(--fg-3)">Contradiction resolution</p></div>
+      <div class="feature-card" style="padding:20px"><h4 style="font-size:14px;margin-bottom:4px">c4_fingerprint</h4><p style="font-size:12px;color:var(--fg-3)">Z₃³ state classification</p></div>
+      <div class="feature-card" style="padding:20px"><h4 style="font-size:14px;margin-bottom:4px">c4_verify</h4><p style="font-size:12px;color:var(--fg-3)">Lean4/Coq/Dafny check</p></div>
+      <div class="feature-card" style="padding:20px"><h4 style="font-size:14px;margin-bottom:4px">c4_prove</h4><p style="font-size:12px;color:var(--fg-3)">LLM-based proof gen</p></div>
+      <div class="feature-card" style="padding:20px"><h4 style="font-size:14px;margin-bottom:4px">c4_transfer</h4><p style="font-size:12px;color:var(--fg-3)">Cross-domain isomorphism</p></div>
+      <div class="feature-card" style="padding:20px"><h4 style="font-size:14px;margin-bottom:4px">c4_simulate</h4><p style="font-size:12px;color:var(--fg-3)">36 engine adapters</p></div>
+      <div class="feature-card" style="padding:20px"><h4 style="font-size:14px;margin-bottom:4px">c4_bayesian</h4><p style="font-size:12px;color:var(--fg-3)">MCMC / BMA inference</p></div>
+      <div class="feature-card" style="padding:20px"><h4 style="font-size:14px;margin-bottom:4px">c4_causal</h4><p style="font-size:12px;color:var(--fg-3)">Do-calculus discovery</p></div>
+      <div class="feature-card" style="padding:20px"><h4 style="font-size:14px;margin-bottom:4px">c4_export</h4><p style="font-size:12px;color:var(--fg-3)">MD/JSON/BibTeX/LaTeX</p></div>
+      <div class="feature-card" style="padding:20px"><h4 style="font-size:14px;margin-bottom:4px">c4_social</h4><p style="font-size:12px;color:var(--fg-3)">Multi-platform publish</p></div>
+      <div class="feature-card" style="padding:20px"><h4 style="font-size:14px;margin-bottom:4px">c4_chain</h4><p style="font-size:12px;color:var(--fg-3)">C4 discovery chain</p></div>
+      <div class="feature-card" style="padding:20px"><h4 style="font-size:14px;margin-bottom:4px">c4_meta</h4><p style="font-size:12px;color:var(--fg-3)">Meta-cognitive reflection</p></div>
+      <div class="feature-card" style="padding:20px"><h4 style="font-size:14px;margin-bottom:4px">blast_solve</h4><p style="font-size:12px;color:var(--fg-3)">UniversalSolvePipeline</p></div>
+      <div class="feature-card" style="padding:20px"><h4 style="font-size:14px;margin-bottom:4px">blast_turbo</h4><p style="font-size:12px;color:var(--fg-3)">Paradigm dissertations</p></div>
+      <div class="feature-card" style="padding:20px"><h4 style="font-size:14px;margin-bottom:4px">blast_flash</h4><p style="font-size:12px;color:var(--fg-3)">Quick LLM + USP analysis</p></div>
+      <div class="feature-card" style="padding:20px"><h4 style="font-size:14px;margin-bottom:4px">blast_turbofactory</h4><p style="font-size:12px;color:var(--fg-3)">Parallel pipeline factory</p></div>
+      <div class="feature-card" style="padding:20px"><h4 style="font-size:14px;margin-bottom:4px">c4_autoresearch</h4><p style="font-size:12px;color:var(--fg-3)">Karpathy-style ML loop</p></div>
+      <div class="feature-card" style="padding:20px"><h4 style="font-size:14px;margin-bottom:4px">blast_auto</h4><p style="font-size:12px;color:var(--fg-3)">Auto-router dispatch</p></div>
+    </div>
+    <div class="code-block" style="max-width:600px;margin:0 auto">
+      <button class="copy-btn" data-copy-btn>copy</button>
+      <code><span class="comment"># Start MCP server</span>
+<span class="cmd">blast serve --mcp</span>
+
+<span class="comment"># Tool schema (auto-synced)</span>
+{"name": "c4_solve", "inputSchema": {...}, "outputSchema": {...}}</code>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ TUI TERMINAL ═══════ -->
+<section id="tui" class="section">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label">The Terminal is the Interface</span>
+      <h2 class="section-title">TUI v8 Experience</h2>
+      <p class="section-desc">ASCII cube. Gradient bars. Spark particles. Night mode. The terminal is not a fallback — it is the primary interface.</p>
+    </div>
+    <div class="tui-window" style="max-width:700px;margin:0 auto;background:var(--bg-4);border-radius:var(--radius);border:1px solid rgba(255,255,255,.06);overflow:hidden">
+      <div class="term-header"><span class="term-dot red"></span><span class="term-dot yellow"></span><span class="term-dot green"></span><span class="term-title">c4reqber — TUI v8</span></div>
+      <div class="term-body" style="font-family:var(--mono);font-size:13px;line-height:1.8;color:var(--fg-2);padding:20px">
+        <div style="color:var(--tui-primary)">c4reqber ❯ blast solve "quantum biology in photosynthesis"</div>
+        <div style="color:var(--fg-3)">[C4] State: F⟨Present, Abstract, Other⟩ (T=0, S=0, A=0)</div>
+        <div style="color:var(--fg-3)">[TRIZ] Segmentation · Extraction · Local Quality</div>
+        <div style="color:var(--fg-3)">[UCOS] 4-layer analysis complete</div>
+        <div style="color:var(--fg-3)">[GAP] 12 gaps mined from 124 papers</div>
+        <div style="color:var(--tui-secondary)">[VERIFY] Lean4 proof skeleton generated</div>
+        <div style="color:var(--green)">[DONE] Dissertation exported to LaTeX + BibTeX</div>
+        <div style="margin-top:12px;color:var(--tui-primary);animation:blink 1s step-end infinite">_</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:12px;justify-content:center;margin-top:24px;flex-wrap:wrap">
+      <span class="tag" style="font-size:12px">Tab: Switch mode</span>
+      <span class="tag" style="font-size:12px">A: Alert panel</span>
+      <span class="tag" style="font-size:12px">B: Budget gauge</span>
+      <span class="tag" style="font-size:12px">D: Depth ladder</span>
+      <span class="tag" style="font-size:12px">T: Article canvas</span>
+      <span class="tag" style="font-size:12px">R: Proof graph</span>
+      <span class="tag" style="font-size:12px">V: Cube nav</span>
+      <span class="tag" style="font-size:12px">F: Live feed</span>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ SOCIAL PUBLISHING ═══════ -->
+<section id="social" class="section section-dark">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label">Publish Everywhere</span>
+      <h2 class="section-title">Social Publishing — 9 Platforms</h2>
+      <p class="section-desc">Dissertation → LaTeX + BibTeX → Auto-upload → ORCID → Social blast.</p>
+    </div>
+    <div class="platform-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:16px;max-width:800px;margin:0 auto">
+      <div style="text-align:center;padding:20px 12px;background:var(--bg-3);border-radius:var(--radius);border:1px solid rgba(255,255,255,.06)"><div style="font-size:24px;margin-bottom:8px">&#128240;</div><div style="font-size:13px">arXiv</div></div>
+      <div style="text-align:center;padding:20px 12px;background:var(--bg-3);border-radius:var(--radius);border:1px solid rgba(255,255,255,.06)"><div style="font-size:24px;margin-bottom:8px">&#128221;</div><div style="font-size:13px">bioRxiv</div></div>
+      <div style="text-align:center;padding:20px 12px;background:var(--bg-3);border-radius:var(--radius);border:1px solid rgba(255,255,255,.06)"><div style="font-size:24px;margin-bottom:8px">&#128190;</div><div style="font-size:13px">Zenodo</div></div>
+      <div style="text-align:center;padding:20px 12px;background:var(--bg-3);border-radius:var(--radius);border:1px solid rgba(255,255,255,.06)"><div style="font-size:24px;margin-bottom:8px">&#128172;</div><div style="font-size:13px">Reddit</div></div>
+      <div style="text-align:center;padding:20px 12px;background:var(--bg-3);border-radius:var(--radius);border:1px solid rgba(255,255,255,.06)"><div style="font-size:24px;margin-bottom:8px">&#128226;</div><div style="font-size:13px">Discord</div></div>
+      <div style="text-align:center;padding:20px 12px;background:var(--bg-3);border-radius:var(--radius);border:1px solid rgba(255,255,255,.06)"><div style="font-size:24px;margin-bottom:8px">&#128172;</div><div style="font-size:13px">Slack</div></div>
+      <div style="text-align:center;padding:20px 12px;background:var(--bg-3);border-radius:var(--radius);border:1px solid rgba(255,255,255,.06)"><div style="font-size:24px;margin-bottom:8px">&#9993;</div><div style="font-size:13px">Telegram</div></div>
+      <div style="text-align:center;padding:20px 12px;background:var(--bg-3);border-radius:var(--radius);border:1px solid rgba(255,255,255,.06)"><div style="font-size:24px;margin-bottom:8px">&#128038;</div><div style="font-size:13px">Twitter/X</div></div>
+      <div style="text-align:center;padding:20px 12px;background:var(--bg-3);border-radius:var(--radius);border:1px solid rgba(255,255,255,.06)"><div style="font-size:24px;margin-bottom:8px">&#127756;</div><div style="font-size:13px">Bluesky</div></div>
+    </div>
+    <p style="text-align:center;margin-top:24px;font-size:13px;color:var(--fg-3)">Workflow: Dissertation → LaTeX + BibTeX → Auto-upload → ORCID registration → Social blast</p>
+  </div>
+</section>
+
+<!-- ═══════ ENGINE ROADMAP ═══════ -->
+<section id="engine-roadmap" class="section">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label">Engine Roadmap</span>
+      <h2 class="section-title">Planned Integrations</h2>
+      <p class="section-desc">CESM and JuliaDiff are on the roadmap. Targeted for v5.6+.</p>
+    </div>
+    <div class="roadmap-block" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px">
+      <div class="feature-card" style="border-left:3px solid var(--amber)">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <span style="background:rgba(255,217,61,.15);color:var(--accent);padding:4px 10px;border-radius:100px;font-size:11px;font-weight:600">v5.6</span>
+          <span style="font-size:13px;color:var(--fg-3)">Q3 2026</span>
+        </div>
+        <h3>CESM — Earth System</h3>
+        <p style="color:var(--fg-2);font-size:14px;line-height:1.7">Community Earth System Model for climate simulation. Full atmospheric, ocean, land, and sea-ice coupling.</p>
+      </div>
+      <div class="feature-card" style="border-left:3px solid var(--pink)">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <span style="background:rgba(255,107,107,.15);color:var(--secondary);padding:4px 10px;border-radius:100px;font-size:11px;font-weight:600">v5.7+</span>
+          <span style="font-size:13px;color:var(--fg-3)">2027</span>
+        </div>
+        <h3>JuliaDiff — Auto-Diff</h3>
+        <p style="color:var(--fg-2);font-size:14px;line-height:1.7">Automatic differentiation in Julia. Forward and reverse mode for scientific machine learning (SciML).</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ SECURITY & QUALITY ═══════ -->
+<section id="security" class="section section-dark">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label">Trust Architecture</span>
+      <h2 class="section-title">Hardened for Production</h2>
+      <p class="section-desc">0 CRITICAL. 0 HIGH. 222 fixes across 4 audit rounds.</p>
+    </div>
+    <div class="stats-grid" style="margin-bottom:40px">
+      <div class="stat-card green"><div class="stat-value green">0</div><div class="stat-label">CRITICAL</div></div>
+      <div class="stat-card green"><div class="stat-value green">0</div><div class="stat-label">HIGH</div></div>
+      <div class="stat-card amber"><div class="stat-value amber">55</div><div class="stat-label">MEDIUM</div></div>
+      <div class="stat-card pink"><div class="stat-value pink">14</div><div class="stat-label">LOW</div></div>
+      <div class="stat-card blue"><div class="stat-value blue">0</div><div class="stat-label">mypy errors</div></div>
+      <div class="stat-card accent"><div class="stat-value accent">594</div><div class="stat-label">tests passing</div></div>
+    </div>
+    <div class="feature-grid" style="grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px">
+      <div class="feature-card"><div class="feature-icon">&#128274;</div><h3>Prompt Injection</h3><p>Nonce delimiters + LaTeX escaping + HTML entity decoding. Fail-closed.</p></div>
+      <div class="feature-card"><div class="feature-icon">&#127760;</div><h3>SSRF Protection</h3><p>Paper ID validation. Redirects disabled. Confined to ~/.c4reqber.</p></div>
+      <div class="feature-card"><div class="feature-icon">&#128737;</div><h3>Subprocess Hardening</h3><p>Shell metacharacter blocking. Symlink guards. Path traversal blocked.</p></div>
+      <div class="feature-card"><div class="feature-icon">&#9989;</div><h3>Auth</h3><p>JWT + HMAC. Dev-mode bypass with token. No secrets in code.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ QUICKSTART ═══════ -->
+<section id="quickstart" class="section section-dark">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label" data-i18n="qs_label">Quickstart</span>
+      <h2 class="section-title" data-i18n="qs_title">3 Commands to Discovery</h2>
+    </div>
+    <div class="code-block">
+      <button class="copy-btn" data-copy-btn>copy</button>
+<code>
+<span class="comment"># 1. Install</span>
+<span class="cmd">pip install c4reqber</span>
+
+<span class="comment"># 2. Set your key</span>
+<span class="cmd">export</span> <span class="str">OPENROUTER_API_KEY</span>=sk-or-...
+
+<span class="comment"># 3. Run</span>
+<span class="cmd">c4reqber</span> <span class="str">"quantum biology in photosynthesis"</span>
+<span class="dim"># → paradigm-shifting hypothesis + dissertation + citations</span>
+
+<span class="comment"># Model-per-stage config</span>
+<span class="cmd">c4reqber config --tier</span> budget --save       <span class="dim"># $0.002/pipeline</span>
+<span class="cmd">c4reqber config --tier</span> premium --save      <span class="dim"># Claude Opus everywhere</span>
+<span class="cmd">c4reqber config --set</span> D=gemma4:26b       <span class="dim"># Local model for hypotheses</span>
+</code>
+    </div>
+    <p style="text-align:center;margin-top:16px;font-size:12px;color:var(--fg-3)" data-i18n="qs_academic_hint">Academic tip: Run with --verify flag to auto-invoke Lean4/Coq for theorem-checking.</p>
+  </div>
+</section>
+
+<!-- ═══════ ROADMAP ═══════ -->
+<section id="roadmap" class="section">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label" data-i18n="roadmap_label">Roadmap</span>
+      <h2 class="section-title" data-i18n="roadmap_title">What Is Next</h2>
+      <p class="section-desc" data-i18n="roadmap_desc">Continuous delivery of simulation engines, AI integrations, and verification backends.</p>
+    </div>
+    <div class="term-block" style="border-left:3px solid var(--green)">
+      <div class="term-header"><span class="term-dot red"></span><span class="term-dot yellow"></span><span class="term-dot green"></span><span class="term-title" data-i18n="roadmap_v55">v5.5 — Now</span></div>
+      <div class="term-body" data-i18n="roadmap_v55_body">✓ Type safety zero (0 mypy errors)
+✓ MCP 20 tools with JSON Schema
+✓ Virtual Bio + GPU auto-detect
+✓ 36 simulation engines integrated
+✓ 10,000+ tests passing</div>
+    </div>
+    <div class="term-block" style="border-left:3px solid var(--amber)">
+      <div class="term-header"><span class="term-dot red"></span><span class="term-dot yellow"></span><span class="term-dot green"></span><span class="term-title" data-i18n="roadmap_v56">v5.6 — Q3 2026</span></div>
+      <div class="term-body" data-i18n="roadmap_v56_body">○ FEniCSx / dolfinx FEM bridge
+○ OpenMM protein dynamics
+○ DeepChem drug discovery
+○ PyMC / Bambi Bayesian stats
+○ ArviZ Bayesian visualization</div>
+    </div>
+    <div class="term-block" style="border-left:3px solid var(--pink)">
+      <div class="term-header"><span class="term-dot red"></span><span class="term-dot yellow"></span><span class="term-dot green"></span><span class="term-title" data-i18n="roadmap_v57">v5.7+ — 2027</span></div>
+      <div class="term-body" data-i18n="roadmap_v57_body">○ LangGraph state-machine agents
+○ Unsloth local LLM fine-tuning
+○ vLLM high-throughput inference
+○ ChromaDB / LanceDB RAG layer
+○ CrewAI multi-agent orchestration</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ ENGINES ═══════ -->
+<section id="engines" class="section section-dark">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label" data-i18n="engines_label">Simulation Engines</span>
+      <h2 class="section-title" data-i18n="engines_title">59 Scientific Computing Engines</h2>
+      <p class="section-desc" data-i18n="engines_desc">5 internal GPU engines + 31 open-source bridges + 23 planned integrations. From molecular dynamics to climate modeling.</p>
+    </div>
+    <div class="table-scroll">
+      <table class="comp-table" style="--sticky-2:120px">
+        <thead><tr><th scope="col" data-i18n="analyzer_title">Domain</th><th scope="col" data-i18n="analyzer_title">Engine</th><th scope="col" data-i18n="analyzer_desc">Description</th><th scope="col" data-i18n="engines_note">Status</th></tr></thead>
+        <tbody>
+        <tr><th scope="row">Physics</th><td>Newton</td><td>Classical mechanics, N-body, orbital</td><td><span class="engine-status status-green">Built-in GPU</span></td></tr>
+        <tr><th scope="row">Physics</th><td>JaxSim</td><td>Differentiable physics, robotics</td><td><span class="engine-status status-green">Built-in GPU</span></td></tr>
+        <tr><th scope="row">Physics</th><td>TorchSim</td><td>PyTorch-native material simulation</td><td><span class="engine-status status-green">Built-in GPU</span></td></tr>
+        <tr><th scope="row">Physics</th><td>OpenFOAM</td><td>CFD, turbulence, multiphase</td><td><span class="engine-status status-amber">P1 Bridge</span></td></tr>
+        <tr><th scope="row">Physics</th><td>Elmer FEM</td><td>Multiphysics FEM solver</td><td><span class="engine-status status-amber">P1 Bridge</span></td></tr>
+        <tr><th scope="row">Chemistry</th><td>PySCF</td><td>Quantum chemistry, DFT</td><td><span class="engine-status status-amber">P1 Bridge</span></td></tr>
+        <tr><th scope="row">Chemistry</th><td>RDKit</td><td>Cheminformatics, SMILES</td><td><span class="engine-status status-amber">P1 Bridge</span></td></tr>
+        <tr><th scope="row">Chemistry</th><td>Open Babel</td><td>Molecular format conversion</td><td><span class="engine-status status-amber">P1 Bridge</span></td></tr>
+        <tr><th scope="row">Bio</th><td>GROMACS</td><td>Molecular dynamics</td><td><span class="engine-status status-amber">P1 Bridge</span></td></tr>
+        <tr><th scope="row">Bio</th><td>NEURON</td><td>Neuronal simulation</td><td><span class="engine-status status-amber">P1 Bridge</span></td></tr>
+        <tr><th scope="row">Bio</th><td>Brian2</td><td>Spiking neural networks</td><td><span class="engine-status status-amber">P1 Bridge</span></td></tr>
+        <tr><th scope="row">Bio</th><td>Virtual Bio</td><td>GPU-accelerated bio pipeline</td><td><span class="engine-status status-green">Built-in GPU</span></td></tr>
+        <tr><th scope="row">Climate</th><td>WRF</td><td>Weather research & forecasting</td><td><span class="engine-status status-amber">P1 Bridge</span></td></tr>
+        <tr><th scope="row">Stats</th><td>Stan</td><td>Bayesian inference</td><td><span class="engine-status status-amber">P1 Bridge</span></td></tr>
+        <tr><th scope="row">Stats</th><td>PyMC</td><td>Probabilistic programming</td><td><span class="engine-status status-amber">P1 Bridge</span></td></tr>
+        <tr><th scope="row">ML</th><td>ONNX Runtime</td><td>Cross-platform inference</td><td><span class="engine-status status-green">Built-in</span></td></tr>
+        <tr><th scope="row">ML</th><td>MLX</td><td>Apple Silicon ML</td><td><span class="engine-status status-green">Built-in GPU</span></td></tr>
+        <tr><th scope="row">Math</th><td>SciPy</td><td>Scientific computing</td><td><span class="engine-status status-green">Built-in</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="text-align:center;margin-top:16px;font-size:12px;color:var(--fg-3)" data-i18n="engines_note">P1 = Python-native open-source bridge available now · Planned = on roadmap · Full list in simulation_engines_report.md</p>
+  </div>
+</section>
+
+<!-- ═══════ REAL CITATIONS ═══════ -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label">Sources</span>
+      <h2 class="section-title">33 Knowledge Sources — Real Citations</h2>
+      <p class="section-desc">No hallucinated references. Every citation is verified against live databases with DOI.</p>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;max-width:900px;margin:0 auto">
+      <span class="tag" style="font-size:13px;padding:6px 14px">arXiv</span>
+      <span class="tag" style="font-size:13px;padding:6px 14px">PubMed</span>
+      <span class="tag" style="font-size:13px;padding:6px 14px">Semantic Scholar</span>
+      <span class="tag" style="font-size:13px;padding:6px 14px">OpenAlex</span>
+      <span class="tag" style="font-size:13px;padding:6px 14px">Europe PMC</span>
+      <span class="tag" style="font-size:13px;padding:6px 14px">Crossref</span>
+      <span class="tag" style="font-size:13px;padding:6px 14px">Zenodo</span>
+      <span class="tag" style="font-size:13px;padding:6px 14px">ClinicalTrials.gov</span>
+      <span class="tag" style="font-size:13px;padding:6px 14px">GBIF</span>
+      <span class="tag" style="font-size:13px;padding:6px 14px">NASA Earthdata</span>
+      <span class="tag" style="font-size:13px;padding:6px 14px">Google Patents</span>
+      <span class="tag" style="font-size:13px;padding:6px 14px">Brave Search</span>
+      <span class="tag" style="font-size:13px;padding:6px 14px">Tavily</span>
+      <span class="tag" style="font-size:13px;padding:6px 14px">Exa.ai</span>
+      <span class="tag" style="font-size:13px;padding:6px 14px">Wikidata</span>
+      <span class="tag" style="font-size:13px;padding:6px 14px">OpenStreetMap</span>
+      <span class="tag" style="font-size:13px;padding:6px 14px">+ 17 more</span>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ VERIFICATION ═══════ -->
+<section class="section section-dark">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label">Verification</span>
+      <h2 class="section-title">6 Formal Verification Backends</h2>
+      <p class="section-desc">Your hypotheses don't just claim — they prove. Auto-selected by domain.</p>
+    </div>
+    <div class="feature-grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">
+      <div class="feature-card" style="text-align:center;border-color:rgba(59,130,246,.2)"><div class="feature-icon" style="color:#60a5fa;font-size:40px">λ</div><h3>Lean4</h3><p>Dependent type theory for mathematics</p></div>
+      <div class="feature-card" style="text-align:center;border-color:rgba(236,72,153,.2)"><div class="feature-icon" style="color:#f472b6;font-size:40px">π</div><h3>Coq</h3><p>Inductive proofs for hardware verification</p></div>
+      <div class="feature-card" style="text-align:center;border-color:rgba(16,185,129,.2)"><div class="feature-icon" style="color:#34d399;font-size:40px">∃</div><h3>Dafny</h3><p>Imperative programs with pre/post-conditions</p></div>
+      <div class="feature-card" style="text-align:center;border-color:rgba(245,158,11,.2)"><div class="feature-icon" style="color:#fbbf24;font-size:40px">⊢</div><h3>Agda</h3><p>Intuitionistic type theory</p></div>
+      <div class="feature-card" style="text-align:center;border-color:rgba(239,68,68,.2)"><div class="feature-icon" style="color:#ef4444;font-size:40px">⊨</div><h3>Z3</h3><p>SMT solver for constraint satisfaction</p></div>
+      <div class="feature-card" style="text-align:center;border-color:rgba(124,58,237,.2)"><div class="feature-icon" style="color:#a78bfa;font-size:40px">{}</div><h3>Hoare</h3><p>Logic for imperative program correctness</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ OS & REQUIREMENTS ═══════ -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label" data-i18n="sysreq_label">Compatibility</span>
+      <h2 class="section-title" data-i18n="sysreq_title">OS & System Requirements</h2>
+      <p class="section-desc" data-i18n="sysreq_desc">macOS and Linux are tested and supported. Windows is not tested. External engines require separate installation.</p>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;margin-top:32px">
+      <div class="feature-card">
+        <h3 data-i18n="os_matrix_title">OS Compatibility Matrix</h3>
+        <table style="width:100%;margin-top:12px;font-size:13px;border-collapse:collapse">
+          <tbody>
+          <tr style="border-bottom:1px solid rgba(255,255,255,.06)"><th scope="row" style="padding:8px 0;text-align:left;font-weight:700">macOS</th><td style="padding:8px 0;text-align:right;color:var(--cyan)">✓ Tested</td></tr>
+          <tr style="border-bottom:1px solid rgba(255,255,255,.06)"><th scope="row" style="padding:8px 0;text-align:left;font-weight:700">Linux</th><td style="padding:8px 0;text-align:right;color:var(--cyan)">✓ Tested</td></tr>
+          <tr><th scope="row" style="padding:8px 0;text-align:left;font-weight:700">Windows</th><td style="padding:8px 0;text-align:right;color:var(--red)" data-i18n="os_windows_status">✗ Not tested · WSL2 may work</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="feature-card">
+        <h3 data-i18n="hw_req_title">Minimum Requirements</h3>
+        <table style="width:100%;margin-top:12px;font-size:13px;border-collapse:collapse">
+          <tbody>
+          <tr style="border-bottom:1px solid rgba(255,255,255,.06)"><th scope="row" style="padding:8px 0;text-align:left"><strong data-i18n="hw_ram">RAM</strong></th><td style="padding:8px 0;text-align:right">4 GB <span style="color:var(--fg-3)" data-i18n="hw_ram_note">(8 GB rec)</span></td></tr>
+          <tr style="border-bottom:1px solid rgba(255,255,255,.06)"><th scope="row" style="padding:8px 0;text-align:left"><strong data-i18n="hw_cpu">CPU</strong></th><td style="padding:8px 0;text-align:right">2 cores <span style="color:var(--fg-3)" data-i18n="hw_cpu_note">(4+ for sim)</span></td></tr>
+          <tr style="border-bottom:1px solid rgba(255,255,255,.06)"><th scope="row" style="padding:8px 0;text-align:left"><strong data-i18n="hw_disk">Disk</strong></th><td style="padding:8px 0;text-align:right">2 GB <span style="color:var(--fg-3)" data-i18n="hw_disk_note">+ engines separately</span></td></tr>
+          <tr><th scope="row" style="padding:8px 0;text-align:left"><strong data-i18n="hw_gpu">GPU</strong></th><td style="padding:8px 0;text-align:right;color:var(--fg-3)" data-i18n="hw_gpu_note">Optional · Apple Silicon / CUDA</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <p style="text-align:center;margin-top:32px;font-size:13px;color:var(--fg-2)" data-i18n="pip_scope_note"><strong>Note:</strong> <code style="color:var(--cyan);font-family:var(--mono)">pip install c4reqber</code> installs the Python package + CLI only. External simulation engines (GROMACS, OpenFOAM, etc.) require separate installation per engine. See <a href="GPU_SETUP.md" style="color:var(--cyan)">GPU_SETUP.md</a>.</p>
+  </div>
+</section>
+
+<!-- ═══════ PRICING ═══════ -->
+<section class="section section-dark">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label" data-i18n="price_label">Pricing</span>
+      <h2 class="section-title" data-i18n="price_title">5 Cost Tiers</h2>
+      <p class="section-desc" data-i18n="price_desc">From $0.002 to $0.11 per full pipeline run. Configure per phase.</p>
+    </div>
+    <div class="pricing-grid">
+      <div class="pricing-card"><div class="pricing-tier" data-i18n="price_budget">Budget</div><div class="pricing-cost">$0.002<small>/run</small></div><div class="pricing-model">DeepSeek V4-Flash</div></div>
+      <div class="pricing-card recommended"><div class="rec-badge" data-i18n="price_rec">Recommended</div><div class="pricing-tier" data-i18n="price_balanced">Balanced</div><div class="pricing-cost">~$0.35<small>/run</small></div><div class="pricing-model">Claude Sonnet + Qwen</div></div>
+      <div class="pricing-card"><div class="pricing-tier" data-i18n="price_premium">Premium</div><div class="pricing-cost">$0.11<small>/run</small></div><div class="pricing-model">Claude Opus + Gemini</div></div>
+      <div class="pricing-card"><div class="pricing-tier" data-i18n="price_local">Local</div><div class="pricing-cost">$0<small>/run</small></div><div class="pricing-model">Qwen 3.6 + Gemma 4</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════ CTA ═══════ -->
+<section class="section" style="background:linear-gradient(180deg,var(--bg-2)0%,var(--bg)100%);position:relative;overflow:hidden">
+  <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--accent),transparent)"></div>
+  <div class="container" style="text-align:center;position:relative;z-index:2">
+    <h2 class="section-title" style="font-size:clamp(32px,5vw,56px);margin-bottom:16px" data-i18n="cta_title">Ready to Shift Paradigms?</h2>
+    <p style="color:var(--fg-2);font-size:17px;max-width:500px;margin:0 auto 32px" data-i18n="cta_sub">One command. One dissertation. One paradigm shift.</p>
+    <div class="hero-btns" style="margin-bottom:24px">
+      <a href="#quickstart" class="btn btn-primary" data-i18n="hero_install">pip install c4reqber</a>
+      <a href="https://github.com/c4reqber/c4reqber" class="btn btn-secondary" rel="noopener noreferrer" target="_blank">GitHub</a>
+    </div>
+    <p style="font-size:12px;color:var(--fg-3)" data-i18n="cta_license">AGPL-3.0 · BYOK · No data retention · Self-hostable</p>
+  </div>
+</section>
+
+</main>
+
+<!-- Reading progress -->
+<div id="read-progress" style="position:fixed;top:0;left:0;height:2px;background:linear-gradient(90deg,var(--primary),var(--accent));z-index:1002;width:0%;transition:width .1s"></div>
+
+<!-- Back to top -->
+<button id="back-to-top" aria-label="Back to top" style="position:fixed;bottom:20px;right:20px;z-index:998;width:40px;height:40px;border-radius:50%;background:var(--bg-3);border:1px solid rgba(255,255,255,.1);color:var(--fg-2);cursor:pointer;opacity:0;pointer-events:none;transition:opacity .3s,transform .2s;display:flex;align-items:center;justify-content:center;font-size:18px">&#8593;</button>
+
+<!-- ═══════ FOOTER ═══════ -->
+<footer class="footer">
+  <div class="container">
+    <div style="display:flex;justify-content:center;gap:24px;margin-bottom:16px;flex-wrap:wrap">
+      <a href="#quickstart" class="footer-link" style="color:var(--fg-2);text-decoration:none;font-size:13px">Quickstart</a>
+      <a href="https://github.com/c4reqber/c4reqber" class="footer-link" rel="noopener noreferrer" target="_blank" style="color:var(--fg-2);text-decoration:none;font-size:13px">GitHub</a>
+      <a href="GPU_SETUP.md" class="footer-link" style="color:var(--fg-2);text-decoration:none;font-size:13px">GPU Setup</a>
+      <a href="simulation_engines_report.md" class="footer-link" style="color:var(--fg-2);text-decoration:none;font-size:13px">Engines</a>
+    </div>
+    <p><span data-i18n="foot_product">c4reqber v5.5.0</span> · <a href="https://github.com/c4reqber/c4reqber" rel="noopener noreferrer" target="_blank">GitHub</a> · <a href="https://c4reqber.org/docs" rel="noopener noreferrer" target="_blank">Docs</a> · AGPL-3.0 · <span data-i18n="foot_tests">10,023 tests · 0 mypy errors</span></p>
+    <p style="margin-top:8px" data-i18n="foot_slogan">Think. Simulate. Prove. Discover.</p>
+  </div>
+</footer>
+
+<!-- ═══════ MASCOT ═══════ -->
+<div id="mascot" style="position:fixed;bottom:20px;left:20px;z-index:999;pointer-events:none;font-family:var(--mono);font-size:11px;color:var(--cyan);opacity:.9;transition:opacity .3s">
+<pre id="mascot-art" style="margin:0;line-height:1.2;font-size:10px;letter-spacing:1px">   ┌─────────┐
+  ╱         ╱│
+ ┌─────────┐ │
+ │  C4R    │ │
+ │  ███     ╱
+ └─────────┘╱ </pre>
+<div id="mascot-comment" style="margin-top:4px;font-size:10px;color:#8088a8;max-width:140px">Ready.</div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// i18n Engine — 7 languages
+// ═══════════════════════════════════════════════════════
+const i18n = {
+  en: {
+    hero_badge: "v5.5.0 · PRODUCTION · 0 mypy errors",
+    hero_subtitle: "The cognitive exoskeleton for <strong>humans and AI agents</strong>.<br>Think. Simulate. Prove. Discover.",
+    hero_tags: "Z₃³ COGNITIVE EXOSKELETON · 27 STATES · 6 OPERATORS · 33+ SOURCES · 36 ENGINES · 20 MCP TOOLS · HUMANS + AI AGENTS",
+    hero_cta_primary: "pip install c4reqber",
+    hero_cta_secondary: "GitHub",
+    hero_meta: "AGPL-3.0 · BYOK · Multi-Prompt Router · Terminal-First · OpenRouter · XAI · Mistral · Moonshot · DeepSeek · Liquid · NVIDIA · YandexGPT · Ollama · LM Studio · MLX",
+    github_stars: "Be the first star!",
+    stat_states: "Cognitive States",
+    stat_operators: "C4 Operators",
+    stat_sources: "Knowledge Sources",
+    stat_engines: "Simulation Engines",
+    stat_mcp: "MCP Tools",
+    stat_tests: "Tests Passing",
+    fp_label: "First Principles",
+    fp_title: "Agents Can Talk. But Can They Think?",
+    fp_desc: "AI agents have language. They lack cognition. c4reqber is the scientific body for the agentic mind.",
+    fp_no_sim: "No Simulation",
+    fp_no_sim_desc: "LLMs generate hypotheses but cannot test them. No physics engine, no statistical validation, no ground truth.",
+    fp_no_verify: "No Verification",
+    fp_no_verify_desc: "ChatGPT \"proves\" theorems by generating convincing text. Formal verification requires Lean4, Coq, Dafny.",
+    fp_no_cog: "No Meta-Reflection",
+    fp_no_cog_desc: "Agents lack meta-cognition. They cannot track their own thinking state or reconfigure strategy.",
+    fp_no_rigor: "No Scientific Rigor",
+    fp_no_rigor_desc: "Falsifiability, real citations, reproducibility — the foundation of science. Absent from most agent frameworks.",
+    fp_conclusion: "c4reqber solves all four. Formal verification + 36 simulation engines + Z₃³ cognitive topology + real citations.",
+    features_label: "Capabilities",
+    features_title: "The Only AI Cognitive Exoskeleton",
+    features_desc: "Not features. Cognitive organs. Each module is a real implementation.",
+    feat_c4: "Z₃³ Cognitive Topology",
+    feat_c4_desc: "27 discrete cognitive states across Time, Scale, and Agency dimensions. Every query is mapped, tracked, and navigable.",
+    feat_verify: "Formal Verification Engine",
+    feat_verify_desc: "Lean4, Coq, Dafny, Agda, Z3, Hoare logic — your hypotheses don't just claim, they prove.",
+    feat_sim: "36 Simulation Engines",
+    feat_sim_desc: "Molecular dynamics (GROMACS, OpenMM), quantum (PySCF), CFD (OpenFOAM), neuro (NEURON), and more.",
+    feat_kg: "33 Knowledge Sources",
+    feat_kg_desc: "arXiv, PubMed, Semantic Scholar, OpenAlex, Europe PMC, Crossref, Zenodo, ClinicalTrials.gov, GBIF, NASA Earthdata, and 23 more.",
+    feat_pub: "Automated Dissertation Generator",
+    feat_pub_desc: "LaTeX + BibTeX + Markdown + JSON + HTML exports. Ready for arXiv, bioRxiv, or your advisor's desk.",
+    feat_mcp: "MCP Server — 20 Tools",
+    feat_mcp_desc: "Expose full C4REQBER capability to AI agents. JSON Schema compliant. stdio JSON-RPC.",
+    c4_label: "Cognitive Architecture",
+    c4_title: "C4-META vs. The Field",
+    c4_desc: "Discrete group-theoretic cognitive space. Not neural networks. Not symbolic rules. Mathematical topology.",
+    c4_repr: "Representation",
+    c4_dim: "Dimensions",
+    c4_states2: "States",
+    c4_formalism: "Formalism",
+    c4_verify2: "Verification",
+    c4_nav: "Navigation",
+    c4_reach: "Reachability",
+    c4_cross: "Cross-Domain",
+    c4_os2: "Open Source",
+    c4_peer: "Peer-Reviewed",
+    comp_label: "Competitive Analysis",
+    comp_title: "c4reqber vs. The Market",
+    comp_desc: "Not an LLM wrapper. A cognitive operating system.",
+    comp_cog: "Cognition",
+    comp_formal: "Formal Verify",
+    comp_multi: "Multi-Domain",
+    comp_out: "Auto Publish",
+    comp_wasm: "WASM Runtime",
+    comp_mcp: "MCP Server",
+    comp_os: "Open Source",
+    comp_price: "Price",
+    comp_term: "Product",
+    comp_lit: "Lit. Review",
+    comp_hypo: "Hypothesis",
+    comp_sim: "Simulation",
+    comp_legend: "● Yes · ○ No · ◐ Partial",
+    pt_label: "Architecture",
+    pt_title: "Pipeline Phases — Model per Stage",
+    pt_desc: "7 phases. Each gets its own LLM model, plugins, and cognitive strategy.",
+    pt_phase: "Phase",
+    pt_stage: "Stage",
+    pt_model: "Model",
+    pt_engines: "Plugins",
+    pt_a: "C4 Cognitive Framing",
+    pt_b: "Knowledge Search",
+    pt_c: "Gap Analysis",
+    pt_d: "Hypothesis Generation",
+    pt_e: "Simulation & Verification",
+    pt_f: "Dissertation",
+    pt_g: "Quality Control",
+    qs_label: "Quickstart",
+    qs_title: "3 Commands to Discovery",
+    qs_academic_hint: "Academic tip: Run with --verify flag to auto-invoke Lean4/Coq for theorem-checking.",
+    roadmap_label: "Roadmap",
+    roadmap_title: "What Is Next",
+    roadmap_desc: "Continuous delivery of simulation engines, AI integrations, and verification backends.",
+    roadmap_v55: "v5.5 — Now",
+    roadmap_v55_body: `✓ Type safety zero (0 mypy errors)
+✓ MCP 20 tools with JSON Schema
+✓ Virtual Bio + GPU auto-detect
+✓ 36 simulation engines integrated
+✓ 10,000+ tests passing`,
+    roadmap_v56: "v5.6 — Q3 2026",
+    roadmap_v56_body: `○ FEniCSx / dolfinx FEM bridge
+○ OpenMM protein dynamics
+○ DeepChem drug discovery
+○ PyMC / Bambi Bayesian stats
+○ ArviZ Bayesian visualization`,
+    roadmap_v57: "v5.7+ — 2027",
+    roadmap_v57_body: `○ LangGraph state-machine agents
+○ Unsloth local LLM fine-tuning
+○ vLLM high-throughput inference
+○ ChromaDB / LanceDB RAG layer
+○ CrewAI multi-agent orchestration`,
+    engines_label: "Simulation Engines",
+    engines_title: "59 Scientific Computing Engines",
+    engines_desc: "5 internal GPU engines + 31 open-source bridges + 23 planned integrations. From molecular dynamics to climate modeling.",
+    engines_note: "P1 = Python-native open-source bridge available now · Planned = on roadmap · Full list in simulation_engines_report.md",
+    sysreq_label: "Compatibility",
+    sysreq_title: "OS & System Requirements",
+    sysreq_desc: "macOS and Linux are tested and supported. Windows is not tested. External engines require separate installation.",
+    os_matrix_title: "OS Compatibility Matrix",
+    os_windows_status: "✗ Not tested · WSL2 may work",
+    hw_req_title: "Minimum Requirements",
+    hw_ram: "RAM",
+    hw_ram_note: "(8 GB rec)",
+    hw_cpu: "CPU",
+    hw_cpu_note: "(4+ for sim)",
+    hw_disk: "Disk",
+    hw_disk_note: "+ engines separately",
+    hw_gpu: "GPU",
+    hw_gpu_note: "Optional · Apple Silicon / CUDA",
+    pip_scope_note: "<strong>Note:</strong> <code style=\"color:var(--cyan);font-family:var(--mono)\">pip install c4reqber</code> installs the Python package + CLI only. External simulation engines (GROMACS, OpenFOAM, etc.) require separate installation per engine. See <a href=\"GPU_SETUP.md\" style=\"color:var(--cyan)\">GPU_SETUP.md</a>.",
+    price_label: "Pricing",
+    price_title: "5 Cost Tiers",
+    price_desc: "From $0.002 to $0.11 per full pipeline run. Configure per phase.",
+    price_budget: "Budget",
+    price_balanced: "Balanced",
+    price_premium: "Premium",
+    price_local: "Local",
+    price_rec: "Recommended",
+    usecases_label: "Who Is It For",
+    usecases_title: "Research Audiences",
+    usecases_desc: "From hard science to social sciences — c4reqber adapts to your domain.",
+    uc_hard: "Hard Science",
+    uc_hard_desc: "Physics, chemistry, biology, materials. TRIZ + 36 simulation engines + formal verification.",
+    uc_psych: "Psychology & Social Sciences",
+    uc_psych_desc: "CBT meta-analysis, organizational behavior, political psychology. Causal inference + agent models.",
+    uc_clinical: "Clinical Research",
+    uc_clinical_desc: "RCT design, biomarkers, drug-drug interactions. PubMed + ClinicalTrials.gov + STRING.",
+    uc_eco: "Climate & Ecology",
+    uc_eco_desc: "Biodiversity, climate modeling, ocean dynamics. GBIF + NASA Earthdata + WRF.",
+    uc_law: "Law & Policy",
+    uc_law_desc: "Legal reasoning, precedent analysis, regulatory impact. Multi-jurisdiction + temporal reasoning.",
+    cta_title: "Ready to Shift Paradigms?",
+    cta_sub: "One command. One dissertation. One paradigm shift.",
+    cta_license: "AGPL-3.0 · BYOK · No data retention · Self-hostable",
+    foot_product: "c4reqber v5.5.0",
+    foot_tests: "10,023 tests · 0 mypy errors",
+    foot_slogan: "Think. Simulate. Prove. Discover.",
+  },
+  ru: {
+    hero_badge: "v5.5.0 · ПРОДАКШН · 0 ошибок mypy",
+    hero_subtitle: "Когнитивный экзоскелет для <strong>людей и AI-агентов</strong>.<br>Думай. Симулируй. Докажи. Открой.",
+    hero_tags: "Z₃³ КОГНИТИВНЫЙ ЭКЗОСКЕЛЕТ · 27 СОСТОЯНИЙ · 6 ОПЕРАТОРОВ · 33+ ИСТОЧНИКА · 36 ДВИЖКОВ · 20 MCP-ИНСТРУМЕНТОВ",
+    hero_cta_primary: "pip install c4reqber",
+    hero_cta_secondary: "GitHub",
+    hero_meta: "AGPL-3.0 · BYOK · Multi-Prompt Router · Terminal-First · OpenRouter · XAI · Mistral · Moonshot · DeepSeek · Liquid · NVIDIA · YandexGPT · Ollama · LM Studio · MLX",
+    github_stars: "Стань первой звездой!",
+    stat_states: "Когнитивных состояний",
+    stat_operators: "Операторов C4",
+    stat_sources: "Источников знаний",
+    stat_engines: "Движков симуляций",
+    stat_mcp: "MCP-инструментов",
+    stat_tests: "Тестов проходят",
+    fp_label: "Первые принципы",
+    fp_title: "Агенты умеют говорить. Но умеют ли думать?",
+    fp_desc: "У AI-агентов есть язык. Нет когниции. c4reqber — это научное тело для агентного разума.",
+    fp_no_sim: "Нет симуляции",
+    fp_no_sim_desc: "LLM генерируют гипотезы, но не могут их проверить. Нет физического движка, нет валидации, нет ground truth.",
+    fp_no_verify: "Нет верификации",
+    fp_no_verify_desc: "ChatGPT \"доказывает\" теоремы, генерируя убедительный текст. Формальная верификация требует Lean4, Coq, Dafny.",
+    fp_no_cog: "Нет мета-рефлексии",
+    fp_no_cog_desc: "Агенты лишены метакогниции. Не отслеживают своё состояние мышления и не переконфигурируют стратегию.",
+    fp_no_rigor: "Нет научной строгости",
+    fp_no_rigor_desc: "Фальсифицируемость, реальные цитаты, воспроизводимость — фундамент науки. Отсутствует в большинстве фреймворков.",
+    fp_conclusion: "c4reqber решает все четыре проблемы. Формальная верификация + 36 движков + Z₃³ когнитивная топология + реальные цитаты.",
+    features_label: "Возможности",
+    features_title: "Единственный AI-когнитивный экзоскелет",
+    features_desc: "Не фичи. Когнитивные органы. Каждый модуль — реальная реализация, не обёртка над API.",
+    feat_c4: "Z₃³ Когнитивная топология",
+    feat_c4_desc: "27 дискретных когнитивных состояний по измерениям Время, Масштаб, Агентность. Каждый запрос маппится, отслеживается и навигируется.",
+    feat_verify: "Движок формальной верификации",
+    feat_verify_desc: "Lean4, Coq, Dafny, Agda, Z3, логика Хоара — ваши гипотезы не просто утверждают, они доказывают.",
+    feat_sim: "36 движков симуляций",
+    feat_sim_desc: "Молекулярная динамика (GROMACS, OpenMM), квант (PySCF), CFD (OpenFOAM), нейро (NEURON) и др.",
+    feat_kg: "33 источника знаний",
+    feat_kg_desc: "arXiv, PubMed, Semantic Scholar, OpenAlex, Europe PMC, Crossref, Zenodo, ClinicalTrials.gov, GBIF, NASA Earthdata и 23 других.",
+    feat_pub: "Генератор диссертаций",
+    feat_pub_desc: "Экспорт LaTeX + BibTeX + Markdown + JSON + HTML. Готов к arXiv, bioRxiv или столу вашего научного руководителя.",
+    feat_mcp: "MCP-сервер — 20 инструментов",
+    feat_mcp_desc: "Предоставьте полные возможности C4REQBER AI-агентам. JSON Schema. stdio JSON-RPC.",
+    c4_label: "Когнитивная архитектура",
+    c4_title: "C4-META против остальных",
+    c4_desc: "Дискретное группо-теоретическое когнитивное пространство. Не нейросети. Не символьные правила. Математическая топология.",
+    c4_repr: "Представление",
+    c4_dim: "Измерения",
+    c4_states2: "Состояния",
+    c4_formalism: "Формализм",
+    c4_verify2: "Верификация",
+    c4_nav: "Навигация",
+    c4_reach: "Достижимость",
+    c4_cross: "Кросс-домен",
+    c4_os2: "Open Source",
+    c4_peer: "Рецензируемый",
+    comp_label: "Конкурентный анализ",
+    comp_title: "c4reqber против рынка",
+    comp_desc: "Не обёртка над LLM. Когнитивная операционная система.",
+    comp_cog: "Когниция",
+    comp_formal: "Форм. вериф.",
+    comp_multi: "Мультидомен",
+    comp_out: "Авто публикация",
+    comp_wasm: "WASM Runtime",
+    comp_mcp: "MCP-сервер",
+    comp_os: "Open Source",
+    comp_price: "Цена",
+    comp_term: "Продукт",
+    comp_lit: "Лит. обзор",
+    comp_hypo: "Гипотезы",
+    comp_sim: "Симуляция",
+    comp_legend: "● Да · ○ Нет · ◐ Частично",
+    pt_label: "Архитектура",
+    pt_title: "Фазы пайплайна — модель на стадию",
+    pt_desc: "7 фаз. Каждая получает свою LLM-модель, плагины и когнитивную стратегию.",
+    pt_phase: "Фаза",
+    pt_stage: "Стадия",
+    pt_model: "Модель",
+    pt_engines: "Плагины",
+    pt_a: "C4 Когнитивное фрейминг",
+    pt_b: "Поиск знаний",
+    pt_c: "Анализ пробелов",
+    pt_d: "Генерация гипотез",
+    pt_e: "Симуляция и верификация",
+    pt_f: "Диссертация",
+    pt_g: "Контроль качества",
+    qs_label: "Быстрый старт",
+    qs_title: "3 команды до открытия",
+    qs_academic_hint: "Совет: запускай с флагом --verify для автовызова Lean4/Coq.",
+    roadmap_label: "Дорожная карта",
+    roadmap_title: "Что дальше",
+    roadmap_desc: "Непрерывная поставка движков симуляций, AI-интеграций и бэкендов верификации.",
+    roadmap_v55: "v5.5 — Сейчас",
+    roadmap_v55_body: `✓ Нулевая типобезопасность (0 ошибок mypy)
+✓ MCP 20 инструментов с JSON Schema
+✓ Virtual Bio + автоопределение GPU
+✓ 36 движков симуляций интегрировано
+✓ 10 000+ тестов проходят`,
+    roadmap_v56: "v5.6 — Q3 2026",
+    roadmap_v56_body: `○ FEniCSx / dolfinx FEM-мост
+○ OpenMM динамика белков
+○ DeepChem drug discovery
+○ PyMC / Bambi байесовская статистика
+○ ArviZ байесовская визуализация`,
+    roadmap_v57: "v5.7+ — 2027",
+    roadmap_v57_body: `○ LangGraph агенты с автоматами
+○ Unsloth локальный дообучение LLM
+○ vLLM высокопроизводительный инференс
+○ ChromaDB / LanceDB RAG-слой
+○ CrewAI мульти-агентная оркестрация`,
+    engines_label: "Движки симуляций",
+    engines_title: "59 научно-вычислительных движков",
+    engines_desc: "5 внутренних GPU + 31 open-source мост + 23 запланировано. От молекулярной динамики до климатического моделирования.",
+    engines_note: "P1 = Python-мост с открытым исходным кодом доступен сейчас · Planned = в планах · Полный список в simulation_engines_report.md",
+    sysreq_label: "Совместимость",
+    sysreq_title: "ОС и системные требования",
+    sysreq_desc: "macOS и Linux протестированы и поддерживаются. Windows не тестировался. Внешние движки требуют отдельной установки.",
+    os_matrix_title: "Матрица совместимости ОС",
+    os_windows_status: "✗ Не тестировался · WSL2 может работать",
+    hw_req_title: "Минимальные требования",
+    hw_ram: "ОЗУ",
+    hw_ram_note: "(8 ГБ рекомендуется)",
+    hw_cpu: "Процессор",
+    hw_cpu_note: "(4+ ядра для симуляций)",
+    hw_disk: "Диск",
+    hw_disk_note: "+ движки отдельно",
+    hw_gpu: "GPU",
+    hw_gpu_note: "Опционально · Apple Silicon / CUDA",
+    pip_scope_note: "<strong>Примечание:</strong> <code style=\"color:var(--cyan);font-family:var(--mono)\">pip install c4reqber</code> устанавливает только Python-пакет + CLI. Внешние движки (GROMACS, OpenFOAM и др.) требуют отдельной установки. См. <a href=\"GPU_SETUP.md\" style=\"color:var(--cyan)\">GPU_SETUP.md</a>.",
+    price_label: "Ценообразование",
+    price_title: "5 уровней стоимости",
+    price_desc: "От $0.002 до $0.11 за полный пайплайн. Настройка по фазам.",
+    price_budget: "Бюджет",
+    price_balanced: "Баланс",
+    price_premium: "Премиум",
+    price_local: "Локально",
+    price_rec: "Рекомендуется",
+    usecases_label: "Кому это нужно",
+    usecases_title: "Аудитории исследователей",
+    usecases_desc: "От точных наук до социальных — c4reqber адаптируется под ваш домен.",
+    uc_hard: "Точные науки",
+    uc_hard_desc: "Физика, химия, биология, материалы. ТРИЗ + 36 движков симуляций + формальная верификация.",
+    uc_psych: "Психология и социальные науки",
+    uc_psych_desc: "Мета-анализ КПТ, организационное поведение, политическая психология. Причинные выводы + агентные модели.",
+    uc_clinical: "Клинические исследования",
+    uc_clinical_desc: "Дизайн РКИ, биомаркеры, лекарственные взаимодействия. PubMed + ClinicalTrials.gov + STRING.",
+    uc_eco: "Климат и экология",
+    uc_eco_desc: "Биоразнообразие, климатическое моделирование, океаническая динамика. GBIF + NASA Earthdata + WRF.",
+    uc_law: "Право и политика",
+    uc_law_desc: "Юридические рассуждения, анализ прецедентов, регуляторное воздействие. Мультизюрисдикция + темпоральные рассуждения.",
+    cta_title: "Готовы сменить парадигму?",
+    cta_sub: "Одна команда. Одна диссертация. Один сдвиг парадигмы.",
+    cta_license: "AGPL-3.0 · BYOK · Нет хранения данных · Self-hostable",
+    foot_product: "c4reqber v5.5.0",
+    foot_tests: "10 023 теста · 0 ошибок mypy",
+    foot_slogan: "Думай. Симулируй. Докажи. Открой.",
+  },
+  zh: {
+    hero_badge: "v5.5.0 · 生产环境 · 0 mypy 错误",
+    hero_subtitle: "为<strong>人类和 AI 代理</strong>打造的认知外骨骼。<br>思考。模拟。证明。发现。",
+    hero_tags: "Z₃³ 认知外骨骼 · 27 状态 · 6 算子 · 33+ 知识源 · 36 引擎 · 20 MCP 工具",
+    hero_cta_primary: "pip install c4reqber",
+    hero_cta_secondary: "GitHub",
+    github_stars: "成为第一颗星！",
+    stat_states: "认知状态",
+    stat_operators: "C4 算子",
+    stat_sources: "知识源",
+    stat_engines: "模拟引擎",
+    stat_mcp: "MCP 工具",
+    stat_tests: "通过测试",
+    fp_label: "第一性原理",
+    fp_title: "代理会说话。但它们会思考吗？",
+    fp_desc: "AI 代理拥有语言。缺乏认知。c4reqber 是代理心智的科学躯体。",
+    features_label: "能力",
+    features_title: "唯一的 AI 认知外骨骼",
+    features_desc: "不是功能。认知器官。每个模块都是真实实现。",
+    feat_c4: "Z₃³ 认知拓扑",
+    feat_c4_desc: "27 个离散认知状态，跨越时间、规模和主体维度。每个查询都可映射、跟踪和导航。",
+    feat_verify: "形式验证引擎",
+    feat_verify_desc: "Lean4、Coq、Dafny、Agda、Z3、Hoare 逻辑——您的假设不只是声称，而是证明。",
+    feat_sim: "36 个模拟引擎",
+    feat_sim_desc: "分子动力学（GROMACS、OpenMM）、量子（PySCF）、CFD（OpenFOAM）、神经（NEURON）等。",
+    feat_kg: "33 个知识源",
+    feat_kg_desc: "arXiv、PubMed、Semantic Scholar、OpenAlex、Europe PMC、Crossref、Zenodo、ClinicalTrials.gov、GBIF、NASA Earthdata 等 23 个更多。",
+    feat_pub: "自动论文生成器",
+    feat_pub_desc: "LaTeX + BibTeX + Markdown + JSON + HTML 导出。可直接提交 arXiv、bioRxiv 或导师。",
+    feat_mcp: "MCP 服务器 — 20 个工具",
+    feat_mcp_desc: "将完整的 C4REQBER 能力暴露给 AI 代理。符合 JSON Schema。stdio JSON-RPC。",
+    c4_label: "认知架构",
+    c4_title: "C4-META 与同行对比",
+    c4_desc: "离散群论认知空间。不是神经网络。不是符号规则。数学拓扑。",
+    c4_repr: "表示",
+    c4_dim: "维度",
+    c4_states2: "状态",
+    c4_formalism: "形式主义",
+    c4_verify2: "验证",
+    c4_nav: "导航",
+    c4_reach: "可达性",
+    c4_cross: "跨领域",
+    c4_os2: "开源",
+    c4_peer: "同行评审",
+    comp_label: "竞争分析",
+    comp_title: "c4reqber 与市场",
+    comp_desc: "不是 LLM 包装器。认知操作系统。",
+    comp_cog: "认知",
+    comp_formal: "形式验证",
+    comp_multi: "多领域",
+    comp_out: "自动发布",
+    comp_wasm: "WASM 运行时",
+    comp_mcp: "MCP 服务器",
+    comp_os: "开源",
+    comp_price: "价格",
+    comp_term: "产品",
+    comp_lit: "文献综述",
+    comp_hypo: "假设生成",
+    comp_sim: "模拟",
+    comp_legend: "● 是 · ○ 否 · ◐ 部分",
+    pt_label: "架构",
+    pt_title: "流水线阶段 — 每阶段一个模型",
+    pt_desc: "7 个阶段。每个阶段都有自己的 LLM 模型、插件和认知策略。",
+    pt_phase: "阶段",
+    pt_stage: "步骤",
+    pt_model: "模型",
+    pt_engines: "插件",
+    pt_a: "C4 认知框架",
+    pt_b: "知识搜索",
+    pt_c: "差距分析",
+    pt_d: "假设生成",
+    pt_e: "模拟与验证",
+    pt_f: "论文撰写",
+    pt_g: "质量控制",
+    qs_label: "快速开始",
+    qs_title: "3 条命令发现新知",
+    qs_academic_hint: "学术提示：使用 --verify 标志自动调用 Lean4/Coq 进行定理检查。",
+    roadmap_label: "路线图",
+    roadmap_title: "下一步",
+    roadmap_desc: "持续交付模拟引擎、AI 集成和验证后端。",
+    roadmap_v55: "v5.5 — 现在",
+    roadmap_v55_body: `✓ 类型安全为零（0 mypy 错误）
+✓ MCP 20 个 JSON Schema 工具
+✓ Virtual Bio + GPU 自动检测
+✓ 36 个模拟引擎已集成
+✓ 10,000+ 测试通过`,
+    roadmap_v56: "v5.6 — 2026年第三季度",
+    roadmap_v56_body: `○ FEniCSx / dolfinx FEM 桥接
+○ OpenMM 蛋白质动力学
+○ DeepChem 药物发现
+○ PyMC / Bambi 贝叶斯统计
+○ ArviZ 贝叶斯可视化`,
+    roadmap_v57: "v5.7+ — 2027",
+    roadmap_v57_body: `○ LangGraph 状态机代理
+○ Unsloth 本地 LLM 微调
+○ vLLM 高吞吐量推理
+○ ChromaDB / LanceDB RAG 层
+○ CrewAI 多代理编排`,
+    engines_label: "模拟引擎",
+    engines_title: "59 科学计算引擎",
+    engines_desc: "5 个内部 GPU 引擎 + 31 个开源桥接 + 23 个计划集成。从分子动力学到气候建模。",
+    engines_note: "P1 = Python 原生开源桥接现已可用 · Planned = 路线图中 · 完整列表见 simulation_engines_report.md",
+    sysreq_label: "兼容性",
+    sysreq_title: "操作系统和系统要求",
+    sysreq_desc: "macOS 和 Linux 已测试并受支持。Windows 未测试。外部引擎需要单独安装。",
+    os_matrix_title: "操作系统兼容性矩阵",
+    os_windows_status: "✗ 未测试 · WSL2 可能可用",
+    hw_req_title: "最低要求",
+    hw_ram: "内存",
+    hw_ram_note: "建议 8 GB",
+    hw_cpu: "CPU",
+    hw_cpu_note: "4+ 核心用于模拟",
+    hw_disk: "磁盘",
+    hw_disk_note: "+ 引擎单独安装",
+    hw_gpu: "GPU",
+    hw_gpu_note: "可选 · Apple Silicon / CUDA",
+    pip_scope_note: "<strong>注意：</strong> <code style=\"color:var(--cyan);font-family:var(--mono)\">pip install c4reqber</code> 仅安装 Python 包 + CLI。外部模拟引擎（GROMACS、OpenFOAM 等）需要单独安装。参见 <a href=\"GPU_SETUP.md\" style=\"color:var(--cyan)\">GPU_SETUP.md</a>。",
+    price_label: "定价",
+    price_title: "5 个成本层级",
+    price_desc: "每次完整流水线运行从 $0.002 到 $0.11。按阶段配置。",
+    price_budget: "预算",
+    price_balanced: "平衡",
+    price_premium: "高级",
+    price_local: "本地",
+    price_rec: "推荐",
+    usecases_label: "适用人群",
+    usecases_title: "研究者受众",
+    usecases_desc: "从硬科学到社会科学 — c4reqber 适应您的领域。",
+    uc_hard: "硬科学",
+    uc_hard_desc: "物理、化学、生物、材料。TRIZ + 36 模拟引擎 + 形式化验证。",
+    uc_psych: "心理学与社会科学",
+    uc_psych_desc: "认知行为疗法元分析、组织行为、政治心理学。因果推断 + 智能体模型。",
+    uc_clinical: "临床研究",
+    uc_clinical_desc: "随机对照试验设计、生物标志物、药物相互作用。PubMed + ClinicalTrials.gov + STRING。",
+    uc_eco: "气候与生态",
+    uc_eco_desc: "生物多样性、气候建模、海洋动力学。GBIF + NASA Earthdata + WRF。",
+    uc_law: "法律与政策",
+    uc_law_desc: "法律推理、判例分析、监管影响。多司法管辖区 + 时序推理。",
+    cta_title: "准备好改变范式了吗？",
+    cta_sub: "一个命令。一篇论文。一次范式转变。",
+    cta_license: "AGPL-3.0 · BYOK · 无数据保留 · 可自托管",
+    foot_product: "c4reqber v5.5.0",
+    foot_tests: "10,023 测试 · 0 mypy 错误",
+    foot_slogan: "思考。模拟。证明。发现。",
+  },
+  ja: {
+    hero_badge: "v5.5.0 · プロダクション · 0 mypy エラー",
+    hero_subtitle: "<strong>人間とAIエージェント</strong>のための認知エクソスケルトン。<br>思考。シミュレート。証明。発見。",
+    hero_tags: "Z₃³ 認知エクソスケルトン · 27 状態 · 6 オペレータ · 33+ 知識源 · 36 エンジン · 20 MCP ツール · 人間+AIエージェント",
+    hero_tags: "Z₃³ 認知エクソスケルトン · 27 状態 · 6 オペレータ · 33+ 知識源 · 36 エンジン · 20 MCP ツール",
+    hero_cta_primary: "pip install c4reqber",
+    hero_cta_secondary: "GitHub",
+    github_stars: "最初のスターになろう！",
+    stat_states: "認知状態",
+    stat_operators: "C4 オペレータ",
+    stat_sources: "知識源",
+    stat_engines: "シミュレーションエンジン",
+    stat_mcp: "MCP ツール",
+    stat_tests: "通過テスト",
+    fp_label: "第一原理",
+    fp_title: "エージェントは話せる。しかし考えられるか？",
+    fp_desc: "AIエージェントには言語がある。認知が欠けている。c4reqber はエージェントの心の科学体である。",
+    features_label: "機能",
+    features_title: "唯一の AI 認知エクソスケルトン",
+    features_desc: "機能ではない。認知器官。各モジュールは実際の実装。",
+    feat_c4: "Z₃³ 認知トポロジー",
+    feat_c4_desc: "時間、規模、主体性の3次元にわたる27の離散認知状態。すべてのクエリはマッピング、追跡、ナビゲーション可能。",
+    feat_verify: "形式検証エンジン",
+    feat_verify_desc: "Lean4、Coq、Dafny、Agda、Z3、Hoare 論理 — 仮説は主張するだけでなく、証明する。",
+    feat_sim: "36 シミュレーションエンジン",
+    feat_sim_desc: "分子動力学（GROMACS、OpenMM）、量子（PySCF）、CFD（OpenFOAM）、神経（NEURON）など。",
+    feat_kg: "33 知識源",
+    feat_kg_desc: "arXiv、PubMed、Semantic Scholar、OpenAlex、Europe PMC、Crossref、Zenodo、ClinicalTrials.gov、GBIF、NASA Earthdata など23以上。",
+    feat_pub: "自動論文生成器",
+    feat_pub_desc: "LaTeX + BibTeX + Markdown + JSON + HTML エクスポート。arXiv、bioRxiv、または指導教員の机の上へ。",
+    feat_mcp: "MCP サーバー — 20 ツール",
+    feat_mcp_desc: "C4REQBER の全機能を AI エージェントに公開。JSON Schema 準拠。stdio JSON-RPC。",
+    c4_label: "認知アーキテクチャ",
+    c4_title: "C4-META vs 分野",
+    c4_desc: "離散群論的認知空間。ニューラルネットワークでもなければ、記号的ルールでもない。数学的トポロジー。",
+    c4_repr: "表現",
+    c4_dim: "次元",
+    c4_states2: "状態",
+    c4_formalism: "形式化",
+    c4_verify2: "検証",
+    c4_nav: "ナビゲーション",
+    c4_reach: "到達可能性",
+    c4_cross: "クロスドメイン",
+    c4_os2: "オープンソース",
+    c4_peer: "査読付き",
+    comp_label: "競合分析",
+    comp_title: "c4reqber vs 市場",
+    comp_desc: "LLM ラッパーではない。認知オペレーティングシステム。",
+    comp_cog: "認知",
+    comp_formal: "形式検証",
+    comp_multi: "マルチドメイン",
+    comp_out: "自動出版",
+    comp_wasm: "WASM ランタイム",
+    comp_mcp: "MCP サーバー",
+    comp_os: "オープンソース",
+    comp_price: "価格",
+    comp_term: "製品",
+    comp_lit: "文献レビュー",
+    comp_hypo: "仮説生成",
+    comp_sim: "シミュレーション",
+    comp_legend: "● はい · ○ いいえ · ◐ 部分的",
+    pt_label: "アーキテクチャ",
+    pt_title: "パイプライン段階 — 段階ごとのモデル",
+    pt_desc: "7 段階。各段階に独自の LLM モデル、プラグイン、認知戦略。",
+    pt_phase: "段階",
+    pt_stage: "ステージ",
+    pt_model: "モデル",
+    pt_engines: "プラグイン",
+    pt_a: "C4 認知フレーミング",
+    pt_b: "知識検索",
+    pt_c: "ギャップ分析",
+    pt_d: "仮説生成",
+    pt_e: "シミュレーションと検証",
+    pt_f: "論文作成",
+    pt_g: "品質管理",
+    qs_label: "クイックスタート",
+    qs_title: "3 コマンドで発見",
+    qs_academic_hint: "学術的ヒント: --verify フラグを付けて Lean4/Coq を自動呼び出し。",
+    roadmap_label: "ロードマップ",
+    roadmap_title: "次は何か",
+    roadmap_desc: "シミュレーションエンジン、AI統合、検証バックエンドの継続的デリバリー。",
+    roadmap_v55: "v5.5 — 現在",
+    roadmap_v55_body: `✓ 型安全性ゼロ（0 mypy エラー）
+✓ MCP 20 JSON Schema ツール
+✓ Virtual Bio + GPU 自動検出
+✓ 36 シミュレーションエンジン統合
+✓ 10,000+ テスト通過`,
+    roadmap_v56: "v5.6 — 2026年Q3",
+    roadmap_v56_body: `○ FEniCSx / dolfinx FEM ブリッジ
+○ OpenMM タンパク質動力学
+○ DeepChem 創薬
+○ PyMC / Bambi ベイズ統計
+○ ArviZ ベイズ可視化`,
+    roadmap_v57: "v5.7+ — 2027",
+    roadmap_v57_body: `○ LangGraph 状態機械エージェント
+○ Unsloth ローカル LLM ファインチューニング
+○ vLLM 高スループット推論
+○ ChromaDB / LanceDB RAG レイヤー
+○ CrewAI マルチエージェントオーケストレーション`,
+    engines_label: "シミュレーションエンジン",
+    engines_title: "59 科学計算エンジン",
+    engines_desc: "5 内部 GPU エンジン + 31 オープンソースブリッジ + 23 計画統合。分子動力学から気候モデリングまで。",
+    engines_note: "P1 = Python ネイティブのオープンソースブリッジが利用可能 · Planned = ロードマップ上 · 完全なリストは simulation_engines_report.md",
+    sysreq_label: "互換性",
+    sysreq_title: "OSとシステム要件",
+    sysreq_desc: "macOS と Linux はテスト済みでサポートされています。Windows はテストされていません。外部エンジンは別途インストールが必要です。",
+    os_matrix_title: "OS互換性マトリックス",
+    os_windows_status: "✗ 未テスト · WSL2 は動作する可能性あり",
+    hw_req_title: "最低要件",
+    hw_ram: "RAM",
+    hw_ram_note: "8 GB 推奨",
+    hw_cpu: "CPU",
+    hw_cpu_note: "シミュレーション用に 4+ コア",
+    hw_disk: "ディスク",
+    hw_disk_note: "+ エンジンは別途",
+    hw_gpu: "GPU",
+    hw_gpu_note: "オプション · Apple Silicon / CUDA",
+    pip_scope_note: "<strong>注：</strong> <code style=\"color:var(--cyan);font-family:var(--mono)\">pip install c4reqber</code> は Python パッケージ + CLI のみをインストールします。外部シミュレーションエンジン（GROMACS、OpenFOAM など）はエンジンごとに別途インストールが必要です。<a href=\"GPU_SETUP.md\" style=\"color:var(--cyan)\">GPU_SETUP.md</a> を参照。",
+    price_label: "価格",
+    price_title: "5 コスト層",
+    price_desc: "完全なパイプライン実行ごとに $0.002 から $0.11。段階ごとに設定。",
+    price_budget: "予算",
+    price_balanced: "バランス",
+    price_premium: "プレミアム",
+    price_local: "ローカル",
+    price_rec: "推奨",
+    usecases_label: "対象者",
+    usecases_title: "研究者向け",
+    usecases_desc: "ハードサイエンスから社会科学まで — c4reqber はあなたの領域に適応します。",
+    uc_hard: "ハードサイエンス",
+    uc_hard_desc: "物理、化学、生物、材料。TRIZ + 36 シミュレーションエンジン + 形式的検証。",
+    uc_psych: "心理学・社会科学",
+    uc_psych_desc: "CBT メタアナリシス、組織行動、政治心理学。因果推論 + エージェントモデル。",
+    uc_clinical: "臨床研究",
+    uc_clinical_desc: "RCT 設計、バイオマーカー、薬物相互作用。PubMed + ClinicalTrials.gov + STRING。",
+    uc_eco: "気候・生態学",
+    uc_eco_desc: "生物多様性、気候モデリング、海洋力学。GBIF + NASA Earthdata + WRF。",
+    uc_law: "法律・政策",
+    uc_law_desc: "法的推論、判例分析、規制影響。多法域 + 時系列推論。",
+    cta_title: "パラダイムシフトの準備はできましたか？",
+    cta_sub: "1つのコマンド。1つの学位論文。1つのパラダイムシフト。",
+    cta_license: "AGPL-3.0 · BYOK · データ保持なし · セルフホスト可能",
+    foot_product: "c4reqber v5.5.0",
+    foot_tests: "10,023 テスト · 0 mypy エラー",
+    foot_slogan: "Think. Simulate. Prove. Discover.",
+  },
+  de: {
+    hero_badge: "v5.5.0 · PRODUKTION · 0 mypy-Fehler",
+    hero_subtitle: "Kognitives Exoskelett für <strong>Menschen und KI-Agenten</strong>.<br>Denke. Simuliere. Beweise. Entdecke.",
+    hero_tags: "Z₃³ KOGNITIVE EXOSKELETT · 27 ZUSTÄNDE · 6 OPERATOREN · 33+ QUELLEN · 36 ENGINES · 20 MCP-TOOLS",
+    hero_cta_primary: "pip install c4reqber",
+    hero_cta_secondary: "GitHub",
+    github_stars: "Sei der erste Stern!",
+    stat_states: "Kognitive Zustände",
+    stat_operators: "C4-Operatoren",
+    stat_sources: "Wissensquellen",
+    stat_engines: "Simulations-Engines",
+    stat_mcp: "MCP-Tools",
+    stat_tests: "Bestandene Tests",
+    fp_label: "Erste Prinzipien",
+    fp_title: "Agenten können reden. Aber können sie denken?",
+    fp_desc: "KI-Agenten haben Sprache. Sie fehlt Kognition. c4reqber ist der wissenschaftliche Körper für den agentischen Verstand.",
+    features_label: "Fähigkeiten",
+    features_title: "Das einzige KI-kognitive Exoskelett",
+    features_desc: "Keine Features. Kognitive Organe. Jedes Modul ist eine echte Implementierung.",
+    feat_c4: "Z₃³ Kognitive Topologie",
+    feat_c4_desc: "27 diskrete kognitive Zustände über Zeit, Skala und Agentur. Jede Abfrage wird gemappt, verfolgt und navigierbar.",
+    feat_verify: "Formale Verifizierungs-Engine",
+    feat_verify_desc: "Lean4, Coq, Dafny, Agda, Z3, Hoare-Logik — Ihre Hypothesen behaupten nicht nur, sie beweisen.",
+    feat_sim: "36 Simulations-Engines",
+    feat_sim_desc: "Molekulardynamik (GROMACS, OpenMM), Quanten (PySCF), CFD (OpenFOAM), Neuro (NEURON) und mehr.",
+    feat_kg: "33 Wissensquellen",
+    feat_kg_desc: "arXiv, PubMed, Semantic Scholar, OpenAlex, Europe PMC, Crossref, Zenodo, ClinicalTrials.gov, GBIF, NASA Earthdata und 23 weitere.",
+    feat_pub: "Automatischer Dissertationsgenerator",
+    feat_pub_desc: "LaTeX + BibTeX + Markdown + JSON + HTML Exporte. Bereit für arXiv, bioRxiv oder den Schreibtisch Ihres Betreuers.",
+    feat_mcp: "MCP-Server — 20 Tools",
+    feat_mcp_desc: "Stellen Sie die volle C4REQBER-Fähigkeit KI-Agenten zur Verfügung. JSON Schema konform. stdio JSON-RPC.",
+    c4_label: "Kognitive Architektur",
+    c4_title: "C4-META vs. das Feld",
+    c4_desc: "Diskreter gruppentheoretischer kognitiver Raum. Keine neuronalen Netze. Keine symbolischen Regeln. Mathematische Topologie.",
+    c4_repr: "Repräsentation",
+    c4_dim: "Dimensionen",
+    c4_states2: "Zustände",
+    c4_formalism: "Formalismus",
+    c4_verify2: "Verifikation",
+    c4_nav: "Navigation",
+    c4_reach: "Erreichbarkeit",
+    c4_cross: "Domänenübergreifend",
+    c4_os2: "Open Source",
+    c4_peer: "Peer-Reviewed",
+    comp_label: "Wettbewerbsanalyse",
+    comp_title: "c4reqber vs. der Markt",
+    comp_desc: "Kein LLM-Wrapper. Ein kognitives Betriebssystem.",
+    comp_cog: "Kognition",
+    comp_formal: "Formale Verif.",
+    comp_multi: "Multi-Domäne",
+    comp_out: "Auto-Publikation",
+    comp_wasm: "WASM Runtime",
+    comp_mcp: "MCP-Server",
+    comp_os: "Open Source",
+    comp_price: "Preis",
+    comp_term: "Produkt",
+    comp_lit: "Lit. Review",
+    comp_hypo: "Hypothesengen.",
+    comp_sim: "Simulation",
+    comp_legend: "● Ja · ○ Nein · ◐ Teilweise",
+    pt_label: "Architektur",
+    pt_title: "Pipeline-Phasen — Modell pro Stufe",
+    pt_desc: "7 Phasen. Jede erhält ihr eigenes LLM-Modell, Plugins und kognitive Strategie.",
+    pt_phase: "Phase",
+    pt_stage: "Stufe",
+    pt_model: "Modell",
+    pt_engines: "Plugins",
+    pt_a: "C4 Kognitive Rahmung",
+    pt_b: "Wissenssuche",
+    pt_c: "Lückenanalyse",
+    pt_d: "Hypothesengenerierung",
+    pt_e: "Simulation & Verifikation",
+    pt_f: "Dissertation",
+    pt_g: "Qualitätskontrolle",
+    qs_label: "Schnellstart",
+    qs_title: "3 Befehle zur Entdeckung",
+    qs_academic_hint: "Akademischer Tipp: Mit --verify-Flag Lean4/Coq automatisch aufrufen.",
+    roadmap_label: "Roadmap",
+    roadmap_title: "Was kommt als Nächstes",
+    roadmap_desc: "Kontinuierliche Bereitstellung von Simulations-Engines, KI-Integrationen und Verifikations-Backends.",
+    roadmap_v55: "v5.5 — Jetzt",
+    roadmap_v55_body: `✓ Typsicherheit Null (0 mypy-Fehler)
+✓ MCP 20 Tools mit JSON Schema
+✓ Virtual Bio + GPU-Autoerkennung
+✓ 36 Simulations-Engines integriert
+✓ 10.000+ Tests bestanden`,
+    roadmap_v56: "v5.6 — Q3 2026",
+    roadmap_v56_body: `○ FEniCSx / dolfinx FEM-Brücke
+○ OpenMM Proteindynamik
+○ DeepChem Arzneimittelforschung
+○ PyMC / Bambi Bayes'sche Statistik
+○ ArviZ Bayes'sche Visualisierung`,
+    roadmap_v57: "v5.7+ — 2027",
+    roadmap_v57_body: `○ LangGraph Zustandsautomaten-Agenten
+○ Unsloth lokales LLM-Fine-Tuning
+○ vLLM Hochdurchsatz-Inferenz
+○ ChromaDB / LanceDB RAG-Schicht
+○ CrewAI Multi-Agent-Orchestrierung`,
+    engines_label: "Simulations-Engines",
+    engines_title: "59 wissenschaftliche Rechen-Engines",
+    engines_desc: "5 interne GPU-Engines + 31 Open-Source-Brücken + 23 geplante Integrationen. Von Molekulardynamik bis Klimamodellierung.",
+    engines_note: "P1 = Python-native Open-Source-Brücke verfügbar · Planned = auf der Roadmap · Vollständige Liste in simulation_engines_report.md",
+    sysreq_label: "Kompatibilität",
+    sysreq_title: "BS & Systemanforderungen",
+    sysreq_desc: "macOS und Linux sind getestet und unterstützt. Windows ist nicht getestet. Externe Engines erfordern separate Installation.",
+    os_matrix_title: "BS-Kompatibilitätsmatrix",
+    os_windows_status: "✗ Nicht getestet · WSL2 könnte funktionieren",
+    hw_req_title: "Mindestanforderungen",
+    hw_ram: "RAM",
+    hw_ram_note: "8 GB empfohlen",
+    hw_cpu: "CPU",
+    hw_cpu_note: "4+ Kerne für Simulation",
+    hw_disk: "Festplatte",
+    hw_disk_note: "+ Engines separat",
+    hw_gpu: "GPU",
+    hw_gpu_note: "Optional · Apple Silicon / CUDA",
+    pip_scope_note: "<strong>Hinweis:</strong> <code style=\"color:var(--cyan);font-family:var(--mono)\">pip install c4reqber</code> installiert nur das Python-Paket + CLI. Externe Simulations-Engines (GROMACS, OpenFOAM usw.) erfordern eine separate Installation pro Engine. Siehe <a href=\"GPU_SETUP.md\" style=\"color:var(--cyan)\">GPU_SETUP.md</a>.",
+    price_label: "Preisgestaltung",
+    price_title: "5 Kostenstufen",
+    price_desc: "Von $0,002 bis $0,11 pro vollständigem Pipeline-Lauf. Pro Phase konfigurierbar.",
+    price_budget: "Budget",
+    price_balanced: "Ausgewogen",
+    price_premium: "Premium",
+    price_local: "Lokal",
+    price_rec: "Empfohlen",
+    usecases_label: "Für wen ist es",
+    usecases_title: "Zielgruppen",
+    usecases_desc: "Von Naturwissenschaften bis Sozialwissenschaften — c4reqber passt sich Ihrer Domäne an.",
+    uc_hard: "Naturwissenschaften",
+    uc_hard_desc: "Physik, Chemie, Biologie, Materialien. TRIZ + 36 Simulations-Engines + formale Verifikation.",
+    uc_psych: "Psychologie & Sozialwissenschaften",
+    uc_psych_desc: "CBT-Metaanalyse, Organisationsverhalten, politische Psychologie. Kausalschlüsse + Agentenmodelle.",
+    uc_clinical: "Klinische Forschung",
+    uc_clinical_desc: "RCT-Design, Biomarker, Arzneimittelinteraktionen. PubMed + ClinicalTrials.gov + STRING.",
+    uc_eco: "Klima & Ökologie",
+    uc_eco_desc: "Biodiversität, Klimamodellierung, Ozeandynamik. GBIF + NASA Earthdata + WRF.",
+    uc_law: "Recht & Politik",
+    uc_law_desc: "Juristisches Denken, Präzedenzanalyse, regulatorische Auswirkungen. Multi-Jurisdiktion + temporales Denken.",
+    cta_title: "Bereit für den Paradigmenwechsel?",
+    cta_sub: "Ein Befehl. Eine Dissertation. Ein Paradigmenwechsel.",
+    cta_license: "AGPL-3.0 · BYOK · Keine Datenspeicherung · Selbst hostbar",
+    foot_product: "c4reqber v5.5.0",
+    foot_tests: "10.023 Tests · 0 mypy-Fehler",
+    foot_slogan: "Think. Simulate. Prove. Discover.",
+  },
+  ar: {
+    hero_badge: "v5.5.0 · إنتاج · 0 أخطاء mypy",
+    hero_subtitle: "الهيكل المعرفي لـ <strong>البشر ووكلاء الذكاء الاصطناعي</strong>.<br>فكّر. حاكِ. أثبِت. اكتشف.",
+    hero_tags: "Z₃³ الهيكل المعرفي · 27 حالة · 6 مشغلات · 33+ مصدر · 36 محرك · 20 أداة MCP",
+    hero_cta_primary: "pip install c4reqber",
+    hero_cta_secondary: "GitHub",
+    github_stars: "كن النجمة الأولى!",
+    stat_states: "الحالات المعرفية",
+    stat_operators: "مشغلات C4",
+    stat_sources: "مصادر المعرفة",
+    stat_engines: "محركات المحاكاة",
+    stat_mcp: "أدوات MCP",
+    stat_tests: "الاختبارات المجتازة",
+    fp_label: "المبادئ الأولى",
+    fp_title: "الوكلاء يستطيعون التحدث. لكن هل يستطيعون التفكير؟",
+    fp_desc: "الوكلاء الذكاء لديهم لغة. يفتقرون إلى الإدراك. c4reqber هو الجسم العلمي للعقل الوكيل.",
+    features_label: "القدرات",
+    features_title: "الهيكل المعرفي الوحيد للذكاء الاصطناعي",
+    features_desc: "ليس ميزات. أعضاء معرفية. كل وحدة هي تنفيذ حقيقي.",
+    feat_c4: "Z₃³ الطوبولوجيا المعرفية",
+    feat_c4_desc: "27 حالة معرفية منفصلة عبر الزمان والمقياس والوكالة. كل استعلام يتم تعيينه وتتبعه والتنقل فيه.",
+    feat_verify: "محرك التحقق الرسمي",
+    feat_verify_desc: "Lean4 و Coq و Dafny و Agda و Z3 ومنطق Hoare — فرضياتك لا تدعي فقط، بل تثبت.",
+    feat_sim: "36 محرك محاكاة",
+    feat_sim_desc: "ديناميكا جزيئية (GROMACS و OpenMM) وكم (PySCF) و CFD (OpenFOAM) وعصبي (NEURON) والمزيد.",
+    feat_kg: "33 مصدر معرفة",
+    feat_kg_desc: "arXiv و PubMed و Semantic Scholar و OpenAlex و Europe PMC و Crossref و Zenodo و ClinicalTrials.gov و GBIF و NASA Earthdata و 23 آخرين.",
+    feat_pub: "مولد الأطروحات الآلي",
+    feat_pub_desc: "تصدير LaTeX + BibTeX + Markdown + JSON + HTML. جاهز لـ arXiv أو bioRxiv أو مكتب مشرفك.",
+    feat_mcp: "خادم MCP — 20 أداة",
+    feat_mcp_desc: "اعرض إمكانيات C4REQBER الكاملة لوكلاء الذكاء الاصطناعي. متوافق مع JSON Schema. stdio JSON-RPC.",
+    c4_label: "الهيكل المعرفي",
+    c4_title: "C4-META مقابل المجال",
+    c4_desc: "فضاء معرفي نظري مجموعاتي منفصل. ليس شبكات عصبية. ليس قواعد رمزية. طوبولوجيا رياضية.",
+    c4_repr: "التمثيل",
+    c4_dim: "أبعاد",
+    c4_states2: "حالات",
+    c4_formalism: "شكلية",
+    c4_verify2: "التحقق",
+    c4_nav: "التنقل",
+    c4_reach: "القابلية للوصول",
+    c4_cross: "متعدد المجالات",
+    c4_os2: "مصدر مفتوح",
+    c4_peer: "تمت مراجعته",
+    comp_label: "تحليل المنافسة",
+    comp_title: "c4reqber مقابل السوق",
+    comp_desc: "ليس غلاف LLM. نظام تشغيل معرفي.",
+    comp_cog: "إدراك",
+    comp_formal: "التحقق الرسمي",
+    comp_multi: "متعدد المجالات",
+    comp_out: "نشر تلقائي",
+    comp_wasm: "WASM Runtime",
+    comp_mcp: "خادم MCP",
+    comp_os: "مصدر مفتوح",
+    comp_price: "السعر",
+    comp_term: "المنتج",
+    comp_lit: "مراجعة الأدب",
+    comp_hypo: "توليد الفرضية",
+    comp_sim: "محاكاة",
+    comp_legend: "● نعم · ○ لا · ◐ جزئي",
+    pt_label: "البنية",
+    pt_title: "مراحل الخط — نموذج لكل مرحلة",
+    pt_desc: "7 مراحل. كل مرحلة تحصل على نموذج LLM خاص بها وإضافات واستراتيجية معرفية.",
+    pt_phase: "المرحلة",
+    pt_stage: "المرحلة",
+    pt_model: "النموذج",
+    pt_engines: "الإضافات",
+    pt_a: "C4 الإطار المعرفي",
+    pt_b: "البحث عن المعرفة",
+    pt_c: "تحليل الفجوات",
+    pt_d: "توليد الفرضية",
+    pt_e: "المحاكاة والتحقق",
+    pt_f: "الأطروحة",
+    pt_g: "مراقبة الجودة",
+    qs_label: "البدء السريع",
+    qs_title: "3 أوامر للاكتشاف",
+    qs_academic_hint: "نصيحة أكاديمية: شغل بعلامة --verify لاستدعاء Lean4/Coq تلقائيًا.",
+    roadmap_label: "خارطة الطريق",
+    roadmap_title: "ما التالي",
+    roadmap_desc: "تواصل تسليم محركات المحاكاة وتكاملات الذكاء الاصطناعي وواجهات التحقق الخلفية.",
+    roadmap_v55: "v5.5 — الآن",
+    roadmap_v55_body: `✓ سلامة النوع صفر (0 أخطاء mypy)
+✓ MCP 20 أداة مع JSON Schema
+✓ Virtual Bio + اكتشاف GPU التلقائي
+✓ 36 محرك محاكاة مدمج
+✓ 10,000+ اختبار مجتاز`,
+    roadmap_v56: "v5.6 — Q3 2026",
+    roadmap_v56_body: `○ جسر FEniCSx / dolfinx FEM
+○ ديناميكا بروتين OpenMM
+○ DeepChem اكتشاف الأدوية
+○ PyMC / Bambi الإحصاء البايزي
+○ ArviZ التصور البايزي`,
+    roadmap_v57: "v5.7+ — 2027",
+    roadmap_v57_body: `○ وكلاء آلات الحالة LangGraph
+○ Unsloth ضبط LLM المحلي
+○ vLLM استدلال عالي الإنتاجية
+○ طبقة RAG ChromaDB / LanceDB
+○ CrewAI الأوركسترا متعدد الوكلاء`,
+    engines_label: "محركات المحاكاة",
+    engines_title: "59 محرك حساب علمي",
+    engines_desc: "5 محركات GPU داخلية + 31 جسر مفتوح المصدر + 23 تكامل مخطط له. من الديناميكا الجزيئية إلى نمذجة المناخ.",
+    engines_note: "P1 = جسر مفتوح المصدر أصلي بلغة Python متاح الآن · Planned = على خارطة الطريق · القائمة الكاملة في simulation_engines_report.md",
+    sysreq_label: "التوافق",
+    sysreq_title: "نظام التشغيل ومتطلبات النظام",
+    sysreq_desc: "macOS و Linux تم اختبارهما ودعمهما. Windows لم يتم اختباره. المحركات الخارجية تتطلب تثبيتًا منفصلًا.",
+    os_matrix_title: "مصفوفة توافق نظام التشغيل",
+    os_windows_status: "✗ لم يتم اختباره · WSL2 قد يعمل",
+    hw_req_title: "الحد الأدنى من المتطلبات",
+    hw_ram: "ذاكرة الوصول العشوائي",
+    hw_ram_note: "يوصى بـ 8 جيجابايت",
+    hw_cpu: "وحدة المعالجة المركزية",
+    hw_cpu_note: "4+ أنوية للمحاكاة",
+    hw_disk: "القرص",
+    hw_disk_note: "+ المحركات بشكل منفصل",
+    hw_gpu: "وحدة معالجة الرسومات",
+    hw_gpu_note: "اختياري · Apple Silicon / CUDA",
+    pip_scope_note: "<strong>ملاحظة:</strong> <code style=\"color:var(--cyan);font-family:var(--mono)\">pip install c4reqber</code> يثبت حزمة Python + CLI فقط. محركات المحاكاة الخارجية (GROMACS و OpenFOAM وما إلى ذلك) تتطلب تثبيتًا منفصلًا لكل محرك. راجع <a href=\"GPU_SETUP.md\" style=\"color:var(--cyan)\">GPU_SETUP.md</a>.",
+    price_label: "التسعير",
+    price_title: "5 مستويات التكلفة",
+    price_desc: "من $0.002 إلى $0.11 لكل تشغيل خط كامل. تكوين لكل مرحلة.",
+    price_budget: "ميزانية",
+    price_balanced: "متوازن",
+    price_premium: "متميز",
+    price_local: "محلي",
+    price_rec: "موصى به",
+    usecases_label: "لمن هو موجه",
+    usecases_title: "جمهور الباحثين",
+    usecases_desc: "من العلوم الصلبة إلى العلوم الاجتماعية — c4reqber يتكيف مع مجالك.",
+    uc_hard: "العلوم الصلبة",
+    uc_hard_desc: "الفيزياء، الكيمياء، الأحياء، المواد. TRIZ + 36 محرك محاكاة + التحقق الرسمي.",
+    uc_psych: "علم النفس والعلوم الاجتماعية",
+    uc_psych_desc: "تحليل الميتا للعلاج السلوكي المعرفي، السلوك التنظيمي، علم النفس السياسي. استدلال سببي + نماذج الوكلاء.",
+    uc_clinical: "البحث السريري",
+    uc_clinical_desc: "تصميم التجارب السريرية العشوائية، المؤشرات الحيوية، التفاعلات الدوائية. PubMed + ClinicalTrials.gov + STRING.",
+    uc_eco: "المناخ والبيئة",
+    uc_eco_desc: "التنوع البيولوجي، نمذجة المناخ، ديناميكيات المحيط. GBIF + NASA Earthdata + WRF.",
+    uc_law: "القانون والسياسة",
+    uc_law_desc: "الاستدلال القانوني، تحليل السوابق، التأثير التنظيمي. متعدد الاختصاصات + استدلال زمني.",
+    cta_title: "مستعد لتغيير النموذج؟",
+    cta_sub: "أمر واحد. أطروحة واحدة. تحول نموذجي واحد.",
+    cta_license: "AGPL-3.0 · BYOK · عدم الاحتفاظ بالبيانات · قابل للاستضافة الذاتية",
+    foot_product: "c4reqber v5.5.0",
+    foot_tests: "10,023 اختبار · 0 أخطاء mypy",
+    foot_slogan: "فكّر. حاكِ. أثبِت. اكتشف.",
+  },
+  hi: {
+    hero_badge: "v5.5.0 · प्रोडक्शन · 0 mypy त्रुटियाँ",
+    hero_subtitle: "<strong>मनुष्यों और AI एजेंटों</strong> के लिए संज्ञानात्मक एक्जोस्केलेटन।<br>सोचो। अनुकरण करो। साबित करो। खोजो।",
+    hero_tags: "Z₃³ संज्ञानात्मक एक्जोस्केलेटन · 27 स्थितियाँ · 6 ऑपरेटर · 33+ स्रोत · 36 इंजन · 20 MCP टूल्स",
+    hero_cta_primary: "pip install c4reqber",
+    hero_cta_secondary: "GitHub",
+    github_stars: "पहला तारा बनें!",
+    stat_states: "संज्ञानात्मक स्थितियाँ",
+    stat_operators: "C4 ऑपरेटर",
+    stat_sources: "ज्ञान के स्रोत",
+    stat_engines: "सिमुलेशन इंजन",
+    stat_mcp: "MCP टूल्स",
+    stat_tests: "पास होने वाले टेस्ट",
+    fp_label: "प्रथम सिद्धांत",
+    fp_title: "एजेंट बात कर सकते हैं। लेकिन क्या वे सोच सकते हैं?",
+    fp_desc: "AI एजेंटों में भाषा है। उनमें संज्ञान नहीं है। c4reqber एजेंटिक मन के लिए वैज्ञानिक शरीर है।",
+    features_label: "क्षमताएँ",
+    features_title: "एकमात्र AI संज्ञानात्मक एक्जोस्केलेटन",
+    features_desc: "सुविधाएँ नहीं। संज्ञानात्मक अंग। प्रत्येक मॉड्यूल एक वास्तविक कार्यान्वयन है।",
+    feat_c4: "Z₃³ संज्ञानात्मक टोपोलॉजी",
+    feat_c4_desc: "समय, पैमाने और एजेंसी के आयामों में 27 विस्तीर्ण संज्ञानात्मक स्थितियाँ। प्रत्येक क्वेरी मैप, ट्रैक और नेविगेट योग्य है।",
+    feat_verify: "औपचारिक सत्यापन इंजन",
+    feat_verify_desc: "Lean4, Coq, Dafny, Agda, Z3, Hoare लॉजिक — आपके परिकल्पनाएँ केवल दावा नहीं करतीं, वे साबित करती हैं।",
+    feat_sim: "36 सिमुलेशन इंजन",
+    feat_sim_desc: "आणविक गतिशीलता (GROMACS, OpenMM), क्वांटम (PySCF), CFD (OpenFOAM), न्यूरो (NEURON), और अधिक।",
+    feat_kg: "33 ज्ञान स्रोत",
+    feat_kg_desc: "arXiv, PubMed, Semantic Scholar, OpenAlex, Europe PMC, Crossref, Zenodo, ClinicalTrials.gov, GBIF, NASA Earthdata, और 23 अधिक।",
+    feat_pub: "स्वचालित डिसर्टेशन जनरेटर",
+    feat_pub_desc: "LaTeX + BibTeX + Markdown + JSON + HTML निर्यात। arXiv, bioRxiv, या आपके सलाहकार की मेज के लिए तैयार।",
+    feat_mcp: "MCP सर्वर — 20 टूल्स",
+    feat_mcp_desc: "AI एजेंटों को C4REQBER की पूरी क्षमता दें। JSON Schema अनुपालन। stdio JSON-RPC।",
+    c4_label: "संज्ञानात्मक वास्तुकला",
+    c4_title: "C4-META बनाम क्षेत्र",
+    c4_desc: "विस्तीर्ण समूह-सैद्धांतिक संज्ञानात्मक स्थान। तंत्रिका नेटवर्क नहीं। प्रतीकात्मक नियम नहीं। गणितीय टोपोलॉजी।",
+    c4_repr: "प्रतिनिधित्व",
+    c4_dim: "आयाम",
+    c4_states2: "अवस्थाएँ",
+    c4_formalism: "औपचारिकता",
+    c4_verify2: "सत्यापन",
+    c4_nav: "नेफिगेशन",
+    c4_reach: "पहुँचयोग्यता",
+    c4_cross: "क्रॉस-डोमेन",
+    c4_os2: "ओपन सोर्स",
+    c4_peer: "पीयर-रिव्यूड",
+    comp_label: "प्रतिस्पर्धात्मक विश्लेषण",
+    comp_title: "c4reqber बनाम बाज़ार",
+    comp_desc: "LLM रैपर नहीं। एक संज्ञानात्मक ऑपरेटिंग सिस्टम।",
+    comp_cog: "संज्ञान",
+    comp_formal: "औपचारिक सत्यापन",
+    comp_multi: "मल्टी-डोमेन",
+    comp_out: "ऑटो प्रकाशन",
+    comp_wasm: "WASM रनटाइम",
+    comp_mcp: "MCP सर्वर",
+    comp_os: "ओपन सोर्स",
+    comp_price: "कीमत",
+    comp_term: "उत्पाद",
+    comp_lit: "साहित्य समीक्षा",
+    comp_hypo: "परिकल्पना जनरेशन",
+    comp_sim: "अनुकरण",
+    comp_legend: "● हाँ · ○ नहीं · ◐ आंशिक",
+    pt_label: "वास्तुकला",
+    pt_title: "पाइपलाइन चरण — प्रति चरण मॉडल",
+    pt_desc: "7 चरण। प्रत्येक को अपनी LLM मॉडल, प्लगइन्स और संज्ञानात्मक रणनीति मिलती है।",
+    pt_phase: "चरण",
+    pt_stage: "चरण",
+    pt_model: "मॉडल",
+    pt_engines: "प्लगइन्स",
+    pt_a: "C4 संज्ञानात्मक फ्रेमिंग",
+    pt_b: "ज्ञान खोज",
+    pt_c: "अंतराल विश्लेषण",
+    pt_d: "परिकल्पना जनरेशन",
+    pt_e: "सिमुलेशन और सत्यापन",
+    pt_f: "डिसर्टेशन",
+    pt_g: "गुणवत्ता नियंत्रण",
+    qs_label: "क्विकस्टार्ट",
+    qs_title: "3 कमांड डिस्कवरी के लिए",
+    qs_academic_hint: "शैक्षिक सुझाव: --verify फ्लैग के साथ चलाएँ ताकि Lean4/Coq स्वचालित रूप से लागू हो।",
+    roadmap_label: "रोडमैप",
+    roadmap_title: "आगे क्या है",
+    roadmap_desc: "सिमुलेशन इंजन, AI एकीकरण और सत्यापन बैकएंड की निरंतर डिलीवरी।",
+    roadmap_v55: "v5.5 — अभी",
+    roadmap_v55_body: `✓ प्रकार सुरक्षा शून्य (0 mypy त्रुटियाँ)
+✓ MCP 20 JSON Schema टूल्स
+✓ Virtual Bio + GPU ऑटो-डिटेक्ट
+✓ 36 सिमुलेशन इंजन एकीकृत
+✓ 10,000+ टेस्ट पास`,
+    roadmap_v56: "v5.6 — Q3 2026",
+    roadmap_v56_body: `○ FEniCSx / dolfinx FEM ब्रिज
+○ OpenMM प्रोटीन गतिशीलता
+○ DeepChem ड्रग डिस्कवरी
+○ PyMC / Bambi बेजियन आंकड़े
+○ ArviZ बेजियन विज़ुअलाइज़ेशन`,
+    roadmap_v57: "v5.7+ — 2027",
+    roadmap_v57_body: `○ LangGraph स्टेट-मशीन एजेंट
+○ Unsloth स्थानीय LLM फाइन-ट्यूनिंग
+○ vLLM उच्च-थ्रूपुट अनुमान
+○ ChromaDB / LanceDB RAG परत
+○ CrewAI मल्टी-एजेंट ऑर्केस्ट्रेशन`,
+    engines_label: "सिमुलेशन इंजन",
+    engines_title: "59 वैज्ञानिक कम्प्यूटिंग इंजन",
+    engines_desc: "5 आंतरिक GPU इंजन + 31 ओपन-सोर्स ब्रिज + 23 योजनाबद्ध एकीकरण। आणविक गतिशीलता से जलवायु मॉडलिंग तक।",
+    engines_note: "P1 = Python-देशज ओपन-सोर्स ब्रिज अभी उपलब्ध · Planned = रोडमैप पर · पूरी सूची simulation_engines_report.md में",
+    sysreq_label: "अनुकूलता",
+    sysreq_title: "OS और सिस्टम आवश्यकताएँ",
+    sysreq_desc: "macOS और Linux का परीक्षण और समर्थन किया गया है। Windows का परीक्षण नहीं किया गया। बाहरी इंजन को अलग से स्थापना की आवश्यकता है।",
+    os_matrix_title: "OS अनुकूलता मैट्रिक्स",
+    os_windows_status: "✗ परीक्षण नहीं किया · WSL2 काम कर सकता है",
+    hw_req_title: "न्यूनतम आवश्यकताएँ",
+    hw_ram: "RAM",
+    hw_ram_note: "8 GB अनुशंसित",
+    hw_cpu: "CPU",
+    hw_cpu_note: "सिमुलेशन के लिए 4+ कोर",
+    hw_disk: "डिस्क",
+    hw_disk_note: "+ इंजन अलग से",
+    hw_gpu: "GPU",
+    hw_gpu_note: "वैकल्पिक · Apple Silicon / CUDA",
+    pip_scope_note: "<strong>नोट:</strong> <code style=\"color:var(--cyan);font-family:var(--mono)\">pip install c4reqber</code> केवल Python पैकेज + CLI स्थापित करता है। बाहरी सिमुलेशन इंजन (GROMACS, OpenFOAM आदि) को प्रति इंजन अलग से स्थापना की आवश्यकता है। देखें <a href=\"GPU_SETUP.md\" style=\"color:var(--cyan)\">GPU_SETUP.md</a>।",
+    price_label: "मूल्य निर्धारण",
+    price_title: "5 लागत स्तर",
+    price_desc: "प्रति पूर्ण पाइपलाइन रन $0.002 से $0.11 तक। प्रति चरण कॉन्फ़िगर करें।",
+    price_budget: "बजट",
+    price_balanced: "संतुलित",
+    price_premium: "प्रीमियम",
+    price_local: "स्थानीय",
+    price_rec: "अनुशंसित",
+    usecases_label: "किसके लिए",
+    usecases_title: "शोधकर्ता दर्शक",
+    usecases_desc: "हार्ड साइंस से सोशल साइंस तक — c4reqber आपके डोमेन के अनुकूल होता है।",
+    uc_hard: "हार्ड साइंस",
+    uc_hard_desc: "भौतिकी, रसायन विज्ञान, जीव विज्ञान, सामग्री। TRIZ + 36 सिमुलेशन इंजन + औपचारिक सत्यापन।",
+    uc_psych: "मनोविज्ञान और सामाजिक विज्ञान",
+    uc_psych_desc: "CBT मेटा-विश्लेषण, संगठनात्मक व्यवहार, राजनीतिक मनोविज्ञान। कारणात्मक अनुमान + एजेंट मॉडल।",
+    uc_clinical: "क्लिनिकल अनुसंधान",
+    uc_clinical_desc: "RCT डिज़ाइन, बायोमार्कर, दवा-दवा इंटरैक्शन। PubMed + ClinicalTrials.gov + STRING।",
+    uc_eco: "जलवायु और पारिस्थितिकी",
+    uc_eco_desc: "जैव विविधता, जलवायु मॉडलिंग, महासागर गतिशीलता। GBIF + NASA Earthdata + WRF।",
+    uc_law: "कानून और नीति",
+    uc_law_desc: "कानूनी तर्क, पूर्वाग्रह विश्लेषण, नियामक प्रभाव। बहु-क्षेत्राधिकार + कालिक तर्क।",
+    cta_title: "पैराडाइम बदलने के लिए तैयार हैं?",
+    cta_sub: "एक कमांड। एक डिसर्टेशन। एक पैराडाइम शिफ्ट।",
+    cta_license: "AGPL-3.0 · BYOK · कोई डेटा संग्रहण नहीं · स्वयं-होस्टेबल",
+    foot_product: "c4reqber v5.5.0",
+    foot_tests: "10,023 टेस्ट · 0 mypy त्रुटियाँ",
+    foot_slogan: "सोचो। अनुकरण करो। साबित करो। खोजो।",
+  },
+};
+
+let currentLang = 'en';
+try { currentLang = localStorage.getItem('c4r_lang') || 'en'; } catch (e) {}
+window.c4rCurrentLang = currentLang;
+
+function applyLanguage(lang) {
+  currentLang = lang;
+  window.c4rCurrentLang = lang;
+  try { localStorage.setItem('c4r_lang', lang); } catch (e) {}
+  const t = i18n[lang] || i18n.en;
+  const htmlKeys = new Set(['hero_subtitle','pip_scope_note']);
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    const val = t[key] || i18n.en[key];
+    if (!val) return;
+    if (htmlKeys.has(key)) el.innerHTML = val;
+    else el.textContent = val;
+  });
+  document.querySelectorAll('.lang-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.lang === lang);
+  });
+  document.documentElement.lang = lang === 'zh' ? 'zh-CN' : lang === 'ja' ? 'ja-JP' : lang === 'ar' ? 'ar-SA' : lang === 'hi' ? 'hi-IN' : lang === 'ru' ? 'ru-RU' : lang === 'de' ? 'de-DE' : 'en';
+  const mascotComment = document.getElementById('mascot-comment');
+  if (mascotComment && window.mascotComments) {
+    const msgs = window.mascotComments[lang] || window.mascotComments.en;
+    const idx = (typeof window.mascotCommentIndex === 'number') ? window.mascotCommentIndex : 0;
+    mascotComment.textContent = msgs[idx % msgs.length];
+  }
+}
+
+document.querySelectorAll('.lang-btn').forEach(btn => {
+  btn.addEventListener('click', () => applyLanguage(btn.dataset.lang));
+});
+
+// Adaptive GitLab/GitHub link strategy
+(function(){
+  const hostname = window.location.hostname;
+  const isGitLab = hostname.includes('gitlab') || hostname.includes('git.') || document.referrer.includes('gitlab');
+  const repoBase = isGitLab ? 'https://gitlab.com/c4reqber/c4reqber' : 'https://github.com/c4reqber/c4reqber';
+  document.querySelectorAll('a[href*="github.com/c4reqber"]').forEach(a => {
+    a.href = a.href.replace('https://github.com/c4reqber/c4reqber', repoBase);
+  });
+})();
+
+// Scroll reveal animation with stagger
+const revealObserver=new IntersectionObserver((entries)=>{entries.forEach(e=>{if(e.isIntersecting){let delay=0;if(!e.target.classList.contains('section-header')){delay=Array.from(e.target.parentElement.children).indexOf(e.target)*80}e.target.style.transitionDelay=delay+'ms';e.target.style.opacity='1';e.target.style.transform='translateY(0)';revealObserver.unobserve(e.target)}})},{threshold:.1});
+document.querySelectorAll('.section-header,.feature-card,.stat-card,.term-block,.pricing-card').forEach(el=>{el.style.opacity='0';el.style.transform='translateY(20px)';el.style.transition='opacity .6s ease, transform .6s ease';revealObserver.observe(el)});
+
+applyLanguage(currentLang);
+
+// Reading progress + back-to-top
+const readProg=document.getElementById('read-progress');
+const backTop=document.getElementById('back-to-top');
+window.addEventListener('scroll',()=>{
+  const scrolled=window.scrollY/(document.documentElement.scrollHeight-window.innerHeight);
+  if(readProg)readProg.style.width=Math.min(scrolled*100,100)+'%';
+  if(backTop){backTop.style.opacity=window.scrollY>500?'1':'0';backTop.style.pointerEvents=window.scrollY>500?'auto':'none'}
+});
+if(backTop)backTop.addEventListener('click',()=>window.scrollTo({top:0,behavior:'smooth'}));
+
+// GitHub star counter
+(function(){
+  const hostname=window.location.hostname;
+  const isGitLab=hostname.includes('gitlab')||hostname.includes('git.')||document.referrer.includes('gitlab');
+  if(isGitLab)return;
+  const repo='c4reqber/c4reqber';
+  fetch('https://api.github.com/repos/'+repo)
+    .then(r=>r.ok?r.json():null)
+    .then(d=>{
+      if(!d||typeof d.stargazers_count!=='number')return;
+      const el=document.querySelector('[data-i18n="github_stars"]');
+      if(el)el.textContent='⭐ '+d.stargazers_count.toLocaleString();
+    })
+    .catch(()=>{});
+})();
+
+// Theme toggle
+(function(){
+  const html=document.documentElement;
+  const btn=document.getElementById('theme-toggle');
+  function setTheme(t){html.setAttribute('data-theme',t);btn.innerHTML=t==='light'?'&#9728;':'&#127769;';try{localStorage.setItem('c4r_theme',t)}catch(e){}}
+  let theme='dark';
+  try{theme=localStorage.getItem('c4r_theme')||(window.matchMedia('(prefers-color-scheme:light)').matches?'light':'dark')}catch(e){}
+  setTheme(theme);
+  if(btn)btn.addEventListener('click',()=>setTheme(html.getAttribute('data-theme')==='light'?'dark':'light'));
+})();
+
+// Hamburger toggle
+document.querySelector('.hamburger').addEventListener('click',function(){const nav=document.querySelector('.navbar-links');const expanded=this.getAttribute('aria-expanded')==='true';this.setAttribute('aria-expanded',!expanded);nav.classList.toggle('open')});
+// Close mobile nav on link click
+document.querySelectorAll('.navbar-links a').forEach(a=>{a.addEventListener('click',()=>{document.querySelector('.navbar-links').classList.remove('open');document.querySelector('.hamburger').setAttribute('aria-expanded','false')})});
+// Close mobile nav on outside click
+document.addEventListener('click',e=>{const nav=document.querySelector('.navbar-links');const ham=document.querySelector('.hamburger');if(nav&&ham&&!nav.contains(e.target)&&!ham.contains(e.target)){nav.classList.remove('open');ham.setAttribute('aria-expanded','false')}});
+// Copy buttons
+document.querySelectorAll('[data-copy-btn]').forEach(btn=>{btn.addEventListener('click',()=>copyCode(btn))});
+
+function copyCode(btn){
+  const code=btn.parentElement.querySelector('code');
+  if(!code)return;
+  navigator.clipboard.writeText(code.innerText).then(()=>{
+    btn.classList.add('show-tooltip');
+    setTimeout(()=>btn.classList.remove('show-tooltip'),1200);
+  }).catch(()=>{});
+}
+
+function switchGallery(btn){
+  const id=btn.getAttribute('aria-controls');
+  document.querySelectorAll('.gallery-tab').forEach(t=>{t.classList.remove('active');t.setAttribute('aria-selected','false')});
+  btn.classList.add('active');btn.setAttribute('aria-selected','true');
+  document.querySelectorAll('.gallery-panel').forEach(p=>p.style.display='none');
+  const panel=document.getElementById(id);
+  if(panel)panel.style.display='block';
+}
+document.querySelectorAll('.gallery-tab').forEach(tab=>{tab.addEventListener('click',()=>switchGallery(tab))});
+
+// blink animation for TUI cursor
+const blinkStyle=document.createElement('style');
+blinkStyle.textContent='@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}';
+document.head.appendChild(blinkStyle);
+
+// ═══════════════════════════════════════════════════════
+// MASCOT — 3-frame ASCII cube with live i18n
+// ═══════════════════════════════════════════════════════
+(function(){
+const frames=[
+`   ┌─────────┐
+  ╱         ╱│
+ ┌─────────┐ │
+ │  C4R    │ │
+ │  ███     ╱
+ └─────────┘  `,
+`   ┌─────────┐
+  ╱ ∿∿∿∿∿∿∿ ╱│
+ ┌─────────┐ │
+ │  C4R    │ │
+ │  ◈◈◈     ╱
+ └─────────┘  `,
+`   ┌─────────┐
+  ╱ ▓▓▓▓▓▓▓ ╱│
+ ┌─────────┐ │
+ │  C4R    │ │
+ │  ███     ╱
+ └─────────┘  `,
+];
+window.mascotComments={
+  en:['Ready.','Thinking...','Processing...','Discovery!','All done.'],
+  ru:['Готов.','Думаю...','Обработка...','Открытие!','Готово.'],
+  zh:['就绪。','思考中...','处理中...','发现！','完成。'],
+  ja:['準備完了。','考え中...','処理中...','発見！','完了。'],
+  de:['Bereit.','Denke...','Verarbeite...','Entdeckung!','Fertig.'],
+  ar:['جاهز.','يفكر...','يعالج...','اكتشاف!','تم.'],
+  hi:['तैयार.','सोच रहा है...','प्रसंस्करण...','खोज!','पूर्ण।']
+};
+let f=0,c=0;
+window.mascotCommentIndex=0;
+const art=document.getElementById('mascot-art');
+const com=document.getElementById('mascot-comment');
+setInterval(()=>{
+  f=(f+1)%frames.length;
+  if(art)art.textContent=frames[f];
+  let lang='en';
+  try{lang=window.c4rCurrentLang||localStorage.getItem('c4r_lang')||'en';}catch(e){}
+  const msgs=window.mascotComments[lang]||window.mascotComments.en;
+  c=(c+1)%msgs.length;
+  window.mascotCommentIndex=c;
+  if(com)com.textContent=msgs[c];
+},3000);
+})();
+</script>
+
+</body>
+</html>

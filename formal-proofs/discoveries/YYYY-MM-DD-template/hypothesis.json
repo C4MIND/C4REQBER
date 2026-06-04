@@ -1,0 +1,20 @@
+{
+  "discovery_date": "2026-05-11",
+  "author": "c4reqber AI Meta-Solver",
+  "theorem_name": "TODO: theorem-name",
+  "statement": "TODO: formal or informal theorem statement",
+  "hypotheses": [
+    {
+      "id": "H1",
+      "description": "TODO: first hypothesis",
+      "formal": "TODO: formal encoding if available"
+    }
+  ],
+  "dependencies": [
+    "TODO: list any theorems or lemmas this discovery depends on"
+  ],
+  "confidence": "low | medium | high",
+  "verification_status": "unverified | partial | verified",
+  "language": "lean4 | coq | dafny | agda | hoare",
+  "notes": "TODO: any additional meta-solver notes"
+}

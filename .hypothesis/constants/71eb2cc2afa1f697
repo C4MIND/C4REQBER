@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/api/v6_routers/llm_local_v6.py
+# hypothesis_version: 6.141.1
+
+['/local/discover', '/local/generate', '/local/models', '/local/status', 'content', 'error', 'latency_ms', 'local_llm', 'model', 'models', 'provider', 'providers', 'results', 'total', 'turbo_cdi', 'usage', 'v6-llm-local']

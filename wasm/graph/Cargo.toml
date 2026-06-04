@@ -1,0 +1,15 @@
+[package]
+name = "turbo-cdi-graph"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+wasm-bindgen = { workspace = true }
+js-sys = { workspace = true }
+
+[profile.release]
+opt-level = 3
+lto = true

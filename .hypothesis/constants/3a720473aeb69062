@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/llm/providers/base.py
+# hypothesis_version: 6.141.1
+
+[0.0, 0.7, 60.0, 2000, 'Authorization', 'Content-Type', 'HTTP-Referer', 'TURBO-CDI', 'X-Title', 'application/json', 'choices', 'content', 'message', 'model', 'role', 'system', 'unknown', 'usage', 'user']

@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/patterns/library/path_planning/pattern.py
+# hypothesis_version: 6.141.1
+
+[0.0, 1e-10, 0.5, 5000, '6.0.0', 'Autonomous Vehicles', 'EXTENDED', 'Game AI', 'Known environment', 'Logistics', 'Path Planning', 'Robotics', 'Static obstacles', 'a_star', 'accuracy', 'assumptions', 'category', 'cluttered', 'default', 'description', 'dijkstra', 'domain', 'empty', 'enum', 'environment_type', 'float', 'goal', 'id', 'int', 'iterations', 'max_iterations', 'maze', 'mean_turning_angle', 'n_obstacles', 'n_waypoints', 'name', 'options', 'parameters', 'path', 'path_length', 'path_planning', 'planner_type', 'planning_time', 'random_obstacles', 'rrt', 'rrt_star', 'start', 'step_size', 'success', 'type', 'typical_runtime', 'version']

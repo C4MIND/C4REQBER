@@ -1,20 +1,19 @@
-"""
-TURBO-CDI: Explainability Module
-Why C4 steps work
-"""
-
-from src.explainability.engine import (
+"""c4-cdi-turbo Explainability package."""
+from explainability.core import (
     ExplainabilityEngine,
+    ExplanationLevel,
     PathExplanation,
     StepExplanation,
-    ExplanationLevel,
     get_explainability_engine,
 )
+from explainability.renderers import render_explanation
+
 
 __all__ = [
+    "ExplanationLevel",
     "ExplainabilityEngine",
     "PathExplanation",
     "StepExplanation",
-    "ExplanationLevel",
     "get_explainability_engine",
+    "render_explanation",
 ]

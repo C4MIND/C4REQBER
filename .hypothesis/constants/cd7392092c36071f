@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/patterns/library/supply_chain.py
+# hypothesis_version: 6.141.1
+
+[0.0, 0.1, 0.2, 0.3, 0.5, 0.9, 1.0, 1.65, 10.0, 20.0, 100.0, 200.0, 1000.0, 100, 1000, 'Average demand', 'Lead time (periods)', 'Simulation periods', 'avg_bullwhip', 'avg_inventory', 'bullwhip', 'bullwhip_ratios', 'cpu_cores', 'demand forecasting', 'demand_mean', 'demand_std', 'eoq', 'float', 'gpu_required', 'holding_cost', 'int', 'inventory', 'lead_time', 'logistics', 'logs', 'memory_gb', 'metrics', 'multi-echelon', 'newsvendor', 'num_echelons', 'operations', 'periods', 'reorder point', 'reorder_point', 'safety stock', 'shortage_cost', 'supply chain', 'supply_chain', 'total_cost', 'total_holding_cost', 'total_shortage_cost']

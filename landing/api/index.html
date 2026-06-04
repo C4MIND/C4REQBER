@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>API Reference — c4reqber</title>
+<meta name="description" content="c4reqber API reference: blast commands, REST endpoints, Python SDK, MCP tools.">
+<meta property="og:title" content="API Reference — c4reqber">
+<meta property="og:type" content="website">
+<link rel="canonical" href="https://c4reqber.org/api/">
+<meta name="theme-color" content="#0F1117">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' https: data:; connect-src 'self' https://api.github.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800,900&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#9670;</text></svg>">
+<link rel="manifest" href="../manifest.json">
+<link rel="stylesheet" href="../css/main.css">
+<style>
+.api-content{max-width:900px;margin:0 auto;padding:0 24px}
+.api-content h2{font-size:28px;font-weight:800;margin:60px 0 20px;color:var(--accent)}
+.api-content h3{font-size:20px;font-weight:700;margin:32px 0 12px;color:var(--primary)}
+.api-content p{color:var(--fg-2);line-height:1.8;margin-bottom:16px}
+.api-content ul{margin:16px 0;padding-left:24px;color:var(--fg-2)}
+.api-content li{margin-bottom:8px;line-height:1.7}
+.api-content code{background:var(--bg-3);padding:2px 8px;border-radius:4px;font-family:var(--mono);font-size:13px;color:var(--primary)}
+.api-content pre{background:var(--bg-4);border-radius:var(--radius);padding:20px;overflow-x:auto;border:1px solid rgba(255,255,255,.06);margin:20px 0;position:relative}
+.api-content pre code{background:none;padding:0;color:var(--fg-2)}
+.api-content table{width:100%;border-collapse:collapse;margin:20px 0;font-size:14px}
+.api-content th{background:var(--bg-3);padding:10px 12px;text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--fg-3);border-bottom:1px solid rgba(255,255,255,.08)}
+.api-content td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.04);color:var(--fg-2)}
+
+.copy-btn{position:absolute;top:8px;right:8px;background:rgba(255,255,255,.08);border:none;color:var(--fg-3);padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer;opacity:0;transition:opacity .2s}
+.api-content pre:hover .copy-btn{opacity:1}
+.copy-btn:hover{background:rgba(78,205,196,.15);color:var(--primary)}
+
+.endpoint{display:flex;align-items:center;gap:12px;padding:14px 18px;background:var(--bg-2);border-radius:var(--radius);margin-bottom:12px;border:1px solid rgba(255,255,255,.06)}
+.endpoint .method{font-family:var(--mono);font-size:12px;font-weight:700;padding:3px 10px;border-radius:6px;text-transform:uppercase;min-width:64px;text-align:center}
+.method.get{background:rgba(34,197,94,.12);color:#4ade80}
+.method.post{background:rgba(59,130,246,.12);color:#60a5fa}
+.method.put{background:rgba(245,158,11,.12);color:#fbbf24}
+.method.delete{background:rgba(239,68,68,.12);color:#f87171}
+.endpoint .path{font-family:var(--mono);font-size:14px;color:var(--fg);flex:1}
+.endpoint .desc{font-size:13px;color:var(--fg-3)}
+
+.breadcrumb{display:flex;gap:8px;align-items:center;font-size:13px;color:var(--fg-3);margin-bottom:24px}
+.breadcrumb a{color:var(--fg-3);text-decoration:none}
+.breadcrumb a:hover{color:var(--primary)}
+
+[data-theme="light"] .endpoint{background:#fff;border-color:rgba(0,0,0,.08)}
+[data-theme="light"] .method.get{background:rgba(34,197,94,.1);color:#16a34a}
+[data-theme="light"] .method.post{background:rgba(59,130,246,.1);color:#2563eb}
+</style>
+</head>
+<body>
+
+<div id="site-header"></div>
+
+<main>
+
+<section class="hero" style="min-height:45vh;padding-top:100px">
+  <div class="hero-bg"></div>
+  <div class="container" style="text-align:center;position:relative;z-index:2">
+    <div class="badge"><span class="dot"></span> <span data-i18n="badge_reference">Reference</span></div>
+    <h1 style="font-size:clamp(36px,6vw,64px);margin-bottom:16px"><span class="gradient-text">API Reference</span></h1>
+    <p class="hero-sub" style="max-width:700px;margin:0 auto 32px">Blast commands, REST endpoints, Python SDK, and MCP tools. Everything you need to integrate.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="api-content">
+    <nav class="breadcrumb">
+      <a href="../" data-i18n="breadcrumb_home">Home</a> <span>/</span> <span>API</span>
+    </nav>
+
+    <h2>Blast Commands</h2>
+    <p>The fastest way to use c4reqber from the command line. All commands support <code>--help</code> for detailed options.</p>
+
+    <pre><code>$ blast solve "your research question"
+$ blast turbo "complex multi-step problem"
+$ blast flash "quick check"</code></pre>
+
+    <table>
+      <tr><th>Command</th><th>Description</th><th>Latency</th></tr>
+      <tr><td><code>blast solve</code></td><td>Standard discovery pipeline — full Z₃³ traversal</td><td>~5s</td></tr>
+      <tr><td><code>blast turbo</code></td><td>Accelerated path — skips low-relevance states</td><td>~2s</td></tr>
+      <tr><td><code>blast flash</code></td><td>Instant answer — single best engine</td><td>&lt;1s</td></tr>
+      <tr><td><code>blast turbofactory</code></td><td>Batch processing from file</td><td>~1s/query</td></tr>
+    </table>
+
+    <h2>REST API Endpoints (v5.6.0)</h2>
+    <p>Base URL: <code>/api/v1</code></p>
+
+    <div class="endpoint">
+      <span class="method get">GET</span>
+      <span class="path">/health</span>
+      <span class="desc">Service health check</span>
+    </div>
+    <div class="endpoint">
+      <span class="method post">POST</span>
+      <span class="path">/solve</span>
+      <span class="desc">Submit a problem for discovery</span>
+    </div>
+    <div class="endpoint">
+      <span class="method get">GET</span>
+      <span class="path">/solve/{job_id}</span>
+      <span class="desc">Get discovery results</span>
+    </div>
+    <div class="endpoint">
+      <span class="method post">POST</span>
+      <span class="path">/agenda</span>
+      <span class="desc">Create a research agenda</span>
+    </div>
+    <div class="endpoint">
+      <span class="method get">GET</span>
+      <span class="path">/agenda/{agenda_id}</span>
+      <span class="desc">Get agenda status and results</span>
+    </div>
+    <div class="endpoint">
+      <span class="method post">POST</span>
+      <span class="path">/verify</span>
+      <span class="desc">Verify a hypothesis against knowledge sources</span>
+    </div>
+    <div class="endpoint">
+      <span class="method get">GET</span>
+      <span class="path">/engines</span>
+      <span class="desc">List available simulation engines</span>
+    </div>
+    <div class="endpoint">
+      <span class="method get">GET</span>
+      <span class="path">/sources</span>
+      <span class="desc">List configured knowledge sources</span>
+    </div>
+
+    <h3>Example: Solve a Problem</h3>
+    <pre><button class="copy-btn" data-copy>copy</button><code>curl -X POST https://api.c4reqber.org/v1/solve \\
+  -H "Authorization: Bearer $TOKEN" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "query": "Find novel approaches to protein folding",
+    "engines": ["biology", "optimization"],
+    "max_depth": 3
+  }'</code></pre>
+
+    <h3>Example: Create Agenda</h3>
+    <pre><button class="copy-btn" data-copy>copy</button><code>curl -X POST https://api.c4reqber.org/v1/agenda \\
+  -H "Authorization: Bearer $TOKEN" \\
+  -d '{
+    "topic": "Quantum computing applications in drug discovery",
+    "duration_days": 30,
+    "milestones": 5
+  }'</code></pre>
+
+    <h2>Python SDK</h2>
+    <pre><button class="copy-btn" data-copy>copy</button><code>from c4reqber import Client
+
+client = Client(api_key="your-key")
+
+# Solve a problem
+result = client.solve("Novel battery chemistry")
+print(result.discoveries)
+
+# Create a research agenda
+agenda = client.create_agenda(
+    topic="Climate adaptation strategies",
+    duration_days=90
+)
+
+# Verify a hypothesis
+verification = client.verify(
+    hypothesis="Solar geoengineering reduces crop yields",
+    sources=["pubmed", "nature", "arxiv"]
+)</code></pre>
+
+    <h2>MCP Tools</h2>
+    <p>c4reqber exposes Model Context Protocol tools for integration with Claude, Cursor, and other MCP-compatible agents.</p>
+
+    <table>
+      <tr><th>Tool</th><th>Description</th></tr>
+      <tr><td><code>c4reqber_solve</code></td><td>Submit a problem and get discoveries</td></tr>
+      <tr><td><code>c4reqber_agenda</code></td><td>Create and manage research agendas</td></tr>
+      <tr><td><code>c4reqber_verify</code></td><td>Verify hypotheses against sources</td></tr>
+      <tr><td><code>c4reqber_search</code></td><td>Search knowledge sources</td></tr>
+      <tr><td><code>c4reqber_visualize</code></td><td>Generate C4-META state diagrams</td></tr>
+    </table>
+
+    <h2>Authentication</h2>
+    <p>All API requests require a Bearer token in the <code>Authorization</code> header. Obtain your token from the <a href="https://github.com/c4reqber/c4reqber" rel="noopener noreferrer" target="_blank">GitHub repository</a> or self-host.</p>
+    <pre><code>Authorization: Bearer sk_c4r_xxxxxxxxxxxxxxxx</code></pre>
+
+    <h2>Rate Limits</h2>
+    <table>
+      <tr><th>Tier</th><th>Requests/min</th><th>Concurrent</th></tr>
+      <tr><td>Free</td><td>10</td><td>1</td></tr>
+      <tr><td>Pro</td><td>120</td><td>5</td></tr>
+      <tr><td>Enterprise</td><td>Unlimited</td><td>50</td></tr>
+    </table>
+
+    <h2>Further Reading</h2>
+    <ul>
+      <li><a href="../docs/getting-started.html">Getting Started</a> — Install and configure c4reqber</li>
+      <li><a href="../docs/setup/mcp.html">MCP Setup</a> — Configure MCP in Claude / Cursor</li>
+      <li><a href="../architecture/">Architecture</a> — Understand the system design</li>
+    </ul>
+  </div>
+</section>
+
+</main>
+
+<div id="site-footer"></div>
+
+<script src="../js/components.js"></script>
+<script src="../js/main.js"></script>
+<script>
+// Copy buttons
+document.querySelectorAll('.copy-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const code = btn.nextElementSibling.textContent;
+    navigator.clipboard.writeText(code).then(() => {
+      const orig = btn.textContent;
+      btn.textContent = 'copied!';
+      setTimeout(() => btn.textContent = orig, 1200);
+    });
+  });
+});
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('../sw.js').catch(()=>{});
+}
+</script>
+
+</body>
+</html>

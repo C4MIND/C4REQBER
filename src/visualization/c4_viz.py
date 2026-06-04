@@ -1,18 +1,12 @@
 """
-TURBO-CDI: C4 Space Visualization
+C4REQBER: C4 Space Visualization
 Terminal-based visualization of cognitive navigation
 """
+from __future__ import annotations
 
-from typing import List, Tuple, Optional
+from typing import Any
 
-try:
-    from ..core.c4_state import C4State
-except ImportError:
-    import sys
-    import os
-
-    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    from core.c4_state import C4State
+from src.c4.state import C4State
 
 
 class C4Visualizer:
@@ -20,11 +14,11 @@ class C4Visualizer:
     Visualize C4 state space and navigation paths in terminal.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.width = 60
         self.height = 20
 
-    def draw_cube_2d(self, path: Optional[List[C4State]] = None) -> str:
+    def draw_cube_2d(self, path: list[C4State] | None = None) -> str:
         """
         Draw 2D representation of C4 cube with path.
 
@@ -94,14 +88,14 @@ class C4Visualizer:
 
         return "\n".join(lines)
 
-    def draw_path_timeline(self, path: List[C4State], operators: List[str]) -> str:
+    def draw_path_timeline(self, path: list[C4State], operators: list[str]) -> str:
         """Draw path as timeline."""
         lines = []
         lines.append("NAVIGATION PATH")
         lines.append("═" * 50)
         lines.append("")
 
-        for i, (state, op) in enumerate(zip(path, operators)):
+        for i, (state, op) in enumerate(zip(path, operators, strict=False)):
             # State representation
             t_names = ["Past", "Pres", "Fut"]
             s_names = ["Conc", "Abst", "Meta"]
@@ -120,7 +114,7 @@ class C4Visualizer:
 
         return "\n".join(lines)
 
-    def draw_operator_frequencies(self, paths: List[List[str]]) -> str:
+    def draw_operator_frequencies(self, paths: list[list[str]]) -> str:
         """Draw bar chart of operator usage."""
         from collections import Counter
 
@@ -168,7 +162,7 @@ class C4Visualizer:
 
         return "\n".join(lines)
 
-    def draw_domain_map(self, discoveries_by_domain: dict) -> str:
+    def draw_domain_map(self, discoveries_by_domain: dict[str, Any]) -> str:
         """Draw ASCII map of discoveries by domain."""
         lines = []
         lines.append("DISCOVERIES BY DOMAIN")
@@ -185,13 +179,13 @@ class C4Visualizer:
         return "\n".join(lines)
 
 
-def print_c4_cube(path: Optional[List[C4State]] = None):
+def print_c4_cube(path: list[C4State] | None = None) -> None:
     """Utility function to print C4 cube."""
     viz = C4Visualizer()
     print(viz.draw_cube_2d(path))
 
 
-def print_path(path: List[C4State], operators: List[str]):
+def print_path(path: list[C4State], operators: list[str]) -> None:
     """Utility function to print path."""
     viz = C4Visualizer()
     print(viz.draw_path_timeline(path, operators))

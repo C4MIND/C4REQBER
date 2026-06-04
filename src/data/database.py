@@ -1,44 +1,55 @@
 """
-TURBO-CDI: Pattern Database
-SQLite storage for patterns, discoveries, and research context
-"""
+C4REQBER: Pattern Database
+SQLite/PostgreSQL storage for patterns, discoveries, and research context
 
-import sqlite3
+Auto-detects database type from DATABASE_URL environment variable.
+Supports SQLite (default) and PostgreSQL with connection pooling.
+"""
+from __future__ import annotations
+
 import json
-from datetime import datetime
-from typing import List, Optional, Dict, Any
+import logging
+import sqlite3
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
+from typing import Any, Optional
+
+from src.config.db_config import DatabaseConfig, get_database_config
+from src.di.container import get_container
+
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
 class Pattern:
     """A discovered pattern or isomorphism."""
 
-    id: Optional[int]
+    id: int | None
     name: str
     description: str
     source_domain: str
     target_domain: str
-    c4_path: List[str]  # JSON
+    c4_path: list[str]  # JSON
     confidence: float
     times_used: int
     created_at: str
-    tags: List[str]  # JSON
+    tags: list[str]  # JSON
 
 
 @dataclass
 class Discovery:
     """A generated hypothesis/discovery."""
 
-    id: Optional[int]
+    id: int | None
     problem: str
     contradiction: str
     hypothesis: str
-    c4_path: List[str]  # JSON
+    c4_path: list[str]  # JSON
     domain: str
     confidence: float
-    falsifiability_criteria: List[str]  # JSON
+    falsifiability_criteria: list[str]  # JSON
     status: str  # "pending", "validated", "falsified", "unknown"
     created_at: str
     notes: str
@@ -48,29 +59,29 @@ class Discovery:
 class ResearchContext:
     """Cached research context from arXiv/PubMed."""
 
-    id: Optional[int]
+    id: int | None
     query: str
     source: str  # "arxiv", "pubmed"
-    results: List[Dict]  # JSON
+    results: list[dict]  # type: ignore  # JSON
     cached_at: str
 
 
 class PatternDatabase:
     """
-    SQLite database for storing TURBO-CDI patterns and discoveries.
+    SQLite database for storing C4REQBER patterns and discoveries.
     """
 
-    def __init__(self, db_path: Optional[str] = None):
+    def __init__(self, db_path: str | None = None) -> None:
         if db_path is None:
             # Default to data directory
             data_dir = Path(__file__).parent.parent / "data"
             data_dir.mkdir(exist_ok=True)
-            db_path = data_dir / "turbo_cdi.db"
+            db_path = data_dir / "c4_cdi_turbo.db"  # type: ignore[assignment]
 
         self.db_path = str(db_path)
         self._init_db()
 
-    def _init_db(self):
+    def _init_db(self) -> None:
         """Initialize database schema."""
         with sqlite3.connect(self.db_path) as conn:
             # Patterns table
@@ -135,8 +146,8 @@ class PatternDatabase:
         """Save a pattern and return its ID."""
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.execute(
-                """INSERT INTO patterns 
-                   (name, description, source_domain, target_domain, c4_path, 
+                """INSERT INTO patterns
+                   (name, description, source_domain, target_domain, c4_path,
                     confidence, times_used, created_at, tags)
                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                 (
@@ -152,16 +163,16 @@ class PatternDatabase:
                 ),
             )
             conn.commit()
-            return cursor.lastrowid
+            return cursor.lastrowid  # type: ignore[return-value]
 
     def get_patterns(
-        self, domain: Optional[str] = None, min_confidence: float = 0.0
-    ) -> List[Pattern]:
+        self, domain: str | None = None, min_confidence: float = 0.0
+    ) -> list[Pattern]:
         """Get patterns, optionally filtered by domain."""
         with sqlite3.connect(self.db_path) as conn:
             if domain:
                 cursor = conn.execute(
-                    """SELECT * FROM patterns 
+                    """SELECT * FROM patterns
                        WHERE (source_domain = ? OR target_domain = ?)
                        AND confidence >= ?
                        ORDER BY confidence DESC""",
@@ -169,7 +180,7 @@ class PatternDatabase:
                 )
             else:
                 cursor = conn.execute(
-                    """SELECT * FROM patterns 
+                    """SELECT * FROM patterns
                        WHERE confidence >= ?
                        ORDER BY confidence DESC""",
                     (min_confidence,),
@@ -178,7 +189,7 @@ class PatternDatabase:
             rows = cursor.fetchall()
             return [self._row_to_pattern(row) for row in rows]
 
-    def increment_pattern_usage(self, pattern_id: int):
+    def increment_pattern_usage(self, pattern_id: int) -> None:
         """Increment usage counter for a pattern."""
         with sqlite3.connect(self.db_path) as conn:
             conn.execute(
@@ -192,7 +203,7 @@ class PatternDatabase:
         """Save a discovery and return its ID."""
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.execute(
-                """INSERT INTO discoveries 
+                """INSERT INTO discoveries
                    (problem, contradiction, hypothesis, c4_path, domain,
                     confidence, falsifiability_criteria, status, created_at, notes)
                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
@@ -212,11 +223,11 @@ class PatternDatabase:
                 ),
             )
             conn.commit()
-            return cursor.lastrowid
+            return cursor.lastrowid  # type: ignore[return-value]
 
     def get_discoveries(
-        self, domain: Optional[str] = None, status: Optional[str] = None
-    ) -> List[Discovery]:
+        self, domain: str | None = None, status: str | None = None
+    ) -> list[Discovery]:
         """Get discoveries with optional filters."""
         with sqlite3.connect(self.db_path) as conn:
             query = "SELECT * FROM discoveries WHERE 1=1"
@@ -236,23 +247,23 @@ class PatternDatabase:
             rows = cursor.fetchall()
             return [self._row_to_discovery(row) for row in rows]
 
-    def update_discovery_status(self, discovery_id: int, status: str, notes: str = ""):
+    def update_discovery_status(self, discovery_id: int, status: str, notes: str = "") -> None:
         """Update status of a discovery."""
         with sqlite3.connect(self.db_path) as conn:
             conn.execute(
-                """UPDATE discoveries 
-                   SET status = ?, notes = ? || '\n' || notes 
+                """UPDATE discoveries
+                   SET status = ?, notes = ? || '\n' || notes
                    WHERE id = ?""",
                 (status, notes, discovery_id),
             )
             conn.commit()
 
     # Research cache operations
-    def get_cached_research(self, query: str, source: str) -> Optional[List[Dict]]:
+    def get_cached_research(self, query: str, source: str) -> list[dict] | None:  # type: ignore[type-arg]
         """Get cached research results if not expired (7 days)."""
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.execute(
-                """SELECT results, cached_at FROM research_cache 
+                """SELECT results, cached_at FROM research_cache
                    WHERE query = ? AND source = ?""",
                 (query, source),
             )
@@ -263,15 +274,15 @@ class PatternDatabase:
                 # Check if cache is still valid (7 days)
                 cache_time = datetime.fromisoformat(cached_at)
                 if (datetime.now() - cache_time).days < 7:
-                    return json.loads(results)
+                    return json.loads(results)  # type: ignore[no-any-return]
 
             return None
 
-    def cache_research(self, query: str, source: str, results: List[Dict]):
+    def cache_research(self, query: str, source: str, results: list[dict]) -> None:  # type: ignore[type-arg]
         """Cache research results."""
         with sqlite3.connect(self.db_path) as conn:
             conn.execute(
-                """INSERT OR REPLACE INTO research_cache 
+                """INSERT OR REPLACE INTO research_cache
                    (query, source, results, cached_at)
                    VALUES (?, ?, ?, ?)""",
                 (query, source, json.dumps(results), datetime.now().isoformat()),
@@ -287,15 +298,15 @@ class PatternDatabase:
                 (datetime.now().isoformat(),),
             )
             conn.commit()
-            return cursor.lastrowid
+            return cursor.lastrowid  # type: ignore[return-value]
 
     def update_session_stats(
         self, session_id: int, problems: int = 0, discoveries: int = 0
-    ):
+    ) -> None:
         """Update session statistics."""
         with sqlite3.connect(self.db_path) as conn:
             conn.execute(
-                """UPDATE sessions 
+                """UPDATE sessions
                    SET problem_count = problem_count + ?,
                        discoveries_count = discoveries_count + ?
                    WHERE id = ?""",
@@ -304,7 +315,7 @@ class PatternDatabase:
             conn.commit()
 
     # Stats
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get database statistics."""
         with sqlite3.connect(self.db_path) as conn:
             stats = {}
@@ -327,7 +338,7 @@ class PatternDatabase:
             return stats
 
     # Helper methods
-    def _row_to_pattern(self, row) -> Pattern:
+    def _row_to_pattern(self, row: Any) -> Pattern:
         """Convert DB row to Pattern object."""
         return Pattern(
             id=row[0],
@@ -342,7 +353,7 @@ class PatternDatabase:
             tags=json.loads(row[9]) if row[9] else [],
         )
 
-    def _row_to_discovery(self, row) -> Discovery:
+    def _row_to_discovery(self, row: Any) -> Discovery:
         """Convert DB row to Discovery object."""
         return Discovery(
             id=row[0],
@@ -357,3 +368,86 @@ class PatternDatabase:
             created_at=row[9],
             notes=row[10] if row[10] else "",
         )
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Database Engine Detection and Initialization
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# Backward-compatible module-level references (source of truth is DI container)
+engine: Any = None
+_db_config: DatabaseConfig | None = None
+
+
+def init_database(config: DatabaseConfig | None = None) -> Any:
+    """Initialize the database based on configuration.
+
+    Auto-detects database type from DATABASE_URL or environment variables.
+    Returns appropriate engine/database instance.
+
+    Priority:
+        1. DATABASE_URL env var (sqlite or postgresql)
+        2. Individual DB_* settings for PostgreSQL
+        3. Default SQLite
+    """
+    config = config or get_database_config()
+
+    container = get_container()
+    container.register("db_config", config)
+
+    _engine: Any
+    if config.is_postgresql():
+        logger.info("Initializing PostgreSQL database with connection pooling")
+        try:
+            from src.data.database_pg import init_engine as init_pg_engine
+
+            _engine = init_pg_engine(config)
+            container.register("db_engine", _engine)
+            return _engine
+        except ImportError as e:
+            logger.error(
+                f"PostgreSQL dependencies not installed: {e}. "
+                "Install with: pip install asyncpg psycopg2-binary sqlalchemy"
+            )
+            raise
+    else:
+        logger.info("Initializing SQLite database")
+        # SQLite uses the PatternDatabase class directly
+        _engine = PatternDatabase()
+        container.register("db_engine", _engine)
+        return _engine
+
+
+def get_engine() -> Any:
+    """Get the global database engine.
+
+    Initializes on first call if not already done.
+    """
+    container = get_container()
+    if container.has("db_engine"):
+        return container.resolve("db_engine")
+    return init_database()
+
+
+def is_postgresql() -> bool:
+    """Check if currently using PostgreSQL."""
+    container = get_container()
+    if container.has("db_config"):
+        config = container.resolve("db_config")
+        return config.is_postgresql()
+    return get_database_config().is_postgresql()
+
+
+def get_database_type() -> str:
+    """Get string identifier for current database type."""
+    if is_postgresql():
+        return "postgresql"
+    return "sqlite"
+
+
+# Auto-initialize on module import if DATABASE_URL is set
+if get_database_config().url:
+    try:
+        init_database()
+    except Exception as e:
+        logger.warning(f"Auto-initialization failed: {e}. Will retry on first use.")

@@ -1,12 +1,11 @@
 """
-TURBO-CDI: Reference Manager Integration
+C4REQBER: Reference Manager Integration
 Import from Zotero and Mendeley
 """
+from __future__ import annotations
 
-from typing import List, Dict, Any, Optional
 from dataclasses import dataclass
 from pathlib import Path
-import json
 
 
 @dataclass
@@ -14,32 +13,32 @@ class ReferenceImport:
     """Imported reference."""
 
     title: str
-    authors: List[str]
+    authors: list[str]
     year: int
     journal: str = ""
     doi: str = ""
     url: str = ""
     abstract: str = ""
-    tags: List[str] = None
+    tags: list[str] = None  # type: ignore[assignment]
     source: str = ""  # zotero, mendeley
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if self.tags is None:
-            self.tags = []
+            self.tags = []  # type: ignore[unreachable]
 
 
 class ZoteroImporter:
     """Import references from Zotero."""
 
-    def __init__(self, library_path: Optional[str] = None):
+    def __init__(self, library_path: str | None = None) -> None:
         self.library_path = library_path
 
-    def import_from_csv(self, csv_path: str) -> List[ReferenceImport]:
+    def import_from_csv(self, csv_path: str) -> list[ReferenceImport]:
         """Import from Zotero CSV export."""
         import csv
 
         references = []
-        with open(csv_path, "r", encoding="utf-8") as f:
+        with open(csv_path, encoding="utf-8") as f:
             reader = csv.DictReader(f)
             for row in reader:
                 ref = ReferenceImport(
@@ -59,12 +58,12 @@ class ZoteroImporter:
 
         return references
 
-    def import_from_bib(self, bib_path: str) -> List[ReferenceImport]:
+    def import_from_bib(self, bib_path: str) -> list[ReferenceImport]:
         """Import from BibTeX file."""
         # Simple BibTeX parser
         references = []
 
-        with open(bib_path, "r", encoding="utf-8") as f:
+        with open(bib_path, encoding="utf-8") as f:
             content = f.read()
 
         # Split entries
@@ -100,12 +99,12 @@ class ZoteroImporter:
 class MendeleyImporter:
     """Import references from Mendeley."""
 
-    def import_from_csv(self, csv_path: str) -> List[ReferenceImport]:
+    def import_from_csv(self, csv_path: str) -> list[ReferenceImport]:
         """Import from Mendeley CSV export."""
         import csv
 
         references = []
-        with open(csv_path, "r", encoding="utf-8") as f:
+        with open(csv_path, encoding="utf-8") as f:
             reader = csv.DictReader(f)
             for row in reader:
                 ref = ReferenceImport(
@@ -126,13 +125,13 @@ class MendeleyImporter:
 class ReferenceManager:
     """Unified reference manager integration."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.zotero = ZoteroImporter()
         self.mendeley = MendeleyImporter()
 
     def import_references(
         self, file_path: str, source: str = "auto"
-    ) -> List[ReferenceImport]:
+    ) -> list[ReferenceImport]:
         """
         Import references from file.
 
@@ -171,14 +170,14 @@ class ReferenceManager:
 
         raise ValueError(f"Unsupported format: {path.suffix} for source {source}")
 
-    def save_to_knowledge_graph(self, references: List[ReferenceImport]):
+    def save_to_knowledge_graph(self, references: list[ReferenceImport]) -> None:
         """Save imported references to knowledge graph."""
         from src.graph.knowledge_graph import get_knowledge_graph
 
         kg = get_knowledge_graph()
 
         for ref in references:
-            kg.add_reference(
+            kg.add_reference(  # type: ignore[call-arg]
                 title=ref.title,
                 authors=ref.authors,
                 year=ref.year,
@@ -196,13 +195,7 @@ class ReferenceManager:
         kg.save()
 
 
-# Singleton
-_manager: Optional[ReferenceManager] = None
-
-
 def get_reference_manager() -> ReferenceManager:
-    """Get singleton reference manager."""
-    global _manager
-    if _manager is None:
-        _manager = ReferenceManager()
-    return _manager
+    """Get singleton reference manager (backed by DI container)."""
+    from src.di.container import get_container
+    return get_container().get_or_register("reference_manager", ReferenceManager)

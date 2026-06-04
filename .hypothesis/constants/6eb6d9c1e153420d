@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/patterns/library/rumor_spreading.py
+# hypothesis_version: 6.141.1
+
+[0.05, 0.1, 0.2, 0.3, 0.5, 0.6, 1.0, 20.0, 100.0, 100, 500, 1000, '6.0.0', 'E', 'EXTENDED', 'I', 'Marketing', 'Medium (macro-level)', 'No content decay', 'O(T·N·⟨k⟩)', 'Public Opinion', 'R', 'Rumor Spreading', 'S', 'Social Media', 'Z', '__main__', 'accuracy', 'assumptions', 'category', 'complete', 'config', 'default', 'density', 'description', 'domain', 'enum', 'exposed', 'final_reach', 'final_state', 'float', 'half_life', 'history', 'id', 'ignorant', 'int', 'mckendrick', 'model', 'n_agents', 'name', 'network', 'options', 'parameters', 'peak_spreaders', 'peak_time', 'r0_estimate', 'random', 'rumor_spreading', 'scale_free', 'seconds', 'seir', 'seiz', 'sir', 'skeptics', 'small_world', 'spreaders', 'spreading_rate', 'statistics', 'stiflers', 'stifling_rate', 'time', 'total_duration', 'type', 'typical_runtime', 'version']

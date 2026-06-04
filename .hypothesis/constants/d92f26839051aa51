@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/patterns/library/social_network.py
+# hypothesis_version: 6.141.1
+
+[0.0, 1e-06, 0.01, 0.1, 0.3, 0.5, 0.9, 1.0, 100, 10000, 'Diffusion model', 'Network topology', 'adopters', 'adoption', 'adoption_rate', 'avg_degree', 'cascade', 'centrality', 'cpu_cores', 'diffusion', 'diffusion_iterations', 'diffusion_model', 'final_adoption_rate', 'float', 'gpu_required', 'independent_cascade', 'influence', 'information spread', 'int', 'linear_threshold', 'logs', 'max_degree', 'memory_gb', 'metrics', 'network effect', 'network_type', 'num_edges', 'num_nodes', 'random', 'scale_free', 'select', 'small_world', 'social', 'social network', 'social_network', 'viral']

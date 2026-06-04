@@ -1,0 +1,17 @@
+[run]
+source = src
+branch = true
+parallel = true
+concurrency = thread
+
+[report]
+fail_under = 60
+show_missing = true
+skip_covered = false
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    raise AssertionError
+    raise NotImplementedError
+    if __name__ == .__main__.:
+    if TYPE_CHECKING:

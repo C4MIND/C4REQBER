@@ -1,26 +1,27 @@
-"""
-TURBO-CDI: Agents Module
-Multi-agent scientific discovery system
-"""
+"""c4reqber Agents — AI Assistant Persona, Policy, QA, and Safety Layer.
 
-from src.agents.multi_agent import (
-    MultiAgentSystem,
-    AnalystAgent,
-    ScientistAgent,
-    CriticAgent,
-    SynthesizerAgent,
-    AgentRole,
-    AgentOutput,
-    get_multi_agent_system,
-)
+This package provides the cognitive governance layer for the c4reqber CLI:
+- Soul: persona and identity management
+- Policy: permission engine with audit trail
+- QA: automated quality assurance controller
+- Guardian: safety and security scanner
+"""
+from __future__ import annotations
+
+from src.agents.guardian import Guardian
+from src.agents.policy import Action, AuditTrail, Decision, PolicyEngine, RiskTier
+from src.agents.qa import QAController, QAResult
+from src.agents.soul import Soul
+
 
 __all__ = [
-    "MultiAgentSystem",
-    "AnalystAgent",
-    "ScientistAgent",
-    "CriticAgent",
-    "SynthesizerAgent",
-    "AgentRole",
-    "AgentOutput",
-    "get_multi_agent_system",
+    "Soul",
+    "PolicyEngine",
+    "Action",
+    "Decision",
+    "RiskTier",
+    "AuditTrail",
+    "QAController",
+    "QAResult",
+    "Guardian",
 ]

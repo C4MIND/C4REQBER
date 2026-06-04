@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/patterns/library/signal_transduction/config.py
+# hypothesis_version: 6.141.1
+
+[0.01, 0.1, 1.0, 2.0, 5.0, 10.0, 100.0, 250.0, 1000.0, 'E1_total', 'E2_total', 'G_total', 'K', 'MAPKK_total', 'MAPK_total', 'R_total', 'adaptation', 'adaptation_rate', 'alpha', 'beta', 'dt', 'gamma', 'gpcr', 'k1', 'k2', 'k3', 'k4', 'ligand_conc', 'mapk_cascade', 'model', 'n_genes', 'n_hill', 'num_stimulus_levels', 'repressilator', 'stimulus_amp', 'stimulus_duration', 't_max', 'toggle_switch']

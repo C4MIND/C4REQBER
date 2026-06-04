@@ -108,6 +108,14 @@ class ExtendRequest(BaseModel):
     language: str = Field(default="lean4", min_length=1, max_length=20)
     concept_gap: str = Field(..., min_length=1, max_length=1000)
 
+    @field_validator("library")
+    @classmethod
+    def library_no_path_traversal(cls, v: str) -> str:
+        """Reject library names that contain path traversal or path separators."""
+        if ".." in v or "/" in v or "\\" in v:
+            raise ValueError("library name must not contain path traversal characters")
+        return v
+
 
 @router.post("/anomalies")
 async def detect_anomalies(req: AnomalyRequest) -> dict[str, Any]:

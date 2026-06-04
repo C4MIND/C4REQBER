@@ -11,6 +11,7 @@ Based on:
 from __future__ import annotations
 
 import logging
+import math
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
@@ -180,7 +181,7 @@ class QuantumHarmonicOscillatorPattern(SimulationPattern):
 
         for n in range(n_levels):
             # Normalization constant
-            N_n = (alpha / np.pi**0.5)**0.5 / np.sqrt(2**n * np.math.factorial(n))
+            N_n = (alpha / np.pi**0.5)**0.5 / np.sqrt(2**n * math.factorial(n))
             # Hermite polynomial
             H_n = hermite(n)
             xi = alpha * x

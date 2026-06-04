@@ -69,9 +69,7 @@ class TestInputSanitization:
             "library": "../../../etc/passwd",
             "concept_gap": "test",
         })
-        # min_length=1 passes, but we should validate library names more strictly
-        # For now, accept and sanitize downstream
-        assert resp.status_code in (200, 422)
+        assert resp.status_code == 422
 
     def test_approve_rejects_very_long_question(self) -> None:
         """Question > 2000 chars should be rejected."""

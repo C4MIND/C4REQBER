@@ -34,7 +34,7 @@ class DoCalculus:
         self, g: nx.DiGraph, x: set[str], y: set[str], z: set[str]
     ) -> bool:
         """Check d-separation in a given graph."""
-        return nx.d_separated(g, x, y, z)
+        return nx.algorithms.d_separation.is_d_separator(g, x, y, z)
 
     def rule1_insertion_deletion(
         self,
@@ -230,11 +230,11 @@ class DoCalculus:
         """
         g_do_x = self._mutilated_graph({treatment})
 
-        if nx.d_separated(g_do_x, {outcome}, {treatment}, set()):
+        if nx.algorithms.d_separation.is_d_separator(g_do_x, {outcome}, {treatment}, set()):
             return True
 
         for node in set(self.scm.nodes) - {treatment, outcome}:
-            if nx.d_separated(g_do_x, {outcome}, {node}, {treatment}):
+            if nx.algorithms.d_separation.is_d_separator(g_do_x, {outcome}, {node}, {treatment}):
                 return True
 
         return False

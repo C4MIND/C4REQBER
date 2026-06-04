@@ -381,7 +381,7 @@ class FRARouter:
             feedback_bonus = op_scores.get(op_name, 0.5)
             return dist - feedback_bonus
 
-        return sorted(neighbors, key=score)
+        return sorted(neighbors, key=_score_item)
 
     def record_feedback(self, operator: str, success_score: float) -> None:
         """Record performance feedback for adaptive routing."""

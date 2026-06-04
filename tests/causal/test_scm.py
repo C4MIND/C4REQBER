@@ -122,8 +122,9 @@ class TestStructuralCausalModel:
         scm.add_node("Z", is_exogenous=True, noise=lambda: 1.0)
         scm.add_node("X", parents=["Z"], mechanism=lambda z, u: 2 * z + u)
 
-        samples = scm.sample(100)
-        assert np.allclose(samples["X"], 3.0, atol=5.0)
+        samples = scm.sample(1000)
+        # X = 2*Z + noise where noise ~ N(0,1), so mean(X) ≈ 2.0
+        assert np.isclose(np.mean(samples["X"]), 2.0, atol=0.5)
 
     def test_intervention(self) -> None:
         scm = StructuralCausalModel()

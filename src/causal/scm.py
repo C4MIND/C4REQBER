@@ -151,7 +151,7 @@ class StructuralCausalModel:
         in Bayesian networks and causal DAGs.
         """
         z = conditioning_set or set()
-        return nx.d_separated(self._dag, {x}, {y}, z)
+        return nx.algorithms.d_separation.is_d_separator(self._dag, {x}, {y}, z)
 
     def get_topological_order(self) -> list[str]:
         """Return variables in topological order (causal ordering)."""

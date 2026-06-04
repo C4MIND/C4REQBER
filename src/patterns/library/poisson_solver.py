@@ -360,7 +360,7 @@ class PoissonSolverPattern(SimulationPattern):
         f = self._initialize_rhs(config).flatten()
 
         # Solve using conjugate gradient
-        phi_flat, info = cg(A, f, tol=config.tolerance, maxiter=config.max_iterations)
+        phi_flat, info = cg(A, f, rtol=config.tolerance, maxiter=config.max_iterations)
 
         phi = phi_flat.reshape((nx, ny))
         self._apply_boundary_conditions(phi, config)

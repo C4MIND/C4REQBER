@@ -671,6 +671,7 @@ def mock_np() -> MagicMock:
         return sum(v * dx for v in flat)
 
     mock.trapz = _trapz
+    mock.trapezoid = _trapz
 
     def _var(x, axis=None):
         arr = _to_mock(x)

@@ -218,10 +218,15 @@ class StateSpaceController:
         """
         A_d, B_d = self.discretize()
 
-        # Check controllability
-        from scipy.linalg import ctrb
+        # Check controllability (inline since scipy.linalg.ctrb was removed)
+        def _ctrb(A: np.ndarray, B: np.ndarray) -> np.ndarray:
+            n = A.shape[0]
+            C = B
+            for i in range(1, n):
+                C = np.hstack((C, np.linalg.matrix_power(A, i) @ B))
+            return C
 
-        Co = ctrb(A_d, B_d)
+        Co = _ctrb(A_d, B_d)
 
         if np.linalg.matrix_rank(Co) < self.n_states:
             logger.warning("System not controllable, using LQR fallback")

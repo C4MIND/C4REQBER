@@ -362,8 +362,11 @@ class AgentBasedPattern(SimulationPattern):
 
             for i in range(m, n):
                 degrees = [len(network[j]) for j in range(i)]
-                total = sum(degrees) + 1
-                probs = [d / total for d in degrees]
+                total = sum(degrees)
+                if total == 0:
+                    probs = [1.0 / i] * i
+                else:
+                    probs = [d / total for d in degrees]
 
                 targets = self.rng.choice(i, size=min(m, i), replace=False, p=probs)
                 for target in targets:

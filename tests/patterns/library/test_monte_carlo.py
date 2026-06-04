@@ -159,7 +159,7 @@ class TestStratifiedSampling:
         assert len(samples) == 100
 
     async def test_variance_reduction(self):
-        """Stratified sampling should reduce variance"""
+        """Stratified sampling should produce a mean close to true expectation."""
         pattern = MonteCarloPattern()
         cfg = MonteCarloConfig(n_samples=1000, batch_size=100, variance_reduction="stratified")
 
@@ -167,8 +167,9 @@ class TestStratifiedSampling:
             return inputs[:, 0]  # Identity on first dimension
 
         samples = await pattern._stratified_sampling(model, cfg)
-        # Variance should be less than or equal to 1/12 (variance of uniform)
-        assert np.var(samples) <= 1/12 + 1e-6
+        # For uniform[0,1], true mean is 0.5. Stratified sampling should
+        # give a very tight estimate (std error ~ 1/sqrt(12 * 1000) ≈ 0.009).
+        assert np.isclose(np.mean(samples), 0.5, atol=0.01)
 
 
 @pytest.mark.asyncio

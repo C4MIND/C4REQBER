@@ -27,19 +27,7 @@ import numpy as np
 import pytest
 
 # ---------------------------------------------------------------------------
-# Module-level mocking of optional heavy dependencies
-# ---------------------------------------------------------------------------
-# Prevent any attempt to import matplotlib or scipy during test collection
-_mock_scipy = MagicMock()
-_mock_plt = MagicMock()
-sys.modules["scipy"] = _mock_scipy
-sys.modules["scipy.sparse"] = _mock_scipy.sparse
-sys.modules["scipy.linalg"] = _mock_scipy.linalg
-sys.modules["matplotlib"] = _mock_plt
-sys.modules["matplotlib.pyplot"] = _mock_plt.pyplot
-
-# ---------------------------------------------------------------------------
-# Imports under test (must happen after sys.modules mocking)
+# Imports under test
 # ---------------------------------------------------------------------------
 from patterns.library.biogeochemistry import (
     BiogeochemistryConfig,
@@ -804,32 +792,6 @@ class TestAllPatterns:
 
         assert "final_state" in result
         assert isinstance(result["final_state"], dict)
-
-
-# ===========================================================================
-# Mock verification tests
-# ===========================================================================
-
-class TestMockVerification:
-    """Confirm that heavy dependencies are actually mocked."""
-
-    def test_scipy_is_mocked(self):
-        import scipy
-
-        assert isinstance(scipy, MagicMock)
-
-    def test_matplotlib_pyplot_is_mocked(self):
-        import matplotlib.pyplot as plt
-
-        assert isinstance(plt, MagicMock)
-
-    def test_matplotlib_show_not_called(self):
-        """Ensure plt.show() does nothing (it is a mock)."""
-        import matplotlib.pyplot as plt
-
-
-        plt.show()
-        plt.show.assert_called()
 
 
 # ===========================================================================

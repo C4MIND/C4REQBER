@@ -57,8 +57,13 @@ class TestValidateFileSize:
 
 
 class TestCheckCouncilReady:
-    def test_premium_tier_returns_true(self):
+    def test_premium_tier_returns_true(self, monkeypatch):
+        monkeypatch.setenv("OPENROUTER_API_KEY", "sk-fake")
         assert check_council_ready("premium") is True
+
+    def test_premium_tier_without_key_returns_false(self, monkeypatch):
+        monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
+        assert check_council_ready("premium") is False
 
     def test_cheap_tier_without_key_returns_false(self, monkeypatch):
         monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)

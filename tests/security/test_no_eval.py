@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import ast
 import os
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -75,17 +76,27 @@ class TestNoEvalExec:
             )
 
     def test_grep_confirms_zero_eval_exec(self) -> None:
-        """Use ripgrep to confirm no eval/exec in src/ (excluding comments/docstrings)."""
-        result = subprocess.run(
-            ["rg", "-n", "\beval\b|\bexec\b", str(PROJECT_ROOT), "--type", "py"],
-            capture_output=True,
-            text=True,
-        )
-        # ripgrep returns 1 when no matches found — that's what we want
-        # But we need to filter out legitimate uses like model.eval() in PyTorch
-        lines = result.stdout.strip().split("\n") if result.stdout.strip() else []
-        # Filter out comments, docstrings, PyTorch .eval() calls, and known exception files
+        """Use grep/ripgrep to confirm no eval/exec in src/ (excluding comments/docstrings)."""
         known_exception_paths = {str(exc_path) for exc_path in KNOWN_EXCEPTIONS}
+
+        # Prefer ripgrep, fall back to grep
+        if shutil.which("rg"):
+            result = subprocess.run(
+                ["rg", "-n", "\beval\b|\bexec\b", str(PROJECT_ROOT), "--type", "py"],
+                capture_output=True,
+                text=True,
+            )
+        elif shutil.which("grep"):
+            result = subprocess.run(
+                ["grep", "-rn", "-E", "\\beval\\b|\\bexec\\b", "--include=*.py", str(PROJECT_ROOT)],
+                capture_output=True,
+                text=True,
+            )
+        else:
+            pytest.skip("Neither ripgrep nor grep available in this environment")
+            return
+
+        lines = result.stdout.strip().split("\n") if result.stdout.strip() else []
         bad_lines = []
         for line in lines:
             if not line.strip():
@@ -102,5 +113,5 @@ class TestNoEvalExec:
             bad_lines.append(line)
 
         assert len(bad_lines) == 0, (
-            f"ripgrep found potential eval/exec usage:\n" + "\n".join(bad_lines)
+            f"Found potential eval/exec usage:\n" + "\n".join(bad_lines)
         )

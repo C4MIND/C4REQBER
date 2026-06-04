@@ -477,12 +477,12 @@ class TestEmpiricalLayer:
     @pytest.mark.anyio(backend="asyncio")
     async def test_run_benchmark_invalid_id_defaults(self, layer):
         with patch.object(
-            layer.pipeline, "run", new_callable=AsyncMock
-        ) as mock_run:
+            layer.pipeline, "solve", new_callable=AsyncMock
+        ) as mock_solve:
             mock_result = MagicMock()
             mock_result.steps = [1, 2, 3]
             mock_result.confidence = 0.9
-            mock_run.return_value = mock_result
+            mock_solve.return_value = mock_result
 
             result = await layer.run_benchmark("nonexistent")
             assert result.benchmark_id == "einstein_relativity"
@@ -490,12 +490,12 @@ class TestEmpiricalLayer:
     @pytest.mark.anyio(backend="asyncio")
     async def test_run_suite(self, layer):
         with patch.object(
-            layer.pipeline, "run", new_callable=AsyncMock
-        ) as mock_run:
+            layer.pipeline, "solve", new_callable=AsyncMock
+        ) as mock_solve:
             mock_result = MagicMock()
             mock_result.steps = [1, 2]
             mock_result.confidence = 0.85
-            mock_run.return_value = mock_result
+            mock_solve.return_value = mock_result
 
             results = await layer.run_suite()
             assert len(results) == len(layer.benchmarks)

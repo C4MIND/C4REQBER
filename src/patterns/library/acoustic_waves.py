@@ -386,10 +386,10 @@ class AcousticWaves(BasePattern, GPUMixin):
         # Kinetic energy ~ 0.5 * rho0 * v^2
         vx_f64 = self.vx.astype(np.float64)
         vy_f64 = self.vy.astype(np.float64)
-        v_norm_sq = float(np.dot(vx_f64, vx_f64) + np.dot(vy_f64, vy_f64))
+        v_norm_sq = float(np.sum(vx_f64 * vx_f64) + np.sum(vy_f64 * vy_f64))
         if self.config.nz > 1:
             vz_f64 = self.vz.astype(np.float64)
-            v_norm_sq += float(np.dot(vz_f64, vz_f64))
+            v_norm_sq += float(np.sum(vz_f64 * vz_f64))
         ke = 0.5 * self.config.rho0 * v_norm_sq
         ke *= self.dx * self.dy
         if self.config.nz > 1:

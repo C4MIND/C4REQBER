@@ -7,13 +7,11 @@ import asyncio
 import numpy as np
 
 # Import the v6 engine
-import sys
-sys.path.insert(0, '/Users/figuramax/LocalProjects/TURBO-CDI')
-
 from v6.engine import (
     TURBOCDIEngine,
     Hypothesis,
     EngineConfig,
+    ValidationLevel,
     MonteCarloPattern,
     AgentBasedPattern,
     SystemDynamicsPattern,
@@ -68,7 +66,7 @@ class TestMonteCarloPattern:
         config = {"n_samples": 1000, "variance_reduction": "stratified"}
         result = await pattern.run(risk_hypothesis, config)
         
-        assert result.status.value == "COMPLETED"
+        assert result.status.name == "COMPLETED"
         assert "mean" in result.metrics
         assert "ci_lower" in result.metrics
         assert "ci_upper" in result.metrics
@@ -106,7 +104,7 @@ class TestAgentBasedPattern:
         config = {"n_agents": 50, "n_steps": 100, "grid_size": 20}
         result = await pattern.run(market_hypothesis, config)
         
-        assert result.status.value == "COMPLETED"
+        assert result.status.name == "COMPLETED"
         assert "final_mean_wealth" in result.metrics
         assert "final_gini" in result.metrics
         assert "equilibrium_reached" in result.metrics
@@ -150,7 +148,7 @@ class TestSystemDynamicsPattern:
         }
         result = await pattern.run(epidemic_hypothesis, config)
         
-        assert result.status.value == "COMPLETED"
+        assert result.status.name == "COMPLETED"
         assert "susceptible_final" in result.metrics
         assert "infected_final" in result.metrics
         assert "recovered_final" in result.metrics
@@ -190,7 +188,7 @@ class TestCircuitSimulationPattern:
         }
         result = await pattern.run(filter_hypothesis, config)
         
-        assert result.status.value == "COMPLETED"
+        assert result.status.name == "COMPLETED"
         assert "rc_time_constant" in result.metrics or "v_output_mean" in result.metrics
         assert "cutoff_frequency" in result.metrics or "total_power" in result.metrics
 
@@ -201,7 +199,7 @@ class TestIntegration:
     @pytest.fixture
     def engine(self):
         return TURBOCDIEngine(EngineConfig(
-            default_validation_level=None,  # Will be set per test
+            default_validation_level=ValidationLevel.MONTE_CARLO,
             max_parallel_simulations=2,
         ))
     

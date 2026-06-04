@@ -36,27 +36,37 @@ def validate_hypothesis(hypothesis: dict[str, Any]) -> dict[str, Any]:
     errors: list[str] = []
     warnings: list[str] = []
 
+    if not isinstance(hypothesis, dict):
+        errors.append("Hypothesis must be a dictionary")
+        return {"valid": False, "errors": errors, "warnings": warnings}
 
     # Check for text or structured format
     text = hypothesis.get("text", "")
     structured = hypothesis.get("structured", False)
 
+    if not isinstance(text, str):
+        errors.append("Hypothesis 'text' must be a string")
+    elif text:
+        # Validate text length
+        if len(text.strip()) < 10:
+            errors.append("Hypothesis text is too short (min 10 chars)")
+        elif len(text) > 10000:
+            warnings.append("Hypothesis text is very long (>10000 chars)")
+
+        # Check for testable claims (basic heuristic)
+        has_prediction = any(
+            kw in text.lower()
+            for kw in ["predict", "expect", "will", "should", "measurement", "measure"]
+        )
+        if not has_prediction:
+            warnings.append("Hypothesis may not be falsifiable - no predictive language found")
+
+        # Check for specificity
+        if text.count(" ") < 5:
+            warnings.append("Hypothesis may be too vague (less than 5 words)")
+
     if not text and not structured:
         errors.append("Hypothesis must have 'text' or be 'structured'")
-    elif text:
-        # Validate text
-
-            # Check for testable claims (basic heuristic)
-            has_prediction = any(
-                kw in text.lower()
-                for kw in ["predict", "expect", "will", "should", "measurement", "measure"]
-            )
-            if not has_prediction:
-                warnings.append("Hypothesis may not be falsifiable - no predictive language found")
-
-            # Check for specificity
-            if text.count(" ") < 5:
-                warnings.append("Hypothesis may be too vague (less than 5 words)")
 
     # Validate source
     source = hypothesis.get("source", "")
@@ -91,6 +101,10 @@ def validate_hypothesis_text(text: str) -> dict[str, Any]:
 
     errors: list[str] = []
     warnings: list[str] = []
+
+    if not isinstance(text, str):
+        errors.append("Hypothesis 'text' must be a string")
+        return {"valid": False, "errors": errors, "warnings": warnings}
 
     if len(text.strip()) < 10:
         errors.append("Hypothesis text is too short (min 10 chars)")
@@ -138,18 +152,27 @@ def validate_proof(proof: dict[str, Any]) -> dict[str, Any]:
     errors: list[str] = []
     warnings: list[str] = []
 
+    if not isinstance(proof, dict):
+        errors.append("Proof must be a dictionary")
+        return {"valid": False, "errors": errors, "warnings": warnings}
 
     # Check required fields
     language = proof.get("language", "")
     proof_code = proof.get("proof", "")
 
-    if not language:
+    if not isinstance(language, str):
+        errors.append("Proof 'language' must be a string")
+    elif not language:
         errors.append("Proof must have 'language' field")
     elif language not in ("lean4", "coq", "dafny", "hoare", "unknown"):
         warnings.append(f"Unsupported proof language: {language}")
 
-    if not proof_code:
+    if not isinstance(proof_code, str):
+        errors.append("Proof 'proof' must be a string")
+    elif not proof_code.strip():
         errors.append("Proof must have 'proof' field with code")
+    elif len(proof_code.strip()) < 10:
+        errors.append("Proof text is too short (min 10 chars)")
 
     # Check generated flag
     generated = proof.get("generated", None)
@@ -225,6 +248,9 @@ def validate_simulation_config(config: dict[str, Any]) -> dict[str, Any]:
     errors: list[str] = []
     warnings: list[str] = []
 
+    if not isinstance(config, dict):
+        errors.append("Simulation config must be a dictionary")
+        return {"valid": False, "errors": errors, "warnings": warnings}
 
     # Required fields
     domain = config.get("domain", "")
@@ -291,6 +317,9 @@ def validate_simulation_result(result: dict[str, Any]) -> dict[str, Any]:
     errors: list[str] = []
     warnings: list[str] = []
 
+    if not isinstance(result, dict):
+        errors.append("Simulation result must be a dictionary")
+        return {"valid": False, "errors": errors, "warnings": warnings}
 
     # Check status
     status = result.get("status", "")

@@ -249,6 +249,10 @@ class C4Space:
 
         return paths
 
+    def get_neighbors(self, state: C4State) -> list[C4State]:
+        """Backward-compat alias for axis_neighbors."""
+        return self.axis_neighbors(state)
+
     def neighbors(self, state: C4State) -> list[tuple[str, C4State]]:
         """Get all neighboring states (one operator away, including iota)."""
         return [(name, op(state)) for name, op in self._ops.items()]

@@ -24,7 +24,7 @@ _missing = [k for k in ("OPENROUTER_API_KEY",) if not os.environ.get(k)]
 if _missing:
     print(f"WARNING: Missing env vars: {_missing}. Set in .env or environment.")
     print("Run: cp .env.example .env && edit .env with your keys")
-    pytest.skip(f"Missing env vars: {_missing}")
+    pytest.skip(f"Missing env vars: {_missing}", allow_module_level=True)
 
 import src.llm.config as _llm_config
 

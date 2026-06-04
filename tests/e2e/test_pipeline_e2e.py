@@ -2,6 +2,7 @@
 import asyncio
 import os
 import sys
+import pytest
 import time
 from pathlib import Path
 
@@ -23,7 +24,7 @@ _missing = [k for k in ("OPENROUTER_API_KEY",) if not os.environ.get(k)]
 if _missing:
     print(f"WARNING: Missing env vars: {_missing}. Set in .env or environment.")
     print("Run: cp .env.example .env && edit .env with your keys")
-    sys.exit(1)
+    pytest.skip(f"Missing env vars: {_missing}")
 
 import src.llm.config as _llm_config
 

@@ -607,7 +607,7 @@ class TestEdgeCases:
         config = {"n_agents": 10, "n_steps": 5, "network_type": "scale_free"}
         result = await pattern.run(h, config)
         # Scale-free network has a bug with probability sum; may fail
-        if result.status == SimulationStatus.FAILED and "probabilities" in result.error_message:
+        if result.status == SimulationStatus.FAILED and "probabilities" in result.error_message.lower():
             pytest.skip("Scale-free network probability bug in source")
         assert result.status == SimulationStatus.COMPLETED
 

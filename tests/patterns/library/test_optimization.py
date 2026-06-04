@@ -108,6 +108,13 @@ class TestMockedHeavyComputations:
 
         mock_x = MagicMock()
         mock_x.value = np.array([0.5] * 50)
+        mock_x.__array__ = lambda dtype=None: np.zeros(50)
+        mock_x.__ge__ = lambda self, other: MagicMock()
+        mock_x.__eq__ = lambda self, other: MagicMock()
+
+        mock_sum_result = MagicMock()
+        mock_sum_result.__eq__ = lambda self, other: MagicMock()
+
         mock_problem = MagicMock()
         mock_problem.solve.return_value = 1.5
         mock_problem.status = "optimal"
@@ -116,7 +123,7 @@ class TestMockedHeavyComputations:
             with patch("src.patterns.library.optimization.cp.Minimize"):
                 with patch("src.patterns.library.optimization.cp.Problem", return_value=mock_problem):
                     with patch("src.patterns.library.optimization.cp.quad_form"):
-                        with patch("src.patterns.library.optimization.cp.sum"):
+                        with patch("src.patterns.library.optimization.cp.sum", return_value=mock_sum_result):
                             result = await pattern._solve_quadratic(h, config)
                             assert result["metrics"]["optimal_value"] == 1.5
 

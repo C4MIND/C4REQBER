@@ -11,9 +11,10 @@ from typing import Any
 
 from src.discovery.closed_loop.bayesian_tracker import BayesianHypothesisTracker
 from src.discovery.closed_loop.convergence import ConvergenceChecker
-from src.discovery.closed_loop.experiment_designer import ExperimentDesigner
 from src.discovery.closed_loop.ensemble_runner import EnsembleRunner
+from src.discovery.closed_loop.experiment_designer import ExperimentDesigner
 from src.discovery.closed_loop.refiner import HypothesisRefiner
+
 
 logger = logging.getLogger("c4reqber.discovery.closed_loop")
 

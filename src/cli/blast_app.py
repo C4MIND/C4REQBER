@@ -301,7 +301,12 @@ def blast_config(
         blast config --set D=claude-sonnet-4.6 --save  # Phase D → Claude Sonnet
         blast config --set B=gemma4:26b       # Phase B → local Gemma 4
     """
-    from src.llm.model_assignment import CONFIG_FILE, DEFAULT_ASSIGNMENTS, PHASE_DESCRIPTIONS, ModelAssignment
+    from src.llm.model_assignment import (
+        CONFIG_FILE,
+        DEFAULT_ASSIGNMENTS,
+        PHASE_DESCRIPTIONS,
+        ModelAssignment,
+    )
 
     # Load existing or create default
     assignment = ModelAssignment.load()

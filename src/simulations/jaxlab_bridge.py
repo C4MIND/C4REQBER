@@ -10,6 +10,7 @@ from typing import Any
 
 from .base_adapter import BaseSimulationAdapter, SimulationResult
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -26,8 +27,8 @@ class JaxLaBBridge(BaseSimulationAdapter):
 
     def run(self, input_data: dict[str, Any] | None = None) -> SimulationResult:
         def _run(data: dict[str, Any]) -> dict[str, Any]:
-            import jax_lab
             import jax.numpy as jnp
+            import jax_lab
 
             nx = self._params.get("nx", 128)
             ny = self._params.get("ny", 128)

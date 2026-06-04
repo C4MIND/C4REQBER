@@ -3,9 +3,10 @@ TURBO-CDI: Calculator Skill
 Advanced calculator with scientific functions
 """
 
-import math
 import json
-from typing import Dict, Any
+import math
+from typing import Any, Dict
+
 from .registry import Skill
 
 

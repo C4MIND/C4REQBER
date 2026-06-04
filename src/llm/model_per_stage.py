@@ -10,9 +10,9 @@ Phase F (Dissertation)    → Claude 3.5 Sonnet (academic writing)
 Phase G (Quality)         → GPT-4o-mini (cheap validation)
 """
 from __future__ import annotations
-from typing import Any
 
 import os
+from typing import Any
 
 
 # Default model for each pipeline phase

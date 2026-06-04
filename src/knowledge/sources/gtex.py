@@ -12,6 +12,7 @@ from typing import Any
 
 from .base_p6 import BaseP6Client
 
+
 logger = logging.getLogger("c4reqber.knowledge.gtex")
 
 

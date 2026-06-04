@@ -9,14 +9,14 @@ from typing import Any, Literal
 
 import networkx as nx
 from fastapi import APIRouter, status
-
-from src.api.errors import C4APIError, ValidationError
 from pydantic import BaseModel, Field
 
 from src.agenda.feasibility import FeasibilityChecker
 from src.agenda.generator import AgendaGenerator
 from src.agenda.priority import PriorityScorer
 from src.agenda.progress import ProgressTracker
+from src.api.errors import C4APIError, ValidationError
+
 
 router = APIRouter(prefix="/agenda", tags=["v8-agenda"])
 _tracker = ProgressTracker()

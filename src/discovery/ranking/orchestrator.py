@@ -13,6 +13,7 @@ from src.discovery.ranking.eig_estimator import EIGEstimator
 from src.discovery.ranking.mcdm_ranker import MCDMRanker, RankedHypothesis
 from src.discovery.ranking.prior_scorer import PriorScorer
 
+
 logger = logging.getLogger("c4reqber.discovery.ranking")
 
 

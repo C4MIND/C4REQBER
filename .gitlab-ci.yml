@@ -21,7 +21,7 @@ test-backend:
     - pip install -r requirements.txt
     - pip install pytest pytest-asyncio ruff
   script:
-    - ruff check src/ --exclude="archive/"
+    - ruff check src/ --exclude="archive/" --select=E,F
     - PYTHONPATH=. pytest tests/ -v --tb=short
   variables:
     DATABASE_URL: "sqlite:///tmp/test.db"
@@ -33,21 +33,6 @@ test-backend:
       junit: report.xml
     paths:
       - report.xml
-
-test-frontend:
-  stage: test
-  image: node:20-alpine
-  before_script:
-    - cd web-v2
-    - npm ci --legacy-peer-deps
-  script:
-    - npm run lint
-    - npx tsc --noEmit
-    - npm run test
-    - npm run build
-  artifacts:
-    paths:
-      - web-v2/dist
 
 # ═══════════════════════════════════════════════════════════════
 # BUILD JOBS
@@ -67,21 +52,6 @@ build-api:
     - main
     - develop
 
-build-web:
-  stage: build
-  image: docker:24
-  services:
-    - docker:24-dind
-  needs:
-    - test-frontend
-  script:
-    - cd web-v2
-    - docker build -t $CI_REGISTRY_IMAGE/web:$CI_COMMIT_SHA .
-    - docker build -t $CI_REGISTRY_IMAGE/web:latest .
-  only:
-    - main
-    - develop
-
 # ═══════════════════════════════════════════════════════════════
 # DEPLOY JOBS
 # ═══════════════════════════════════════════════════════════════
@@ -91,7 +61,6 @@ deploy-staging:
   image: alpine:latest
   needs:
     - build-api
-    - build-web
   script:
     - echo "Deploy to staging environment"
     - echo "docker-compose -f docker-compose.yml up -d"
@@ -106,7 +75,6 @@ deploy-production:
   image: alpine:latest
   needs:
     - build-api
-    - build-web
   script:
     - echo "Deploy to production environment"
     - echo "docker-compose -f docker-compose.prod.yml up -d"

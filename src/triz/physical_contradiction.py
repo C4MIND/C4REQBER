@@ -7,9 +7,9 @@ with C4 state-space mapping for cognitive transitions.
 from __future__ import annotations
 
 import re
-from typing import Any
 from dataclasses import dataclass, field
 from enum import Enum, auto
+from typing import Any
 
 from src.c4.state import C4State
 

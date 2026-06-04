@@ -11,6 +11,7 @@ from typing import Any
 
 from .base import BaseSourceAdapter
 
+
 logger = logging.getLogger("c44tcdi.knowledge.multi_source")
 
 

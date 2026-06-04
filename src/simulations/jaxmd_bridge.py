@@ -10,6 +10,7 @@ from typing import Any
 
 from .base_adapter import BaseSimulationAdapter, SimulationResult
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -28,7 +29,7 @@ class JaxMDBridge(BaseSimulationAdapter):
         def _run(data: dict[str, Any]) -> dict[str, Any]:
             import jax.numpy as jnp
             from jax import random
-            from jax_md import energy, space, simulate
+            from jax_md import energy, simulate, space
 
             key = random.PRNGKey(0)
             n = self._params.get("n_particles", 128)

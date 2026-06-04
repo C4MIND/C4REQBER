@@ -4,48 +4,49 @@ TURBO-CDI: Super Terminal UI v4.0
 Ultimate research environment with full integration
 """
 
-import sys
 import os
+import sys
+
 
 sys.path.insert(0, "/Users/figuramax/LocalProjects/TURBO-CDI/src")
 
-from typing import Dict, List, Optional, Any
+import json
+import queue
+import threading
 from dataclasses import dataclass
 from datetime import datetime
-import json
-import threading
-import queue
+from typing import Any, Dict, List, Optional
+
+# Adapters
+from adapters.arxiv_adapter import ARXIV_CATEGORIES, ArxivAdapter
+from adapters.ollama_adapter import LLMProvider
+from adapters.pubmed_adapter import PubMedAdapter
+from bibliography.manager import BibliographyManager
+from core.c4_state import C4State
 
 # Core
 from core.cdi_engine import CDIEngine, EinsteinValidator
-from core.c4_state import C4State
 from core.operators import Operators
 
 # Data
-from data.database import PatternDatabase, Discovery
+from data.database import Discovery, PatternDatabase
+from export.manager import ExportManager
 from extractors.contradiction import ContradictionExtractor
 
 # Projects & Biblio
-from projects.manager import ProjectManager, ResearchProject, Task, Milestone
-from bibliography.manager import BibliographyManager
-from export.manager import ExportManager
-
-# Visualization
-from visualization.c4_viz import C4Visualizer
-
-# Adapters
-from adapters.arxiv_adapter import ArxivAdapter, ARXIV_CATEGORIES
-from adapters.pubmed_adapter import PubMedAdapter
-from adapters.ollama_adapter import LLMProvider
+from projects.manager import Milestone, ProjectManager, ResearchProject, Task
+from skills.calculator import (
+    CalculatorSkill,
+    CodeExecutorSkill,
+    DataAnalyzerSkill,
+    UnitConverterSkill,
+)
 
 # External APIs integration placeholder
 from skills.registry import SkillRegistry
-from skills.calculator import (
-    CalculatorSkill,
-    UnitConverterSkill,
-    DataAnalyzerSkill,
-    CodeExecutorSkill,
-)
+
+# Visualization
+from visualization.c4_viz import C4Visualizer
 
 
 # ANSI Styles
@@ -105,9 +106,9 @@ class TurboTerminal:
         self.skills.register(CodeExecutorSkill())
 
         # Session state
-        self.current_project: Optional[int] = None
-        self.session_discoveries: List[int] = []
-        self.command_history: List[str] = []
+        self.current_project: int | None = None
+        self.session_discoveries: list[int] = []
+        self.command_history: list[str] = []
 
         self.clear_screen()
         self.show_boot_sequence()
@@ -140,7 +141,7 @@ class TurboTerminal:
                 f"{S.GREEN}[OK]{S.RESET}   Pattern DB mounted",
                 f"{S.GREEN}[OK]{S.RESET}   Project DB mounted",
                 f"{S.GREEN}[OK]{S.RESET}   Bibliography DB mounted",
-                f"",
+                "",
                 f"{S.CYAN}{S.BOLD}SYSTEM READY{S.RESET}",
             ]
         )
@@ -258,7 +259,7 @@ class TurboTerminal:
                 return self.skills.execute(cmd, args)
 
             print(f"{S.RED}Unknown command: {cmd}{S.RESET}")
-            print(f"Type 'help' for available commands")
+            print("Type 'help' for available commands")
             return None
 
     # ========== Discovery Commands ==========
@@ -292,7 +293,7 @@ class TurboTerminal:
             print(
                 f"{S.YELLOW}⚠ No clear contradiction. Using generic approach.{S.RESET}"
             )
-            from core.cdi_engine import PhysicalContradiction, ContradictionType
+            from core.cdi_engine import ContradictionType, PhysicalContradiction
 
             contradiction = PhysicalContradiction(
                 parameter="solution",
@@ -380,7 +381,6 @@ Be concrete and propose a mechanism."""
             # ... (falsifiability generation)
 
         # Save
-        from data.database import Discovery
 
         discovery = Discovery(
             id=None,

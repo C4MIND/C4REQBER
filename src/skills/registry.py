@@ -3,8 +3,8 @@ TURBO-CDI: Skills System
 Modular skills for research assistance
 """
 
-from typing import Dict, Any, Optional, List
 from abc import ABC, abstractmethod
+from typing import Any, Dict, List, Optional
 
 
 class Skill(ABC):
@@ -24,7 +24,7 @@ class SkillRegistry:
     """Registry for all available skills."""
 
     def __init__(self):
-        self._skills: Dict[str, Skill] = {}
+        self._skills: dict[str, Skill] = {}
 
     def register(self, skill: Skill):
         """Register a skill."""
@@ -44,10 +44,10 @@ class SkillRegistry:
         except Exception as e:
             return f"Error executing {name}: {e}"
 
-    def list_skills(self) -> List[str]:
+    def list_skills(self) -> list[str]:
         """List all skill names."""
         return list(self._skills.keys())
 
-    def get_all_skills(self) -> Dict[str, Skill]:
+    def get_all_skills(self) -> dict[str, Skill]:
         """Get all skills."""
         return self._skills.copy()

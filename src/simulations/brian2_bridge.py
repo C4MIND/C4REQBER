@@ -10,6 +10,7 @@ from typing import Any
 
 from .base_adapter import BaseSimulationAdapter, SimulationResult
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -26,7 +27,7 @@ class Brian2Bridge(BaseSimulationAdapter):
 
     def run(self, input_data: dict[str, Any] | None = None) -> SimulationResult:
         def _run(data: dict[str, Any]) -> dict[str, Any]:
-            from brian2 import NeuronGroup, SpikeMonitor, StateMonitor, defaultclock, run, ms, mV
+            from brian2 import NeuronGroup, SpikeMonitor, StateMonitor, defaultclock, ms, mV, run
 
             duration = self._params.get("duration_ms", 100) * ms
             defaultclock.dt = self._params.get("dt_ms", 0.1) * ms

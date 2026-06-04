@@ -3,8 +3,8 @@ from __future__ import annotations
 
 """Simple rate limiter for c44tcdi API."""
 import threading
-from typing import Any
 import time
+from typing import Any
 
 
 class RateLimiter:

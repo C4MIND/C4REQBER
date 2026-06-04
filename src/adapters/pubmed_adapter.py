@@ -12,6 +12,7 @@ from dataclasses import dataclass
 
 import httpx
 
+
 logger = logging.getLogger("c4reqber.adapters.pubmed")
 
 

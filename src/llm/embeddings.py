@@ -56,6 +56,7 @@ class EmbeddingCache:
 
 from collections import OrderedDict
 
+
 _cache = EmbeddingCache()
 # Ensure LRU backing on module load
 _cache._init_ordered_dict()

@@ -9,14 +9,15 @@ from src.api.v8_routers import (
     discovery_router,
     exploration_router,
     knowledge_router,
+    news_router,
     newton_router,
     novelty_router,
-    news_router,
     scimatic_router,
     social_router,
     turbo_router,
     verification_router,
 )
+
 
 router = APIRouter(prefix="/v8", tags=["v8"])
 

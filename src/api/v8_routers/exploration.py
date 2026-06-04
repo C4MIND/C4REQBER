@@ -9,13 +9,13 @@ from typing import Any
 
 import numpy as np
 from fastapi import APIRouter, status
-
-from src.api.errors import C4APIError, ValidationError
 from pydantic import BaseModel, Field, field_validator
 
+from src.api.errors import C4APIError, ValidationError
 from src.exploration.anomaly_detector import AnomalyDetector
-from src.exploration.question_generator import SurpriseDrivenQuestionGenerator
 from src.exploration.formal_extender import FormalFrameworkExtender
+from src.exploration.question_generator import SurpriseDrivenQuestionGenerator
+
 
 router = APIRouter(prefix="/exploration", tags=["v8-exploration"])
 

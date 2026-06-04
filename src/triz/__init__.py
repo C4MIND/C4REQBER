@@ -8,6 +8,8 @@ _logger = logging.getLogger(__name__)
 try:
     from .bridge import (
         C4TrizBridge as TRIZBridge,
+    )
+    from .bridge import (
         get_c4_triz_bridge_obj,
         get_c4_triz_mapping,
         map_c4_to_triz_parameters,

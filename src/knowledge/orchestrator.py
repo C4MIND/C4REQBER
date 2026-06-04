@@ -35,18 +35,13 @@ from .sources.inspire_hep import InspireHepAdapter
 from .sources.lens_org import LensOrgAdapter
 from .sources.oa_mg import OaMgAdapter
 from .sources.openalex import OpenAlexAdapter
-from .sources.pubmed import PubmedAdapter
-from .sources.semantic_scholar import SemanticScholarAdapter
-from .sources.tavily import TavilyAdapter
-from .sources.unpaywall import UnpaywallAdapter
-from .sources.zenodo import ZenodoAdapter
 from .sources.p6_adapters import (
     AflowAdapter,
     AllenBrainAdapter,
+    CernOpenDataAdapter,
     ChemblAdapter,
     ClinicalTrialsAdapter,
     ConceptNetAdapter,
-    CernOpenDataAdapter,
     CyberLeninkaAdapter,
     GbifAdapter,
     HarvardDataverseAdapter,
@@ -68,6 +63,11 @@ from .sources.p6_adapters import (
     UsgsAdapter,
     UsptoPatentsviewAdapter,
 )
+from .sources.pubmed import PubmedAdapter
+from .sources.semantic_scholar import SemanticScholarAdapter
+from .sources.tavily import TavilyAdapter
+from .sources.unpaywall import UnpaywallAdapter
+from .sources.zenodo import ZenodoAdapter
 
 
 logger = logging.getLogger("c44tcdi.knowledge.multi_source")

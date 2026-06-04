@@ -10,6 +10,7 @@ from typing import Any
 
 import numpy as np
 
+
 logger = logging.getLogger("c4reqber.discovery.ranking")
 
 
@@ -34,8 +35,8 @@ class EIGEstimator:
         """
         try:
             # Try to find and run simulator
-            from src.simulations.config import SimulationConfig
             from src.patterns.core import Hypothesis
+            from src.simulations.config import SimulationConfig
 
             config = SimulationConfig()
             pattern_id = self._map_simulator_to_pattern(simulator)

@@ -10,6 +10,7 @@ from typing import Any
 
 from .base_adapter import BaseSimulationAdapter, SimulationResult
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -26,7 +27,7 @@ class PySCFBridge(BaseSimulationAdapter):
 
     def run(self, input_data: dict[str, Any] | None = None) -> SimulationResult:
         def _run(data: dict[str, Any]) -> dict[str, Any]:
-            from pyscf import gto, scf, dft
+            from pyscf import dft, gto, scf
 
             atom = data.get("atom", "H 0 0 0; H 0 0 0.74")
             basis = self._params.get("basis", "sto-3g")

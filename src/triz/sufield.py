@@ -17,9 +17,9 @@ Incomplete Su-Fields are innovation opportunities.
 from __future__ import annotations
 
 import re
-from typing import Any
 from dataclasses import dataclass
 from enum import Enum, auto
+from typing import Any
 
 from src.c4.state import C4State
 

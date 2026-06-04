@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field
 
 from src.api.errors import C4APIError, ValidationError
 
+
 try:
     from src.verification import (  # type: ignore[attr-defined]
         UnifiedVerificationEngine,
@@ -59,7 +60,7 @@ class VerifyResponse(BaseModel):
     simulation_score: int
 
     @classmethod
-    def from_score(cls, score: Any) -> "VerifyResponse":
+    def from_score(cls, score: Any) -> VerifyResponse:
         return cls(
             hypothesis_id=score.hypothesis_id,
             hypothesis_text=score.hypothesis_text,

@@ -7,6 +7,7 @@ import logging
 import time
 from typing import Any
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -26,9 +27,9 @@ from src.agents.pipeline.steps.base import (
 )
 from src.api.v8_routers.discovery.pipeline import _sanitize_for_prompt
 from src.c4.state import C4State
-from src.metamodels.mp.profiles import AgentPerspective
 from src.knowledge.citation_verifier import CitationVerifier
 from src.knowledge.novelty_scorer import NoveltyScorer
+from src.metamodels.mp.profiles import AgentPerspective
 
 
 class SynthesisStep(PipelineStep):
@@ -149,7 +150,7 @@ class SynthesisStep(PipelineStep):
             observer_insights: list[str] = context.get("observer_insights", [])
             if observer_insights:
                 observer_section = (
-                    f"\n\nMETA-COGNITIVE OBSERVER INSIGHTS:\n"
+                    "\n\nMETA-COGNITIVE OBSERVER INSIGHTS:\n"
                     + "\n".join(f"- {insight}" for insight in observer_insights)
                     + "\n\nConsider these observer insights when synthesizing — they reveal potential blind spots or biases in the perspectives above."
                 )

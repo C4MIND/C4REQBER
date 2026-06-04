@@ -14,6 +14,7 @@ from src.verification.unified_score import (
     compute_unified_score,
 )
 
+
 router = APIRouter(prefix="/verification", tags=["v8-verification"])
 
 _VERIFY_CACHE_TTL = 3600

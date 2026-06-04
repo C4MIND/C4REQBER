@@ -14,6 +14,7 @@ from typing import Any
 
 import httpx
 
+
 logger = logging.getLogger("c4reqber.citation_verifier")
 
 

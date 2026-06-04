@@ -111,8 +111,8 @@ class UniversalSolvePipeline(BasePipeline):
     def __init__(self, provider_router: ProviderRouter | None = None, config: PipelineConfig | None = None) -> None:
         super().__init__(config=config)
         if provider_router is None:
-            from src.llm.router import ProviderRouter
             from src.llm.config import ProviderPreset
+            from src.llm.router import ProviderRouter
             provider_router = ProviderRouter.from_preset(ProviderPreset.C4REQBER)
         self.c4_space = C4Space()
         self.transformer = DomainTransformer(self.c4_space)
@@ -198,7 +198,7 @@ class UniversalSolvePipeline(BasePipeline):
                 # Restore observer data
                 result.observer_insights = data.get("observer_insights", [])
                 # Restore steps
-                from src.agents.pipeline.steps.base import PipelineStepResult, PipelineStage
+                from src.agents.pipeline.steps.base import PipelineStage, PipelineStepResult
                 for s in data.get("steps", []):
                     try:
                         result.steps.append(PipelineStepResult(

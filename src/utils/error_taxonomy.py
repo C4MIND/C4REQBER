@@ -95,8 +95,9 @@ ERR_RATE_LIMIT = C4Error(
 def classify_exception(exc: Exception) -> C4Error:
     """Classify a raw exception into a structured C4Error."""
     import asyncio
-    import httpx
     import subprocess
+
+    import httpx
 
     if isinstance(exc, asyncio.TimeoutError):
         return ERR_TIMEOUT

@@ -35,7 +35,7 @@ class ProofExampleRetriever:
         if not os.path.exists(path):
             return {"examples": [], "vectorizer": None, "matrix": None}
 
-        with open(path, "r", encoding="utf-8") as f:
+        with open(path, encoding="utf-8") as f:
             examples = json.load(f)
 
         texts = [ex.get("hypothesis", "") for ex in examples]
@@ -95,7 +95,7 @@ class ProofExampleRetriever:
         path = os.path.join(self._examples_dir, f"{language}_examples.json")
         examples: list[dict[str, str]] = []
         if os.path.exists(path):
-            with open(path, "r", encoding="utf-8") as f:
+            with open(path, encoding="utf-8") as f:
                 examples = json.load(f)
 
         examples.append({"hypothesis": hypothesis, "proof": proof})

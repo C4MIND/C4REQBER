@@ -10,6 +10,7 @@ from typing import Any
 
 from .base_adapter import BaseSimulationAdapter, SimulationResult
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -25,8 +26,8 @@ class WrfBridge(BaseSimulationAdapter):
 
     def run(self, input_data: dict[str, Any] | None = None) -> SimulationResult:
         def _run(data: dict[str, Any]) -> dict[str, Any]:
-            from netCDF4 import Dataset
             import wrf
+            from netCDF4 import Dataset
 
             wrf_file = data.get("wrfout")
             if wrf_file:

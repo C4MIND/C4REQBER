@@ -3,9 +3,9 @@ TURBO-CDI: Interactive Contradiction Matrix
 Visual TRIZ contradiction matrix with interactive selection
 """
 
-from typing import List, Dict, Tuple, Optional, Set
 from dataclasses import dataclass
 from enum import Enum
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 
 class EngineeringParameter(Enum):
@@ -58,7 +58,7 @@ class MatrixCell:
 
     improve_param: int  # Parameter to improve (1-39)
     worsen_param: int  # Parameter that worsens (1-39)
-    principles: List[int]  # Recommended TRIZ principles
+    principles: list[int]  # Recommended TRIZ principles
     frequency: int = 0  # How often this contradiction appears in patents
 
 
@@ -115,7 +115,7 @@ class ContradictionMatrix:
     }
 
     def __init__(self):
-        self.matrix: Dict[Tuple[int, int], MatrixCell] = {}
+        self.matrix: dict[tuple[int, int], MatrixCell] = {}
         self._load_matrix()
 
     def _load_matrix(self):
@@ -192,7 +192,7 @@ class ContradictionMatrix:
 
     def get_principles(
         self, improve_param: int, worsen_param: int
-    ) -> Optional[MatrixCell]:
+    ) -> MatrixCell | None:
         """
         Get recommended principles for a contradiction.
 
@@ -211,7 +211,7 @@ class ContradictionMatrix:
 
     def find_similar_contradictions(
         self, improve_param: int, worsen_param: int, top_k: int = 3
-    ) -> List[MatrixCell]:
+    ) -> list[MatrixCell]:
         """
         Find similar contradictions (same improve or worsen parameter).
         """
@@ -226,7 +226,7 @@ class ContradictionMatrix:
         similar.sort(key=lambda x: x.frequency, reverse=True)
         return similar[:top_k]
 
-    def search_by_parameter_name(self, name_query: str) -> List[Tuple[int, str]]:
+    def search_by_parameter_name(self, name_query: str) -> list[tuple[int, str]]:
         """
         Search for parameters by name.
 
@@ -250,7 +250,7 @@ class ContradictionMatrix:
         return self.PARAM_NAMES.get(param_num, f"Parameter {param_num}")
 
     def render_matrix_ascii(
-        self, highlight_cell: Optional[Tuple[int, int]] = None, width: int = 3
+        self, highlight_cell: tuple[int, int] | None = None, width: int = 3
     ) -> str:
         """
         Render ASCII visualization of the matrix.
@@ -318,7 +318,7 @@ class ContradictionMatrix:
 
         return "\n".join(lines)
 
-    def get_common_contradictions(self, top_n: int = 10) -> List[MatrixCell]:
+    def get_common_contradictions(self, top_n: int = 10) -> list[MatrixCell]:
         """Get the most common contradictions from the matrix."""
         cells = list(self.matrix.values())
         cells.sort(key=lambda x: x.frequency, reverse=True)
@@ -326,7 +326,7 @@ class ContradictionMatrix:
 
     def suggest_parameters(
         self, problem_description: str
-    ) -> Tuple[Optional[int], Optional[int]]:
+    ) -> tuple[int | None, int | None]:
         """
         Suggest which parameters to use based on problem description.
 
@@ -382,7 +382,7 @@ class ContradictionMatrix:
 
         return (best_improve, best_worsen)
 
-    def get_statistics(self) -> Dict[str, Any]:
+    def get_statistics(self) -> dict[str, Any]:
         """Get statistics about the matrix."""
         cells = list(self.matrix.values())
 
@@ -398,7 +398,7 @@ class ContradictionMatrix:
             "total_frequency": sum(c.frequency for c in cells),
         }
 
-    def _get_most_common_principles(self, top_n: int = 5) -> List[Tuple[int, int]]:
+    def _get_most_common_principles(self, top_n: int = 5) -> list[tuple[int, int]]:
         """Get the most frequently recommended principles."""
         from collections import Counter
 
@@ -411,7 +411,7 @@ class ContradictionMatrix:
 
 
 # Singleton
-_matrix: Optional[ContradictionMatrix] = None
+_matrix: ContradictionMatrix | None = None
 
 
 def get_contradiction_matrix() -> ContradictionMatrix:

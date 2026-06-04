@@ -69,6 +69,8 @@ app = FastAPI(
 
 # Register centralized error handlers
 from src.api.errors import register_error_handlers
+
+
 register_error_handlers(app)
 
 # Add request ID middleware for structured logging

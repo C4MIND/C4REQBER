@@ -328,6 +328,7 @@ def run_power_analysis(hypothesis: dict[str, Any]) -> dict[str, Any]:
         power = hypothesis.get("power") if isinstance(hypothesis, dict) else None
         if effect_size is None:
             import numpy as np
+
             from src.experiment_design.power import cohens_d
             rng = np.random.default_rng()
             group1 = np.array(rng.normal(0.5, 0.15, 30), dtype=np.float64)
@@ -441,6 +442,7 @@ def run_causal_do_calculus(problem: str, domain: str, data: dict[str, Any] | Non
     """Run causal do-calculus. Auto-retrieves data before falling back to toy model."""
     try:
         import pandas as pd
+
         from src.causal.discovery_engine import CausalDiscoveryEngine
         from src.causal.estimation_engine import CausalEstimationEngine
 
@@ -532,6 +534,7 @@ def run_counterfactual(hypothesis: dict[str, Any], domain: str, data: dict[str, 
     """Run counterfactual inference. Auto-retrieves data before falling back to toy model."""
     try:
         import pandas as pd
+
         from src.causal.discovery_engine import CausalDiscoveryEngine
         from src.causal.gp_scm import GPSCM
 

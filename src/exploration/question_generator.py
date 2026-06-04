@@ -13,6 +13,7 @@ import numpy as np
 from src.llm.embeddings import EmbeddingEngine
 from src.llm.router import ProviderRouter
 
+
 logger = logging.getLogger("c4reqber.exploration")
 
 

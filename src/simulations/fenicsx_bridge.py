@@ -10,6 +10,7 @@ from typing import Any
 
 from .base_adapter import BaseSimulationAdapter, SimulationResult
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -28,9 +29,9 @@ class FenicsxBridge(BaseSimulationAdapter):
         def _run(data: dict[str, Any]) -> dict[str, Any]:
             import dolfinx
             import numpy as np
-            from mpi4py import MPI
-            from dolfinx import fem, mesh
             import ufl
+            from dolfinx import fem, mesh
+            from mpi4py import MPI
 
             # Default: solve Poisson on unit square
             n = self._params.get("mesh_resolution", 32)

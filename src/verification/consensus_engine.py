@@ -13,6 +13,7 @@ from typing import Any
 
 from src.verification.llm_prover import LLMProver
 
+
 logger = logging.getLogger("c4reqber.verification.consensus")
 
 

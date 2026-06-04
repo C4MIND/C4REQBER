@@ -48,12 +48,12 @@ ZenodoAdapter = _safe_import("zenodo", "ZenodoAdapter")
 
 # P6 scientific data sources (direct clients, not BaseSourceAdapter-based)
 from .base_p6 import BaseP6Client
-from .ncbi_eutils import NCBIEUtilsClient
-from .pubchem import PubChemClient
 from .chembl import ChEMBLClient
-from .materials_project import MaterialsProjectClient
-from .noaa import NOAAClient
-from .gtex import GTExClient
-from .uniprot import UniProtClient
-from .kaggle import KaggleClient
 from .drugbank import DrugBankClient
+from .gtex import GTExClient
+from .kaggle import KaggleClient
+from .materials_project import MaterialsProjectClient
+from .ncbi_eutils import NCBIEUtilsClient
+from .noaa import NOAAClient
+from .pubchem import PubChemClient
+from .uniprot import UniProtClient

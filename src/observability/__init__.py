@@ -4,6 +4,7 @@ Re-exports logging, Sentry, and OpenTelemetry.
 """
 from __future__ import annotations
 
+
 try:
     from src.observability.logging import get_logger, setup_logging
     from src.observability.sentry import SentryManager, get_sentry

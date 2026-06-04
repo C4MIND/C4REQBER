@@ -5,6 +5,7 @@ from typing import cast
 
 from PIL import Image
 
+
 img = Image.open("/Users/figuramax/Downloads/ASCII-art.png").convert("L")
 w, h = img.size
 print(f"Original: {w}x{h}")

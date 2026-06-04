@@ -238,8 +238,8 @@ class AutoTheoremFormulator:
 
     def _run_z3(self, smt_script: str) -> dict[str, Any]:
         """Run Z3 on SMT-LIB script."""
-        import subprocess
         import os
+        import subprocess
         smt_file = ""
         try:
             with tempfile.NamedTemporaryFile(mode="w", suffix=".smt2", delete=False) as f:

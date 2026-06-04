@@ -119,6 +119,7 @@ class LLMProofResult:
 
 from src.verification.rag_retriever import ProofExampleRetriever
 
+
 _rag_retriever: ProofExampleRetriever | None = None
 
 

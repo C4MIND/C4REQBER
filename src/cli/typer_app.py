@@ -15,6 +15,7 @@ from rich.style import Style
 from rich.table import Table
 from rich.text import Text
 
+
 app = typer.Typer(
     name="turbo",
     help="C4REQBER v5.4 - Scientific Hypothesis Generation Platform",

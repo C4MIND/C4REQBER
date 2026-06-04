@@ -11,6 +11,7 @@ from typing import Any
 from src.discovery.closed_loop.bayesian_tracker import BayesianHypothesisTracker
 from src.llm.router import ProviderRouter
 
+
 logger = logging.getLogger("c4reqber.discovery.closed_loop")
 
 REFINER_PROMPT = """You are a scientific hypothesis refiner.

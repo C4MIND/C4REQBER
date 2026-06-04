@@ -10,6 +10,7 @@ from typing import Any
 
 from .base_adapter import BaseSimulationAdapter, SimulationResult
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -25,8 +26,8 @@ class AmuseBridge(BaseSimulationAdapter):
 
     def run(self, input_data: dict[str, Any] | None = None) -> SimulationResult:
         def _run(data: dict[str, Any]) -> dict[str, Any]:
-            from amuse.units import units
             from amuse.datamodel import Particles
+            from amuse.units import units
 
             particles = Particles(2)
             particles.mass = [1.0, 1.0] | units.MSun

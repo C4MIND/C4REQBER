@@ -11,6 +11,7 @@ import urllib.request
 from dataclasses import dataclass
 from typing import Any
 
+
 logger = logging.getLogger("c4reqber.adapters.ollama")
 
 

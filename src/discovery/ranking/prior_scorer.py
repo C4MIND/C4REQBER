@@ -12,6 +12,7 @@ import numpy as np
 
 from src.llm.embeddings import EmbeddingEngine
 
+
 logger = logging.getLogger("c4reqber.discovery.ranking")
 
 

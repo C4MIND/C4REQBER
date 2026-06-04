@@ -323,8 +323,8 @@ Qed.
             Dict with keys: success, output.
         """
         from src.verification.config import get_auto_formalization_config
-        from src.verification.formalization_engine import FormalizationEngine
         from src.verification.consensus_engine import ConsensusEngine
+        from src.verification.formalization_engine import FormalizationEngine
         from src.verification.semantic_alignment import SemanticAlignmentChecker
 
         config = get_auto_formalization_config()

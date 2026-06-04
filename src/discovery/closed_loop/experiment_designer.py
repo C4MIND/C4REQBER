@@ -13,6 +13,7 @@ import numpy as np
 
 from src.discovery.closed_loop.bayesian_tracker import BayesianHypothesisTracker
 
+
 logger = logging.getLogger("c4reqber.discovery.closed_loop")
 
 

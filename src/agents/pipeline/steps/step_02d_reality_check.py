@@ -6,12 +6,15 @@ in problem/solution text using regex heuristics + falsifier integration.
 """
 from __future__ import annotations
 
+import logging
 import re
 import time
 from typing import Any
 
 from src.agents.pipeline.steps.base import PipelineStage, PipelineStep, PipelineStepResult
 
+
+logger = logging.getLogger(__name__)
 
 class RealityCheckStep(PipelineStep):
     """Step 2d: Reality Check — flag extraordinary claims requiring scrutiny."""

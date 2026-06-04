@@ -12,7 +12,6 @@ from .eigent import EigentDesktop
 from .liquid_ai import LiquidAIClient
 from .nvidia import NvidiaNimClient
 from .openfang import OpenFangClient
-
 from .scientific_bridges import (
     DeepChemBridge,
     LangGraphBridge,

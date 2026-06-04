@@ -3,12 +3,12 @@ TURBO-CDI: arXiv Adapter
 Search and retrieve papers from arXiv
 """
 
-import urllib.request
 import urllib.parse
+import urllib.request
 import xml.etree.ElementTree as ET
-from typing import List, Dict, Optional
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Dict, List, Optional
 
 
 @dataclass
@@ -18,10 +18,10 @@ class ArxivPaper:
     id: str
     title: str
     abstract: str
-    authors: List[str]
+    authors: list[str]
     published: str
     updated: str
-    categories: List[str]
+    categories: list[str]
     pdf_url: str
     primary_category: str
 
@@ -44,7 +44,7 @@ class ArxivAdapter:
         max_results: int = 10,
         sort_by: str = "relevance",  # relevance, lastUpdatedDate, submittedDate
         sort_order: str = "descending",
-    ) -> List[ArxivPaper]:
+    ) -> list[ArxivPaper]:
         """
         Search arXiv for papers.
 
@@ -89,14 +89,14 @@ class ArxivAdapter:
 
     def search_by_category(
         self, category: str, max_results: int = 10
-    ) -> List[ArxivPaper]:
+    ) -> list[ArxivPaper]:
         """Search papers in a specific category."""
         query = f"cat:{category}"
         return self.search(query, max_results)
 
     def get_recent(
         self, category: str = "quant-ph", days: int = 7, max_results: int = 20
-    ) -> List[ArxivPaper]:
+    ) -> list[ArxivPaper]:
         """Get recent papers in a category."""
         # arXiv doesn't have direct date filtering in API
         # So we sort by date and take first N
@@ -107,7 +107,7 @@ class ArxivAdapter:
             sort_order="descending",
         )
 
-    def _parse_feed(self, xml_data: str) -> List[ArxivPaper]:
+    def _parse_feed(self, xml_data: str) -> list[ArxivPaper]:
         """Parse arXiv Atom feed."""
         papers = []
 
@@ -185,7 +185,7 @@ class ArxivAdapter:
 
         return papers
 
-    def format_for_context(self, papers: List[ArxivPaper]) -> str:
+    def format_for_context(self, papers: list[ArxivPaper]) -> str:
         """Format papers as context for LLM."""
         if not papers:
             return "No relevant papers found."

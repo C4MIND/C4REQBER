@@ -10,6 +10,7 @@ from typing import Any
 
 from .base_adapter import BaseSimulationAdapter, SimulationResult
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -25,8 +26,8 @@ class XarrayBridge(BaseSimulationAdapter):
 
     def run(self, input_data: dict[str, Any] | None = None) -> SimulationResult:
         def _run(data: dict[str, Any]) -> dict[str, Any]:
-            import xarray as xr
             import numpy as np
+            import xarray as xr
 
             # Create a synthetic climate-like dataset if no file provided
             if "dataset" in data:

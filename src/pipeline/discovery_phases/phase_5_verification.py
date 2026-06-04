@@ -81,7 +81,7 @@ async def run_verification_suite(problem, domain, results, errors) -> dict:
         import asyncio
         proof = await asyncio.wait_for(generate_lean4_proof(hypothesis_for_proof), timeout=60.0)
         results["proof"] = proof
-    except asyncio.TimeoutError:
+    except TimeoutError:
         results["proof"] = {"generated": False, "error": "Proof generation timed out after 60s"}
         errors.append("proof: timed out after 60s")
     except Exception as e:

@@ -3,8 +3,8 @@ TURBO-CDI: Effects Database
 Physical and chemical effects for problem solving
 """
 
-from typing import List, Dict, Any, Optional
 from dataclasses import dataclass
+from typing import Any, Dict, List, Optional
 
 
 @dataclass
@@ -15,8 +15,8 @@ class PhysicalEffect:
     description: str
     category: str  # mechanical, thermal, electromagnetic, etc.
     formula: str = ""
-    parameters: List[str] = None
-    applications: List[str] = None
+    parameters: list[str] = None
+    applications: list[str] = None
 
     def __post_init__(self):
         if self.parameters is None:
@@ -93,8 +93,8 @@ class EffectsDatabase:
     }
 
     def search_effects(
-        self, query: str, category: Optional[str] = None
-    ) -> List[PhysicalEffect]:
+        self, query: str, category: str | None = None
+    ) -> list[PhysicalEffect]:
         """
         Search effects by keyword.
 
@@ -123,16 +123,16 @@ class EffectsDatabase:
 
         return results
 
-    def get_effect(self, name: str) -> Optional[PhysicalEffect]:
+    def get_effect(self, name: str) -> PhysicalEffect | None:
         """Get effect by name."""
         key = name.lower().replace(" ", "_")
         return self.EFFECTS.get(key)
 
-    def get_by_category(self, category: str) -> List[PhysicalEffect]:
+    def get_by_category(self, category: str) -> list[PhysicalEffect]:
         """Get all effects in a category."""
         return [e for e in self.EFFECTS.values() if e.category == category]
 
-    def suggest_effects(self, problem: str) -> List[PhysicalEffect]:
+    def suggest_effects(self, problem: str) -> list[PhysicalEffect]:
         """Suggest effects based on problem description."""
         problem_lower = problem.lower()
         suggestions = []
@@ -156,13 +156,13 @@ class EffectsDatabase:
 
         return suggestions
 
-    def list_categories(self) -> List[str]:
+    def list_categories(self) -> list[str]:
         """List all effect categories."""
         return list(set(e.category for e in self.EFFECTS.values()))
 
 
 # Singleton
-_db: Optional[EffectsDatabase] = None
+_db: EffectsDatabase | None = None
 
 
 def get_effects_database() -> EffectsDatabase:

@@ -12,6 +12,7 @@ import numpy as np
 
 from src.discovery.closed_loop.experiment_designer import ExperimentDesign
 
+
 logger = logging.getLogger("c4reqber.discovery.closed_loop")
 
 

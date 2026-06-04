@@ -15,6 +15,7 @@ from src.api.v8_routers.social_v8 import router as social_router
 from src.api.v8_routers.turbo_v8 import router as turbo_router
 from src.api.v8_routers.verification_v8 import router as verification_router
 
+
 try:
     from src.api.v8_routers.news_v8 import router as news_router
 except Exception:

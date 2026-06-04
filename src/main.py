@@ -7,13 +7,14 @@ beautiful output across all commands.
 """
 
 import sys
-from typing import Optional, List
-from pathlib import Path
 from datetime import datetime
 from enum import Enum
+from pathlib import Path
+from typing import List, Optional
 
 import typer
 from rich.console import Console
+
 
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent))
@@ -22,18 +23,19 @@ sys.path.insert(0, str(Path(__file__).parent))
 # IMPORT DESIGN SYSTEM
 # ═══════════════════════════════════════════════════════════════════
 from src.design import (
+    ICONS,
     DesignTokens,
-    PanelType,
-    StyledPanel,
-    StyledTable,
-    ProgressIndicator,
     ErrorDisplay,
+    PanelType,
+    ProgressIndicator,
     ResultDisplay,
     StatusIndicator,
-    print_section_header,
+    StyledPanel,
+    StyledTable,
     print_divider,
-    ICONS,
+    print_section_header,
 )
+
 
 # ═══════════════════════════════════════════════════════════════════
 # CLI SETUP
@@ -70,7 +72,7 @@ def solve_command(
     max_hypotheses: int = typer.Option(
         5, "--max", "-n", help="Maximum hypotheses to generate"
     ),
-    output: Optional[str] = typer.Option(None, "--output", "-o", help="Export to file"),
+    output: str | None = typer.Option(None, "--output", "-o", help="Export to file"),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Verbose output"),
 ):
     """
@@ -182,7 +184,7 @@ def discover_command(
     problem: str = typer.Argument(..., help="Problem statement"),
     agents: int = typer.Option(4, "--agents", "-a", help="Number of agents to use"),
     iterations: int = typer.Option(3, "--iterations", "-i", help="Debate iterations"),
-    output: Optional[str] = typer.Option(None, "--output", "-o", help="Export results"),
+    output: str | None = typer.Option(None, "--output", "-o", help="Export results"),
 ):
     """
     Multi-agent collaborative discovery with debate.
@@ -265,7 +267,7 @@ def explain_command(
     level: str = typer.Option(
         "technical", "--level", "-l", help="Explanation level (simple/technical/expert)"
     ),
-    focus: Optional[str] = typer.Option(
+    focus: str | None = typer.Option(
         None, "--focus", "-f", help="Focus on specific aspect"
     ),
 ):
@@ -325,8 +327,8 @@ app.add_typer(research_app, name="research")
 def research_semantic(
     query: str = typer.Argument(..., help="Search query"),
     limit: int = typer.Option(10, "--limit", "-n", help="Number of results"),
-    year_start: Optional[int] = typer.Option(None, "--from", help="Start year"),
-    year_end: Optional[int] = typer.Option(None, "--to", help="End year"),
+    year_start: int | None = typer.Option(None, "--from", help="Start year"),
+    year_end: int | None = typer.Option(None, "--to", help="End year"),
     citations: bool = typer.Option(
         False, "--citations", "-c", help="Sort by citations"
     ),
@@ -386,7 +388,7 @@ def research_semantic(
 def research_arxiv(
     query: str = typer.Argument(..., help="Search query"),
     limit: int = typer.Option(10, "--limit", "-n", help="Number of results"),
-    category: Optional[str] = typer.Option(
+    category: str | None = typer.Option(
         None, "--category", "-c", help="arXiv category (cs.AI, physics, etc)"
     ),
     sort: str = typer.Option(
@@ -422,10 +424,10 @@ def research_patents(
     white_space: bool = typer.Option(
         False, "--white-space", "-w", help="White space analysis"
     ),
-    assignee: Optional[str] = typer.Option(
+    assignee: str | None = typer.Option(
         None, "--assignee", "-a", help="Filter by assignee"
     ),
-    country: Optional[str] = typer.Option(
+    country: str | None = typer.Option(
         None, "--country", "-c", help="Patent country (US, EP, WO)"
     ),
 ):
@@ -471,7 +473,7 @@ app.add_typer(c4_app, name="c4")
 
 @c4_app.command("states")
 def c4_states(
-    dimension: Optional[str] = typer.Option(
+    dimension: str | None = typer.Option(
         None, "--dimension", "-d", help="Filter by dimension (time/scale/agency)"
     ),
 ):
@@ -557,7 +559,7 @@ def c4_path(
     # Path result
     path_panel = StyledPanel.result(
         "[bold]Optimal Path:[/bold]\n\n"
-        f"[dim]000[/dim] → [cyan]100[/cyan] → [green]110[/green] → [yellow]111[/yellow] → [bold]222[/bold]\n\n"
+        "[dim]000[/dim] → [cyan]100[/cyan] → [green]110[/green] → [yellow]111[/yellow] → [bold]222[/bold]\n\n"
         "Distance: 4 steps\n"
         "Estimated creativity boost: +340%",
         "C4 Transformation Path",
@@ -578,7 +580,7 @@ app.add_typer(triz_app, name="triz")
 
 @triz_app.command("list")
 def triz_list(
-    category: Optional[str] = typer.Option(
+    category: str | None = typer.Option(
         None, "--category", "-c", help="Filter by category"
     ),
 ):
@@ -666,8 +668,8 @@ app.add_typer(analogy_app, name="analogy")
 @analogy_app.command("find")
 def analogy_find(
     concept: str = typer.Argument(..., help="Concept to find analogies for"),
-    from_domain: Optional[str] = typer.Option(None, "--from", help="Source domain"),
-    to_domain: Optional[str] = typer.Option(None, "--to", help="Target domain"),
+    from_domain: str | None = typer.Option(None, "--from", help="Source domain"),
+    to_domain: str | None = typer.Option(None, "--to", help="Target domain"),
     depth: int = typer.Option(2, "--depth", "-d", help="Search depth"),
 ):
     """
@@ -704,7 +706,7 @@ app.add_typer(validate_app, name="validate")
 @validate_app.command("create")
 def validate_create(
     hypothesis_id: str = typer.Argument(..., help="Hypothesis to validate"),
-    name: Optional[str] = typer.Option(None, "--name", "-n", help="Experiment name"),
+    name: str | None = typer.Option(None, "--name", "-n", help="Experiment name"),
     method: str = typer.Option(
         "experimental", "--method", "-m", help="Validation method"
     ),
@@ -829,11 +831,11 @@ def system_status(
 def system_version():
     """Show version information."""
     panel = StyledPanel.create(
-        f"[bold]TURBO-CDI[/bold] v5.0.0\n"
-        f"Scientific Hypothesis Generation Platform\n\n"
-        f"[dim]Design System: v1.0.0[/dim]\n"
-        f"[dim]C4 Engine: v4.5[/dim]\n"
-        f"[dim]Python: 3.11+[/dim]",
+        "[bold]TURBO-CDI[/bold] v5.0.0\n"
+        "Scientific Hypothesis Generation Platform\n\n"
+        "[dim]Design System: v1.0.0[/dim]\n"
+        "[dim]C4 Engine: v4.5[/dim]\n"
+        "[dim]Python: 3.11+[/dim]",
         "Version",
         PanelType.INFO,
     )

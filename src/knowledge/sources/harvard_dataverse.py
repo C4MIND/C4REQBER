@@ -12,6 +12,7 @@ from typing import Any
 
 from .base_p6 import BaseP6Client
 
+
 logger = logging.getLogger("c4reqber.knowledge.harvard_dataverse")
 
 
@@ -73,7 +74,7 @@ class HarvardDataverseClient(BaseP6Client):
             if self.api_key:
                 params["key"] = self.api_key
             data = await self._get(
-                f"/datasets/:persistentId",
+                "/datasets/:persistentId",
                 params={"persistentId": persistent_id, **params},
                 use_cache=True,
             )

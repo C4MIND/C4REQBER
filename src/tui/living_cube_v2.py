@@ -331,7 +331,6 @@ class LivingCube:
         return "\n".join(lines)
 
     def render_bubble(self) -> str:
-        import textwrap
         comment = self.comment[:90]
         max_w = 26
         wrapped = []

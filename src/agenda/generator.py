@@ -12,6 +12,7 @@ from typing import Any
 import networkx as nx
 import numpy as np
 
+
 logger = logging.getLogger("c4reqber.agenda")
 
 

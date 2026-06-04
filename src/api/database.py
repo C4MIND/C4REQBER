@@ -4,8 +4,9 @@ PostgreSQL async operations
 """
 
 import os
-from typing import Optional, List, Dict, Any
 from datetime import datetime
+from typing import Any, Dict, List, Optional
+
 import asyncpg
 
 
@@ -13,7 +14,7 @@ class Database:
     """Async PostgreSQL database manager."""
 
     def __init__(self):
-        self.pool: Optional[asyncpg.Pool] = None
+        self.pool: asyncpg.Pool | None = None
 
     async def connect(self):
         """Create connection pool."""
@@ -78,8 +79,8 @@ class Database:
             return str(discovery_id)
 
     async def get_discovery(
-        self, discovery_id: str, user_id: Optional[str] = None
-    ) -> Optional[Dict]:
+        self, discovery_id: str, user_id: str | None = None
+    ) -> dict | None:
         """Get discovery by ID."""
         async with self.pool.acquire() as conn:
             query = "SELECT * FROM discoveries WHERE id = $1"
@@ -94,7 +95,7 @@ class Database:
 
     async def get_user_discoveries(
         self, user_id: str, skip: int, limit: int
-    ) -> List[Dict]:
+    ) -> list[dict]:
         """Get user's discoveries."""
         async with self.pool.acquire() as conn:
             rows = await conn.fetch(
@@ -110,7 +111,7 @@ class Database:
             )
             return [dict(r) for r in rows]
 
-    async def get_all_discoveries(self, skip: int, limit: int) -> List[Dict]:
+    async def get_all_discoveries(self, skip: int, limit: int) -> list[dict]:
         """Get all discoveries (for unauthenticated access)."""
         async with self.pool.acquire() as conn:
             rows = await conn.fetch(
@@ -125,7 +126,7 @@ class Database:
             return [dict(r) for r in rows]
 
     async def update_discovery_status(
-        self, discovery_id: str, status: str, notes: Optional[str], user_id: str
+        self, discovery_id: str, status: str, notes: str | None, user_id: str
     ):
         """Update discovery validation status."""
         async with self.pool.acquire() as conn:
@@ -186,7 +187,7 @@ class Database:
 
 
 # Singleton
-_db: Optional[Database] = None
+_db: Database | None = None
 
 
 async def get_db() -> Database:

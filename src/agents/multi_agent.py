@@ -4,16 +4,16 @@ AI Co-Scientist style multi-agent scientific discovery
 """
 
 import asyncio
-from typing import List, Dict, Any, Optional, Callable
+import json
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-import json
+from typing import Any, Callable, Dict, List, Optional
 
 from rich.console import Console
 from rich.panel import Panel
-from rich.tree import Tree
 from rich.progress import Progress, SpinnerColumn, TextColumn
+from rich.tree import Tree
 
 
 console = Console()
@@ -59,20 +59,20 @@ class BaseAgent:
     def __init__(self, role: AgentRole, name: str):
         self.role = role
         self.name = name
-        self.memory: List[AgentMessage] = []
+        self.memory: list[AgentMessage] = []
         self.confidence_threshold = 0.6
 
     def receive_message(self, message: AgentMessage):
         """Receive message from another agent."""
         self.memory.append(message)
 
-    async def process(self, context: Dict[str, Any]) -> AgentOutput:
+    async def process(self, context: dict[str, Any]) -> AgentOutput:
         """Process input and produce output. Override in subclasses."""
         raise NotImplementedError
 
     def get_relevant_memory(
-        self, message_type: Optional[str] = None
-    ) -> List[AgentMessage]:
+        self, message_type: str | None = None
+    ) -> list[AgentMessage]:
         """Get relevant messages from memory."""
         if message_type:
             return [m for m in self.memory if m.message_type == message_type]
@@ -93,7 +93,7 @@ class AnalystAgent(BaseAgent):
     def __init__(self):
         super().__init__(AgentRole.ANALYST, "Analyst")
 
-    async def process(self, context: Dict[str, Any]) -> AgentOutput:
+    async def process(self, context: dict[str, Any]) -> AgentOutput:
         """Analyze problem and produce structured analysis."""
         problem = context.get("problem", "")
 
@@ -128,7 +128,7 @@ class AnalystAgent(BaseAgent):
             reasoning=f"Analyzed problem across {len(analogies)} potential domains",
         )
 
-    def _decompose_problem(self, problem: str) -> List[Dict[str, str]]:
+    def _decompose_problem(self, problem: str) -> list[dict[str, str]]:
         """Break problem into sub-problems."""
         # Simple heuristic decomposition
         parts = []
@@ -173,7 +173,7 @@ class AnalystAgent(BaseAgent):
 
         return "general"
 
-    def _identify_constraints(self, problem: str) -> List[str]:
+    def _identify_constraints(self, problem: str) -> list[str]:
         """Extract constraints from problem."""
         constraints = []
 
@@ -189,7 +189,7 @@ class AnalystAgent(BaseAgent):
 
         return constraints
 
-    def _find_analogous_domains(self, problem: str, primary_domain: str) -> List[str]:
+    def _find_analogous_domains(self, problem: str, primary_domain: str) -> list[str]:
         """Find domains with similar problems."""
         analogies = {
             "energy": ["biology", "chemistry", "materials"],
@@ -201,7 +201,7 @@ class AnalystAgent(BaseAgent):
 
         return analogies.get(primary_domain, ["general"])
 
-    def _extract_concepts(self, problem: str) -> List[str]:
+    def _extract_concepts(self, problem: str) -> list[str]:
         """Extract key concepts from problem."""
         # Simple extraction - in production use NLP
         words = problem.lower().split()
@@ -255,7 +255,7 @@ class ScientistAgent(BaseAgent):
     def __init__(self):
         super().__init__(AgentRole.SCIENTIST, "Scientist")
 
-    async def process(self, context: Dict[str, Any]) -> AgentOutput:
+    async def process(self, context: dict[str, Any]) -> AgentOutput:
         """Generate hypotheses based on analysis."""
         analysis = context.get("analysis", {})
         problem = analysis.get("problem", "")
@@ -288,7 +288,7 @@ class ScientistAgent(BaseAgent):
             reasoning=f"Generated {len(hypotheses)} hypotheses using C4, TRIZ, and analogy",
         )
 
-    async def _generate_c4_hypotheses(self, problem: str, analysis: Dict) -> List[Dict]:
+    async def _generate_c4_hypotheses(self, problem: str, analysis: dict) -> list[dict]:
         """Generate hypotheses using C4 operators."""
         from src.core.c4_state import C4Space
 
@@ -315,7 +315,7 @@ class ScientistAgent(BaseAgent):
 
         return hypotheses
 
-    def _describe_c4_path(self, path: List[str]) -> str:
+    def _describe_c4_path(self, path: list[str]) -> str:
         """Generate human-readable description of C4 path."""
         descriptions = {
             "tau+": "shift to future perspective",
@@ -331,8 +331,8 @@ class ScientistAgent(BaseAgent):
         return " → ".join(parts)
 
     async def _generate_triz_hypotheses(
-        self, problem: str, analysis: Dict
-    ) -> List[Dict]:
+        self, problem: str, analysis: dict
+    ) -> list[dict]:
         """Generate hypotheses using TRIZ principles."""
         # Common TRIZ principles for innovation
         principles = [
@@ -356,8 +356,8 @@ class ScientistAgent(BaseAgent):
         return hypotheses
 
     async def _generate_analogy_hypotheses(
-        self, problem: str, analysis: Dict
-    ) -> List[Dict]:
+        self, problem: str, analysis: dict
+    ) -> list[dict]:
         """Generate hypotheses using cross-domain analogies."""
         domains = analysis.get("analogous_domains", ["general"])
 
@@ -390,7 +390,7 @@ class CriticAgent(BaseAgent):
     def __init__(self):
         super().__init__(AgentRole.CRITIC, "Critic")
 
-    async def process(self, context: Dict[str, Any]) -> AgentOutput:
+    async def process(self, context: dict[str, Any]) -> AgentOutput:
         """Critique hypotheses from Scientist."""
         # Get hypotheses from memory
         scientist_messages = self.get_relevant_memory("hypotheses")
@@ -425,7 +425,7 @@ class CriticAgent(BaseAgent):
             reasoning=f"Critiqued {len(critiques)} hypotheses",
         )
 
-    def _critique_hypothesis(self, hypothesis: Dict) -> Dict:
+    def _critique_hypothesis(self, hypothesis: dict) -> dict:
         """Critique a single hypothesis."""
         weaknesses = []
         assumptions = []
@@ -463,7 +463,7 @@ class CriticAgent(BaseAgent):
             "verdict": self._generate_verdict(falsifiability_score, feasibility_score),
         }
 
-    def _assess_falsifiability(self, hypothesis: Dict) -> float:
+    def _assess_falsifiability(self, hypothesis: dict) -> float:
         """Assess how falsifiable the hypothesis is (0-1)."""
         # More specific = more falsifiable
         score = 0.5
@@ -477,12 +477,12 @@ class CriticAgent(BaseAgent):
 
         return min(score, 1.0)
 
-    def _assess_feasibility(self, hypothesis: Dict) -> float:
+    def _assess_feasibility(self, hypothesis: dict) -> float:
         """Assess feasibility (0-1)."""
         # For now, moderate feasibility
         return 0.6
 
-    def _assess_novelty(self, hypothesis: Dict) -> float:
+    def _assess_novelty(self, hypothesis: dict) -> float:
         """Assess novelty (0-1)."""
         # Cross-domain analogies are more novel
         if hypothesis.get("type") == "analogy":
@@ -513,7 +513,7 @@ class SynthesizerAgent(BaseAgent):
     def __init__(self):
         super().__init__(AgentRole.SYNTHESIZER, "Synthesizer")
 
-    async def process(self, context: Dict[str, Any]) -> AgentOutput:
+    async def process(self, context: dict[str, Any]) -> AgentOutput:
         """Synthesize all agent outputs into final result."""
         # Gather all outputs from memory
         hypotheses_msgs = self.get_relevant_memory("hypotheses")
@@ -553,8 +553,8 @@ class SynthesizerAgent(BaseAgent):
         )
 
     def _score_hypotheses(
-        self, hypotheses: List[Dict], critiques: List[Dict]
-    ) -> List[Dict]:
+        self, hypotheses: list[dict], critiques: list[dict]
+    ) -> list[dict]:
         """Score hypotheses based on critiques."""
         scored = []
 
@@ -582,7 +582,7 @@ class SynthesizerAgent(BaseAgent):
         scored.sort(key=lambda x: x["final_score"], reverse=True)
         return scored
 
-    def _generate_research_plan(self, top_hypotheses: List[Dict]) -> List[Dict]:
+    def _generate_research_plan(self, top_hypotheses: list[dict]) -> list[dict]:
         """Generate research plan for top hypotheses."""
         plan = []
 
@@ -598,7 +598,7 @@ class SynthesizerAgent(BaseAgent):
 
         return plan
 
-    def _assess_risks(self, hypotheses: List[Dict], critiques: List[Dict]) -> Dict:
+    def _assess_risks(self, hypotheses: list[dict], critiques: list[dict]) -> dict:
         """Assess overall risks."""
         risk_factors = []
 
@@ -616,7 +616,7 @@ class SynthesizerAgent(BaseAgent):
             ],
         }
 
-    def _generate_next_steps(self, top_hypothesis: Optional[Dict]) -> List[str]:
+    def _generate_next_steps(self, top_hypothesis: dict | None) -> list[str]:
         """Generate recommended next steps."""
         if not top_hypothesis:
             return ["Refine problem statement"]
@@ -643,15 +643,15 @@ class MultiAgentSystem:
     """
 
     def __init__(self):
-        self.agents: Dict[AgentRole, BaseAgent] = {
+        self.agents: dict[AgentRole, BaseAgent] = {
             AgentRole.ANALYST: AnalystAgent(),
             AgentRole.SCIENTIST: ScientistAgent(),
             AgentRole.CRITIC: CriticAgent(),
             AgentRole.SYNTHESIZER: SynthesizerAgent(),
         }
-        self.message_bus: List[AgentMessage] = []
+        self.message_bus: list[AgentMessage] = []
 
-    async def discover(self, problem: str) -> Dict[str, Any]:
+    async def discover(self, problem: str) -> dict[str, Any]:
         """
         Run multi-agent discovery process.
 
@@ -747,7 +747,7 @@ class MultiAgentSystem:
 
 
 # Singleton
-_system: Optional[MultiAgentSystem] = None
+_system: MultiAgentSystem | None = None
 
 
 def get_multi_agent_system() -> MultiAgentSystem:

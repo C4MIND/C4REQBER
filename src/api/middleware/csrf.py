@@ -13,10 +13,10 @@ import logging
 import os
 import secrets
 import time
+from typing import Any
 
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
-from typing import Any
 
 
 logger = logging.getLogger(__name__)

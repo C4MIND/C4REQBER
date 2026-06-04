@@ -5,6 +5,7 @@ from typing import Any
 
 from .base_p6_adapter import BaseP6SourceAdapter
 
+
 logger = logging.getLogger("c4reqber.knowledge.semantic_scholar")
 
 

@@ -5,8 +5,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from .data import ARCHETYPE_MAP, C4State, decode_code, get_all_archetypes
 from src.c4.state import C4State as CanonicalC4State
+
+from .data import ARCHETYPE_MAP, C4State, decode_code, get_all_archetypes
 
 
 # Agent affinity by cognitive dimension

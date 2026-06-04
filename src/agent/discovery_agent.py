@@ -15,22 +15,22 @@ The agent:
 """
 
 import asyncio
-from typing import List, Dict, Any, Optional
+import json
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-import json
+from typing import Any, Dict, List, Optional
 
 from rich.console import Console
-from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
-from rich.table import Table
 from rich.panel import Panel
+from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
+from rich.table import Table
 
+from src.analogy import AnalogyResult, get_analogy_engine
 from src.graph.knowledge_graph import get_knowledge_graph
-from src.analogy import get_analogy_engine, AnalogyResult
+from src.models.pydantic_models import C4StateModel, DiscoveryModel
 from src.triz import get_c4_triz_bridge
-from src.validation import get_validation_tracker, FalsifiabilityCriterion
-from src.models.pydantic_models import DiscoveryModel, C4StateModel
+from src.validation import FalsifiabilityCriterion, get_validation_tracker
 
 
 console = Console()
@@ -44,11 +44,11 @@ class AgentHypothesis:
     problem: str
     hypothesis: str
     mechanism: str
-    c4_path: List[str]
-    triz_principles: List[int]
-    analogies: List[AnalogyResult]
+    c4_path: list[str]
+    triz_principles: list[int]
+    analogies: list[AnalogyResult]
     confidence: float
-    falsifiability_criteria: List[FalsifiabilityCriterion]
+    falsifiability_criteria: list[FalsifiabilityCriterion]
     estimated_validation_cost: float  # USD
     estimated_time_to_validate: str  # e.g., "2 weeks"
     domain: str
@@ -63,10 +63,10 @@ class AgentReport:
     start_time: datetime
     end_time: datetime
     total_hypotheses: int
-    hypotheses: List[AgentHypothesis]
-    rankings: Dict[str, List[str]]  # By confidence, cost, speed
+    hypotheses: list[AgentHypothesis]
+    rankings: dict[str, list[str]]  # By confidence, cost, speed
     summary: str
-    recommendations: List[str]
+    recommendations: list[str]
 
 
 class ScientificDiscoveryAgent:
@@ -87,9 +87,9 @@ class ScientificDiscoveryAgent:
     async def discover(
         self,
         problem: str,
-        time_budget: Optional[str] = None,
+        time_budget: str | None = None,
         max_hypotheses: int = 10,
-        domains: Optional[List[str]] = None,
+        domains: list[str] | None = None,
     ) -> AgentReport:
         """
         Autonomous discovery process.
@@ -105,11 +105,11 @@ class ScientificDiscoveryAgent:
         """
         start_time = datetime.now()
 
-        console.print(f"[bold blue]🔬 Scientific Discovery Agent[/bold blue]")
+        console.print("[bold blue]🔬 Scientific Discovery Agent[/bold blue]")
         console.print(f"Problem: {problem}")
         console.print(f"Max hypotheses: {max_hypotheses}\n")
 
-        hypotheses: List[AgentHypothesis] = []
+        hypotheses: list[AgentHypothesis] = []
 
         with Progress(
             SpinnerColumn(),
@@ -203,7 +203,7 @@ class ScientificDiscoveryAgent:
 
         return report
 
-    def _detect_domains(self, problem: str) -> List[str]:
+    def _detect_domains(self, problem: str) -> list[str]:
         """Auto-detect relevant domains from problem description."""
         keywords = {
             "battery": ["energy", "chemistry", "materials"],
@@ -226,8 +226,8 @@ class ScientificDiscoveryAgent:
         return list(detected) if detected else ["general"]
 
     async def _generate_c4_triz(
-        self, problem: str, domains: List[str]
-    ) -> List[AgentHypothesis]:
+        self, problem: str, domains: list[str]
+    ) -> list[AgentHypothesis]:
         """Generate hypotheses using C4+TRIZ methodology."""
         hypotheses = []
 
@@ -263,8 +263,8 @@ class ScientificDiscoveryAgent:
         return hypotheses
 
     async def _generate_analogies(
-        self, problem: str, domains: List[str]
-    ) -> List[AgentHypothesis]:
+        self, problem: str, domains: list[str]
+    ) -> list[AgentHypothesis]:
         """Generate hypotheses via cross-domain analogies."""
         hypotheses = []
 
@@ -306,8 +306,8 @@ class ScientificDiscoveryAgent:
         return hypotheses
 
     async def _generate_hybrid(
-        self, existing: List[AgentHypothesis]
-    ) -> List[AgentHypothesis]:
+        self, existing: list[AgentHypothesis]
+    ) -> list[AgentHypothesis]:
         """Generate hybrid hypotheses by combining existing ones."""
         if len(existing) < 2:
             return []
@@ -345,7 +345,7 @@ class ScientificDiscoveryAgent:
 
     async def _generate_falsifiability(
         self, hypothesis: AgentHypothesis
-    ) -> List[FalsifiabilityCriterion]:
+    ) -> list[FalsifiabilityCriterion]:
         """Generate falsifiability criteria for a hypothesis."""
         # Simplified - in real implementation would use LLM
         criteria = [
@@ -365,8 +365,8 @@ class ScientificDiscoveryAgent:
         return criteria
 
     def _rank_hypotheses(
-        self, hypotheses: List[AgentHypothesis]
-    ) -> List[AgentHypothesis]:
+        self, hypotheses: list[AgentHypothesis]
+    ) -> list[AgentHypothesis]:
         """Rank hypotheses by composite score."""
 
         def score(h: AgentHypothesis) -> float:
@@ -408,7 +408,7 @@ class ScientificDiscoveryAgent:
             return int(numbers[0])
         return 4
 
-    def _generate_summary(self, hypotheses: List[AgentHypothesis]) -> str:
+    def _generate_summary(self, hypotheses: list[AgentHypothesis]) -> str:
         """Generate executive summary."""
         methods = {}
         for h in hypotheses:
@@ -425,7 +425,7 @@ Total validation budget: ${total_cost:,.0f}
 Top method: {max(methods, key=methods.get) if methods else "N/A"}
 """
 
-    def _generate_recommendations(self, hypotheses: List[AgentHypothesis]) -> List[str]:
+    def _generate_recommendations(self, hypotheses: list[AgentHypothesis]) -> list[str]:
         """Generate actionable recommendations."""
         if not hypotheses:
             return ["No hypotheses generated. Try rephrasing the problem."]
@@ -520,7 +520,7 @@ Top method: {max(methods, key=methods.get) if methods else "N/A"}
 # SINGLETON INSTANCE
 # ═══════════════════════════════════════════════════════════════════
 
-_agent: Optional[ScientificDiscoveryAgent] = None
+_agent: ScientificDiscoveryAgent | None = None
 
 
 def get_agent() -> ScientificDiscoveryAgent:

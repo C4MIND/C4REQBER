@@ -13,6 +13,7 @@ import logging
 import warnings
 from typing import Any
 
+
 logger = logging.getLogger(__name__)
 
 from src.knowledge.orchestrator import MultiSourceSearcher as _RealSearcher

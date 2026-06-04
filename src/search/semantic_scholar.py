@@ -57,8 +57,8 @@ class SemanticScholarClient:
             self.client = httpx.AsyncClient(headers=headers, timeout=30.0)
 
     async def _rate_limit_wait(self) -> None:
-        import time
         import asyncio
+        import time
         now = time.monotonic()
         wait = self._last_request + (1.0 / self._rate_limit) - now
         if wait > 0:

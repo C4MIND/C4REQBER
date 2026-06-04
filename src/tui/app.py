@@ -3,5 +3,6 @@ from __future__ import annotations
 
 from src.tui import main
 
+
 if __name__ == "__main__":
     main()

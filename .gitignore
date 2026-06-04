@@ -13,7 +13,7 @@ config/secrets/
 # API Keys & Tokens
 *api_key*
 *apikey*
-*token*
+# Removed: *token* was too broad, use specific rules
 *secret*
 openrouter_key.txt
 ollama_config.yaml
@@ -64,7 +64,7 @@ log/
 *.db
 *.sqlite
 *.sqlite3
-data/
+/data/
 !data/.gitkeep
 
 # Vector Stores (Large Files)

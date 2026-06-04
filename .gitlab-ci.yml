@@ -22,7 +22,7 @@ test-backend:
     - pip install pytest pytest-asyncio ruff
   script:
     - ruff check src/ --exclude="archive/" --select=E9,F821,F822,F823
-    - PYTHONPATH=. pytest tests/ -v --tb=short
+    - PYTHONPATH=src pytest tests/ -v --tb=short
   variables:
     DATABASE_URL: "sqlite:///tmp/test.db"
     CACHE_BACKEND: "memory"

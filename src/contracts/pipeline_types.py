@@ -39,8 +39,12 @@ class PipelineResult:
     execution_time_ms: int = 0
 
 
-class PipelineConfig(Protocol):
-    """Protocol for pipeline configuration."""
+class PipelineConfigProtocol(Protocol):
+    """Structural interface for a pipeline configuration.
+
+    Renamed from `PipelineConfig` to avoid a name clash with the concrete
+    dataclass `src.contracts.pipeline_config.PipelineConfig`.
+    """
 
     name: str
     description: str

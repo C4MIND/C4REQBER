@@ -60,6 +60,55 @@ from src.discovery.pipeline_logic import (
 logger = logging.getLogger("c4_cdi_turbo.api.v8.discovery")
 
 
+__all__ = [
+    "DissertationRequest",
+    "FlashRequest",
+    "MultiHypothesisRequest",
+    "OneClickRequest",
+    "_build_dissertation",
+    "_domain_improving_param",
+    "_domain_worsening_param",
+    "_escape_latex",
+    "_refine_hypothesis_llm",
+    "_run_self_critique",
+    "_sanitize_for_prompt",
+    "_update_phase",
+    "build_temporal_kg",
+    "detect_paradigm_shift",
+    "dissertation_mode",
+    "flash_discovery",
+    "generate_competing_hypotheses",
+    "generate_hypothesis",
+    "generate_lean4_proof",
+    "generate_paper",
+    "mine_contradictions",
+    "multi_hypothesis_discovery",
+    "navigate_c4",
+    "one_click_discovery",
+    "resolve_triz",
+    "run_abduction",
+    "run_autoscanner",
+    "run_bayesian_conjugate_update",
+    "run_bayesian_model_averaging",
+    "run_c4_observer",
+    "run_causal_do_calculus",
+    "run_cognitive_plugins",
+    "run_consensus_meter",
+    "run_counterfactual",
+    "run_dempster_shafer",
+    "run_doe_design",
+    "run_empirical_validation",
+    "run_falsification_engine",
+    "run_fra_routing",
+    "run_matrix_dream",
+    "run_power_analysis",
+    "run_relevant_simulation",
+    "run_reproducibility_check",
+    "run_strong_inference",
+    "search_isomorphisms",
+]
+
+
 class OneClickRequest(BaseModel):
     problem: str
     domain: str = "science"

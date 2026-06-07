@@ -782,7 +782,7 @@ def blast_agent(
                             elif tool_name == "agent_search":
                                 result = {"content": [{"type": "text", "text": f"Search for: {arguments.get('query', '')}"}]}
                             elif tool_name == "agent_fingerprint":
-                                from src.c4.llm_classifier import get_c4_classifier
+                                from src.c4_analysis.llm_classifier import get_c4_classifier
                                 classifier = get_c4_classifier()
                                 state, confidence, _ = classifier.classify(arguments.get("problem", ""))
                                 result = {"content": [{"type": "text", "text": f"C4 State: {state} (confidence: {confidence:.2f})"}]}
@@ -844,7 +844,7 @@ def blast_analyze(
         console.print("[red]Error: query cannot be empty[/]")
         raise typer.Exit(1)
 
-    from src.c4.system_analyzer import SystemAnalyzer
+    from src.c4_analysis.system_analyzer import SystemAnalyzer
 
     console.print(f"[bold]Analyzing:[/bold] {query}")
     console.print()

@@ -13,7 +13,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "src"))
 
-from c4.system_synthesizer import SYSTEMIC_INDICATORS, SystemSynthesizer
+from c4_analysis.system_synthesizer import SYSTEMIC_INDICATORS, SystemSynthesizer
 
 
 class TestSystemicIndicators:

@@ -14,7 +14,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "src"))
 
-from c4.multi_prompt_router import MultiPromptRouter
+from c4_analysis.multi_prompt_router import MultiPromptRouter
 
 
 class TestMultiPromptRouterSplit:

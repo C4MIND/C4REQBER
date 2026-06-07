@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import pytest
 
-from src.c4.system_analyzer import SystemAnalyzer
+from src.c4_analysis.system_analyzer import SystemAnalyzer
 
 
 class TestSystemAnalyzerQueries:

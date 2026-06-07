@@ -6,7 +6,7 @@ import logging
 from typing import Any
 
 from src.c4.cognitive_router import CognitiveRouter
-from src.c4.extended_engines import CognitiveStateClassifier
+from src.c4_analysis.extended_engines import CognitiveStateClassifier
 
 
 logger = logging.getLogger(__name__)

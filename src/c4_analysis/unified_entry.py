@@ -6,9 +6,9 @@ import logging
 from typing import Any
 
 from src.c4.cognitive_router import CognitiveRouter
-from src.c4.multi_prompt_router import MultiPromptRouter
-from src.c4.system_analyzer import SystemAnalyzer
-from src.c4.system_synthesizer import SystemSynthesizer
+from src.c4_analysis.multi_prompt_router import MultiPromptRouter
+from src.c4_analysis.system_analyzer import SystemAnalyzer
+from src.c4_analysis.system_synthesizer import SystemSynthesizer
 
 
 logger = logging.getLogger(__name__)

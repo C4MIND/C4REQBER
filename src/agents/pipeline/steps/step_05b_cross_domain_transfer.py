@@ -12,7 +12,7 @@ from src.agents.pipeline.steps.base import (
     PipelineStep,
     PipelineStepResult,
 )
-from src.c4.transfer_pipeline import (
+from src.c4_analysis.transfer_pipeline import (
     TransferResult,
     cross_domain_transfer,
     should_auto_trigger,

@@ -31,7 +31,7 @@ class C4FingerprintStep(PipelineStep):
         start = time.time()
 
         try:
-            from src.c4.llm_classifier import get_c4_classifier
+            from src.c4_analysis.llm_classifier import get_c4_classifier
 
             classifier = get_c4_classifier()
             c4_state, confidence, reasoning = await classifier.classify(problem)

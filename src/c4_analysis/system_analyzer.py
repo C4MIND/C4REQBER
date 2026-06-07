@@ -7,8 +7,8 @@ from collections import defaultdict
 from typing import Any
 
 from src.c4.cognitive_router import CognitiveRouter
-from src.c4.extended_engines import CognitiveStateClassifier
-from src.c4.system_synthesizer import SYSTEMIC_INDICATORS
+from src.c4_analysis.extended_engines import CognitiveStateClassifier
+from src.c4_analysis.system_synthesizer import SYSTEMIC_INDICATORS
 
 
 logger = logging.getLogger(__name__)

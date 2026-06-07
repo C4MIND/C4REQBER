@@ -28,7 +28,7 @@ async def get_current_user(
     auth_manager: Any = None,
 ) -> User:
     """Validate JWT token and return user. In dev mode, returns test user."""
-    from src.auth.dev_mode import get_dev_user, is_dev_mode
+    from src.api.dev_mode import get_dev_user, is_dev_mode
 
     if is_dev_mode(request):
         return get_dev_user()

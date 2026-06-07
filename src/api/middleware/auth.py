@@ -25,7 +25,7 @@ class JWTAuthMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next) -> JSONResponse:
         """Authenticate requests using JWT token."""
         # Bypass auth in dev/test mode with cryptographic token
-        from src.auth.dev_mode import is_dev_mode
+        from src.api.dev_mode import is_dev_mode
         if is_dev_mode(request):
             return await call_next(request)
 

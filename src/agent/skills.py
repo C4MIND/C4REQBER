@@ -172,7 +172,7 @@ class SkillRegistry:
                 "generate_proof": lambda: _import_run("src.verification.llm_prover", "LLMProver", "prove", hypothesis=call.args.get("hypothesis", ""), language=call.args.get("lang", "lean4")),
             },
             "c4.security": {
-                "scan": lambda: _import_run("src.agents.guardian", "Guardian", "full_scan", text=call.args.get("text", "")),
+                "scan": lambda: _import_run("src.security.guardian", "Guardian", "full_scan", text=call.args.get("text", "")),
                 "audit": lambda: _import_run("src.agents.policy", "PolicyEngine", "audit", read_all=lambda: "audit trail"),
                 "policy_check": lambda: _import_run("src.agents.policy", "PolicyEngine", "evaluate", action_name=call.args.get("action", "unknown")),
             },

@@ -121,7 +121,7 @@ class LLMProviderRouter:
     @staticmethod
     def _guard_messages(messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
         try:
-            from src.agents.guardian import Guardian
+            from src.security.guardian import Guardian
 
             guardian = Guardian()
             cleaned: list[dict[str, Any]] = []

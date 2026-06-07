@@ -8,7 +8,7 @@ This package provides the cognitive governance layer for the c4reqber CLI:
 """
 from __future__ import annotations
 
-from src.agents.guardian import Guardian
+from src.security.guardian import Guardian
 from src.agents.policy import Action, AuditTrail, Decision, PolicyEngine, RiskTier
 from src.agents.qa import QAController, QAResult
 from src.agents.soul import Soul

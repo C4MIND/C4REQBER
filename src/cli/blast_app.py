@@ -521,7 +521,7 @@ def blast_guardian(
     code: str = typer.Option("", "--code", "-c", help="Python code to validate AST"),
 ) -> None:
     """Safety guardian — scan for prompt injection, credentials, unsafe code."""
-    from src.agents.guardian import Guardian
+    from src.security.guardian import Guardian
 
     guardian = Guardian()
 

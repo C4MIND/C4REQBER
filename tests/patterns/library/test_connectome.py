@@ -489,6 +489,7 @@ class TestEdgeCases:
         result = await pattern.run(h, config)
         assert result.status == SimulationStatus.COMPLETED
 
+    @pytest.mark.slow  # empty config -> full 68-region / 60s@1ms default sim (~80s)
     async def test_empty_config(self):
         pattern = ConnectomePattern()
         h = Hypothesis(title="Brain connectome", description="test")

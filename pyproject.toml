@@ -32,6 +32,7 @@ dependencies = [
     "jsonschema",
     "pytest",
     "pytest-asyncio",
+    "pytest-timeout",
     "anyio",
     "sniffio",
     "certifi",

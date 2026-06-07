@@ -27,3 +27,15 @@ class PipelineConfig(Protocol):
 
     def to_dict(self) -> dict[str, Any]:
         ...
+
+
+class SolvePipeline(Protocol):
+    """Structural interface for a solve pipeline (e.g. agents.UniversalSolvePipeline).
+
+    Lets lower layers (e.g. validation's benchmark harness) depend on the
+    capability without importing the concrete pipeline from the agents package.
+    The concrete pipeline is injected by the caller.
+    """
+
+    async def solve(self, problem: str, mode: str = ...) -> Any:
+        ...

@@ -8,6 +8,7 @@ backward compatibility (so existing `...discovery.pipeline` imports keep working
 import asyncio
 import json
 import logging
+import re
 import time
 from datetime import datetime
 from pathlib import Path
@@ -17,6 +18,7 @@ from pydantic import BaseModel
 
 from src.api.v8_routers.discovery.jobs import JobStore, get_job_store
 from src.api.v8_routers.discovery.search import search_knowledge
+from src.llm.providers.unified import LLMProviderRouter
 from src.discovery.pipeline_logic import (
     _build_dissertation,
     _domain_improving_param,

@@ -159,10 +159,9 @@ async def run_quality_and_output(results, errors, abort_reasons) -> dict:
                 f"Consensus: {recheck_result.get('consensus_level', 0):.0%}."
             ]
             try:
-                from src.discovery.paradigm_shift import (
-                    detect_paradigm_shift,  # type: ignore[attr-defined]
-                )
-                ps_result = detect_paradigm_shift(papers, domain)  # type: ignore[attr-defined]
+                from src.discovery.pipeline_logic import detect_paradigm_shift
+
+                ps_result = detect_paradigm_shift(papers, domain)
                 results["paradigm_shift"] = ps_result
                 shift_entry = dict(refinement_history[-1]) if refinement_history else {}
                 shift_entry.update({"paradigm_shift_rechecked": True, "ps_probability": ps_result.get("probability")})

@@ -3,11 +3,17 @@ from __future__ import annotations
 
 """Phase D: Cognitive Agents — Functors (9 perspectives) and Plugins (24 methods)."""
 
+import importlib
 import logging
 from typing import Any
 
-from src.agents.functor_orchestrator import FunctorOrchestrator
 from src.plugins.v2_registry import PLUGIN_REGISTRY
+
+# Note: FunctorOrchestrator (agents layer) is resolved by LATE BINDING inside
+# run_functors (see below), not imported statically. This pipeline phase invokes
+# the agent layer only at runtime, so the generic pipeline engine has no static
+# (import-time) dependency on the agents package — it stays independently
+# importable/type-checkable. The runtime invocation is guarded by try/except.
 
 
 logger = logging.getLogger(__name__)
@@ -20,6 +26,9 @@ class PhaseD_CognitiveAgents:
         """Run 9 cognitive functor agents in parallel, extract novel insights."""
         print("\n[3.5/7] Running 9 cognitive functor agents...")
         try:
+            FunctorOrchestrator = importlib.import_module(
+                "src.agents.functor_orchestrator"
+            ).FunctorOrchestrator
             orchestrator = FunctorOrchestrator()
             result = await orchestrator.run_turbo(topic, agent_count=9, vector="discover")
 

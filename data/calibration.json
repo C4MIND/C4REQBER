@@ -203,8 +203,108 @@
     {
       "confidence": 0.5,
       "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": false
+    },
+    {
+      "confidence": 0.5,
+      "actual": false
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": false
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": false
+    },
+    {
+      "confidence": 0.5,
+      "actual": false
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": false
+    },
+    {
+      "confidence": 0.5,
+      "actual": false
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": false
+    },
+    {
+      "confidence": 0.5,
+      "actual": false
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
     }
   ],
-  "brier_score": 0.24588235294117644,
-  "total_predictions": 51
+  "brier_score": 0.24723684210526314,
+  "total_predictions": 76
 }

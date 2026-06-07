@@ -25,7 +25,7 @@ from src.agents.pipeline.steps.base import (
     PipelineStep,
     PipelineStepResult,
 )
-from src.api.v8_routers.discovery.pipeline import _sanitize_for_prompt
+from src.discovery.pipeline_logic import _sanitize_for_prompt
 from src.c4.state import C4State
 from src.knowledge.citation_verifier import CitationVerifier
 from src.knowledge.novelty_scorer import NoveltyScorer

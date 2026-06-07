@@ -15,7 +15,7 @@ async def run_deep_analysis(problem, domain, papers, results, thresholds, errors
     import asyncio
     import time
 
-    from src.api.v8_routers.discovery.pipeline import (
+    from src.discovery.pipeline_logic import (
         build_temporal_kg,
         generate_competing_hypotheses,
         generate_hypothesis,

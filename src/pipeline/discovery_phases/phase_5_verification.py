@@ -14,7 +14,7 @@ async def run_verification_suite(problem, domain, results, errors) -> dict:
     import asyncio
     import time
 
-    from src.api.v8_routers.discovery.pipeline import (
+    from src.discovery.pipeline_logic import (
         generate_lean4_proof,
         run_bayesian_conjugate_update,
         run_bayesian_model_averaging,

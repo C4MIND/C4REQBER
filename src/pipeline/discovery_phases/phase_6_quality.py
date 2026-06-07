@@ -14,7 +14,7 @@ async def run_quality_and_output(results, errors, abort_reasons) -> dict:
     """Run quality and output."""
     import time
 
-    from src.api.v8_routers.discovery.pipeline import (
+    from src.discovery.pipeline_logic import (
         _refine_hypothesis_llm,
         _run_self_critique,
         generate_paper,

@@ -11,7 +11,7 @@ async def run_knowledge_acquisition(problem: str, domain: str, thresholds: dict,
     """Run knowledge acquisition."""
     import asyncio
 
-    from src.api.v8_routers.discovery.search import search_knowledge
+    from src.discovery.search import search_knowledge
 
     papers_found = 0
     sources_used = 0

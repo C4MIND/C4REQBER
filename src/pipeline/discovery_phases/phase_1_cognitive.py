@@ -13,7 +13,7 @@ async def run_cognitive_framing(problem: str, results: dict) -> dict:
     """Run cognitive framing."""
     import time
 
-    from src.api.v8_routers.discovery.pipeline import (
+    from src.discovery.pipeline_logic import (
         _domain_improving_param,
         _domain_worsening_param,
         navigate_c4,

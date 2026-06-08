@@ -23,6 +23,7 @@ dependencies = [
     "matplotlib",
     "plotly",
     "rich",
+    "textual",
     "typer",
     "click",
     "jinja2",

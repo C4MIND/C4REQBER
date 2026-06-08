@@ -19,9 +19,17 @@ pyyaml>=6.0.0
 typer[all]>=0.9.0
 rich>=13.0.0
 prompt-toolkit>=3.0.0
+textual>=0.40.0  # TUI widgets (src/tui) — pulled in by the REPL (src/repl); top-level import
 
 # Retry Logic
 tenacity>=8.0.0
+
+# Async runtime / caching (direct top-level imports; also in pyproject)
+anyio>=4.0.0        # src/cache/tier4_upstream.py (also transitive via fastapi/httpx)
+cachetools>=5.0.0   # src/analogy/operations.py LRUCache
+
+# Formal Verification
+z3-solver>=4.16.0.0  # src/verification/hoare_verifier.py (top-level) + lazy in provers/mcp
 
 # WASM Plugin Runtime
 wasmtime>=14.0.0          # WASM sandbox execution (optional — stub mode works without)
@@ -71,6 +79,7 @@ bcrypt>=4.1.0
 # OBSERVABILITY & LOGGING
 # ═══════════════════════════════════════════════════════════════
 structlog>=23.0.0          # Structured JSON logging
+prometheus-client>=0.25.0  # /metrics endpoint (src/api/routers/metrics.py, top-level import)
 opentelemetry-api>=1.20.0   # OpenTelemetry tracing (optional)
 opentelemetry-sdk>=1.20.0   # OpenTelemetry SDK (optional)
 sentry-sdk>=1.40.0         # Error tracking (optional)

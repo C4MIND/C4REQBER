@@ -1,10 +1,11 @@
 # Merge plan — Phase-1 reorg + stabilization stack
 
-**Status (2026-06-08):** 22 commits sit on top of `main` as a single **linear** chain.
-The tip branch `stab/06-requirements-sync` is a strict superset of every other
+**Status (2026-06-08):** 26 commits sit on top of `main` as a single **linear** chain.
+The tip branch `stab/08-import-sweep` is a strict superset of every other
 `reorg/*` and `stab/*` branch — they are stacked, not divergent. The full local
-suite is **green** (logic 5250 passed / 0 failed; patterns+simulations 0 failures;
-ruff step passes). `main` is untouched.
+suite is **green** (logic 5251 passed / 0 failed; connectome 42 passed;
+import sweep 1131 modules OK / 0 import-time failures; ruff step passes). `main`
+is untouched.
 
 Recovery tags: `pre-reorg-baseline` (full rollback), `reorg-decycle-24to8`,
 `reorg-core-decycled`.
@@ -31,11 +32,16 @@ main
  └─ ebe3899 ARCHITECTURE_DECISIONS.md                    ┘ MR-3 Arch doc → reorg/12-arch-doc
  ├─ 5e616ff fix broken triz import (ImportError)        ┐
  ├─ da16096 hang-proof suite (per-test timeout)          │
- ├─ f6a9bc3 pandas required, not optional                │ MR-4 Stabilization
- ├─ 346c5e5 delete dead+broken terminal.py               │ → stab/06-requirements-sync
- ├─ 8674fd5 connectome t_max 60→30 (fit sim budget)      │
- └─ 469e4e1 add 5 imported-but-unlisted deps             ┘
+ ├─ f6a9bc3 pandas required, not optional                │
+ ├─ 346c5e5 delete dead+broken terminal.py               │ MR-4 Stabilization
+ ├─ c6cc553 connectome t_max 60→30 (fit sim budget)      │ → stab/08-import-sweep
+ ├─ 55186d1 add 5 imported-but-unlisted deps             │
+ ├─ 41368b6 MERGE_PLAN.md                                │
+ ├─ cf1d96c remove triple @dataclass breaking REPL       │
+ └─ c182889 clear 4 import-sweep failures (bs4 dep etc.) ┘
 ```
+(SHAs for connectome onward shifted from an earlier push — the t_max commit
+was amended to also update its test, and the stack rebased on top.)
 
 ## Recommended grouping — 4 themed MRs
 
@@ -44,24 +50,24 @@ main
 | 1 | Subtraction (delete dead code) | `reorg/01-subtraction` | 4 | ~84.5k LOC removed (v6_legacy + dead v8/) + analysis docs. Large but mechanical. |
 | 2 | Core de-cycling refactor | `reorg/11-review-fixes` | 11 | The real refactor: 24-pkg import-blob → 0. Deserves the closest review. |
 | 3 | Architecture decision doc | `reorg/12-arch-doc` | 1 | Docs only. |
-| 4 | Stabilization | `stab/06-requirements-sync` | 6 | Bug fixes, test hardening, deps, connectome perf, dead-code deletion. |
+| 4 | Stabilization | `stab/08-import-sweep` | 9 | Bug fixes, test hardening, deps (incl. bs4/textual/z3), connectome perf, REPL dataclass fix, dead-code deletion, import-sweep cleanup. |
 
 ## Option A — stacked MRs (recommended; preserves granular history, reviewable themes)
 
 Open 4 MRs, each targeting the previous group's branch, merge **bottom-up**:
 
 ```
-MR-1  reorg/01-subtraction     → main
-MR-2  reorg/11-review-fixes     → reorg/01-subtraction
-MR-3  reorg/12-arch-doc         → reorg/11-review-fixes
-MR-4  stab/06-requirements-sync → reorg/12-arch-doc
+MR-1  reorg/01-subtraction  → main
+MR-2  reorg/11-review-fixes  → reorg/01-subtraction
+MR-3  reorg/12-arch-doc      → reorg/11-review-fixes
+MR-4  stab/08-import-sweep   → reorg/12-arch-doc
 ```
 
 After MR-1 merges into `main`, retarget MR-2 to `main` (GitLab usually offers
 this automatically), and so on up the stack. New-MR URLs (from the push):
 
 - MR-1: https://gitlab.com/cognitive-functors/turbo-cdi/-/merge_requests/new?merge_request%5Bsource_branch%5D=reorg%2F01-subtraction
-- MR-4: https://gitlab.com/cognitive-functors/turbo-cdi/-/merge_requests/new?merge_request%5Bsource_branch%5D=stab%2F06-requirements-sync
+- MR-4: https://gitlab.com/cognitive-functors/turbo-cdi/-/merge_requests/new?merge_request%5Bsource_branch%5D=stab%2F08-import-sweep
 
 Set the target branch per the table when creating each.
 
@@ -70,7 +76,7 @@ Set the target branch per the table when creating each.
 Because the chain is linear and the suite is green, one MR brings everything:
 
 ```
-stab/06-requirements-sync → main
+stab/08-import-sweep → main
 ```
 
 One review, one merge. Loses the themed review boundaries — pick this only if

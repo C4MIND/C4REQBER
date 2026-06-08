@@ -184,10 +184,13 @@ class CalibrationTracker:
     """
 
     def __init__(self, storage_path: str | None = None) -> None:
+        import os
         from pathlib import Path
 
-        self.storage_path = (
-            Path(storage_path) if storage_path else Path("data/calibration.json")
+        # Default is env-overridable so tests can redirect persistent state to
+        # a tmp path instead of mutating the tracked repo file (see conftest).
+        self.storage_path = Path(
+            storage_path or os.getenv("CALIBRATION_STORE", "data/calibration.json")
         )
         self.predictions: list[tuple] = []  # type: ignore[type-arg]
         self._load()

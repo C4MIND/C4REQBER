@@ -63,7 +63,7 @@ class TestConnectomeConfig:
         assert cfg.model == NetworkModel.KURAMOTO
         assert cfg.coupling_strength == 0.5
         assert cfg.noise_level == 0.01
-        assert cfg.t_max == 60.0
+        assert cfg.t_max == 30.0  # reduced 60->30 to fit simulation_timeout_seconds=60
         assert cfg.dt == 0.001
         assert cfg.stimulation_site is None
         assert cfg.stimulation_amp == 0.0

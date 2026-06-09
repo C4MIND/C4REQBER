@@ -151,7 +151,7 @@ class NewtonBridge:
                     return NewtonMode.GPU
                 return NewtonMode.CPU
             else:
-                logger.info("Newton not found in mlx-env venv. Install with: source /Users/figuramax/LocalProjects/mlx-env/bin/activate && pip install newton-physics")
+                logger.info("Newton not found. Install with: pip install newton-physics")
                 return NewtonMode.UNAVAILABLE
         except Exception as e:
             logger.info(f"Newton detection failed: {e}")

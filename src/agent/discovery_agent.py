@@ -29,7 +29,7 @@ from rich.table import Table
 from src.analogy import AnalogyResult, get_analogy_engine
 from src.graph.knowledge_graph import get_knowledge_graph
 from src.models.pydantic_models import C4StateModel, DiscoveryModel
-from src.triz import get_c4_triz_bridge
+from src.triz import get_c4_triz_bridge_obj
 from src.validation import FalsifiabilityCriterion, get_validation_tracker
 
 
@@ -80,7 +80,7 @@ class ScientificDiscoveryAgent:
     def __init__(self):
         self.kg = get_knowledge_graph()
         self.analogy = get_analogy_engine()
-        self.triz = get_c4_triz_bridge()
+        self.triz = get_c4_triz_bridge_obj()
         self.validator = get_validation_tracker()
         self._hypothesis_counter = 0
 

@@ -336,14 +336,20 @@ def _register_plugin_info(
 ) -> None:
     """Register a plugin from module path."""
     try:
-        try:
-            module = importlib.import_module(module_path)
-        except (ImportError, ModuleNotFoundError):
-            if module_path.endswith("@wasm"):
-                module = None
-                logger.debug("WASM plugin %s — loaded via wasmtime, not Python import", name)
-            else:
-                raise
+        if module_path.endswith("@wasm"):
+            # WASM plugins execute through the wasm runtime (WASMToolPlugin /
+            # `blast wasm-load`), NOT a Python attribute. The old code set
+            # module=None and then called getattr(None, fn_name), which always
+            # raised "'NoneType' has no attribute 'execute'" -> every @wasm
+            # plugin failed to register with a misleading warning. Skip the
+            # Python-import path cleanly. FLAG for author: wiring these into
+            # the unified registry via WASMToolPlugin is unfinished.
+            logger.debug(
+                "Skipping Python registration for WASM plugin %s "
+                "(executes via wasm runtime, not Python import)", id
+            )
+            return
+        module = importlib.import_module(module_path)
         fn = getattr(module, fn_name)
         registry.register_info(
             PluginInfo(

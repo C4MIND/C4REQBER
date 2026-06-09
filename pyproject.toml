@@ -23,6 +23,7 @@ dependencies = [
     "matplotlib",
     "plotly",
     "rich",
+    "textual",
     "typer",
     "click",
     "jinja2",
@@ -32,6 +33,7 @@ dependencies = [
     "jsonschema",
     "pytest",
     "pytest-asyncio",
+    "pytest-timeout",
     "anyio",
     "sniffio",
     "certifi",
@@ -47,6 +49,7 @@ dependencies = [
     "flit-core",
     "mcp",
     "aiofiles",
+    "beautifulsoup4",
     "prometheus-client>=0.25.0",
     "z3-solver>=4.16.0.0",
 ]

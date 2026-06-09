@@ -41,7 +41,11 @@ class ConnectomeConfig:
     a: float = 0.0  # Bifurcation parameter
 
     # Simulation
-    t_max: float = 60.0  # seconds
+    # t_max=30s keeps the full sim (68 regions, dt=1ms) at ~29s wall-clock,
+    # comfortably under the pipeline's simulation_timeout_seconds=60 budget
+    # (t_max=60 measured ~71s and would be killed). 20s of post-transient
+    # signal is ample for Kuramoto synchronization metrics.
+    t_max: float = 30.0  # seconds
     dt: float = 0.001  # seconds (1 ms)
     transient: float = 10.0  # Discard initial transient (s)
 

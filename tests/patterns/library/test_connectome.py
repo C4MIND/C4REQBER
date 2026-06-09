@@ -63,7 +63,7 @@ class TestConnectomeConfig:
         assert cfg.model == NetworkModel.KURAMOTO
         assert cfg.coupling_strength == 0.5
         assert cfg.noise_level == 0.01
-        assert cfg.t_max == 60.0
+        assert cfg.t_max == 30.0  # reduced 60->30 to fit simulation_timeout_seconds=60
         assert cfg.dt == 0.001
         assert cfg.stimulation_site is None
         assert cfg.stimulation_amp == 0.0
@@ -489,6 +489,7 @@ class TestEdgeCases:
         result = await pattern.run(h, config)
         assert result.status == SimulationStatus.COMPLETED
 
+    @pytest.mark.slow  # empty config -> full 68-region / 60s@1ms default sim (~80s)
     async def test_empty_config(self):
         pattern = ConnectomePattern()
         h = Hypothesis(title="Brain connectome", description="test")

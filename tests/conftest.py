@@ -16,3 +16,14 @@ def pytest_configure(config):
 def anyio_backend():
     """Restrict anyio tests to asyncio backend only."""
     return "asyncio"
+
+
+@pytest.fixture(autouse=True)
+def _isolate_calibration_store(tmp_path, monkeypatch):
+    """Redirect the CalibrationTracker store to a per-test tmp file.
+
+    Without this, any test that exercises validation calibration writes to
+    the tracked repo file data/calibration.json (CalibrationTracker's
+    default) — pollution that has historically been committed by accident.
+    """
+    monkeypatch.setenv("CALIBRATION_STORE", str(tmp_path / "calibration.json"))

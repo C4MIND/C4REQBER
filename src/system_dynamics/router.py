@@ -7,7 +7,7 @@ from typing import Any
 
 from fastapi import APIRouter, Body, Depends, HTTPException
 
-from src.auth.dev_mode import dev_mode_dependency
+from src.api.dev_mode import dev_mode_dependency
 from src.system_dynamics.archetypes import ARCHETYPE_BY_NAME, simulate_archetype
 from src.system_dynamics.dsl import dsl_to_string, parse_dsl
 from src.system_dynamics.simulator import simulate_euler, simulate_rk4

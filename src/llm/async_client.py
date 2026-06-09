@@ -124,7 +124,7 @@ class AsyncLLMClient:
         """
         # ── Guardrail: prompt injection scan ──────────────────────────
         try:
-            from src.agents.guardian import Guardian
+            from src.security.guardian import Guardian
 
             guardian = Guardian()
             scan = guardian.full_scan(prompt, code=None)

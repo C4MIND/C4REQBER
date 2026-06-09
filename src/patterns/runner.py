@@ -40,10 +40,7 @@ class PatternRunner:
 
     def _discover_patterns(self) -> None:
         """Dynamically discover and load all pattern modules."""
-        # Try library directory first, then v6_legacy fallback
         patterns_dir = os.path.join(os.path.dirname(__file__), "library")
-        if not os.path.exists(patterns_dir):
-            patterns_dir = os.path.join(os.path.dirname(__file__), "v6_legacy")
         if not os.path.exists(patterns_dir):
             logger.warning("No patterns directory found")
             return

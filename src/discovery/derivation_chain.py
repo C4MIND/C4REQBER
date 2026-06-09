@@ -5,8 +5,8 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from src.pipeline.parsimony import ParsimonyScorer
-from src.pipeline.recursive_validation import RecursiveValidationLoop
+from src.discovery.parsimony import ParsimonyScorer
+from src.discovery.recursive_validation import RecursiveValidationLoop
 
 
 logger = logging.getLogger(__name__)

@@ -15,7 +15,7 @@ async def run_shift_detection(problem, domain, papers, results, citation_chase_r
     import asyncio
     import time
 
-    from src.api.v8_routers.discovery.pipeline import (
+    from src.discovery.pipeline_logic import (
         detect_paradigm_shift,
         run_doe_design,
         run_falsification_engine,

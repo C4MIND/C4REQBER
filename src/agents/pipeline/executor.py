@@ -15,8 +15,7 @@ from src.pipeline.observer import PipelineObserver
 from src.pipeline.step_definition import STEP_MODULES as _STEP_MODULES
 
 
-# Step functions are imported lazily to avoid circular imports
-# and to allow test mocking via _agents_pipeline_module
+# Step functions are imported lazily to avoid circular imports.
 _step_impact_identify = None
 _step_prior_art = None
 _step_gap_analysis = None
@@ -34,16 +33,7 @@ _step_simulation = None
 
 
 def _get_step_fn(name: str) -> Any:
-    """Lazy import step function, checking _agents_pipeline_module first for test mocks."""
-    import sys
-
-    # Check if test module has mocked the function
-    if "_agents_pipeline_module" in sys.modules:
-        mod = sys.modules["_agents_pipeline_module"]
-        if hasattr(mod, name):
-            return getattr(mod, name)
-
-    # Fallback: import from actual step module
+    """Lazy-import a step function from its real step module (cached)."""
     globals_dict = globals()
     cache_key = f"_{name}"
     if globals_dict.get(cache_key) is not None:

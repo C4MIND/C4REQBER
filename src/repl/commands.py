@@ -10,8 +10,6 @@ from repl.core import C4REQBERShell, Style
 
 
 @dataclass
-@dataclass
-@dataclass
 class ResearchProject:
     id: Any = None
     name: str = ""

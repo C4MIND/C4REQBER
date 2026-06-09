@@ -5,27 +5,11 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from enum import Enum
 from typing import Any
 
-
-class PipelineStage(Enum):
-    """PipelineStage."""
-    IMPACT_IDENTIFY = "impact_identify"
-    PRIOR_ART = "prior_art"
-    GAP_ANALYSIS = "gap_analysis"
-    QUALITY_GATE = "quality_gate"
-    REALITY_CHECK = "reality_check"
-    C4_FINGERPRINT = "c4_fingerprint"
-    CROSS_DOMAIN_TRANSFER = "cross_domain_transfer"
-    MP_ROTATION = "mp_rotation"
-    QZRF_SELECT = "qzrf_select"
-    ISOMORPHISM_SEARCH = "isomorphism_search"
-    PLUGIN_EXECUTION = "plugin_execution"
-    SYNTHESIS = "synthesis"
-    VALIDATION = "validation"
-    SIMULATION = "simulation"
-    FORMAL_VERIFICATION = "formal_verification"
+# PipelineStage moved to the foundational contracts layer; re-exported here so
+# existing `agents.pipeline.steps.base` imports keep working.
+from src.contracts.pipeline_types import PipelineStage
 
 
 @dataclass

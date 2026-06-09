@@ -15,7 +15,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "src"))
 
-from c4.transfer_pipeline import (
+from c4_analysis.transfer_pipeline import (
     StructuralIsomorphismResult,
     TransferPipeline,
     TransferResult,

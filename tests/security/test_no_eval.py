@@ -30,7 +30,6 @@ def _find_python_files(root: Path) -> list[Path]:
 KNOWN_EXCEPTIONS = frozenset({
     Path(__file__).resolve().parent.parent.parent / "src" / "skills" / "calculator.py",
     Path(__file__).resolve().parent.parent.parent / "src" / "simulations" / "boolnet_bridge.py",
-    Path(__file__).resolve().parent.parent.parent / "src" / "patterns" / "v6_legacy" / "system_dynamics.py",
 })
 
 

@@ -477,7 +477,7 @@ async def c4_prove(hypothesis: str, language: str = "lean4") -> dict[str, Any]:
 async def c4_transfer(problem: str, source_domain: str, target_domain: str) -> dict[str, Any]:
     """Execute cross-domain structural isomorphism transfer."""
     try:
-        from src.c4.transfer_pipeline import TransferPipeline
+        from src.c4_analysis.transfer_pipeline import TransferPipeline
         pipeline = TransferPipeline()
         result = pipeline.transfer(problem, source_domain, target_domain)
         return result.to_dict()

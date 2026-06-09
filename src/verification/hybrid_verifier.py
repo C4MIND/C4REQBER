@@ -131,7 +131,7 @@ class HybridVerifier:
 
         # Emit verification start event
         try:
-            from src.pipeline.events import event_bus
+            from src.infrastructure.events import event_bus
             await event_bus.emit("verification_start", {
                 "backend": backend,
                 "claim": claim[:100],
@@ -163,7 +163,7 @@ class HybridVerifier:
         # Progress callback → EventBus
         def on_progress(progress: Any) -> None:
             try:
-                from src.pipeline.events import event_bus
+                from src.infrastructure.events import event_bus
                 asyncio.create_task(event_bus.emit("verification_progress", {
                     "backend": progress.backend,
                     "status": progress.status,

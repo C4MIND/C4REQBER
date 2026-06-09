@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from src.core.user_profile import UserProfile
-from src.pipeline.config import PipelineConfig
+from src.contracts.pipeline_config import PipelineConfig
 
 
 logger = logging.getLogger(__name__)

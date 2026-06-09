@@ -7,7 +7,7 @@ from typing import Any
 
 from fastapi import APIRouter, Body, Depends, HTTPException
 
-from src.auth.dev_mode import dev_mode_dependency
+from src.api.dev_mode import dev_mode_dependency
 from src.conceptual_blending.blender import ConceptualBlender, InputSpace
 from src.conceptual_blending.examples import EXAMPLES
 

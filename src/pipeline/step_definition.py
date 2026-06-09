@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from src.agents.pipeline.steps.base import PipelineStage
+from src.contracts.pipeline_types import PipelineStage
 
 
 STEP_MODULES: dict[str, str] = {

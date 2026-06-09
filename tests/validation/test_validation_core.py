@@ -448,12 +448,11 @@ class TestConsensusMeter:
 class TestEmpiricalLayer:
     @pytest.fixture
     def layer(self):
-        with patch("src.validation.empirical_layer.UniversalSolvePipeline") as mock_pipeline, \
-             patch("src.validation.empirical_layer.ValidationTracker") as mock_tracker:
-            mock_pipeline.return_value = MagicMock()
+        # pipeline is now injected (validation no longer imports agents)
+        with patch("src.validation.empirical_layer.ValidationTracker") as mock_tracker:
             mock_tracker.return_value = MagicMock()
             mock_tracker.return_value.record_empirical = AsyncMock()
-            return EmpiricalLayer()
+            return EmpiricalLayer(pipeline=MagicMock())
 
     def test_init(self, layer):
         assert layer.benchmarks is not None

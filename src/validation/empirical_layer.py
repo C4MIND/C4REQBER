@@ -7,7 +7,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any
 
-from src.agents.pipeline import UniversalSolvePipeline
+from src.contracts.pipeline_types import SolvePipeline
 from src.core.complexity_adapter import ComplexityLevel, get_config
 from src.validation.tracker import ValidationTracker
 
@@ -50,9 +50,9 @@ class EmpiricalResult:
 
 class EmpiricalLayer:
     """EmpiricalLayer."""
-    def __init__(self) -> None:
+    def __init__(self, pipeline: SolvePipeline) -> None:
         self.tracker = ValidationTracker()
-        self.pipeline = UniversalSolvePipeline()
+        self.pipeline = pipeline
         self.benchmarks = self._load_benchmarks()
 
     def _load_benchmarks(self) -> dict[str, dict]:  # type: ignore[type-arg]

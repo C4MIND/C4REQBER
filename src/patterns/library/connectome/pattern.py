@@ -96,7 +96,7 @@ class ConnectomePattern(SimulationPattern):
         SimulationParameter(
             name="t_max",
             type="float",
-            default=60.0,
+            default=30.0,
             min=10.0,
             max=600.0,
             description="Simulation duration (seconds)",

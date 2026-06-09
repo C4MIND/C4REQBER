@@ -288,8 +288,8 @@ class AuthManager:
         return User(
             id=row["id"],
             email=row["email"],
-            name=row.get("name"),
-            created_at=row.get("created_at"),
+            name=row["name"] if "name" in row.keys() else None,
+            created_at=row["created_at"] if "created_at" in row.keys() else None,
         )
 
     async def revoke_token(self, jti: str, ttl: int = 86400) -> None:

@@ -58,12 +58,12 @@ def _start_external_service(
     """Start an external service if it's not already running."""
     try:
         check_result = safe_subprocess_run(
-            ["curl", "-s", "-o", "/dev/null", "-w", "%{http_code}", check_url],
+            ["curl", "-s", "-o", "/dev/null", check_url],
             capture_output=True,
             text=True,
             timeout=5,
         )
-        if check_result.returncode == 0 and check_result.stdout.strip() == "200":
+        if check_result.returncode == 0:
             logging.getLogger("c4_cdi_turbo").info("%s already running", name)
             return
     except (OSError, RuntimeError):
@@ -81,12 +81,12 @@ def _start_external_service(
         for _ in range(timeout * 2):
             try:
                 check_result = safe_subprocess_run(
-                    ["curl", "-s", "-o", "/dev/null", "-w", "%{http_code}", check_url],
+                    ["curl", "-s", "-o", "/dev/null", check_url],
                     capture_output=True,
                     text=True,
                     timeout=2,
                 )
-                if check_result.returncode == 0 and check_result.stdout.strip() == "200":
+                if check_result.returncode == 0:
                     logging.getLogger("c4_cdi_turbo").info("%s started successfully", name)
                     return
             except (OSError, RuntimeError):

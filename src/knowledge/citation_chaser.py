@@ -155,7 +155,7 @@ class CitationChaser:
     @staticmethod
     def _validate_paper_id(paper_id: str) -> str:
         import re
-        if not re.fullmatch(r"[A-Za-z0-9_-]+", paper_id):
+        if not re.fullmatch(r"[A-Za-z0-9._\-/]+", paper_id):
             raise ValueError(f"Invalid paper_id format: {paper_id}")
         return paper_id
 
@@ -184,7 +184,7 @@ class CitationChaser:
                     await asyncio.sleep(wait)
                     continue
                 resp.raise_for_status()
-                data = resp.json()
+                data = resp.json() or {}
                 return [
                     {
                         "title": c.get("citingPaper", {}).get("title", ""),
@@ -198,7 +198,7 @@ class CitationChaser:
                         "publication_date": c.get("citingPaper", {}).get("publicationDate", ""),
                         "source": "semantic_scholar_citations",
                     }
-                    for c in data.get("data", [])
+                    for c in (data.get("data") or [])
                 ]
             except (TimeoutError, httpx.TimeoutException, httpx.HTTPError, json.JSONDecodeError) as e:
                 logger.debug("S2 citations error for %s: %s", paper_id, e)
@@ -231,7 +231,7 @@ class CitationChaser:
                     await asyncio.sleep(wait)
                     continue
                 resp.raise_for_status()
-                data = resp.json()
+                data = resp.json() or {}
                 return [
                     {
                         "title": r.get("citedPaper", {}).get("title", ""),
@@ -245,7 +245,7 @@ class CitationChaser:
                         "publication_date": r.get("citedPaper", {}).get("publicationDate", ""),
                         "source": "semantic_scholar_references",
                     }
-                    for r in data.get("data", [])
+                    for r in (data.get("data") or [])
                     if r.get("citedPaper")
                 ]
             except (TimeoutError, httpx.TimeoutException, httpx.HTTPError, json.JSONDecodeError) as e:
@@ -269,7 +269,7 @@ class CitationChaser:
                 if resp.status_code == 404:
                     return []
                 resp.raise_for_status()
-                data = resp.json()
+                data = resp.json() or {}
             return [
                 {
                     "paper_id": c.get("citing", ""),
@@ -301,7 +301,7 @@ class CitationChaser:
                 if resp.status_code == 404:
                     return []
                 resp.raise_for_status()
-                data = resp.json()
+                data = resp.json() or {}
             return [
                 {
                     "paper_id": c.get("cited", ""),

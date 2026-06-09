@@ -1,0 +1,1 @@
+{"job_id":"job_c95e3eb7f5aa","job_type":"one-click","status":"failed","phase":"B: Search","phase_detail":"Knowledge acquisition","progress":0.15,"result":null,"errors":["'NoneType' object is not iterable"],"created_at":1781042961.845829,"updated_at":1781042982.305898,"completed_at":1781042982.305898}

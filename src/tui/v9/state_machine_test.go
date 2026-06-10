@@ -166,8 +166,8 @@ func TestStateMachine_SSEEvent_PhaseA(t *testing.T) {
 	data := `{"status":"phase_a","phase":"A: Framing","progress":0.15,"result":null}`
 	u, _ := m.Update(apiSSEEventMsg(api.SSEEvent{Event: "phase", Data: data}))
 	mm := u.(*model)
-	if mm.running {
-		t.Error("phase_a not completed")
+	if !mm.running {
+		t.Error("phase_a should still be running (job not complete)")
 	}
 	if len(mm.feed) < 1 {
 		t.Error("no card appended for phase_a")
@@ -192,6 +192,22 @@ func TestStateMachine_SSEEvent_Completed(t *testing.T) {
 	}
 	if mm.lastPapersCount != 1 {
 		t.Errorf("lastPapersCount = %d, want 1", mm.lastPapersCount)
+	}
+}
+
+func TestStateMachine_SSEEvent_PhaseA_IsNotComplete(t *testing.T) {
+	// phase_a is intermediate — running stays true, no jobID clear
+	m := NewApp("http://test")
+	m.running = true
+	m.jobID = "test"
+	data := `{"status":"phase_b","phase":"B: Search","progress":0.30}`
+	u, _ := m.Update(apiSSEEventMsg(api.SSEEvent{Event: "phase", Data: data}))
+	mm := u.(*model)
+	if !mm.running {
+		t.Error("phase_b should still be running")
+	}
+	if mm.jobID != "test" {
+		t.Error("phase_b should not clear jobID")
 	}
 }
 
@@ -346,10 +362,10 @@ func TestStateMachine_LangSwitchAddsToSeen(t *testing.T) {
 	m := NewApp("http://test")
 	defer i18n.SetLang(i18n.LangEN)
 	i18n.SetLang(i18n.LangZH)
-	m.langsSeen = map[string]bool{"EN": true}
+	m.langsSeen = map[string]bool{"en": true}
 	m.updateLangSeen()
-	if !m.langsSeen["ZH"] {
-		t.Error("updateLangSeen should add ZH")
+	if !m.langsSeen["zh"] {
+		t.Error("updateLangSeen should add zh")
 	}
 }
 

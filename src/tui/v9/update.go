@@ -144,8 +144,6 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.toast = i18n.T("toast.cancelled")
 			}
 			return m, nil
-		}
-			return m, nil
 		case "tab":
 			// Cycle mode: DISCOVER → FLASH → TURBO → TURBOFACTORY → DISCOVER
 			switch m.mode {
@@ -172,8 +170,6 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.toast = i18n.T("lang.name") + ": " + string(next)
 			return m, nil
 		}
-		m.sparks.Emit(2, 0, 3)
-		return m, nil
 
 	case tea.MouseClickMsg:
 		// Mouse click on a card → find the card whose zone contains the click
@@ -280,6 +276,8 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.running = false
 			m.toast = i18n.T("toast.complete")
 			m.burst.Trigger(m.width, m.height, m.width/2, m.height/2)
+			m.completedDisc++
+			m.checkAchievements()
 			// Render each ranked hypothesis as a card
 			if ranked, ok := msg.result["ranked_hypotheses"].([]any); ok {
 				for i, h := range ranked {
@@ -299,6 +297,8 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		return m, nil
 	}
+
+	m.sparks.Emit(2, 0, 3)
 
 	var cmd tea.Cmd
 	m.ta, cmd = m.ta.Update(msg)

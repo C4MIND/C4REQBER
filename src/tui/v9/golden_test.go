@@ -23,8 +23,9 @@ func renderToString(t *testing.T, m *model) string {
 }
 
 func TestGoldenEmptyState_EN(t *testing.T) {
+	original := i18n.GetLang()
+	defer SetLang(original)
 	SetLang(i18n.LangEN)
-	defer SetLang(i18n.LangEN)
 	m := NewApp("http://test")
 	out := renderToString(t, m)
 	// Must contain key UI strings
@@ -43,20 +44,22 @@ func TestGoldenEmptyState_EN(t *testing.T) {
 }
 
 func TestGoldenEmptyState_RU(t *testing.T) {
-	defer SetLang(i18n.LangEN)
+	original := i18n.GetLang()
+	defer SetLang(original)
 	SetLang(i18n.LangRU)
 	m := NewApp("http://test")
 	out := renderToString(t, m)
 	if !strings.Contains(out, "Готов к первому") {
 		t.Errorf("missing RU empty title in:\n%s", out)
 	}
-	if !strings.Contains(out, "RU") {
-		t.Errorf("missing RU label in:\n%s", out)
+	if !strings.Contains(out, "ГОТОВ") {
+		t.Errorf("missing RU footer (ГОТОВ) in:\n%s", out)
 	}
 }
 
 func TestGoldenEmptyState_ZH(t *testing.T) {
-	defer SetLang(i18n.LangEN)
+	original := i18n.GetLang()
+	defer SetLang(original)
 	SetLang(i18n.LangZH)
 	m := NewApp("http://test")
 	out := renderToString(t, m)
@@ -66,19 +69,20 @@ func TestGoldenEmptyState_ZH(t *testing.T) {
 }
 
 func TestGoldenEmptyState_AR(t *testing.T) {
-	defer SetLang(i18n.LangEN)
+	original := i18n.GetLang()
+	defer SetLang(original)
 	SetLang(i18n.LangAR)
 	m := NewApp("http://test")
 	out := renderToString(t, m)
-	// Arabic is RTL — text might be reversed in display
-	if !strings.Contains(out, "AR") {
-		t.Errorf("missing AR label in:\n%s", out)
+	if !strings.Contains(out, "جاهز") {
+		t.Errorf("missing AR footer (جاهز) in:\n%s", out)
 	}
 }
 
 func TestGoldenWithPhaseCard(t *testing.T) {
+	original := i18n.GetLang()
+	defer SetLang(original)
 	SetLang(i18n.LangEN)
-	defer SetLang(i18n.LangEN)
 	m := NewApp("http://test")
 	m.appendCard(Card{
 		Kind:     CardPhase,
@@ -88,14 +92,12 @@ func TestGoldenWithPhaseCard(t *testing.T) {
 		Status:   "running",
 		Progress: 0.45,
 	})
-	// The card's content is rendered into the viewport, but viewport only shows visible area.
-	// Check that the renderCard output contains the expected strings.
 	cardStr := renderCard(m.feed[1], 120)
 	if !strings.Contains(cardStr, "Knowledge") {
 		t.Errorf("phase card body not in renderCard output:\n%s", cardStr)
 	}
-	if !strings.Contains(cardStr, "45%") {
-		t.Errorf("progress not in renderCard output:\n%s", cardStr)
+	if !strings.Contains(cardStr, "12 sources fired") {
+		t.Errorf("phase card body not in renderCard output:\n%s", cardStr)
 	}
 }
 

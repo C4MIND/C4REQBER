@@ -224,9 +224,13 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			return m, nil
 		case km.Matches(ActReauth, keyStr):
-			// Re-authenticate
-			_ = m.api.Login(context.Background(), "kilo-v9@test.com", "test12345")
-			m.setToast("🔑 re-auth OK (" + km.Label(ActReauth) + ")")
+			// Re-authenticate (best-effort)
+			err := m.api.Login(context.Background(), "kilo-v9@test.com", "test12345")
+			if err != nil {
+				m.setToast("🔑 re-auth failed: " + err.Error())
+			} else {
+				m.setToast("🔑 re-auth OK (" + km.Label(ActReauth) + ")")
+			}
 			return m, nil
 		case km.Matches(ActSearch, keyStr):
 			// Search mode (placeholder: shows search bar)
@@ -366,6 +370,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case apiSubmitMsg:
 		if msg.err != nil {
 			m.appendCard(Card{Kind: CardError, Title: i18n.T("toast.submit_failed"), Body: msg.err.Error(), Time: time.Now(), Status: "error"})
+			m.running = false
 		} else {
 			m.jobID = msg.jobID
 			m.running = true
@@ -379,6 +384,8 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case apiPollMsg:
 		if msg.err != nil {
 			m.appendCard(Card{Kind: CardError, Title: "Poll error", Body: msg.err.Error(), Time: time.Now(), Status: "error"})
+			m.running = false
+			m.jobID = ""
 		} else {
 			// v9.12.1: dedup phase cards — skip if phase/progress unchanged
 			if msg.phase != m.lastPhase || (abs(msg.progress-m.lastProgress) > 0.01) {
@@ -425,6 +432,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case flashResultMsg:
 		if msg.err != nil {
 			m.appendCard(Card{Kind: CardError, Title: "Flash error", Body: msg.err.Error(), Time: time.Now(), Status: "error"})
+			m.running = false
 		} else {
 			m.running = false
 			m.setToast(i18n.T("toast.complete"))
@@ -442,6 +450,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case multiResultMsg:
 		if msg.err != nil {
 			m.appendCard(Card{Kind: CardError, Title: "Multi error", Body: msg.err.Error(), Time: time.Now(), Status: "error"})
+			m.running = false
 		} else {
 			m.running = false
 			m.setToast(i18n.T("toast.complete"))

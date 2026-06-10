@@ -180,7 +180,7 @@ func (m SplashModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if m.phase == "fadeout" {
 			m.phase = "done"
 			m.loadingDone = true
-			return m, nil
+			return m, tea.Quit
 		}
 		return m, nil
 

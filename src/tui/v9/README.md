@@ -2,13 +2,40 @@
 
 # TUI v9 "The Cockpit"
 
-**Tag:** v9.11.8 (commit pending) | [v9.11.0..v9.11.7]
-**Date:** 2026-06-10
-**Status:** 20/20 tests PASS with -race, 2x stable, 7,342 LOC (+4,720 test LOC = 64% ratio), i18n 7 langs × 156 keys, 39 source files.
+**Tag:** v9.12.6 | **Branch:** `friend-stack-merged`
+**Date:** 2026-06-11
+**Status:** 20/20 tests PASS with -race, 9/9 Go packages, i18n 7 langs × 158 keys.
+**Pipeline:** A(instant)→B(8.8s)→C(73.5s chunked)→D→E→F(verified)
+
+## Quick Start (для коллеги)
+
+```bash
+# 1. API ключи
+cp .env.dontredact .env
+
+# 2. Бэкенд
+cd /Users/figuramax/LocalProjects/C4REQBER
+nohup .venv/bin/python -m uvicorn src.api.server:app \
+  --host 127.0.0.1 --port 8000 --no-access-log > /tmp/c4backend.log 2>&1 &
+
+# 3. TUI
+cd src/tui/v9 && ./bin/c4tui-v9
+
+# 4. Demo режим (без бэкенда)
+./bin/c4tui-v9 --demo --story=crispr
+```
+
+**Что изменилось с v9.11.0?** См. CHANGELOG.md в корне. Основное:
+- Discovery теперь работает (был баг `_ = submitCmd`)
+- Pipeline A→F за ~2 мин (было 5+)
+- Диссертация с нормальными ссылками [1]..[N] и DOI
+- Два режима вывода: human (статья) / explain (технический)
+- 7 языков, все переводы контекстные
+
+---
 
 ```
-┌────────────────────────────────────────────────────────────────┐
-│ ◉ C4REQBER v9  F⟨1,1,0⟩  🇬🇧 EN  DeepSeek  $0.0000  04:55:12   DISCOVER  │
+◉ C4REQBER v9  F<1,1,0>  [EN]  DeepSeek  $0.0000  04:55:12  DISCOVER
 ├────────────────────────────────────────────────────────────────┤
 │ ▣ Phase A: Framing   [██████░░░░░░░] 33%                       │
 │ ▣ Phase B: Search    [████████████░░] 65%                       │

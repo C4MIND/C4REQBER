@@ -1,7 +1,8 @@
 // Package main is the entry point for c4tui-v9 (TUI Cockpit).
 // Supports: --demo flag (scripted demo without backend)
-//           --version (print version)
-//           --config (print resolved config from env)
+//
+//	--version (print version)
+//	--config (print resolved config from env)
 package main
 
 import (
@@ -24,7 +25,7 @@ import (
 )
 
 // version is set at build time via -ldflags "-X main.version=..."
-var version = "v9.11.7"
+var version = "v9.11.8"
 
 // gitRef returns the git commit short hash, or empty if not available.
 func gitRef() string {

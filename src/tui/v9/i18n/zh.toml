@@ -142,24 +142,24 @@ easter.line1 = "о'лскульный русский science"
 easter.line2 = "♭ Garmon doloy — bito useyut ♭"
 
 # v9.11.7: empty-state dashboard widgets
-widget.tip.title = "Tip"
-widget.tip.body = "Start with a question, hypothesis, or 'What if…?' — the C4 engine will find relevant papers, generate a hypothesis, and run a verification pass."
-widget.examples.title = "Example queries"
-widget.status.title = "Session status"
-widget.shortcuts.title = "Keyboard shortcuts"
-widget.discoveries = "discoveries"
-widget.languages = "languages"
+widget.tip.title = "提示"
+widget.tip.body = "从一个问题、假设或「如果…」开始 — C4 引擎会找到相关论文、生成假设并运行验证。"
+widget.examples.title = "示例查询"
+widget.status.title = "会话状态"
+widget.shortcuts.title = "快捷键"
+widget.discoveries = "发现数"
+widget.languages = "语言数"
 
-widget.modes.title = "Mode variants"
+widget.modes.title = "模式变体"
 
-widget.mode.discover = "multi-paper discovery with C4 paradigm-shift gate"
+widget.mode.discover = "多论文发现带C4范式门控"
 
-widget.mode.flash = "quick answer with optional USP cognitive analysis"
+widget.mode.flash = "快速回答可选USP认知分析"
 
-widget.mode.turbo = "paradigm-shift research proposal with full pipeline"
+widget.mode.turbo = "范式转变研究提案完整流水线"
 
-widget.mode.factory = "parallel pipeline factory (5-100 parallel jobs)"
+widget.mode.factory = "并行流水线工厂（5-100并行作业）"
 
-widget.achievements.title = "Achievements"
+widget.achievements.title = "成就"
 
-widget.achievements.body = "First discovery, 5 discoveries, multi-paper shift, S-rank quality, fast turnaround. Keep going to unlock them all."
+widget.achievements.body = "首次发现、5次发现、多论文转变、S级质量、快速周转。继续探索解锁全部。"

@@ -142,24 +142,24 @@ easter.line1 = "о'лскульный русский science"
 easter.line2 = "♭ Garmon doloy — bito useyut ♭"
 
 # v9.11.7: empty-state dashboard widgets
-widget.tip.title = "Tip"
-widget.tip.body = "Start with a question, hypothesis, or 'What if…?' — the C4 engine will find relevant papers, generate a hypothesis, and run a verification pass."
-widget.examples.title = "Example queries"
-widget.status.title = "Session status"
-widget.shortcuts.title = "Keyboard shortcuts"
-widget.discoveries = "discoveries"
-widget.languages = "languages"
+widget.tip.title = "सुझाव"
+widget.tip.body = "एक प्रश्न परिकल्पना या "क्या होगा अगर…?" से शुरू करें — C4 इंजन प्रासंगिक पेपर ढूंढेगा एक परिकल्पना उत्पन्न करेगा और सत्यापन चलाएगा।"
+widget.examples.title = "उदाहरण प्रश्न"
+widget.status.title = "सत्र स्थिति"
+widget.shortcuts.title = "कीबोर्ड शॉर्टकट"
+widget.discoveries = "खोजें"
+widget.languages = "भाषाएं"
 
-widget.modes.title = "Mode variants"
+widget.modes.title = "मोड वेरिएंट"
 
-widget.mode.discover = "multi-paper discovery with C4 paradigm-shift gate"
+widget.mode.discover = "C4 पैराडाइम-शिफ्ट गेट के साथ मल्टी-पेपर डिस्कवरी"
 
-widget.mode.flash = "quick answer with optional USP cognitive analysis"
+widget.mode.flash = "वैकल्पिक USP विश्लेषण के साथ त्वरित उत्तर"
 
-widget.mode.turbo = "paradigm-shift research proposal with full pipeline"
+widget.mode.turbo = "पूर्ण पाइपलाइन के साथ पैराडाइम-शिफ्ट शोध प्रस्ताव"
 
-widget.mode.factory = "parallel pipeline factory (5-100 parallel jobs)"
+widget.mode.factory = "समानांतर पाइपलाइन फैक्टरी (5-100 समानांतर जॉब)"
 
-widget.achievements.title = "Achievements"
+widget.achievements.title = "उपलब्धियां"
 
-widget.achievements.body = "First discovery, 5 discoveries, multi-paper shift, S-rank quality, fast turnaround. Keep going to unlock them all."
+widget.achievements.body = "पहली खोज 5 खोजें मल्टी-पेपर शिफ्ट S-रैंक गुणवत्ता तेज़ टर्नअराउंड। सभी को अनलॉक करने के लिए जारी रखें।"

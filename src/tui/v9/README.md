@@ -2,9 +2,9 @@
 
 # TUI v9 "The Cockpit"
 
-**Tag:** v9.0.0 (commit 2404ddc) | **Tag:** v9.1.0-rc1 (commit pending)
+**Tag:** v9.11.8 (commit pending) | [v9.11.0..v9.11.7]
 **Date:** 2026-06-10
-**Status:** 20/20 tests PASS, 10x stable, single-screen feed-driven discovery UI.
+**Status:** 20/20 tests PASS with -race, 2x stable, 7,342 LOC (+4,720 test LOC = 64% ratio), i18n 7 langs × 156 keys, 39 source files.
 
 ```
 ┌────────────────────────────────────────────────────────────────┐

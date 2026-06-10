@@ -159,7 +159,7 @@ func pad(s string, w int) string {
 
 // renderCard formats one card. Cards are wrapped in bubblezone.Mark for mouse clicks.
 func renderCard(c Card, width int) string {
-	style := lipgloss.NewStyle().Width(width - 2).Padding(0, 1)
+	style := lipgloss.NewStyle().Width(width-2).Padding(0, 1)
 	border := "│"
 	zoneID := fmt.Sprintf("card-%d", c.Time.UnixNano())
 	switch c.Kind {
@@ -167,7 +167,16 @@ func renderCard(c Card, width int) string {
 		title := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("6")).Render("▣ " + c.Title)
 		body := lipgloss.NewStyle().Foreground(lipgloss.Color("8")).Render(c.Body)
 		bar := progressBar(c.Progress, 20)
-		return zone.Mark(zoneID, style.Render(border + " " + title + "  " + bar + "\n" + border + "  " + body))
+		// v9.11.8: multi-line body gets border per line (was concat with single border).
+		bodyLines := strings.Split(body, "\n")
+		if len(bodyLines) > 1 {
+			for i, l := range bodyLines {
+				bodyLines[i] = border + "  " + l
+			}
+			body = strings.Join(bodyLines, "\n")
+			return zone.Mark(zoneID, style.Render(border+" "+title+"  "+bar+"\n"+body))
+		}
+		return zone.Mark(zoneID, style.Render(border+" "+title+"  "+bar+"\n"+border+"  "+body))
 	case CardHypothesis:
 		title := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("2")).Render("✦ " + c.Title + "  NEW")
 		body := lipgloss.NewStyle().Foreground(lipgloss.Color("7")).Render(c.Body)
@@ -175,7 +184,7 @@ func renderCard(c Card, width int) string {
 		for _, m := range c.Meta {
 			meta += "\n" + border + "  " + lipgloss.NewStyle().Foreground(lipgloss.Color("8")).Render("↳ "+m)
 		}
-		return zone.Mark(zoneID, style.Render(border + " " + title + "\n" + border + "  " + body + meta))
+		return zone.Mark(zoneID, style.Render(border+" "+title+"\n"+border+"  "+body+meta))
 	case CardPaper:
 		title := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("4")).Render("📚 " + c.Title)
 		body := lipgloss.NewStyle().Foreground(lipgloss.Color("7")).Render(c.Body)
@@ -183,19 +192,19 @@ func renderCard(c Card, width int) string {
 		for _, m := range c.Meta {
 			meta += "\n" + border + "  " + lipgloss.NewStyle().Foreground(lipgloss.Color("8")).Render(m)
 		}
-		return zone.Mark(zoneID, style.Render(border + " " + title + "\n" + border + "  " + body + meta))
+		return zone.Mark(zoneID, style.Render(border+" "+title+"\n"+border+"  "+body+meta))
 	case CardCode:
 		title := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("5")).Render("⚙ " + c.Title)
 		body := lipgloss.NewStyle().Foreground(lipgloss.Color("7")).Render(c.Body)
-		return zone.Mark(zoneID, style.Render(border + " " + title + "\n" + border + "  " + body))
+		return zone.Mark(zoneID, style.Render(border+" "+title+"\n"+border+"  "+body))
 	case CardError:
 		title := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("1")).Render("✗ " + c.Title)
 		body := lipgloss.NewStyle().Foreground(lipgloss.Color("9")).Render(c.Body)
-		return zone.Mark(zoneID, style.Render(border + " " + title + "\n" + border + "  " + body))
+		return zone.Mark(zoneID, style.Render(border+" "+title+"\n"+border+"  "+body))
 	default:
 		title := lipgloss.NewStyle().Foreground(lipgloss.Color("8")).Render(c.Title)
 		body := lipgloss.NewStyle().Foreground(lipgloss.Color("7")).Render(c.Body)
-		return zone.Mark(zoneID, style.Render(border + " " + title + "\n" + border + "  " + body))
+		return zone.Mark(zoneID, style.Render(border+" "+title+"\n"+border+"  "+body))
 	}
 }
 

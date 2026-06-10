@@ -142,24 +142,24 @@ easter.line1 = "о'лскульный русский science"
 easter.line2 = "♭ Garmon doloy — bito useyut ♭"
 
 # v9.11.7: empty-state dashboard widgets
-widget.tip.title = "Tip"
-widget.tip.body = "Start with a question, hypothesis, or 'What if…?' — the C4 engine will find relevant papers, generate a hypothesis, and run a verification pass."
-widget.examples.title = "Example queries"
-widget.status.title = "Session status"
-widget.shortcuts.title = "Keyboard shortcuts"
-widget.discoveries = "discoveries"
-widget.languages = "languages"
+widget.tip.title = "نصيحة"
+widget.tip.body = "ابدأ بسؤال فرضية أو «ماذا لو…؟» — سيجد محرك C4 الأوراق ذات الصلة ويولد فرضية وينفذ التحقق."
+widget.examples.title = "استعلامات نموذجية"
+widget.status.title = "حالة الجلسة"
+widget.shortcuts.title = "اختصارات لوحة المفاتيح"
+widget.discoveries = "اكتشافات"
+widget.languages = "لغات"
 
-widget.modes.title = "Mode variants"
+widget.modes.title = "أنماط التشغيل"
 
-widget.mode.discover = "multi-paper discovery with C4 paradigm-shift gate"
+widget.mode.discover = "اكتشاف متعدد الأوراق مع بوابة تحول النموذج C4"
 
-widget.mode.flash = "quick answer with optional USP cognitive analysis"
+widget.mode.flash = "إجابة سريعة مع تحليل USP اختياري"
 
-widget.mode.turbo = "paradigm-shift research proposal with full pipeline"
+widget.mode.turbo = "اقتراح بحث تحول نموذجي مع خط أنابيب كامل"
 
-widget.mode.factory = "parallel pipeline factory (5-100 parallel jobs)"
+widget.mode.factory = "مصنع خط أنابيب متوازي (5-100 مهمة متوازية)"
 
-widget.achievements.title = "Achievements"
+widget.achievements.title = "الإنجازات"
 
-widget.achievements.body = "First discovery, 5 discoveries, multi-paper shift, S-rank quality, fast turnaround. Keep going to unlock them all."
+widget.achievements.body = "الاكتشاف الأول 5 اكتشافات تحول متعدد الأوراق جودة S-rank دوران سريع. استمر لفتحها جميعًا."

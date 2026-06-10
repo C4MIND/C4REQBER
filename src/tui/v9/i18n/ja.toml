@@ -142,24 +142,24 @@ easter.line1 = "о'лскульный русский science"
 easter.line2 = "♭ Garmon doloy — bito useyut ♭"
 
 # v9.11.7: empty-state dashboard widgets
-widget.tip.title = "Tip"
-widget.tip.body = "Start with a question, hypothesis, or 'What if…?' — the C4 engine will find relevant papers, generate a hypothesis, and run a verification pass."
-widget.examples.title = "Example queries"
-widget.status.title = "Session status"
-widget.shortcuts.title = "Keyboard shortcuts"
-widget.discoveries = "discoveries"
-widget.languages = "languages"
+widget.tip.title = "ヒント"
+widget.tip.body = "質問、仮説、「もしも…？」から始めてください — C4エンジンが関連論文を見つけ、仮説を生成し検証を実行します。"
+widget.examples.title = "クエリ例"
+widget.status.title = "セッションステータス"
+widget.shortcuts.title = "ショートカットキー"
+widget.discoveries = "発見数"
+widget.languages = "言語数"
 
-widget.modes.title = "Mode variants"
+widget.modes.title = "モード"
 
-widget.mode.discover = "multi-paper discovery with C4 paradigm-shift gate"
+widget.mode.discover = "C4パラダイムシフトゲート付きマルチ論文発見"
 
-widget.mode.flash = "quick answer with optional USP cognitive analysis"
+widget.mode.flash = "オプションUSP分析付きクイック回答"
 
-widget.mode.turbo = "paradigm-shift research proposal with full pipeline"
+widget.mode.turbo = "完全パイプラインによるパラダイムシフト研究提案"
 
-widget.mode.factory = "parallel pipeline factory (5-100 parallel jobs)"
+widget.mode.factory = "並列パイプラインファクトリ（5-100並列ジョブ）"
 
-widget.achievements.title = "Achievements"
+widget.achievements.title = "実績"
 
-widget.achievements.body = "First discovery, 5 discoveries, multi-paper shift, S-rank quality, fast turnaround. Keep going to unlock them all."
+widget.achievements.body = "初発見、5発見、マルチ論文シフト、Sランク品質、高速ターンアラウンド。続けてすべてをアンロックしましょう。"

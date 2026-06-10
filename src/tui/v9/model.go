@@ -11,6 +11,8 @@ import (
 	"github.com/figuramax/c4reqber-tui-v9/api"
 	"github.com/figuramax/c4reqber-tui-v9/effects"
 	"github.com/figuramax/c4reqber-tui-v9/i18n"
+	"github.com/figuramax/c4reqber-tui-v9/persist"
+	"github.com/figuramax/c4reqber-tui-v9/telemetry"
 )
 
 // Card kinds.
@@ -91,6 +93,13 @@ type model struct {
 	langsSeen        map[string]bool
 	lastQuality      float64
 	lastPapersCount int
+
+	// Persisted state (achievements, langs seen) and in-session telemetry
+	store *persist.Store
+	tel   *telemetry.Telemetry
+
+	// showTelemetry toggles the bottom telemetry panel (Ctrl+T)
+	showTelemetry bool
 }
 
 // message types for bubbletea
@@ -139,6 +148,13 @@ func (p pollTickMsg) String() string { return "poll-tick" }
 
 var _ tea.Model = (*model)(nil)
 
+// NewAppWithStore creates a model with a custom persist.Store (used by tests).
+func NewAppWithStore(apiURL string, store *persist.Store) *model {
+	m := NewApp(apiURL)
+	m.store = store
+	return m
+}
+
 // NewApp exports the constructor for cmd/c4tui-v9.
 func NewApp(apiURL string) *model {
 	ta := textarea.New()
@@ -165,8 +181,20 @@ func NewApp(apiURL string) *model {
 		typew:        effects.NewTypewriter(),
 		sparks:       effects.NewSparkles(),
 		achievements: NewAchievements(),
-		langsSeen:    map[string]bool{"EN": true},
+		langsSeen:    map[string]bool{},
+		tel:          telemetry.New(),
 	}
+	// Load persisted state (achievements, langs). If store fails, fall back gracefully.
+	store, storeErr := persist.New(persist.DefaultPath())
+	if storeErr == nil {
+		m.store = store
+		// Repopulate langsSeen from disk
+		snap := store.Snapshot()
+		for _, l := range snap.LangsSeen {
+			m.langsSeen[l] = true
+		}
+	}
+	m.langsSeen[string(i18n.GetLang())] = true
 	m.appendCard(Card{Kind: CardEmpty, Title: i18n.T("empty.title"), Body: i18n.T("empty.hint"), Time: time.Now()})
 	return m
 }

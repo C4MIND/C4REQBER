@@ -2,12 +2,14 @@ package tui
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
 	"charm.land/lipgloss/v2"
 
 	"github.com/figuramax/c4reqber-tui-v9/i18n"
+	"github.com/figuramax/c4reqber-tui-v9/telemetry"
 )
 
 // Achievement kinds
@@ -103,6 +105,29 @@ func renderAchievementCard(a Achievement, width int) string {
 	body := lipgloss.NewStyle().Foreground(lipgloss.Color("7")).Render(i18n.T(a.Description))
 	stamp := lipgloss.NewStyle().Foreground(lipgloss.Color("8")).Render(a.UnlockedAt.Format("15:04:05"))
 	return style.Render(title + "  " + stamp + "\n" + body)
+}
+
+// renderTelemetry renders the bottom telemetry panel (Ctrl+T).
+func renderTelemetry(snap telemetry.Snapshot, width int) string {
+	style := lipgloss.NewStyle().Width(width).Padding(0, 1).Foreground(lipgloss.Color("6"))
+	dur := time.Since(snap.SessionStart).Round(time.Second)
+	title := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("6")).Render("📊 Telemetry")
+	modes := ""
+	for k, v := range snap.ModeUseCount {
+		modes += k + ":" + strconv.Itoa(v) + " "
+	}
+	langs := ""
+	for k, v := range snap.LangUseCount {
+		langs += k + ":" + strconv.Itoa(v) + " "
+	}
+	stats := fmt.Sprintf(
+		"disc=%d ok=%d fail=%d abort=%d api=%d err=%d cost=$%.3f longest=%.1fs",
+		snap.Discoveries, snap.DiscoveriesOK, snap.DiscoveriesFail, snap.DiscoveriesAbort,
+		snap.TotalAPICalls, snap.APIErrors, snap.TotalCost, snap.LongestRunSec,
+	)
+	usage := "modes: " + modes + " langs: " + langs
+	uptime := fmt.Sprintf("uptime: %s", dur)
+	return style.Render(title + "  " + stats + "\n" + usage + "  " + uptime)
 }
 
 // cycleLangName returns the next lang code, or "—" if no change.

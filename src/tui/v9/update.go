@@ -142,6 +142,9 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 				m.sseEvents = nil
 				m.toast = i18n.T("toast.cancelled")
+				if m.tel != nil {
+					m.tel.IncAbort()
+				}
 			}
 			return m, nil
 		case "tab":
@@ -161,12 +164,30 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				modeName = l
 			}
 			m.toast = i18n.T("keymap.cycle_mode") + ": " + modeName
+			if m.tel != nil {
+				m.tel.IncMode(string(m.mode))
+			}
 			return m, nil
-		case "L":
+		case "ctrl+t":
+			m.showTelemetry = !m.showTelemetry
+			if m.showTelemetry {
+				m.toast = "📊 telemetry ON (Ctrl+T to hide)"
+			} else {
+				m.toast = "📊 telemetry OFF"
+			}
+			return m, nil
+		case "shift+L":
 			// Shift+L — cycle language (right-to-left: EN→RU→ZH→JA→DE→AR→HI)
 			next := cycleLangName(i18n.GetLang())
 			i18n.SetLang(next)
 			m.updateLangSeen()
+			if m.tel != nil {
+				m.tel.IncLang(string(next))
+			}
+			if m.store != nil {
+				m.store.AddLangSeen(string(next))
+				_ = m.store.Save()
+			}
 			m.toast = i18n.T("lang.name") + ": " + string(next)
 			return m, nil
 		}
@@ -355,6 +376,16 @@ func (m *model) checkAchievements() {
 			Time:   a.UnlockedAt,
 			Status: "done",
 		})
+		// Persist to disk + telemetry
+		if m.store != nil {
+			m.store.AddAchievement(int(a.Kind))
+			m.store.AddLangSeen(string(i18n.GetLang()))
+			m.store.IncrementDiscovery()
+			_ = m.store.Save()
+		}
+		if m.tel != nil {
+			m.tel.IncDiscoveryResult(true, seconds)
+		}
 	}
 }
 

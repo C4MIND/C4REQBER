@@ -22,12 +22,16 @@ func (m *model) View() tea.View {
 		v.AltScreen = true
 		return v
 	}
-	body := strings.Join([]string{
+	regions := []string{
 		m.renderHeader(),
 		m.renderFeed(),
 		m.renderInput(),
 		m.renderFooter(),
-	}, "\n")
+	}
+	if m.showTelemetry {
+		regions = append(regions, renderTelemetry(m.tel.Get(), m.width))
+	}
+	body := strings.Join(regions, "\n")
 	if rain := m.rain.Render(); rain != "" && !m.burst.Active() && len(m.feed) == 0 {
 		body = overlayRegion(body, rain, 1, m.height-4, m.width)
 	}

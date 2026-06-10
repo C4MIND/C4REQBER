@@ -56,7 +56,7 @@ func Translations() map[Lang]map[string]string {
 		for ik, iv := range v {
 			inner[ik] = iv
 		}
-	cp[k] = inner
+		cp[k] = inner
 	}
 	return cp
 }

@@ -177,9 +177,16 @@ async def one_click_discovery(
     await _update_phase(job_id, "C: Gaps", "Deep analysis & gap mining", 0.30)
     from src.pipeline.discovery_phases.phase_3_analysis import run_deep_analysis
     logger.info("PHASE_C starting...")
-    gap_potential, hypothesis = await run_deep_analysis(
-        problem, domain, papers, results, thresholds, errors
-    )
+    try:
+        gap_potential, hypothesis = await asyncio.wait_for(
+            run_deep_analysis(problem, domain, papers, results, thresholds, errors),
+            timeout=300.0,
+        )
+    except asyncio.TimeoutError:
+        errors.append("Phase C (gap analysis) timed out after 300s")
+        gap_potential = 0.0
+        hypothesis = {"source": "timeout", "text": "Phase C timed out"}
+        logger.warning("PHASE_C timed out after 300s")
     results["_gap_potential"] = gap_potential
     results["_papers_list"] = papers
     results["_papers_found"] = papers_found

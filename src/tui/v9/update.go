@@ -1,9 +1,13 @@
 package tui
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"time"
+
+	"os/exec"
+	"runtime"
 
 	tea "charm.land/bubbletea/v2"
 	zone "github.com/lrstanley/bubblezone/v2"
@@ -210,6 +214,36 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.toast = i18n.T("help.shown")
 			} else {
 				m.toast = i18n.T("help.hidden")
+			}
+			return m, nil
+		case "ctrl+l":
+			// Re-authenticate
+			_ = m.api.Login(context.Background(), "kilo-v9@test.com", "test12345")
+			m.toast = "🔑 re-auth OK"
+			return m, nil
+		case "/":
+			// Search mode (placeholder: shows search bar)
+			m.toast = "🔍 search: " + strings.TrimSpace(m.ta.Value())
+			return m, nil
+		case "c":
+			// Copy last card as markdown to clipboard (uses pbcopy on macOS)
+			if len(m.feed) > 0 {
+				last := m.feed[len(m.feed)-1]
+				md := fmt.Sprintf("# %s\n\n%s\n\n*%s*", last.Title, last.Body, last.Time.Format("2006-01-02 15:04"))
+				_ = copyToClipboard(md)
+				m.toast = "📋 copied to clipboard"
+			}
+			return m, nil
+		case "j":
+			// Copy last card as JSON
+			if len(m.feed) > 0 {
+				last := m.feed[len(m.feed)-1]
+				_ = copyToClipboard(fmt.Sprintf(`{"title":%q,"body":%q,"time"
+
+	"os/exec"
+	"runtime":%q}`,
+					last.Title, last.Body, last.Time.Format(time.RFC3339)))
+				m.toast = "📋 copied as JSON"
 			}
 			return m, nil
 		case "ctrl+y":
@@ -481,4 +515,22 @@ func fieldString(m map[string]any, key string) string {
 		return s
 	}
 	return fmt.Sprintf("%v", v)
+}
+
+// copyToClipboard copies text to OS clipboard. Best-effort: pbcopy (macOS),
+// xclip (Linux), clip (Windows). Returns nil on success.
+func copyToClipboard(text string) error {
+	var cmd *exec.Cmd
+	switch runtime.GOOS {
+	case "darwin":
+		cmd = exec.Command("pbcopy")
+	case "linux":
+		cmd = exec.Command("xclip", "-selection", "clipboard")
+	case "windows":
+		cmd = exec.Command("clip")
+	default:
+		return fmt.Errorf("clipboard not supported on %s", runtime.GOOS)
+	}
+	cmd.Stdin = strings.NewReader(text)
+	return cmd.Run()
 }

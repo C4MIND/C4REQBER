@@ -57,11 +57,18 @@ var splashAnsiPattern = regexp.MustCompile(`\x1b\[[0-9;]*[a-zA-Z]`)
 
 // NewSplash creates a fresh splash model.
 func NewSplash(version, gitRef string) SplashModel {
+	// Pick seed art upfront so crystal phase has art to show.
+	// 200x50 default assumption for initial pick; View re-picks on resize.
+	tmp := SplashModel{height: 50, width: 200}
+	seed := tmp.pickANSI()
+	seedPlain := stripSplashANSI(seed)
+	_ = seedPlain
 	return SplashModel{
 		phase:      "crystal",
 		rng:        rand.New(rand.NewSource(time.Now().UnixNano())),
 		appVersion: version,
 		gitRef:     gitRef,
+		seedArt:    seed,
 	}
 }
 
@@ -382,14 +389,14 @@ func buildSplashForms(h int, seedArt string, compact bool, rng *rand.Rand) [][]s
 }
 
 // pickANSI selects the best ANSI art for terminal dimensions.
-// For v9 we don't pre-bundle large ANSI art — we use a simpler procedural crystal.
-// This is a marked improvement over v8 (no embedded ANSI bloat in the binary).
+// Uses v8RawANSISmall (170 wide × 42 lines) which fits in most terminals.
+// v8RawANSI (the full 200+ wide purple crystal) is only used when terminal
+// is wide AND tall (e.g. 220×60+).
 func (m SplashModel) pickANSI() string {
-	if m.isCompact() {
-		// Compact: use a small procedural crystal
-		return smallCrystalLines
+	if m.width >= 220 && m.height >= 60 {
+		return v8RawANSI
 	}
-	return bigCrystalLines
+	return v8RawANSISmall
 }
 
 
@@ -533,24 +540,23 @@ func (m SplashModel) View() tea.View {
 		blocks = append(blocks, block{textLines, textY})
 	}
 
-	// Compose into final viewport buffer
+	// Compose into final viewport buffer with per-line horizontal centering.
+	// Each line is centered on its own (matches v8 lipgloss.Place behavior
+	// without the squishing issue from centering the whole block at once).
 	final := make([]string, m.height)
 	for i := range final {
 		final[i] = ""
 	}
-	// Place each block independently with per-block horizontal centering
-	// (otherwise the wide art+short text get squished into one block with bad centering)
 	for _, b := range blocks {
-		// Center each line of the block horizontally
 		for i, line := range b.lines {
 			y := b.y + i
 			if y >= 0 && y < m.height {
-				// padRight to width
 				plain := stripSplashANSI(line)
-				if lenRunes(plain) < m.width {
-					pad := m.width - lenRunes(plain)
-					if pad > 0 && pad < 200 {
-						line = line + strings.Repeat(" ", pad)
+				visibleLen := lenRunes(plain)
+				if visibleLen < m.width {
+					leftPad := (m.width - visibleLen) / 2
+					if leftPad > 0 {
+						line = strings.Repeat(" ", leftPad) + line
 					}
 				}
 				final[y] = line

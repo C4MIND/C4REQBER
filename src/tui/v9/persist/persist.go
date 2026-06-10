@@ -12,20 +12,20 @@ import (
 
 // Achievement records one unlocked achievement for persistence.
 type Achievement struct {
-	Kind      int       `json:"kind"`
+	Kind       int       `json:"kind"`
 	UnlockedAt time.Time `json:"unlocked_at"`
 }
 
 // State is the persisted TUI v9 state (currently just achievements).
 type State struct {
-	LangsSeen       []string      `json:"langs_seen"`
-	Achievements    []Achievement `json:"achievements"`
-	DiscoveryCount  int           `json:"discovery_count"`
-	LLMTier         string        `json:"llm_tier,omitempty"`
-	ColorProfile    string        `json:"color_profile,omitempty"`
-	Lang            string        `json:"lang,omitempty"`
-	FirstRun        bool          `json:"first_run"`
-	UpdatedAt       time.Time     `json:"updated_at"`
+	LangsSeen      []string      `json:"langs_seen"`
+	Achievements   []Achievement `json:"achievements"`
+	DiscoveryCount int           `json:"discovery_count"`
+	LLMTier        string        `json:"llm_tier,omitempty"`
+	ColorProfile   string        `json:"color_profile,omitempty"`
+	Lang           string        `json:"lang,omitempty"`
+	FirstRun       bool          `json:"first_run"`
+	UpdatedAt      time.Time     `json:"updated_at"`
 }
 
 // Store manages loading/saving persistent state.

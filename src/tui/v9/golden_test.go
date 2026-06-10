@@ -31,11 +31,11 @@ func TestGoldenEmptyState_EN(t *testing.T) {
 	out := renderToString(t, m)
 	// Must contain key UI strings
 	mustContain := []string{
-		"C4REQBER v9",      // header
+		"C4REQBER v9",          // header
 		"Ready for your first", // empty title
-		"DeepSeek",          // header
-		"READY",             // footer
-		"DISCOVER",          // mode
+		"DeepSeek",             // header
+		"READY",                // footer
+		"DISCOVER",             // mode
 	}
 	for _, s := range mustContain {
 		if !strings.Contains(out, s) {
@@ -107,11 +107,11 @@ func TestGoldenWithHypothesisCard(t *testing.T) {
 	defer SetLang(i18n.LangEN)
 	m := NewAppFresh("http://test")
 	m.appendCard(Card{
-		Kind:  CardHypothesis,
-		Title: "Hypothesis",
-		Body:  "Use truncated 17-nt guide RNAs with NGG PAM to reduce off-target binding in T-cells.",
-		Meta:  []string{"confidence 0.87", "derived from: 3 papers"},
-		Time:  time.Now(),
+		Kind:   CardHypothesis,
+		Title:  "Hypothesis",
+		Body:   "Use truncated 17-nt guide RNAs with NGG PAM to reduce off-target binding in T-cells.",
+		Meta:   []string{"confidence 0.87", "derived from: 3 papers"},
+		Time:   time.Now(),
 		Status: "done",
 	})
 	SetLang(i18n.LangEN)
@@ -126,10 +126,10 @@ func TestGoldenWithErrorCard(t *testing.T) {
 	defer SetLang(i18n.LangEN)
 	m := NewAppFresh("http://test")
 	m.appendCard(Card{
-		Kind:  CardError,
-		Title: "Submit failed",
-		Body:  "connection refused",
-		Time:  time.Now(),
+		Kind:   CardError,
+		Title:  "Submit failed",
+		Body:   "connection refused",
+		Time:   time.Now(),
 		Status: "error",
 	})
 	SetLang(i18n.LangEN)

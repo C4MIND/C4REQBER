@@ -83,7 +83,7 @@ func renderSettingsMenuInner(rows []SettingsRow, cursor, width, height int) stri
 		Width(min(70, width-4))
 
 	var body string
-	body = titleStyle.Render("⚙  " + i18n.T("settings.title")) + "\n\n"
+	body = titleStyle.Render("⚙  "+i18n.T("settings.title")) + "\n\n"
 	for i, row := range rows {
 		marker := "  "
 		label := labelStyle.Render(i18n.T(row.Key))

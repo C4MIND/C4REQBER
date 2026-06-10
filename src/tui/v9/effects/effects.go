@@ -65,7 +65,7 @@ type Rain struct {
 	width, height int
 	drops         []int
 	speed         int
-	tick         int
+	tick          int
 	chars         []rune
 }
 
@@ -160,14 +160,14 @@ type particle struct {
 }
 
 type Burst struct {
-	active   bool
-	tick     int
-	parts    []particle
-	cx, cy   int
-	centerX  float64
-	centerY  float64
-	width    int
-	height   int
+	active  bool
+	tick    int
+	parts   []particle
+	cx, cy  int
+	centerX float64
+	centerY float64
+	width   int
+	height  int
 }
 
 func NewBurst() *Burst { return &Burst{} }
@@ -304,7 +304,7 @@ func (s *SlideIn) Tick() {
 }
 
 func (s *SlideIn) Offset() float64 { return s.pos }
-func (s *SlideIn) Active() bool   { return s.active }
+func (s *SlideIn) Active() bool    { return s.active }
 
 // ════════════════════════════════════════════════════════════════
 // Typewriter
@@ -362,10 +362,10 @@ func (t *Typewriter) Active() bool { return t.active }
 const sparkSyms = "·•◦●"
 
 type Spark struct {
-	x, y    int
-	vx, vy  float64
-	life    float64
-	symIdx  int
+	x, y   int
+	vx, vy float64
+	life   float64
+	symIdx int
 }
 
 type Sparkles struct {

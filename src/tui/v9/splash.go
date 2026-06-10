@@ -29,38 +29,38 @@ type SplashDoneMsg struct{}
 
 // SplashModel is the splash screen Bubble Tea model.
 type SplashModel struct {
-	width       int
-	height      int
-	phase       string // "crystal" | "dissolve" | "waiting" | "fadeout"
-	loadingDone bool
-	morphTick   int
-	morphLines  []string
-	forms       [][]string
-	seedArt     string // stripped ANSI art for morph start
-	textTick    int    // progressive text fade-in
-	pulseTick   int    // cube shimmer in waiting phase
-	bloomFrame  int    // progressive cube bloom-in (waiting phase)
-	crystalFrame int   // progressive crystal-phase animation (12 frames)
-	morphFrame  int   // global morph progress (combined crystal+dissolve)
-	aurora      *BioAurora
-	rng         *rand.Rand
-	appVersion  string
-	gitRef      string // e.g. "v9.4.0 (abcdef0)"
+	width        int
+	height       int
+	phase        string // "crystal" | "dissolve" | "waiting" | "fadeout"
+	loadingDone  bool
+	morphTick    int
+	morphLines   []string
+	forms        [][]string
+	seedArt      string // stripped ANSI art for morph start
+	textTick     int    // progressive text fade-in
+	pulseTick    int    // cube shimmer in waiting phase
+	bloomFrame   int    // progressive cube bloom-in (waiting phase)
+	crystalFrame int    // progressive crystal-phase animation (12 frames)
+	morphFrame   int    // global morph progress (combined crystal+dissolve)
+	aurora       *BioAurora
+	rng          *rand.Rand
+	appVersion   string
+	gitRef       string    // e.g. "v9.4.0 (abcdef0)"
 	crystalStart time.Time // for boot progress display
 }
 
 // Splash constants
 const (
-	splashFormDuration  = 10 // ticks per morph form
+	splashFormDuration  = 10                     // ticks per morph form
 	splashTickInterval  = 90 * time.Millisecond  // slower morph (was 60ms)
-	splashCrystalDelay  = 6 * time.Second         // longer hold (v9.10.3: 4s→6s for visible animation)
-	splashArtReserve    = 14                       // tagline+motto+version+status+footer+spacers+tier
-	splashPulseInterval = 650 * time.Millisecond  // calmer pulse (was 400ms)
-	splashTextFade      = 120 * time.Millisecond  // slower text fade-in
-	splashFadeOutMs     = 800 * time.Millisecond  // fade-out duration
+	splashCrystalDelay  = 6 * time.Second        // longer hold (v9.10.3: 4s→6s for visible animation)
+	splashArtReserve    = 14                     // tagline+motto+version+status+footer+spacers+tier
+	splashPulseInterval = 650 * time.Millisecond // calmer pulse (was 400ms)
+	splashTextFade      = 120 * time.Millisecond // slower text fade-in
+	splashFadeOutMs     = 800 * time.Millisecond // fade-out duration
 	splashBottomLift    = 2
-	splashMorphForms    = 6                       // more intermediate morph forms (was 4)
-	splashBloomFrames   = 12                      // bloom-in animation frames for cube
+	splashMorphForms    = 6  // more intermediate morph forms (was 4)
+	splashBloomFrames   = 12 // bloom-in animation frames for cube
 )
 
 var splashAnsiPattern = regexp.MustCompile(`\x1b\[[0-9;]*[a-zA-Z]`)
@@ -471,14 +471,15 @@ func buildSplashFinalForm(h int, compact bool) []string {
 
 // buildCrystalFrames creates a sequence of crystal-phase frames for
 // progressive multi-stage animation:
-//   frame 0:  raw seed art (purple ANSI, as-is)
-//   frame 1-2: horizontal scan lines (only every Nth row visible)
-//   frame 3-4: vertical scan (only every Nth col visible)
-//   frame 5-6: center-out reveal (chars from center reveal progressively)
-//   frame 7-8: dim flicker (random chars dim)
-//   frame 9:  full brightness
-//   frame 10: pre-morph — colors starting to shift toward green/yellow
-//   frame 11: morph start — last frame before dissolve
+//
+//	frame 0:  raw seed art (purple ANSI, as-is)
+//	frame 1-2: horizontal scan lines (only every Nth row visible)
+//	frame 3-4: vertical scan (only every Nth col visible)
+//	frame 5-6: center-out reveal (chars from center reveal progressively)
+//	frame 7-8: dim flicker (random chars dim)
+//	frame 9:  full brightness
+//	frame 10: pre-morph — colors starting to shift toward green/yellow
+//	frame 11: morph start — last frame before dissolve
 func buildCrystalFrames(seedArt string, h int, compact bool, rng *rand.Rand, targetCenter float64) [][]string {
 	// v9.11.5: strip ANSI escape codes from seedArt before any
 	// width measurements. v8RawANSISmall is 170 visible chars PLUS
@@ -678,10 +679,6 @@ func (m SplashModel) pickANSI() string {
 	return v8RawANSISmall
 }
 
-
-
-
-
 func stripSplashANSI(s string) string {
 	return splashAnsiPattern.ReplaceAllString(s, "")
 }
@@ -766,10 +763,10 @@ func (m SplashModel) View() tea.View {
 		return v
 	}
 	// Default ANSI palette colors
-	primary := "3"  // yellow
-	success := "2"  // green
-	muted := "8"    // gray
-	accent := "5"   // magenta
+	primary := "3"   // yellow
+	success := "2"   // green
+	muted := "8"     // gray
+	accent := "5"    // magenta
 	highlight := "6" // cyan
 
 	// Colorize art based on phase
@@ -1042,7 +1039,7 @@ func (m SplashModel) coloredArtLines(primary, success, accent, muted, highlight 
 	case "waiting":
 		// Apply progressive bloom-in over splashBloomFrames frames
 		artLines = m.morphLines
-			bloomedArt := BloomFrame(artLines, m.bloomFrame, splashBloomFrames)
+		bloomedArt := BloomFrame(artLines, m.bloomFrame, splashBloomFrames)
 		// After bloom completes: apply bio-aurora color modulation
 		// (smooth wave-based palette shifting, sub-1Hz, no epilepsy)
 		if m.bloomFrame >= splashBloomFrames && m.aurora != nil {
@@ -1074,8 +1071,8 @@ func (m SplashModel) splashTextLines(primary, success, accent, muted, highlight 
 	primaryStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color(primary))
 	mutedStyle := lipgloss.NewStyle().Foreground(lipgloss.Color(muted))
 	highlightStyle := lipgloss.NewStyle().Foreground(lipgloss.Color(highlight))
-	greenStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("2"))  // for "Shift"
-	redOrangeStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("9"))  // for "paradigms"
+	greenStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("2"))     // for "Shift"
+	redOrangeStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("9")) // for "paradigms"
 	easterStyle := lipgloss.NewStyle().Italic(true).Foreground(lipgloss.Color("6"))  // easter egg
 
 	var lines []string

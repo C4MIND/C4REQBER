@@ -24,8 +24,8 @@ func saveTelemetryHistory(tel *telemetry.Telemetry, cfg Config) {
 
 // HistoryFile is the per-run telemetry snapshot saved to disk.
 type HistoryFile struct {
-	Config     string              `json:"config"`
-	SessionEnd time.Time           `json:"session_end"`
+	Config     string             `json:"config"`
+	SessionEnd time.Time          `json:"session_end"`
 	Snapshot   telemetry.Snapshot `json:"snapshot"`
 }
 
@@ -124,24 +124,24 @@ func isTimestampedHistory(name string) bool {
 
 // AggregatedStats is the cross-run aggregation result.
 type AggregatedStats struct {
-	TotalRuns        int                      `json:"total_runs"`
-	TotalDiscoveries int                      `json:"total_discoveries"`
-	TotalOK          int                      `json:"total_ok"`
-	TotalFail        int                      `json:"total_fail"`
-	TotalAbort       int                      `json:"total_abort"`
-	TotalCost        float64                  `json:"total_cost"`
-	TotalAPICalls    int                      `json:"total_api_calls"`
-	TotalErrors      int                      `json:"total_errors"`
-	AvgCostPerRun    float64                  `json:"avg_cost_per_run"`
-	AvgRunSec        float64                  `json:"avg_run_sec"`
-	LongestRunSec    float64                  `json:"longest_run_sec"`
-	ModeUseCount     map[string]int           `json:"mode_use_count"`
-	LangUseCount     map[string]int           `json:"lang_use_count"`
-	FirstSession     time.Time                `json:"first_session"`
-	LastSession      time.Time                `json:"last_session"`
-	StreakDays       int                      `json:"streak_days"`
-	TopDay           string                   `json:"top_day"` // YYYY-MM-DD
-	TopDayCount      int                      `json:"top_day_count"`
+	TotalRuns        int            `json:"total_runs"`
+	TotalDiscoveries int            `json:"total_discoveries"`
+	TotalOK          int            `json:"total_ok"`
+	TotalFail        int            `json:"total_fail"`
+	TotalAbort       int            `json:"total_abort"`
+	TotalCost        float64        `json:"total_cost"`
+	TotalAPICalls    int            `json:"total_api_calls"`
+	TotalErrors      int            `json:"total_errors"`
+	AvgCostPerRun    float64        `json:"avg_cost_per_run"`
+	AvgRunSec        float64        `json:"avg_run_sec"`
+	LongestRunSec    float64        `json:"longest_run_sec"`
+	ModeUseCount     map[string]int `json:"mode_use_count"`
+	LangUseCount     map[string]int `json:"lang_use_count"`
+	FirstSession     time.Time      `json:"first_session"`
+	LastSession      time.Time      `json:"last_session"`
+	StreakDays       int            `json:"streak_days"`
+	TopDay           string         `json:"top_day"` // YYYY-MM-DD
+	TopDayCount      int            `json:"top_day_count"`
 }
 
 // Aggregate combines multiple history files into a single stats view.

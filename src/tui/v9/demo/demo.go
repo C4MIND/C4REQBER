@@ -12,20 +12,20 @@ import (
 
 // CardEvent is one scripted card emission.
 type CardEvent struct {
-	Delay     time.Duration
-	Kind      string
-	Title     string
-	Body      string
-	Meta      []string
-	Status    string
-	Progress  float64
+	Delay    time.Duration
+	Kind     string
+	Title    string
+	Body     string
+	Meta     []string
+	Status   string
+	Progress float64
 }
 
 // Script is a series of fake card events.
 type Script struct {
-	Topic      string
-	Events     []CardEvent
-	TotalTime  time.Duration
+	Topic     string
+	Events    []CardEvent
+	TotalTime time.Duration
 }
 
 // Default returns the stock "first-time user" demo.
@@ -141,21 +141,21 @@ func (s *Script) AsAPIResult() map[string]any {
 			"papers": []any{
 				map[string]any{
 					"title":          "Optimized sgRNA design to maximize activity and minimize off-target",
-					"authors":       []string{"Doench JG", "Fusi N", "Sullender M"},
-					"year":          2016,
-					"venue":         "Nature Biotechnology",
-					"doi":           "10.1038/nbt.3437",
+					"authors":        []string{"Doench JG", "Fusi N", "Sullender M"},
+					"year":           2016,
+					"venue":          "Nature Biotechnology",
+					"doi":            "10.1038/nbt.3437",
 					"citation_count": 1847,
-					"source":        "openalex",
+					"source":         "openalex",
 				},
 				map[string]any{
 					"title":          "Genome-scale CRISPR-Cas9 knockout screening",
-					"authors":       []string{"Shalem O", "Sanjana NE", "Hartenian E"},
-					"year":          2014,
-					"venue":         "Science",
-					"doi":           "10.1126/science.1247005",
+					"authors":        []string{"Shalem O", "Sanjana NE", "Hartenian E"},
+					"year":           2014,
+					"venue":          "Science",
+					"doi":            "10.1126/science.1247005",
 					"citation_count": 2840,
-					"source":        "openalex",
+					"source":         "openalex",
 				},
 			},
 		},

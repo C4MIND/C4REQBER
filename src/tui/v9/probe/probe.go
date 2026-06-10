@@ -63,12 +63,12 @@ type PollSnapshot struct {
 }
 
 type PaperRow struct {
-	Title        string `json:"title"`
-	Year         any    `json:"year"`
-	Venue        string `json:"venue"`
-	DOI          string `json:"doi"`
-	Source       string `json:"source"`
-	CitationCount any   `json:"citation_count"`
+	Title         string `json:"title"`
+	Year          any    `json:"year"`
+	Venue         string `json:"venue"`
+	DOI           string `json:"doi"`
+	Source        string `json:"source"`
+	CitationCount any    `json:"citation_count"`
 }
 
 // Run executes the full probe. Result is written to stdout as JSON.

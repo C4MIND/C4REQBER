@@ -46,12 +46,12 @@ func (ba *BioAurora) Tick(elapsedSec float64) {
 
 // auroraPalette is the 6-color organic gradient used for the bio-morphing.
 var auroraPalette = []string{
-	"2",  // green
-	"6",  // cyan
-	"4",  // blue
-	"5",  // magenta
-	"3",  // yellow (rare highlight)
-	"2",  // green (loop)
+	"2", // green
+	"6", // cyan
+	"4", // blue
+	"5", // magenta
+	"3", // yellow (rare highlight)
+	"2", // green (loop)
 }
 
 // maxAuroraOpacity caps how strong the aurora tint can be. v9.11.1
@@ -93,7 +93,7 @@ func (ba *BioAurora) colorAt(x, y int) int {
 		v += band * 0.3
 	}
 	// Vertical pulse: top brighter, bottom dimmer (or vice versa)
-	pulse := math.Sin(t*2*math.Pi/7.0)
+	pulse := math.Sin(t * 2 * math.Pi / 7.0)
 	v += pulse * 0.2
 	// Soft saturation: tanh compresses the extremes.
 	norm := (math.Tanh(v) + 1.0) / 2.0 // 0..1, smooth

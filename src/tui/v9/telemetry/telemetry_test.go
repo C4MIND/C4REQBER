@@ -134,7 +134,7 @@ func TestTelemetryModeCountCopy(t *testing.T) {
 	tel.IncMode("DISCOVER")
 	got1 := tel.Get()
 	got1.ModeUseCount["FLASH"] = 99 // mutate the copy
-	got2 := tel.Get()                  // should be unchanged
+	got2 := tel.Get()               // should be unchanged
 	if got2.ModeUseCount["FLASH"] != 0 {
 		t.Errorf("internal state leaked: FLASH = %d", got2.ModeUseCount["FLASH"])
 	}

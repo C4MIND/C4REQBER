@@ -153,8 +153,8 @@ func (d *DreamState) Active() bool {
 }
 
 // Pause/Resume — useful for tests.
-func (d *DreamState) Pause()  { d.paused = true }
-func (d *DreamState) Resume() { d.paused = false }
+func (d *DreamState) Pause()       { d.paused = true }
+func (d *DreamState) Resume()      { d.paused = false }
 func (d *DreamState) Paused() bool { return d.paused }
 
 // ActivateForTest forces dream mode on (used by tests).

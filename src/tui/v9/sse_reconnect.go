@@ -92,7 +92,6 @@ type SSEStreamResult struct {
 	Reopened bool // true if this event came from a reconnect
 }
 
-
 func sseStreamWithReconnect(ctx context.Context, c *api.Client, jobID string, state *sseState) <-chan SSEStreamResult {
 	out := make(chan SSEStreamResult, 16)
 	go func() {

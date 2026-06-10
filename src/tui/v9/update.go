@@ -68,7 +68,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		return m, m.pollTickCmd()
 
-		case sseEventMsg:
+	case sseEventMsg:
 		// SSE event from /v8/discover/stream/{job_id}
 		if m.sseEvents == nil {
 			m.sseEvents = msg.events

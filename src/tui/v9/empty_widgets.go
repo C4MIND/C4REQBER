@@ -45,22 +45,22 @@ func (m *model) emptyWidgets() []Card {
 	langs := len(m.langsSeen)
 	return []Card{
 		{
-			Kind: CardEmpty,
+			Kind:  CardEmpty,
 			Title: i18n.T("empty.title"),
-			Body: i18n.T("empty.hint"),
-			Time: now,
+			Body:  i18n.T("empty.hint"),
+			Time:  now,
 		},
 		{
-			Kind:    CardPhase,
-			Title:   i18n.T("widget.tip.title"),
-			Body:    i18n.T("widget.tip.body"),
-			Time:    now.Add(timeSecond(1)),
+			Kind:  CardPhase,
+			Title: i18n.T("widget.tip.title"),
+			Body:  i18n.T("widget.tip.body"),
+			Time:  now.Add(timeSecond(1)),
 		},
 		{
-			Kind: CardPhase,
+			Kind:  CardPhase,
 			Title: i18n.T("widget.examples.title"),
-			Body: m.tipExample(),
-			Time: now.Add(timeSecond(2)),
+			Body:  m.tipExample(),
+			Time:  now.Add(timeSecond(2)),
 		},
 		{
 			Kind:  CardPhase,
@@ -169,7 +169,6 @@ func (m *model) renderEmptyWidgets() string {
 }
 
 // timeNow is a package-level variable so tests can stub it.
-
 
 // timeNow is a package-level variable so tests can stub it.
 var timeNow = func() time.Time { return time.Now() }

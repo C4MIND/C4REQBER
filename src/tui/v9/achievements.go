@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sort"
 	"strconv"
-	
+
 	"time"
 
 	"charm.land/lipgloss/v2"
@@ -36,14 +36,14 @@ type Achievement struct {
 
 // AchievementSystem tracks user achievements.
 type AchievementSystem struct {
-	Items       []Achievement
-	Unlocked    int
-	Total       int
-	LastUnlock  time.Time
+	Items      []Achievement
+	Unlocked   int
+	Total      int
+	LastUnlock time.Time
 	// overlayActive + overlayUntil control the fullscreen achievement overlay.
-	overlayActive   bool
-	overlayUntil    time.Time
-	overlayMessage  string // i18n-rendered "🏆 Name · description"
+	overlayActive  bool
+	overlayUntil   time.Time
+	overlayMessage string // i18n-rendered "🏆 Name · description"
 }
 
 func NewAchievements() *AchievementSystem {

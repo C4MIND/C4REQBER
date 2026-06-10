@@ -168,12 +168,15 @@ async def one_click_discovery(
 
     await _update_phase(job_id, "B: Search", "Knowledge acquisition", 0.15)
     from src.pipeline.discovery_phases.phase_2_knowledge import run_knowledge_acquisition
+    logger.info("PHASE_B starting search...")
     papers, papers_found, sources_used, citation_chase_result = await run_knowledge_acquisition(
         problem, domain, thresholds, results, errors
     )
+    logger.info("PHASE_B done: %d papers from %d sources", papers_found, sources_used)
 
     await _update_phase(job_id, "C: Gaps", "Deep analysis & gap mining", 0.30)
     from src.pipeline.discovery_phases.phase_3_analysis import run_deep_analysis
+    logger.info("PHASE_C starting...")
     gap_potential, hypothesis = await run_deep_analysis(
         problem, domain, papers, results, thresholds, errors
     )

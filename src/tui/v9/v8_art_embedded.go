@@ -1,8 +1,9 @@
 // Embedded v8 splash art (true v8 port, not procedural).
 // Source files:
-//   v8/splash/green_cube.txt  (28 lines green cube ASCII)
-//   v8/splash/ascii_art.go    (bigC4R from 1, asciiC4R box-drawing)
-//   v8/splash/art.go          (purple ANSI crystal as seed art for morph)
+//
+//	v8/splash/green_cube.txt  (28 lines green cube ASCII)
+//	v8/splash/ascii_art.go    (bigC4R from 1, asciiC4R box-drawing)
+//	v8/splash/art.go          (purple ANSI crystal as seed art for morph)
 package tui
 
 // v8GreenCubeRaw — 28-line green cube ASCII (pulsed in waiting phase).

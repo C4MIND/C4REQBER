@@ -121,19 +121,19 @@ func TestColorProfile_AllProfilesHaveAllKeys(t *testing.T) {
 
 func TestProfileFromString(t *testing.T) {
 	for s, want := range map[string]ColorProfile{
-		"": ProfileDefault,
-		"default": ProfileDefault,
+		"":              ProfileDefault,
+		"default":       ProfileDefault,
 		"high-contrast": ProfileHighContrast,
-		"hc": ProfileHighContrast,
-		"protanopia": ProfileProtanopia,
-		"prot": ProfileProtanopia,
-		"deuteranopia": ProfileDeuteranopia,
-		"deut": ProfileDeuteranopia,
-		"tritanopia": ProfileTritanopia,
-		"trit": ProfileTritanopia,
-		"monochrome": ProfileMonochrome,
-		"mono": ProfileMonochrome,
-		"no-color": ProfileMonochrome,
+		"hc":            ProfileHighContrast,
+		"protanopia":    ProfileProtanopia,
+		"prot":          ProfileProtanopia,
+		"deuteranopia":  ProfileDeuteranopia,
+		"deut":          ProfileDeuteranopia,
+		"tritanopia":    ProfileTritanopia,
+		"trit":          ProfileTritanopia,
+		"monochrome":    ProfileMonochrome,
+		"mono":          ProfileMonochrome,
+		"no-color":      ProfileMonochrome,
 	} {
 		got, ok := ProfileFromString(s)
 		if !ok {
@@ -357,4 +357,3 @@ func TestAggregate_TopDay(t *testing.T) {
 		t.Errorf("TopDayCount = %d, want 3", stats.TopDayCount)
 	}
 }
-

@@ -13,44 +13,45 @@ import (
 
 // Config holds runtime configuration loaded from env vars + defaults.
 type Config struct {
-	APIURL    string
-	Lang      i18n.Lang
-	DreamIdle int // seconds; 0 = disabled
-	NoColor   bool
-	Width     int
-	Height    int
-	ExtraQuotes []string // env C4_DREAM_QUOTES (newline-separated)
-	SaveHistory bool    // env C4_SAVE_HISTORY (default true)
-	LLMTier   LLMTier   // env C4_LLM_TIER (C1/C2/C3, default C2)
+	APIURL       string
+	Lang         i18n.Lang
+	DreamIdle    int // seconds; 0 = disabled
+	NoColor      bool
+	Width        int
+	Height       int
+	ExtraQuotes  []string     // env C4_DREAM_QUOTES (newline-separated)
+	SaveHistory  bool         // env C4_SAVE_HISTORY (default true)
+	LLMTier      LLMTier      // env C4_LLM_TIER (C1/C2/C3, default C2)
 	ColorProfile ColorProfile // env C4_COLOR_PROFILE
 }
 
 // DefaultConfig returns a Config with sensible defaults.
 func DefaultConfig() Config {
 	return Config{
-		APIURL:      "http://127.0.0.1:8000",
-		Lang:        i18n.LangEN,
-		DreamIdle:   300,
-		NoColor:     false,
-		Width:       0,
-		Height:      0,
-		ExtraQuotes: nil,
-		SaveHistory: true,
-		LLMTier:     TierC2,
+		APIURL:       "http://127.0.0.1:8000",
+		Lang:         i18n.LangEN,
+		DreamIdle:    300,
+		NoColor:      false,
+		Width:        0,
+		Height:       0,
+		ExtraQuotes:  nil,
+		SaveHistory:  true,
+		LLMTier:      TierC2,
 		ColorProfile: ProfileDefault,
 	}
 }
 
 // LoadConfig reads environment variables and returns a Config.
 // Recognized env vars:
-//   C4_API_URL       - backend URL (default: http://127.0.0.1:8000)
-//   C4_LANG          - starting language (en/ru/zh/ja/de/ar/hi)
-//   C4_DREAM_IDLE    - seconds of idle before dream mode (0=disabled, default 300)
-//   C4_NO_COLOR      - if set (any value), disable colors
-//   C4_WIDTH         - initial width (0=auto)
-//   C4_HEIGHT        - initial height (0=auto)
-//   C4_DREAM_QUOTES  - newline-separated extra dream quotes to append
-//   C4_SAVE_HISTORY  - "0"/"false" to disable telemetry history save
+//
+//	C4_API_URL       - backend URL (default: http://127.0.0.1:8000)
+//	C4_LANG          - starting language (en/ru/zh/ja/de/ar/hi)
+//	C4_DREAM_IDLE    - seconds of idle before dream mode (0=disabled, default 300)
+//	C4_NO_COLOR      - if set (any value), disable colors
+//	C4_WIDTH         - initial width (0=auto)
+//	C4_HEIGHT        - initial height (0=auto)
+//	C4_DREAM_QUOTES  - newline-separated extra dream quotes to append
+//	C4_SAVE_HISTORY  - "0"/"false" to disable telemetry history save
 func LoadConfig() Config {
 	cfg := DefaultConfig()
 	if v := os.Getenv("C4_API_URL"); v != "" {
@@ -169,7 +170,7 @@ func HelpOverlayWith(width, height int, km *KeyMap) string {
 	sectionStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("6"))
 	keyStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("2")).Width(14)
 	dimStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("8"))
-	boxStyle := lipgloss.NewStyle().Width(width - 2).Padding(0, 1)
+	boxStyle := lipgloss.NewStyle().Width(width-2).Padding(0, 1)
 
 	// Resolve platform-specific keys. Display "Cmd+L / Ctrl+L" if both
 	// are bound (e.g. macOS keeps Ctrl aliases for muscle memory).

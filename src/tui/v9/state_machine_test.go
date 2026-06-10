@@ -259,8 +259,8 @@ func TestStateMachine_PollMsgCompleted(t *testing.T) {
 	m.running = true
 	m.jobID = "test"
 	data := map[string]any{
-		"hypothesis": map[string]any{"text": "poll hypothesis", "source": "v8"},
-		"papers":     []any{map[string]any{"title": "P", "year": 2020, "venue": "V", "doi": "D", "citation_count": 5, "source": "s"}},
+		"hypothesis":         map[string]any{"text": "poll hypothesis", "source": "v8"},
+		"papers":             []any{map[string]any{"title": "P", "year": 2020, "venue": "V", "doi": "D", "citation_count": 5, "source": "s"}},
 		"total_time_seconds": 30.0,
 	}
 	u, _ := m.Update(apiPollMsg{

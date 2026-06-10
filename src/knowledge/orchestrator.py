@@ -133,8 +133,12 @@ class MultiSourceSearcher:
         )
 
     def _build_adapters(self, sources: set[str] | None) -> None:
-        adapter_map = cast(dict[str, type[BaseSourceAdapter]], {
-            "semantic_scholar": SemanticScholarAdapter,
+        adapter_map = cast(dict[str, type[BaseSourceAdapter] | None], {
+            # semantic_scholar disabled — free tier rate limit (429) hangs the
+            # search pipeline. TODO: re-enable after upgrading to paid tier or
+            # adding circuit-breaker with longer cooldown.
+            # "semantic_scholar": SemanticScholarAdapter,
+            "openalex": OpenAlexAdapter,
             "openalex": OpenAlexAdapter,
             "crossref": CrossrefAdapter,
             "arxiv": ArxivAdapter,

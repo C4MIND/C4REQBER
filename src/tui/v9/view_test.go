@@ -33,7 +33,7 @@ func stripANSI(s string) string {
 		if s[i] == 0x1b && i+1 < len(s) && s[i+1] == '[' {
 			j := i + 2
 			for j < len(s) {
-				if (s[j] >= 0x40 && s[j] <= 0x7e) {
+				if s[j] >= 0x40 && s[j] <= 0x7e {
 					j++
 					break
 				}
@@ -131,8 +131,8 @@ func TestProgressBar(t *testing.T) {
 
 func TestStringField(t *testing.T) {
 	m := map[string]any{
-		"title": "Hello",
-		"year":  2020,
+		"title":   "Hello",
+		"year":    2020,
 		"missing": nil,
 	}
 	if fieldString(m, "title") != "Hello" {

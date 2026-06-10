@@ -153,11 +153,15 @@ class CitationChaser:
         return []
 
     @staticmethod
-    def _validate_paper_id(paper_id: str) -> str:
+    def _validate_paper_id(paper_id: str) -> str | None:
         import re
-        if not re.fullmatch(r"[A-Za-z0-9._\-/]+", paper_id):
-            raise ValueError(f"Invalid paper_id format: {paper_id}")
-        return paper_id
+        # Normalise: strip surrounding whitespace, lowercase
+        pid = paper_id.strip()
+        # Some DOIs contain parentheses — strip them for S2 API
+        pid = pid.replace("(", "").replace(")", "")
+        if not re.fullmatch(r"[A-Za-z0-9._\-/]+", pid):
+            return None  # skip — invalid for S2, don't crash pipeline
+        return pid
 
     async def _get_citations_from_s2(
         self,
@@ -165,6 +169,8 @@ class CitationChaser:
         limit: int = 50,
     ) -> list[dict[str, Any]]:
         paper_id = self._validate_paper_id(paper_id)
+        if paper_id is None:
+            return []
         url = f"https://api.semanticscholar.org/graph/v1/paper/{paper_id}/citations"
         params: dict[str, Any] = {
             "limit": limit,
@@ -212,6 +218,8 @@ class CitationChaser:
         limit: int = 50,
     ) -> list[dict[str, Any]]:
         paper_id = self._validate_paper_id(paper_id)
+        if paper_id is None:
+            return []
         url = f"https://api.semanticscholar.org/graph/v1/paper/{paper_id}/references"
         params: dict[str, Any] = {
             "limit": limit,

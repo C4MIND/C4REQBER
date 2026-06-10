@@ -19,17 +19,17 @@ type Particle struct {
 
 // ParticleField manages drifting ASCII particles around the cube/C4R.
 type ParticleField struct {
-	particles []Particle
-	rng       *rand.Rand
+	particles  []Particle
+	rng        *rand.Rand
 	maxX, maxY int
 }
 
 // NewParticleField creates a new field of ~30 particles within bounds.
 func NewParticleField(width, height int) *ParticleField {
 	pf := &ParticleField{
-		rng:   rand.New(rand.NewSource(0xCAFE)),
-		maxX:  width,
-		maxY:  height,
+		rng:  rand.New(rand.NewSource(0xCAFE)),
+		maxX: width,
+		maxY: height,
 	}
 	glyphs := []string{"·", ":", "∴", "∴", "·", "·"}
 	styles := []string{"5", "6", "8", "3"}

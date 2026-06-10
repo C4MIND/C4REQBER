@@ -40,24 +40,24 @@ func DetectPlatform() Platform {
 type Action string
 
 const (
-	ActRun           Action = "run"            // Enter — submit discovery
-	ActHelp           Action = "help"           // ? — show help overlay
-	ActQuit           Action = "quit"           // Ctrl+C — exit
-	ActCancel         Action = "cancel"         // Esc — cancel running
-	ActCycleMode      Action = "cycle_mode"     // Tab — cycle DISCOVER/FLASH/TURBO/TURBOFACTORY
-	ActLang           Action = "lang"           // L — cycle language
-	ActReauth         Action = "reauth"         // Ctrl+L — re-authenticate
-	ActSearch         Action = "search"         // / — search
-	ActCopy           Action = "copy"           // c — copy card
-	ActJump           Action = "jump"           // j — jump
-	ActTier           Action = "tier"           // Ctrl+Y — cycle C1/C2/C3
-	ActSettings       Action = "settings"       // Ctrl+, — settings menu
-	ActUp             Action = "up"             // ↑
-	ActDown           Action = "down"           // ↓
-	ActColorProfile   Action = "color_profile"  // Ctrl+Shift+P — color cycle
-	ActProfileMac     Action = "profile"        // Shift+L on macOS (Cmd+Shift+P conflicts)
-	ActNewTab         Action = "new_tab"        // Ctrl+T (Win/Linux) or Cmd+T (Mac)
-	ActEscape         Action = "escape"         // Ctrl+. — universal TUI escape hatch
+	ActRun          Action = "run"           // Enter — submit discovery
+	ActHelp         Action = "help"          // ? — show help overlay
+	ActQuit         Action = "quit"          // Ctrl+C — exit
+	ActCancel       Action = "cancel"        // Esc — cancel running
+	ActCycleMode    Action = "cycle_mode"    // Tab — cycle DISCOVER/FLASH/TURBO/TURBOFACTORY
+	ActLang         Action = "lang"          // L — cycle language
+	ActReauth       Action = "reauth"        // Ctrl+L — re-authenticate
+	ActSearch       Action = "search"        // / — search
+	ActCopy         Action = "copy"          // c — copy card
+	ActJump         Action = "jump"          // j — jump
+	ActTier         Action = "tier"          // Ctrl+Y — cycle C1/C2/C3
+	ActSettings     Action = "settings"      // Ctrl+, — settings menu
+	ActUp           Action = "up"            // ↑
+	ActDown         Action = "down"          // ↓
+	ActColorProfile Action = "color_profile" // Ctrl+Shift+P — color cycle
+	ActProfileMac   Action = "profile"       // Shift+L on macOS (Cmd+Shift+P conflicts)
+	ActNewTab       Action = "new_tab"       // Ctrl+T (Win/Linux) or Cmd+T (Mac)
+	ActEscape       Action = "escape"        // Ctrl+. — universal TUI escape hatch
 )
 
 // KeyMap resolves semantic Actions to platform-appropriate display labels
@@ -71,8 +71,8 @@ type KeyMap struct {
 // keyBinding is one physical key variant for an Action, with display
 // label and matching bubbletea event strings.
 type keyBinding struct {
-	label string         // human-readable, e.g. "Cmd+L"
-	keys  []string       // bubbletea msg.String() matches, e.g. {"ctrl+l", "cmd+l"}
+	label string   // human-readable, e.g. "Cmd+L"
+	keys  []string // bubbletea msg.String() matches, e.g. {"ctrl+l", "cmd+l"}
 }
 
 // NewKeyMap builds a keymap for the given platform.
@@ -94,24 +94,24 @@ func NewKeyMap(p Platform) *KeyMap {
 // Platform-specific remaps may add or override labels.
 func defaultBindings() map[Action][]keyBinding {
 	return map[Action][]keyBinding{
-		ActRun:         {{label: "Enter", keys: []string{"enter", " "}}},
-		ActHelp:        {{label: "?", keys: []string{"?"}}},
-		ActQuit:        {{label: "Ctrl+C", keys: []string{"ctrl+c"}}},
-		ActCancel:      {{label: "Esc", keys: []string{"esc"}}},
-		ActCycleMode:   {{label: "Tab", keys: []string{"tab"}}},
-		ActLang:        {{label: "L", keys: []string{"l", "shift+l"}}},
-		ActReauth:      {{label: "Ctrl+L", keys: []string{"ctrl+l"}}},
-		ActSearch:      {{label: "/", keys: []string{"/"}}},
-		ActCopy:        {{label: "c", keys: []string{"c"}}},
-		ActJump:        {{label: "j", keys: []string{"j"}}},
-		ActTier:        {{label: "Ctrl+Y", keys: []string{"ctrl+y"}}},
-		ActSettings:    {{label: "Ctrl+,", keys: []string{"ctrl+,"}}},
-		ActUp:          {{label: "↑", keys: []string{"up"}}},
-		ActDown:        {{label: "↓", keys: []string{"down"}}},
+		ActRun:          {{label: "Enter", keys: []string{"enter", " "}}},
+		ActHelp:         {{label: "?", keys: []string{"?"}}},
+		ActQuit:         {{label: "Ctrl+C", keys: []string{"ctrl+c"}}},
+		ActCancel:       {{label: "Esc", keys: []string{"esc"}}},
+		ActCycleMode:    {{label: "Tab", keys: []string{"tab"}}},
+		ActLang:         {{label: "L", keys: []string{"l", "shift+l"}}},
+		ActReauth:       {{label: "Ctrl+L", keys: []string{"ctrl+l"}}},
+		ActSearch:       {{label: "/", keys: []string{"/"}}},
+		ActCopy:         {{label: "c", keys: []string{"c"}}},
+		ActJump:         {{label: "j", keys: []string{"j"}}},
+		ActTier:         {{label: "Ctrl+Y", keys: []string{"ctrl+y"}}},
+		ActSettings:     {{label: "Ctrl+,", keys: []string{"ctrl+,"}}},
+		ActUp:           {{label: "↑", keys: []string{"up"}}},
+		ActDown:         {{label: "↓", keys: []string{"down"}}},
 		ActColorProfile: {{label: "Ctrl+Shift+P", keys: []string{"ctrl+shift+p"}}},
-		ActProfileMac:  {{label: "Cmd+Shift+P", keys: []string{"cmd+shift+p"}}},
-		ActNewTab:      {{label: "Ctrl+T", keys: []string{"ctrl+t"}}},
-		ActEscape:      {{label: "Ctrl+.", keys: []string{"ctrl+."}}},
+		ActProfileMac:   {{label: "Cmd+Shift+P", keys: []string{"cmd+shift+p"}}},
+		ActNewTab:       {{label: "Ctrl+T", keys: []string{"ctrl+t"}}},
+		ActEscape:       {{label: "Ctrl+.", keys: []string{"ctrl+."}}},
 	}
 }
 

@@ -8,8 +8,8 @@ import (
 
 // WizardState is the state of the first-run wizard.
 type WizardState struct {
-	step    int // 0=hello, 1=try-demo, 2=help, 3=done
-	active  bool
+	step   int // 0=hello, 1=try-demo, 2=help, 3=done
+	active bool
 }
 
 // NewWizardState returns a fresh wizard.

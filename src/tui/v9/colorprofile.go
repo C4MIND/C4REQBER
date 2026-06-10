@@ -12,10 +12,10 @@ type ColorProfile int
 const (
 	ProfileDefault ColorProfile = iota
 	ProfileHighContrast
-	ProfileProtanopia    // red-blind
-	ProfileDeuteranopia  // green-blind
-	ProfileTritanopia    // blue-blind
-	ProfileMonochrome    // no color
+	ProfileProtanopia   // red-blind
+	ProfileDeuteranopia // green-blind
+	ProfileTritanopia   // blue-blind
+	ProfileMonochrome   // no color
 )
 
 // String returns the profile name.
@@ -94,8 +94,8 @@ func tritanopiaColors() colorMap {
 		"error":     lipgloss.Color("1"),
 		"muted":     lipgloss.Color("8"),
 		"accent":    lipgloss.Color("5"),
-		"highlight": lipgloss.Color("7"),  // white instead of cyan
-		"info":      lipgloss.Color("6"),  // cyan instead of blue
+		"highlight": lipgloss.Color("7"), // white instead of cyan
+		"info":      lipgloss.Color("6"), // cyan instead of blue
 	}
 }
 
@@ -105,7 +105,7 @@ func monochromeColors() colorMap {
 		"primary":   lipgloss.Color("7"),  // white
 		"success":   lipgloss.Color("15"), // bright white
 		"warn":      lipgloss.Color("7"),
-		"error":     lipgloss.Color("8"),  // gray
+		"error":     lipgloss.Color("8"), // gray
 		"muted":     lipgloss.Color("8"),
 		"accent":    lipgloss.Color("7"),
 		"highlight": lipgloss.Color("15"),

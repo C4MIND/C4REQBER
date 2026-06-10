@@ -292,6 +292,27 @@ class AuthManager:
             created_at=row["created_at"] if "created_at" in row.keys() else None,
         )
 
+    async def get_user_by_email(self, email: str) -> User | None:
+        """Get user by email."""
+        import sqlite3
+        from pathlib import Path
+
+        db_path = Path(__file__).parent.parent.parent / "data" / "c4_cdi_turbo.db"
+        with sqlite3.connect(str(db_path)) as conn:
+            conn.row_factory = sqlite3.Row
+            row = conn.execute(
+                "SELECT id, email, name, created_at FROM users WHERE email = ?",
+                (email,),
+            ).fetchone()
+        if not row:
+            return None
+        return User(
+            id=row["id"],
+            email=row["email"],
+            name=row["name"] if "name" in row.keys() else None,
+            created_at=row["created_at"] if "created_at" in row.keys() else None,
+        )
+
     async def revoke_token(self, jti: str, ttl: int = 86400) -> None:
         """Revoke a token by its jti."""
         await revoke_token(jti, ttl)

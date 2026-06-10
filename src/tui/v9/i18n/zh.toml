@@ -163,3 +163,5 @@ widget.mode.factory = "并行流水线工厂（5-100并行作业）"
 widget.achievements.title = "成就"
 
 widget.achievements.body = "首次发现、5次发现、多论文转变、S级质量、快速周转。继续探索解锁全部。"
+settings.llm_stage = "Per-stage LLM"
+settings.llm_stage.desc = "Phase-specific model tier. A:local → D/E/F:premium → G:cheap"

@@ -17,14 +17,25 @@ type SettingsRow struct {
 
 // CurrentSettings returns the live settings for the in-app menu.
 func (m *model) CurrentSettings() []SettingsRow {
+	tel := m.tel.Get()
+	// Per-stage LLM config (v9.12.5): show which model each phase uses
+	stageInfo := ""
+	if m.llmTier.String() == "C1" {
+		stageInfo = "A:local B:cheap C:cheap D:balanced E:— F:balanced G:cheap"
+	} else if m.llmTier.String() == "C2" {
+		stageInfo = "A:local B:balanced C:balanced D:premium E:— F:premium G:balanced"
+	} else {
+		stageInfo = "A:local B:balanced C:balanced D:premium E:— F:premium G:premium"
+	}
 	return []SettingsRow{
 		{Key: "settings.llm_tier", Value: m.llmTier.String() + " (" + m.llmTier.ModelFor() + " · ~$" + fmt.Sprintf("%.3f", m.llmTier.EstimatedCost()) + ")", Description: "settings.llm_tier.desc"},
+		{Key: "settings.llm_stage", Value: stageInfo, Description: "settings.llm_stage.desc"},
 		{Key: "settings.color_profile", Value: m.colorProfile.String(), Description: "settings.color_profile.desc"},
 		{Key: "settings.dream_idle", Value: fmt.Sprintf("%ds", m.dream.idleSeconds), Description: "settings.dream_idle.desc"},
 		{Key: "settings.lang", Value: string(i18n.GetLang()), Description: "settings.lang.desc"},
 		{Key: "settings.api_url", Value: m.apiURL, Description: "settings.api_url.desc"},
 		{Key: "settings.save_history", Value: boolOnOff(m.saveHistory), Description: "settings.save_history.desc"},
-		{Key: "settings.telemetry", Value: fmt.Sprintf("disc=%d ok=%d fail=%d abort=%d", m.tel.Get().Discoveries, m.tel.Get().DiscoveriesOK, m.tel.Get().DiscoveriesFail, m.tel.Get().DiscoveriesAbort), Description: "settings.telemetry.desc"},
+		{Key: "settings.telemetry", Value: fmt.Sprintf("disc=%d ok=%d fail=%d abort=%d", tel.Discoveries, tel.DiscoveriesOK, tel.DiscoveriesFail, tel.DiscoveriesAbort), Description: "settings.telemetry.desc"},
 	}
 }
 

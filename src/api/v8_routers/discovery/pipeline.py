@@ -114,6 +114,7 @@ __all__ = [
 class OneClickRequest(BaseModel):
     problem: str
     domain: str = "science"
+    llm_tier: str = "C2"
 
 
 class MultiHypothesisRequest(BaseModel):
@@ -156,11 +157,34 @@ async def one_click_discovery(
     errors: list[str] = []
     start_total = time.perf_counter()
     results: dict[str, Any] = {"problem": problem, "domain": domain, "pipeline_version": "v8.0", "warnings": []}
-    thresholds = {"min_papers_for_discovery": 50, "min_papers_for_paradigm_shift": 100, "min_gap_miner_potential": 0.15, "min_novelty_score": 0.5, "min_contradictions_found": 3, "recursive_search_depth": 2, "cross_validate_sources_min": 5, "require_already_shifted_check": True, "require_self_critique": True}
+    thresholds = {
+        "min_papers_for_discovery": 50,
+        "min_papers_for_paradigm_shift": 100,
+        "min_gap_miner_potential": 0.15,
+        "min_novelty_score": 0.5,
+        "min_contradictions_found": 3,
+        "recursive_search_depth": 2,
+        "cross_validate_sources_min": 5,
+        "require_already_shifted_check": True,
+        "require_self_critique": True,
+        # Per-stage LLM model tier — user can override in TUI settings.
+        # Maps pipeline phase → quality level (local/cheap/balanced/premium).
+        # C1 → cheap, C2 → balanced, C3 → premium. Local requires MLX.
+        "llm_tier": request.llm_tier,
+    }
     abort_reasons: list[str] = []
     results["_errors"] = errors
     results["_abort_reasons"] = abort_reasons
     results["_thresholds"] = thresholds
+    results["_llm_stage"] = {
+        "A": "local",    # Framing — MLX, free
+        "B": "balanced",  # Search — Qwen, free
+        "C": "balanced",  # Gap analysis — Qwen, free
+        "D": "premium",   # Hypothesis — Claude Sonnet $3
+        "E": "local",     # Simulation — no LLM (compute plugins)
+        "F": "premium",   # Dissertation — Claude Sonnet $3
+        "G": "cheap",     # Quality — GPT-4o-mini $0.15
+    }
 
     await _update_phase(job_id, "A: Framing", "Cognitive framing", 0.0)
     from src.pipeline.discovery_phases.phase_1_cognitive import run_cognitive_framing

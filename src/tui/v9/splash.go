@@ -126,7 +126,7 @@ func (m SplashModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.crystalFrame++
 			}
 			// Update morphLines to current crystal frame so View() shows it
-			forms := buildCrystalFrames(m.seedArt, m.artHeight(), m.isCompact(), m.rng)
+			forms := buildCrystalFrames(m.seedArt, m.artHeight(), m.isCompact(), m.rng, FinalFormTargetCenterSplash(m.artHeight(), m.isCompact()))
 			m.forms = forms
 			if m.crystalFrame < len(forms) {
 				m.morphLines = make([]string, len(forms[m.crystalFrame]))
@@ -205,7 +205,7 @@ func (m SplashModel) startDissolve() (tea.Model, tea.Cmd) {
 	m.rng.Seed(time.Now().UnixNano())
 	// Build the multi-frame dissolve sequence:
 	// 12 crystal frames → 4 dissolve forms (seed→noise→C4R→final)
-	crystalForms := buildCrystalFrames(m.seedArt, m.artHeight(), m.isCompact(), m.rng)
+	crystalForms := buildCrystalFrames(m.seedArt, m.artHeight(), m.isCompact(), m.rng, FinalFormTargetCenterSplash(m.artHeight(), m.isCompact()))
 	dissolveForms := buildSplashForms(m.artHeight(), m.seedArt, m.isCompact(), m.rng)
 	// Concatenate: crystal first, then dissolve
 	m.forms = append(crystalForms, dissolveForms...)
@@ -479,17 +479,38 @@ func buildSplashFinalForm(h int, compact bool) []string {
 //   frame 9:  full brightness
 //   frame 10: pre-morph — colors starting to shift toward green/yellow
 //   frame 11: morph start — last frame before dissolve
-func buildCrystalFrames(seedArt string, h int, compact bool, rng *rand.Rand) [][]string {
+func buildCrystalFrames(seedArt string, h int, compact bool, rng *rand.Rand, targetCenter float64) [][]string {
+	// v9.11.5: strip ANSI escape codes from seedArt before any
+	// width measurements. v8RawANSISmall is 170 visible chars PLUS
+	// 14-rune ANSI escape sequences per line, so lenRunes() over-
+	// counts and breaks the padToWidthSplash clip logic.
+	seedArt = stripSplashANSI(seedArt)
 	seedLines := splitSplashLines(seedArt)
 	seedLines = padToHeightSplash(seedLines, h)
+	// v9.11.5: clip the seed (purple cube) lines to the final form's
+	// composite width. Otherwise the wide 170-char seed cube drifts
+	// right of the narrower (80-char) final cube + C4R composite.
+	final := buildSplashFinalForm(h, compact)
+	compositeMaxW := 0
+	for _, l := range final {
+		if w := contentWidthSplash(l); w > compositeMaxW {
+			compositeMaxW = w
+		}
+	}
+	if compositeMaxW > 0 {
+		seedLines = padToWidthSplash(seedLines, compositeMaxW)
+	}
 	const framesCount = 12
 	forms := make([][]string, framesCount)
 	// Frame 0: raw seed (purple ANSI, no processing)
 	forms[0] = make([]string, len(seedLines))
 	copy(forms[0], seedLines)
 	// Frame 1-2: horizontal scan (only every 3rd row visible)
+	// v9.11.5 fix: previous code used `row%1` which is ALWAYS 0, so
+	// only forms[1] ever got rows and forms[2] stayed empty. Use
+	// `row%2` to alternate between frames 1 and 2.
 	for row := 0; row < len(seedLines); row++ {
-		forms[1+row%1] = append(forms[1+row%1], seedLines[row])
+		forms[1+row%2] = append(forms[1+row%2], seedLines[row])
 	}
 	// Frame 3-4: scan with progressive reveal
 	for f := 3; f <= 4; f++ {
@@ -567,6 +588,14 @@ func buildCrystalFrames(seedArt string, h int, compact bool, rng *rand.Rand) [][
 			forms[i] = padToWidthSplash(frame, maxW)
 		}
 	}
+	// v9.11.5: also normalize visual centers. Each frame's natural
+	// visual center (weighted mean of [first, last] non-blank col)
+	// can vary between frames because the scramble / scan-line steps
+	// produce lines of different widths. Pad all frames so their
+	// centers align with each other AND with the target center
+	// (the final form's C4R center, computed by the caller via
+	// AlignFormsCenterX).
+	forms = AlignFormsCenterX(forms, targetCenter)
 	return forms
 }
 
@@ -594,12 +623,35 @@ func buildSplashForms(h int, seedArt string, compact bool, rng *rand.Rand) [][]s
 		h = 30
 	}
 	final := buildSplashFinalForm(h, compact)
-	// Form 0: stripped ANSI art (purple crystal)
-	form0 := padToHeightSplash(splitSplashLines(seedArt), h)
+	// v9.11.5: strip ANSI escape codes from seedArt before any
+	// width measurements. Same reason as in buildCrystalFrames —
+	// lenRunes() over-counts when ANSI sequences are present.
+	seedArt = stripSplashANSI(seedArt)
+	// v9.11.5: compute the target X-center from the final form's
+	// C4R block. All earlier forms (purple crystal, noise, C4R
+	// intermediate) will be aligned to this center so the cube
+	// doesn't visually "jump" when transitioning between phases.
+	targetCenter := FinalFormTargetCenterSplash(h, compact)
+	// v9.11.5: clip the purple cube's lines to match the final
+	// composite's max width. Without this, v8RawANSISmall (170 wide)
+	// makes the purple cube drift 40+ cols to the right of the green
+	// cube (80 wide) + C4R (70 wide) composite, producing a
+	// jarring "cube lands left/bottom" jump during the dissolve.
+	compositeMaxW := 0
+	for _, l := range final {
+		if w := contentWidthSplash(l); w > compositeMaxW {
+			compositeMaxW = w
+		}
+	}
+	form0 := splitSplashLines(seedArt)
+	form0 = padToHeightSplash(form0, h)
+	if compositeMaxW > 0 {
+		form0 = padToWidthSplash(form0, compositeMaxW)
+	}
 	// Form 1: heavy noise
 	form1 := make([]string, len(form0))
 	for i := range form0 {
-		form1[i] = scrambleSplashRow(splitSplashLines(seedArt), i, rng)
+		form1[i] = scrambleSplashRow(form0, i, rng)
 	}
 	// Form 2: C4R block
 	var c4r []string
@@ -609,7 +661,10 @@ func buildSplashForms(h int, seedArt string, compact bool, rng *rand.Rand) [][]s
 		c4r = padToMaxWidthSplash(splitSplashLines(bigC4R))
 	}
 	form2 := padToHeightSplash(c4r, h)
-	return [][]string{form0, form1, form2, final}
+	// Align all forms to the target center so the X-position of the
+	// cube is stable from the first crystal frame to the final form.
+	aligned := AlignFormsCenterX([][]string{form0, form1, form2, final}, targetCenter)
+	return aligned
 }
 
 // pickANSI selects the best ANSI art for terminal dimensions.
@@ -856,6 +911,101 @@ func visualCenterColumnSplash(lines []string) float64 {
 		return 0
 	}
 	return sum / float64(count)
+}
+
+// shiftLinesBySplash prepends `n` spaces to every non-blank line in
+// `lines` (no-op for blank lines or n=0). Negative n is treated as 0
+// to avoid strings.Repeat panicking. Used to align visual centers.
+func shiftLinesBySplash(lines []string, n int) []string {
+	if n <= 0 {
+		return lines
+	}
+	pad := strings.Repeat(" ", n)
+	out := make([]string, len(lines))
+	for i, l := range lines {
+		if strings.TrimSpace(l) == "" {
+			out[i] = l
+		} else {
+			out[i] = pad + l
+		}
+	}
+	return out
+}
+
+// AlignFormsCenterX shifts each form so its visual center sits at
+// `target` (column). Used to align all 12 crystal frames, all
+// dissolve forms, and the final form to the same X-center so the
+// cube doesn't "jump" when transitioning between phases. v9.11.5.
+func AlignFormsCenterX(forms [][]string, target float64) [][]string {
+	if len(forms) == 0 {
+		return forms
+	}
+	// v9.11.5: align first, then pad. Compute shifts for each form
+	// to center on `target`, apply the shifts, THEN find the
+	// post-shift max width and pad to it. This way the post-shift
+	// width = original_max + |shift| (which is what we want: shift
+	// adds left padding, so the right edge stays aligned at the same
+	// X column).
+	shifts := make([]int, len(forms))
+	maxShift := 0
+	for i, f := range forms {
+		center := visualCenterColumnSplash(f)
+		shift := int(target - center)
+		if shift < 0 {
+			shift = 0
+		}
+		shifts[i] = shift
+		if shift > maxShift {
+			maxShift = shift
+		}
+	}
+	// First: apply shifts to all forms.
+	for i, f := range forms {
+		if shifts[i] > 0 {
+			forms[i] = shiftLinesBySplash(f, shifts[i])
+		}
+	}
+	// Second: find the max content width across all (now shifted)
+	// forms, and pad every form to that width. Since shift only
+	// adds left padding, the right edge of every form sits at the
+	// same X column, producing a clean visual alignment.
+	maxW := 0
+	for _, f := range forms {
+		for _, l := range f {
+			w := contentWidthSplash(l)
+			if w > maxW {
+				maxW = w
+			}
+		}
+	}
+	if maxW > 0 {
+		for i, f := range forms {
+			forms[i] = padToWidthSplash(f, maxW)
+		}
+	}
+	return forms
+}
+
+// FinalFormTargetCenterSplash returns the X-column that the final
+// form's C4R block is centered on. Other forms should target this
+// column so transitions between phases are seamless.
+func FinalFormTargetCenterSplash(h int, compact bool) float64 {
+	final := buildSplashFinalForm(h, compact)
+	// Find the C4R block (last non-empty line range in `final`).
+	if len(final) == 0 {
+		return 0
+	}
+	c4rStart := -1
+	for i, l := range final {
+		if c4rStart < 0 && strings.Contains(l, "111111111111111111") {
+			c4rStart = i
+		}
+	}
+	if c4rStart < 0 {
+		return 0
+	}
+	c4rBlock := final[c4rStart:]
+	return visualCenterColumnSplash(c4rBlock)
 }
 
 func (m SplashModel) coloredArtLines(primary, success, accent, muted, highlight string) []string {

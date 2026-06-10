@@ -126,3 +126,7 @@ settings.save_history.desc = "Продолжайте передавать тел
 settings.telemetry = "Телеметрия"
 settings.telemetry.desc = "Провести статистику (сбросить данные для каждой сессии)."
 achievement.unlocked = "Достижение разблокировано!"
+subtitle.line1 = "Креативные и разрушительные идеи"
+subtitle.line2 = "Прямо у ваших пальцев"
+easter.line1 = "о'лскульный русский science"
+easter.line2 = "♭ Garmon doloy — bito useyut ♭"

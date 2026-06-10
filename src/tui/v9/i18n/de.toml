@@ -126,3 +126,7 @@ settings.save_history.desc = "Nach jeder Ausführung weiterhin Telemetrie senden
 settings.telemetry = "Telemetrie"
 settings.telemetry.desc = "Statistiken berechnen (jede Sitzung neu starten)."
 achievement.unlocked = "Erfolg gelöst!"
+subtitle.line1 = "Kreative & zerstörerische Erkenntnisse"
+subtitle.line2 = "An der Handfläche"
+easter.line1 = "о'лскульный русский science"
+easter.line2 = "♭ Garmon doloy — bito useyut ♭"

@@ -102,6 +102,11 @@ func TestSplash_View_LoadingMessage(t *testing.T) {
 func TestSplash_View_ContainsTagline(t *testing.T) {
 	m := NewSplash("v9.9.0", "abc1234")
 	m.width, m.height = 120, 40
+	// Advance from crystal→dissolve→waiting (where tagline text appears)
+	updated, _ := m.Update(tea.KeyPressMsg{Code: ' '})
+	m = updated.(SplashModel)
+	updated, _ = m.Update(tea.KeyPressMsg{Code: ' '})
+	m = updated.(SplashModel)
 	v := m.View()
 	content := v.Content
 	// v.Content is wrapped (lipgloss centering may add spaces)
@@ -219,6 +224,11 @@ func TestSplash_FadeoutCompletes(t *testing.T) {
 func TestSplash_CompactMode_ShowsCompactArt(t *testing.T) {
 	m := NewSplash("v9.9.0", "")
 	m.width, m.height = 80, 25 // < 30, compact
+	// Advance from crystal→dissolve→waiting (where text appears)
+	updated, _ := m.Update(tea.KeyPressMsg{Code: ' '})
+	m = updated.(SplashModel)
+	updated, _ = m.Update(tea.KeyPressMsg{Code: ' '})
+	m = updated.(SplashModel)
 	v := m.View()
 	content := v.Content
 	if !strings.Contains(content, "C4REQBER") {

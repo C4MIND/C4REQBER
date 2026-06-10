@@ -126,3 +126,7 @@ settings.save_history.desc = "يتم الحفاظ على البيانات الت
 settings.telemetry = "ترانسليتي"
 settings.telemetry.desc = "قم بإجراء إحصاءات (إعادة تعيين كل جلسة)."
 achievement.unlocked = "الإنجاز تم فتحه!"
+subtitle.line1 = "إبداعي ودموي في الرؤى"
+subtitle.line2 = "في أصابعك"
+easter.line1 = "о'лскульный русский science"
+easter.line2 = "♭ Garmon doloy — bito useyut ♭"

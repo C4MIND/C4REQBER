@@ -20,6 +20,8 @@ import (
 
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
+
+	"github.com/figuramax/c4reqber-tui-v9/i18n"
 )
 
 // SplashDoneMsg signals that the splash sequence has finished.
@@ -51,7 +53,7 @@ type SplashModel struct {
 const (
 	splashFormDuration  = 10 // ticks per morph form
 	splashTickInterval  = 90 * time.Millisecond  // slower morph (was 60ms)
-	splashCrystalDelay  = 4 * time.Second         // longer hold (was 3s)
+	splashCrystalDelay  = 6 * time.Second         // longer hold (v9.10.3: 4s→6s for visible animation)
 	splashArtReserve    = 14                       // tagline+motto+version+status+footer+spacers+tier
 	splashPulseInterval = 650 * time.Millisecond  // calmer pulse (was 400ms)
 	splashTextFade      = 120 * time.Millisecond  // slower text fade-in
@@ -399,6 +401,12 @@ func buildSplashFinalForm(h int, compact bool) []string {
 	}
 	cubeLines := splitSplashLines(greenCubeBig)
 	c4rLines := splitSplashLines(bigC4R)
+	// Strip C4R's leading whitespace (7 spaces) so the "4" letter's vertical
+	// bar aligns with the cube's center column. v8 used 7 leading spaces which
+	// made the "4" sit 7 cols to the right of the cube's visual center.
+	for i, l := range c4rLines {
+		c4rLines[i] = strings.TrimLeft(l, " ")
+	}
 	// Cube: use full line widths (all 80 chars). Cube content is centered in
 	// each line by the original art, so we just left-align all lines.
 	// (No trimming — would shrink them.)
@@ -811,20 +819,31 @@ func (m SplashModel) splashTextLines(primary, success, accent, muted, highlight 
 	primaryStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color(primary))
 	mutedStyle := lipgloss.NewStyle().Foreground(lipgloss.Color(muted))
 	highlightStyle := lipgloss.NewStyle().Foreground(lipgloss.Color(highlight))
+	greenStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("2"))  // for "Shift"
+	redOrangeStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("9"))  // for "paradigms"
+	easterStyle := lipgloss.NewStyle().Italic(true).Foreground(lipgloss.Color("6"))  // easter egg
 
-	// Spacer
-	lines := []string{""}
+	var lines []string
+
+	// Subtitle (1 line, dim) — combines the 2 lines via " · " separator
+	sub1 := i18n.T("subtitle.line1")
+	sub2 := i18n.T("subtitle.line2")
+	tagline := primaryStyle.Render("COGNITIVE EXOSKELETON FOR AI-AGENTS AND HUMANS")
+	subtitleCombined := mutedStyle.Render(sub1 + "  ·  " + sub2)
+	lines = append(lines, subtitleCombined)
 
 	// Tagline
-	tagline := primaryStyle.Render("COGNITIVE EXOSKELETON FOR AI-AGENTS AND HUMANS")
 	lines = append(lines, tagline)
 
 	// Motto (visible in dissolve & waiting)
+	// "Discover.  Invent.  Shift paradigms." — "Shift" green, "paradigms" red-orange
 	if m.phase != "crystal" {
-		d := mutedStyle.Render("Discover.  ")
-		i := highlightStyle.Render("Invent.  ")
-		s := primaryStyle.Render("Shift paradigms.")
-		motto := d + i + s
+		discover := mutedStyle.Render("Discover.  ")
+		invent := highlightStyle.Render("Invent.  ")
+		shift := greenStyle.Render("Shift")
+		space := mutedStyle.Render(" ")
+		paradigms := redOrangeStyle.Render("paradigms.")
+		motto := discover + invent + shift + space + paradigms
 		lines = append(lines, motto)
 	}
 
@@ -858,6 +877,12 @@ func (m SplashModel) splashTextLines(primary, success, accent, muted, highlight 
 	// Footer
 	footer := mutedStyle.Render("GitLab · c4reqber · Z₃³")
 	lines = append(lines, footer)
+
+	// Easter egg (dim, only in waiting phase — rare sighting, vibe farm)
+	if m.phase == "waiting" {
+		easter := easterStyle.Render(i18n.T("easter.line1") + "  ·  " + i18n.T("easter.line2"))
+		lines = append(lines, easter)
+	}
 
 	return lines
 }

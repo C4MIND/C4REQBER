@@ -84,6 +84,13 @@ type model struct {
 
 	// Mouse click zones (tracked for clickable cards)
 	zoneIDs []string
+
+	// Achievements + meta
+	achievements     *AchievementSystem
+	completedDisc    int
+	langsSeen        map[string]bool
+	lastQuality      float64
+	lastPapersCount int
 }
 
 // message types for bubbletea
@@ -145,18 +152,20 @@ func NewApp(apiURL string) *model {
 	vp.MouseWheelEnabled = true
 
 	m := &model{
-		apiURL: apiURL,
-		api:    api.New(apiURL),
-		mode:   ModeDiscover,
-		ta:     ta,
-		vp:     vp,
-		focus:  true,
-		follow: true,
-		rain:   effects.NewRain(),
-		burst:  effects.NewBurst(),
-		slide:  effects.NewSlideIn(),
-		typew:  effects.NewTypewriter(),
-		sparks: effects.NewSparkles(),
+		apiURL:       apiURL,
+		api:          api.New(apiURL),
+		mode:         ModeDiscover,
+		ta:           ta,
+		vp:           vp,
+		focus:        true,
+		follow:       true,
+		rain:         effects.NewRain(),
+		burst:        effects.NewBurst(),
+		slide:        effects.NewSlideIn(),
+		typew:        effects.NewTypewriter(),
+		sparks:       effects.NewSparkles(),
+		achievements: NewAchievements(),
+		langsSeen:    map[string]bool{"EN": true},
 	}
 	m.appendCard(Card{Kind: CardEmpty, Title: i18n.T("empty.title"), Body: i18n.T("empty.hint"), Time: time.Now()})
 	return m

@@ -55,7 +55,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		return m, m.pollTickCmd()
 
-	case sseEventMsg:
+		case sseEventMsg:
 		// SSE event from /v8/discover/stream/{job_id}
 		if m.sseCancel != nil {
 			// don't replace — we'll continue streaming the existing connection
@@ -75,8 +75,12 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					hc := Card{Kind: CardHypothesis, Title: i18n.T("card.hypothesis.t"), Body: fieldString(hyp, "text"), Meta: []string{"source: " + fieldString(hyp, "source")}, Time: time.Now(), Status: "done"}
 					m.appendCard(hc)
 					m.typew.Set(fieldString(hyp, "text"), m.tick)
+					if novelty, ok := hyp["novelty_score"].(float64); ok {
+						m.lastQuality = novelty
+					}
 				}
 				if papers, ok := result["papers"].([]any); ok {
+					m.lastPapersCount = len(papers)
 					for i, p := range papers {
 						if i >= 3 {
 							break
@@ -85,6 +89,8 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 						m.appendCard(Card{Kind: CardPaper, Title: fieldString(pm, "title"), Body: fmt.Sprintf("%s · %s · citations %s", fieldString(pm, "venue"), fieldString(pm, "year"), fieldString(pm, "citation_count")), Meta: []string{"doi: " + fieldString(pm, "doi"), "source: " + fieldString(pm, "source")}, Time: time.Now(), Status: "done"})
 					}
 				}
+				m.completedDisc++
+				m.checkAchievements()
 			}
 		}
 		// Continue streaming
@@ -144,7 +150,18 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			default:
 				m.mode = ModeDiscover
 			}
-			m.toast = "Mode: " + string(m.mode)
+			modeName := string(m.mode)
+			if l := i18n.T("mode." + strings.ToLower(string(m.mode))); l != "mode."+strings.ToLower(string(m.mode)) {
+				modeName = l
+			}
+			m.toast = i18n.T("keymap.cycle_mode") + ": " + modeName
+			return m, nil
+		case "L":
+			// Shift+L — cycle language (right-to-left: EN→RU→ZH→JA→DE→AR→HI)
+			next := cycleLangName(i18n.GetLang())
+			i18n.SetLang(next)
+			m.langsSeen[string(next)] = true
+			m.toast = i18n.T("lang.name") + ": " + string(next)
 			return m, nil
 		}
 		m.sparks.Emit(2, 0, 3)
@@ -243,6 +260,8 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.appendCard(hc)
 				m.typew.Set(fieldString(hyp, "text"), m.tick)
 			}
+			m.completedDisc++
+			m.checkAchievements()
 		}
 		return m, nil
 
@@ -307,6 +326,28 @@ func (m *model) appendCard(c Card) {
 	// Track zone ID for mouse click routing
 	zoneID := fmt.Sprintf("card-%d", c.Time.UnixNano())
 	m.zoneIDs = append(m.zoneIDs, zoneID)
+}
+
+// checkAchievements evaluates unlocks and appends achievement cards.
+func (m *model) checkAchievements() {
+	langs := make([]string, 0, len(m.langsSeen))
+	for l := range m.langsSeen {
+		langs = append(langs, l)
+	}
+	seconds := time.Since(m.startedAt).Seconds()
+	if m.startedAt.IsZero() {
+		seconds = 0
+	}
+	unlocked := m.achievements.Check(m.completedDisc, m.lastQuality, m.lastPapersCount, seconds, langs)
+	for _, a := range unlocked {
+		m.appendCard(Card{
+			Kind:   CardPhase,
+			Title:  "🏆 " + i18n.T(a.Name),
+			Body:   i18n.T(a.Description) + "  " + a.UnlockedAt.Format("15:04:05"),
+			Time:   a.UnlockedAt,
+			Status: "done",
+		})
+	}
 }
 
 func (m *model) rebuildFeedContent() {

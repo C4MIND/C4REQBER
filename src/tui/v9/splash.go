@@ -38,6 +38,7 @@ type SplashModel struct {
 	textTick    int    // progressive text fade-in
 	pulseTick   int    // cube shimmer in waiting phase
 	bloomFrame  int    // progressive cube bloom-in (waiting phase)
+	aurora      *BioAurora
 	rng         *rand.Rand
 	appVersion  string
 	gitRef      string // e.g. "v9.4.0 (abcdef0)"
@@ -71,6 +72,7 @@ func NewSplash(version, gitRef string) SplashModel {
 		gitRef:       gitRef,
 		seedArt:      seed,
 		crystalStart: time.Now(),
+		aurora:       NewBioAurora(),
 	}
 }
 
@@ -139,6 +141,10 @@ func (m SplashModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			// Bloom-in: cube expands from center over splashBloomFrames frames
 			if m.bloomFrame < splashBloomFrames {
 				m.bloomFrame++
+			}
+			// Bio-aurora clock: advance based on real time (smooth, not frame-based)
+			if m.aurora != nil {
+				m.aurora.Tick(time.Since(m.crystalStart).Seconds())
 			}
 			// Shimmer the final form
 			lines := make([]string, len(m.forms[len(m.forms)-1]))
@@ -582,7 +588,6 @@ func lenRunes(s string) int {
 
 func (m SplashModel) coloredArtLines(primary, success, accent, muted, highlight string) []string {
 	primaryStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color(primary))
-	successStyle := lipgloss.NewStyle().Foreground(lipgloss.Color(success))
 	mutedStyle := lipgloss.NewStyle().Foreground(lipgloss.Color(muted))
 
 	var artLines []string
@@ -610,15 +615,13 @@ func (m SplashModel) coloredArtLines(primary, success, accent, muted, highlight 
 		// Apply progressive bloom-in over splashBloomFrames frames
 		artLines = m.morphLines
 		bloomedArt := BloomFrame(artLines, m.bloomFrame, splashBloomFrames)
-		// Apply shimmer to bloomed art (every 3rd frame shifts color hue)
-		if m.bloomFrame >= splashBloomFrames {
+		// After bloom completes: apply bio-aurora color modulation
+		// (smooth wave-based palette shifting, sub-1Hz, no epilepsy)
+		if m.bloomFrame >= splashBloomFrames && m.aurora != nil {
 			for i, line := range bloomedArt {
-				half := len(bloomedArt) / 2
-				if i < half {
-					bloomedArt[i] = successStyle.Render(line)
-				} else {
-					bloomedArt[i] = primaryStyle.Render(line)
-				}
+				// Strip ANSI to get plain text, then re-color with bio-aurora
+				plain := stripSplashANSI(line)
+				bloomedArt[i] = m.aurora.RenderAurora(plain, i, primaryStyle)
 			}
 		} else {
 			// During bloom-in: use single color (primary) for cohesion

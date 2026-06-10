@@ -197,6 +197,13 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.toast = i18n.T("help.hidden")
 			}
 			return m, nil
+		case "ctrl+y":
+			m.llmTier = CycleLLMTier(m.llmTier)
+			if m.tel != nil {
+				// Tier tracking is in-model; snapshot picks it up on save
+			}
+			m.toast = "🧠 LLM " + m.llmTier.FormatTierBadge()
+			return m, nil
 		case "shift+L":
 			// Shift+L — cycle language (right-to-left: EN→RU→ZH→JA→DE→AR→HI)
 			next := cycleLangName(i18n.GetLang())

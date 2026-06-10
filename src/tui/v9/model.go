@@ -109,6 +109,12 @@ type model struct {
 
 	// saveHistory controls whether telemetry history is persisted on shutdown
 	saveHistory bool
+
+	// llmTier is the LLM depth tier (C1/C2/C3) — switchable via Ctrl+Y
+	llmTier LLMTier
+
+	// colorProfile is the active color profile (default/high-contrast/dalt)
+	colorProfile ColorProfile
 }
 
 // message types for bubbletea
@@ -194,6 +200,8 @@ func NewApp(apiURL string) *model {
 		tel:          telemetry.New(),
 		dream:        NewDreamState(),
 		saveHistory:  true,
+		llmTier:      TierC2,
+		colorProfile: ProfileDefault,
 	}
 	// Load persisted state (achievements, langs). If store fails, fall back gracefully.
 	store, storeErr := persist.New(persist.DefaultPath())

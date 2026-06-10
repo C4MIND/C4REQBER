@@ -22,12 +22,13 @@ import (
 )
 
 // version is set at build time via -ldflags "-X main.version=..."
-var version = "v9.6.0-dev"
+var version = "v9.7.0"
 
 func main() {
 	demoMode := false
 	showConfig := false
 	showVersion := false
+	showStats := false
 	topic := "design a CRISPR guide RNA with minimal off-targets in T-cells"
 	for _, arg := range os.Args[1:] {
 		switch arg {
@@ -37,6 +38,8 @@ func main() {
 			showVersion = true
 		case "--config":
 			showConfig = true
+		case "--stats":
+			showStats = true
 		}
 	}
 
@@ -52,6 +55,10 @@ func main() {
 	if showConfig {
 		fmt.Printf("c4tui-v9 %s\n", version)
 		fmt.Printf("Config: %s\n", cfg.String())
+		return
+	}
+	if showStats {
+		runStats()
 		return
 	}
 
@@ -99,6 +106,23 @@ func saveHistory(cfg tui.Config) {
 	// For now, this is a no-op stub — full implementation deferred to v9.7
 	// where we add a hook to pass tel back from model to main.
 	_ = cfg
+}
+
+func runStats() {
+	fmt.Printf("c4tui-v9 %s — telemetry stats\n", version)
+	files, err := tui.LoadAllHistoryFiles()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "load history: %v\n", err)
+		os.Exit(1)
+	}
+	if len(files) == 0 {
+		fmt.Println("No history files found in ~/.config/c4reqber/")
+		fmt.Println("(Run c4tui-v9 at least once to generate history.)")
+		return
+	}
+	stats := tui.Aggregate(files)
+	fmt.Printf("Loaded %d history file(s) from ~/.config/c4reqber/\n\n", len(files))
+	fmt.Print(stats.FormatStats())
 }
 
 // Silence unused import in case drop a path.

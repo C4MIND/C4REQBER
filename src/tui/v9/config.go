@@ -21,6 +21,8 @@ type Config struct {
 	Height    int
 	ExtraQuotes []string // env C4_DREAM_QUOTES (newline-separated)
 	SaveHistory bool    // env C4_SAVE_HISTORY (default true)
+	LLMTier   LLMTier   // env C4_LLM_TIER (C1/C2/C3, default C2)
+	ColorProfile ColorProfile // env C4_COLOR_PROFILE
 }
 
 // DefaultConfig returns a Config with sensible defaults.
@@ -34,6 +36,8 @@ func DefaultConfig() Config {
 		Height:      0,
 		ExtraQuotes: nil,
 		SaveHistory: true,
+		LLMTier:     TierC2,
+		ColorProfile: ProfileDefault,
 	}
 }
 
@@ -93,6 +97,16 @@ func LoadConfig() Config {
 			cfg.SaveHistory = false
 		}
 	}
+	if v := os.Getenv("C4_LLM_TIER"); v != "" {
+		if t, ok := TierFromString(v); ok {
+			cfg.LLMTier = t
+		}
+	}
+	if v := os.Getenv("C4_COLOR_PROFILE"); v != "" {
+		if p, ok := ProfileFromString(v); ok {
+			cfg.ColorProfile = p
+		}
+	}
 	return cfg
 }
 
@@ -100,6 +114,7 @@ func LoadConfig() Config {
 func (c Config) String() string {
 	var b strings.Builder
 	b.WriteString(fmt.Sprintf("API=%s Lang=%s DreamIdle=%ds", c.APIURL, c.Lang, c.DreamIdle))
+	b.WriteString(fmt.Sprintf(" LLM=%s Profile=%s", c.LLMTier, c.ColorProfile))
 	if c.NoColor {
 		b.WriteString(" NoColor")
 	}
@@ -126,6 +141,12 @@ func (c Config) ApplyToModel(m *model) {
 	if len(c.ExtraQuotes) > 0 {
 		// Append to dream quotes (mutates package var)
 		dreamQuotes = append(dreamQuotes, c.ExtraQuotes...)
+	}
+	if c.LLMTier != 0 {
+		m.llmTier = c.LLMTier
+	}
+	if c.ColorProfile != 0 {
+		m.colorProfile = c.ColorProfile
 	}
 }
 

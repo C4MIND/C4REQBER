@@ -18,6 +18,8 @@ type Snapshot struct {
 	DiscoveriesFail  int           `json:"discoveries_fail"`
 	DiscoveriesAbort int           `json:"discoveries_aborted"`
 	ModeUseCount     ModeCount     `json:"mode_use_count"`
+	LLMTier          string        `json:"llm_tier,omitempty"`
+	ColorProfile     string        `json:"color_profile,omitempty"`
 	LangUseCount     ModeCount     `json:"lang_use_count"`
 	TotalLatencySec  float64       `json:"total_latency_sec"`
 	LongestRunSec    float64       `json:"longest_run_sec"`

@@ -204,9 +204,21 @@ func TestHistory_SaveTelemetryHistory_CreatesFile(t *testing.T) {
 	saveTelemetryHistory(tel, cfg)
 	// Wait briefly for write
 	time.Sleep(50 * time.Millisecond)
-	path := filepath.Join(tmp, ".config", "c4reqber", "tui-v9-history.json")
-	if _, err := os.Stat(path); err != nil {
-		t.Errorf("history file not created: %v", err)
+	// New format: timestamped files (one per run)
+	dir := filepath.Join(tmp, ".config", "c4reqber")
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		t.Fatalf("history dir not created: %v", err)
+	}
+	found := false
+	for _, e := range entries {
+		if strings.HasPrefix(e.Name(), "tui-v9-history-") {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Errorf("no timestamped history file in: %v", entries)
 	}
 }
 

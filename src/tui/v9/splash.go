@@ -401,48 +401,67 @@ func buildSplashFinalForm(h int, compact bool) []string {
 	}
 	cubeLines := splitSplashLines(greenCubeBig)
 	c4rLines := splitSplashLines(bigC4R)
-	// Strip C4R's leading whitespace (7 spaces) so the "4" letter's vertical
-	// bar aligns with the cube's center column. v8 used 7 leading spaces which
-	// made the "4" sit 7 cols to the right of the cube's visual center.
+	// Strip C4R's leading whitespace so the "4" letter's vertical bar
+	// aligns with the cube's center column.
 	for i, l := range c4rLines {
 		c4rLines[i] = strings.TrimLeft(l, " ")
 	}
-	// Cube: use full line widths (all 80 chars). Cube content is centered in
-	// each line by the original art, so we just left-align all lines.
-	// (No trimming — would shrink them.)
-	// C4R: each line has different content extent. Find max content width.
-	maxCube := 0
-	for _, l := range cubeLines {
-		if w := lenRunes(l); w > maxCube {
-			maxCube = w
+	// v9.11.4: align cube and C4R by their VISUAL centers, not by
+	// their max line widths. The cube art has irregular leading
+	// whitespace per line (it's a 3D diamond), and treating the
+	// longest line as "the width" made the cube's visual center drift
+	// right of the C4R's. We measure each block's weighted center
+	// and shift the cube to match the C4R.
+	cubeCenter := visualCenterColumnSplash(cubeLines)
+	c4rCenter := visualCenterColumnSplash(c4rLines)
+	shift := int(c4rCenter - cubeCenter)
+	if shift > 0 {
+		// Pad cube lines on the left to shift it right.
+		for i, l := range cubeLines {
+			cubeLines[i] = strings.Repeat(" ", shift) + l
+		}
+	} else if shift < 0 {
+		// Pad c4r lines on the left to shift it right.
+		absShift := -shift
+		for i, l := range c4rLines {
+			c4rLines[i] = strings.Repeat(" ", absShift) + l
 		}
 	}
-	// C4R: each line has its own left-padding. Find the maximum line width
-	// across all c4r lines (after splitting), then use that as target.
+	// C4R: each line has different content extent. Use content width
+	// (not lenRunes) so trailing whitespace doesn't inflate it.
 	maxC4R := 0
 	for _, l := range c4rLines {
-		if w := lenRunes(l); w > maxC4R {
+		if w := contentWidthSplash(l); w > maxC4R {
 			maxC4R = w
 		}
 	}
 	// Pad c4r lines to maxC4R (so trailing edge is uniform within c4r)
 	c4rLines = padToWidthSplash(c4rLines, maxC4R)
-	// Use the larger of the two as overall max
+	// Use the larger of cube's content width and c4r's content width.
+	// We compare content widths, not lenRunes, so trailing padding
+	// doesn't push the centroid off-center.
+	maxCube := 0
+	for _, l := range cubeLines {
+		if w := contentWidthSplash(l); w > maxCube {
+			maxCube = w
+		}
+	}
 	maxArt := maxCube
 	if maxC4R > maxArt {
 		maxArt = maxC4R
 	}
-	// Pad all lines to maxArt (right-pad only)
+	// Pad all lines to maxArt (right-pad only) so the trailing edge
+	// of the composite block is uniform.
 	allLines := make([]string, 0, len(cubeLines)+1+len(c4rLines))
 	for _, l := range cubeLines {
-		if pad := maxArt - lenRunes(l); pad > 0 {
+		if pad := maxArt - contentWidthSplash(l); pad > 0 {
 			l = l + strings.Repeat(" ", pad)
 		}
 		allLines = append(allLines, l)
 	}
 	allLines = append(allLines, "") // spacer
 	for _, l := range c4rLines {
-		if pad := maxArt - lenRunes(l); pad > 0 {
+		if pad := maxArt - contentWidthSplash(l); pad > 0 {
 			l = l + strings.Repeat(" ", pad)
 		}
 		allLines = append(allLines, l)
@@ -777,6 +796,66 @@ func (m SplashModel) View() tea.View {
 // lenRunes returns the visible (rune) length of s.
 func lenRunes(s string) int {
 	return len([]rune(s))
+}
+
+// contentWidthSplash returns the width of the visible (non-trailing-space)
+// content of s. Used for centering art where each line has irregular
+// trailing whitespace. v9.11.4: cube and C4R were both padded to lenRunes()
+// which counted trailing spaces — this miscentered the cube because its
+// art has variable padding per line and the trailing spaces made it look
+// "wider" than its actual content. Now we measure content width (after
+// right-trim) so the visual center of the cube and the visual center
+// of the C4R end up at the same X column.
+func contentWidthSplash(s string) int {
+	return lenRunes(strings.TrimRight(s, " "))
+}
+
+// findFirstNonBlank returns the column index of the first non-space
+// rune in s, or -1 if the line is all whitespace.
+func findFirstNonBlank(s string) int {
+	for i, r := range s {
+		if r != ' ' {
+			return i
+		}
+	}
+	return -1
+}
+
+// findLastNonBlank returns the column index of the last non-space
+// rune in s, or -1 if the line is all whitespace.
+func findLastNonBlank(s string) int {
+	runes := []rune(s)
+	for i := len(runes) - 1; i >= 0; i-- {
+		if runes[i] != ' ' {
+			return i
+		}
+	}
+	return -1
+}
+
+// visualCenterColumnSplash returns the column (in art-local coords)
+// of the geometric center of the non-blank content across all lines,
+// averaged. Used to align the cube and the C4R so their visual
+// centers coincide.
+func visualCenterColumnSplash(lines []string) float64 {
+	sum, count := 0.0, 0
+	for _, l := range lines {
+		first := findFirstNonBlank(l)
+		last := findLastNonBlank(l)
+		if first < 0 || last < 0 {
+			continue
+		}
+		// Use the midpoint of the [first, last] range, weighted by
+		// the line's own width so wider lines contribute more.
+		width := last - first + 1
+		center := float64(first+last) / 2.0
+		sum += center * float64(width)
+		count += width
+	}
+	if count == 0 {
+		return 0
+	}
+	return sum / float64(count)
 }
 
 func (m SplashModel) coloredArtLines(primary, success, accent, muted, highlight string) []string {

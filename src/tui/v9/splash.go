@@ -284,32 +284,23 @@ func (m SplashModel) shimmerFinalForm(lines []string) []string {
 
 // ── Art constants ────────────────────────────────────────────────────────────
 
-// greenCubeBig is a large ASCII green cube (centered C4R over the cube).
-const greenCubeBig = `
-        .  .. .....::.  ..  .. ...
-      .: .    .  ....  ......::.::.....:.
-     .  .  .::  .....  .  ..... ......  . .
-     .  .  .::  .....  .  ..... ......  . .
-        .  .. .....::.  ..  .. ...
-`
+// greenCubeBig — REAL v8 green cube (28 lines from v8/splash/green_cube.txt).
+// Replaces my "synth snowflake box" placeholder with the actual cube art.
+const greenCubeBig = v8GreenCubeRaw
 
-// bigC4R is the "C4R" letters using block characters.
-const bigC4R = `
-   ████   ██  ██████   ██   ████████  ██████
-  ██  ██  ██  ██  ██  ██     ██     ██  ██
-  ██████  ██  ██████   ██     ██     ██████
-  ██  ██  ██  ██  ██  ██     ██     ██  ██
-  ██████  ██  ██  ██  ██     ██     ██  ██
-`
+// bigC4R — REAL v8 "C4R" letters (11 lines of "1" digits from v8).
+// This is what I missed — was replaced by my "block chars" stub.
+const bigC4R = v8BigC4R
 
-// c4rCompact is the compact-mode C4R (used when height < 30).
-const c4rCompact = `
-   ▓▓▓▓▓   ▓▓   ▓▓▓▓▓   ▓▓    ▓▓    ▓▓▓▓▓
-  ▓▓  ▓▓   ▓▓   ▓▓  ▓▓  ▓▓  ▓▓  ▓▓  ▓▓  ▓▓
-  ▓▓▓▓▓▓   ▓▓   ▓▓  ▓▓  ▓▓  ▓▓▓▓▓  ▓▓▓▓▓▓
-  ▓▓       ▓▓   ▓▓  ▓▓  ▓▓  ▓▓  ▓▓  ▓▓   ▓▓
-  ▓▓       ▓▓   ▓▓▓▓▓   ▓▓   ▓▓   ▓▓   ▓▓
-`
+// c4rCompact — REAL v8 compact C4R (box-drawing, height < 30).
+const c4rCompact = v8AsciiC4R
+
+// bigCrystalLines — REAL v8 purple ANSI crystal (seed art for morph).
+// Used in crystal phase (with ANSI colors visible) and as morph start.
+var bigCrystalLines = v8RawANSI
+
+// smallCrystalLines — REAL v8 small purple crystal (compact).
+var smallCrystalLines = v8RawANSISmall
 
 func splitSplashLines(s string) []string {
 	return strings.Split(strings.Trim(s, "\n"), "\n")
@@ -401,39 +392,9 @@ func (m SplashModel) pickANSI() string {
 	return bigCrystalLines
 }
 
-// bigCrystalLines is a procedurally-generated purple ANSI crystal (v9 doesn't bundle the 80KB v8 file).
-var bigCrystalLines = `
-   ╔══════════════════════════════════════════╗
-   ║   ◈   ◈  C R Y S T A L   ◈  ◈          ║
-   ║                                          ║
-   ║      ·  ·  · 27 STATES ·  ·  ·          ║
-   ║      ╲           │           ╱          ║
-   ║       ╲          │          ╱           ║
-   ║        ╲         │         ╱            ║
-   ║         ╲        │        ╱             ║
-   ║          ╲       │       ╱              ║
-   ║           ╲      │      ╱               ║
-   ║            ╲     │     ╱                ║
-   ║             ╲    │    ╱                 ║
-   ║              ╲   │   ╱                  ║
-   ║               ╲  │  ╱                   ║
-   ║                ╲ │ ╱                    ║
-   ║                 ╲│╱                     ║
-   ║                  V                      ║
-   ╚══════════════════════════════════════════╝
-`
 
-var smallCrystalLines = `
-   ┌────────────────────────┐
-   │  ◈ C4REQBER v9 ◈       │
-   │   27 STATES            │
-   │     ╲   │   ╱          │
-   │      ╲  │  ╱           │
-   │       ╲ │ ╱            │
-   │        ╲│╱             │
-   │         V              │
-   └────────────────────────┘
-`
+
+
 
 func stripSplashANSI(s string) string {
 	return splashAnsiPattern.ReplaceAllString(s, "")
@@ -551,20 +512,18 @@ func (m SplashModel) View() tea.View {
 
 func (m SplashModel) coloredArtLines(primary, success, accent, muted, highlight string) []string {
 	primaryStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color(primary))
-	accentStyle := lipgloss.NewStyle().Foreground(lipgloss.Color(accent))
 	successStyle := lipgloss.NewStyle().Foreground(lipgloss.Color(success))
 	mutedStyle := lipgloss.NewStyle().Foreground(lipgloss.Color(muted))
 
 	var artLines []string
 	switch m.phase {
 	case "crystal":
-		artLines = m.morphLines
-		for i, line := range artLines {
-			if i%2 == 0 {
-				artLines[i] = primaryStyle.Render(line)
-			} else {
-				artLines[i] = accentStyle.Render(line)
-			}
+		// Render raw ANSI crystal as-is. m.morphLines is nil until dissolve starts;
+		// use m.seedArt directly so we always see art in the crystal phase.
+		if len(m.morphLines) > 0 {
+			artLines = m.morphLines
+		} else {
+			artLines = splitSplashLines(m.seedArt)
 		}
 	case "dissolve":
 		// Blend between accent and success
@@ -600,7 +559,6 @@ func (m SplashModel) coloredArtLines(primary, success, accent, muted, highlight 
 func (m SplashModel) splashTextLines(primary, success, accent, muted, highlight string) []string {
 	primaryStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color(primary))
 	mutedStyle := lipgloss.NewStyle().Foreground(lipgloss.Color(muted))
-	accentStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color(accent))
 	highlightStyle := lipgloss.NewStyle().Foreground(lipgloss.Color(highlight))
 
 	// Spacer
@@ -635,7 +593,7 @@ func (m SplashModel) splashTextLines(primary, success, accent, muted, highlight 
 	case "crystal":
 		status = mutedStyle.Render(fmt.Sprintf("booting in %s · press any key to skip", splashCrystalDelay))
 	case "dissolve":
-		status = accentStyle.Render("◆ awakening cube state ◆")
+		status = primaryStyle.Render("◆ awakening cube state ◆")
 	case "waiting":
 		status = highlightStyle.Render("✨ ready · press any key to launch")
 	case "fadeout":

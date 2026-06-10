@@ -131,13 +131,16 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.ta, cmd = m.ta.Update(msg)
 		cmds = append(cmds, cmd)
 
-		switch msg.String() {
-		case "ctrl+c":
+		keyStr := msg.String()
+		km := m.keymap
+		switch {
+
+		case km.Matches(ActQuit, keyStr):
 			if m.saveHistory && m.tel != nil {
 				saveTelemetryHistory(m.tel, m.Config())
 			}
 			return m, tea.Quit
-		case "enter":
+		case km.Matches(ActRun, keyStr):
 			// Wizard: Enter advances / finishes
 			if m.wizard != nil && m.wizard.Active() {
 				m.wizard.Next()
@@ -155,7 +158,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.ta.Reset()
 			m.startDiscovery(val)
 			return m, nil
-		case "esc":
+		case km.Matches(ActCancel, keyStr), km.Matches(ActEscape, keyStr):
 			// Wizard: Esc skips
 			if m.wizard != nil && m.wizard.Active() {
 				m.wizard.Done()
@@ -176,7 +179,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 			}
 			return m, nil
-		case "tab":
+		case km.Matches(ActCycleMode, keyStr):
 			// Cycle mode: DISCOVER → FLASH → TURBO → TURBOFACTORY → DISCOVER
 			switch m.mode {
 			case ModeDiscover:
@@ -197,15 +200,15 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.tel.IncMode(string(m.mode))
 			}
 			return m, nil
-		case "ctrl+t":
+		case km.Matches(ActNewTab, keyStr):
 			m.showTelemetry = !m.showTelemetry
 			if m.showTelemetry {
-				m.toast = "📊 telemetry ON (Ctrl+T to hide)"
+				m.toast = "📊 telemetry ON (" + km.Label(ActNewTab) + " to hide)"
 			} else {
 				m.toast = "📊 telemetry OFF"
 			}
 			return m, nil
-		case "?":
+		case km.Matches(ActHelp, keyStr):
 			m.showHelp = !m.showHelp
 			if m.showHelp {
 				m.toast = i18n.T("help.shown")
@@ -213,16 +216,16 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.toast = i18n.T("help.hidden")
 			}
 			return m, nil
-		case "ctrl+l":
+		case km.Matches(ActReauth, keyStr):
 			// Re-authenticate
 			_ = m.api.Login(context.Background(), "kilo-v9@test.com", "test12345")
-			m.toast = "🔑 re-auth OK"
+			m.toast = "🔑 re-auth OK (" + km.Label(ActReauth) + ")"
 			return m, nil
-		case "/":
+		case km.Matches(ActSearch, keyStr):
 			// Search mode (placeholder: shows search bar)
 			m.toast = "🔍 search: " + strings.TrimSpace(m.ta.Value())
 			return m, nil
-		case "c":
+		case km.Matches(ActCopy, keyStr):
 			// Copy last card as markdown to clipboard (uses pbcopy on macOS)
 			if len(m.feed) > 0 {
 				last := m.feed[len(m.feed)-1]
@@ -231,36 +234,33 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.toast = "📋 copied to clipboard"
 			}
 			return m, nil
-		case "j":
+		case km.Matches(ActJump, keyStr):
 			// Copy last card as JSON
 			if len(m.feed) > 0 {
 				last := m.feed[len(m.feed)-1]
-				_ = copyToClipboard(fmt.Sprintf(`{"title":%q,"body":%q,"time"
-
-	"os/exec"
-	"runtime":%q}`,
+				_ = copyToClipboard(fmt.Sprintf(`{"title":%q,"body":%q,"time":%q}`,
 					last.Title, last.Body, last.Time.Format(time.RFC3339)))
 				m.toast = "📋 copied as JSON"
 			}
 			return m, nil
-		case "ctrl+y":
+		case km.Matches(ActTier, keyStr):
 			m.llmTier = CycleLLMTier(m.llmTier)
 			if m.tel != nil {
 				// Tier tracking is in-model; snapshot picks it up on save
 			}
-			m.toast = "🧠 LLM " + m.llmTier.FormatTierBadge()
+			m.toast = "🧠 LLM " + m.llmTier.FormatTierBadge() + " (" + km.Label(ActTier) + ")"
 			m.PersistSettings()
 			return m, nil
-		case "ctrl+,":
+		case km.Matches(ActSettings, keyStr):
 			// v9.10: toggle settings menu
 			m.settingsVisible = !m.settingsVisible
 			if m.settingsVisible {
-				m.toast = "⚙  settings (↑/↓ to move, Ctrl+, to close)"
+				m.toast = "⚙  settings (↑/↓ to move, " + km.Label(ActSettings) + " to close)"
 			} else {
 				m.toast = "settings closed"
 			}
 			return m, nil
-		case "up":
+		case km.Matches(ActUp, keyStr):
 			if m.settingsVisible {
 				if m.settingsCursor > 0 {
 					m.settingsCursor--
@@ -271,7 +271,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.vp.ScrollUp(1)
 			m.rebuildFeedContent()
 			return m, nil
-		case "down":
+		case km.Matches(ActDown, keyStr):
 			if m.settingsVisible {
 				rows := m.CurrentSettings()
 				if m.settingsCursor < len(rows)-1 {
@@ -283,7 +283,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.vp.ScrollDown(1)
 			m.rebuildFeedContent()
 			return m, nil
-		case "ctrl+shift+p":
+		case km.Matches(ActColorProfile, keyStr), km.Matches(ActProfileMac, keyStr):
 			// Cycle color profile (default → hc → prot → deut → trit → mono → default)
 			switch m.colorProfile {
 			case ProfileDefault:
@@ -302,8 +302,8 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.toast = "🎨 " + m.colorProfile.String()
 			m.PersistSettings()
 			return m, nil
-		case "shift+L":
-			// Shift+L — cycle language (right-to-left: EN→RU→ZH→JA→DE→AR→HI)
+		case km.Matches(ActLang, keyStr):
+			// Cycle language (right-to-left: EN→RU→ZH→JA→DE→AR→HI)
 			next := cycleLangName(i18n.GetLang())
 			i18n.SetLang(next)
 			m.updateLangSeen()

@@ -91,7 +91,10 @@ func (m *model) renderFooter() string {
 		state = "⏵ " + i18n.T("footer.running")
 	}
 	left := " " + state + " "
-	right := " [Enter] " + i18n.T("keymap.run") + "  [?] " + i18n.T("keymap.help") + "  [Ctrl+C] " + i18n.T("keymap.quit") + " "
+	// Use the platform-resolved key labels instead of hardcoded "[Enter]"/"[Ctrl+C]".
+	right := " [" + m.keymap.Label(ActRun) + "] " + i18n.T("keymap.run") +
+		"  [" + m.keymap.Label(ActHelp) + "] " + i18n.T("keymap.help") +
+		"  [" + m.keymap.Label(ActQuit) + "] " + i18n.T("keymap.quit") + " "
 	if m.toast != "" {
 		right = m.toast + "  " + right
 	}

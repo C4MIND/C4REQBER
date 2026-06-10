@@ -112,6 +112,15 @@ func TestStateMachine_LangSwitch(t *testing.T) {
 		_ = "ok"
 	}
 	_ = m
+	// Restore disk state — the lang switch handler calls
+	// PersistSettings which writes to ~/.config/c4reqber/. The defer
+	// above only restores the in-process i18n state.
+	if m.store != nil {
+		s := m.store.GetSettings()
+		s.Lang = "en"
+		m.store.SetSettings(s)
+		_ = m.store.Save()
+	}
 }
 
 func TestStateMachine_CheckAchievements_EmptyModel(t *testing.T) {

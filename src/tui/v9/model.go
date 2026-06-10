@@ -56,6 +56,11 @@ type model struct {
 	width  int
 	height int
 
+	// keymap resolves semantic actions to platform-appropriate key labels
+	// (e.g. Cmd+L on macOS vs Ctrl+L on Linux/Windows). Built once at
+	// startup; read-only thereafter.
+	keymap *KeyMap
+
 	mode      Mode
 	cost      float64
 	running   bool
@@ -203,6 +208,7 @@ func NewAppFresh(apiURL string) *model {
 	m := &model{
 		apiURL:       apiURL,
 		api:          api.New(apiURL),
+		keymap:       NewKeyMap(DetectPlatform()),
 		mode:         ModeDiscover,
 		ta:           ta,
 		vp:           vp,
@@ -241,6 +247,7 @@ func NewApp(apiURL string) *model {
 	m := &model{
 		apiURL:       apiURL,
 		api:          api.New(apiURL),
+		keymap:       NewKeyMap(DetectPlatform()),
 		mode:         ModeDiscover,
 		ta:           ta,
 		vp:           vp,

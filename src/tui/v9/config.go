@@ -152,6 +152,13 @@ func (c Config) ApplyToModel(m *model) {
 
 // HelpOverlay renders a fullscreen keymap help.
 func HelpOverlay(width, height int) string {
+	return HelpOverlayWith(width, height, NewKeyMap(DetectPlatform()))
+}
+
+// HelpOverlayWith renders the help overlay using a specific keymap, so
+// the displayed shortcuts match the active platform (Cmd+L on macOS,
+// Ctrl+L on Linux/Windows, etc.).
+func HelpOverlayWith(width, height int, km *KeyMap) string {
 	if width < 20 {
 		width = 80
 	}
@@ -160,9 +167,23 @@ func HelpOverlay(width, height int) string {
 	}
 	titleStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("3"))
 	sectionStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("6"))
-	keyStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("2")).Width(12)
+	keyStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("2")).Width(14)
 	dimStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("8"))
 	boxStyle := lipgloss.NewStyle().Width(width - 2).Padding(0, 1)
+
+	// Resolve platform-specific keys. Display "Cmd+L / Ctrl+L" if both
+	// are bound (e.g. macOS keeps Ctrl aliases for muscle memory).
+	langKey := FormatKeyList(km.Labels(ActLang))
+	tierKey := FormatKeyList(km.Labels(ActTier))
+	tabKey := km.Label(ActCycleMode)
+	telKey := km.Label(ActNewTab)
+	helpKey := km.Label(ActHelp)
+	cancelKey := km.Label(ActCancel)
+	quitKey := km.Label(ActQuit)
+	runKey := km.Label(ActRun)
+	setKey := FormatKeyList(km.Labels(ActSettings))
+	profKey := FormatKeyList(km.Labels(ActColorProfile))
+	reaKey := km.Label(ActReauth)
 
 	type entry struct{ key, desc string }
 	sections := []struct {
@@ -170,16 +191,20 @@ func HelpOverlay(width, height int) string {
 		entries []entry
 	}{
 		{"Navigation", []entry{
-			{"Tab", i18n.T("help.tab")},
-			{"Shift+L", i18n.T("help.lang")},
-			{"Ctrl+T", i18n.T("help.telemetry")},
-			{"?", i18n.T("help.toggle")},
-			{"Esc", i18n.T("help.cancel")},
-			{"Ctrl+C", i18n.T("help.quit")},
+			{tabKey, i18n.T("help.tab")},
+			{langKey, i18n.T("help.lang")},
+			{tierKey, i18n.T("tier.cycle")},
+			{telKey, i18n.T("help.telemetry")},
+			{helpKey, i18n.T("help.toggle")},
+			{cancelKey, i18n.T("help.cancel")},
+			{quitKey, i18n.T("help.quit")},
 		}},
 		{"Run", []entry{
-			{"Enter", i18n.T("help.run")},
+			{runKey, i18n.T("help.run")},
 			{"mouse", i18n.T("help.mouse")},
+			{profKey, i18n.T("profile.cycle")},
+			{setKey, i18n.T("settings.title")},
+			{reaKey, i18n.T("reauth.success")},
 		}},
 		{"Display", []entry{
 			{"rain", i18n.T("help.rain")},
@@ -189,7 +214,11 @@ func HelpOverlay(width, height int) string {
 	}
 
 	var b strings.Builder
-	b.WriteString(titleStyle.Render("✨ C4REQBER v9 — " + i18n.T("help.title")))
+	title := "✨ C4REQBER v9 — " + i18n.T("help.title")
+	if km != nil {
+		title += " (" + km.Platform.Display() + ")"
+	}
+	b.WriteString(titleStyle.Render(title))
 	b.WriteString("\n\n")
 	for _, s := range sections {
 		b.WriteString(sectionStyle.Render(s.title))

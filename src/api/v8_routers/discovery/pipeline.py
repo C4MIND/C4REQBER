@@ -115,6 +115,7 @@ class OneClickRequest(BaseModel):
     problem: str
     domain: str = "science"
     llm_tier: str = "C2"
+    output_mode: str = "human"  # "human" (clean paper) or "explain" (with pipeline internals)
 
 
 class MultiHypothesisRequest(BaseModel):
@@ -171,6 +172,7 @@ async def one_click_discovery(
         # Maps pipeline phase → quality level (local/cheap/balanced/premium).
         # C1 → cheap, C2 → balanced, C3 → premium. Local requires MLX.
         "llm_tier": request.llm_tier,
+        "output_mode": request.output_mode,
     }
     abort_reasons: list[str] = []
     results["_errors"] = errors

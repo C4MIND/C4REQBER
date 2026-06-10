@@ -28,7 +28,7 @@ func submitCmd(c *api.Client, query, domain, tier string) tea.Cmd {
 		if err := c.Login(ctx, "kilo-v9@test.com", "test12345"); err != nil {
 			return apiSubmitMsg{err: fmt.Errorf("login failed: %w", err)}
 		}
-		id, err := c.OneClickWithTier(ctx, query, domain, tier)
+		id, err := c.OneClickWithTier(ctx, query, domain, tier, "human")
 		return apiSubmitMsg{jobID: id, err: err}
 	}
 }

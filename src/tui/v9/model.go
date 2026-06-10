@@ -118,6 +118,14 @@ type model struct {
 
 	// wizard is the first-run wizard (nil if not active)
 	wizard *WizardState
+
+	// settingsVisible toggles the in-app settings menu UI (Ctrl+,)
+	settingsVisible bool
+	// settingsCursor tracks the currently highlighted row in settings menu
+	settingsCursor int
+
+	// showAchievementOverlay shows the fullscreen unlock animation
+	showAchievementOverlay bool
 }
 
 // message types for bubbletea

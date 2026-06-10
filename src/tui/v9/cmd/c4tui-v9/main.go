@@ -24,7 +24,7 @@ import (
 )
 
 // version is set at build time via -ldflags "-X main.version=..."
-var version = "v9.9.0"
+var version = "v9.10.0"
 
 // gitRef returns the git commit short hash, or empty if not available.
 func gitRef() string {
@@ -37,6 +37,7 @@ func gitRef() string {
 
 func main() {
 	demoMode := false
+	demoStory := ""
 	showConfig := false
 	showVersion := false
 	showStats := false
@@ -48,6 +49,8 @@ func main() {
 		switch {
 		case arg == "--demo":
 			demoMode = true
+		case strings.HasPrefix(arg, "--story="):
+			demoStory = strings.TrimPrefix(arg, "--story=")
 		case arg == "--version" || arg == "-v":
 			showVersion = true
 		case arg == "--config":
@@ -97,7 +100,7 @@ func main() {
 	}
 
 	if demoMode {
-		runDemo(topic)
+		runDemo(topic, demoStory)
 		return
 	}
 
@@ -121,11 +124,19 @@ func main() {
 	}
 }
 
-func runDemo(topic string) {
+func runDemo(topic, story string) {
 	fmt.Println("TUI v9 DEMO MODE — no backend required")
 	fmt.Println("Topic:", topic)
+	if story != "" {
+		fmt.Println("Story:", story)
+	}
 	fmt.Println()
-	script := demo.Default(topic)
+	var script *demo.Script
+	if story != "" {
+		script = demo.Story(story, topic)
+	} else {
+		script = demo.Default(topic)
+	}
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
 	_ = i18n.T("app.title")
@@ -136,6 +147,7 @@ func runDemo(topic string) {
 	}
 	fmt.Println()
 	fmt.Println("Demo complete. Real mode: omit --demo flag.")
+	fmt.Println("Stories: --demo --story=crispr|sleep|lang")
 }
 
 // runSplash displays the splash screen for ~3s then returns.

@@ -56,6 +56,10 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if m.dream != nil {
 			m.dream.Tick()
 		}
+		// Achievement overlay auto-dismiss (v9.10)
+		if m.showAchievementOverlay && !m.achievements.OverlayActive() {
+			m.showAchievementOverlay = false
+		}
 		if m.typew.Active() || m.slide.Active() {
 			m.rebuildFeedContent()
 		}
@@ -254,6 +258,38 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.toast = "🧠 LLM " + m.llmTier.FormatTierBadge()
 			m.PersistSettings()
 			return m, nil
+		case "ctrl+,":
+			// v9.10: toggle settings menu
+			m.settingsVisible = !m.settingsVisible
+			if m.settingsVisible {
+				m.toast = "⚙  settings (↑/↓ to move, Ctrl+, to close)"
+			} else {
+				m.toast = "settings closed"
+			}
+			return m, nil
+		case "up":
+			if m.settingsVisible {
+				if m.settingsCursor > 0 {
+					m.settingsCursor--
+				}
+				return m, nil
+			}
+			// Scroll feed up
+			m.vp.ScrollUp(1)
+			m.rebuildFeedContent()
+			return m, nil
+		case "down":
+			if m.settingsVisible {
+				rows := m.CurrentSettings()
+				if m.settingsCursor < len(rows)-1 {
+					m.settingsCursor++
+				}
+				return m, nil
+			}
+			// Scroll feed down
+			m.vp.ScrollDown(1)
+			m.rebuildFeedContent()
+			return m, nil
 		case "ctrl+shift+p":
 			// Cycle color profile (default → hc → prot → deut → trit → mono → default)
 			switch m.colorProfile {
@@ -295,6 +331,15 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if msg.Button != tea.MouseLeft {
 			return m, nil
 		}
+	case tea.MouseWheelMsg:
+		// v9.10: mouse wheel scrolls feed
+		if msg.Button == tea.MouseWheelUp {
+			m.vp.ScrollUp(3)
+		} else if msg.Button == tea.MouseWheelDown {
+			m.vp.ScrollDown(3)
+		}
+		m.rebuildFeedContent()
+		return m, nil
 		// Check zones for the last 32 cards (we don't track every zone; just most recent)
 		start := 0
 		if len(m.zoneIDs) > 32 {
@@ -484,6 +529,11 @@ func (m *model) checkAchievements() {
 		}
 		if m.tel != nil {
 			m.tel.IncDiscoveryResult(true, seconds)
+		}
+		// Trigger fullscreen achievement overlay (v9.10)
+		if len(unlocked) > 0 {
+			m.showAchievementOverlay = true
+			m.achievements.ShowOverlay(i18n.T(a.Name), 2*time.Second)
 		}
 	}
 }

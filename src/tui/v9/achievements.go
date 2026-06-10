@@ -36,10 +36,14 @@ type Achievement struct {
 
 // AchievementSystem tracks user achievements.
 type AchievementSystem struct {
-	Items      []Achievement
-	Unlocked   int
-	Total      int
-	LastUnlock time.Time
+	Items       []Achievement
+	Unlocked    int
+	Total       int
+	LastUnlock  time.Time
+	// overlayActive + overlayUntil control the fullscreen achievement overlay.
+	overlayActive   bool
+	overlayUntil    time.Time
+	overlayMessage  string // i18n-rendered "🏆 Name · description"
 }
 
 func NewAchievements() *AchievementSystem {
@@ -55,6 +59,88 @@ func NewAchievements() *AchievementSystem {
 		},
 		Total: 7,
 	}
+}
+
+// ShowOverlay triggers a 2s fullscreen achievement overlay.
+// Called by Update when a new achievement is unlocked.
+func (a *AchievementSystem) ShowOverlay(message string, duration time.Duration) {
+	a.overlayActive = true
+	a.overlayUntil = time.Now().Add(duration)
+	a.overlayMessage = message
+}
+
+// HideOverlay clears the overlay (called from Update tick).
+func (a *AchievementSystem) HideOverlay() {
+	a.overlayActive = false
+	a.overlayMessage = ""
+}
+
+// OverlayActive returns true if the achievement overlay should be drawn.
+func (a *AchievementSystem) OverlayActive() bool {
+	if !a.overlayActive {
+		return false
+	}
+	if time.Now().After(a.overlayUntil) {
+		a.overlayActive = false
+		return false
+	}
+	return true
+}
+
+// renderAchievementOverlay returns a fullscreen overlay (centered) for
+// the most recent unlock. Auto-dismisses after the configured duration.
+func renderAchievementOverlay(a AchievementSystem, width, height int) string {
+	// Build big centered card
+	title := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("3")).Render(
+		"🏆  " + i18n.T("achievement.unlocked"))
+	lastUnlock := time.Time{}
+	if a.LastUnlock.IsZero() {
+		lastUnlock = time.Now()
+	} else {
+		lastUnlock = a.LastUnlock
+	}
+	var nameAch Achievement
+	for i := range a.Items {
+		if a.Items[i].UnlockedAt.After(lastUnlock.Add(-time.Second)) {
+			nameAch = a.Items[i]
+			break
+		}
+	}
+	name := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("11")).Render(
+		i18n.T(nameAch.Name))
+	desc := lipgloss.NewStyle().Foreground(lipgloss.Color("7")).Render(
+		i18n.T(nameAch.Description))
+	progress := lipgloss.NewStyle().Foreground(lipgloss.Color("6")).Render(
+		fmt.Sprintf("%d / %d", a.Unlocked, a.Total))
+
+	body := lipgloss.JoinVertical(lipgloss.Center,
+		title,
+		"",
+		name,
+		"",
+		desc,
+		"",
+		progress,
+		"",
+		lipgloss.NewStyle().Foreground(lipgloss.Color("8")).Render(
+			fmt.Sprintf("progress: %d/%d unlocked", a.Unlocked, a.Total)))
+
+	boxStyle := lipgloss.NewStyle().
+		Border(lipgloss.DoubleBorder()).
+		BorderForeground(lipgloss.Color("3")).
+		Padding(2, 4).
+		Width(min(60, width-4))
+
+	centered := lipgloss.Place(width, height, lipgloss.Center, lipgloss.Center, boxStyle.Render(body))
+	return centered
+}
+
+// min returns the minimum of two ints.
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
 }
 
 // Check looks for new unlocks based on run state.

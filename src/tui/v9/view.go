@@ -41,6 +41,15 @@ func (m *model) View() tea.View {
 	if m.dream != nil && m.dream.Active() && !m.showHelp {
 		body = m.dream.Render(m.width, m.height)
 	}
+	// v9.10: settings menu overlay (Ctrl+,)
+	if m.settingsVisible {
+		rows := m.CurrentSettings()
+		body = RenderSettingsMenuWith(rows, m.settingsCursor, m.width, m.height)
+	}
+	// v9.10: achievement fullscreen overlay
+	if m.showAchievementOverlay && !m.showHelp && (m.wizard == nil || !m.wizard.Active()) {
+		body = renderAchievementOverlay(*m.achievements, m.width, m.height)
+	}
 	if rain := m.rain.Render(); rain != "" && !m.burst.Active() && len(m.feed) == 0 {
 		body = overlayRegion(body, rain, 1, m.height-4, m.width)
 	}

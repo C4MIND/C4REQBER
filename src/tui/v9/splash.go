@@ -467,6 +467,10 @@ func splashLerpColor(from, to string, t float64) string {
 // ── View ────────────────────────────────────────────────────────────────────
 
 // View returns the rendered splash screen.
+// Layout (v8 port):
+//   - crystal phase: art centered both axes; text just below art
+//   - dissolve/waiting/fadeout: art+text bottom-anchored with bottomLift
+//   - art horizontal centering: lipgloss.Place (auto-pads to width)
 func (m SplashModel) View() tea.View {
 	if m.width == 0 || m.height == 0 {
 		v := tea.NewView("Loading...")
@@ -486,26 +490,70 @@ func (m SplashModel) View() tea.View {
 	// Text elements
 	textLines := m.splashTextLines(primary, success, accent, muted, highlight)
 
-	// Combine: art (centered) + text (below)
-	allLines := append(coloredArt, textLines...)
+	// v8 layout: bottom-anchored in dissolve/waiting, centered in crystal
+	const bottomLift = 2
+	spacerLines := 0
+	if m.phase != "crystal" {
+		spacerLines = 1 // breathing room between art and text
+	}
 
-	// Pad to full height (top + bottom)
-	padTop := (m.height - len(allLines)) / 2
+	// Build the full block
+	block := make([]string, 0, len(coloredArt)+spacerLines+len(textLines))
+	block = append(block, coloredArt...)
+	if spacerLines > 0 {
+		block = append(block, "")
+	}
+	block = append(block, textLines...)
+
+	var padTop int
+	if m.phase == "crystal" {
+		// Center whole block vertically (crystal art is short)
+		padTop = (m.height - len(block)) / 2
+	} else {
+		// Bottom-anchored: art+text sit at bottom with bottomLift rows
+		padTop = m.height - len(block) - bottomLift
+	}
 	if padTop < 0 {
 		padTop = 0
 	}
-	for i := 0; i < padTop; i++ {
-		allLines = append([]string{""}, allLines...)
-	}
-	// Pad bottom
-	for len(allLines) < m.height {
-		allLines = append(allLines, "")
-	}
-	if len(allLines) > m.height {
-		allLines = allLines[:m.height]
+	// Truncate if too tall
+	if padTop+len(block) > m.height {
+		// Try to keep text by trimming art
+		excess := padTop + len(block) - m.height
+		if excess < len(coloredArt) {
+			// Trim from top of art (preserve C4R at bottom)
+			coloredArt = coloredArt[excess:]
+		}
+		block = make([]string, 0, len(coloredArt)+spacerLines+len(textLines))
+		block = append(block, coloredArt...)
+		if spacerLines > 0 {
+			block = append(block, "")
+		}
+		block = append(block, textLines...)
+		padTop = m.height - len(block)
+		if padTop < 0 {
+			padTop = 0
+		}
 	}
 
-	v := tea.NewView(lipgloss.JoinVertical(lipgloss.Center, allLines...))
+	// Final vertical composition
+	final := make([]string, 0, m.height)
+	for i := 0; i < padTop; i++ {
+		final = append(final, "")
+	}
+	final = append(final, block...)
+	for len(final) < m.height {
+		final = append(final, "")
+	}
+	if len(final) > m.height {
+		final = final[:m.height]
+	}
+
+	// Horizontal centering: use lipgloss.Place (centered both axes)
+	content := lipgloss.JoinVertical(lipgloss.Left, final...)
+	placed := lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center, content)
+
+	v := tea.NewView(placed)
 	v.AltScreen = true
 	return v
 }

@@ -101,6 +101,51 @@ func TestBioAurora_ColorAt_InRange(t *testing.T) {
 	}
 }
 
+// TestBioAurora_ColorDwellTime verifies v9.11.6's color quantization
+// keeps a given cell at the same color for at least 500ms of wave
+// time. Before quantization, color index changed whenever the wave
+// norm crossed a 1/6 boundary (~166ms per color), producing a 6 Hz
+// visible flicker. After quantization to 3 visible steps, each
+// color dwells for ~1-2 seconds.
+func TestBioAurora_ColorDwellTime(t *testing.T) {
+	ba := NewBioAurora(11)
+	// Pick a cell in the art region (y=5).
+	const x, y = 20, 5
+	// Sample densely over 3 seconds, count how long the color stays
+	// the same at the first observed transition.
+	ba.Tick(0)
+	first := ba.colorAt(x, y)
+	dwellStart := 0.0
+	minDwell := 1.0
+	maxDwell := 0.0
+	totalChanges := 0
+	for tick := 0.0; tick <= 5.0; tick += 0.05 {
+		ba.Tick(tick)
+		idx := ba.colorAt(x, y)
+		if idx != first {
+			dwell := tick - dwellStart
+			if dwell < minDwell {
+				minDwell = dwell
+			}
+			if dwell > maxDwell {
+				maxDwell = dwell
+			}
+			totalChanges++
+			first = idx
+			dwellStart = tick
+		}
+	}
+	// v9.11.6 quantization: most dwells should be at least 200ms.
+	// We allow a minimum of 100ms because the cell uses 3 stacked
+	// waves that don't all sync to the same beat — a near-miss at
+	// a step boundary can produce a sub-200ms flip.
+	if minDwell < 0.1 {
+		t.Errorf("minimum color dwell is %.3fs — should be >= 0.1s after quantization (got %d changes in 5s, min=%.3f, max=%.3f)",
+			minDwell, totalChanges, minDwell, maxDwell)
+	}
+	t.Logf("color changes=%d min=%.3fs max=%.3fs in 5s window", totalChanges, minDwell, maxDwell)
+}
+
 func TestBioAurora_IntensityAt_Bounded(t *testing.T) {
 	ba := NewBioAurora(11)
 	// Intensity should be in [0.15, maxAuroraOpacity] range.

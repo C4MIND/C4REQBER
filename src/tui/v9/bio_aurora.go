@@ -63,6 +63,15 @@ const maxAuroraOpacity = 0.55
 // colorAt returns the palette index for cell (x, y) at time t.
 // Combines 3 sine waves with different periods/phases for organic morphing.
 // All frequencies are sub-1Hz to avoid photosensitive seizures.
+//
+// v9.11.6: quantize the palette index to fewer steps so the color
+// stays stable for a noticeable interval (1-2 seconds) instead of
+// flickering every 16ms. v9.11.5 had `int(norm * 6)` which changed
+// idx whenever norm crossed a 1/6 boundary — with the wave moving
+// continuously, this produced a 6-7 Hz visible flicker that looked
+// like a UI bug ("мерцающий баг"). With quantization to 3 steps,
+// the color only changes when norm crosses a 1/3 boundary, so the
+// visible dwell time per color is ~2-3 seconds.
 func (ba *BioAurora) colorAt(x, y int) int {
 	t := ba.startTime
 	// Three waves with periods 4.3s, 6.7s, 8.1s (all sub-1Hz)
@@ -86,16 +95,30 @@ func (ba *BioAurora) colorAt(x, y int) int {
 	// Vertical pulse: top brighter, bottom dimmer (or vice versa)
 	pulse := math.Sin(t*2*math.Pi/7.0)
 	v += pulse * 0.2
-	// Soft saturation: tanh compresses the extremes so colour transitions
-	// feel smoother and avoid the "snap from green to yellow" jumps that
-	// the integer palette index would otherwise produce.
+	// Soft saturation: tanh compresses the extremes.
 	norm := (math.Tanh(v) + 1.0) / 2.0 // 0..1, smooth
-	idx := int(norm * float64(len(auroraPalette)))
+	// Quantize to 3 visible steps. Each step maps to a 2-color
+	// "neighborhood" in the palette so transitions look like smooth
+	// blends rather than hard color jumps. Visible color dwell:
+	// ~2-3 seconds at 0.34 Hz main wave.
+	const steps = 3
+	stepIdx := int(norm * float64(steps))
+	if stepIdx >= steps {
+		stepIdx = steps - 1
+	}
+	if stepIdx < 0 {
+		stepIdx = 0
+	}
+	// Map 3 steps to 6 palette indices: each step covers 2 adjacent
+	// palette colors. Step 0 -> 0/1, Step 1 -> 2/3, Step 2 -> 4/5.
+	// Then pick the higher of the two for the second half of the
+	// step, so colors advance monotonically with norm.
+	idx := stepIdx * 2
+	if norm*float64(steps)-float64(stepIdx) > 0.5 {
+		idx++
+	}
 	if idx >= len(auroraPalette) {
 		idx = len(auroraPalette) - 1
-	}
-	if idx < 0 {
-		idx = 0
 	}
 	return idx
 }

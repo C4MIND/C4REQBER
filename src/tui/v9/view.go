@@ -82,6 +82,13 @@ func (m *model) renderHeader() string {
 	// Simple padding to width via rune length, no lipgloss.Width.
 	hdr := fmt.Sprintf(" %s C4REQBER v9  F<1,1,0>  [%s]  DeepSeek  $%.4f  %s",
 		pulse, i18n.GetLang(), m.cost, m.cachedFooterClock)
+	// v9.12.5: sub-timer when discovery is running
+	if m.running && !m.startedAt.IsZero() {
+		elapsed := time.Since(m.startedAt).Round(time.Second)
+		if elapsed > 0 {
+			hdr += fmt.Sprintf(" +%s", elapsed)
+		}
+	}
 	right := " " + string(m.mode) + " "
 	if len(hdr)+len(right) < m.width {
 		hdr += strings.Repeat(" ", m.width-len(hdr)-len(right))
@@ -103,6 +110,14 @@ func (m *model) renderFooter() string {
 		state = "⏵ " + i18n.T("footer.running")
 	}
 	left := " " + state + " "
+	// v9.12.5: show current phase in footer when running
+	if m.running && m.jobID != "" && len(m.feed) > 0 {
+		last := m.feed[len(m.feed)-1]
+		if last.Kind == CardPhase && last.Title != "" {
+			pct := int(last.Progress * 100)
+			left = fmt.Sprintf(" %s [%s %d%%]", state, last.Title, pct)
+		}
+	}
 	// Use the platform-resolved key labels instead of hardcoded "[Enter]"/"[Ctrl+C]".
 	right := " [" + m.keymap.Label(ActRun) + "] " + i18n.T("keymap.run") +
 		"  [" + m.keymap.Label(ActHelp) + "] " + i18n.T("keymap.help") +
@@ -222,7 +237,30 @@ func progressBar(p float64, width int) string {
 		p = 1
 	}
 	filled := int(p * float64(width))
-	return "[" + strings.Repeat("█", filled) + strings.Repeat("░", width-filled) + "]"
+	// v9.12.5: gradient bar — use █▊▋▌▍▎▏ for the boundary cell
+	var body string
+	if filled >= width {
+		body = strings.Repeat("█", width)
+	} else if filled <= 0 {
+		body = strings.Repeat("░", width)
+	} else {
+		tail := (p*float64(width) - float64(filled))
+		gradient := "░"
+		switch {
+		case tail > 0.8:
+			gradient = "▊"
+		case tail > 0.6:
+			gradient = "▋"
+		case tail > 0.4:
+			gradient = "▌"
+		case tail > 0.2:
+			gradient = "▍"
+		default:
+			gradient = "▏"
+		}
+		body = strings.Repeat("█", filled) + gradient + strings.Repeat("░", max(0, width-filled-1))
+	}
+	return "[" + body + "]"
 }
 
 func max(a, b int) int {

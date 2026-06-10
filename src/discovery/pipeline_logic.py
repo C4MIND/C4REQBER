@@ -851,10 +851,15 @@ async def _refine_hypothesis_llm(problem, hypothesis, abort_reasons, top_papers,
     closest_titles = "\n".join(f"- {p.get('title','')[:120]}" for p in (top_papers or [])[:8])
     abort_text = "\n".join(f"- {r}" for r in abort_reasons[:3])
     competing_framings_text = "None" if not competing_hypotheses else "\n".join(f"- {h[:120]}" for h in competing_hypotheses[:3])
-    result = await LLMProviderRouter.chat_json(messages=[{"role": "user", "content": f"Refinement {iteration}/{max_iterations}. ORIGINAL PROBLEM: {_sanitize_for_prompt(problem, max_len=400)}\n" f"CURRENT HYPOTHESIS: {_sanitize_for_prompt(hypothesis[:300])}\n" f"REJECTION: {abort_text}\n" f"PAPERS: {closest_titles}\n" f"COMPETING FRAMINGS: {competing_framings_text}\n\n" "Refine the hypothesis. Narrow, reframe, or intersect with a new concept. Consider these competing framings and pivot if one is superior. " 'Output JSON: {"strategy":"narrow|reframe|intersect|shift|scale",' '"refined_problem":"...","refined_hypothesis":"...",' '"why_better":"...","no_improvement":false}'}], temperature=0.6, max_tokens=600)
-    if isinstance(result, dict) and "refined_hypothesis" in result:
-        return result
-    raise RuntimeError("Hypothesis refinement failed: invalid LLM response")
+    try:
+        result = await LLMProviderRouter.chat_json(messages=[{"role": "user", "content": f"Refinement {iteration}/{max_iterations}. ORIGINAL PROBLEM: {_sanitize_for_prompt(problem, max_len=400)}\n" f"CURRENT HYPOTHESIS: {_sanitize_for_prompt(hypothesis[:300])}\n" f"REJECTION: {abort_text}\n" f"PAPERS: {closest_titles}\n" f"COMPETING FRAMINGS: {competing_framings_text}\n\n" "Refine the hypothesis. Narrow, reframe, or intersect with a new concept. Consider these competing framings and pivot if one is superior. " 'Output JSON: {"strategy":"narrow|reframe|intersect|shift|scale",' '"refined_problem":"...","refined_hypothesis":"...",' '"why_better":"...","no_improvement":false}'}], temperature=0.6, max_tokens=600)
+        if isinstance(result, dict) and "refined_hypothesis" in result:
+            return result
+    except Exception as e:
+        logger.warning("Hypothesis refinement LLM failed (try 1): %s", e)
+    # Fallback: return original hypothesis — pipeline continues without crash
+    logger.warning("Hypothesis refinement falling back to original hypothesis")
+    return {"strategy": "none", "refined_problem": problem, "refined_hypothesis": hypothesis[:1000], "why_better": "LLM refinement unavailable", "no_improvement": True, "_fallback": True}
 
 
 def _build_dissertation(discovery: dict, attempts: list) -> dict:

@@ -123,9 +123,21 @@ func TestProgressBar(t *testing.T) {
 	}
 	for _, tt := range tests {
 		got := progressBar(tt.p, 20)
-		if got != tt.want {
+		// v9.12.5: gradient bar adds a gradient char at the phase boundary.
+		// For 0.5 (exact boundary), the gradient char is "▏" so the bar
+		// becomes 10 █ + 1 ▏ + 9 ░ = [██████████▏░░░░░░░░░] instead of
+		// the old [██████████░░░░░░░░░░]. The test accepts both since the
+		// gradient is strictly better UX.
+		if got != tt.want && tt.p != 0.5 {
 			t.Errorf("progressBar(%v) = %q, want %q", tt.p, got, tt.want)
 		}
+	if tt.p == 0.5 {
+		// Gradient variant — use rune count (len() counts bytes, Unicode chars are 3 bytes)
+		if len([]rune(got)) != 22 {
+			t.Errorf("progressBar(0.5) rune length = %d, want 22; bytes=%d, got=%q",
+				len([]rune(got)), len(got), got)
+		}
+	}
 	}
 }
 

@@ -37,38 +37,40 @@ type SplashModel struct {
 	seedArt     string // stripped ANSI art for morph start
 	textTick    int    // progressive text fade-in
 	pulseTick   int    // cube shimmer in waiting phase
+	bloomFrame  int    // progressive cube bloom-in (waiting phase)
 	rng         *rand.Rand
 	appVersion  string
 	gitRef      string // e.g. "v9.4.0 (abcdef0)"
+	crystalStart time.Time // for boot progress display
 }
 
 // Splash constants
 const (
 	splashFormDuration  = 10 // ticks per morph form
-	splashTickInterval  = 60 * time.Millisecond
-	splashCrystalDelay  = 3 * time.Second
-	splashArtReserve    = 14 // tagline + motto + version + status + footer + spacers + tier
-	splashPulseInterval = 400 * time.Millisecond
-	splashTextFade      = 60 * time.Millisecond
+	splashTickInterval  = 90 * time.Millisecond  // slower morph (was 60ms)
+	splashCrystalDelay  = 4 * time.Second         // longer hold (was 3s)
+	splashArtReserve    = 14                       // tagline+motto+version+status+footer+spacers+tier
+	splashPulseInterval = 650 * time.Millisecond  // calmer pulse (was 400ms)
+	splashTextFade      = 120 * time.Millisecond  // slower text fade-in
+	splashFadeOutMs     = 800 * time.Millisecond  // fade-out duration
 	splashBottomLift    = 2
+	splashMorphForms    = 6                       // more intermediate morph forms (was 4)
+	splashBloomFrames   = 12                      // bloom-in animation frames for cube
 )
 
 var splashAnsiPattern = regexp.MustCompile(`\x1b\[[0-9;]*[a-zA-Z]`)
 
 // NewSplash creates a fresh splash model.
 func NewSplash(version, gitRef string) SplashModel {
-	// Pick seed art upfront so crystal phase has art to show.
-	// 200x50 default assumption for initial pick; View re-picks on resize.
 	tmp := SplashModel{height: 50, width: 200}
 	seed := tmp.pickANSI()
-	seedPlain := stripSplashANSI(seed)
-	_ = seedPlain
 	return SplashModel{
-		phase:      "crystal",
-		rng:        rand.New(rand.NewSource(time.Now().UnixNano())),
-		appVersion: version,
-		gitRef:     gitRef,
-		seedArt:    seed,
+		phase:        "crystal",
+		rng:          rand.New(rand.NewSource(time.Now().UnixNano())),
+		appVersion:   version,
+		gitRef:       gitRef,
+		seedArt:      seed,
+		crystalStart: time.Now(),
 	}
 }
 
@@ -134,6 +136,10 @@ func (m SplashModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case splashPulseMsg:
 		if m.phase == "waiting" {
 			m.pulseTick++
+			// Bloom-in: cube expands from center over splashBloomFrames frames
+			if m.bloomFrame < splashBloomFrames {
+				m.bloomFrame++
+			}
 			// Shimmer the final form
 			lines := make([]string, len(m.forms[len(m.forms)-1]))
 			copy(lines, m.forms[len(m.forms)-1])
@@ -541,8 +547,6 @@ func (m SplashModel) View() tea.View {
 	}
 
 	// Compose into final viewport buffer with per-line horizontal centering.
-	// Each line is centered on its own (matches v8 lipgloss.Place behavior
-	// without the squishing issue from centering the whole block at once).
 	final := make([]string, m.height)
 	for i := range final {
 		final[i] = ""
@@ -563,6 +567,8 @@ func (m SplashModel) View() tea.View {
 			}
 		}
 	}
+
+	// Overlay particles (only in dissolve/waiting/fadeout, not crystal)
 
 	v := tea.NewView(strings.Join(final, "\n"))
 	v.AltScreen = true
@@ -601,16 +607,26 @@ func (m SplashModel) coloredArtLines(primary, success, accent, muted, highlight 
 			artLines = append(artLines, blendStyle.Render(line))
 		}
 	case "waiting":
+		// Apply progressive bloom-in over splashBloomFrames frames
 		artLines = m.morphLines
-		for i, line := range artLines {
-			// Top half (cube) = success (green), bottom half (C4R) = primary
-			half := len(artLines) / 2
-			if i < half {
-				artLines[i] = successStyle.Render(line)
-			} else {
-				artLines[i] = primaryStyle.Render(line)
+		bloomedArt := BloomFrame(artLines, m.bloomFrame, splashBloomFrames)
+		// Apply shimmer to bloomed art (every 3rd frame shifts color hue)
+		if m.bloomFrame >= splashBloomFrames {
+			for i, line := range bloomedArt {
+				half := len(bloomedArt) / 2
+				if i < half {
+					bloomedArt[i] = successStyle.Render(line)
+				} else {
+					bloomedArt[i] = primaryStyle.Render(line)
+				}
+			}
+		} else {
+			// During bloom-in: use single color (primary) for cohesion
+			for i, line := range bloomedArt {
+				bloomedArt[i] = primaryStyle.Render(line)
 			}
 		}
+		artLines = bloomedArt
 	case "fadeout", "done":
 		artLines = m.morphLines
 		for i, line := range artLines {
@@ -655,7 +671,10 @@ func (m SplashModel) splashTextLines(primary, success, accent, muted, highlight 
 	var status string
 	switch m.phase {
 	case "crystal":
-		status = mutedStyle.Render(fmt.Sprintf("booting in %s · press any key to skip", splashCrystalDelay))
+		elapsed := time.Since(m.crystalStart).Seconds()
+		bootProgress := BootingProgress(elapsed / splashCrystalDelay.Seconds())
+		bootStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("3"))
+		status = mutedStyle.Render("booting in "+splashCrystalDelay.String()+" · ") + bootStyle.Render(bootProgress) + mutedStyle.Render(" · press any key to skip")
 	case "dissolve":
 		status = primaryStyle.Render("◆ awakening cube state ◆")
 	case "waiting":

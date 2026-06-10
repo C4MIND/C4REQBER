@@ -30,7 +30,7 @@ func TestBioAurora_RenderAurora_NilSafe(t *testing.T) {
 	var ba *BioAurora
 	plain := "1111"
 	style := lipgloss.NewStyle().Foreground(lipgloss.Color("3"))
-	got := ba.RenderAurora(plain, 0, style)
+	got := ba.RenderAurora(plain, 0, style, style)
 	if got == "" {
 		t.Error("nil receiver should return base style, not empty")
 	}
@@ -39,7 +39,7 @@ func TestBioAurora_RenderAurora_NilSafe(t *testing.T) {
 func TestBioAurora_RenderAurora_EmptyPlain(t *testing.T) {
 	ba := NewBioAurora(11)
 	style := lipgloss.NewStyle().Foreground(lipgloss.Color("3"))
-	got := ba.RenderAurora("", 0, style)
+	got := ba.RenderAurora("", 0, style, style)
 	if got == "" {
 		t.Error("empty plain should return base style, not empty")
 	}
@@ -52,7 +52,7 @@ func TestBioAurora_RenderAurora_PreservesGlyphs(t *testing.T) {
 	style := lipgloss.NewStyle().Foreground(lipgloss.Color("3"))
 	plain := "111111111111111111"
 	// Strip ANSI to count visible "1"s.
-	got := stripSplashANSI(ba.RenderAurora(plain, 0, style))
+	got := stripSplashANSI(ba.RenderAurora(plain, 0, style, style))
 	count := strings.Count(got, "1")
 	if count != len(plain) {
 		t.Errorf("expected %d '1' chars, got %d (aurora may have replaced glyphs)", len(plain), count)
@@ -67,8 +67,8 @@ func TestBioAurora_RenderAurora_ArtRegionHasLowerIntensity(t *testing.T) {
 	style := lipgloss.NewStyle().Foreground(lipgloss.Color("3"))
 	plain := "111111111111111111"
 	// Render same line as "inside art" and "outside art".
-	insideLine := stripSplashANSI(ba.RenderAurora(plain, 5, style))
-	outsideLine := stripSplashANSI(ba.RenderAurora(plain, 15, style))
+	insideLine := stripSplashANSI(ba.RenderAurora(plain, 5, style, style))
+	outsideLine := stripSplashANSI(ba.RenderAurora(plain, 15, style, style))
 	// Both should have same "1" count.
 	if len(insideLine) != len(outsideLine) {
 		t.Errorf("line length differs: inside=%d outside=%d", len(insideLine), len(outsideLine))
@@ -119,15 +119,16 @@ func TestBioAurora_IntensityAt_Bounded(t *testing.T) {
 }
 
 func TestBioAurora_IntensityAt_ArtRegionLower(t *testing.T) {
-	// In v9.11.2, intensity inside the art region is capped at 0.30.
+	// In v9.11.3, intensity inside the art region is capped at 0.15
+	// (was 0.30 in v9.11.2 — looked glitchy on small glyphs).
 	// Outside, it can go up to maxAuroraOpacity (0.55).
 	ba := NewBioAurora(11)
 	for tick := 0.0; tick < 30.0; tick += 0.5 {
 		ba.Tick(tick)
 		for x := 0; x < 80; x++ {
 			inside := ba.intensityAt(x, 5) // inside art (y < 11)
-			if inside > 0.30 {
-				t.Errorf("inside art: intensity at t=%f x=%d = %f, should be ≤ 0.30", tick, x, inside)
+			if inside > 0.15 {
+				t.Errorf("inside art: intensity at t=%f x=%d = %f, should be ≤ 0.15", tick, x, inside)
 			}
 		}
 	}
@@ -140,7 +141,7 @@ func TestBioAurora_DitheringBreaksMonochromeStreaks(t *testing.T) {
 	ba := NewBioAurora(11)
 	style := lipgloss.NewStyle().Foreground(lipgloss.Color("3"))
 	plain := strings.Repeat("1", 30)
-	rendered := ba.RenderAurora(plain, 0, style)
+	rendered := ba.RenderAurora(plain, 0, style, style)
 	// Count distinct ANSI color codes used.
 	colors := map[string]bool{}
 	for _, code := range []string{

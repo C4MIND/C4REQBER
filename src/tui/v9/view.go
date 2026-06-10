@@ -70,8 +70,19 @@ func (m *model) renderHeader() string {
 	if m.running && m.tick%30 < 15 {
 		pulse = "◉"
 	}
+	// v9.11.3: cache the wall-clock to avoid footer flicker. View()
+	// runs at 60fps; without this cache the timestamp changed every
+	// render frame, making the whole bottom strip look like it was
+	// "прыгает, моргает" (blinking). Now we only refresh the cached
+	// string when the second changes.
+	now := time.Now()
+	sec := now.Second()
+	if m.cachedFooterClock == "" || sec != m.lastFooterSecond {
+		m.cachedFooterClock = now.Format("15:04:05")
+		m.lastFooterSecond = sec
+	}
 	left := fmt.Sprintf(" %s C4REQBER v9  F⟨1,1,0⟩  🇬🇧 %s  DeepSeek  $%.4f  %s",
-		pulse, i18n.GetLang(), m.cost, time.Now().Format("15:04:05"))
+		pulse, i18n.GetLang(), m.cost, m.cachedFooterClock)
 	right := " " + string(m.mode) + " "
 	gap := strings.Repeat(" ", max(1, m.width-lipgloss.Width(left)-lipgloss.Width(right)))
 	return lipgloss.NewStyle().Width(m.width).Render(left + gap + right)

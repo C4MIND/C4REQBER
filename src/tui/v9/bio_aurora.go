@@ -103,7 +103,9 @@ func (ba *BioAurora) colorAt(x, y int) int {
 // intensityAt returns 0-maxAuroraOpacity intensity for cell (x, y) at time t.
 // Capped at maxAuroraOpacity so the aurora never paints a fully solid
 // color over the art. Inside the C4R art region, intensity is further
-// capped at 0.30 to keep letters readable.
+// capped at 0.15 (very subtle tint) to keep letter shapes stable and
+// avoid the "every cell a different color" glitch on small glyphs
+// (the 4-char wall of C, the 5-char leg of R).
 func (ba *BioAurora) intensityAt(x, y int) float64 {
 	t := ba.startTime
 	b1 := math.Sin(t*2*math.Pi/5.2 + float64(x)*0.1 + float64(y)*0.15)
@@ -112,13 +114,13 @@ func (ba *BioAurora) intensityAt(x, y int) float64 {
 	intensity := 0.4 + 0.4*(b1+b2)/2 + 0.2
 	cap := maxAuroraOpacity
 	if ba.isInArtRegion(y) {
-		cap = 0.30 // softer inside C4R art
+		cap = 0.15 // very subtle inside C4R — was 0.30, looked glitchy
 	}
 	if intensity > cap {
 		intensity = cap
 	}
-	if intensity < 0.15 {
-		intensity = 0.15
+	if intensity < 0.10 {
+		intensity = 0.10
 	}
 	return intensity
 }
@@ -134,13 +136,22 @@ func (ba *BioAurora) isInArtRegion(y int) bool {
 // Each rune is re-colored using the palette at (x, y) where x is rune
 // position. Spaces and empty runes are left untouched.
 //
-// In v9.11.2 the aurora is much softer: max opacity 0.55, with a
-// per-rune dither pattern that prevents long monochrome streaks.
-// Cells inside the art region get a subtler treatment (max 0.30) to
-// keep the C4R letters readable.
-func (ba *BioAurora) RenderAurora(plain string, y int, baseStyle lipgloss.Style) string {
+// In v9.11.3 the aurora is even softer inside the C4R art region:
+// max intensity 0.15, with dither cells using a muted (gray) style
+// rather than the bold primary color. This stops the "прыгает, моргает"
+// strobe effect where every 5th cell flashed bold yellow.
+//
+// baseStyle is the style for non-dithered aurora cells; ditherStyle
+// is what every 5th cell uses (typically muted/gray).
+func (ba *BioAurora) RenderAurora(plain string, y int, baseStyle, ditherStyle lipgloss.Style) string {
 	if ba == nil || plain == "" {
 		return baseStyle.Render(plain)
+	}
+	if ditherStyle.GetForeground() == (lipgloss.Color("")) && ditherStyle.GetBold() == false {
+		// No dither style supplied — fall back to baseStyle for safety
+		// (caller forgot to pass it). Maintains backwards compat with
+		// v9.11.2 callers that didn't know about the second arg.
+		ditherStyle = baseStyle
 	}
 	runes := []rune(plain)
 	var sb strings.Builder
@@ -159,16 +170,17 @@ func (ba *BioAurora) RenderAurora(plain string, y int, baseStyle lipgloss.Style)
 		}
 		// Apply dither: skip a fraction of cells entirely.
 		if (i+ditherSkip)%5 == 0 {
-			// Use base style (no aurora tint) for these cells.
-			sb.WriteString(baseStyle.Render(string(r)))
+			// Use dither style (muted) for these cells — was bold
+			// primary in v9.11.2 which caused the strobe glitch.
+			sb.WriteString(ditherStyle.Render(string(r)))
 			continue
 		}
 		idx := ba.colorAt(i, y)
 		intensity := ba.intensityAt(i, y)
-		// Inside art region: cap intensity to 0.30 so letters stay
+		// Inside art region: cap intensity to 0.15 so letters stay
 		// readable. Outside art region: full maxAuroraOpacity.
-		if ba.isInArtRegion(y) && intensity > 0.30 {
-			intensity = 0.30
+		if ba.isInArtRegion(y) && intensity > 0.15 {
+			intensity = 0.15
 		}
 		style := lipgloss.NewStyle().Foreground(lipgloss.Color(auroraPalette[idx]))
 		// Use bold sparingly — only in the brightest cells, and only
@@ -181,7 +193,7 @@ func (ba *BioAurora) RenderAurora(plain string, y int, baseStyle lipgloss.Style)
 		// cells use a muted palette colour. Lipgloss v2 doesn't expose
 		// per-cell alpha, so we use Faint() for low intensity, normal
 		// otherwise.
-		if intensity < 0.25 {
+		if intensity < 0.10 {
 			style = style.Faint(true)
 		}
 		sb.WriteString(style.Render(string(r)))

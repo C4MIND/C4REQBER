@@ -104,6 +104,14 @@ type model struct {
 	store *persist.Store
 	tel   *telemetry.Telemetry
 
+	// Cached footer values to avoid re-rendering noise on every frame.
+	// v9.11.3: View() runs at 60fps, but time.Now() in the footer
+	// caused the timestamp to flicker every second, which looked like
+	// a blinking/broken display. We cache it and refresh only when
+	// the wall-clock second changes.
+	lastFooterSecond  int    // last second (0-59) rendered in footer
+	cachedFooterClock string // formatted "15:04:05" for that second
+
 	// showTelemetry toggles the bottom telemetry panel (Ctrl+T)
 	showTelemetry bool
 

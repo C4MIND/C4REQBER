@@ -531,6 +531,23 @@ func buildCrystalFrames(seedArt string, h int, compact bool, rng *rand.Rand) [][
 	// Frame 11: ready for morph (this is what the form index points to in the next stage)
 	forms[11] = make([]string, len(seedLines))
 	copy(forms[11], seedLines)
+	// v9.11.3: pad every frame to the same max width so the visual
+	// X-center stays stable across the crystal phase. Without this,
+	// frames 5-6 (center-out reveal) produce shorter visible lines
+	// which makes the cube appear to drift right.
+	maxW := 0
+	for _, frame := range forms {
+		for _, line := range frame {
+			if w := lenRunes(line); w > maxW {
+				maxW = w
+			}
+		}
+	}
+	if maxW > 0 {
+		for i, frame := range forms {
+			forms[i] = padToWidthSplash(frame, maxW)
+		}
+	}
 	return forms
 }
 
@@ -765,6 +782,12 @@ func lenRunes(s string) int {
 func (m SplashModel) coloredArtLines(primary, success, accent, muted, highlight string) []string {
 	primaryStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color(primary))
 	mutedStyle := lipgloss.NewStyle().Foreground(lipgloss.Color(muted))
+	// ditherStyle is what the dithered (every 5th) rune gets. We use
+	// muted (gray) so the dither creates a soft fade rather than a
+	// jarring bright-yellow flash on every 5th cell. v9.11.2 used
+	// primaryStyle here which made C4R look like a strobing broken
+	// display — that's the "прыгает, моргает" bug.
+	ditherStyle := mutedStyle
 
 	var artLines []string
 	switch m.phase {
@@ -795,9 +818,12 @@ func (m SplashModel) coloredArtLines(primary, success, accent, muted, highlight 
 		// (smooth wave-based palette shifting, sub-1Hz, no epilepsy)
 		if m.bloomFrame >= splashBloomFrames && m.aurora != nil {
 			for i, line := range bloomedArt {
-				// Strip ANSI to get plain text, then re-color with bio-aurora
+				// Strip ANSI to get plain text, then re-color with bio-aurora.
+				// ditherStyle (muted/gray) is what every 5th cell uses so
+				// the dither creates a soft fade rather than a bright-yellow
+				// strobe on alternating cells.
 				plain := stripSplashANSI(line)
-				bloomedArt[i] = m.aurora.RenderAurora(plain, i, primaryStyle)
+				bloomedArt[i] = m.aurora.RenderAurora(plain, i, primaryStyle, ditherStyle)
 			}
 		} else {
 			// During bloom-in: use single color (primary) for cohesion

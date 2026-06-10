@@ -140,7 +140,7 @@ func TestStateMachine_CheckAchievements_AfterDiscover(t *testing.T) {
 	m.lastQuality = 0.95
 	m.lastPapersCount = 5
 	m.startedAt = time.Now().Add(-1 * time.Minute)
-	m.langsSeen = map[string]bool{"EN": true, "RU": true, "ZH": true}
+	m.replaceLangsSeen([]string{"EN", "RU", "ZH"})
 	before := len(m.feed)
 	m.checkAchievements()
 	after := len(m.feed)
@@ -366,9 +366,9 @@ func TestStateMachine_LangSwitchAddsToSeen(t *testing.T) {
 	m := NewApp("http://test")
 	defer i18n.SetLang(i18n.LangEN)
 	i18n.SetLang(i18n.LangZH)
-	m.langsSeen = map[string]bool{"en": true}
+	m.replaceLangsSeen([]string{"en"})
 	m.updateLangSeen()
-	if !m.langsSeen["zh"] {
+	if !m.hasLangSeen("zh") {
 		t.Error("updateLangSeen should add zh")
 	}
 }

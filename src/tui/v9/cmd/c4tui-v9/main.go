@@ -24,7 +24,7 @@ import (
 )
 
 // version is set at build time via -ldflags "-X main.version=..."
-var version = "v9.11.0"
+var version = "v9.11.1"
 
 // gitRef returns the git commit short hash, or empty if not available.
 func gitRef() string {
@@ -117,7 +117,7 @@ func main() {
 		runSplash(version, gitRef())
 	}
 
-	p := tea.NewProgram(app, tea.WithFPS(60))
+	p := tea.NewProgram(app, tea.WithFPS(60), KeyDedupFilter())
 	if _, err := p.Run(); err != nil {
 		fmt.Fprintln(os.Stderr, "c4tui-v9:", err)
 		os.Exit(1)

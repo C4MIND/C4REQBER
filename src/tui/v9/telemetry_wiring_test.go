@@ -100,7 +100,7 @@ func TestNewAppWithStore_RestoresLangsFromDisk(t *testing.T) {
 		t.Fatal(err)
 	}
 	m := NewAppWithStore("http://test", store2)
-	if !m.langsSeen["en"] {
+	if !m.hasLangSeen("en") {
 		t.Error("NewAppWithStore should restore langsSeen from disk")
 	}
 }

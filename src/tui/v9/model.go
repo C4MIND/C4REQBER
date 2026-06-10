@@ -2,6 +2,7 @@
 package tui
 
 import (
+	"sync"
 	"time"
 
 	"charm.land/bubbles/v2/textarea"
@@ -95,6 +96,7 @@ type model struct {
 	achievements     *AchievementSystem
 	completedDisc    int
 	langsSeen        map[string]bool
+	langsMu          sync.RWMutex // guards langsSeen for concurrent View/Update
 	lastQuality      float64
 	lastPapersCount int
 
@@ -227,7 +229,7 @@ func NewAppFresh(apiURL string) *model {
 		colorProfile: ProfileDefault,
 		wizard:       NewWizardState(),
 	}
-	m.langsSeen[string(i18n.GetLang())] = true
+	m.addLangSeen(string(i18n.GetLang()))
 	m.appendCard(Card{Kind: CardEmpty, Title: i18n.T("empty.title"), Body: i18n.T("empty.hint"), Time: time.Now()})
 	return m
 }
@@ -272,12 +274,9 @@ func NewApp(apiURL string) *model {
 	if storeErr == nil {
 		m.store = store
 		// Repopulate langsSeen from disk
-		snap := store.Snapshot()
-		for _, l := range snap.LangsSeen {
-			m.langsSeen[l] = true
-		}
+		m.replaceLangsSeen(store.Snapshot().LangsSeen)
 	}
-	m.langsSeen[string(i18n.GetLang())] = true
+	m.addLangSeen(string(i18n.GetLang()))
 	// Apply persisted settings (tier/profile/lang)
 	if m.store != nil {
 		m.ApplySettings(m.store.GetSettings())

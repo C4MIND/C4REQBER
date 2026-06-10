@@ -497,10 +497,7 @@ func (m *model) appendCard(c Card) {
 
 // checkAchievements evaluates unlocks and appends achievement cards.
 func (m *model) checkAchievements() {
-	langs := make([]string, 0, len(m.langsSeen))
-	for l := range m.langsSeen {
-		langs = append(langs, l)
-	}
+	langs := m.snapshotLangsSeen()
 	seconds := time.Since(m.startedAt).Seconds()
 	if m.startedAt.IsZero() {
 		seconds = 0
@@ -534,7 +531,7 @@ func (m *model) checkAchievements() {
 
 // updateLangSeen records the current lang code in model.langsSeen.
 func (m *model) updateLangSeen() {
-	m.langsSeen[string(i18n.GetLang())] = true
+	m.addLangSeen(string(i18n.GetLang()))
 }
 
 func (m *model) rebuildFeedContent() {

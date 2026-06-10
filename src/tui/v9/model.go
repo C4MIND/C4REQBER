@@ -100,6 +100,9 @@ type model struct {
 
 	// showTelemetry toggles the bottom telemetry panel (Ctrl+T)
 	showTelemetry bool
+
+	// dream is the ambient idle mode (activates after 5min of no activity)
+	dream *DreamState
 }
 
 // message types for bubbletea
@@ -183,6 +186,7 @@ func NewApp(apiURL string) *model {
 		achievements: NewAchievements(),
 		langsSeen:    map[string]bool{},
 		tel:          telemetry.New(),
+		dream:        NewDreamState(),
 	}
 	// Load persisted state (achievements, langs). If store fails, fall back gracefully.
 	store, storeErr := persist.New(persist.DefaultPath())

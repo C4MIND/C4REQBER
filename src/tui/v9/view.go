@@ -32,6 +32,9 @@ func (m *model) View() tea.View {
 		regions = append(regions, renderTelemetry(m.tel.Get(), m.width))
 	}
 	body := strings.Join(regions, "\n")
+	if m.dream != nil && m.dream.Active() {
+		body = m.dream.Render(m.width, m.height)
+	}
 	if rain := m.rain.Render(); rain != "" && !m.burst.Active() && len(m.feed) == 0 {
 		body = overlayRegion(body, rain, 1, m.height-4, m.width)
 	}

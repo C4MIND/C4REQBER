@@ -22,6 +22,13 @@ func minInt(a, b int) int {
 func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
 
+	// Any non-tick message is user activity — touch the dream state to defer idle.
+	if _, isTick := msg.(tickMsg); !isTick {
+		if m.dream != nil {
+			m.dream.Touch()
+		}
+	}
+
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		m.width, m.height = msg.Width, msg.Height
@@ -42,6 +49,9 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.slide.Tick()
 		m.typew.Tick(m.tick)
 		m.sparks.Tick()
+		if m.dream != nil {
+			m.dream.Tick()
+		}
 		if m.typew.Active() || m.slide.Active() {
 			m.rebuildFeedContent()
 		}

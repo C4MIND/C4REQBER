@@ -536,11 +536,33 @@ func (m *model) updateLangSeen() {
 
 func (m *model) rebuildFeedContent() {
 	var b strings.Builder
-	for _, card := range m.feed {
-		b.WriteString(renderCard(card, m.width))
-		b.WriteString("\n")
+	// v9.11.7: when the feed is empty OR contains only CardEmpty
+	// placeholders, render the dashboard widgets instead. Without
+	// this, the viewport is 45 lines tall but content is just 2-3
+	// lines, producing a black void below the placeholder.
+	if m.feedIsEmpty() {
+		b.WriteString(m.renderEmptyWidgets())
+	} else {
+		for _, card := range m.feed {
+			b.WriteString(renderCard(card, m.width))
+			b.WriteString("\n")
+		}
 	}
 	m.vp.SetContent(b.String())
+}
+
+// feedIsEmpty reports whether the feed has no real content — i.e.
+// it has zero cards, or only CardEmpty placeholder cards.
+func (m *model) feedIsEmpty() bool {
+	if len(m.feed) == 0 {
+		return true
+	}
+	for _, c := range m.feed {
+		if c.Kind != CardEmpty {
+			return false
+		}
+	}
+	return true
 }
 
 // fieldString — moved from stringField to avoid clash with i18n.T signature

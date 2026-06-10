@@ -26,6 +26,15 @@ card.code.t = "Simulation"
 card.error.t = "Error"
 empty.title = "Ready for your first discovery"
 empty.hint = "Type a question above and press Enter"
+
+# v9.11.7: empty-state dashboard widgets
+widget.tip.title = "Tip"
+widget.tip.body = "Start with a question, hypothesis, or 'What if…?' — the C4 engine will find relevant papers, generate a hypothesis, and run a verification pass."
+widget.examples.title = "Example queries"
+widget.status.title = "Session status"
+widget.shortcuts.title = "Keyboard shortcuts"
+widget.discoveries = "discoveries"
+widget.languages = "languages"
 placeholder = "design a CRISPR guide RNA with minimal off-targets in T-cells"
 toast.empty = "Type a problem first"
 toast.cancelled = "Cancelled"
@@ -53,6 +62,16 @@ mode.flash = "FLASH"
 mode.turbo = "TURBO"
 mode.turbofactory = "TURBOFACTORY"
 keymap.cycle_mode = "Cycle mode"
+keymap.lang = "Lang"
+keymap.cycle_tier = "Cycle tier"
+keymap.telemetry = "Telemetry"
+keymap.reauth = "Reauth"
+keymap.search = "Search"
+keymap.copy = "Copy"
+keymap.jump = "Jump"
+keymap.settings = "Settings"
+keymap.profile = "Profile"
+keymap.escape = "Escape"
 lang.name = "Language"
 # v9.6.0 keys
 help.title = "Keyboard shortcuts"
@@ -147,3 +166,17 @@ subtitle.line2 = "At Your Fingertips"
 # Easter egg (in EN it's the Russian flavor)
 easter.line1 = "ow's me ol'skool Russian science"
 easter.line2 = "♭ Garmon doloy — bito usee ♭"
+
+widget.modes.title = "Mode variants"
+
+widget.mode.discover = "multi-paper discovery with C4 paradigm-shift gate"
+
+widget.mode.flash = "quick answer with optional USP cognitive analysis"
+
+widget.mode.turbo = "paradigm-shift research proposal with full pipeline"
+
+widget.mode.factory = "parallel pipeline factory (5-100 parallel jobs)"
+
+widget.achievements.title = "Achievements"
+
+widget.achievements.body = "First discovery, 5 discoveries, multi-paper shift, S-rank quality, fast turnaround. Keep going to unlock them all."

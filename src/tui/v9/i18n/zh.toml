@@ -45,6 +45,16 @@ achievement.linguist.desc = "使用了3种以上的语言"
 achievement.streak.name = "着火了"
 achievement.streak.desc = "连续5项发现"
 keymap.cycle_mode = "循环模式"
+keymap.lang = "Lang"
+keymap.cycle_tier = "Cycle tier"
+keymap.telemetry = "Telemetry"
+keymap.reauth = "Reauth"
+keymap.search = "Search"
+keymap.copy = "Copy"
+keymap.jump = "Jump"
+keymap.settings = "Settings"
+keymap.profile = "Profile"
+keymap.escape = "Escape"
 lang.name = "语言"
 mode.discover = "探索"
 mode.flash = "闪光"
@@ -130,3 +140,26 @@ subtitle.line1 = "创意与破坏性的洞察"
 subtitle.line2 = "触手可及"
 easter.line1 = "о'лскульный русский science"
 easter.line2 = "♭ Garmon doloy — bito useyut ♭"
+
+# v9.11.7: empty-state dashboard widgets
+widget.tip.title = "Tip"
+widget.tip.body = "Start with a question, hypothesis, or 'What if…?' — the C4 engine will find relevant papers, generate a hypothesis, and run a verification pass."
+widget.examples.title = "Example queries"
+widget.status.title = "Session status"
+widget.shortcuts.title = "Keyboard shortcuts"
+widget.discoveries = "discoveries"
+widget.languages = "languages"
+
+widget.modes.title = "Mode variants"
+
+widget.mode.discover = "multi-paper discovery with C4 paradigm-shift gate"
+
+widget.mode.flash = "quick answer with optional USP cognitive analysis"
+
+widget.mode.turbo = "paradigm-shift research proposal with full pipeline"
+
+widget.mode.factory = "parallel pipeline factory (5-100 parallel jobs)"
+
+widget.achievements.title = "Achievements"
+
+widget.achievements.body = "First discovery, 5 discoveries, multi-paper shift, S-rank quality, fast turnaround. Keep going to unlock them all."

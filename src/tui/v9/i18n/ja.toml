@@ -45,6 +45,16 @@ achievement.linguist.desc = "3つ以上の言語を使用しました"
 achievement.streak.name = "燃えている"
 achievement.streak.desc = "5つの発見が連続であった"
 keymap.cycle_mode = "サイクルモード"
+keymap.lang = "Lang"
+keymap.cycle_tier = "Cycle tier"
+keymap.telemetry = "Telemetry"
+keymap.reauth = "Reauth"
+keymap.search = "Search"
+keymap.copy = "Copy"
+keymap.jump = "Jump"
+keymap.settings = "Settings"
+keymap.profile = "Profile"
+keymap.escape = "Escape"
 lang.name = "言語"
 mode.discover = "発見する"
 mode.flash = "フラッシュ"
@@ -130,3 +140,26 @@ subtitle.line1 = "創造的で破壊的な洞察"
 subtitle.line2 = "手のひらに"
 easter.line1 = "о'лскульный русский science"
 easter.line2 = "♭ Garmon doloy — bito useyut ♭"
+
+# v9.11.7: empty-state dashboard widgets
+widget.tip.title = "Tip"
+widget.tip.body = "Start with a question, hypothesis, or 'What if…?' — the C4 engine will find relevant papers, generate a hypothesis, and run a verification pass."
+widget.examples.title = "Example queries"
+widget.status.title = "Session status"
+widget.shortcuts.title = "Keyboard shortcuts"
+widget.discoveries = "discoveries"
+widget.languages = "languages"
+
+widget.modes.title = "Mode variants"
+
+widget.mode.discover = "multi-paper discovery with C4 paradigm-shift gate"
+
+widget.mode.flash = "quick answer with optional USP cognitive analysis"
+
+widget.mode.turbo = "paradigm-shift research proposal with full pipeline"
+
+widget.mode.factory = "parallel pipeline factory (5-100 parallel jobs)"
+
+widget.achievements.title = "Achievements"
+
+widget.achievements.body = "First discovery, 5 discoveries, multi-paper shift, S-rank quality, fast turnaround. Keep going to unlock them all."

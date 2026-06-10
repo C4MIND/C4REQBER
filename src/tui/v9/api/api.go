@@ -29,7 +29,7 @@ func New(baseURL string) *Client {
 	return &Client{
 		BaseURL: baseURL,
 		jar:     jar,
-		http:    &http.Client{Timeout: defaultTimeout},
+		http:    &http.Client{Timeout: defaultTimeout, Jar: jar},
 	}
 }
 
@@ -55,7 +55,7 @@ func (c *Client) CSRF() string { return c.csrf }
 // Token returns the current JWT bearer token.
 func (c *Client) Token() string { return c.token }
 
-// Register creates a new user (idempotent — server returns 200 if exists).
+// Register creates a new user (idempotent — server returns 200/409/422 if exists).
 func (c *Client) Register(ctx context.Context, email, password, name string) error {
 	body := fmt.Sprintf(`{"email":%q,"password":%q,"name":%q}`, email, password, name)
 	req, _ := http.NewRequestWithContext(ctx, "POST", c.BaseURL+"/api/v1/auth/register", strings.NewReader(body))
@@ -65,10 +65,11 @@ func (c *Client) Register(ctx context.Context, email, password, name string) err
 		return err
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode >= 400 && resp.StatusCode != 409 && resp.StatusCode != 422 {
-		return fmt.Errorf("register status %d", resp.StatusCode)
+	// 200 = created, 409/422 = already exists, anything else = error
+	if resp.StatusCode == 200 || resp.StatusCode == 409 || resp.StatusCode == 422 {
+		return nil
 	}
-	return nil
+	return fmt.Errorf("register status %d", resp.StatusCode)
 }
 
 // Login exchanges credentials for a JWT bearer token.
@@ -82,7 +83,10 @@ func (c *Client) Login(ctx context.Context, email, password string) error {
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode >= 400 {
-		return fmt.Errorf("login status %d", resp.StatusCode)
+		// Read response body for diagnostics
+		buf := make([]byte, 1024)
+		n, _ := resp.Body.Read(buf)
+		return fmt.Errorf("login status %d: %s", resp.StatusCode, string(buf[:n]))
 	}
 	var out struct {
 		AccessToken string `json:"access_token"`
@@ -313,15 +317,20 @@ func indexOfSSEBoundary(s string) int {
 // event: phase\n
 // data: {"status":"phase_b"}\n
 // \n
+// Multi-line data is concatenated with '\n' (SSE spec).
 func parseSSEEvent(block string) SSEEvent {
 	out := SSEEvent{}
+	var dataLines []string
 	for _, line := range strings.Split(block, "\n") {
 		switch {
 		case strings.HasPrefix(line, "event:"):
 			out.Event = strings.TrimSpace(line[len("event:"):])
 		case strings.HasPrefix(line, "data:"):
-			out.Data = strings.TrimSpace(line[len("data:"):])
+			dataLines = append(dataLines, strings.TrimSpace(line[len("data:"):]))
 		}
+	}
+	if len(dataLines) > 0 {
+		out.Data = strings.Join(dataLines, "\n")
 	}
 	return out
 }

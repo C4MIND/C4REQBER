@@ -81,6 +81,9 @@ type model struct {
 	// SSE stream state
 	sseEvents <-chan api.SSEEvent
 	sseCancel func()
+
+	// Mouse click zones (tracked for clickable cards)
+	zoneIDs []string
 }
 
 // message types for bubbletea

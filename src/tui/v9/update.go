@@ -11,6 +11,13 @@ import (
 	"github.com/figuramax/c4reqber-tui-v9/i18n"
 )
 
+func minInt(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
 // Update is the single entry point for all messages.
 func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
@@ -144,6 +151,30 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 
 	case tea.MouseClickMsg:
+		// Mouse click on a card → find the card whose zone contains the click
+		if msg.Button != tea.MouseLeft {
+			return m, nil
+		}
+		// Check zones for the last 32 cards (we don't track every zone; just most recent)
+		start := 0
+		if len(m.zoneIDs) > 32 {
+			start = len(m.zoneIDs) - 32
+		}
+		for _, zid := range m.zoneIDs[start:] {
+			z := zone.Get(zid)
+			if z != nil && z.InBounds(msg) {
+				// Find the corresponding card and show its title
+				for _, c := range m.feed {
+					if fmt.Sprintf("card-%d", c.Time.UnixNano()) == zid {
+						m.toast = "selected: " + c.Title
+						if len(m.toast) > 60 {
+							m.toast = m.toast[:60] + "…"
+						}
+						return m, nil
+					}
+				}
+			}
+		}
 		return m, nil
 
 	case apiSubmitMsg:
@@ -273,7 +304,9 @@ func (m *model) appendCard(c Card) {
 	if m.follow {
 		m.vp.GotoBottom()
 	}
-	_ = zone.Mark
+	// Track zone ID for mouse click routing
+	zoneID := fmt.Sprintf("card-%d", c.Time.UnixNano())
+	m.zoneIDs = append(m.zoneIDs, zoneID)
 }
 
 func (m *model) rebuildFeedContent() {

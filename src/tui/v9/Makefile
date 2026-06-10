@@ -32,3 +32,15 @@ release-all: clean
 	CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" -o bin/c4tui-v9-darwin-amd64 ./cmd/c4tui-v9
 	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o bin/c4tui-v9-windows-amd64.exe ./cmd/c4tui-v9
 	@ls -la bin/
+
+# Headless e2e probe
+probe:
+	go build -o bin/c4tui-v9-probe ./cmd/c4tui-v9-probe
+	@echo "Probe: bin/c4tui-v9-probe (run with ./bin/c4tui-v9-probe <query>)"
+
+probe-run: probe
+	./bin/c4tui-v9-probe "$(QUERY)"
+
+# TUI main
+tui: build
+	./bin/c4tui-v9

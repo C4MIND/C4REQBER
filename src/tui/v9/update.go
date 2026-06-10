@@ -41,11 +41,13 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if m.running && m.cost > 0 {
 			m.cost = float64(m.tick) / 60.0 * 0.001
 		}
-		m.rain.Tick()
+		// v9.11.9: auto-clear toast after ~1.5s (96 ticks at 16ms).
+		if m.toast != "" && m.toastTick > 0 && m.tick-m.toastTick > 96 {
+			m.toast = ""
+		}
 		m.burst.Tick()
 		m.slide.Tick()
 		m.typew.Tick(m.tick)
-		m.sparks.Tick()
 		if m.dream != nil {
 			m.dream.Tick()
 		}
@@ -79,7 +81,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if completed {
 			m.running = false
 			m.jobID = ""
-			m.toast = i18n.T("toast.complete")
+			m.setToast(i18n.T("toast.complete"))
 			m.burst.Trigger(m.width, m.height, m.width/2, m.height/2)
 			if result != nil {
 				if hyp, ok := result["hypothesis"].(map[string]any); ok {
@@ -152,12 +154,12 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			val := strings.TrimSpace(m.ta.Value())
 			if val == "" {
-				m.toast = i18n.T("toast.empty")
+				m.setToast(i18n.T("toast.empty"))
 				return m, nil
 			}
 			m.ta.Reset()
-			m.startDiscovery(val)
-			return m, nil
+			cmd = m.startDiscovery(val)
+			return m, cmd
 		case km.Matches(ActCancel, keyStr), km.Matches(ActEscape, keyStr):
 			// Wizard: Esc skips
 			if m.wizard != nil && m.wizard.Active() {
@@ -173,7 +175,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.sseCancel = nil
 				}
 				m.sseEvents = nil
-				m.toast = i18n.T("toast.cancelled")
+				m.setToast(i18n.T("toast.cancelled"))
 				if m.tel != nil {
 					m.tel.IncAbort()
 				}
@@ -195,7 +197,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if l := i18n.T("mode." + strings.ToLower(string(m.mode))); l != "mode."+strings.ToLower(string(m.mode)) {
 				modeName = l
 			}
-			m.toast = i18n.T("keymap.cycle_mode") + ": " + modeName
+			m.setToast(i18n.T("keymap.cycle_mode") + ": " + modeName)
 			if m.tel != nil {
 				m.tel.IncMode(string(m.mode))
 			}
@@ -203,27 +205,27 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case km.Matches(ActNewTab, keyStr):
 			m.showTelemetry = !m.showTelemetry
 			if m.showTelemetry {
-				m.toast = "📊 telemetry ON (" + km.Label(ActNewTab) + " to hide)"
+				m.setToast("📊 telemetry ON (" + km.Label(ActNewTab) + " to hide)")
 			} else {
-				m.toast = "📊 telemetry OFF"
+				m.setToast("📊 telemetry OFF")
 			}
 			return m, nil
 		case km.Matches(ActHelp, keyStr):
 			m.showHelp = !m.showHelp
 			if m.showHelp {
-				m.toast = i18n.T("help.shown")
+				m.setToast(i18n.T("help.shown"))
 			} else {
-				m.toast = i18n.T("help.hidden")
+				m.setToast(i18n.T("help.hidden"))
 			}
 			return m, nil
 		case km.Matches(ActReauth, keyStr):
 			// Re-authenticate
 			_ = m.api.Login(context.Background(), "kilo-v9@test.com", "test12345")
-			m.toast = "🔑 re-auth OK (" + km.Label(ActReauth) + ")"
+			m.setToast("🔑 re-auth OK (" + km.Label(ActReauth) + ")")
 			return m, nil
 		case km.Matches(ActSearch, keyStr):
 			// Search mode (placeholder: shows search bar)
-			m.toast = "🔍 search: " + strings.TrimSpace(m.ta.Value())
+			m.setToast("🔍 search: " + strings.TrimSpace(m.ta.Value()))
 			return m, nil
 		case km.Matches(ActCopy, keyStr):
 			// Copy last card as markdown to clipboard (uses pbcopy on macOS)
@@ -231,7 +233,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				last := m.feed[len(m.feed)-1]
 				md := fmt.Sprintf("# %s\n\n%s\n\n*%s*", last.Title, last.Body, last.Time.Format("2006-01-02 15:04"))
 				_ = copyToClipboard(md)
-				m.toast = "📋 copied to clipboard"
+				m.setToast("📋 copied to clipboard")
 			}
 			return m, nil
 		case km.Matches(ActJump, keyStr):
@@ -240,7 +242,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				last := m.feed[len(m.feed)-1]
 				_ = copyToClipboard(fmt.Sprintf(`{"title":%q,"body":%q,"time":%q}`,
 					last.Title, last.Body, last.Time.Format(time.RFC3339)))
-				m.toast = "📋 copied as JSON"
+				m.setToast("📋 copied as JSON")
 			}
 			return m, nil
 		case km.Matches(ActTier, keyStr):
@@ -248,16 +250,16 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.tel != nil {
 				// Tier tracking is in-model; snapshot picks it up on save
 			}
-			m.toast = "🧠 LLM " + m.llmTier.FormatTierBadge() + " (" + km.Label(ActTier) + ")"
+			m.setToast("🧠 LLM " + m.llmTier.FormatTierBadge() + " (" + km.Label(ActTier) + ")")
 			m.PersistSettings()
 			return m, nil
 		case km.Matches(ActSettings, keyStr):
 			// v9.10: toggle settings menu
 			m.settingsVisible = !m.settingsVisible
 			if m.settingsVisible {
-				m.toast = "⚙  settings (↑/↓ to move, " + km.Label(ActSettings) + " to close)"
+				m.setToast("⚙  settings (↑/↓ to move, " + km.Label(ActSettings) + " to close)")
 			} else {
-				m.toast = "settings closed"
+				m.setToast("settings closed")
 			}
 			return m, nil
 		case km.Matches(ActUp, keyStr):
@@ -299,7 +301,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			default:
 				m.colorProfile = ProfileDefault
 			}
-			m.toast = "🎨 " + m.colorProfile.String()
+			m.setToast("🎨 " + m.colorProfile.String())
 			m.PersistSettings()
 			return m, nil
 		case km.Matches(ActLang, keyStr):
@@ -314,7 +316,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.store.AddLangSeen(string(next))
 				_ = m.store.Save()
 			}
-			m.toast = i18n.T("lang.name") + ": " + string(next)
+			m.setToast(i18n.T("lang.name") + ": " + string(next))
 			m.PersistSettings()
 			return m, nil
 		}
@@ -335,7 +337,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				// Find the corresponding card and show its title
 				for _, c := range m.feed {
 					if fmt.Sprintf("card-%d", c.Time.UnixNano()) == zid {
-						m.toast = "selected: " + c.Title
+						m.setToast("selected: " + c.Title)
 						if len(m.toast) > 60 {
 							m.toast = m.toast[:60] + "…"
 						}
@@ -377,7 +379,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if msg.completed {
 				m.running = false
 				m.jobID = ""
-				m.toast = i18n.T("toast.complete")
+				m.setToast(i18n.T("toast.complete"))
 				m.burst.Trigger(m.width, m.height, m.width/2, m.height/2)
 				if msg.result != nil {
 					if hyp, ok := msg.result["hypothesis"].(map[string]any); ok {
@@ -415,7 +417,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.appendCard(Card{Kind: CardError, Title: "Flash error", Body: msg.err.Error(), Time: time.Now(), Status: "error"})
 		} else {
 			m.running = false
-			m.toast = i18n.T("toast.complete")
+			m.setToast(i18n.T("toast.complete"))
 			m.burst.Trigger(m.width, m.height, m.width/2, m.height/2)
 			if hyp, ok := msg.result["hypothesis"].(map[string]any); ok {
 				hc := Card{Kind: CardHypothesis, Title: i18n.T("card.hypothesis.t"), Body: fieldString(hyp, "text"), Time: time.Now(), Status: "done"}
@@ -432,7 +434,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.appendCard(Card{Kind: CardError, Title: "Multi error", Body: msg.err.Error(), Time: time.Now(), Status: "error"})
 		} else {
 			m.running = false
-			m.toast = i18n.T("toast.complete")
+			m.setToast(i18n.T("toast.complete"))
 			m.burst.Trigger(m.width, m.height, m.width/2, m.height/2)
 			m.completedDisc++
 			m.checkAchievements()
@@ -464,19 +466,27 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, tea.Batch(cmds...)
 }
 
-func (m *model) startDiscovery(query string) {
+// setToast records a notification message and marks the tick for
+// auto-clear after ~1.5 seconds (96 ticks at 16ms).
+func (m *model) setToast(msg string) {
+	m.toast = msg
+	m.toastTick = m.tick
+}
+
+func (m *model) startDiscovery(query string) tea.Cmd {
 	m.appendCard(Card{Kind: CardEmpty, Title: "→ " + query, Body: "submitting via " + string(m.mode) + "…", Time: time.Now()})
 	tier := m.llmTier.String()
+	m.running = true
+	var cmd tea.Cmd
 	switch m.mode {
 	case ModeFlash:
-		// Flash: sync, fast — uses C1 (cheap) regardless of current tier
-		_ = flashCmd(m.api, query)
+		cmd = flashCmd(m.api, query)
 	case ModeTurbo, ModeTurboFactory:
-		// For v9.0 these still go through one-click (we don't have separate endpoints)
-		_ = submitCmd(m.api, query, "science", tier)
+		cmd = submitCmd(m.api, query, "science", tier)
 	default:
-		_ = submitCmd(m.api, query, "science", tier)
+		cmd = submitCmd(m.api, query, "science", tier)
 	}
+	return cmd
 }
 
 // appendCard helper.

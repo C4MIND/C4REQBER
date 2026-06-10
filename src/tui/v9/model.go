@@ -74,7 +74,8 @@ type model struct {
 
 	ta    textarea.Model
 	focus bool
-	toast string
+	toast    string
+	toastTick int  // tick when toast was last set (for auto-clear ~1.5s)
 
 	tick int
 

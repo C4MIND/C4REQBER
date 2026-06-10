@@ -25,7 +25,7 @@ import (
 )
 
 // version is set at build time via -ldflags "-X main.version=..."
-var version = "v9.11.8"
+var version = "v9.12.0"
 
 // gitRef returns the git commit short hash, or empty if not available.
 func gitRef() string {

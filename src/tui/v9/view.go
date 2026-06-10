@@ -50,14 +50,8 @@ func (m *model) View() tea.View {
 	if m.showAchievementOverlay && !m.showHelp && (m.wizard == nil || !m.wizard.Active()) {
 		body = renderAchievementOverlay(*m.achievements, m.width, m.height)
 	}
-	if rain := m.rain.Render(); rain != "" && !m.burst.Active() && len(m.feed) == 0 {
-		body = overlayRegion(body, rain, 1, m.height-4, m.width)
-	}
 	if m.burst.Active() {
 		body = overlayRegion(body, m.burst.Render(), 0, 0, m.width)
-	}
-	if spark := m.sparks.Render(); spark != "" {
-		body = overlayRegion(body, spark, m.height-4, m.height-1, m.width)
 	}
 	v := tea.NewView(zone.Scan(body))
 	v.AltScreen = true

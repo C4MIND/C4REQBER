@@ -135,8 +135,16 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "esc":
 			if m.running {
 				m.running = false
+				m.jobID = ""
+				if m.sseCancel != nil {
+					m.sseCancel()
+					m.sseCancel = nil
+				}
+				m.sseEvents = nil
 				m.toast = i18n.T("toast.cancelled")
 			}
+			return m, nil
+		}
 			return m, nil
 		case "tab":
 			// Cycle mode: DISCOVER → FLASH → TURBO → TURBOFACTORY → DISCOVER
@@ -160,7 +168,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			// Shift+L — cycle language (right-to-left: EN→RU→ZH→JA→DE→AR→HI)
 			next := cycleLangName(i18n.GetLang())
 			i18n.SetLang(next)
-			m.langsSeen[string(next)] = true
+			m.updateLangSeen()
 			m.toast = i18n.T("lang.name") + ": " + string(next)
 			return m, nil
 		}
@@ -348,6 +356,11 @@ func (m *model) checkAchievements() {
 			Status: "done",
 		})
 	}
+}
+
+// updateLangSeen records the current lang code in model.langsSeen.
+func (m *model) updateLangSeen() {
+	m.langsSeen[string(i18n.GetLang())] = true
 }
 
 func (m *model) rebuildFeedContent() {

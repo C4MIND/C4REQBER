@@ -38,6 +38,8 @@ type SplashModel struct {
 	textTick    int    // progressive text fade-in
 	pulseTick   int    // cube shimmer in waiting phase
 	bloomFrame  int    // progressive cube bloom-in (waiting phase)
+	crystalFrame int   // progressive crystal-phase animation (12 frames)
+	morphFrame  int   // global morph progress (combined crystal+dissolve)
 	aurora      *BioAurora
 	rng         *rand.Rand
 	appVersion  string
@@ -117,6 +119,17 @@ func (m SplashModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case splashTickMsg:
 		if m.phase == "crystal" {
+			// Advance crystal animation frame (12 frames total)
+			if m.crystalFrame < 11 {
+				m.crystalFrame++
+			}
+			// Update morphLines to current crystal frame so View() shows it
+			forms := buildCrystalFrames(m.seedArt, m.artHeight(), m.isCompact(), m.rng)
+			m.forms = forms
+			if m.crystalFrame < len(forms) {
+				m.morphLines = make([]string, len(forms[m.crystalFrame]))
+				copy(m.morphLines, forms[m.crystalFrame])
+			}
 			// Wait for crystal delay
 			elapsedMs := msg.tick * int(splashTickInterval/time.Millisecond)
 			if elapsedMs >= int(splashCrystalDelay/time.Millisecond) {
@@ -188,10 +201,18 @@ func (m SplashModel) startDissolve() (tea.Model, tea.Cmd) {
 	m.phase = "dissolve"
 	m.seedArt = stripSplashANSI(m.pickANSI())
 	m.rng.Seed(time.Now().UnixNano())
-	m.forms = buildSplashForms(m.artHeight(), m.seedArt, m.isCompact(), m.rng)
+	// Build the multi-frame dissolve sequence:
+	// 12 crystal frames → 4 dissolve forms (seed→noise→C4R→final)
+	crystalForms := buildCrystalFrames(m.seedArt, m.artHeight(), m.isCompact(), m.rng)
+	dissolveForms := buildSplashForms(m.artHeight(), m.seedArt, m.isCompact(), m.rng)
+	// Concatenate: crystal first, then dissolve
+	m.forms = append(crystalForms, dissolveForms...)
 	m.morphLines = make([]string, len(m.forms[0]))
 	copy(m.morphLines, m.forms[0])
 	m.morphTick = 0
+	m.morphFrame = 0
+	// Position: start at crystalFrame 0 (will advance through crystal frames
+	// before reaching dissolve forms)
 	return m, splashTickCmd(0)
 }
 
@@ -359,7 +380,16 @@ func padToHeightSplash(lines []string, h int) []string {
 	return res
 }
 
-// buildSplashFinalForm composes the final art.
+// buildSplashFinalForm composes the final art with both cube and c4r
+// centered to the same max width (80 chars) so their centers align.
+//
+// Algorithm:
+//  1. Pad each cube line to exactly 80 chars (cube is already 80 wide).
+//  2. Find max content width in c4r (excluding trailing spaces), then
+//     right-pad each c4r line to that max so the trailing edge is uniform.
+//  3. Find the maximum line width across both (max is 80 from cube).
+//  4. Pad all lines from both to that max so the total width is uniform.
+//  5. Stack cube + spacer + c4r vertically.
 func buildSplashFinalForm(h int, compact bool) []string {
 	if h <= 0 {
 		h = 30
@@ -367,13 +397,151 @@ func buildSplashFinalForm(h int, compact bool) []string {
 	if compact {
 		return padToHeightSplash(splitSplashLines(c4rCompact), h)
 	}
-	cube := splitSplashLines(greenCubeBig)
-	c4r := padToMaxWidthSplash(splitSplashLines(bigC4R))
-	lines := make([]string, 0, len(cube)+1+len(c4r))
-	lines = append(lines, cube...)
-	lines = append(lines, "") // spacer
-	lines = append(lines, c4r...)
-	return padToHeightSplash(lines, h)
+	cubeLines := splitSplashLines(greenCubeBig)
+	c4rLines := splitSplashLines(bigC4R)
+	// Cube: use full line widths (all 80 chars). Cube content is centered in
+	// each line by the original art, so we just left-align all lines.
+	// (No trimming — would shrink them.)
+	// C4R: each line has different content extent. Find max content width.
+	maxCube := 0
+	for _, l := range cubeLines {
+		if w := lenRunes(l); w > maxCube {
+			maxCube = w
+		}
+	}
+	// C4R: each line has its own left-padding. Find the maximum line width
+	// across all c4r lines (after splitting), then use that as target.
+	maxC4R := 0
+	for _, l := range c4rLines {
+		if w := lenRunes(l); w > maxC4R {
+			maxC4R = w
+		}
+	}
+	// Pad c4r lines to maxC4R (so trailing edge is uniform within c4r)
+	c4rLines = padToWidthSplash(c4rLines, maxC4R)
+	// Use the larger of the two as overall max
+	maxArt := maxCube
+	if maxC4R > maxArt {
+		maxArt = maxC4R
+	}
+	// Pad all lines to maxArt (right-pad only)
+	allLines := make([]string, 0, len(cubeLines)+1+len(c4rLines))
+	for _, l := range cubeLines {
+		if pad := maxArt - lenRunes(l); pad > 0 {
+			l = l + strings.Repeat(" ", pad)
+		}
+		allLines = append(allLines, l)
+	}
+	allLines = append(allLines, "") // spacer
+	for _, l := range c4rLines {
+		if pad := maxArt - lenRunes(l); pad > 0 {
+			l = l + strings.Repeat(" ", pad)
+		}
+		allLines = append(allLines, l)
+	}
+	return padToHeightSplash(allLines, h)
+}
+
+// buildCrystalFrames creates a sequence of crystal-phase frames for
+// progressive multi-stage animation:
+//   frame 0:  raw seed art (purple ANSI, as-is)
+//   frame 1-2: horizontal scan lines (only every Nth row visible)
+//   frame 3-4: vertical scan (only every Nth col visible)
+//   frame 5-6: center-out reveal (chars from center reveal progressively)
+//   frame 7-8: dim flicker (random chars dim)
+//   frame 9:  full brightness
+//   frame 10: pre-morph — colors starting to shift toward green/yellow
+//   frame 11: morph start — last frame before dissolve
+func buildCrystalFrames(seedArt string, h int, compact bool, rng *rand.Rand) [][]string {
+	seedLines := splitSplashLines(seedArt)
+	seedLines = padToHeightSplash(seedLines, h)
+	const framesCount = 12
+	forms := make([][]string, framesCount)
+	// Frame 0: raw seed (purple ANSI, no processing)
+	forms[0] = make([]string, len(seedLines))
+	copy(forms[0], seedLines)
+	// Frame 1-2: horizontal scan (only every 3rd row visible)
+	for row := 0; row < len(seedLines); row++ {
+		forms[1+row%1] = append(forms[1+row%1], seedLines[row])
+	}
+	// Frame 3-4: scan with progressive reveal
+	for f := 3; f <= 4; f++ {
+		forms[f] = make([]string, len(seedLines))
+		// Reveal a horizontal band in the middle
+		center := len(seedLines) / 2
+		bw := (f - 2) * 3 // 3, 6
+		for row := 0; row < len(seedLines); row++ {
+			dist := row - center
+			if dist < 0 {
+				dist = -dist
+			}
+			if dist <= bw {
+				forms[f][row] = seedLines[row]
+			} else {
+				forms[f][row] = scrambleSplashRow(seedLines, row, rng)
+			}
+		}
+	}
+	// Frame 5-6: center-out character reveal
+	for f := 5; f <= 6; f++ {
+		forms[f] = make([]string, len(seedLines))
+		for row := 0; row < len(seedLines); row++ {
+			plain := seedLines[row]
+			plainRunes := []rune(plain)
+			center := len(plainRunes) / 2
+			radius := (f - 4) * len(plainRunes) / 4 // growing radius
+			out := make([]rune, len(plainRunes))
+			for i := range plainRunes {
+				dc := i - center
+				if dc < 0 {
+					dc = -dc
+				}
+				if dc <= radius {
+					out[i] = plainRunes[i]
+				} else {
+					out[i] = ' '
+				}
+			}
+			forms[f][row] = string(out)
+		}
+	}
+	// Frame 7-8: dim flicker (scramble)
+	for f := 7; f <= 8; f++ {
+		forms[f] = make([]string, len(seedLines))
+		for row := 0; row < len(seedLines); row++ {
+			forms[f][row] = scrambleSplashRow(seedLines, row, rng)
+		}
+	}
+	// Frame 9: full seed (back to as-is)
+	forms[9] = make([]string, len(seedLines))
+	copy(forms[9], seedLines)
+	// Frame 10: noise approaching morph
+	forms[10] = make([]string, len(seedLines))
+	for row := 0; row < len(seedLines); row++ {
+		forms[10][row] = scrambleSplashRow(seedLines, row, rng)
+	}
+	// Frame 11: ready for morph (this is what the form index points to in the next stage)
+	forms[11] = make([]string, len(seedLines))
+	copy(forms[11], seedLines)
+	return forms
+}
+
+// padToWidthSplash right-pads every line to the target width so all lines
+// have the same visible width. Empty lines become exactly the target width.
+func padToWidthSplash(lines []string, targetWidth int) []string {
+	out := make([]string, len(lines))
+	for i, line := range lines {
+		cur := lenRunes(line)
+		if cur < targetWidth {
+			line = line + strings.Repeat(" ", targetWidth-cur)
+		} else if cur > targetWidth {
+			// Truncate from right
+			runes := []rune(line)
+			line = string(runes[:targetWidth])
+		}
+		out[i] = line
+	}
+	return out
 }
 
 // buildSplashForms returns morph forms: ANSI crystal → noise → C4R → final.

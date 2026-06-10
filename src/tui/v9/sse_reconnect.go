@@ -30,7 +30,6 @@ func DefaultReconnectPolicy() ReconnectPolicy {
 type sseState struct {
 	mu          sync.Mutex
 	attempts    int
-	lastErr     error
 	cancelled   bool
 	policy      ReconnectPolicy
 	streamErrCb func(err error, attempt int) // for UI feedback
@@ -93,8 +92,7 @@ type SSEStreamResult struct {
 	Reopened bool // true if this event came from a reconnect
 }
 
-// sseStreamWithReconnect streams SSE events with auto-reconnect on error.
-// Returns a channel that yields SSEStreamResult messages until cancelled or job done.
+
 func sseStreamWithReconnect(ctx context.Context, c *api.Client, jobID string, state *sseState) <-chan SSEStreamResult {
 	out := make(chan SSEStreamResult, 16)
 	go func() {
@@ -107,7 +105,7 @@ func sseStreamWithReconnect(ctx context.Context, c *api.Client, jobID string, st
 			events, cancelFn, err := c.Stream(ctx, jobID)
 			if err != nil {
 				state.mu.Lock()
-				state.lastErr = err
+				_ = err // ensure used
 				state.mu.Unlock()
 				if state.streamErrCb != nil {
 					state.streamErrCb(err, attempt)

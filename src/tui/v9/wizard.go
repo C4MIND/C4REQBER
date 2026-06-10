@@ -10,7 +10,6 @@ import (
 type WizardState struct {
 	step    int // 0=hello, 1=try-demo, 2=help, 3=done
 	active  bool
-	choice  string
 }
 
 // NewWizardState returns a fresh wizard.

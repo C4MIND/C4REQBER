@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sort"
 	"strconv"
-	"strings"
+	
 	"time"
 
 	"charm.land/lipgloss/v2"
@@ -93,15 +93,10 @@ func renderAchievementOverlay(a AchievementSystem, width, height int) string {
 	// Build big centered card
 	title := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("3")).Render(
 		"🏆  " + i18n.T("achievement.unlocked"))
-	lastUnlock := time.Time{}
-	if a.LastUnlock.IsZero() {
-		lastUnlock = time.Now()
-	} else {
-		lastUnlock = a.LastUnlock
-	}
+
 	var nameAch Achievement
 	for i := range a.Items {
-		if a.Items[i].UnlockedAt.After(lastUnlock.Add(-time.Second)) {
+		if a.Items[i].Unlocked {
 			nameAch = a.Items[i]
 			break
 		}
@@ -185,15 +180,6 @@ func (a *AchievementSystem) Check(discoveries int, lastQuality float64, papersCo
 	return justUnlocked
 }
 
-// renderAchievementCard renders an achievement unlock banner.
-func renderAchievementCard(a Achievement, width int) string {
-	style := lipgloss.NewStyle().Width(width - 2).Padding(0, 1).Border(lipgloss.RoundedBorder()).BorderForeground(lipgloss.Color("3"))
-	title := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("3")).Render("🏆 " + i18n.T(a.Name))
-	body := lipgloss.NewStyle().Foreground(lipgloss.Color("7")).Render(i18n.T(a.Description))
-	stamp := lipgloss.NewStyle().Foreground(lipgloss.Color("8")).Render(a.UnlockedAt.Format("15:04:05"))
-	return style.Render(title + "  " + stamp + "\n" + body)
-}
-
 // renderTelemetry renders the bottom telemetry panel (Ctrl+T).
 // Upgraded for v9.7 with tier + profile + per-lang % info.
 func renderTelemetry(snap telemetry.Snapshot, width int, llmTier, colorProfile string) string {
@@ -254,11 +240,6 @@ func cycleLangName(current i18n.Lang) i18n.Lang {
 		}
 	}
 	return i18n.LangEN
-}
-
-// joinStrings helper for LangList
-func joinStrings(parts []string, sep string) string {
-	return strings.Join(parts, sep)
 }
 
 // fmtDiscoveryMeta is a helper for the discovery complete card.

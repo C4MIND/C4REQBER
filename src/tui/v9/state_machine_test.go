@@ -8,11 +8,6 @@ import (
 	"github.com/figuramax/c4reqber-tui-v9/i18n"
 )
 
-// fakeSSEEvent builds an api.SSEEvent for testing.
-func fakeSSEEvent(data string) api.SSEEvent {
-	return api.SSEEvent{Event: "phase", Data: data}
-}
-
 func TestStateMachine_WindowSize(t *testing.T) {
 	m := NewApp("http://test")
 	u, _ := m.Update(teaWindowSizeMsg(120, 40))

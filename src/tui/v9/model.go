@@ -68,7 +68,6 @@ type model struct {
 
 	ta    textarea.Model
 	focus bool
-	err   error
 	toast string
 
 	tick int

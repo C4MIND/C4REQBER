@@ -358,8 +358,3 @@ func TestAggregate_TopDay(t *testing.T) {
 	}
 }
 
-// helper: bubbletea v2 key msg with Ctrl modifier
-type teaKeyYMsgType = struct {
-	Code rune
-	Mod  int
-}

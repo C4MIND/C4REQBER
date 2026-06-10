@@ -654,7 +654,7 @@ func (m SplashModel) splashTextLines(primary, success, accent, muted, highlight 
 
 type splashTickMsg struct{ tick int }
 type splashPulseMsg struct{}
-type splashTextFadeMsg struct{ tick int }
+type splashTextFadeMsg struct{}
 type splashFadeMsg struct{}
 
 func splashTickCmd(tick int) tea.Cmd {
@@ -669,7 +669,7 @@ func splashPulseCmd() tea.Cmd {
 	})
 }
 
-func splashTextFadeCmd(_ int) tea.Cmd {
+func splashTextFadeCmd(_ int) tea.Cmd { //nolint:unused
 	return tea.Tick(splashTextFade, func(time.Time) tea.Msg {
 		return splashTextFadeMsg{}
 	})
@@ -679,16 +679,4 @@ func splashFadeCmd() tea.Cmd {
 	return tea.Tick(300*time.Millisecond, func(time.Time) tea.Msg {
 		return splashFadeMsg{}
 	})
-}
-
-// colorToString extracts the hex string from a color.Color for lipgloss.Color() function.
-// lipgloss v2's Color() is a function, but for type compatibility we extract a hex string.
-func colorToString(c interface{ String() string }) string {
-	if c == nil {
-		return "#ffffff"
-	}
-	if s, ok := c.(interface{ String() string }); ok {
-		return s.String()
-	}
-	return "#ffffff"
 }

@@ -15,13 +15,6 @@ import (
 	"github.com/figuramax/c4reqber-tui-v9/i18n"
 )
 
-func minInt(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}
-
 // Update is the single entry point for all messages.
 func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
@@ -331,15 +324,6 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if msg.Button != tea.MouseLeft {
 			return m, nil
 		}
-	case tea.MouseWheelMsg:
-		// v9.10: mouse wheel scrolls feed
-		if msg.Button == tea.MouseWheelUp {
-			m.vp.ScrollUp(3)
-		} else if msg.Button == tea.MouseWheelDown {
-			m.vp.ScrollDown(3)
-		}
-		m.rebuildFeedContent()
-		return m, nil
 		// Check zones for the last 32 cards (we don't track every zone; just most recent)
 		start := 0
 		if len(m.zoneIDs) > 32 {
@@ -360,6 +344,16 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 			}
 		}
+		return m, nil
+
+	case tea.MouseWheelMsg:
+		// v9.10: mouse wheel scrolls feed by 3 lines
+		if msg.Button == tea.MouseWheelUp {
+			m.vp.ScrollUp(3)
+		} else if msg.Button == tea.MouseWheelDown {
+			m.vp.ScrollDown(3)
+		}
+		m.rebuildFeedContent()
 		return m, nil
 
 	case apiSubmitMsg:

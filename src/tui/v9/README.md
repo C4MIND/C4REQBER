@@ -1,3 +1,5 @@
+> **Note:** Repo on **GitLab** (`git@gitlab.com:cognitive-functors/turbo-cdi.git`). GitHub is a read-only mirror. All tags and work live on friend-stack-merged branch locally — not pushed.
+
 # TUI v9 "The Cockpit"
 
 **Tag:** v9.0.0 (commit 2404ddc) | **Tag:** v9.1.0-rc1 (commit pending)

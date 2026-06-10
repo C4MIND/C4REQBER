@@ -1,3 +1,19 @@
+## 🔴 GIT REMOTE — PRIMARY: GitLab (NEVER say "github" in chat!)
+
+**Primary remote:** GitLab (`git@gitlab.com:cognitive-functors/turbo-cdi.git`).
+**GitHub = read-only mirror** for promotion only. Do NOT push to github.com.
+
+When writing commits, tags, REPORT files, or any user-facing output:
+- ✅ Say "GitLab" / "gitlab" / "GitLab repo"
+- ❌ Never say "GitHub" / "github" — even casually
+- ❌ Never reference github.com URLs in reports
+
+When creating branches / PRs / releases: target GitLab (`git push gitlab ...`).
+
+This is a permanent rule. If you accidentally wrote "github" — flag it to the user and fix in the next commit.
+
+---
+
 # c4reqber v5.6.0 — AI Agent Context File
 
 **Version:** 5.6.0 | **Date:** 2026-06-03 | Production — Dead Code Cleanup + API Integration + Pydantic V2 + TUI v8 Polish Complete

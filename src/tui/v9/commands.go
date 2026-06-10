@@ -70,7 +70,7 @@ func sseCmd(c *api.Client, jobID string) tea.Cmd {
 				cancel()
 				return sseErrorMsg{err: nil} // closed
 			}
-			return sseEventMsg{event: ev, cancel: cancel}
+			return sseEventMsg{event: ev, events: events, cancel: cancel}
 		case <-time.After(8 * time.Second):
 			cancel()
 			return sseErrorMsg{err: nil} // timeout
@@ -86,7 +86,7 @@ func sseContinueCmd(events <-chan api.SSEEvent, cancel func()) tea.Cmd {
 			if !ok {
 				return sseClosedMsg{}
 			}
-			return sseEventMsg{event: ev, cancel: cancel}
+			return sseEventMsg{event: ev, events: events, cancel: cancel}
 		case <-time.After(8 * time.Second):
 			return sseClosedMsg{} // periodic keepalive / no events
 		}

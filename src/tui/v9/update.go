@@ -70,8 +70,9 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case sseEventMsg:
 		// SSE event from /v8/discover/stream/{job_id}
-		if m.sseCancel != nil {
-			// don't replace — we'll continue streaming the existing connection
+		if m.sseEvents == nil {
+			m.sseEvents = msg.events
+			m.sseCancel = msg.cancel
 		}
 		status, phase, progress, result, completed := extractResultFromSSEData(msg.event.Data)
 		// Map to apiPollMsg so we can reuse the render path
@@ -112,8 +113,8 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 		// Continue streaming
-		if m.sseEvents != nil && msg.cancel != nil {
-			return m, sseContinueCmd(m.sseEvents, msg.cancel)
+		if m.sseEvents != nil {
+			return m, sseContinueCmd(m.sseEvents, m.sseCancel)
 		}
 		return m, nil
 
@@ -166,7 +167,6 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			cmd = m.startDiscovery(val)
 			return m, cmd
 		case km.Matches(ActCancel, keyStr), km.Matches(ActEscape, keyStr):
-			// Wizard: Esc skips
 			if m.wizard != nil && m.wizard.Active() {
 				m.wizard.Done()
 				m.MarkFirstRunDone()
@@ -224,8 +224,10 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			return m, nil
 		case km.Matches(ActReauth, keyStr):
-			// Re-authenticate (best-effort)
-			err := m.api.Login(context.Background(), "kilo-v9@test.com", "test12345")
+			// Re-authenticate (best-effort, with 10s timeout)
+			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			defer cancel()
+			err := m.api.Login(ctx, "kilo-v9@test.com", "test12345")
 			if err != nil {
 				m.setToast("🔑 re-auth failed: " + err.Error())
 			} else {
@@ -323,7 +325,9 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			if m.store != nil {
 				m.store.AddLangSeen(string(next))
-				_ = m.store.Save()
+				if err := m.store.Save(); err != nil {
+					m.setToast("⚠ save: " + err.Error())
+				}
 			}
 			m.setToast(i18n.T("lang.name") + ": " + string(next))
 			m.PersistSettings()
@@ -545,7 +549,9 @@ func (m *model) checkAchievements() {
 			m.store.AddAchievement(int(a.Kind))
 			m.store.AddLangSeen(string(i18n.GetLang()))
 			m.store.IncrementDiscovery()
-			_ = m.store.Save()
+			if err := m.store.Save(); err != nil {
+				m.setToast("⚠ save: " + err.Error())
+			}
 		}
 		if m.tel != nil {
 			m.tel.IncDiscoveryResult(true, seconds)

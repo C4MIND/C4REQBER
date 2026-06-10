@@ -72,14 +72,14 @@ type model struct {
 	vp     viewport.Model
 	follow bool
 
-	ta    textarea.Model
-	focus bool
-	toast    string
-	toastTick int  // tick when toast was last set (for auto-clear ~1.5s)
+	ta        textarea.Model
+	focus     bool
+	toast     string
+	toastTick int // tick when toast was last set (for auto-clear ~1.5s)
 
 	// v9.12.1: dedup phase cards — only append when phase/progress changes.
-	lastPhase     string
-	lastProgress  float64
+	lastPhase    string
+	lastProgress float64
 
 	tick int
 
@@ -98,11 +98,11 @@ type model struct {
 	zoneIDs []string
 
 	// Achievements + meta
-	achievements     *AchievementSystem
-	completedDisc    int
-	langsSeen        map[string]bool
-	langsMu          sync.RWMutex // guards langsSeen for concurrent View/Update
-	lastQuality      float64
+	achievements    *AchievementSystem
+	completedDisc   int
+	langsSeen       map[string]bool
+	langsMu         sync.RWMutex // guards langsSeen for concurrent View/Update
+	lastQuality     float64
 	lastPapersCount int
 
 	// Persisted state (achievements, langs seen) and in-session telemetry
@@ -170,13 +170,14 @@ type (
 		err error
 	}
 	sseEventMsg struct {
-		event api.SSEEvent
+		event  api.SSEEvent
+		events <-chan api.SSEEvent
 		cancel func()
 	}
 	sseErrorMsg struct {
 		err error
 	}
-	sseClosedMsg struct{}
+	sseClosedMsg   struct{}
 	flashResultMsg struct {
 		result map[string]any
 		err    error

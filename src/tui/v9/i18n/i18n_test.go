@@ -52,7 +52,7 @@ func TestTLangSwitch(t *testing.T) {
 		t.Error("EN run keymap")
 	}
 	SetLang(LangRU)
-	if !strings.Contains(T("keymap.run"), "Бегать") {
+	if !strings.Contains(T("keymap.run"), "Запустить") {
 		t.Error("RU run keymap")
 	}
 }

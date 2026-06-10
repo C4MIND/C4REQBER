@@ -75,11 +75,18 @@ func (m *model) renderHeader() string {
 		m.cachedFooterClock = now.Format("15:04:05")
 		m.lastFooterSecond = sec
 	}
-	left := fmt.Sprintf(" %s C4REQBER v9  F⟨1,1,0⟩  🇬🇧 %s  DeepSeek  $%.4f  %s",
+	// v9.12.3: use ASCII-only header to avoid lipgloss.Width() bugs
+	// with Unicode characters (⟨⟩🇬🇧 caused gap calc errors, producing
+	// overflow lines that the terminal wrapped — "CAREQBER" missing 4,
+	// "F(1,1,0)" instead of F⟨1,1,0⟩, duplicated "DeepSeek $0.0000").
+	// Simple padding to width via rune length, no lipgloss.Width.
+	hdr := fmt.Sprintf(" %s C4REQBER v9  F<1,1,0>  [%s]  DeepSeek  $%.4f  %s",
 		pulse, i18n.GetLang(), m.cost, m.cachedFooterClock)
 	right := " " + string(m.mode) + " "
-	gap := strings.Repeat(" ", max(1, m.width-lipgloss.Width(left)-lipgloss.Width(right)))
-	return lipgloss.NewStyle().Width(m.width).Render(left + gap + right)
+	if len(hdr)+len(right) < m.width {
+		hdr += strings.Repeat(" ", m.width-len(hdr)-len(right))
+	}
+	return hdr + right
 }
 
 func (m *model) renderFeed() string {
@@ -103,8 +110,13 @@ func (m *model) renderFooter() string {
 	if m.toast != "" {
 		right = m.toast + "  " + right
 	}
-	gap := strings.Repeat(" ", max(1, m.width-lipgloss.Width(left)-lipgloss.Width(right)))
-	return lipgloss.NewStyle().Width(m.width).Render(left + gap + right)
+	// v9.12.3: simple padding to width — lipgloss.Width() miscalculates
+	// Unicode characters (▶⏵ etc.) causing overflow and terminal wrap.
+	line := left + strings.Repeat(" ", max(1, m.width-len([]rune(left))-len([]rune(right)))) + right
+	if len([]rune(line)) < m.width {
+		line += strings.Repeat(" ", m.width-len([]rune(line)))
+	}
+	return line[:min(len(line), m.width)]
 }
 
 func (m *model) layout() {

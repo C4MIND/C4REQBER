@@ -145,5 +145,5 @@ subtitle.line2 = "At Your Fingertips"
 # Motto: "Shift" green (1), "paradigms" red-orange (9 — closest ANSI to orange)
 # This is achieved by splitting the string in code
 # Easter egg (in EN it's the Russian flavor)
-easter.line1 = "о'лскульный русский science"
-easter.line2 = "♭ Garmon doloy — bito useyut ♭"
+easter.line1 = "ow's me ol'skool Russian science"
+easter.line2 = "♭ Garmon doloy — bito usee ♭"

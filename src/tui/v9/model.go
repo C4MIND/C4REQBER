@@ -101,8 +101,14 @@ type model struct {
 	// showTelemetry toggles the bottom telemetry panel (Ctrl+T)
 	showTelemetry bool
 
+	// showHelp toggles the fullscreen keymap help overlay (?)
+	showHelp bool
+
 	// dream is the ambient idle mode (activates after 5min of no activity)
 	dream *DreamState
+
+	// saveHistory controls whether telemetry history is persisted on shutdown
+	saveHistory bool
 }
 
 // message types for bubbletea
@@ -187,6 +193,7 @@ func NewApp(apiURL string) *model {
 		langsSeen:    map[string]bool{},
 		tel:          telemetry.New(),
 		dream:        NewDreamState(),
+		saveHistory:  true,
 	}
 	// Load persisted state (achievements, langs). If store fails, fall back gracefully.
 	store, storeErr := persist.New(persist.DefaultPath())
@@ -220,3 +227,16 @@ func T(key string) string { return i18n.T(key) }
 
 // SetLang shortcut re-exports i18n.SetLang.
 func SetLang(l i18n.Lang) { i18n.SetLang(l) }
+
+// Tel returns the telemetry handle (used by main to save history on exit).
+func (m *model) Tel() *telemetry.Telemetry { return m.tel }
+
+// Config returns the live config snapshot.
+func (m *model) Config() Config {
+	return Config{
+		APIURL:      m.apiURL,
+		Lang:        i18n.GetLang(),
+		DreamIdle:   m.dream.idleSeconds,
+		SaveHistory: true,
+	}
+}

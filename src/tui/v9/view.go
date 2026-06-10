@@ -32,7 +32,10 @@ func (m *model) View() tea.View {
 		regions = append(regions, renderTelemetry(m.tel.Get(), m.width))
 	}
 	body := strings.Join(regions, "\n")
-	if m.dream != nil && m.dream.Active() {
+	if m.showHelp {
+		body = HelpOverlay(m.width, m.height)
+	}
+	if m.dream != nil && m.dream.Active() && !m.showHelp {
 		body = m.dream.Render(m.width, m.height)
 	}
 	if rain := m.rain.Render(); rain != "" && !m.burst.Active() && len(m.feed) == 0 {

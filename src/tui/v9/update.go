@@ -132,6 +132,9 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		switch msg.String() {
 		case "ctrl+c":
+			if m.saveHistory && m.tel != nil {
+				saveTelemetryHistory(m.tel, m.Config())
+			}
 			return m, tea.Quit
 		case "enter":
 			val := strings.TrimSpace(m.ta.Value())
@@ -184,6 +187,14 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.toast = "📊 telemetry ON (Ctrl+T to hide)"
 			} else {
 				m.toast = "📊 telemetry OFF"
+			}
+			return m, nil
+		case "?":
+			m.showHelp = !m.showHelp
+			if m.showHelp {
+				m.toast = i18n.T("help.shown")
+			} else {
+				m.toast = i18n.T("help.hidden")
 			}
 			return m, nil
 		case "shift+L":

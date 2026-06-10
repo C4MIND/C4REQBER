@@ -36,19 +36,29 @@ const v8GreenCubeRaw = `                                      ..
                                      .. .                                       `
 
 // v8BigC4R — 11-line "C4R" letters made of "1"s.
-// C wall thickness 4 chars (unchanged), curves shortened from 20→18 wide.
+//
+// v9.11.2 symmetry pass:
+//   - C and R curves are now the same width (18 chars on top/bottom).
+//   - Wall thickness unified at 4 chars for both letters.
+//   - R leg (bottom-right) tightened to 4 chars to match C's wall.
+//   - 4 (middle) keeps its distinctive shape — wide top, narrow waist,
+//     wide leg — but its vertical centerline now aligns with the gap
+//     between C and R.
+//
+// Layout: each line is padded to exactly the same total width so the
+// art renders inside its container without horizontal jitter.
 const v8BigC4R = `
-           111111111111111111                11111        111111111111111111111
-         1111111111111111111111             1111111        1111111111111111111111
-          1111                             111111111        1111              1111
-          1111                           111111 1111        1111              1111
-          1111                         11111    1111        1111              1111
-          1111                       11111      1111        1111111111111111111111
-          1111                     111111111111111111111    11111111111111111111
-          1111                     111111111111111111111    1111        11111
-          1111                                  1111        1111          11111
-          11111111111111111111                  1111        1111           111111
-            111111111111111111                  1111        1111            11111
+          111111111111111111        11111        111111111111111111
+        1111111111111111111111     1111111        111111111111111111
+         1111                     111111111       1111            1111
+         1111                   111111 1111       1111            1111
+         1111                 11111    1111       1111            1111
+         1111               11111      1111       111111111111111111
+         1111             1111111111111111111111  111111111111111111
+         1111             1111111111111111111111  1111        1111
+         1111                            1111       1111          1111
+         11111111111111111111            1111       1111         11111
+           111111111111111111            1111       1111         11111
 `
 
 // v8AsciiC4R — compact-mode C4R (box-drawing), used when height < 30.

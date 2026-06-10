@@ -76,7 +76,7 @@ func NewSplash(version, gitRef string) SplashModel {
 		gitRef:       gitRef,
 		seedArt:      seed,
 		crystalStart: time.Now(),
-		aurora:       NewBioAurora(),
+		aurora:       NewBioAurora(11), // C4R art occupies 11 rows; aurora respects this
 	}
 }
 
@@ -790,7 +790,7 @@ func (m SplashModel) coloredArtLines(primary, success, accent, muted, highlight 
 	case "waiting":
 		// Apply progressive bloom-in over splashBloomFrames frames
 		artLines = m.morphLines
-		bloomedArt := BloomFrame(artLines, m.bloomFrame, splashBloomFrames)
+			bloomedArt := BloomFrame(artLines, m.bloomFrame, splashBloomFrames)
 		// After bloom completes: apply bio-aurora color modulation
 		// (smooth wave-based palette shifting, sub-1Hz, no epilepsy)
 		if m.bloomFrame >= splashBloomFrames && m.aurora != nil {

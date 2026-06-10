@@ -49,7 +49,7 @@ func TestGoldenEmptyState_RU(t *testing.T) {
 	SetLang(i18n.LangRU)
 	m := NewApp("http://test")
 	out := renderToString(t, m)
-	if !strings.Contains(out, "Готов к первому") {
+	if !strings.Contains(out, "Готов к вашему первому открытию") {
 		t.Errorf("missing RU empty title in:\n%s", out)
 	}
 	if !strings.Contains(out, "ГОТОВ") {
@@ -63,7 +63,7 @@ func TestGoldenEmptyState_ZH(t *testing.T) {
 	SetLang(i18n.LangZH)
 	m := NewApp("http://test")
 	out := renderToString(t, m)
-	if !strings.Contains(out, "准备进行首次") {
+	if !strings.Contains(out, "准备好迎接你的第一次探索") {
 		t.Errorf("missing ZH empty title in:\n%s", out)
 	}
 }

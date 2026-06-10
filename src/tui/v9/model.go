@@ -77,6 +77,10 @@ type model struct {
 	toast    string
 	toastTick int  // tick when toast was last set (for auto-clear ~1.5s)
 
+	// v9.12.1: dedup phase cards — only append when phase/progress changes.
+	lastPhase     string
+	lastProgress  float64
+
 	tick int
 
 	// game-feel effects

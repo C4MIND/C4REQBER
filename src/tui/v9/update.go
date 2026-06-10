@@ -76,7 +76,12 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		status, phase, progress, result, completed := extractResultFromSSEData(msg.event.Data)
 		// Map to apiPollMsg so we can reuse the render path
 		if status != "" || phase != "" {
-			m.appendCard(Card{Kind: CardPhase, Title: phase, Body: fmt.Sprintf("progress %.0f%%", progress*100), Time: time.Now(), Status: "running", Progress: progress})
+			// v9.12.1: dedup phase cards — skip if phase/progress unchanged
+			if phase != m.lastPhase || (abs(progress-m.lastProgress) > 0.01) {
+				m.lastPhase = phase
+				m.lastProgress = progress
+				m.appendCard(Card{Kind: CardPhase, Title: phase, Body: fmt.Sprintf("progress %.0f%%", progress*100), Time: time.Now(), Status: "running", Progress: progress})
+			}
 		}
 		if completed {
 			m.running = false
@@ -375,7 +380,12 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if msg.err != nil {
 			m.appendCard(Card{Kind: CardError, Title: "Poll error", Body: msg.err.Error(), Time: time.Now(), Status: "error"})
 		} else {
-			m.appendCard(Card{Kind: CardPhase, Title: msg.phase, Body: fmt.Sprintf("progress %.0f%%", msg.progress*100), Time: time.Now(), Status: "running", Progress: msg.progress})
+			// v9.12.1: dedup phase cards — skip if phase/progress unchanged
+			if msg.phase != m.lastPhase || (abs(msg.progress-m.lastProgress) > 0.01) {
+				m.lastPhase = msg.phase
+				m.lastProgress = msg.progress
+				m.appendCard(Card{Kind: CardPhase, Title: msg.phase, Body: fmt.Sprintf("progress %.0f%%", msg.progress*100), Time: time.Now(), Status: "running", Progress: msg.progress})
+			}
 			if msg.completed {
 				m.running = false
 				m.jobID = ""
@@ -606,4 +616,12 @@ func copyToClipboard(text string) error {
 	}
 	cmd.Stdin = strings.NewReader(text)
 	return cmd.Run()
+}
+
+// abs returns the absolute value of a float64. Used by phase-card dedup.
+func abs(x float64) float64 {
+	if x < 0 {
+		return -x
+	}
+	return x
 }

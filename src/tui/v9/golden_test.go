@@ -18,6 +18,7 @@ func renderToString(t *testing.T, m *model) string {
 		m.height = 40
 	}
 	m.layout()
+	m.rebuildFeedContent()
 	view := stripANSI(m.View().Content)
 	return view
 }
@@ -26,7 +27,7 @@ func TestGoldenEmptyState_EN(t *testing.T) {
 	original := i18n.GetLang()
 	defer SetLang(original)
 	SetLang(i18n.LangEN)
-	m := NewApp("http://test")
+	m := NewAppFresh("http://test")
 	out := renderToString(t, m)
 	// Must contain key UI strings
 	mustContain := []string{
@@ -47,12 +48,12 @@ func TestGoldenEmptyState_RU(t *testing.T) {
 	original := i18n.GetLang()
 	defer SetLang(original)
 	SetLang(i18n.LangRU)
-	m := NewApp("http://test")
+	m := NewAppFresh("http://test")
 	out := renderToString(t, m)
 	if !strings.Contains(out, "Готов к вашему первому открытию") {
 		t.Errorf("missing RU empty title in:\n%s", out)
 	}
-	if !strings.Contains(out, "ГОТОВ") {
+	if !strings.Contains(out, "ГОТОВО") {
 		t.Errorf("missing RU footer (ГОТОВ) in:\n%s", out)
 	}
 }
@@ -61,7 +62,7 @@ func TestGoldenEmptyState_ZH(t *testing.T) {
 	original := i18n.GetLang()
 	defer SetLang(original)
 	SetLang(i18n.LangZH)
-	m := NewApp("http://test")
+	m := NewAppFresh("http://test")
 	out := renderToString(t, m)
 	if !strings.Contains(out, "准备好迎接你的第一次探索") {
 		t.Errorf("missing ZH empty title in:\n%s", out)
@@ -72,7 +73,7 @@ func TestGoldenEmptyState_AR(t *testing.T) {
 	original := i18n.GetLang()
 	defer SetLang(original)
 	SetLang(i18n.LangAR)
-	m := NewApp("http://test")
+	m := NewAppFresh("http://test")
 	out := renderToString(t, m)
 	if !strings.Contains(out, "جاهز") {
 		t.Errorf("missing AR footer (جاهز) in:\n%s", out)
@@ -83,7 +84,7 @@ func TestGoldenWithPhaseCard(t *testing.T) {
 	original := i18n.GetLang()
 	defer SetLang(original)
 	SetLang(i18n.LangEN)
-	m := NewApp("http://test")
+	m := NewAppFresh("http://test")
 	m.appendCard(Card{
 		Kind:     CardPhase,
 		Title:    "B: Knowledge acquisition",
@@ -104,7 +105,7 @@ func TestGoldenWithPhaseCard(t *testing.T) {
 func TestGoldenWithHypothesisCard(t *testing.T) {
 	SetLang(i18n.LangEN)
 	defer SetLang(i18n.LangEN)
-	m := NewApp("http://test")
+	m := NewAppFresh("http://test")
 	m.appendCard(Card{
 		Kind:  CardHypothesis,
 		Title: "Hypothesis",
@@ -113,6 +114,7 @@ func TestGoldenWithHypothesisCard(t *testing.T) {
 		Time:  time.Now(),
 		Status: "done",
 	})
+	SetLang(i18n.LangEN)
 	out := renderToString(t, m)
 	if !strings.Contains(out, "truncated 17-nt") {
 		t.Errorf("hypothesis body not in feed:\n%s", out)
@@ -122,7 +124,7 @@ func TestGoldenWithHypothesisCard(t *testing.T) {
 func TestGoldenWithErrorCard(t *testing.T) {
 	SetLang(i18n.LangEN)
 	defer SetLang(i18n.LangEN)
-	m := NewApp("http://test")
+	m := NewAppFresh("http://test")
 	m.appendCard(Card{
 		Kind:  CardError,
 		Title: "Submit failed",
@@ -130,6 +132,7 @@ func TestGoldenWithErrorCard(t *testing.T) {
 		Time:  time.Now(),
 		Status: "error",
 	})
+	SetLang(i18n.LangEN)
 	out := renderToString(t, m)
 	if !strings.Contains(out, "Submit failed") {
 		t.Errorf("error card not in feed:\n%s", out)
@@ -139,9 +142,10 @@ func TestGoldenWithErrorCard(t *testing.T) {
 func TestGoldenWidthNarrow(t *testing.T) {
 	SetLang(i18n.LangEN)
 	defer SetLang(i18n.LangEN)
-	m := NewApp("http://test")
+	m := NewAppFresh("http://test")
 	m.width = 60
 	m.height = 24
+	SetLang(i18n.LangEN)
 	out := renderToString(t, m)
 	// Should still render even in narrow mode
 	if !strings.Contains(out, "C4REQBER v9") {
@@ -152,9 +156,10 @@ func TestGoldenWidthNarrow(t *testing.T) {
 func TestGoldenWidthVeryNarrow(t *testing.T) {
 	SetLang(i18n.LangEN)
 	defer SetLang(i18n.LangEN)
-	m := NewApp("http://test")
+	m := NewAppFresh("http://test")
 	m.width = 30
 	m.height = 12
+	SetLang(i18n.LangEN)
 	out := renderToString(t, m)
 	// Should not panic
 	if !strings.Contains(out, "C4REQBER v9") {
@@ -165,9 +170,10 @@ func TestGoldenWidthVeryNarrow(t *testing.T) {
 func TestGoldenAchievementCard(t *testing.T) {
 	SetLang(i18n.LangEN)
 	defer SetLang(i18n.LangEN)
-	m := NewApp("http://test")
+	m := NewAppFresh("http://test")
 	m.completedDisc = 1
 	m.checkAchievements()
+	SetLang(i18n.LangEN)
 	out := renderToString(t, m)
 	if !strings.Contains(out, "First") && !strings.Contains(out, "achievement") {
 		t.Errorf("achievement card not in feed:\n%s", out)

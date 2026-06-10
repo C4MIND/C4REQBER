@@ -137,6 +137,15 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			return m, tea.Quit
 		case "enter":
+			// Wizard: Enter advances / finishes
+			if m.wizard != nil && m.wizard.Active() {
+				m.wizard.Next()
+				if m.wizard.Step() >= 3 {
+					m.wizard.Done()
+					m.MarkFirstRunDone()
+				}
+				return m, nil
+			}
 			val := strings.TrimSpace(m.ta.Value())
 			if val == "" {
 				m.toast = i18n.T("toast.empty")
@@ -146,6 +155,12 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.startDiscovery(val)
 			return m, nil
 		case "esc":
+			// Wizard: Esc skips
+			if m.wizard != nil && m.wizard.Active() {
+				m.wizard.Done()
+				m.MarkFirstRunDone()
+				return m, nil
+			}
 			if m.running {
 				m.running = false
 				m.jobID = ""
@@ -203,6 +218,26 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				// Tier tracking is in-model; snapshot picks it up on save
 			}
 			m.toast = "🧠 LLM " + m.llmTier.FormatTierBadge()
+			m.PersistSettings()
+			return m, nil
+		case "ctrl+shift+p":
+			// Cycle color profile (default → hc → prot → deut → trit → mono → default)
+			switch m.colorProfile {
+			case ProfileDefault:
+				m.colorProfile = ProfileHighContrast
+			case ProfileHighContrast:
+				m.colorProfile = ProfileProtanopia
+			case ProfileProtanopia:
+				m.colorProfile = ProfileDeuteranopia
+			case ProfileDeuteranopia:
+				m.colorProfile = ProfileTritanopia
+			case ProfileTritanopia:
+				m.colorProfile = ProfileMonochrome
+			default:
+				m.colorProfile = ProfileDefault
+			}
+			m.toast = "🎨 " + m.colorProfile.String()
+			m.PersistSettings()
 			return m, nil
 		case "shift+L":
 			// Shift+L — cycle language (right-to-left: EN→RU→ZH→JA→DE→AR→HI)
@@ -217,6 +252,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				_ = m.store.Save()
 			}
 			m.toast = i18n.T("lang.name") + ": " + string(next)
+			m.PersistSettings()
 			return m, nil
 		}
 
@@ -357,15 +393,16 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m *model) startDiscovery(query string) {
 	m.appendCard(Card{Kind: CardEmpty, Title: "→ " + query, Body: "submitting via " + string(m.mode) + "…", Time: time.Now()})
+	tier := m.llmTier.String()
 	switch m.mode {
 	case ModeFlash:
-		// Flash: sync, fast
+		// Flash: sync, fast — uses C1 (cheap) regardless of current tier
 		_ = flashCmd(m.api, query)
 	case ModeTurbo, ModeTurboFactory:
 		// For v9.0 these still go through one-click (we don't have separate endpoints)
-		_ = submitCmd(m.api, query, "science")
+		_ = submitCmd(m.api, query, "science", tier)
 	default:
-		_ = submitCmd(m.api, query, "science")
+		_ = submitCmd(m.api, query, "science", tier)
 	}
 }
 

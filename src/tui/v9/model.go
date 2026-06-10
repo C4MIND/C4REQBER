@@ -115,6 +115,9 @@ type model struct {
 
 	// colorProfile is the active color profile (default/high-contrast/dalt)
 	colorProfile ColorProfile
+
+	// wizard is the first-run wizard (nil if not active)
+	wizard *WizardState
 }
 
 // message types for bubbletea
@@ -166,7 +169,53 @@ var _ tea.Model = (*model)(nil)
 // NewAppWithStore creates a model with a custom persist.Store (used by tests).
 func NewAppWithStore(apiURL string, store *persist.Store) *model {
 	m := NewApp(apiURL)
+	// Override the real store with the test store and re-apply settings
 	m.store = store
+	if store != nil {
+		m.ApplySettings(store.GetSettings())
+	}
+	return m
+}
+
+// NewAppFresh creates a model without loading any persisted state (test-friendly).
+// Use this in tests that need a clean slate.
+func NewAppFresh(apiURL string) *model {
+	cfg := DefaultConfig()
+	if apiURL == "" {
+		apiURL = cfg.APIURL
+	}
+	zoneId := 0
+	_ = zoneId
+	ta := textarea.New()
+	ta.Placeholder = i18n.T("placeholder")
+	ta.ShowLineNumbers = false
+	ta.CharLimit = 0
+	ta.SetWidth(80)
+	ta.SetHeight(3)
+	vp := viewport.New()
+	m := &model{
+		apiURL:       apiURL,
+		api:          api.New(apiURL),
+		mode:         ModeDiscover,
+		ta:           ta,
+		vp:           vp,
+		focus:        true,
+		follow:       true,
+		rain:         effects.NewRain(),
+		burst:        effects.NewBurst(),
+		slide:        effects.NewSlideIn(),
+		typew:        effects.NewTypewriter(),
+		sparks:       effects.NewSparkles(),
+		achievements: NewAchievements(),
+		langsSeen:    map[string]bool{},
+		tel:          telemetry.New(),
+		dream:        NewDreamState(),
+		llmTier:      TierC2,
+		colorProfile: ProfileDefault,
+		wizard:       NewWizardState(),
+	}
+	m.langsSeen[string(i18n.GetLang())] = true
+	m.appendCard(Card{Kind: CardEmpty, Title: i18n.T("empty.title"), Body: i18n.T("empty.hint"), Time: time.Now()})
 	return m
 }
 
@@ -202,6 +251,7 @@ func NewApp(apiURL string) *model {
 		saveHistory:  true,
 		llmTier:      TierC2,
 		colorProfile: ProfileDefault,
+		wizard:       NewWizardState(),
 	}
 	// Load persisted state (achievements, langs). If store fails, fall back gracefully.
 	store, storeErr := persist.New(persist.DefaultPath())
@@ -214,6 +264,14 @@ func NewApp(apiURL string) *model {
 		}
 	}
 	m.langsSeen[string(i18n.GetLang())] = true
+	// Apply persisted settings (tier/profile/lang)
+	if m.store != nil {
+		m.ApplySettings(m.store.GetSettings())
+		// First-run wizard
+		if m.store.IsFirstRun() {
+			m.wizard.Show()
+		}
+	}
 	m.appendCard(Card{Kind: CardEmpty, Title: i18n.T("empty.title"), Body: i18n.T("empty.hint"), Time: time.Now()})
 	return m
 }
@@ -248,3 +306,43 @@ func (m *model) Config() Config {
 		SaveHistory: true,
 	}
 }
+
+// ApplySettings applies persisted settings to the model (called after persist load).
+func (m *model) ApplySettings(s persist.Settings) {
+	if s.LLMTier != "" {
+		if t, ok := TierFromString(s.LLMTier); ok {
+			m.llmTier = t
+		}
+	}
+	if s.ColorProfile != "" {
+		if p, ok := ProfileFromString(s.ColorProfile); ok {
+			m.colorProfile = p
+		}
+	}
+	if s.Lang != "" {
+		i18n.SetLang(i18n.Lang(s.Lang))
+	}
+}
+
+// PersistSettings saves current model settings to the persist store.
+func (m *model) PersistSettings() {
+	if m.store == nil {
+		return
+	}
+	m.store.SetSettings(persist.Settings{
+		LLMTier:      m.llmTier.String(),
+		ColorProfile: m.colorProfile.String(),
+		Lang:         string(i18n.GetLang()),
+	})
+	_ = m.store.Save()
+}
+
+// MarkFirstRunDone marks the first-run wizard as completed in the persist store.
+func (m *model) MarkFirstRunDone() {
+	if m.store != nil {
+		m.store.MarkFirstRunDone()
+		_ = m.store.Save()
+	}
+}
+
+// (no helpers needed — tests use persist.New directly)

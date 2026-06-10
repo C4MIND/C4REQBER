@@ -29,9 +29,12 @@ func (m *model) View() tea.View {
 		m.renderFooter(),
 	}
 	if m.showTelemetry {
-		regions = append(regions, renderTelemetry(m.tel.Get(), m.width))
+		regions = append(regions, renderTelemetry(m.tel.Get(), m.width, m.llmTier.String(), m.colorProfile.String()))
 	}
 	body := strings.Join(regions, "\n")
+	if m.wizard != nil && m.wizard.Active() {
+		body = RenderWizard(m.width, m.height)
+	}
 	if m.showHelp {
 		body = HelpOverlay(m.width, m.height)
 	}

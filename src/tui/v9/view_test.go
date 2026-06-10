@@ -49,11 +49,14 @@ func stripANSI(s string) string {
 }
 
 func TestSnapshotEmptyState(t *testing.T) {
+	original := i18n.GetLang()
+	defer SetLang(original)
 	SetLang(i18n.LangEN)
-	m := NewApp("http://127.0.0.1:8000")
+	m := NewAppFresh("http://127.0.0.1:8000")
 	m.width = 120
 	m.height = 40
 	m.layout()
+	m.rebuildFeedContent()
 	view := stripANSI(m.View().Content)
 	if !strings.Contains(view, "C4REQBER v9") {
 		t.Errorf("missing header in:\n%s", view)
@@ -67,10 +70,11 @@ func TestSnapshotEmptyState(t *testing.T) {
 }
 
 func TestSnapshotWithCard(t *testing.T) {
-	m := NewApp("http://127.0.0.1:8000")
+	m := NewAppFresh("http://127.0.0.1:8000")
 	m.width = 120
 	m.height = 40
 	m.layout()
+	m.rebuildFeedContent()
 	m.appendCard(Card{
 		Kind: CardPhase, Title: "Phase A: Framing",
 		Body: "CRISPR off-target in T-cells", Status: "running", Progress: 0.5,
@@ -82,7 +86,7 @@ func TestSnapshotWithCard(t *testing.T) {
 }
 
 func TestSnapshotErrorCard(t *testing.T) {
-	m := NewApp("http://127.0.0.1:8000")
+	m := NewAppFresh("http://127.0.0.1:8000")
 	m.width = 120
 	m.height = 40
 	m.layout()
@@ -94,12 +98,14 @@ func TestSnapshotErrorCard(t *testing.T) {
 }
 
 func TestSnapshotRussian(t *testing.T) {
+	original := i18n.GetLang()
+	defer SetLang(original)
 	SetLang(i18n.LangRU)
-	defer SetLang(i18n.LangEN)
-	m := NewApp("http://127.0.0.1:8000")
+	m := NewAppFresh("http://127.0.0.1:8000")
 	m.width = 120
 	m.height = 40
 	m.layout()
+	m.rebuildFeedContent()
 	view := stripANSI(m.View().Content)
 	if !strings.Contains(view, "ГОТОВ") {
 		t.Errorf("missing Russian READY in:\n%s", view)

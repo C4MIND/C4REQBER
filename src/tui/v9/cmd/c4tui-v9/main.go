@@ -22,7 +22,7 @@ import (
 )
 
 // version is set at build time via -ldflags "-X main.version=..."
-var version = "v9.7.0"
+var version = "v9.8.0"
 
 func main() {
 	demoMode := false

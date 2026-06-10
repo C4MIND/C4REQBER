@@ -77,7 +77,7 @@ func TestTier_FormatTierBadge(t *testing.T) {
 }
 
 func TestCtrlY_CyclesLLMTier(t *testing.T) {
-	m := NewApp("http://test")
+	m := NewAppFresh("http://test")
 	if m.llmTier != TierC2 {
 		t.Errorf("default tier = %s, want C2", m.llmTier)
 	}

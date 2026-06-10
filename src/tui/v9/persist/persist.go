@@ -21,6 +21,10 @@ type State struct {
 	LangsSeen       []string      `json:"langs_seen"`
 	Achievements    []Achievement `json:"achievements"`
 	DiscoveryCount  int           `json:"discovery_count"`
+	LLMTier         string        `json:"llm_tier,omitempty"`
+	ColorProfile    string        `json:"color_profile,omitempty"`
+	Lang            string        `json:"lang,omitempty"`
+	FirstRun        bool          `json:"first_run"`
 	UpdatedAt       time.Time     `json:"updated_at"`
 }
 
@@ -41,7 +45,8 @@ func New(path string) (*Store, error) {
 	if path == "" {
 		path = DefaultPath()
 	}
-	s := &Store{path: path, state: State{}}
+	// Default: first run is true until saved
+	s := &Store{path: path, state: State{FirstRun: true}}
 	if err := s.load(); err != nil && !os.IsNotExist(err) {
 		return s, fmt.Errorf("load: %w", err)
 	}
@@ -131,4 +136,51 @@ func (s *Store) Reset() error {
 	s.state = State{}
 	s.mu.Unlock()
 	return s.Save()
+}
+
+// Settings is a convenience type for tier/profile/lang persistence.
+type Settings struct {
+	LLMTier      string `json:"llm_tier"`
+	ColorProfile string `json:"color_profile"`
+	Lang         string `json:"lang"`
+}
+
+// GetSettings returns the persisted settings (zero values if unset).
+func (s *Store) GetSettings() Settings {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return Settings{
+		LLMTier:      s.state.LLMTier,
+		ColorProfile: s.state.ColorProfile,
+		Lang:         s.state.Lang,
+	}
+}
+
+// SetSettings persists tier/profile/lang.
+func (s *Store) SetSettings(set Settings) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if set.LLMTier != "" {
+		s.state.LLMTier = set.LLMTier
+	}
+	if set.ColorProfile != "" {
+		s.state.ColorProfile = set.ColorProfile
+	}
+	if set.Lang != "" {
+		s.state.Lang = set.Lang
+	}
+}
+
+// IsFirstRun returns true if this is the first time the app started.
+func (s *Store) IsFirstRun() bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.state.FirstRun
+}
+
+// MarkFirstRunDone flips the first-run flag.
+func (s *Store) MarkFirstRunDone() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.state.FirstRun = false
 }

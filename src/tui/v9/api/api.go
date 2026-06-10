@@ -100,10 +100,16 @@ func (c *Client) Login(ctx context.Context, email, password string) error {
 
 // OneClick submits a one-click discovery job and returns its job_id.
 func (c *Client) OneClick(ctx context.Context, problem, domain string) (string, error) {
+	return c.OneClickWithTier(ctx, problem, domain, "")
+}
+
+// OneClickWithTier sends a discovery request with explicit LLM tier (C1/C2/C3).
+// Empty tier uses backend default.
+func (c *Client) OneClickWithTier(ctx context.Context, problem, domain, tier string) (string, error) {
 	if domain == "" {
 		domain = "science"
 	}
-	body := fmt.Sprintf(`{"problem":%q,"domain":%q}`, problem, domain)
+	body := fmt.Sprintf(`{"problem":%q,"domain":%q,"llm_tier":%q}`, problem, domain, tier)
 	req, _ := http.NewRequestWithContext(ctx, "POST", c.BaseURL+"/v8/discover/one-click", strings.NewReader(body))
 	c.addCommonHeaders(req)
 	resp, err := c.http.Do(req)

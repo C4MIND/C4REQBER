@@ -2,6 +2,7 @@ package tui
 
 import (
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -108,7 +109,8 @@ func renderAchievementCard(a Achievement, width int) string {
 }
 
 // renderTelemetry renders the bottom telemetry panel (Ctrl+T).
-func renderTelemetry(snap telemetry.Snapshot, width int) string {
+// Upgraded for v9.7 with tier + profile + per-lang % info.
+func renderTelemetry(snap telemetry.Snapshot, width int, llmTier, colorProfile string) string {
 	style := lipgloss.NewStyle().Width(width).Padding(0, 1).Foreground(lipgloss.Color("6"))
 	dur := time.Since(snap.SessionStart).Round(time.Second)
 	title := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("6")).Render("📊 Telemetry")
@@ -116,18 +118,45 @@ func renderTelemetry(snap telemetry.Snapshot, width int) string {
 	for k, v := range snap.ModeUseCount {
 		modes += k + ":" + strconv.Itoa(v) + " "
 	}
+	// Lang usage with percentages
+	totalLang := 0
+	for _, v := range snap.LangUseCount {
+		totalLang += v
+	}
 	langs := ""
-	for k, v := range snap.LangUseCount {
-		langs += k + ":" + strconv.Itoa(v) + " "
+	for _, k := range sortedKeysStringInt(snap.LangUseCount) {
+		v := snap.LangUseCount[k]
+		pct := 0.0
+		if totalLang > 0 {
+			pct = 100.0 * float64(v) / float64(totalLang)
+		}
+		langs += fmt.Sprintf("%s:%d(%.0f%%) ", k, v, pct)
 	}
 	stats := fmt.Sprintf(
 		"disc=%d ok=%d fail=%d abort=%d api=%d err=%d cost=$%.3f longest=%.1fs",
 		snap.Discoveries, snap.DiscoveriesOK, snap.DiscoveriesFail, snap.DiscoveriesAbort,
 		snap.TotalAPICalls, snap.APIErrors, snap.TotalCost, snap.LongestRunSec,
 	)
+	tierStr := ""
+	if llmTier != "" {
+		tierStr = " tier=" + llmTier
+	}
+	profStr := ""
+	if colorProfile != "" {
+		profStr = " prof=" + colorProfile
+	}
 	usage := "modes: " + modes + " langs: " + langs
 	uptime := fmt.Sprintf("uptime: %s", dur)
-	return style.Render(title + "  " + stats + "\n" + usage + "  " + uptime)
+	return style.Render(title + "  " + stats + tierStr + profStr + "\n" + usage + "  " + uptime)
+}
+
+func sortedKeysStringInt(m map[string]int) []string {
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	return keys
 }
 
 // cycleLangName returns the next lang code, or "—" if no change.

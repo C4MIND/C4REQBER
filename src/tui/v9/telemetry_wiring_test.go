@@ -7,6 +7,7 @@ import (
 
 	tea "charm.land/bubbletea/v2"
 
+	"github.com/figuramax/c4reqber-tui-v9/i18n"
 	"github.com/figuramax/c4reqber-tui-v9/persist"
 	"github.com/figuramax/c4reqber-tui-v9/telemetry"
 )
@@ -19,7 +20,7 @@ func TestTelemetryPanel_RenderContainsSnapshotStats(t *testing.T) {
 	tel.IncDiscovery()
 	tel.IncDiscoveryResult(true, 12.3)
 	tel.AddCost(0.045)
-	out := renderTelemetry(tel.Get(), 120)
+	out := renderTelemetry(tel.Get(), 120, "C2", "default")
 	if !strings.Contains(out, "DISCOVER:1") {
 		t.Errorf("missing DISCOVER counter in:\n%s", out)
 	}
@@ -33,7 +34,7 @@ func TestTelemetryPanel_RenderContainsSnapshotStats(t *testing.T) {
 
 func TestTelemetryPanel_RenderEmpty(t *testing.T) {
 	tel := telemetry.New()
-	out := renderTelemetry(tel.Get(), 80)
+	out := renderTelemetry(tel.Get(), 80, "C2", "default")
 	if out == "" {
 		t.Error("renderTelemetry should return non-empty for empty stats")
 	}
@@ -117,7 +118,11 @@ func TestTelemetry_TabIncrementsMode(t *testing.T) {
 }
 
 func TestTelemetry_LShiftIncrementsLang(t *testing.T) {
-	m := NewApp("http://test")
+	// Save+restore global lang
+	original := i18n.GetLang()
+	defer SetLang(original)
+	SetLang(i18n.LangEN)
+	m := NewAppFresh("http://test")
 	if m.tel.Get().LangUseCount["ru"] != 0 {
 		t.Fatal("ru should not be counted yet")
 	}

@@ -11,14 +11,14 @@ import (
 )
 
 // submitCmd fires a discovery request.
-func submitCmd(c *api.Client, query, domain string) tea.Cmd {
+func submitCmd(c *api.Client, query, domain, tier string) tea.Cmd {
 	return func() tea.Msg {
 		ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 		defer cancel()
 		_ = c.Health(ctx)
 		_ = c.Register(ctx, "kilo-v9@test.com", "test12345", "Kilo v9")
 		_ = c.Login(ctx, "kilo-v9@test.com", "test12345")
-		id, err := c.OneClick(ctx, query, domain)
+		id, err := c.OneClickWithTier(ctx, query, domain, tier)
 		return apiSubmitMsg{jobID: id, err: err}
 	}
 }

@@ -26,19 +26,20 @@ logger = logging.getLogger("c4_cdi_turbo.pipeline.discovery.phase3")
 
 def _pick_centroids(
     chunks: list[list[dict]],
-    chunk_results: list[dict],
+    chunk_results: dict[int, dict],
     top_k: int = 5,
 ) -> list[dict]:
     """Pick top-K most-contradictory papers from each chunk for cross-block
-    centroid comparison. Papers are identified by their position in the
-    chunk; we reconstruct them from the chunk lists."""
+    centroid comparison. chunk_results is a dict mapping chunk index → result,
+    preserving the submission-to-result correspondence (as_completed returns
+    in arbitrary order, so list-based iteration would mismatch chunks).
+    Returns a flat list of centroid papers (one per chunk, top-k from each)."""
     centroids: list[dict] = []
-    for i, cr in enumerate(chunk_results):
-        if i >= len(chunks):
+    for chunk_idx, cr in sorted(chunk_results.items()):
+        if chunk_idx >= len(chunks):
             continue
-        # Pick first top_k papers from this chunk (or all if smaller)
-        n = min(top_k, len(chunks[i]))
-        centroids.extend(chunks[i][:n])
+        n = min(top_k, len(chunks[chunk_idx]))
+        centroids.extend(chunks[chunk_idx][:n])
     return centroids
 
 
@@ -80,14 +81,17 @@ async def run_deep_analysis(problem, domain, papers, results, thresholds, errors
         # Also launch temporal KG (fast — only 10 papers)
         futs[pool.submit(build_temporal_kg, papers, problem)] = "temporal_kg"
 
-        # Collect intra-chunk results
-        chunk_results: list[dict] = []
+        # Collect intra-chunk results — use dict indexed by chunk index
+        # (as_completed returns in completion order, not submission order,
+        # so chunk_results[0] may correspond to chunks[3] without this fix)
+        chunk_results: dict[int, dict] = {}
         for fut in as_completed(futs):
             name = futs[fut]
             try:
                 result = fut.result(timeout=240)
                 if name.startswith("contra_chunk_"):
-                    chunk_results.append(result)
+                    idx = int(name.split("_")[-1])
+                    chunk_results[idx] = result
                 elif name == "temporal_kg":
                     results["temporal_kg"] = result
                     logger.info("Temporal KG: %.3fs", time.perf_counter() - t0)
@@ -101,11 +105,12 @@ async def run_deep_analysis(problem, domain, papers, results, thresholds, errors
 
     # Cross-block centroid pass: combine top-5 papers from each chunk
     # and run one more contradiction detection to find inter-chunk conflicts
-    centroids = _pick_centroids(chunks, chunk_results, top_k=5)
+        centroids = _pick_centroids(chunks, chunk_results, top_k=5)
     if len(centroids) > 1:
         try:
             cross_result = mine_contradictions(centroids)
-            chunk_results.append(cross_result)
+            # Store cross-block result at index len(chunks) (one past the last chunk)
+            chunk_results[len(chunks)] = cross_result
             logger.info("Cross-block centroid pass: %d papers in %.3fs",
                         len(centroids), time.perf_counter() - t0)
         except Exception as e:
@@ -114,7 +119,7 @@ async def run_deep_analysis(problem, domain, papers, results, thresholds, errors
     # Merge all contradictions from all chunks, sort by score, keep top 5
     all_contradictions: list[dict] = []
     total_claims = 0
-    for cr in chunk_results:
+    for cr in chunk_results.values():
         total_claims += cr.get("claims_extracted", 0)
         for c in cr.get("top_contradictions", []):
             all_contradictions.append(c)

@@ -7,6 +7,8 @@ import (
 
 	tea "charm.land/bubbletea/v2"
 	zone "github.com/lrstanley/bubblezone/v2"
+
+	"github.com/figuramax/c4reqber-tui-v9/i18n"
 )
 
 // Update is the single entry point for all messages.
@@ -17,18 +19,16 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.width, m.height = msg.Width, msg.Height
 		m.layout()
-		m.refreshView()
+		m.rebuildFeedContent()
 		return m, nil
 
 	case tea.BackgroundColorMsg:
-		// could re-pick theme, but dark-only for v9.0
 		return m, nil
 
 	case tickMsg:
 		m.tick++
-		// re-render the feed (cost ticker, pulse animations)
 		if m.running && m.cost > 0 {
-			m.costTick = fmt.Sprintf("$%.4f", m.cost)
+			m.cost = float64(m.tick) / 60.0 * 0.001
 		}
 		m.rain.Tick()
 		m.burst.Tick()
@@ -38,15 +38,71 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if m.typew.Active() || m.slide.Active() {
 			m.rebuildFeedContent()
 		}
-		m.refreshView()
 		return m, m.tickCmd()
 
 	case pollTickMsg:
+		// Legacy polling — superseded by SSE (see sseEventMsg below).
+		// Kept for fallback if SSE endpoint unavailable.
 		if m.running && m.jobID != "" {
-			return m, pollCmd(m.apiURL, m.jobID)
+			return m, pollCmd(m.api, m.jobID)
 		}
 		return m, m.pollTickCmd()
-		// Forward to textarea first (so typing works in input)
+
+	case sseEventMsg:
+		// SSE event from /v8/discover/stream/{job_id}
+		if m.sseCancel != nil {
+			// don't replace — we'll continue streaming the existing connection
+		}
+		status, phase, progress, result, completed := extractResultFromSSEData(msg.event.Data)
+		// Map to apiPollMsg so we can reuse the render path
+		if status != "" || phase != "" {
+			m.appendCard(Card{Kind: CardPhase, Title: phase, Body: fmt.Sprintf("progress %.0f%%", progress*100), Time: time.Now(), Status: "running", Progress: progress})
+		}
+		if completed {
+			m.running = false
+			m.jobID = ""
+			m.toast = i18n.T("toast.complete")
+			m.burst.Trigger(m.width, m.height, m.width/2, m.height/2)
+			if result != nil {
+				if hyp, ok := result["hypothesis"].(map[string]any); ok {
+					hc := Card{Kind: CardHypothesis, Title: i18n.T("card.hypothesis.t"), Body: fieldString(hyp, "text"), Meta: []string{"source: " + fieldString(hyp, "source")}, Time: time.Now(), Status: "done"}
+					m.appendCard(hc)
+					m.typew.Set(fieldString(hyp, "text"), m.tick)
+				}
+				if papers, ok := result["papers"].([]any); ok {
+					for i, p := range papers {
+						if i >= 3 {
+							break
+						}
+						pm, _ := p.(map[string]any)
+						m.appendCard(Card{Kind: CardPaper, Title: fieldString(pm, "title"), Body: fmt.Sprintf("%s · %s · citations %s", fieldString(pm, "venue"), fieldString(pm, "year"), fieldString(pm, "citation_count")), Meta: []string{"doi: " + fieldString(pm, "doi"), "source: " + fieldString(pm, "source")}, Time: time.Now(), Status: "done"})
+					}
+				}
+			}
+		}
+		// Continue streaming
+		if m.sseEvents != nil && msg.cancel != nil {
+			return m, sseContinueCmd(m.sseEvents, msg.cancel)
+		}
+		return m, nil
+
+	case sseClosedMsg:
+		// SSE stream ended; fall back to polling for any final result
+		m.sseEvents = nil
+		if m.running && m.jobID != "" {
+			return m, pollCmd(m.api, m.jobID)
+		}
+		return m, nil
+
+	case sseErrorMsg:
+		m.sseEvents = nil
+		// SSE failed; fall back to polling
+		if m.running && m.jobID != "" {
+			return m, pollCmd(m.api, m.jobID)
+		}
+		return m, nil
+
+	case tea.KeyPressMsg:
 		var cmd tea.Cmd
 		m.ta, cmd = m.ta.Update(msg)
 		cmds = append(cmds, cmd)
@@ -57,40 +113,50 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "enter":
 			val := strings.TrimSpace(m.ta.Value())
 			if val == "" {
-				m.toast = T("toast.empty")
-				m.refreshView()
+				m.toast = i18n.T("toast.empty")
 				return m, nil
 			}
 			m.ta.Reset()
 			m.startDiscovery(val)
-			m.refreshView()
-			return m, tea.Batch(cmds...)
+			return m, nil
 		case "esc":
 			if m.running {
 				m.running = false
-				m.toast = T("toast.cancelled")
-				m.refreshView()
+				m.toast = i18n.T("toast.cancelled")
 			}
-			return m, tea.Batch(cmds...)
+			return m, nil
+		case "tab":
+			// Cycle mode: DISCOVER → FLASH → TURBO → TURBOFACTORY → DISCOVER
+			switch m.mode {
+			case ModeDiscover:
+				m.mode = ModeFlash
+			case ModeFlash:
+				m.mode = ModeTurbo
+			case ModeTurbo:
+				m.mode = ModeTurboFactory
+			default:
+				m.mode = ModeDiscover
+			}
+			m.toast = "Mode: " + string(m.mode)
+			return m, nil
 		}
-		m.sparks.Emit(2, 0, 3) // emit 3 sparks at input cursor on any key
-		return m, tea.Batch(cmds...)
+		m.sparks.Emit(2, 0, 3)
+		return m, nil
 
 	case tea.MouseClickMsg:
-		// bubblezone: zone.Get("…").InBounds(msg)
-		_ = msg
 		return m, nil
 
 	case apiSubmitMsg:
 		if msg.err != nil {
-			m.appendCard(Card{Kind: CardError, Title: "Submit failed", Body: msg.err.Error(), Time: time.Now(), Status: "error"})
+			m.appendCard(Card{Kind: CardError, Title: i18n.T("toast.submit_failed"), Body: msg.err.Error(), Time: time.Now(), Status: "error"})
 		} else {
 			m.jobID = msg.jobID
 			m.running = true
 			m.startedAt = time.Now()
 			m.appendCard(Card{Kind: CardPhase, Title: "Submitted", Body: "job " + msg.jobID, Time: time.Now(), Status: "running", Progress: 0.0})
+			// Prefer SSE; fall back to polling if SSE fails
+			return m, tea.Batch(sseCmd(m.api, msg.jobID), m.pollTickCmd())
 		}
-		m.refreshView()
 		return m, nil
 
 	case apiPollMsg:
@@ -101,15 +167,13 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if msg.completed {
 				m.running = false
 				m.jobID = ""
-				m.cost = float64(m.tick) / 60.0 * 0.001
-				m.toast = T("toast.complete")
+				m.toast = i18n.T("toast.complete")
 				m.burst.Trigger(m.width, m.height, m.width/2, m.height/2)
 				if msg.result != nil {
 					if hyp, ok := msg.result["hypothesis"].(map[string]any); ok {
-						hc := Card{Kind: CardHypothesis, Title: T("card.hypothesis.t"), Body: stringField(hyp, "text"), Meta: []string{"source: " + stringField(hyp, "source")}, Time: time.Now(), Status: "done"}
+						hc := Card{Kind: CardHypothesis, Title: i18n.T("card.hypothesis.t"), Body: fieldString(hyp, "text"), Meta: []string{"source: " + fieldString(hyp, "source")}, Time: time.Now(), Status: "done"}
 						m.appendCard(hc)
-						m.typoTarget = hc
-						m.typew.Set(stringField(hyp, "text"), m.tick)
+						m.typew.Set(fieldString(hyp, "text"), m.tick)
 					}
 					if papers, ok := msg.result["papers"].([]any); ok {
 						for i, p := range papers {
@@ -117,18 +181,12 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 								break
 							}
 							pm, _ := p.(map[string]any)
-							_ = i
-							m.appendCard(Card{Kind: CardPaper, Title: stringField(pm, "title"), Body: fmt.Sprintf("%s · %s · citations %s", stringField(pm, "venue"), stringField(pm, "year"), stringField(pm, "citation_count")), Meta: []string{"doi: " + stringField(pm, "doi"), "source: " + stringField(pm, "source")}, Time: time.Now(), Status: "done"})
+							m.appendCard(Card{Kind: CardPaper, Title: fieldString(pm, "title"), Body: fmt.Sprintf("%s · %s · citations %s", fieldString(pm, "venue"), fieldString(pm, "year"), fieldString(pm, "citation_count")), Meta: []string{"doi: " + fieldString(pm, "doi"), "source: " + fieldString(pm, "source")}, Time: time.Now(), Status: "done"})
 						}
 					}
-					if t, ok := msg.result["total_time_seconds"].(float64); ok {
-						m.cost = t * 0.0001 // placeholder
-					}
 				}
-				m.toast = "Discovery complete"
 			}
 		}
-		m.refreshView()
 		return m, nil
 
 	case apiPapersMsg:
@@ -137,15 +195,53 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				if i >= 3 {
 					break
 				}
-				_ = i
-				m.appendCard(Card{Kind: CardPaper, Title: stringField(pm, "title"), Body: fmt.Sprintf("%s · %s · citations %s", stringField(pm, "venue"), stringField(pm, "year"), stringField(pm, "citation_count")), Meta: []string{"doi: " + stringField(pm, "doi"), "source: " + stringField(pm, "source")}, Time: time.Now(), Status: "done"})
+				m.appendCard(Card{Kind: CardPaper, Title: fieldString(pm, "title"), Body: fmt.Sprintf("%s · %s · citations %s", fieldString(pm, "venue"), fieldString(pm, "year"), fieldString(pm, "citation_count")), Meta: []string{"doi: " + fieldString(pm, "doi"), "source: " + fieldString(pm, "source")}, Time: time.Now(), Status: "done"})
 			}
-			m.refreshView()
+		}
+		return m, nil
+
+	case flashResultMsg:
+		if msg.err != nil {
+			m.appendCard(Card{Kind: CardError, Title: "Flash error", Body: msg.err.Error(), Time: time.Now(), Status: "error"})
+		} else {
+			m.running = false
+			m.toast = i18n.T("toast.complete")
+			m.burst.Trigger(m.width, m.height, m.width/2, m.height/2)
+			if hyp, ok := msg.result["hypothesis"].(map[string]any); ok {
+				hc := Card{Kind: CardHypothesis, Title: i18n.T("card.hypothesis.t"), Body: fieldString(hyp, "text"), Time: time.Now(), Status: "done"}
+				m.appendCard(hc)
+				m.typew.Set(fieldString(hyp, "text"), m.tick)
+			}
+		}
+		return m, nil
+
+	case multiResultMsg:
+		if msg.err != nil {
+			m.appendCard(Card{Kind: CardError, Title: "Multi error", Body: msg.err.Error(), Time: time.Now(), Status: "error"})
+		} else {
+			m.running = false
+			m.toast = i18n.T("toast.complete")
+			m.burst.Trigger(m.width, m.height, m.width/2, m.height/2)
+			// Render each ranked hypothesis as a card
+			if ranked, ok := msg.result["ranked_hypotheses"].([]any); ok {
+				for i, h := range ranked {
+					if i >= 3 {
+						break
+					}
+					hm, _ := h.(map[string]any)
+					text := fieldString(hm, "text")
+					if text == "" {
+						text = fieldString(hm, "source") + " hypothesis"
+					}
+					score := fieldString(hm, "score")
+					title := fmt.Sprintf("%s #%d (%s)", i18n.T("card.hypothesis.t"), i+1, score)
+					m.appendCard(Card{Kind: CardHypothesis, Title: title, Body: text, Meta: []string{"source: " + fieldString(hm, "source")}, Time: time.Now(), Status: "done"})
+				}
+			}
 		}
 		return m, nil
 	}
 
-	// Forward non-handled messages to textarea
 	var cmd tea.Cmd
 	m.ta, cmd = m.ta.Update(msg)
 	cmds = append(cmds, cmd)
@@ -153,15 +249,44 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m *model) startDiscovery(query string) {
-	// Append user query as a card
-	m.appendCard(Card{Kind: CardEmpty, Title: "→ " + query, Body: "submitting…", Time: time.Now()})
-	cmds := []tea.Cmd{submitCmd(m.apiURL, query, "")}
-	_ = cmds
+	m.appendCard(Card{Kind: CardEmpty, Title: "→ " + query, Body: "submitting via " + string(m.mode) + "…", Time: time.Now()})
+	switch m.mode {
+	case ModeFlash:
+		// Flash: sync, fast
+		_ = flashCmd(m.api, query)
+	case ModeTurbo, ModeTurboFactory:
+		// For v9.0 these still go through one-click (we don't have separate endpoints)
+		_ = submitCmd(m.api, query, "science")
+	default:
+		_ = submitCmd(m.api, query, "science")
+	}
 }
 
-// stubs wired to actual API in phase 2
+// appendCard helper.
+func (m *model) appendCard(c Card) {
+	if c.Time.IsZero() {
+		c.Time = time.Now()
+	}
+	m.feed = append(m.feed, c)
+	m.rebuildFeedContent()
+	m.slide.Trigger()
+	if m.follow {
+		m.vp.GotoBottom()
+	}
+	_ = zone.Mark
+}
 
-func stringField(m map[string]any, key string) string {
+func (m *model) rebuildFeedContent() {
+	var b strings.Builder
+	for _, card := range m.feed {
+		b.WriteString(renderCard(card, m.width))
+		b.WriteString("\n")
+	}
+	m.vp.SetContent(b.String())
+}
+
+// fieldString — moved from stringField to avoid clash with i18n.T signature
+func fieldString(m map[string]any, key string) string {
 	if m == nil {
 		return ""
 	}
@@ -173,27 +298,4 @@ func stringField(m map[string]any, key string) string {
 		return s
 	}
 	return fmt.Sprintf("%v", v)
-}
-
-// helper — append to feed & auto-scroll
-func (m *model) appendCard(c Card) {
-	if c.Time.IsZero() {
-		c.Time = time.Now()
-	}
-	m.feed = append(m.feed, c)
-	m.rebuildFeedContent()
-	m.slide.Trigger(m.tick)
-	if m.follow {
-		m.vp.GotoBottom()
-	}
-	_ = zone.Mark // keep import alive
-}
-
-func (m *model) rebuildFeedContent() {
-	var b strings.Builder
-	for _, card := range m.feed {
-		b.WriteString(renderCard(card, m.width))
-		b.WriteString("\n")
-	}
-	m.vp.SetContent(b.String())
 }

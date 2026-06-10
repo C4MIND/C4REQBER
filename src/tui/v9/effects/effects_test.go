@@ -1,4 +1,4 @@
-package tui
+package effects
 
 import (
 	"strings"
@@ -114,7 +114,7 @@ func TestSlideInTrigger(t *testing.T) {
 	if sl.Active() {
 		t.Error("slidein should not start active")
 	}
-	sl.Trigger(0)
+	sl.Trigger()
 	if !sl.Active() {
 		t.Error("slidein should be active after Trigger")
 	}

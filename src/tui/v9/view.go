@@ -5,9 +5,11 @@ import (
 	"strings"
 	"time"
 
-	"charm.land/lipgloss/v2"
 	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 	zone "github.com/lrstanley/bubblezone/v2"
+
+	"github.com/figuramax/c4reqber-tui-v9/i18n"
 )
 
 // View composes the 4 regions.
@@ -23,8 +25,6 @@ func (m *model) View() tea.View {
 		m.renderInput(),
 		m.renderFooter(),
 	}, "\n")
-	// Overlay effects: matrix rain only in TRUE empty state (no cards, no activity).
-	// Once user has any content, rain hides — so real discoveries are never obscured.
 	if rain := m.rain.Render(); rain != "" && !m.burst.Active() && len(m.feed) == 0 {
 		body = overlayRegion(body, rain, 1, m.height-4, m.width)
 	}
@@ -40,44 +40,13 @@ func (m *model) View() tea.View {
 	return v
 }
 
-// overlayRegion paints `overlay` over `base` starting at line `fromY`.
-// Both strings are split by \n and overlaid cell by cell (overlay chars replace base if non-space).
-func overlayRegion(base, overlay string, fromY, toY, width int) string {
-	baseLines := strings.Split(base, "\n")
-	overLines := strings.Split(overlay, "\n")
-	for y := 0; y+fromY < toY && y < len(overLines); y++ {
-		target := y + fromY
-		if target >= len(baseLines) {
-			break
-		}
-		over := pad(overLines[y], width)
-		base := pad(baseLines[target], width)
-		out := make([]byte, len(base))
-		for i := 0; i < len(base); i++ {
-			if i < len(over) && over[i] != ' ' {
-				out[i] = over[i]
-			} else {
-				out[i] = base[i]
-			}
-		}
-		baseLines[target] = string(out)
-	}
-	return strings.Join(baseLines, "\n")
-}
-
-func pad(s string, w int) string {
-	if len(s) >= w {
-		return s[:w]
-	}
-	return s + strings.Repeat(" ", w-len(s))
-}
-
 func (m *model) renderHeader() string {
 	pulse := "●"
 	if m.running && m.tick%30 < 15 {
 		pulse = "◉"
 	}
-	left := fmt.Sprintf(" %s C4REQBER v9  F⟨1,1,0⟩  🇬🇧 EN  DeepSeek  $%.4f  %s", pulse, m.cost, time.Now().Format("15:04:05"))
+	left := fmt.Sprintf(" %s C4REQBER v9  F⟨1,1,0⟩  🇬🇧 %s  DeepSeek  $%.4f  %s",
+		pulse, i18n.GetLang(), m.cost, time.Now().Format("15:04:05"))
 	right := " " + string(m.mode) + " "
 	gap := strings.Repeat(" ", max(1, m.width-lipgloss.Width(left)-lipgloss.Width(right)))
 	return lipgloss.NewStyle().Width(m.width).Render(left + gap + right)
@@ -92,12 +61,12 @@ func (m *model) renderInput() string {
 }
 
 func (m *model) renderFooter() string {
-	state := "▶ " + T("footer.ready")
+	state := "▶ " + i18n.T("footer.ready")
 	if m.running {
-		state = "⏵ " + T("footer.running")
+		state = "⏵ " + i18n.T("footer.running")
 	}
 	left := " " + state + " "
-	right := " [Enter] " + T("keymap.run") + "  [?] " + T("keymap.help") + "  [Ctrl+C] " + T("keymap.quit") + " "
+	right := " [Enter] " + i18n.T("keymap.run") + "  [?] " + i18n.T("keymap.help") + "  [Ctrl+C] " + i18n.T("keymap.quit") + " "
 	if m.toast != "" {
 		right = m.toast + "  " + right
 	}
@@ -106,9 +75,7 @@ func (m *model) renderFooter() string {
 }
 
 func (m *model) layout() {
-	header := 1
-	footer := 1
-	input := 3
+	header, footer, input := 1, 1, 3
 	feedH := m.height - header - footer - input
 	if feedH < 5 {
 		feedH = 5
@@ -120,11 +87,38 @@ func (m *model) layout() {
 	m.sparks.SetSize(m.width, input)
 }
 
-func (m *model) refreshView() {
-	// (View is recomputed on every Update; no manual refresh needed)
+// overlayRegion paints overlay over base starting at line fromY.
+func overlayRegion(base, overlay string, fromY, toY, width int) string {
+	baseLines := strings.Split(base, "\n")
+	overLines := strings.Split(overlay, "\n")
+	for y := 0; y+fromY < toY && y < len(overLines); y++ {
+		target := y + fromY
+		if target >= len(baseLines) {
+			break
+		}
+		over := pad(overLines[y], width)
+		bs := pad(baseLines[target], width)
+		out := make([]byte, len(bs))
+		for i := 0; i < len(bs); i++ {
+			if i < len(over) && over[i] != ' ' {
+				out[i] = over[i]
+			} else {
+				out[i] = bs[i]
+			}
+		}
+		baseLines[target] = string(out)
+	}
+	return strings.Join(baseLines, "\n")
 }
 
-// renderCard formats one card. Used by feed.
+func pad(s string, w int) string {
+	if len(s) >= w {
+		return s[:w]
+	}
+	return s + strings.Repeat(" ", w-len(s))
+}
+
+// renderCard formats one card.
 func renderCard(c Card, width int) string {
 	style := lipgloss.NewStyle().Width(width - 2).Padding(0, 1)
 	border := "│"
@@ -182,5 +176,3 @@ func max(a, b int) int {
 	}
 	return b
 }
-
-var _ = tea.Quit // keep import alive

@@ -6,6 +6,8 @@ import (
 
 	"charm.land/lipgloss/v2"
 	zone "github.com/lrstanley/bubblezone/v2"
+
+	"github.com/figuramax/c4reqber-tui-v9/i18n"
 )
 
 func init() {
@@ -47,7 +49,7 @@ func stripANSI(s string) string {
 }
 
 func TestSnapshotEmptyState(t *testing.T) {
-	SetLang(LangEN)
+	SetLang(i18n.LangEN)
 	m := NewApp("http://127.0.0.1:8000")
 	m.width = 120
 	m.height = 40
@@ -92,8 +94,8 @@ func TestSnapshotErrorCard(t *testing.T) {
 }
 
 func TestSnapshotRussian(t *testing.T) {
-	SetLang(LangRU)
-	defer SetLang(LangEN)
+	SetLang(i18n.LangRU)
+	defer SetLang(i18n.LangEN)
 	m := NewApp("http://127.0.0.1:8000")
 	m.width = 120
 	m.height = 40
@@ -127,16 +129,16 @@ func TestStringField(t *testing.T) {
 		"year":  2020,
 		"missing": nil,
 	}
-	if stringField(m, "title") != "Hello" {
+	if fieldString(m, "title") != "Hello" {
 		t.Error("title")
 	}
-	if stringField(m, "year") != "2020" {
+	if fieldString(m, "year") != "2020" {
 		t.Error("year")
 	}
-	if stringField(m, "missing") != "" {
+	if fieldString(m, "missing") != "" {
 		t.Error("missing")
 	}
-	if stringField(nil, "anything") != "" {
+	if fieldString(nil, "anything") != "" {
 		t.Error("nil map")
 	}
 }

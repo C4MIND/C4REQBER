@@ -1,3 +1,4 @@
+// Package tui implements TUI v9 "The Cockpit" — single-screen feed-driven discovery UI.
 package tui
 
 import (
@@ -6,9 +7,13 @@ import (
 	"charm.land/bubbles/v2/textarea"
 	"charm.land/bubbles/v2/viewport"
 	tea "charm.land/bubbletea/v2"
+
+	"github.com/figuramax/c4reqber-tui-v9/api"
+	"github.com/figuramax/c4reqber-tui-v9/effects"
+	"github.com/figuramax/c4reqber-tui-v9/i18n"
 )
 
-// Card kinds — append-only, displayed bottom-up in feed.
+// Card kinds.
 type CardKind int
 
 const (
@@ -20,68 +25,66 @@ const (
 	CardError
 )
 
-// Card is one row in the feed. Each card has a fixed visual layout per Kind.
+// Card is one row in the feed.
 type Card struct {
 	Kind     CardKind
 	Title    string
 	Body     string
-	Meta     []string // provenance, source, status
-	Actions  []string // e.g. ["[o] Open", "[y] Copy"]
+	Meta     []string
+	Actions  []string
 	Time     time.Time
-	Progress float64 // 0.0..1.0, only for CardPhase
-	Status   string  // "running" | "done" | "error"
+	Progress float64
+	Status   string
 }
 
 // Mode — what kind of discovery.
 type Mode string
 
 const (
-	ModeDiscover Mode = "DISCOVER"
-	ModeFlash    Mode = "FLASH"
+	ModeDiscover     Mode = "DISCOVER"
+	ModeFlash        Mode = "FLASH"
+	ModeTurbo        Mode = "TURBO"
+	ModeTurboFactory Mode = "TURBOFACTORY"
 )
 
 // model is the top-level state.
 type model struct {
 	apiURL string
+	api    *api.Client
 	width  int
 	height int
 
 	mode      Mode
 	cost      float64
-	costTick  string
 	running   bool
 	jobID     string
 	startedAt time.Time
 
 	feed   []Card
 	vp     viewport.Model
-	follow bool // auto-scroll to bottom
+	follow bool
 
-	ta     textarea.Model
-	focus  bool
-	err    error
-	toast  string
+	ta    textarea.Model
+	focus bool
+	err   error
+	toast string
 
-	tick int // 60Hz counter for animations
+	tick int
 
 	// game-feel effects
-	rain    *Rain
-	burst   *Burst
-	slide   *SlideIn
-	typew   *Typewriter
-	sparks  *Sparkles
+	rain   *effects.Rain
+	burst  *effects.Burst
+	slide  *effects.SlideIn
+	typew  *effects.Typewriter
+	sparks *effects.Sparkles
 
-	// typewriter buffer
-	typoTarget Card
+	// SSE stream state
+	sseEvents <-chan api.SSEEvent
+	sseCancel func()
 }
 
-// message types
+// message types for bubbletea
 type (
-	apiHealthMsg struct{ csrf string }
-	apiAuthMsg   struct {
-		token string
-		err   error
-	}
 	apiSubmitMsg struct {
 		jobID string
 		err   error
@@ -102,16 +105,34 @@ type (
 		hyp map[string]any
 		err error
 	}
-	tickMsg time.Time
+	sseEventMsg struct {
+		event api.SSEEvent
+		cancel func()
+	}
+	sseErrorMsg struct {
+		err error
+	}
+	sseClosedMsg struct{}
+	flashResultMsg struct {
+		result map[string]any
+		err    error
+	}
+	multiResultMsg struct {
+		result map[string]any
+		err    error
+	}
+	tickMsg     time.Time
+	pollTickMsg time.Time
 )
 
-// satisfies tea.Model
+func (p pollTickMsg) String() string { return "poll-tick" }
+
 var _ tea.Model = (*model)(nil)
 
-// NewApp exported constructor for cmd/c4tui-v9.
+// NewApp exports the constructor for cmd/c4tui-v9.
 func NewApp(apiURL string) *model {
 	ta := textarea.New()
-	ta.Placeholder = "design a CRISPR guide RNA with minimal off-targets in T-cells…"
+	ta.Placeholder = i18n.T("placeholder")
 	ta.Prompt = "❯ "
 	ta.SetWidth(80)
 	ta.SetHeight(3)
@@ -122,18 +143,19 @@ func NewApp(apiURL string) *model {
 
 	m := &model{
 		apiURL: apiURL,
+		api:    api.New(apiURL),
 		mode:   ModeDiscover,
 		ta:     ta,
 		vp:     vp,
 		focus:  true,
 		follow: true,
-		rain:   NewRain(),
-		burst:  NewBurst(),
-		slide:  NewSlideIn(),
-		typew:  NewTypewriter(),
-		sparks: NewSparkles(),
+		rain:   effects.NewRain(),
+		burst:  effects.NewBurst(),
+		slide:  effects.NewSlideIn(),
+		typew:  effects.NewTypewriter(),
+		sparks: effects.NewSparkles(),
 	}
-	m.appendCard(Card{Kind: CardEmpty, Title: T("empty.title"), Body: T("empty.hint"), Time: time.Now()})
+	m.appendCard(Card{Kind: CardEmpty, Title: i18n.T("empty.title"), Body: i18n.T("empty.hint"), Time: time.Now()})
 	return m
 }
 
@@ -145,11 +167,12 @@ func (m *model) tickCmd() tea.Cmd {
 	return tea.Tick(time.Millisecond*16, func(t time.Time) tea.Msg { return tickMsg(t) })
 }
 
-// pollTickCmd fires every 2s while a job is running.
 func (m *model) pollTickCmd() tea.Cmd {
 	return tea.Tick(time.Second*2, func(t time.Time) tea.Msg { return pollTickMsg(t) })
 }
 
-type pollTickMsg time.Time
+// T shortcut re-exports i18n.T.
+func T(key string) string { return i18n.T(key) }
 
-func (p pollTickMsg) String() string { return "poll-tick" }
+// SetLang shortcut re-exports i18n.SetLang.
+func SetLang(l i18n.Lang) { i18n.SetLang(l) }

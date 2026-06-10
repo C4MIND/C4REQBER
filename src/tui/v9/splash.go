@@ -467,17 +467,19 @@ func splashLerpColor(from, to string, t float64) string {
 // ── View ────────────────────────────────────────────────────────────────────
 
 // View returns the rendered splash screen.
-// Layout (v8 port):
-//   - crystal phase: art centered both axes; text just below art
-//   - dissolve/waiting/fadeout: art+text bottom-anchored with bottomLift
-//   - art horizontal centering: lipgloss.Place (auto-pads to width)
+// Layout (v8 port — proper):
+//   - textLines ALWAYS at fixed bottom position (textY = height - textCount - bottomLift)
+//   - crystal phase: small art (purple ANSI) CENTERED horizontally + vertically, NO text
+//   - dissolve/waiting: art grows ABOVE text (text stays at same Y), centered horizontally
+//   - art horizontal centering: lipgloss.Place
+//   - spacer 1 line between art and text in dissolve/waiting (breathing room)
 func (m SplashModel) View() tea.View {
 	if m.width == 0 || m.height == 0 {
 		v := tea.NewView("Loading...")
 		v.AltScreen = true
 		return v
 	}
-	// Default ANSI palette colors (lipgloss understands these directly)
+	// Default ANSI palette colors
 	primary := "3"  // yellow
 	success := "2"  // green
 	muted := "8"    // gray
@@ -487,75 +489,83 @@ func (m SplashModel) View() tea.View {
 	// Colorize art based on phase
 	coloredArt := m.coloredArtLines(primary, success, accent, muted, highlight)
 
-	// Text elements
+	// Text elements (7 lines in dissolve/waiting; partial in crystal)
 	textLines := m.splashTextLines(primary, success, accent, muted, highlight)
-
-	// v8 layout: bottom-anchored in dissolve/waiting, centered in crystal
+	textCount := len(textLines)
 	const bottomLift = 2
-	spacerLines := 0
-	if m.phase != "crystal" {
-		spacerLines = 1 // breathing room between art and text
-	}
 
-	// Build the full block
-	block := make([]string, 0, len(coloredArt)+spacerLines+len(textLines))
-	block = append(block, coloredArt...)
-	if spacerLines > 0 {
-		block = append(block, "")
+	// v8 layout: text is ANCHORED at bottom; art sits above it.
+	// In crystal phase, text is NOT yet rendered (only tagline + version fade in late).
+	// In dissolve/waiting, full 7-line text block sits at fixed Y.
+	type block struct {
+		lines []string
+		y     int // absolute Y in viewport
 	}
-	block = append(block, textLines...)
+	var blocks []block
 
-	var padTop int
 	if m.phase == "crystal" {
-		// Center whole block vertically (crystal art is short)
-		padTop = (m.height - len(block)) / 2
+		// Crystal: only art, centered in viewport (no text yet)
+		artY := (m.height - len(coloredArt)) / 2
+		if artY < 0 {
+			artY = 0
+		}
+		blocks = append(blocks, block{coloredArt, artY})
 	} else {
-		// Bottom-anchored: art+text sit at bottom with bottomLift rows
-		padTop = m.height - len(block) - bottomLift
-	}
-	if padTop < 0 {
-		padTop = 0
-	}
-	// Truncate if too tall
-	if padTop+len(block) > m.height {
-		// Try to keep text by trimming art
-		excess := padTop + len(block) - m.height
-		if excess < len(coloredArt) {
-			// Trim from top of art (preserve C4R at bottom)
-			coloredArt = coloredArt[excess:]
+		// Dissolve / waiting / fadeout: text anchored, art above
+		textY := m.height - textCount - bottomLift
+		if textY < 0 {
+			textY = 0
 		}
-		block = make([]string, 0, len(coloredArt)+spacerLines+len(textLines))
-		block = append(block, coloredArt...)
-		if spacerLines > 0 {
-			block = append(block, "")
+		// art sits directly above text, with 1-line spacer
+		artBottom := textY - 2 // 1 spacer + 1 row above for visual gap
+		artTop := artBottom - len(coloredArt) + 1
+		if artTop < 0 {
+			// Art too tall — truncate from top (preserve C4R at bottom)
+			trim := -artTop
+			if trim >= len(coloredArt) {
+				trim = len(coloredArt) - 1
+			}
+			visibleArt := coloredArt[trim:]
+			blocks = append(blocks, block{visibleArt, 0})
+		} else {
+			blocks = append(blocks, block{coloredArt, artTop})
 		}
-		block = append(block, textLines...)
-		padTop = m.height - len(block)
-		if padTop < 0 {
-			padTop = 0
+		blocks = append(blocks, block{textLines, textY})
+	}
+
+	// Compose into final viewport buffer
+	final := make([]string, m.height)
+	for i := range final {
+		final[i] = ""
+	}
+	// Place each block independently with per-block horizontal centering
+	// (otherwise the wide art+short text get squished into one block with bad centering)
+	for _, b := range blocks {
+		// Center each line of the block horizontally
+		for i, line := range b.lines {
+			y := b.y + i
+			if y >= 0 && y < m.height {
+				// padRight to width
+				plain := stripSplashANSI(line)
+				if lenRunes(plain) < m.width {
+					pad := m.width - lenRunes(plain)
+					if pad > 0 && pad < 200 {
+						line = line + strings.Repeat(" ", pad)
+					}
+				}
+				final[y] = line
+			}
 		}
 	}
 
-	// Final vertical composition
-	final := make([]string, 0, m.height)
-	for i := 0; i < padTop; i++ {
-		final = append(final, "")
-	}
-	final = append(final, block...)
-	for len(final) < m.height {
-		final = append(final, "")
-	}
-	if len(final) > m.height {
-		final = final[:m.height]
-	}
-
-	// Horizontal centering: use lipgloss.Place (centered both axes)
-	content := lipgloss.JoinVertical(lipgloss.Left, final...)
-	placed := lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center, content)
-
-	v := tea.NewView(placed)
+	v := tea.NewView(strings.Join(final, "\n"))
 	v.AltScreen = true
 	return v
+}
+
+// lenRunes returns the visible (rune) length of s.
+func lenRunes(s string) int {
+	return len([]rune(s))
 }
 
 func (m SplashModel) coloredArtLines(primary, success, accent, muted, highlight string) []string {

@@ -591,9 +591,18 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if msg.err != nil {
 			// Backend unreachable — overlay still renders, but with a hint.
 			m.setToast("⏚ capabilities: backend unreachable (using last known)")
-		} else {
-			m.setToast("⏚ capabilities loaded (" + capsim.ShortSummary(msg.report) + ")")
+			return m, nil
 		}
+		// D-03 in action: surface missing engines to the feed as first-class
+		// CardSimulation entries with status=unavailable + install hint.
+		// User can press 'i' on any of them to see the conda line.
+		summary := capSummaryCard(msg.report)
+		m.appendCard(summary)
+		for _, c := range capUnavailableCards(msg.report, 6) {
+			m.appendCard(c)
+			m.simCountThisRun++
+		}
+		m.setToast("⏚ capabilities loaded (" + capsim.ShortSummary(msg.report) + ")")
 		return m, nil
 	}
 

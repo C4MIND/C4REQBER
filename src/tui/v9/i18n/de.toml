@@ -172,3 +172,13 @@ sim.capabilities.title = "Simulationsfähigkeiten"
 sim.action.install = "Installations-Hinweis"
 sim.action.fallback = "Fallback-Kette"
 sim.action.plot = "Plot im Browser"
+
+# v9.13 (sim settings)
+settings.sim_preference = "Simulationsmodus"
+settings.sim_preference.desc = "auto (beste verfügbare) | cpu_only | off (keine Sims)"
+settings.sim_cost_limit = "Kostenlimit pro Lauf"
+settings.sim_cost_limit.desc = "USD. Sims werden übersprungen, wenn überschritten."
+settings.sim_spend = "Sim-Ausgaben diese Sitzung"
+settings.sim_spend.desc = "Summe der Sim-Kosten in dieser Sitzung."
+settings.capabilities_status = "Fähigkeiten"
+settings.capabilities_status.desc = "Drücke Ctrl+Shift+C für die volle Übersicht."

@@ -5,6 +5,7 @@ import (
 
 	"charm.land/lipgloss/v2"
 
+	"github.com/figuramax/c4reqber-tui-v9/capsim"
 	"github.com/figuramax/c4reqber-tui-v9/i18n"
 )
 
@@ -36,6 +37,10 @@ func (m *model) CurrentSettings() []SettingsRow {
 		{Key: "settings.api_url", Value: m.apiURL, Description: "settings.api_url.desc"},
 		{Key: "settings.save_history", Value: boolOnOff(m.saveHistory), Description: "settings.save_history.desc"},
 		{Key: "settings.telemetry", Value: fmt.Sprintf("disc=%d ok=%d fail=%d abort=%d", tel.Discoveries, tel.DiscoveriesOK, tel.DiscoveriesFail, tel.DiscoveriesAbort), Description: "settings.telemetry.desc"},
+		{Key: "settings.sim_preference", Value: m.simPreference, Description: "settings.sim_preference.desc"},
+		{Key: "settings.sim_cost_limit", Value: fmt.Sprintf("$%.2f", m.simCostLimit), Description: "settings.sim_cost_limit.desc"},
+		{Key: "settings.sim_spend", Value: fmt.Sprintf("$%.4f (cap $%.2f)", m.simSpendThisSession, m.simCostLimit), Description: "settings.sim_spend.desc"},
+		{Key: "settings.capabilities_status", Value: capsim.ShortSummary(m.capsimReport), Description: "settings.capabilities_status.desc"},
 	}
 }
 

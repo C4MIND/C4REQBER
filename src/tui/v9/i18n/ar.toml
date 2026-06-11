@@ -172,3 +172,13 @@ sim.capabilities.title = "قدرات المحاكاة"
 sim.action.install = "إظهار تلميح التثبيت"
 sim.action.fallback = "عرض سلسلة الاحتياط"
 sim.action.plot = "افتح الرسم في المتصفح"
+
+# v9.13 (sim settings)
+settings.sim_preference = "تفضيل المحاكاة"
+settings.sim_preference.desc = "auto (أفضل متاح) | cpu_only | off (تخطي)"
+settings.sim_cost_limit = "حد التكلفة لكل تشغيل"
+settings.sim_cost_limit.desc = "دولار. يتم تخطي المحاكاة عند التجاوز."
+settings.sim_spend = "إنفاق المحاكاة في هذه الجلسة"
+settings.sim_spend.desc = "إجمالي تكلفة المحاكاة في الجلسة."
+settings.capabilities_status = "القدرات"
+settings.capabilities_status.desc = "اضغط Ctrl+Shift+C للقائمة الكاملة."

@@ -172,3 +172,13 @@ sim.capabilities.title = "シミュレーション機能"
 sim.action.install = "インストール手順を表示"
 sim.action.fallback = "フォールバックチェーン"
 sim.action.plot = "ブラウザでプロットを開く"
+
+# v9.13 (sim settings)
+settings.sim_preference = "シミュレーション設定"
+settings.sim_preference.desc = "auto (最適な利用可能) | cpu_only | off (スキップ)"
+settings.sim_cost_limit = "実行ごとのコスト上限"
+settings.sim_cost_limit.desc = "USD。上限を超えるとスキップ。"
+settings.sim_spend = "セッションのシミュレーション支出"
+settings.sim_spend.desc = "セッション累計のシミュレーションコスト。"
+settings.capabilities_status = "機能"
+settings.capabilities_status.desc = "Ctrl+Shift+C で完全な一覧を表示。"

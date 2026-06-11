@@ -355,6 +355,43 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.vp.ScrollDown(1)
 			m.rebuildFeedContent()
 			return m, nil
+		case km.Matches(ActFocusPrev, keyStr):
+			// v9.13: navigate card focus up.
+			if len(m.feed) > 0 {
+				if m.focusedCardIdx < 0 {
+					m.focusedCardIdx = len(m.feed) - 1
+				} else if m.focusedCardIdx > 0 {
+					m.focusedCardIdx--
+				}
+				m.follow = false
+				m.setToast("focused: " + truncate(m.feed[m.focusedCardIdx].Title, 40))
+			}
+			return m, nil
+		case km.Matches(ActFocusNext, keyStr):
+			if len(m.feed) > 0 {
+				if m.focusedCardIdx < 0 {
+					m.focusedCardIdx = 0
+				} else if m.focusedCardIdx < len(m.feed)-1 {
+					m.focusedCardIdx++
+				}
+				m.follow = false
+				m.setToast("focused: " + truncate(m.feed[m.focusedCardIdx].Title, 40))
+			}
+			return m, nil
+		case km.Matches(ActFocusFirst, keyStr):
+			if len(m.feed) > 0 {
+				m.focusedCardIdx = 0
+				m.follow = false
+				m.setToast("focused: first")
+			}
+			return m, nil
+		case km.Matches(ActFocusLast, keyStr):
+			if len(m.feed) > 0 {
+				m.focusedCardIdx = len(m.feed) - 1
+				m.follow = true
+				m.setToast("focused: last (follow on)")
+			}
+			return m, nil
 		case km.Matches(ActColorProfile, keyStr), km.Matches(ActProfileMac, keyStr):
 			// Cycle color profile (default → hc → prot → deut → trit → mono → default)
 			switch m.colorProfile {

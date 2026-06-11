@@ -152,6 +152,15 @@ type model struct {
 	capsimReport    *capsim.Report
 	showCapabilities bool
 	capsimLoading   bool
+
+	// v9.13 (TI-SIM-07): sim settings — preference, cost limit, session spend.
+	// simPreference: "auto" | "cpu_only" | "off" — controls whether sims run
+	// simCostLimit: USD per discovery; over → emit CardSimulation with budget_exceeded
+	// simSpendThisSession: running total from cost_update events (placeholder
+	//   until backend B-07 ships; today just a counter)
+	simPreference     string
+	simCostLimit      float64
+	simSpendThisSession float64
 }
 
 // message types for bubbletea
@@ -246,7 +255,9 @@ func NewApp(apiURL string) *model {
 		llmTier:       TierC2,
 		colorProfile:  ProfileDefault,
 		wizard:        NewWizardState(),
-		capsimClient:  capsim.NewClient(apiURL),
+		capsimClient:        capsim.NewClient(apiURL),
+		simPreference:       "auto",
+		simCostLimit:        5.00,
 	}
 	// Load persisted state (achievements, langs). If store fails, fall back gracefully.
 	store, storeErr := persist.New(persist.DefaultPath())
@@ -305,7 +316,9 @@ func NewAppFresh(apiURL string) *model {
 		llmTier:       TierC2,
 		colorProfile:  ProfileDefault,
 		wizard:        NewWizardState(),
-		capsimClient:  capsim.NewClient(apiURL),
+		capsimClient:        capsim.NewClient(apiURL),
+		simPreference:       "auto",
+		simCostLimit:        5.00,
 	}
 	// Load persisted state (achievements, langs). If store fails, fall back gracefully.
 	store, storeErr := persist.New(persist.DefaultPath())
@@ -386,6 +399,17 @@ func (m *model) PersistSettings() {
 		Lang:         string(i18n.GetLang()),
 	})
 	_ = m.store.Save()
+}
+
+// ApplySimCost accumulates a cost update from a backend cost_update event.
+// Called by the SSE event handler when the backend sends real cost data
+// (BE-SIM-10). Until the backend emits those events, this is unused and
+// the header cost stays at 0.
+func (m *model) ApplySimCost(usd float64) {
+	if usd < 0 {
+		return
+	}
+	m.simSpendThisSession += usd
 }
 
 // MarkFirstRunDone marks the first-run wizard as completed in the persist store.

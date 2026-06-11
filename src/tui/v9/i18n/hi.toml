@@ -172,3 +172,13 @@ sim.capabilities.title = "सिमुलेशन क्षमताएं"
 sim.action.install = "इंस्टॉल संकेत दिखाएं"
 sim.action.fallback = "फ़ॉलबैक श्रृंखला"
 sim.action.plot = "ब्राउज़र में प्लॉट खोलें"
+
+# v9.13 (sim settings)
+settings.sim_preference = "सिमुलेशन वरीयता"
+settings.sim_preference.desc = "auto (सर्वोत्तम उपलब्ध) | cpu_only | off (छोड़ें)"
+settings.sim_cost_limit = "प्रति रन लागत सीमा"
+settings.sim_cost_limit.desc = "USD. पार होने पर सिम छोड़ दिया जाता है।"
+settings.sim_spend = "इस सत्र में सिम खर्च"
+settings.sim_spend.desc = "सत्र में संचयी सिम लागत।"
+settings.capabilities_status = "क्षमताएं"
+settings.capabilities_status.desc = "पूरी सूची के लिए Ctrl+Shift+C दबाएं।"

@@ -172,3 +172,13 @@ sim.capabilities.title = "仿真能力"
 sim.action.install = "显示安装提示"
 sim.action.fallback = "显示回退链"
 sim.action.plot = "在浏览器中打开图表"
+
+# v9.13 (sim settings)
+settings.sim_preference = "仿真偏好"
+settings.sim_preference.desc = "auto (使用最佳可用) | cpu_only | off (跳过仿真)"
+settings.sim_cost_limit = "每次运行成本限制"
+settings.sim_cost_limit.desc = "美元。超限后跳过仿真。"
+settings.sim_spend = "本次会话仿真支出"
+settings.sim_spend.desc = "本次会话累计仿真成本。"
+settings.capabilities_status = "能力"
+settings.capabilities_status.desc = "按 Ctrl+Shift+C 查看完整仿真/验证器列表。"

@@ -88,7 +88,7 @@ func (m *model) renderHeader() string {
 	// "F(1,1,0)" instead of F⟨1,1,0⟩, duplicated "DeepSeek $0.0000").
 	// Simple padding to width via rune length, no lipgloss.Width.
 	hdr := fmt.Sprintf(" %s C4REQBER v9  F<1,1,0>  [%s]  DeepSeek  $%.4f  %s",
-		pulse, i18n.GetLang(), m.cost, m.cachedFooterClock)
+		pulse, i18n.GetLang(), m.simSpendThisSession, m.cachedFooterClock)
 	// v9.12.5: sub-timer when discovery is running
 	if m.running && !m.startedAt.IsZero() {
 		elapsed := time.Since(m.startedAt).Round(time.Second)

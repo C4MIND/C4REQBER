@@ -189,3 +189,13 @@ sim.capabilities.title = "Simulation capabilities"
 sim.action.install = "Show install hint"
 sim.action.fallback = "Show fallback chain"
 sim.action.plot = "Open plot in browser"
+
+# v9.13 (sim settings)
+settings.sim_preference = "Simulation preference"
+settings.sim_preference.desc = "auto (use best available) | cpu_only | off (skip sims)"
+settings.sim_cost_limit = "Cost limit per run"
+settings.sim_cost_limit.desc = "USD. Sims are skipped once exceeded."
+settings.sim_spend = "Sim spend this session"
+settings.sim_spend.desc = "Total sim cost accumulated this session."
+settings.capabilities_status = "Capabilities"
+settings.capabilities_status.desc = "Press Ctrl+Shift+C for the full sim/verifier overlay."

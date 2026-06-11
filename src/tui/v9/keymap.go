@@ -56,6 +56,10 @@ const (
 	ActInstallHint  Action = "install_hint"  // i — show install hint for an unavailable sim engine
 	ActSelectFallback Action = "fallback"    // f — show fallback chain for a skipped sim
 	ActOpenPlot     Action = "open_plot"     // o — open a sim plot URL in browser
+	ActFocusPrev    Action = "focus_prev"    // k — focus previous card
+	ActFocusNext    Action = "focus_next"    // j — focus next card
+	ActFocusFirst   Action = "focus_first"   // g g — focus first card
+	ActFocusLast    Action = "focus_last"    // G — focus last card (and re-enable follow)
 	ActUp           Action = "up"            // ↑
 	ActDown         Action = "down"          // ↓
 	ActColorProfile Action = "color_profile" // Ctrl+Shift+P — color cycle
@@ -107,13 +111,17 @@ func defaultBindings() map[Action][]keyBinding {
 		ActReauth:       {{label: "Ctrl+L", keys: []string{"ctrl+l"}}},
 		ActSearch:       {{label: "/", keys: []string{"/"}}},
 		ActCopy:         {{label: "c", keys: []string{"c"}}},
-		ActJump:         {{label: "j", keys: []string{"j"}}},
+		ActJump:         {{label: "Ctrl+J", keys: []string{"ctrl+j"}}},
 		ActTier:         {{label: "Ctrl+Y", keys: []string{"ctrl+y"}}},
 		ActSettings:     {{label: "Ctrl+,", keys: []string{"ctrl+,"}}},
 		ActCapabilities: {{label: "Ctrl+Shift+C", keys: []string{"ctrl+shift+c"}}},
 		ActInstallHint:  {{label: "i", keys: []string{"i"}}},
 		ActSelectFallback: {{label: "f", keys: []string{"f"}}},
 		ActOpenPlot:     {{label: "o", keys: []string{"o"}}},
+		ActFocusPrev:    {{label: "k", keys: []string{"k"}}},
+		ActFocusNext:    {{label: "j", keys: []string{"j"}}},
+		ActFocusFirst:   {{label: "g g", keys: []string{"g", "g"}}},
+		ActFocusLast:    {{label: "G", keys: []string{"G", "shift+g"}}},
 		ActUp:           {{label: "↑", keys: []string{"up"}}},
 		ActDown:         {{label: "↓", keys: []string{"down"}}},
 		ActColorProfile: {{label: "Ctrl+Shift+P", keys: []string{"ctrl+shift+p"}}},

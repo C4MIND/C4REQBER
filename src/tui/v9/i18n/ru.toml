@@ -172,3 +172,13 @@ sim.capabilities.title = "Возможности симуляции"
 sim.action.install = "Показать подсказку установки"
 sim.action.fallback = "Показать цепочку fallback"
 sim.action.plot = "Открыть график"
+
+# v9.13 (sim settings)
+settings.sim_preference = "Режим симуляций"
+settings.sim_preference.desc = "auto (лучшее доступное) | cpu_only | off (без симуляций)"
+settings.sim_cost_limit = "Лимит стоимости на запуск"
+settings.sim_cost_limit.desc = "USD. Симуляции пропускаются при превышении."
+settings.sim_spend = "Потрачено на симуляции"
+settings.sim_spend.desc = "Сумма симуляций за сессию."
+settings.capabilities_status = "Возможности"
+settings.capabilities_status.desc = "Нажмите Ctrl+Shift+C для полного списка."

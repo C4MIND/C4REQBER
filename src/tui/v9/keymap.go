@@ -53,6 +53,9 @@ const (
 	ActTier         Action = "tier"          // Ctrl+Y — cycle C1/C2/C3
 	ActSettings     Action = "settings"      // Ctrl+, — settings menu
 	ActCapabilities Action = "capabilities"  // Ctrl+Shift+C — sim/verifier capabilities overlay (v9.13)
+	ActInstallHint  Action = "install_hint"  // i — show install hint for an unavailable sim engine
+	ActSelectFallback Action = "fallback"    // f — show fallback chain for a skipped sim
+	ActOpenPlot     Action = "open_plot"     // o — open a sim plot URL in browser
 	ActUp           Action = "up"            // ↑
 	ActDown         Action = "down"          // ↓
 	ActColorProfile Action = "color_profile" // Ctrl+Shift+P — color cycle
@@ -108,6 +111,9 @@ func defaultBindings() map[Action][]keyBinding {
 		ActTier:         {{label: "Ctrl+Y", keys: []string{"ctrl+y"}}},
 		ActSettings:     {{label: "Ctrl+,", keys: []string{"ctrl+,"}}},
 		ActCapabilities: {{label: "Ctrl+Shift+C", keys: []string{"ctrl+shift+c"}}},
+		ActInstallHint:  {{label: "i", keys: []string{"i"}}},
+		ActSelectFallback: {{label: "f", keys: []string{"f"}}},
+		ActOpenPlot:     {{label: "o", keys: []string{"o"}}},
 		ActUp:           {{label: "↑", keys: []string{"up"}}},
 		ActDown:         {{label: "↓", keys: []string{"down"}}},
 		ActColorProfile: {{label: "Ctrl+Shift+P", keys: []string{"ctrl+shift+p"}}},
@@ -229,6 +235,7 @@ func (km *KeyMap) HelpRows() []HelpRow {
 	order := []Action{
 		ActRun, ActCancel, ActCycleMode, ActLang, ActTier,
 		ActReauth, ActSearch, ActCopy, ActJump, ActSettings, ActCapabilities,
+		ActInstallHint, ActSelectFallback, ActOpenPlot,
 		ActColorProfile, ActProfileMac, ActNewTab, ActEscape, ActHelp, ActQuit,
 	}
 	rows := make([]HelpRow, 0, len(order))
@@ -266,6 +273,12 @@ func helpDescKey(a Action) string {
 		return "settings.title"
 	case ActCapabilities:
 		return "sim.capabilities.title"
+	case ActInstallHint:
+		return "sim.action.install"
+	case ActSelectFallback:
+		return "sim.action.fallback"
+	case ActOpenPlot:
+		return "sim.action.plot"
 	case ActColorProfile, ActProfileMac:
 		return "profile.cycle"
 	case ActNewTab:

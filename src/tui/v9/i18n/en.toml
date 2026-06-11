@@ -185,3 +185,7 @@ settings.llm_stage.desc = "Phase-specific model tier. A:local → D/E/F:premium 
 
 # v9.13 (capabilities overlay)
 sim.capabilities.title = "Simulation capabilities"
+
+sim.action.install = "Show install hint"
+sim.action.fallback = "Show fallback chain"
+sim.action.plot = "Open plot in browser"

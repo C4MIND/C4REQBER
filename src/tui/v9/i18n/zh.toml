@@ -168,3 +168,7 @@ settings.llm_stage.desc = "Phase-specific model tier. A:local → D/E/F:premium 
 
 # v9.13 (capabilities overlay)
 sim.capabilities.title = "仿真能力"
+
+sim.action.install = "显示安装提示"
+sim.action.fallback = "显示回退链"
+sim.action.plot = "在浏览器中打开图表"

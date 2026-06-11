@@ -168,3 +168,7 @@ settings.llm_stage.desc = "Phase-specific model tier. A:local → D/E/F:premium 
 
 # v9.13 (capabilities overlay)
 sim.capabilities.title = "قدرات المحاكاة"
+
+sim.action.install = "إظهار تلميح التثبيت"
+sim.action.fallback = "عرض سلسلة الاحتياط"
+sim.action.plot = "افتح الرسم في المتصفح"

@@ -168,3 +168,7 @@ settings.llm_stage.desc = "Phase-specific model tier. A:local → D/E/F:premium 
 
 # v9.13 (capabilities overlay)
 sim.capabilities.title = "シミュレーション機能"
+
+sim.action.install = "インストール手順を表示"
+sim.action.fallback = "フォールバックチェーン"
+sim.action.plot = "ブラウザでプロットを開く"

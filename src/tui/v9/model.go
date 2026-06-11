@@ -69,6 +69,10 @@ type model struct {
 	vp     viewport.Model
 	follow bool
 
+	// v9.13: focused card index in feed. -1 means "follow last".
+	// j/k navigate, Enter expands, actions target this card.
+	focusedCardIdx int
+
 	ta        textarea.Model
 	focus     bool
 	toast     string
@@ -393,3 +397,30 @@ func (m *model) MarkFirstRunDone() {
 }
 
 // (no helpers needed — tests use persist.New directly)
+
+// focusedCard returns the card the user has navigated to with j/k.
+// If no card is focused (idx < 0 or feed empty), returns the last card.
+func (m *model) focusedCard() *Card {
+	if len(m.feed) == 0 {
+		return nil
+	}
+	idx := m.focusedCardIdx
+	if idx < 0 || idx >= len(m.feed) {
+		idx = len(m.feed) - 1
+	}
+	return &m.feed[idx]
+}
+
+// clampFocus ensures m.focusedCardIdx is in [0, len(feed)-1] after a mutation.
+func (m *model) clampFocus() {
+	if len(m.feed) == 0 {
+		m.focusedCardIdx = -1
+		return
+	}
+	if m.focusedCardIdx < 0 {
+		m.focusedCardIdx = len(m.feed) - 1
+	}
+	if m.focusedCardIdx >= len(m.feed) {
+		m.focusedCardIdx = len(m.feed) - 1
+	}
+}

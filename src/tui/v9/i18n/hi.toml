@@ -168,3 +168,7 @@ settings.llm_stage.desc = "Phase-specific model tier. A:local → D/E/F:premium 
 
 # v9.13 (capabilities overlay)
 sim.capabilities.title = "सिमुलेशन क्षमताएं"
+
+sim.action.install = "इंस्टॉल संकेत दिखाएं"
+sim.action.fallback = "फ़ॉलबैक श्रृंखला"
+sim.action.plot = "ब्राउज़र में प्लॉट खोलें"

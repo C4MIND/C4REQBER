@@ -255,12 +255,55 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.setToast("🔍 search: " + strings.TrimSpace(m.ta.Value()))
 			return m, nil
 		case km.Matches(ActCopy, keyStr):
-			// Copy last card as markdown to clipboard (uses pbcopy on macOS)
-			if len(m.feed) > 0 {
-				last := m.feed[len(m.feed)-1]
-				md := fmt.Sprintf("# %s\n\n%s\n\n*%s*", last.Title, last.Body, last.Time.Format("2006-01-02 15:04"))
+			// Copy focused card (or last if none focused) as markdown.
+			if c := m.focusedCard(); c != nil {
+				md := cardToMarkdown(*c)
 				_ = copyToClipboard(md)
-				m.setToast("📋 copied to clipboard")
+				m.setToast("📋 copied: " + truncate(c.Title, 30))
+			}
+			return m, nil
+		case km.Matches(ActInstallHint, keyStr):
+			// v9.13 (TI-SIM-06): on a CardSimulation with status=unavailable,
+			// show the install hint. On any other card, no-op (toast hint).
+			if c := m.focusedCard(); c != nil && c.Kind == CardSimulation && c.Sim.InstallHint != "" {
+				m.setToast("ⓘ install: " + c.Sim.InstallHint)
+			} else if c != nil && c.Kind == CardSimulation {
+				m.setToast("ⓘ engine " + c.Sim.Engine + " is available; nothing to install")
+			} else {
+				m.setToast("ⓘ install hint only works on simulation cards")
+			}
+			return m, nil
+		case km.Matches(ActSelectFallback, keyStr):
+			// v9.13 (TI-SIM-06): on a CardSimulation with status=skipped/failed,
+			// show the fallback chain. For now, toast it; full picker comes in
+			// a follow-up commit. Records a telemetry event.
+			if c := m.focusedCard(); c != nil && c.Kind == CardSimulation {
+				chain := ""
+				for _, t := range c.Sim.PatternsTried {
+					chain += t.Engine + "(" + t.Status + ") → "
+				}
+				if chain == "" {
+					chain = "(no chain recorded)"
+				} else {
+					chain = chain[:len(chain)-3] // trim trailing →
+				}
+				m.setToast("↪ fallback chain: " + chain)
+			} else {
+				m.setToast("↪ fallback only works on simulation cards")
+			}
+			return m, nil
+		case km.Matches(ActOpenPlot, keyStr):
+			// v9.13 (TI-SIM-06): on a CardSimulation with image evidence,
+			// open the plot URL in the default browser.
+			if c := m.focusedCard(); c != nil && c.Kind == CardSimulation {
+				if c.Sim.Evidence.Type == "image" && c.Sim.Evidence.ImageURL != "" {
+					_ = openURL(c.Sim.Evidence.ImageURL)
+					m.setToast("🖼 opened plot: " + truncate(c.Sim.Evidence.ImageURL, 40))
+				} else {
+					m.setToast("🖼 this sim has no plot (evidence type: " + c.Sim.Evidence.Type + ")")
+				}
+			} else {
+				m.setToast("🖼 open plot only works on simulation cards")
 			}
 			return m, nil
 		case km.Matches(ActJump, keyStr):

@@ -173,6 +173,9 @@ type model struct {
 	connState       ConnectionState
 	simCountThisRun int
 
+	// v9.13 (§15): debug overlay
+	showDebug bool
+
 	// v9.13 (§10): persistence — feed store and input history.
 	feedStore     *persist.FeedStore
 	inputHistory  *persist.InputHistory

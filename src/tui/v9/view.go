@@ -66,6 +66,10 @@ func (m *model) View() tea.View {
 	if m.showCapabilities {
 		body = capsim.RenderCapabilitiesOverlay(m.width, m.height, m.capsimReport)
 	}
+	// v9.13 (§15): debug overlay (Ctrl+Shift+D) — also high priority
+	if m.showDebug {
+		body = RenderDebugOverlay(m.CollectDebugSnapshot())
+	}
 	v := tea.NewView(zone.Scan(body))
 	v.AltScreen = true
 	v.MouseMode = tea.MouseModeCellMotion

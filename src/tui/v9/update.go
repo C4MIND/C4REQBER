@@ -165,6 +165,10 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			cmd = m.startDiscovery(val)
 			return m, cmd
 		case km.Matches(ActCancel, keyStr), km.Matches(ActEscape, keyStr):
+			if m.showDebug {
+				m.showDebug = false
+				return m, nil
+			}
 			if m.showCapabilities {
 				m.showCapabilities = false
 				return m, nil
@@ -223,6 +227,14 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.setToast(i18n.T("help.shown"))
 			} else {
 				m.setToast(i18n.T("help.hidden"))
+			}
+			return m, nil
+		case km.Matches(ActDebug, keyStr):
+			m.showDebug = !m.showDebug
+			if m.showDebug {
+				m.setToast("🔧 debug ON")
+			} else {
+				m.setToast("🔧 debug OFF")
 			}
 			return m, nil
 		case km.Matches(ActStatusBar, keyStr):

@@ -117,6 +117,86 @@ func populateHypothesis(m *model) {
 	})
 }
 
+// populateMultiPaper adds a hypothesis + 3 papers to test list density.
+func populateMultiPaper(m *model) {
+	populateHypothesis(m)
+	m.appendCard(Card{Kind: CardPaper, Title: "CRISPR off-target review", Body: "Nature 2024 · citations 142", Time: time.Now(), Status: "done", Meta: []cards.MetaKV{{Key: "doi", Value: "10.1038/nature.2024.001"}}})
+	m.appendCard(Card{Kind: CardPaper, Title: "Guide RNA design principles", Body: "Cell 2023 · citations 87", Time: time.Now(), Status: "done", Meta: []cards.MetaKV{{Key: "doi", Value: "10.1016/j.cell.2023.04.012"}}})
+	m.appendCard(Card{Kind: CardPaper, Title: "Off-target cleavage mechanisms", Body: "Science 2024 · citations 63", Time: time.Now(), Status: "done", Meta: []cards.MetaKV{{Key: "doi", Value: "10.1126/science.adi1234"}}})
+}
+
+// populateError adds an error card.
+func populateError(m *model) {
+	m.appendCard(Card{Kind: CardError, Title: "Discovery failed", Body: "backend returned 500 on submit", Time: time.Now(), Status: "error"})
+}
+
+// populateExpanded creates a card with a long FullBody and expands it
+// (sets State directly so renderCard renders FullBody).
+func populateExpanded(m *model) {
+	m.appendCard(Card{
+		Kind:     CardHypothesis,
+		Title:    "Expanded hypothesis",
+		Body:     "Short body",
+		FullBody: "This is the full body of the hypothesis. It is much longer than the body and explains everything in detail. The user can read the whole thing when expanded. Line two of the full body. Line three with more detail about methodology and findings.",
+		State:    cards.StateExpanded,
+	})
+}
+
+// populateFocused shows the focused-card chrome.
+func populateFocused(m *model) {
+	populateHypothesis(m)
+	// Second hypothesis so we have a non-empty feed and can focus
+	m.appendCard(Card{Kind: CardHypothesis, Title: "Second hypothesis", Body: "x", Time: time.Now(), Status: "done"})
+	m.focusedCardIdx = 0
+}
+
+// populateMixedFeed is the most realistic scenario — phases interleaved
+// with sim cards, plus a hypothesis and a paper. This is what a
+// user would typically see 30 seconds into a discovery.
+func populateMixedFeed(m *model) {
+	// Append in chronological order
+	now := time.Now()
+	m.appendCard(Card{Kind: CardPhase, Title: "A", Body: "framing", Time: now.Add(-30 * time.Second), Status: "done", Progress: 1.0})
+	m.appendCard(Card{Kind: CardPhase, Title: "B", Body: "knowledge acquisition", Time: now.Add(-20 * time.Second), Status: "done", Progress: 1.0})
+	m.appendCard(Card{Kind: CardPhase, Title: "C", Body: "gap analysis", Time: now.Add(-10 * time.Second), Status: "done", Progress: 1.0})
+	m.appendCard(Card{Kind: CardSimulation, Title: "openmm protein folding", Body: "verdict: supports_hypothesis", Time: now.Add(-5 * time.Second), Status: "done",
+		Sim: cards.SimFields{Engine: "openmm", EngineStatus: "success", Domain: "biology", Pattern: "protein_folding", Verdict: "supports_hypothesis", CostUSD: 0.012}})
+	m.appendCard(Card{Kind: CardPhase, Title: "D", Body: "scoring hypotheses", Time: now, Status: "running", Progress: 0.67})
+}
+
+// populateFullHypothesis: hypothesis with FullBody populated (not expanded yet).
+// Verifies that the short body is shown and FullBody is hidden.
+func populateFullHypothesis(m *model) {
+	m.appendCard(Card{
+		Kind:     CardHypothesis,
+		Title:    "Hypothesis with full body",
+		Body:     "Short body here",
+		FullBody: "This long FullBody text is only shown when the card is expanded. The user can press Enter to see it.",
+		Time:     time.Now(), Status: "done",
+	})
+}
+
+// populateVerdictChips: hypothesis with 2 linked sims (1 supports, 1 refutes)
+// to exercise the verdict chip rendering.
+func populateVerdictChips(m *model) {
+	now := time.Now()
+	m.appendCard(Card{Kind: CardHypothesis, Title: "Verdict test", Body: "h body", Time: now, Status: "done"})
+	m.appendCard(Card{Kind: CardSimulation, Title: "openmm", Body: "supports", Time: now, Status: "done",
+		Sim: cards.SimFields{Engine: "openmm", EngineStatus: "success", Domain: "biology", Pattern: "p", Verdict: "supports_hypothesis", HypothesisID: 0 /* will be linked */}})
+	m.appendCard(Card{Kind: CardSimulation, Title: "jaxsim", Body: "refutes", Time: now, Status: "done",
+		Sim: cards.SimFields{Engine: "jaxsim", EngineStatus: "success", Domain: "biology", Pattern: "p", Verdict: "refutes_hypothesis", HypothesisID: 0}})
+}
+
+// populatePalette: command palette open with empty query (shows all commands).
+func populatePalette(m *model) {
+	m.openPalette()
+}
+
+// populateBookmark: hypothesis that's bookmarked (should never auto-prune).
+func populateBookmark(m *model) {
+	m.appendCard(Card{Kind: CardHypothesis, Title: "Bookmarked insight", Body: "Important", Time: time.Now(), Status: "done", Bookmark: true})
+}
+
 func populateSim(m *model) {
 	m.appendCard(Card{
 		Kind: CardSimulation, Title: "openmm protein folding",
@@ -182,7 +262,16 @@ func TestGoldenSnapshotsAll(t *testing.T) {
 	scenarios := []snapshotBuilder{
 		{name: "empty", build: populateEmpty},
 		{name: "hypothesis", build: populateHypothesis},
+		{name: "multi-paper", build: populateMultiPaper},
 		{name: "sim", build: populateSim},
+		{name: "error", build: populateError},
+		{name: "expanded", build: populateExpanded},
+		{name: "focused", build: populateFocused},
+		{name: "full-hypothesis", build: populateFullHypothesis},
+		{name: "verdict-chips", build: populateVerdictChips},
+		{name: "bookmark", build: populateBookmark},
+		{name: "palette", build: populatePalette},
+		{name: "mixed-feed", build: populateMixedFeed},
 		{name: "capsim", build: populateCapsim},
 		{name: "debug", build: populateDebug},
 	}

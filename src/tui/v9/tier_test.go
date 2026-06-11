@@ -77,6 +77,9 @@ func TestTier_FormatTierBadge(t *testing.T) {
 }
 
 func TestCtrlY_CyclesLLMTier(t *testing.T) {
+	// Isolate from user's real ~/.config/c4reqber state.
+	tmp := t.TempDir()
+	t.Setenv("HOME", tmp)
 	m := NewAppFresh("http://test")
 	if m.llmTier != TierC2 {
 		t.Errorf("default tier = %s, want C2", m.llmTier)

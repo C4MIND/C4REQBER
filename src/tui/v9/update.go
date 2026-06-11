@@ -12,6 +12,7 @@ import (
 	tea "charm.land/bubbletea/v2"
 	zone "github.com/lrstanley/bubblezone/v2"
 
+	"github.com/figuramax/c4reqber-tui-v9/api"
 	"github.com/figuramax/c4reqber-tui-v9/cards"
 	"github.com/figuramax/c4reqber-tui-v9/capsim"
 	"github.com/figuramax/c4reqber-tui-v9/i18n"
@@ -76,43 +77,30 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.sseEvents = msg.events
 			m.sseCancel = msg.cancel
 		}
-		status, phase, progress, result, completed := extractResultFromSSEData(msg.event.Data)
-		// Map to apiPollMsg so we can reuse the render path
-		if status != "" || phase != "" {
-			// v9.12.1: dedup phase cards — skip if phase/progress unchanged
-			if phase != m.lastPhase || (abs(progress-m.lastProgress) > 0.01) {
-				m.lastPhase = phase
-				m.lastProgress = progress
-				m.appendCard(Card{Kind: CardPhase, Title: phase, Body: fmt.Sprintf("progress %.0f%%", progress*100), Time: time.Now(), Status: "running", Progress: progress})
-			}
-		}
-		if completed {
-			m.running = false
-			m.jobID = ""
-			m.setToast(i18n.T("toast.complete"))
-			m.burst.Trigger(m.width, m.height, m.width/2, m.height/2)
-			if result != nil {
-				if hyp, ok := result["hypothesis"].(map[string]any); ok {
-					hc := Card{Kind: CardHypothesis, Title: i18n.T("card.hypothesis.t"), Body: fieldString(hyp, "text"), Meta: []cards.MetaKV{{Key: "source", Value: fieldString(hyp, "source")}}, Time: time.Now(), Status: "done"}
-					m.appendCard(hc)
-					m.typew.Set(fieldString(hyp, "text"), m.tick)
-					if novelty, ok := hyp["novelty_score"].(float64); ok {
-						m.lastQuality = novelty
-					}
+		// v9.13: use the typed decoder for proper event-type dispatch.
+		// Falls back to legacy extraction for the old v8.12 events.
+		te, terr := api.DecodeTypedEvent(msg.event.Data)
+		if terr == nil {
+			switch te.Type {
+			case api.EventPhaseProgress, api.EventPhaseChange:
+				m.handlePhaseEvent(te)
+			case api.EventSimStarted, api.EventSimFinished, api.EventSimSkipped, api.EventSimBudgetExceeded:
+				m.handleSimEvent(te)
+			case api.EventCostUpdate:
+				if te.CostUSD > 0 {
+					m.ApplySimCost(te.CostUSD)
 				}
-				if papers, ok := result["papers"].([]any); ok {
-					m.lastPapersCount = len(papers)
-					for i, p := range papers {
-						if i >= 3 {
-							break
-						}
-						pm, _ := p.(map[string]any)
-						m.appendCard(Card{Kind: CardPaper, Title: fieldString(pm, "title"), Body: fmt.Sprintf("%s · %s · citations %s", fieldString(pm, "venue"), fieldString(pm, "year"), fieldString(pm, "citation_count")), Meta: []cards.MetaKV{{Key: "doi", Value: fieldString(pm, "doi")}, {Key: "source", Value: fieldString(pm, "source")}}, Time: time.Now(), Status: "done"})
-					}
-				}
-				m.completedDisc++
-				m.checkAchievements()
+			case api.EventComplete:
+				m.handleCompleteEvent(te)
+			case api.EventFailed, api.EventCancelled:
+				m.handleFailedEvent(te)
+			default:
+				// Unknown / log / token_stream — use legacy path as safety net
+				status, phase, progress, result, completed := extractResultFromSSEData(msg.event.Data)
+				m.handleLegacyPhase(status, phase, progress, result, completed)
 			}
+		} else {
+			// Non-JSON data — ignore
 		}
 		// Continue streaming
 		if m.sseEvents != nil {

@@ -2,6 +2,8 @@
 package tui
 
 import (
+	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -431,6 +433,220 @@ func (m *model) MarkFirstRunDone() {
 }
 
 // (no helpers needed — tests use persist.New directly)
+
+// handlePhaseEvent updates phase progress from a typed phase_progress/phase_change event.
+func (m *model) handlePhaseEvent(te api.TypedEvent) {
+	phase := te.Phase
+	progress := te.Progress
+	if phase != m.lastPhase || (abs(progress-m.lastProgress) > 0.01) {
+		m.lastPhase = phase
+		m.lastProgress = progress
+		body := fmt.Sprintf("progress %.0f%%", progress*100)
+		if te.Substep != "" {
+			body = te.Substep + " · " + body
+		}
+		m.appendCard(Card{Kind: CardPhase, Title: phase, Body: body, Time: time.Now(), Status: "running", Progress: progress})
+	}
+}
+
+// handleSimEvent creates a CardSimulation from a typed sim_* event.
+// Back-link to hypothesis: if the event has HypothesisID, try to find
+// the most recent CardHypothesis and link the sim to it.
+func (m *model) handleSimEvent(te api.TypedEvent) {
+	// Default domain: infer from engine or pattern
+	domain := simDomainForEngine(te.Engine)
+	// Find hypothesis to link to
+	hypID := cards.ID(0)
+	if te.HypothesisID != "" {
+		// Try parse as numeric ID
+		var id uint64
+		if _, err := fmt.Sscanf(te.HypothesisID, "%d", &id); err == nil {
+			hypID = cards.ID(id)
+		}
+	}
+	if hypID == 0 {
+		// Fall back: link to most recent hypothesis
+		for i := len(m.feed) - 1; i >= 0; i-- {
+			if m.feed[i].Kind == CardHypothesis {
+				hypID = m.feed[i].ID
+				break
+			}
+		}
+	}
+	c := Card{
+		ID:    cards.NextID(),
+		Kind:  CardSimulation,
+		Title: te.Engine + " · " + te.Pattern,
+		Body:  simBody(te),
+		Time:  time.Now(),
+		Status: func() string {
+			switch te.Type {
+			case api.EventSimFinished:
+				if te.EngineStatus == "success" || te.EngineStatus == "" {
+					return "done"
+				}
+				return "error"
+			case api.EventSimSkipped:
+				return "skipped"
+			case api.EventSimBudgetExceeded:
+				return "error"
+			}
+			return "running"
+		}(),
+		Sim: cards.SimFields{
+			Engine:       te.Engine,
+			EngineStatus: simStatusString(te),
+			Domain:       domain,
+			Pattern:      te.Pattern,
+			Verdict:      te.Verdict,
+			CostUSD:      te.CostUSD,
+			BackendHost:  te.BackendHost,
+			ElapsedMS:    te.ElapsedMS,
+			HypothesisID: hypID,
+			InstallHint:  te.InstallHint,
+			PatternsTried: []cards.PatternTry{
+				{Engine: te.Engine, Status: simStatusString(te), Reason: te.Reason, ElapsedMS: te.ElapsedMS},
+			},
+		},
+	}
+	if te.Type == api.EventSimFinished && te.Verdict != "" {
+		// Capture evidence briefly
+		c.Sim.Evidence = cards.SimEvidence{
+			Type:    "verdict",
+			Caption: te.Verdict,
+		}
+	}
+	m.appendCard(c)
+	m.simCountThisRun++
+}
+
+// simStatusString maps a typed sim event to the CardSimulation status enum.
+func simStatusString(te api.TypedEvent) string {
+	switch te.Type {
+	case api.EventSimStarted:
+		if te.EngineStatus != "" {
+			return te.EngineStatus
+		}
+		return "running"
+	case api.EventSimFinished:
+		if te.EngineStatus == "error" {
+			return "error"
+		}
+		return "success"
+	case api.EventSimSkipped:
+		return "skipped"
+	case api.EventSimBudgetExceeded:
+		return "budget_exceeded"
+	}
+	return te.EngineStatus
+}
+
+// simBody returns a one-line description of the sim event.
+func simBody(te api.TypedEvent) string {
+	switch te.Type {
+	case api.EventSimStarted:
+		return fmt.Sprintf("starting %s on %s", te.Pattern, te.Engine)
+	case api.EventSimFinished:
+		if te.Verdict != "" {
+			return fmt.Sprintf("verdict: %s · %dms · $%.4f", te.Verdict, te.ElapsedMS, te.CostUSD)
+		}
+		return fmt.Sprintf("finished · %dms · $%.4f", te.ElapsedMS, te.CostUSD)
+	case api.EventSimSkipped:
+		body := fmt.Sprintf("skipped: %s", te.Reason)
+		if te.InstallHint != "" {
+			body += " — try: " + te.InstallHint
+		}
+		return body
+	case api.EventSimBudgetExceeded:
+		return fmt.Sprintf("budget exceeded ($%.4f > limit $%.2f)", te.CostUSD, 5.0)
+	}
+	return string(te.Type)
+}
+
+// simDomainForEngine maps an engine name to a high-level domain. Used
+// when the backend event doesn't carry an explicit domain field.
+func simDomainForEngine(engine string) string {
+	switch engine {
+	case "vina", "boolnet", "cobra", "slim", "neuron", "brian2", "jaxley", "tellurium", "copasi":
+		return "biology"
+	case "openmm":
+		return "biology" // openmm can be biology or chemistry; default to biology
+	case "pyscf", "psi4", "quantum_espresso", "schr":
+		return "chemistry"
+	case "newton", "jaxsim", "mujoco", "pybullet", "torchsim":
+		return "physics"
+	case "gromacs", "lammps", "mdanalysis", "jax_md":
+		return "chemistry"
+	case "fenicsx", "openfoam", "taichi", "jax_lab", "modelingtoolkit", "diffeqpy":
+		return "materials"
+	case "xarray", "wrf":
+		return "climate"
+	case "mesa", "simpy":
+		return "economics"
+	case "rebound", "amuse":
+		return "astrophysics"
+	}
+	return "general"
+}
+
+// handleCompleteEvent handles a typed 'complete' event — final results.
+func (m *model) handleCompleteEvent(te api.TypedEvent) {
+	m.running = false
+	m.jobID = ""
+	m.setToast(i18n.T("toast.complete"))
+	m.burst.Trigger(m.width, m.height, m.width/2, m.height/2)
+	if te.Result != nil {
+		if hyp, ok := te.Result["hypothesis"].(map[string]any); ok {
+			hc := Card{Kind: CardHypothesis, Title: i18n.T("card.hypothesis.t"), Body: fieldString(hyp, "text"), Meta: []cards.MetaKV{{Key: "source", Value: fieldString(hyp, "source")}}, Time: time.Now(), Status: "done"}
+			m.appendCard(hc)
+			m.typew.Set(fieldString(hyp, "text"), m.tick)
+			if novelty, ok := hyp["novelty_score"].(float64); ok {
+				m.lastQuality = novelty
+			}
+		}
+		if papers, ok := te.Result["papers"].([]any); ok {
+			m.lastPapersCount = len(papers)
+			for i, p := range papers {
+				if i >= 3 {
+					break
+				}
+				pm, _ := p.(map[string]any)
+				m.appendCard(Card{Kind: CardPaper, Title: fieldString(pm, "title"), Body: fmt.Sprintf("%s · %s · citations %s", fieldString(pm, "venue"), fieldString(pm, "year"), fieldString(pm, "citation_count")), Meta: []cards.MetaKV{{Key: "doi", Value: fieldString(pm, "doi")}, {Key: "source", Value: fieldString(pm, "source")}}, Time: time.Now(), Status: "done"})
+			}
+		}
+		m.completedDisc++
+		m.checkAchievements()
+	}
+}
+
+// handleFailedEvent handles a typed 'failed' or 'cancelled' event.
+func (m *model) handleFailedEvent(te api.TypedEvent) {
+	m.running = false
+	m.jobID = ""
+	body := "cancelled"
+	if len(te.Errors) > 0 {
+		body = strings.Join(te.Errors, "; ")
+	} else if te.Status != "" {
+		body = te.Status
+	}
+	m.appendCard(Card{Kind: CardError, Title: "Discovery " + string(te.Type), Body: body, Time: time.Now(), Status: "error"})
+}
+
+// handleLegacyPhase is the safety-net path for old v8.12 events that
+// don't have a 'type' field. Extracts the phase/progress tuple and
+// dispatches to the same code path as handlePhaseEvent.
+func (m *model) handleLegacyPhase(status, phase string, progress float64, result map[string]any, completed bool) {
+	if status != "" || phase != "" {
+		if phase != m.lastPhase || (abs(progress-m.lastProgress) > 0.01) {
+			m.lastPhase = phase
+			m.lastProgress = progress
+			m.appendCard(Card{Kind: CardPhase, Title: phase, Body: fmt.Sprintf("progress %.0f%%", progress*100), Time: time.Now(), Status: "running", Progress: progress})
+		}
+	}
+	if completed {
+		m.handleCompleteEvent(api.TypedEvent{Result: result, Status: status})
+	}
+}
 
 // verdictChipsForCard returns the verdict chip string for a CardHypothesis,
 // or empty string if no sims link to it. Convenience wrapper around

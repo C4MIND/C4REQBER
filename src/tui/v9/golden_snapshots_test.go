@@ -197,6 +197,66 @@ func populateBookmark(m *model) {
 	m.appendCard(Card{Kind: CardHypothesis, Title: "Bookmarked insight", Body: "Important", Time: time.Now(), Status: "done", Bookmark: true})
 }
 
+// populateSimVerdictSupports: a single sim with verdict=supports.
+func populateSimVerdictSupports(m *model) {
+	m.appendCard(Card{Kind: CardSimulation, Title: "openmm",
+		Body: "verdict: supports_hypothesis", Time: time.Now(), Status: "done",
+		Sim: cards.SimFields{Engine: "openmm", EngineStatus: "success", Domain: "biology", Pattern: "p", Verdict: "supports_hypothesis"}})
+}
+
+// populateSimVerdictRefutes: a single sim with verdict=refutes.
+func populateSimVerdictRefutes(m *model) {
+	m.appendCard(Card{Kind: CardSimulation, Title: "jaxsim",
+		Body: "verdict: refutes_hypothesis", Time: time.Now(), Status: "done",
+		Sim: cards.SimFields{Engine: "jaxsim", EngineStatus: "success", Domain: "biology", Pattern: "p", Verdict: "refutes_hypothesis"}})
+}
+
+// populateSimVerdictInconclusive: a single sim with verdict=inconclusive.
+func populateSimVerdictInconclusive(m *model) {
+	m.appendCard(Card{Kind: CardSimulation, Title: "vina",
+		Body: "verdict: inconclusive", Time: time.Now(), Status: "done",
+		Sim: cards.SimFields{Engine: "vina", EngineStatus: "success", Domain: "biology", Pattern: "p", Verdict: "inconclusive"}})
+}
+
+// populateSimSkipped: a sim with status=unavailable + install hint.
+func populateSimSkipped(m *model) {
+	m.appendCard(Card{Kind: CardSimulation, Title: "fenicsx unavailable",
+		Body: "skipped: no_arm64_wheel", Time: time.Now(), Status: "skipped",
+		Sim: cards.SimFields{
+			Engine: "fenicsx", EngineStatus: "unavailable", Domain: "materials",
+			Pattern: "elasticity_3d", InstallHint: "conda install -c conda-forge fenics-dolfinx",
+		}})
+}
+
+// populateHelpShown: help overlay is open.
+func populateHelpShown(m *model) {
+	m.showHelp = true
+	m.appendCard(Card{Kind: CardHypothesis, Title: "Sample", Body: "x", Time: time.Now(), Status: "done"})
+}
+
+// populateSettingsOpen: settings menu is open.
+func populateSettingsOpen(m *model) {
+	m.settingsVisible = true
+}
+
+// populateAchievementShown: achievement overlay is showing.
+func populateAchievementShown(m *model) {
+	m.achievements.ShowOverlay("🏆 First Discovery · You completed your first discovery!", 90*60)
+	m.appendCard(Card{Kind: CardHypothesis, Title: "triggered", Body: "x", Time: time.Now(), Status: "done"})
+}
+
+// populateFocusedExpanded: focused card that is also expanded (combined).
+func populateFocusedExpanded(m *model) {
+	m.appendCard(Card{
+		Kind:     CardHypothesis,
+		Title:    "Focused & expanded",
+		Body:     "short",
+		FullBody: "Long detailed body that shows in expanded mode. The card is also focused (thick border) at the same time as expanded (thicker border).",
+		Time:     time.Now(), Status: "done", State: cards.StateExpanded,
+	})
+	m.focusedCardIdx = 0
+}
+
 func populateSim(m *model) {
 	m.appendCard(Card{
 		Kind: CardSimulation, Title: "openmm protein folding",
@@ -267,10 +327,18 @@ func TestGoldenSnapshotsAll(t *testing.T) {
 		{name: "error", build: populateError},
 		{name: "expanded", build: populateExpanded},
 		{name: "focused", build: populateFocused},
+		{name: "focused-expanded", build: populateFocusedExpanded},
 		{name: "full-hypothesis", build: populateFullHypothesis},
 		{name: "verdict-chips", build: populateVerdictChips},
+		{name: "sim-supports", build: populateSimVerdictSupports},
+		{name: "sim-refutes", build: populateSimVerdictRefutes},
+		{name: "sim-inconclusive", build: populateSimVerdictInconclusive},
+		{name: "sim-skipped", build: populateSimSkipped},
 		{name: "bookmark", build: populateBookmark},
 		{name: "palette", build: populatePalette},
+		{name: "help-shown", build: populateHelpShown},
+		{name: "settings-open", build: populateSettingsOpen},
+		{name: "achievement-shown", build: populateAchievementShown},
 		{name: "mixed-feed", build: populateMixedFeed},
 		{name: "capsim", build: populateCapsim},
 		{name: "debug", build: populateDebug},

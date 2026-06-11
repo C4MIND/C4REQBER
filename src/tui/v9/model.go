@@ -161,6 +161,14 @@ type model struct {
 	simPreference     string
 	simCostLimit      float64
 	simSpendThisSession float64
+
+	// v9.13 (§3.3): status bar — 1-line context strip with conn/follow/sim.
+	// showStatusBar: user toggle (Ctrl+B, default true at T2+).
+	// connState: live state of SSE/polling pipeline (§8.2).
+	// simCountThisRun: number of CardSimulation cards added in current run.
+	showStatusBar   bool
+	connState       ConnectionState
+	simCountThisRun int
 }
 
 // message types for bubbletea
@@ -257,6 +265,7 @@ func NewApp(apiURL string) *model {
 		wizard:        NewWizardState(),
 		capsimClient:        capsim.NewClient(apiURL),
 		simPreference:       "auto",
+		showStatusBar:        true,
 		simCostLimit:        5.00,
 	}
 	// Load persisted state (achievements, langs). If store fails, fall back gracefully.
@@ -318,6 +327,7 @@ func NewAppFresh(apiURL string) *model {
 		wizard:        NewWizardState(),
 		capsimClient:        capsim.NewClient(apiURL),
 		simPreference:       "auto",
+		showStatusBar:        true,
 		simCostLimit:        5.00,
 	}
 	// Load persisted state (achievements, langs). If store fails, fall back gracefully.

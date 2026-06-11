@@ -229,6 +229,15 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.setToast(i18n.T("help.hidden"))
 			}
 			return m, nil
+		case km.Matches(ActStatusBar, keyStr):
+			// v9.13 (§3.3): toggle the 1-line status bar.
+			m.showStatusBar = !m.showStatusBar
+			if m.showStatusBar {
+				m.setToast("📊 status bar ON")
+			} else {
+				m.setToast("📊 status bar OFF")
+			}
+			return m, nil
 		case km.Matches(ActCapabilities, keyStr):
 			// v9.13 (TI-SIM-02): open capabilities overlay.
 			// Always re-fetch (or use cache). Esc to close.

@@ -30,6 +30,12 @@ func (m *model) View() tea.View {
 		m.renderInput(),
 		m.renderFooter(),
 	}
+	// v9.13 (§3.3): status bar (1 line, between footer and input).
+	// Renders empty string at T0/T1 or when toggled off.
+	if bar := m.renderStatusBar(); bar != "" {
+		// Insert before the footer (between input and footer)
+		regions = append(regions[:3], append([]string{bar}, regions[3:]...)...)
+	}
 	if m.showTelemetry {
 		regions = append(regions, renderTelemetry(m.tel.Get(), m.width, m.llmTier.String(), m.colorProfile.String()))
 	}

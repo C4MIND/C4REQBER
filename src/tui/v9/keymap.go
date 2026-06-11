@@ -56,6 +56,7 @@ const (
 	ActInstallHint  Action = "install_hint"  // i — show install hint for an unavailable sim engine
 	ActSelectFallback Action = "fallback"    // f — show fallback chain for a skipped sim
 	ActOpenPlot     Action = "open_plot"     // o — open a sim plot URL in browser
+	ActStatusBar    Action = "status_bar"    // Ctrl+B — toggle 1-line status bar (§3.3)
 	ActFocusPrev    Action = "focus_prev"    // k — focus previous card
 	ActFocusNext    Action = "focus_next"    // j — focus next card
 	ActFocusFirst   Action = "focus_first"   // g g — focus first card
@@ -118,6 +119,7 @@ func defaultBindings() map[Action][]keyBinding {
 		ActInstallHint:  {{label: "i", keys: []string{"i"}}},
 		ActSelectFallback: {{label: "f", keys: []string{"f"}}},
 		ActOpenPlot:     {{label: "o", keys: []string{"o"}}},
+		ActStatusBar:    {{label: "Ctrl+B", keys: []string{"ctrl+b"}}},
 		ActFocusPrev:    {{label: "k", keys: []string{"k"}}},
 		ActFocusNext:    {{label: "j", keys: []string{"j"}}},
 		ActFocusFirst:   {{label: "g g", keys: []string{"g", "g"}}},
@@ -243,7 +245,7 @@ func (km *KeyMap) HelpRows() []HelpRow {
 	order := []Action{
 		ActRun, ActCancel, ActCycleMode, ActLang, ActTier,
 		ActReauth, ActSearch, ActCopy, ActJump, ActSettings, ActCapabilities,
-		ActInstallHint, ActSelectFallback, ActOpenPlot,
+		ActInstallHint, ActSelectFallback, ActOpenPlot, ActStatusBar,
 		ActColorProfile, ActProfileMac, ActNewTab, ActEscape, ActHelp, ActQuit,
 	}
 	rows := make([]HelpRow, 0, len(order))

@@ -1,0 +1,23 @@
+1;36m⏚ Simulation Capabilities (Darwin arm64)m
+90mGPU: Apple M3 Pro · 18.0 GB · 12 CPUs · 36 GB RAMm
+
+1;34m  physicsm
+    32m●m Newton           (fast)
+    31m○m FEniCSx         31m (unavailable)m
+90m      ⓘ conda install -c conda-forge fenics-dolfinxm
+
+1;34m  biologym
+    32m●m OpenMM           (CPU)
+
+1;34m  chemistrym
+    31m○m GROMACS         31m (unavailable)m
+
+1;34m  ── Verification ──m
+  ● lean4 (4.0.0)
+
+90m  Last probe: <CLOCK> (1200ms) · Ctrl+R to refresh · Esc to closem
+
+
+
+
+

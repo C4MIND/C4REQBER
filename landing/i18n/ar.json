@@ -131,6 +131,7 @@
   "foot_product": "c4reqber v5.6.0",
   "foot_tests": "10,023 اختبار · 0 أخطاء mypy",
   "foot_slogan": "فكّر. حاكِ. أثبِت. اكتشف.",
+  "hero_shift": "SHIFT PARADIGMS",
   "hero_meta": "AGPL-3.0 · BYOK · Multi-Prompt Router · Terminal-First · OpenRouter · XAI · Mistral · Moonshot · DeepSeek · Liquid · NVIDIA · YandexGPT · Ollama · LM Studio · MLX",
   "fp_no_sim": "لا محاكاة",
   "fp_no_sim_desc": "نماذج اللغة الكبيرة تولد فرضيات لكنها لا تستطيع اختبارها. لا محرك فيزياء، لا تحقق إحصائي، لا حقيقة مرجعية.",

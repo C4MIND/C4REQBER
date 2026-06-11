@@ -131,6 +131,7 @@
   "foot_product": "c4reqber v5.6.0",
   "foot_tests": "10,023 测试 · 0 mypy 错误",
   "foot_slogan": "思考。模拟。证明。发现。",
+  "hero_shift": "SHIFT PARADIGMS",
   "hero_meta": "AGPL-3.0 · BYOK · Multi-Prompt Router · Terminal-First · OpenRouter · XAI · Mistral · Moonshot · DeepSeek · Liquid · NVIDIA · YandexGPT · Ollama · LM Studio · MLX",
   "fp_no_sim": "无模拟",
   "fp_no_sim_desc": "大语言模型生成假设但无法测试。没有物理引擎，没有统计验证，没有真实基准。",

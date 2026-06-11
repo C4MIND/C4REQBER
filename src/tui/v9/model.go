@@ -180,6 +180,13 @@ type model struct {
 	// Rebuilt whenever the user cycles the profile (Ctrl+Shift+P).
 	theme *Theme
 
+	// v9.13 (§16.2): command palette
+	paletteActive    bool
+	paletteQuery     string
+	paletteFocused   int
+	paletteMatches   []MatchResult
+	paletteRegistry  *Registry
+
 	// v9.13 (§10): persistence — feed store and input history.
 	feedStore     *persist.FeedStore
 	inputHistory  *persist.InputHistory
@@ -271,6 +278,7 @@ func NewApp(apiURL string) *model {
 		sparks:        effects.NewSparkles(),
 		verdictPulse:  effects.NewVerdictPulse(),
 		theme:         NewTheme(ProfileDefault),
+		paletteRegistry: buildRegistry(),
 		achievements:  NewAchievements(),
 		langsSeen:     map[string]bool{},
 		tel:           telemetry.New(),
@@ -338,7 +346,8 @@ func NewApp(apiURL string) *model {
 		showPlaceholder = false
 	}
 	if showPlaceholder {
-		m.appendCard(Card{Kind: CardEmpty, Title: i18n.T("empty.title"), Body: i18n.T("empty.hint"), Time: time.Now()})
+		m.bindRegistry()
+	m.appendCard(Card{Kind: CardEmpty, Title: i18n.T("empty.title"), Body: i18n.T("empty.hint"), Time: time.Now()})
 	}
 	if restoredCount > 0 {
 		m.setToast(fmt.Sprintf("restored %d cards from last session", restoredCount))
@@ -378,6 +387,7 @@ func NewAppFresh(apiURL string) *model {
 		sparks:        effects.NewSparkles(),
 		verdictPulse:  effects.NewVerdictPulse(),
 		theme:         NewTheme(ProfileDefault),
+		paletteRegistry: buildRegistry(),
 		achievements:  NewAchievements(),
 		langsSeen:     map[string]bool{},
 		tel:           telemetry.New(),
@@ -408,6 +418,7 @@ func NewAppFresh(apiURL string) *model {
 			m.wizard.Show()
 		}
 	}
+	m.bindRegistry()
 	m.appendCard(Card{Kind: CardEmpty, Title: i18n.T("empty.title"), Body: i18n.T("empty.hint"), Time: time.Now()})
 	return m
 }

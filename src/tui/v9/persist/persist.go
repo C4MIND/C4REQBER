@@ -178,6 +178,14 @@ func (s *Store) IsFirstRun() bool {
 	return s.state.FirstRun
 }
 
+// MarkFirstRun resets the first-run flag so the wizard shows again
+// on next launch. Inverse of MarkFirstRunDone.
+func (s *Store) MarkFirstRun() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.state.FirstRun = true
+}
+
 // MarkFirstRunDone flips the first-run flag.
 func (s *Store) MarkFirstRunDone() {
 	s.mu.Lock()

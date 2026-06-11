@@ -133,6 +133,43 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.ta, cmd = m.ta.Update(msg)
 		cmds = append(cmds, cmd)
 
+		// v9.13 (§16.2): when palette is open, route keystrokes to it
+		// BEFORE the main switch.
+		if m.paletteActive {
+			keyStr := msg.String()
+			switch {
+			case keyStr == "esc":
+				m.paletteActive = false
+				m.paletteQuery = ""
+				return m, nil
+			case keyStr == "enter":
+				m.runPaletteFocused()
+				return m, nil
+			case keyStr == "down":
+				if m.paletteFocused < len(m.paletteMatches)-1 {
+					m.paletteFocused++
+				}
+				return m, nil
+			case keyStr == "up":
+				if m.paletteFocused > 0 {
+					m.paletteFocused--
+				}
+				return m, nil
+			case keyStr == "backspace":
+				if len(m.paletteQuery) > 0 {
+					m.paletteQuery = m.paletteQuery[:len(m.paletteQuery)-1]
+					m.refreshPaletteMatches()
+				}
+				return m, nil
+			}
+			// Any other key: append to query
+			if msg.Code != 0 && msg.Text != "" {
+				m.paletteQuery += msg.Text
+				m.refreshPaletteMatches()
+			}
+			return m, nil
+		}
+
 		keyStr := msg.String()
 		km := m.keymap
 		switch {
@@ -236,6 +273,10 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			} else {
 				m.setToast("🔧 debug OFF")
 			}
+			return m, nil
+		case km.Matches(ActPalette, keyStr):
+			// v9.13 (§16.2): open command palette
+			m.openPalette()
 			return m, nil
 		case km.Matches(ActStatusBar, keyStr):
 			// v9.13 (§3.3): toggle the 1-line status bar.

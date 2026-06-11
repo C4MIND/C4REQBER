@@ -70,6 +70,10 @@ func (m *model) View() tea.View {
 	if m.showDebug {
 		body = RenderDebugOverlay(m.CollectDebugSnapshot())
 	}
+	// v9.13 (§16.2): command palette — drawn last, highest priority
+	if m.paletteActive {
+		body = RenderCommandPalette(m.paletteQuery, m.paletteMatches, m.paletteFocused, m.width, m.height)
+	}
 	v := tea.NewView(zone.Scan(body))
 	v.AltScreen = true
 	v.MouseMode = tea.MouseModeCellMotion

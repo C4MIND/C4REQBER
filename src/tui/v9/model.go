@@ -171,6 +171,10 @@ type model struct {
 	showStatusBar   bool
 	connState       ConnectionState
 	simCountThisRun int
+
+	// v9.13 (§10): persistence — feed store and input history.
+	feedStore     *persist.FeedStore
+	inputHistory  *persist.InputHistory
 }
 
 // message types for bubbletea
@@ -266,9 +270,11 @@ func NewApp(apiURL string) *model {
 		colorProfile:  ProfileDefault,
 		wizard:        NewWizardState(),
 		capsimClient:        capsim.NewClient(apiURL),
+		feedStore:           initFeedStore(),
+		inputHistory:        initInputHistory(),
 		simPreference:       "auto",
-		showStatusBar:        true,
 		simCostLimit:        5.00,
+		showStatusBar:        true,
 	}
 	// Load persisted state (achievements, langs). If store fails, fall back gracefully.
 	store, storeErr := persist.New(persist.DefaultPath())
@@ -328,9 +334,11 @@ func NewAppFresh(apiURL string) *model {
 		colorProfile:  ProfileDefault,
 		wizard:        NewWizardState(),
 		capsimClient:        capsim.NewClient(apiURL),
+		feedStore:           initFeedStore(),
+		inputHistory:        initInputHistory(),
 		simPreference:       "auto",
-		showStatusBar:        true,
 		simCostLimit:        5.00,
+		showStatusBar:        true,
 	}
 	// Load persisted state (achievements, langs). If store fails, fall back gracefully.
 	store, storeErr := persist.New(persist.DefaultPath())
@@ -381,6 +389,25 @@ func (m *model) Config() Config {
 		DreamIdle:   m.dream.idleSeconds,
 		SaveHistory: true,
 	}
+}
+
+// initFeedStore creates a FeedStore or returns nil if HOME is unset/invalid.
+// Tests can use this safely — it never panics.
+func initFeedStore() *persist.FeedStore {
+	f, err := persist.NewFeedStore(50)
+	if err != nil {
+		return nil
+	}
+	return f
+}
+
+// initInputHistory creates an InputHistory or returns nil on error.
+func initInputHistory() *persist.InputHistory {
+	h, err := persist.NewInputHistory(200)
+	if err != nil {
+		return nil
+	}
+	return h
 }
 
 // ApplySettings applies persisted settings to the model (called after persist load).

@@ -16,6 +16,7 @@ import (
 	"github.com/figuramax/c4reqber-tui-v9/cards"
 	"github.com/figuramax/c4reqber-tui-v9/capsim"
 	"github.com/figuramax/c4reqber-tui-v9/i18n"
+	"github.com/figuramax/c4reqber-tui-v9/persist"
 )
 
 // Update is the single entry point for all messages.
@@ -152,6 +153,10 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if val == "" {
 				m.setToast(i18n.T("toast.empty"))
 				return m, nil
+			}
+			// v9.13: record to input history (MRU + dedup, best-effort).
+			if m.inputHistory != nil {
+				_ = m.inputHistory.Add(val, string(m.mode))
 			}
 			m.ta.Reset()
 			cmd = m.startDiscovery(val)
@@ -630,6 +635,9 @@ func (m *model) appendCard(c Card) {
 	if c.Time.IsZero() {
 		c.Time = time.Now()
 	}
+	if c.ID == 0 {
+		c.ID = cards.NextID()
+	}
 	m.feed = append(m.feed, c)
 	m.rebuildFeedContent()
 	m.slide.Trigger()
@@ -639,6 +647,24 @@ func (m *model) appendCard(c Card) {
 	// Track zone ID for mouse click routing
 	zoneID := fmt.Sprintf("card-%d", c.Time.UnixNano())
 	m.zoneIDs = append(m.zoneIDs, zoneID)
+	// v9.13: persist to feed.jsonl (best-effort, never blocks UI)
+	if m.feedStore != nil {
+		_ = m.feedStore.Append(persist.FeedEntry{
+			ID:              uint64(c.ID),
+			Kind:            int(c.Kind),
+			Title:           c.Title,
+			Body:            c.Body,
+			Time:            c.Time,
+			Status:          c.Status,
+			Bookmark:        c.Bookmark,
+			SimEngine:       c.Sim.Engine,
+			SimStatus:       c.Sim.EngineStatus,
+			SimVerdict:      c.Sim.Verdict,
+			SimCostUSD:      c.Sim.CostUSD,
+			SimInstallHint:  c.Sim.InstallHint,
+			SimHypothesisID: uint64(c.Sim.HypothesisID),
+		})
+	}
 }
 
 // checkAchievements evaluates unlocks and appends achievement cards.

@@ -202,6 +202,11 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			cmd = m.startDiscovery(val)
 			return m, cmd
 		case km.Matches(ActCancel, keyStr), km.Matches(ActEscape, keyStr):
+			// v9.13 (F-12): first, collapse any expanded card
+			if c := m.focusedCard(); c != nil && c.State == cards.StateExpanded {
+				c.State = cards.StateActive
+				return m, nil
+			}
 			if m.showDebug {
 				m.showDebug = false
 				return m, nil
@@ -448,6 +453,22 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.focusedCardIdx = len(m.feed) - 1
 				m.follow = true
 				m.setToast("focused: last (follow on)")
+			}
+			return m, nil
+		case keyStr == "enter" && !m.ta.Focused() && m.paletteActive == false:
+			// v9.13 (F-12): toggle expand on focused card.
+			// Only fires when Enter is NOT consumed by the textarea
+			// (i.e. user is not in the input box) and not by the
+			// palette (which has its own Enter handler).
+			if c := m.focusedCard(); c != nil {
+				if c.State == cards.StateExpanded {
+					c.State = cards.StateActive
+					m.setToast("▣ collapsed")
+				} else {
+					c.State = cards.StateExpanded
+					_ = c.FullBody // touch to silence "unused" — used by renderCard indirectly
+					m.setToast("▣ expanded (Enter or Esc to collapse)")
+				}
 			}
 			return m, nil
 		case km.Matches(ActColorProfile, keyStr), km.Matches(ActProfileMac, keyStr):
@@ -780,12 +801,14 @@ func (m *model) rebuildFeedContent() {
 	if m.feedIsEmpty() {
 		b.WriteString(m.renderEmptyWidgets())
 	} else {
-		for _, card := range m.feed {
+		for idx, card := range m.feed {
 			chips := ""
 			if card.Kind == CardHypothesis {
 				chips = m.verdictChipsForCard(card)
 			}
-			b.WriteString(renderCard(card, m.width, chips))
+			focused := idx == m.focusedCardIdx
+			expanded := focused && card.State == cards.StateExpanded
+			b.WriteString(renderCard(card, m.width, chips, focused, expanded))
 			b.WriteString("\n")
 		}
 	}

@@ -209,10 +209,19 @@ func pad(s string, w int) string {
 // renderCard formats one card. Cards are wrapped in bubblezone.Mark for mouse clicks.
 // Pass verdictChips to render the chip row above the body of a CardHypothesis
 // (per D-06). For non-hypothesis cards, pass empty string.
-func renderCard(c Card, width int, verdictChips string) string {
+// `focused` adds a thicker border to indicate focus;
+// `expanded` renders the full body and adds an expand/collapse hint.
+func renderCard(c Card, width int, verdictChips string, focused, expanded bool) string {
 	style := lipgloss.NewStyle().Width(width-2).Padding(0, 1)
 	border := "│"
+	if focused {
+		border = "┃" // double-thick border on focus
+	}
+	if expanded {
+		border = "║" // yet another border on expand
+	}
 	zoneID := fmt.Sprintf("card-%d", c.Time.UnixNano())
+	var inner string
 	switch c.Kind {
 	case CardPhase:
 		title := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("6")).Render("▣ " + c.Title)
@@ -225,9 +234,10 @@ func renderCard(c Card, width int, verdictChips string) string {
 				bodyLines[i] = border + "  " + l
 			}
 			body = strings.Join(bodyLines, "\n")
-			return zone.Mark(zoneID, style.Render(border+" "+title+"  "+bar+"\n"+body))
+			inner = border + " " + title + "  " + bar + "\n" + body
+			break
 		}
-		return zone.Mark(zoneID, style.Render(border+" "+title+"  "+bar+"\n"+border+"  "+body))
+		inner = border + " " + title + "  " + bar + "\n" + border + "  " + body
 	case CardHypothesis:
 		title := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("2")).Render("✦ " + c.Title + "  NEW")
 		body := lipgloss.NewStyle().Foreground(lipgloss.Color("7")).Render(c.Body)
@@ -239,7 +249,7 @@ func renderCard(c Card, width int, verdictChips string) string {
 		if verdictChips != "" {
 			meta = "\n" + border + "  " + verdictChips + meta
 		}
-		return zone.Mark(zoneID, style.Render(border+" "+title+"\n"+border+"  "+body+meta))
+		inner = border+" "+title+"\n"+border+"  "+body+meta; break
 	case CardPaper:
 		title := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("4")).Render("📚 " + c.Title)
 		body := lipgloss.NewStyle().Foreground(lipgloss.Color("7")).Render(c.Body)
@@ -247,11 +257,11 @@ func renderCard(c Card, width int, verdictChips string) string {
 		for _, m := range c.Meta {
 			meta += "\n" + border + "  " + lipgloss.NewStyle().Foreground(lipgloss.Color("8")).Render(m.Key+": "+m.Value)
 		}
-		return zone.Mark(zoneID, style.Render(border+" "+title+"\n"+border+"  "+body+meta))
+		inner = border+" "+title+"\n"+border+"  "+body+meta; break
 	case CardCode:
 		title := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("5")).Render("⚙ " + c.Title)
 		body := lipgloss.NewStyle().Foreground(lipgloss.Color("7")).Render(c.Body)
-		return zone.Mark(zoneID, style.Render(border+" "+title+"\n"+border+"  "+body))
+		inner = border+" "+title+"\n"+border+"  "+body; break
 	case CardSimulation:
 		// NEW in v9.13 (TI-SIM-01). Status icon + engine + pattern + domain.
 		icon := cards.StatusIcon(c.Sim.EngineStatus)
@@ -303,16 +313,63 @@ func renderCard(c Card, width int, verdictChips string) string {
 		if actStr != "" {
 			meta += "\n" + border + "  " + lipgloss.NewStyle().Foreground(lipgloss.Color("8")).Render("↳ "+actStr)
 		}
-		return zone.Mark(zoneID, style.Render(border+" "+title+"\n"+border+"  "+bodyRendered+meta))
+		inner = border+" "+title+"\n"+border+"  "+bodyRendered+meta; break
 	case CardError:
 		title := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("1")).Render("✗ " + c.Title)
 		body := lipgloss.NewStyle().Foreground(lipgloss.Color("9")).Render(c.Body)
-		return zone.Mark(zoneID, style.Render(border+" "+title+"\n"+border+"  "+body))
+		inner = border+" "+title+"\n"+border+"  "+body; break
 	default:
 		title := lipgloss.NewStyle().Foreground(lipgloss.Color("8")).Render(c.Title)
 		body := lipgloss.NewStyle().Foreground(lipgloss.Color("7")).Render(c.Body)
-		return zone.Mark(zoneID, style.Render(border+" "+title+"\n"+border+"  "+body))
+		inner = border+" "+title+"\n"+border+"  "+body; break
 	}
+	// v9.13 (F-12): if expanded and FullBody is set, append it as
+	// additional body lines. Wrap to width. If no FullBody, show a
+	// hint that there's nothing more to read.
+	if expanded && c.FullBody != "" {
+		fb := c.FullBody
+		// Word-wrap to width - 4 (border + padding)
+		wrap := width - 4
+		if wrap < 20 {
+			wrap = 20
+		}
+		wrapped := wordWrap(fb, wrap)
+		for _, line := range wrapped {
+			inner += "\n" + border + "  " + line
+		}
+		// Add collapse hint at the end
+		hint := lipgloss.NewStyle().Foreground(lipgloss.Color("8")).Render("[Enter or Esc to collapse]")
+		inner += "\n" + border + "  " + hint
+	}
+	return zone.Mark(zoneID, style.Render(inner))
+}
+
+// wordWrap wraps s to maxRunes runes per line, breaking on whitespace
+// where possible. Pure function.
+func wordWrap(s string, maxRunes int) []string {
+	if maxRunes <= 0 {
+		return []string{s}
+	}
+	words := strings.Fields(s)
+	if len(words) == 0 {
+		return nil
+	}
+	var lines []string
+	cur := ""
+	for _, w := range words {
+		if len(cur) == 0 {
+			cur = w
+		} else if len([]rune(cur))+1+len([]rune(w)) <= maxRunes {
+			cur += " " + w
+		} else {
+			lines = append(lines, cur)
+			cur = w
+		}
+	}
+	if cur != "" {
+		lines = append(lines, cur)
+	}
+	return lines
 }
 
 func progressBar(p float64, width int) string {

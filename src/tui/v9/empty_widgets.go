@@ -163,7 +163,7 @@ func (m *model) renderEmptyWidgets() string {
 		if i > 0 {
 			b.WriteString("\n")
 		}
-		b.WriteString(renderCard(c, m.width, ""))
+		b.WriteString(renderCard(c, m.width, "", false, false))
 	}
 	return b.String()
 }

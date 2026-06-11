@@ -23,6 +23,7 @@ import (
 // CardKind is a thin alias preserving the legacy names used in view.go and
 // update.go. New code should prefer cards.Kind.
 type CardKind = cards.Kind
+type CardState = cards.State
 
 const (
 	CardEmpty      = cards.KindEmpty

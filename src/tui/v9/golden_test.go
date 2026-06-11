@@ -94,7 +94,7 @@ func TestGoldenWithPhaseCard(t *testing.T) {
 		Status:   "running",
 		Progress: 0.45,
 	})
-	cardStr := renderCard(m.feed[1], 120, "")
+	cardStr := renderCard(m.feed[1], 120, "", false, false)
 	if !strings.Contains(cardStr, "Knowledge") {
 		t.Errorf("phase card body not in renderCard output:\n%s", cardStr)
 	}

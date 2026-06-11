@@ -45,8 +45,11 @@ func (w *WizardState) Done() {
 	w.step = 3
 }
 
-// RenderWizard renders the wizard overlay.
-func RenderWizard(width, height int) string {
+// RenderWizard renders the wizard overlay. Pass the current step
+// explicitly so the renderer is pure (testable) and doesn't depend
+// on a package-level variable. The caller (model.Update) passes
+// m.wizard.Step().
+func RenderWizard(width, height int, step int) string {
 	if width < 30 {
 		width = 80
 	}
@@ -63,10 +66,7 @@ func RenderWizard(width, height int) string {
 		Padding(1, 2)
 
 	var body string
-	switch 0 { // placeholder
-	}
-
-	switch currentWizardStep() {
+	switch step {
 	case 0:
 		body = accentStyle.Render("✨ Welcome to C4REQBER v9!\n\n") +
 			bodyStyle.Render(i18n.T("wizard.welcome")+"\n\n"+
@@ -95,5 +95,3 @@ func RenderWizard(width, height int) string {
 	}
 	return boxStyle.Render(titleStyle.Render("🚀 "+i18n.T("wizard.title")) + "\n\n" + body)
 }
-
-var currentWizardStep = func() int { return 0 }

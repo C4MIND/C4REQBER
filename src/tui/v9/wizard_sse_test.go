@@ -74,7 +74,7 @@ func TestWizard_Done(t *testing.T) {
 }
 
 func TestWizard_RenderContainsTitle(t *testing.T) {
-	out := RenderWizard(120, 40)
+	out := RenderWizard(120, 40, 0)
 	if !strings.Contains(out, "wizard") || !strings.Contains(out, "Welcome") {
 		t.Errorf("missing wizard content in:\n%s", out)
 	}

@@ -41,7 +41,7 @@ func (m *model) View() tea.View {
 	}
 	body := strings.Join(regions, "\n")
 	if m.wizard != nil && m.wizard.Active() {
-		body = RenderWizard(m.width, m.height)
+		body = RenderWizard(m.width, m.height, m.wizard.Step())
 	}
 	if m.showHelp {
 		body = HelpOverlay(m.width, m.height)

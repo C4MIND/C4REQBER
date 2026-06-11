@@ -182,3 +182,6 @@ widget.achievements.title = "Achievements"
 widget.achievements.body = "First discovery, 5 discoveries, multi-paper shift, S-rank quality, fast turnaround. Keep going to unlock them all."
 settings.llm_stage = "Per-stage LLM"
 settings.llm_stage.desc = "Phase-specific model tier. A:local → D/E/F:premium → G:cheap"
+
+# v9.13 (capabilities overlay)
+sim.capabilities.title = "Simulation capabilities"

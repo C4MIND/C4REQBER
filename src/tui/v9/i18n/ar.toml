@@ -165,3 +165,6 @@ widget.achievements.title = "الإنجازات"
 widget.achievements.body = "الاكتشاف الأول 5 اكتشافات تحول متعدد الأوراق جودة S-rank دوران سريع. استمر لفتحها جميعًا."
 settings.llm_stage = "Per-stage LLM"
 settings.llm_stage.desc = "Phase-specific model tier. A:local → D/E/F:premium → G:cheap"
+
+# v9.13 (capabilities overlay)
+sim.capabilities.title = "قدرات المحاكاة"

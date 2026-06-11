@@ -11,6 +11,7 @@ import (
 
 	"github.com/figuramax/c4reqber-tui-v9/api"
 	"github.com/figuramax/c4reqber-tui-v9/cards"
+	"github.com/figuramax/c4reqber-tui-v9/capsim"
 	"github.com/figuramax/c4reqber-tui-v9/effects"
 	"github.com/figuramax/c4reqber-tui-v9/i18n"
 	"github.com/figuramax/c4reqber-tui-v9/persist"
@@ -141,6 +142,12 @@ type model struct {
 
 	// showAchievementOverlay shows the fullscreen unlock animation
 	showAchievementOverlay bool
+
+	// v9.13 (TI-SIM-02): capabilities overlay
+	capsimClient    *capsim.Client
+	capsimReport    *capsim.Report
+	showCapabilities bool
+	capsimLoading   bool
 }
 
 // message types for bubbletea
@@ -201,6 +208,62 @@ func NewAppWithStore(apiURL string, store *persist.Store) *model {
 	return m
 }
 
+// NewApp exports the constructor for cmd/c4tui-v9.
+func NewApp(apiURL string) *model {
+	ta := textarea.New()
+	ta.Placeholder = i18n.T("placeholder")
+	ta.Prompt = "❯ "
+	ta.SetWidth(80)
+	ta.SetHeight(3)
+	ta.Focus()
+
+	vp := viewport.New(viewport.WithWidth(80), viewport.WithHeight(20))
+	vp.MouseWheelEnabled = true
+
+	m := &model{
+		apiURL:        apiURL,
+		api:           api.New(apiURL),
+		keymap:        NewKeyMap(DetectPlatform()),
+		mode:          ModeDiscover,
+		ta:            ta,
+		vp:            vp,
+		focus:         true,
+		follow:        true,
+		rain:          effects.NewRain(),
+		burst:         effects.NewBurst(),
+		slide:         effects.NewSlideIn(),
+		typew:         effects.NewTypewriter(),
+		sparks:        effects.NewSparkles(),
+		achievements:  NewAchievements(),
+		langsSeen:     map[string]bool{},
+		tel:           telemetry.New(),
+		dream:         NewDreamState(),
+		saveHistory:   true,
+		llmTier:       TierC2,
+		colorProfile:  ProfileDefault,
+		wizard:        NewWizardState(),
+		capsimClient:  capsim.NewClient(apiURL),
+	}
+	// Load persisted state (achievements, langs). If store fails, fall back gracefully.
+	store, storeErr := persist.New(persist.DefaultPath())
+	if storeErr == nil {
+		m.store = store
+		// Repopulate langsSeen from disk
+		m.replaceLangsSeen(store.Snapshot().LangsSeen)
+	}
+	m.addLangSeen(string(i18n.GetLang()))
+	// Apply persisted settings (tier/profile/lang)
+	if m.store != nil {
+		m.ApplySettings(m.store.GetSettings())
+		// First-run wizard
+		if m.store.IsFirstRun() {
+			m.wizard.Show()
+		}
+	}
+	m.appendCard(Card{Kind: CardEmpty, Title: i18n.T("empty.title"), Body: i18n.T("empty.hint"), Time: time.Now()})
+	return m
+}
+
 // NewAppFresh creates a model without loading any persisted state (test-friendly).
 // Use this in tests that need a clean slate.
 func NewAppFresh(apiURL string) *model {
@@ -218,66 +281,27 @@ func NewAppFresh(apiURL string) *model {
 	ta.SetHeight(3)
 	vp := viewport.New()
 	m := &model{
-		apiURL:       apiURL,
-		api:          api.New(apiURL),
-		keymap:       NewKeyMap(DetectPlatform()),
-		mode:         ModeDiscover,
-		ta:           ta,
-		vp:           vp,
-		focus:        true,
-		follow:       true,
-		rain:         effects.NewRain(),
-		burst:        effects.NewBurst(),
-		slide:        effects.NewSlideIn(),
-		typew:        effects.NewTypewriter(),
-		sparks:       effects.NewSparkles(),
-		achievements: NewAchievements(),
-		langsSeen:    map[string]bool{},
-		tel:          telemetry.New(),
-		dream:        NewDreamState(),
-		llmTier:      TierC2,
-		colorProfile: ProfileDefault,
-		wizard:       NewWizardState(),
-	}
-	m.addLangSeen(string(i18n.GetLang()))
-	m.appendCard(Card{Kind: CardEmpty, Title: i18n.T("empty.title"), Body: i18n.T("empty.hint"), Time: time.Now()})
-	return m
-}
-
-// NewApp exports the constructor for cmd/c4tui-v9.
-func NewApp(apiURL string) *model {
-	ta := textarea.New()
-	ta.Placeholder = i18n.T("placeholder")
-	ta.Prompt = "❯ "
-	ta.SetWidth(80)
-	ta.SetHeight(3)
-	ta.Focus()
-
-	vp := viewport.New(viewport.WithWidth(80), viewport.WithHeight(20))
-	vp.MouseWheelEnabled = true
-
-	m := &model{
-		apiURL:       apiURL,
-		api:          api.New(apiURL),
-		keymap:       NewKeyMap(DetectPlatform()),
-		mode:         ModeDiscover,
-		ta:           ta,
-		vp:           vp,
-		focus:        true,
-		follow:       true,
-		rain:         effects.NewRain(),
-		burst:        effects.NewBurst(),
-		slide:        effects.NewSlideIn(),
-		typew:        effects.NewTypewriter(),
-		sparks:       effects.NewSparkles(),
-		achievements: NewAchievements(),
-		langsSeen:    map[string]bool{},
-		tel:          telemetry.New(),
-		dream:        NewDreamState(),
-		saveHistory:  true,
-		llmTier:      TierC2,
-		colorProfile: ProfileDefault,
-		wizard:       NewWizardState(),
+		apiURL:        apiURL,
+		api:           api.New(apiURL),
+		keymap:        NewKeyMap(DetectPlatform()),
+		mode:          ModeDiscover,
+		ta:            ta,
+		vp:            vp,
+		focus:         true,
+		follow:        true,
+		rain:          effects.NewRain(),
+		burst:         effects.NewBurst(),
+		slide:         effects.NewSlideIn(),
+		typew:         effects.NewTypewriter(),
+		sparks:        effects.NewSparkles(),
+		achievements:  NewAchievements(),
+		langsSeen:     map[string]bool{},
+		tel:           telemetry.New(),
+		dream:         NewDreamState(),
+		llmTier:       TierC2,
+		colorProfile:  ProfileDefault,
+		wizard:        NewWizardState(),
+		capsimClient:  capsim.NewClient(apiURL),
 	}
 	// Load persisted state (achievements, langs). If store fails, fall back gracefully.
 	store, storeErr := persist.New(persist.DefaultPath())

@@ -13,6 +13,7 @@ import (
 	zone "github.com/lrstanley/bubblezone/v2"
 
 	"github.com/figuramax/c4reqber-tui-v9/cards"
+	"github.com/figuramax/c4reqber-tui-v9/capsim"
 	"github.com/figuramax/c4reqber-tui-v9/i18n"
 )
 
@@ -168,6 +169,10 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			cmd = m.startDiscovery(val)
 			return m, cmd
 		case km.Matches(ActCancel, keyStr), km.Matches(ActEscape, keyStr):
+			if m.showCapabilities {
+				m.showCapabilities = false
+				return m, nil
+			}
 			if m.wizard != nil && m.wizard.Active() {
 				m.wizard.Done()
 				m.MarkFirstRunDone()
@@ -222,6 +227,16 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.setToast(i18n.T("help.shown"))
 			} else {
 				m.setToast(i18n.T("help.hidden"))
+			}
+			return m, nil
+		case km.Matches(ActCapabilities, keyStr):
+			// v9.13 (TI-SIM-02): open capabilities overlay.
+			// Always re-fetch (or use cache). Esc to close.
+			m.showCapabilities = !m.showCapabilities
+			if m.showCapabilities {
+				m.capsimLoading = true
+				m.setToast("⏚ " + i18n.T("sim.capabilities.title"))
+				return m, capsimCmd(m.capsimClient, false)
 			}
 			return m, nil
 		case km.Matches(ActReauth, keyStr):
@@ -478,6 +493,17 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.appendCard(Card{Kind: CardHypothesis, Title: title, Body: text, Meta: []cards.MetaKV{{Key: "source", Value: fieldString(hm, "source")}}, Time: time.Now(), Status: "done"})
 				}
 			}
+		}
+		return m, nil
+
+	case capsimMsg:
+		m.capsimLoading = false
+		m.capsimReport = msg.report
+		if msg.err != nil {
+			// Backend unreachable — overlay still renders, but with a hint.
+			m.setToast("⏚ capabilities: backend unreachable (using last known)")
+		} else {
+			m.setToast("⏚ capabilities loaded (" + capsim.ShortSummary(msg.report) + ")")
 		}
 		return m, nil
 	}

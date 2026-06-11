@@ -9,6 +9,7 @@ import (
 	"charm.land/lipgloss/v2"
 	zone "github.com/lrstanley/bubblezone/v2"
 
+	"github.com/figuramax/c4reqber-tui-v9/capsim"
 	"github.com/figuramax/c4reqber-tui-v9/cards"
 	"github.com/figuramax/c4reqber-tui-v9/i18n"
 )
@@ -53,6 +54,11 @@ func (m *model) View() tea.View {
 	}
 	if m.burst.Active() {
 		body = overlayRegion(body, m.burst.Render(), 0, 0, m.width)
+	}
+	// v9.13 (TI-SIM-02): capabilities overlay (Ctrl+Shift+C) — highest priority
+	// transient panel. Drawn last so it covers everything else.
+	if m.showCapabilities {
+		body = capsim.RenderCapabilitiesOverlay(m.width, m.height, m.capsimReport)
 	}
 	v := tea.NewView(zone.Scan(body))
 	v.AltScreen = true

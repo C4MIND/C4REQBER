@@ -165,3 +165,6 @@ widget.achievements.title = "उपलब्धियां"
 widget.achievements.body = "पहली खोज 5 खोजें मल्टी-पेपर शिफ्ट S-रैंक गुणवत्ता तेज़ टर्नअराउंड। सभी को अनलॉक करने के लिए जारी रखें।"
 settings.llm_stage = "Per-stage LLM"
 settings.llm_stage.desc = "Phase-specific model tier. A:local → D/E/F:premium → G:cheap"
+
+# v9.13 (capabilities overlay)
+sim.capabilities.title = "सिमुलेशन क्षमताएं"

@@ -269,6 +269,10 @@ func TestModel_MarkFirstRunDone(t *testing.T) {
 }
 
 func TestModel_NewAppFresh_DefaultTier(t *testing.T) {
+	// Isolate from user's real ~/.config/c4reqber state — NewAppFresh
+	// loads from persist.DefaultPath(), which is $HOME-scoped.
+	tmp := t.TempDir()
+	t.Setenv("HOME", tmp)
 	m := NewAppFresh("http://test")
 	if m.llmTier != TierC2 {
 		t.Errorf("NewAppFresh default tier = %s, want C2", m.llmTier)

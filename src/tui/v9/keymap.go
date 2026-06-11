@@ -52,6 +52,7 @@ const (
 	ActJump         Action = "jump"          // j — jump
 	ActTier         Action = "tier"          // Ctrl+Y — cycle C1/C2/C3
 	ActSettings     Action = "settings"      // Ctrl+, — settings menu
+	ActCapabilities Action = "capabilities"  // Ctrl+Shift+C — sim/verifier capabilities overlay (v9.13)
 	ActUp           Action = "up"            // ↑
 	ActDown         Action = "down"          // ↓
 	ActColorProfile Action = "color_profile" // Ctrl+Shift+P — color cycle
@@ -106,6 +107,7 @@ func defaultBindings() map[Action][]keyBinding {
 		ActJump:         {{label: "j", keys: []string{"j"}}},
 		ActTier:         {{label: "Ctrl+Y", keys: []string{"ctrl+y"}}},
 		ActSettings:     {{label: "Ctrl+,", keys: []string{"ctrl+,"}}},
+		ActCapabilities: {{label: "Ctrl+Shift+C", keys: []string{"ctrl+shift+c"}}},
 		ActUp:           {{label: "↑", keys: []string{"up"}}},
 		ActDown:         {{label: "↓", keys: []string{"down"}}},
 		ActColorProfile: {{label: "Ctrl+Shift+P", keys: []string{"ctrl+shift+p"}}},
@@ -226,7 +228,7 @@ type HelpRow struct {
 func (km *KeyMap) HelpRows() []HelpRow {
 	order := []Action{
 		ActRun, ActCancel, ActCycleMode, ActLang, ActTier,
-		ActReauth, ActSearch, ActCopy, ActJump, ActSettings,
+		ActReauth, ActSearch, ActCopy, ActJump, ActSettings, ActCapabilities,
 		ActColorProfile, ActProfileMac, ActNewTab, ActEscape, ActHelp, ActQuit,
 	}
 	rows := make([]HelpRow, 0, len(order))
@@ -262,6 +264,8 @@ func helpDescKey(a Action) string {
 		return "help.hidden"
 	case ActSettings:
 		return "settings.title"
+	case ActCapabilities:
+		return "sim.capabilities.title"
 	case ActColorProfile, ActProfileMac:
 		return "profile.cycle"
 	case ActNewTab:

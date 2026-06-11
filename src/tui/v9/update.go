@@ -704,7 +704,11 @@ func (m *model) rebuildFeedContent() {
 		b.WriteString(m.renderEmptyWidgets())
 	} else {
 		for _, card := range m.feed {
-			b.WriteString(renderCard(card, m.width))
+			chips := ""
+			if card.Kind == CardHypothesis {
+				chips = m.verdictChipsForCard(card)
+			}
+			b.WriteString(renderCard(card, m.width, chips))
 			b.WriteString("\n")
 		}
 	}

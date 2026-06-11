@@ -432,6 +432,16 @@ func (m *model) MarkFirstRunDone() {
 
 // (no helpers needed — tests use persist.New directly)
 
+// verdictChipsForCard returns the verdict chip string for a CardHypothesis,
+// or empty string if no sims link to it. Convenience wrapper around
+// verdictChips(m, c.ID).
+func (m *model) verdictChipsForCard(c Card) string {
+	if c.Kind != CardHypothesis {
+		return ""
+	}
+	return verdictChips(m, c.ID)
+}
+
 // focusedCard returns the card the user has navigated to with j/k.
 // If no card is focused (idx < 0 or feed empty), returns the last card.
 func (m *model) focusedCard() *Card {

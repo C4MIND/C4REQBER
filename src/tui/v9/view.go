@@ -192,7 +192,9 @@ func pad(s string, w int) string {
 }
 
 // renderCard formats one card. Cards are wrapped in bubblezone.Mark for mouse clicks.
-func renderCard(c Card, width int) string {
+// Pass verdictChips to render the chip row above the body of a CardHypothesis
+// (per D-06). For non-hypothesis cards, pass empty string.
+func renderCard(c Card, width int, verdictChips string) string {
 	style := lipgloss.NewStyle().Width(width-2).Padding(0, 1)
 	border := "│"
 	zoneID := fmt.Sprintf("card-%d", c.Time.UnixNano())
@@ -217,6 +219,10 @@ func renderCard(c Card, width int) string {
 		meta := ""
 		for _, m := range c.Meta {
 			meta += "\n" + border + "  " + lipgloss.NewStyle().Foreground(lipgloss.Color("8")).Render("↳ "+m.Key+": "+m.Value)
+		}
+		// D-06: verdict chip row when 1+ sims reference this hypothesis
+		if verdictChips != "" {
+			meta = "\n" + border + "  " + verdictChips + meta
 		}
 		return zone.Mark(zoneID, style.Render(border+" "+title+"\n"+border+"  "+body+meta))
 	case CardPaper:

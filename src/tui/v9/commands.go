@@ -2,7 +2,6 @@ package tui
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"time"
 
@@ -146,24 +145,8 @@ func multiCmd(c *api.Client, query string) tea.Cmd {
 
 // extractResultFromSSEData parses the data field of an SSE event and returns
 // a partial JobStatus (status, phase, progress, result, completed).
+// v9.13: now uses the typed decoder (api.DecodeTypedEvent) for proper
+// handling of all SSE event types — including the new sim_* events.
 func extractResultFromSSEData(data string) (status, phase string, progress float64, result map[string]any, completed bool) {
-	if data == "" {
-		return
-	}
-	var m map[string]any
-	if err := json.Unmarshal([]byte(data), &m); err != nil {
-		// non-JSON data — just keep as raw
-		return
-	}
-	status = fieldString(m, "status")
-	phase = fieldString(m, "phase")
-	progress = 0
-	if v, ok := m["progress"].(float64); ok {
-		progress = v
-	}
-	if r, ok := m["result"].(map[string]any); ok {
-		result = r
-	}
-	completed = status == "complete" || status == "failed" || status == "partial"
-	return
+	return api.LegacyExtract(data)
 }

@@ -67,6 +67,7 @@ type Rain struct {
 	speed         int
 	tick          int
 	chars         []rune
+	grid          [][]rune // v9.13: pooled render buffer to avoid 60fps realloc
 }
 
 func NewRain() *Rain {
@@ -104,23 +105,45 @@ func (r *Rain) Render() string {
 	if r.width == 0 || r.height == 0 {
 		return ""
 	}
-	grid := make([][]rune, r.height)
-	for i := range grid {
-		grid[i] = make([]rune, r.width)
-		for j := range grid[i] {
-			grid[i][j] = ' '
+	// First pass: figure out which columns have any drop on screen.
+	// If none, return empty string immediately to avoid allocating
+	// a height*width grid every frame.
+	anyOnScreen := false
+	for x := 0; x < r.width && x < len(r.drops); x++ {
+		y := r.drops[x]
+		if y >= 0 && y < r.height {
+			anyOnScreen = true
+			break
 		}
 	}
-	anyOnScreen := false
+	if !anyOnScreen {
+		return ""
+	}
+	// v9.13: per-frame alloc audit. We reuse a pooled grid if its
+	// dimensions match; otherwise realloc once. The grid is then
+	// filled with the per-cell character (or ' ').
+	if r.grid == nil || len(r.grid) != r.height || (len(r.grid) > 0 && len(r.grid[0]) != r.width) {
+		r.grid = make([][]rune, r.height)
+		for i := range r.grid {
+			r.grid[i] = make([]rune, r.width)
+		}
+	}
+	// Reset grid to spaces without re-allocating
+	for y := 0; y < r.height; y++ {
+		for x := 0; x < r.width; x++ {
+			r.grid[y][x] = ' '
+		}
+	}
+	anyOnScreen = false
 	for x := 0; x < r.width && x < len(r.drops); x++ {
 		y := r.drops[x]
 		if y < 0 || y >= r.height {
 			continue
 		}
 		anyOnScreen = true
-		grid[y][x] = r.chars[rand.Intn(len(r.chars))]
+		r.grid[y][x] = r.chars[rand.Intn(len(r.chars))]
 		if y > 0 && y-1 < r.height {
-			grid[y-1][x] = r.chars[rand.Intn(len(r.chars))]
+			r.grid[y-1][x] = r.chars[rand.Intn(len(r.chars))]
 		}
 	}
 	if !anyOnScreen {
@@ -129,7 +152,7 @@ func (r *Rain) Render() string {
 	dimStyle := lipgloss.NewStyle().Foreground(lipgloss.Color(rainDim))
 	bright := lipgloss.NewStyle().Foreground(lipgloss.Color(rainHead))
 	var out []string
-	for y, row := range grid {
+	for y, row := range r.grid {
 		var line string
 		for x, ch := range row {
 			if ch == ' ' {
@@ -168,6 +191,7 @@ type Burst struct {
 	centerY float64
 	width   int
 	height  int
+	grid     [][]rune // v9.13: pooled render buffer
 }
 
 func NewBurst() *Burst { return &Burst{} }
@@ -227,13 +251,26 @@ func (b *Burst) Render() string {
 		return ""
 	}
 	colors := splitSpace(burstColors)
-	grid := make([][]rune, b.height)
-	for i := range grid {
-		grid[i] = make([]rune, b.width)
-		for j := range grid[i] {
-			grid[i][j] = ' '
+	syms := []rune{'·', '•', '○', '◦', '●'}
+	// v9.13: pooled grid (was re-allocating every frame).
+	if b.grid == nil || len(b.grid) != b.height || (len(b.grid) > 0 && len(b.grid[0]) != b.width) {
+		b.grid = make([][]rune, b.height)
+		for i := range b.grid {
+			b.grid[i] = make([]rune, b.width)
 		}
 	}
+	// Reset to spaces
+	for y := 0; y < b.height; y++ {
+		for x := 0; x < b.width; x++ {
+			b.grid[y][x] = ' '
+		}
+	}
+	// v9.13: track each cell's particle to compute per-particle fade.
+	type cellInfo struct {
+		ch     rune
+		fade   int    // 0=full color, 1=dim
+	}
+	infos := make(map[[2]int]cellInfo, len(b.parts))
 	for _, p := range b.parts {
 		if p.life <= 0 {
 			continue
@@ -242,23 +279,35 @@ func (b *Burst) Render() string {
 		if x < 0 || x >= b.width || y < 0 || y >= b.height {
 			continue
 		}
-		syms := []rune{'·', '•', '○', '◦', '●'}
-		grid[y][x] = syms[minInt(p.colorIdx, len(syms)-1)]
+		b.grid[y][x] = syms[minInt(p.colorIdx, len(syms)-1)]
+		// Compute fade for THIS particle
+		fade := 0
+		if p.life < p.maxLife/2 {
+			fade = 1
+		}
+		infos[[2]int{y, x}] = cellInfo{ch: b.grid[y][x], fade: fade}
 	}
 	var out []string
-	for _, row := range grid {
+	for y, row := range b.grid {
 		var line string
-		for _, ch := range row {
+		for x, ch := range row {
 			if ch == ' ' {
 				line += " "
 				continue
 			}
-			fade := 0
-			if p := b.parts[0]; p.life < p.maxLife/2 {
-				fade = 1
+			info, ok := infos[[2]int{y, x}]
+			if !ok {
+				// Default to first color if no info
+				line += lipgloss.NewStyle().Foreground(lipgloss.Color(colors[0])).Render(string(ch))
+				continue
 			}
-			color := colors[minInt(fade, len(colors)-1)]
-			line += lipgloss.NewStyle().Foreground(lipgloss.Color(color)).Render(string(ch))
+			// v9.13: pick the color based on this particle's fade (was b.parts[0] before,
+			// which made every cell in the frame use the same fade state — wrong)
+			colorIdx := 0
+			if info.fade > 0 {
+				colorIdx = minInt(info.fade, len(colors)-1)
+			}
+			line += lipgloss.NewStyle().Foreground(lipgloss.Color(colors[colorIdx])).Render(string(ch))
 		}
 		out = append(out, line)
 	}
@@ -470,4 +519,84 @@ func splitSpace(s string) []string {
 		out = append(out, cur)
 	}
 	return out
+}
+
+// ════════════════════════════════════════════════════════════════
+// Verdict Pulse (v9.13, §12.5)
+// ════════════════════════════════════════════════════════════════
+//
+// When a sim emits a verdict (supports/refutes/inconclusive), the
+// corresponding CardSimulation gets a 1.5s colored border pulse so
+// the user sees the result visually without reading text.
+
+type VerdictPulse struct {
+	active  bool
+	tick    int
+	duration int
+	color    string // "2"=green, "1"=red, "3"=yellow
+}
+
+// NewVerdictPulse returns an inactive pulse.
+func NewVerdictPulse() *VerdictPulse { return &VerdictPulse{duration: 90} } // 90 ticks × 16ms ≈ 1.5s
+
+// Trigger starts a pulse for the given verdict.
+func (p *VerdictPulse) Trigger(verdict string) {
+	p.active = true
+	p.tick = 0
+	switch verdict {
+	case "supports_hypothesis":
+		p.color = "2"
+	case "refutes_hypothesis":
+		p.color = "1"
+	case "inconclusive":
+		p.color = "3"
+	default:
+		p.color = "8" // dim
+	}
+}
+
+// Tick advances the pulse.
+func (p *VerdictPulse) Tick() {
+	if !p.active {
+		return
+	}
+	p.tick++
+	if p.tick >= p.duration {
+		p.active = false
+	}
+}
+
+// Active returns true if the pulse is animating.
+func (p *VerdictPulse) Active() bool { return p.active }
+
+// Color returns the current pulse color (fades as the pulse ages).
+func (p *VerdictPulse) Color() string {
+	if !p.active {
+		return ""
+	}
+	// Pulse fades: full color in the first 30%, then to dim
+	if p.tick < p.duration/3 {
+		return p.color
+	}
+	return "8"
+}
+
+// Intensity returns 0..1 for the pulse strength (used by renderers
+// that want to vary border thickness or glow). Triangle envelope:
+// 0 → 1 → 0 over the duration. Returns 0 when not active or past end.
+func (p *VerdictPulse) Intensity() float64 {
+	if !p.active || p.duration == 0 {
+		return 0
+	}
+	t := float64(p.tick)
+	d := float64(p.duration)
+	if t < 0 || t > d {
+		return 0
+	}
+	// Triangle: 0 → 1 → 0
+	half := d / 2
+	if t < half {
+		return t / half
+	}
+	return 1.0 - (t-half)/half
 }

@@ -52,6 +52,9 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.burst.Tick()
 		m.slide.Tick()
 		m.typew.Tick(m.tick)
+		if m.verdictPulse != nil {
+			m.verdictPulse.Tick()
+		}
 		if m.dream != nil {
 			m.dream.Tick()
 		}

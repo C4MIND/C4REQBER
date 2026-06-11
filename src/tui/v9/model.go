@@ -92,6 +92,7 @@ type model struct {
 	slide  *effects.SlideIn
 	typew  *effects.Typewriter
 	sparks *effects.Sparkles
+	verdictPulse *effects.VerdictPulse // v9.13: pulses on sim verdicts (§12.5)
 
 	// SSE stream state
 	sseEvents <-chan api.SSEEvent
@@ -261,6 +262,7 @@ func NewApp(apiURL string) *model {
 		slide:         effects.NewSlideIn(),
 		typew:         effects.NewTypewriter(),
 		sparks:        effects.NewSparkles(),
+		verdictPulse:  effects.NewVerdictPulse(),
 		achievements:  NewAchievements(),
 		langsSeen:     map[string]bool{},
 		tel:           telemetry.New(),
@@ -366,6 +368,7 @@ func NewAppFresh(apiURL string) *model {
 		slide:         effects.NewSlideIn(),
 		typew:         effects.NewTypewriter(),
 		sparks:        effects.NewSparkles(),
+		verdictPulse:  effects.NewVerdictPulse(),
 		achievements:  NewAchievements(),
 		langsSeen:     map[string]bool{},
 		tel:           telemetry.New(),
@@ -585,6 +588,10 @@ func (m *model) handleSimEvent(te api.TypedEvent) {
 	}
 	m.appendCard(c)
 	m.simCountThisRun++
+	// v9.13: trigger the verdict pulse (visual highlight for the user)
+	if m.verdictPulse != nil && te.Type == api.EventSimFinished && c.Sim.Verdict != "" {
+		m.verdictPulse.Trigger(c.Sim.Verdict)
+	}
 }
 
 // simStatusString maps a typed sim event to the CardSimulation status enum.

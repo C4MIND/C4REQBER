@@ -182,3 +182,13 @@ settings.sim_spend = "إنفاق المحاكاة في هذه الجلسة"
 settings.sim_spend.desc = "إجمالي تكلفة المحاكاة في الجلسة."
 settings.capabilities_status = "القدرات"
 settings.capabilities_status.desc = "اضغط Ctrl+Shift+C للقائمة الكاملة."
+
+# v9.13 (sim achievements)
+achievement.sim_explorer.name = "مستكشف المحاكاة"
+achievement.sim_explorer.desc = "Ran تشغيل 5+ محركات محاكاة مختلفة في جلسة واحدة"
+achievement.sim_saver.name = "محامي الشيطان"
+achievement.sim_saver.desc = "الحصول على حكم refutes_hypothesis من محاكاة"
+achievement.sim_chef.name = "طباخ الاحتياط"
+achievement.sim_chef.desc = "استخدام سلسلة احتياط المحاكاة 3+ مرات"
+achievement.sim_delegate.name = "سحابي أصلي"
+achievement.sim_delegate.desc = "تفويض محاكاة إلى vast.ai"

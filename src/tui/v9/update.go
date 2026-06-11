@@ -675,6 +675,8 @@ func (m *model) checkAchievements() {
 		seconds = 0
 	}
 	unlocked := m.achievements.Check(m.completedDisc, m.lastQuality, m.lastPapersCount, seconds, langs)
+	// v9.13: also check sim-specific achievements (TI-SIM-08).
+	unlocked = append(unlocked, m.achievements.CheckSimAchievements(m.feed)...)
 	for _, a := range unlocked {
 		m.appendCard(Card{
 			Kind:   CardPhase,

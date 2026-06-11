@@ -182,3 +182,13 @@ settings.sim_spend = "Sim-Ausgaben diese Sitzung"
 settings.sim_spend.desc = "Summe der Sim-Kosten in dieser Sitzung."
 settings.capabilities_status = "Fähigkeiten"
 settings.capabilities_status.desc = "Drücke Ctrl+Shift+C für die volle Übersicht."
+
+# v9.13 (sim achievements)
+achievement.sim_explorer.name = "Sim-Entdecker"
+achievement.sim_explorer.desc = "Ran 5+ verschiedene Sim-Engines in einer Sitzung"
+achievement.sim_saver.name = "Advocatus Diaboli"
+achievement.sim_saver.desc = "Refutes-Hypothesis-Urteil von einer Sim erhalten"
+achievement.sim_chef.name = "Fallback-Koch"
+achievement.sim_chef.desc = "Sim-Fallback-Kette 3+ mal verwendet"
+achievement.sim_delegate.name = "Cloud-Native"
+achievement.sim_delegate.desc = "Sim an vast.ai delegiert"

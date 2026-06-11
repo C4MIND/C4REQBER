@@ -182,3 +182,13 @@ settings.sim_spend = "本次会话仿真支出"
 settings.sim_spend.desc = "本次会话累计仿真成本。"
 settings.capabilities_status = "能力"
 settings.capabilities_status.desc = "按 Ctrl+Shift+C 查看完整仿真/验证器列表。"
+
+# v9.13 (sim achievements)
+achievement.sim_explorer.name = "仿真探索者"
+achievement.sim_explorer.desc = "Ran 一个会话中运行 5+ 种不同仿真引擎"
+achievement.sim_saver.name = "魔鬼辩护人"
+achievement.sim_saver.desc = "从仿真获得 refutes_hypothesis 判定"
+achievement.sim_chef.name = "回退大师"
+achievement.sim_chef.desc = "使用仿真回退链 3+ 次"
+achievement.sim_delegate.name = "云原生"
+achievement.sim_delegate.desc = "将仿真云委托到 vast.ai"

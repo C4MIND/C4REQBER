@@ -182,3 +182,13 @@ settings.sim_spend = "इस सत्र में सिम खर्च"
 settings.sim_spend.desc = "सत्र में संचयी सिम लागत।"
 settings.capabilities_status = "क्षमताएं"
 settings.capabilities_status.desc = "पूरी सूची के लिए Ctrl+Shift+C दबाएं।"
+
+# v9.13 (sim achievements)
+achievement.sim_explorer.name = "सिम एक्सप्लोरर"
+achievement.sim_explorer.desc = "Ran एक सत्र में 5+ विभिन्न सिम इंजन चलाएं"
+achievement.sim_saver.name = "शैतान का वकील"
+achievement.sim_saver.desc = "सिम से refutes_hypothesis फैसला प्राप्त करें"
+achievement.sim_chef.name = "फ़ॉलबैक शेफ"
+achievement.sim_chef.desc = "सिम फ़ॉलबैक श्रृंखला 3+ बार उपयोग करें"
+achievement.sim_delegate.name = "क्लाउड नेटिव"
+achievement.sim_delegate.desc = "vast.ai को सिम सौंपा"

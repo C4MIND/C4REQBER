@@ -199,3 +199,13 @@ settings.sim_spend = "Sim spend this session"
 settings.sim_spend.desc = "Total sim cost accumulated this session."
 settings.capabilities_status = "Capabilities"
 settings.capabilities_status.desc = "Press Ctrl+Shift+C for the full sim/verifier overlay."
+
+# v9.13 (sim achievements)
+achievement.sim_explorer.name = "Sim Explorer"
+achievement.sim_explorer.desc = "Ran 5+ different sim engines in one session"
+achievement.sim_saver.name = "Devil's Advocate"
+achievement.sim_saver.desc = "Got a refutes_hypothesis verdict from a sim"
+achievement.sim_chef.name = "Fallback Chef"
+achievement.sim_chef.desc = "Used the sim fallback chain 3+ times"
+achievement.sim_delegate.name = "Cloud Native"
+achievement.sim_delegate.desc = "Cloud-delegated a sim to vast.ai"

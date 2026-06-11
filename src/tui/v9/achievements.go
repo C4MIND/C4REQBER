@@ -24,6 +24,11 @@ const (
 	AchSpeedster
 	AchLinguist
 	AchStreak
+	// v9.13: sim-specific achievements (TI-SIM-08).
+	AchSimExplorer // 5+ different sim engines in one session
+	AchSimSaver    // got a 'refutes_hypothesis' verdict
+	AchSimChef     // used fallback chain 3+ times
+	AchSimDelegate // cloud-delegated (vast.ai) at least once
 )
 
 type Achievement struct {
@@ -56,8 +61,13 @@ func NewAchievements() *AchievementSystem {
 			{Kind: AchSpeedster, Name: "achievement.speed.name", Description: "achievement.speed.desc"},
 			{Kind: AchLinguist, Name: "achievement.linguist.name", Description: "achievement.linguist.desc"},
 			{Kind: AchStreak, Name: "achievement.streak.name", Description: "achievement.streak.desc"},
+			// v9.13 (TI-SIM-08): sim achievements
+			{Kind: AchSimExplorer, Name: "achievement.sim_explorer.name", Description: "achievement.sim_explorer.desc"},
+			{Kind: AchSimSaver, Name: "achievement.sim_saver.name", Description: "achievement.sim_saver.desc"},
+			{Kind: AchSimChef, Name: "achievement.sim_chef.name", Description: "achievement.sim_chef.desc"},
+			{Kind: AchSimDelegate, Name: "achievement.sim_delegate.name", Description: "achievement.sim_delegate.desc"},
 		},
-		Total: 7,
+		Total: 11,
 	}
 }
 
@@ -168,6 +178,68 @@ func (a *AchievementSystem) Check(discoveries int, lastQuality float64, papersCo
 			unlock = len(langsUsed) >= 3
 		case AchStreak:
 			unlock = discoveries >= 5 // simplified: 5 in session
+		// Sim achievements (TI-SIM-08) are checked by CheckSimAchievements,
+		// not by this function (they need the feed, not aggregate counters).
+		}
+		if unlock {
+			ach.Unlocked = true
+			ach.UnlockedAt = time.Now()
+			a.Unlocked++
+			a.LastUnlock = ach.UnlockedAt
+			justUnlocked = append(justUnlocked, *ach)
+		}
+	}
+	return justUnlocked
+}
+
+// CheckSimAchievements walks the feed and unlocks sim-specific
+// achievements per TI-SIM-08. Returns the list of newly-unlocked
+// achievements (same shape as Check).
+//
+// Rules:
+//   AchSimExplorer — 5+ different sim engines ran successfully in this session
+//   AchSimSaver    — at least one CardSimulation with verdict "refutes_hypothesis"
+//   AchSimChef     — 3+ CardSimulation with EngineStatus == "skipped" or "unavailable"
+//                    (i.e. fallback chain was invoked)
+//   AchSimDelegate — at least one CardSimulation with EngineStatus == "delegated"
+func (a *AchievementSystem) CheckSimAchievements(feed []Card) []Achievement {
+	engines := map[string]bool{}
+	hasRefutes := false
+	skippedCount := 0
+	hasDelegated := false
+	for _, c := range feed {
+		if c.Kind != CardSimulation {
+			continue
+		}
+		if c.Sim.EngineStatus == "success" || c.Sim.EngineStatus == "available" {
+			engines[c.Sim.Engine] = true
+		}
+		if c.Sim.Verdict == "refutes_hypothesis" {
+			hasRefutes = true
+		}
+		if c.Sim.EngineStatus == "skipped" || c.Sim.EngineStatus == "unavailable" {
+			skippedCount++
+		}
+		if c.Sim.EngineStatus == "delegated" || c.Sim.EngineStatus == "delegated_to_cloud" {
+			hasDelegated = true
+		}
+	}
+	justUnlocked := []Achievement{}
+	for i := range a.Items {
+		ach := &a.Items[i]
+		if ach.Unlocked {
+			continue
+		}
+		var unlock bool
+		switch ach.Kind {
+		case AchSimExplorer:
+			unlock = len(engines) >= 5
+		case AchSimSaver:
+			unlock = hasRefutes
+		case AchSimChef:
+			unlock = skippedCount >= 3
+		case AchSimDelegate:
+			unlock = hasDelegated
 		}
 		if unlock {
 			ach.Unlocked = true

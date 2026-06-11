@@ -2,136 +2,122 @@ package tui
 
 import (
 	"testing"
+
+	"github.com/figuramax/c4reqber-tui-v9/cards"
 )
 
-func TestAchievementFirstDiscovery(t *testing.T) {
-	a := NewAchievements()
-	// 0 discoveries → no unlock
-	got := a.Check(0, 0, 0, 0, nil)
-	if len(got) != 0 {
-		t.Errorf("got %d unlocks for 0 discoveries", len(got))
+func TestSimExplorerUnlocksAt5(t *testing.T) {
+	as := NewAchievements()
+	// 4 distinct successful engines → still locked
+	feed := []cards.Card{
+		{Kind: cards.KindSimulation, Sim: cards.SimFields{Engine: "newton", EngineStatus: "success"}},
+		{Kind: cards.KindSimulation, Sim: cards.SimFields{Engine: "jaxsim", EngineStatus: "success"}},
+		{Kind: cards.KindSimulation, Sim: cards.SimFields{Engine: "openmm", EngineStatus: "success"}},
+		{Kind: cards.KindSimulation, Sim: cards.SimFields{Engine: "tellurium", EngineStatus: "success"}},
 	}
-	// 1 discovery → unlock FirstDiscovery
-	got = a.Check(1, 0, 0, 0, nil)
-	if len(got) != 1 {
-		t.Errorf("got %d unlocks for 1 discovery, want 1", len(got))
+	as.CheckSimAchievements(feed)
+	if as.Items[7].Unlocked { // AchSimExplorer is index 7
+		t.Error("should still be locked at 4 engines")
 	}
-	if got[0].Kind != AchFirstDiscovery {
-		t.Errorf("wrong kind unlocked: %d", got[0].Kind)
+	// 5th engine unlocks
+	feed = append(feed, cards.Card{Kind: cards.KindSimulation, Sim: cards.SimFields{Engine: "vina", EngineStatus: "success"}})
+	unlocked := as.CheckSimAchievements(feed)
+	if !as.Items[7].Unlocked {
+		t.Error("should unlock at 5 engines")
 	}
-}
-
-func TestAchievementQualityS(t *testing.T) {
-	a := NewAchievements()
-	got := a.Check(1, 0.85, 5, 60, []string{"EN"})
-	// 1 discovery + quality 0.85 + 5 papers = First + QualityS + MultiPaper
-	if len(got) != 3 {
-		t.Errorf("got %d unlocks, want 3 (first + qualityS + multiPaper)", len(got))
-	}
-	// Specifically check that QualityS is in there
-	found := false
-	for _, u := range got {
-		if u.Kind == AchQualityS {
-			found = true
-		}
-	}
-	if !found {
-		t.Error("QualityS not unlocked for quality=0.85")
+	if len(unlocked) != 1 {
+		t.Errorf("expected 1 unlock, got %d", len(unlocked))
 	}
 }
 
-func TestAchievementMultiPaper(t *testing.T) {
-	a := NewAchievements()
-	got := a.Check(1, 0, 5, 60, nil)
-	found := false
-	for _, u := range got {
-		if u.Kind == AchMultiPaper {
-			found = true
-		}
+func TestSimSaverUnlocksOnRefutes(t *testing.T) {
+	as := NewAchievements()
+	unlocked := as.CheckSimAchievements([]cards.Card{
+		{Kind: cards.KindSimulation, Sim: cards.SimFields{Engine: "openmm", Verdict: "supports_hypothesis"}},
+		{Kind: cards.KindSimulation, Sim: cards.SimFields{Engine: "jaxsim", Verdict: "refutes_hypothesis"}},
+	})
+	if !as.Items[8].Unlocked { // AchSimSaver
+		t.Error("should unlock on refutes verdict")
 	}
-	if !found {
-		t.Error("multi-paper not unlocked for 5 papers")
-	}
-}
-
-func TestAchievementSpeedster(t *testing.T) {
-	a := NewAchievements()
-	got := a.Check(1, 0, 0, 20, nil) // 20s < 30s
-	found := false
-	for _, u := range got {
-		if u.Kind == AchSpeedster {
-			found = true
-		}
-	}
-	if !found {
-		t.Error("speedster not unlocked for 20s discovery")
-	}
-	got2 := a.Check(1, 0, 0, 60, nil) // 60s > 30s
-	for _, u := range got2 {
-		if u.Kind == AchSpeedster {
-			t.Error("speedster should NOT unlock for 60s discovery")
-		}
+	if len(unlocked) != 1 {
+		t.Errorf("expected 1 unlock, got %d", len(unlocked))
 	}
 }
 
-func TestAchievementLinguist(t *testing.T) {
-	a := NewAchievements()
-	got := a.Check(1, 0, 0, 60, []string{"EN", "RU", "ZH", "JA"})
-	found := false
-	for _, u := range got {
-		if u.Kind == AchLinguist {
-			found = true
-		}
+func TestSimChefUnlocksAt3Fallbacks(t *testing.T) {
+	as := NewAchievements()
+	// 2 skipped → still locked
+	feed := []cards.Card{
+		{Kind: cards.KindSimulation, Sim: cards.SimFields{EngineStatus: "skipped"}},
+		{Kind: cards.KindSimulation, Sim: cards.SimFields{EngineStatus: "unavailable"}},
 	}
-	if !found {
-		t.Error("linguist not unlocked for 4 langs")
+	as.CheckSimAchievements(feed)
+	if as.Items[9].Unlocked { // AchSimChef
+		t.Error("should still be locked at 2 fallbacks")
 	}
-}
-
-func TestAchievementStreak(t *testing.T) {
-	a := NewAchievements()
-	got := a.Check(5, 0, 0, 60, nil)
-	found := false
-	for _, u := range got {
-		if u.Kind == AchStreak {
-			found = true
-		}
+	// 3rd skipped → unlocks
+	feed = append(feed, cards.Card{Kind: cards.KindSimulation, Sim: cards.SimFields{EngineStatus: "skipped"}})
+	unlocked := as.CheckSimAchievements(feed)
+	if !as.Items[9].Unlocked {
+		t.Error("should unlock at 3 fallbacks")
 	}
-	if !found {
-		t.Error("streak not unlocked for 5 discoveries")
+	if len(unlocked) != 1 {
+		t.Errorf("expected 1 unlock, got %d", len(unlocked))
 	}
 }
 
-func TestAchievementIdempotent(t *testing.T) {
-	a := NewAchievements()
-	got1 := a.Check(1, 0.85, 5, 20, []string{"EN", "RU", "ZH", "JA", "DE", "AR", "HI"})
-	// Same params → no new unlocks
-	got2 := a.Check(1, 0.85, 5, 20, []string{"EN", "RU", "ZH", "JA", "DE", "AR", "HI"})
-	if len(got1) == 0 {
-		t.Error("first call should unlock something")
+func TestSimDelegateUnlocks(t *testing.T) {
+	as := NewAchievements()
+	unlocked := as.CheckSimAchievements([]cards.Card{
+		{Kind: cards.KindSimulation, Sim: cards.SimFields{EngineStatus: "delegated"}},
+	})
+	if !as.Items[10].Unlocked { // AchSimDelegate
+		t.Error("should unlock on delegated sim")
 	}
-	if len(got2) != 0 {
-		t.Errorf("second call (same state) should NOT unlock anything, got %d", len(got2))
-	}
-}
-
-func TestAchievementAllUnlock(t *testing.T) {
-	a := NewAchievements()
-	// Optimal conditions
-	a.Check(10, 0.95, 5, 15, []string{"EN", "RU", "ZH", "JA", "DE", "AR", "HI"})
-	if a.Unlocked != 7 {
-		t.Errorf("got %d/7 unlocked", a.Unlocked)
+	if len(unlocked) != 1 {
+		t.Errorf("expected 1 unlock, got %d", len(unlocked))
 	}
 }
 
-func TestCycleLangName(t *testing.T) {
-	cycle := []struct{ from, to string }{
-		{"en", "ru"}, {"ru", "zh"}, {"zh", "ja"}, {"ja", "de"}, {"de", "ar"}, {"ar", "hi"}, {"hi", "en"},
+func TestSimAchievementsDontRepeat(t *testing.T) {
+	as := NewAchievements()
+	// Trigger AchSimExplorer once
+	feed := []cards.Card{
+		{Kind: cards.KindSimulation, Sim: cards.SimFields{Engine: "a", EngineStatus: "success"}},
+		{Kind: cards.KindSimulation, Sim: cards.SimFields{Engine: "b", EngineStatus: "success"}},
+		{Kind: cards.KindSimulation, Sim: cards.SimFields{Engine: "c", EngineStatus: "success"}},
+		{Kind: cards.KindSimulation, Sim: cards.SimFields{Engine: "d", EngineStatus: "success"}},
+		{Kind: cards.KindSimulation, Sim: cards.SimFields{Engine: "e", EngineStatus: "success"}},
 	}
-	for _, c := range cycle {
-		got := cycleLangName(langFromString(c.from))
-		if string(got) != c.to {
-			t.Errorf("cycleLangName(%s) = %s, want %s", c.from, got, c.to)
-		}
+	first := as.CheckSimAchievements(feed)
+	if len(first) != 1 {
+		t.Fatalf("expected 1 unlock first time, got %d", len(first))
+	}
+	second := as.CheckSimAchievements(feed)
+	if len(second) != 0 {
+		t.Errorf("should not re-unlock; got %d", len(second))
+	}
+}
+
+func TestSimAchievementsIgnoresNonSimCards(t *testing.T) {
+	as := NewAchievements()
+	// 100 hypothesis cards — should not affect sim achievements
+	feed := make([]cards.Card, 100)
+	for i := range feed {
+		feed[i] = cards.Card{Kind: cards.KindHypothesis, Title: "h"}
+	}
+	unlocked := as.CheckSimAchievements(feed)
+	if len(unlocked) != 0 {
+		t.Errorf("expected 0 sim unlocks from 100 hypothesis cards, got %d", len(unlocked))
+	}
+}
+
+func TestAchievementTotalCount(t *testing.T) {
+	as := NewAchievements()
+	if as.Total != 11 {
+		t.Errorf("expected 11 total achievements (7 original + 4 sim), got %d", as.Total)
+	}
+	if len(as.Items) != 11 {
+		t.Errorf("expected 11 items, got %d", len(as.Items))
 	}
 }

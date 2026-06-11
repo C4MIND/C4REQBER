@@ -182,3 +182,13 @@ settings.sim_spend = "セッションのシミュレーション支出"
 settings.sim_spend.desc = "セッション累計のシミュレーションコスト。"
 settings.capabilities_status = "機能"
 settings.capabilities_status.desc = "Ctrl+Shift+C で完全な一覧を表示。"
+
+# v9.13 (sim achievements)
+achievement.sim_explorer.name = "シミュレーションエクスプローラー"
+achievement.sim_explorer.desc = "Ran 1セッションで5種類以上のシミュレーションエンジンを実行"
+achievement.sim_saver.name = "魔鬼の代弁者"
+achievement.sim_saver.desc = "シミュレーションから refutes_hypothesis 判定を取得"
+achievement.sim_chef.name = "フォールバックシェフ"
+achievement.sim_chef.desc = "シミュレーションのフォールバックチェーンを3回以上使用"
+achievement.sim_delegate.name = "クラウドネイティブ"
+achievement.sim_delegate.desc = "シミュレーションを vast.ai に委任"

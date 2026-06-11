@@ -182,3 +182,13 @@ settings.sim_spend = "Потрачено на симуляции"
 settings.sim_spend.desc = "Сумма симуляций за сессию."
 settings.capabilities_status = "Возможности"
 settings.capabilities_status.desc = "Нажмите Ctrl+Shift+C для полного списка."
+
+# v9.13 (sim achievements)
+achievement.sim_explorer.name = "Исследователь"
+achievement.sim_explorer.desc = "Ran 5+ разных движков симуляции за сессию"
+achievement.sim_saver.name = "Адвокат дьявола"
+achievement.sim_saver.desc = "Получил вердикт refutes_hypothesis от симуляции"
+achievement.sim_chef.name = "Мастер fallback"
+achievement.sim_chef.desc = "Использовал цепочку fallback 3+ раза"
+achievement.sim_delegate.name = "Облачный натив"
+achievement.sim_delegate.desc = "Делегировал симуляцию в vast.ai"

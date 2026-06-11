@@ -292,7 +292,47 @@ func NewApp(apiURL string) *model {
 			m.wizard.Show()
 		}
 	}
-	m.appendCard(Card{Kind: CardEmpty, Title: i18n.T("empty.title"), Body: i18n.T("empty.hint"), Time: time.Now()})
+	// v9.13 (B-05): restore last N cards from feed.jsonl FIRST, before the
+	// initial Empty placeholder. This avoids double-appending the placeholder.
+	restoredCount := 0
+	if m.feedStore != nil {
+		entries, _ := m.feedStore.LoadRecent(50)
+		// Reverse to chronological order (LoadRecent returns most-recent-first)
+		for i, j := 0, len(entries)-1; i < j; i, j = i+1, j-1 {
+			entries[i], entries[j] = entries[j], entries[i]
+		}
+		for _, e := range entries {
+			m.feed = append(m.feed, Card{
+				Kind:     CardKind(e.Kind),
+				Title:    e.Title,
+				Body:     e.Body,
+				Time:     e.Time,
+				Status:   e.Status,
+				Bookmark: e.Bookmark,
+				Sim: cards.SimFields{
+					Engine:       e.SimEngine,
+					EngineStatus: e.SimStatus,
+					Verdict:      e.SimVerdict,
+					CostUSD:      e.SimCostUSD,
+					InstallHint:  e.SimInstallHint,
+					HypothesisID: cards.ID(e.SimHypothesisID),
+				},
+			})
+			restoredCount++
+		}
+	}
+	// Only append the empty placeholder if there are no restored cards
+	// AND the existing first-run wizard isn't going to take over the screen.
+	showPlaceholder := restoredCount == 0
+	if m.wizard != nil && m.wizard.Active() {
+		showPlaceholder = false
+	}
+	if showPlaceholder {
+		m.appendCard(Card{Kind: CardEmpty, Title: i18n.T("empty.title"), Body: i18n.T("empty.hint"), Time: time.Now()})
+	}
+	if restoredCount > 0 {
+		m.setToast(fmt.Sprintf("restored %d cards from last session", restoredCount))
+	}
 	return m
 }
 

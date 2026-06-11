@@ -16,6 +16,7 @@ const (
 	ProfileDeuteranopia // green-blind
 	ProfileTritanopia   // blue-blind
 	ProfileMonochrome   // no color
+	ProfileSolarizedDark // v9.13: warm low-blue palette, easy on eyes for long sessions
 )
 
 // String returns the profile name.
@@ -31,6 +32,8 @@ func (p ColorProfile) String() string {
 		return "tritanopia"
 	case ProfileMonochrome:
 		return "monochrome"
+	case ProfileSolarizedDark:
+		return "solarized-dark"
 	default:
 		return "default"
 	}
@@ -113,6 +116,22 @@ func monochromeColors() colorMap {
 	}
 }
 
+// solarizedDarkColors returns the Ethan Schoonover Solarized Dark palette
+// (https://ethanschoonover.com/solarized/). Warm low-blue, easy on eyes
+// for long terminal sessions. Values are 256-color codes.
+func solarizedDarkColors() colorMap {
+	return colorMap{
+		"primary":   lipgloss.Color("136"), // solarized yellow
+		"success":   lipgloss.Color("64"),  // solarized green
+		"warn":      lipgloss.Color("166"), // solarized orange
+		"error":     lipgloss.Color("160"), // solarized red
+		"muted":     lipgloss.Color("240"), // base01
+		"accent":    lipgloss.Color("125"), // solarized violet
+		"highlight": lipgloss.Color("33"),  // solarized blue
+		"info":      lipgloss.Color("37"),  // solarized cyan
+	}
+}
+
 // ColorsFor returns the color map for the given profile.
 func ColorsFor(p ColorProfile) colorMap {
 	switch p {
@@ -126,6 +145,8 @@ func ColorsFor(p ColorProfile) colorMap {
 		return tritanopiaColors()
 	case ProfileMonochrome:
 		return monochromeColors()
+	case ProfileSolarizedDark:
+		return solarizedDarkColors()
 	default:
 		return baseColors()
 	}
@@ -146,6 +167,8 @@ func ProfileFromString(s string) (ColorProfile, bool) {
 		return ProfileTritanopia, true
 	case "monochrome", "mono", "no-color":
 		return ProfileMonochrome, true
+	case "solarized-dark", "solarized", "solar":
+		return ProfileSolarizedDark, true
 	}
 	return 0, false
 }

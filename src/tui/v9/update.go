@@ -410,7 +410,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			return m, nil
 		case km.Matches(ActColorProfile, keyStr), km.Matches(ActProfileMac, keyStr):
-			// Cycle color profile (default → hc → prot → deut → trit → mono → default)
+			// Cycle color profile (default → hc → prot → deut → trit → mono → solarized → default)
 			switch m.colorProfile {
 			case ProfileDefault:
 				m.colorProfile = ProfileHighContrast
@@ -422,9 +422,14 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.colorProfile = ProfileTritanopia
 			case ProfileTritanopia:
 				m.colorProfile = ProfileMonochrome
+			case ProfileMonochrome:
+				m.colorProfile = ProfileSolarizedDark
 			default:
 				m.colorProfile = ProfileDefault
 			}
+			// v9.13: rebuild the theme so render functions pick up the
+			// new color map immediately.
+			m.theme = NewTheme(m.colorProfile)
 			m.setToast("🎨 " + m.colorProfile.String())
 			m.PersistSettings()
 			return m, nil

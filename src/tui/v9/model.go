@@ -176,6 +176,10 @@ type model struct {
 	// v9.13 (§15): debug overlay
 	showDebug bool
 
+	// v9.13 (§11): theme — pre-built lipgloss styles for the active profile.
+	// Rebuilt whenever the user cycles the profile (Ctrl+Shift+P).
+	theme *Theme
+
 	// v9.13 (§10): persistence — feed store and input history.
 	feedStore     *persist.FeedStore
 	inputHistory  *persist.InputHistory
@@ -266,6 +270,7 @@ func NewApp(apiURL string) *model {
 		typew:         effects.NewTypewriter(),
 		sparks:        effects.NewSparkles(),
 		verdictPulse:  effects.NewVerdictPulse(),
+		theme:         NewTheme(ProfileDefault),
 		achievements:  NewAchievements(),
 		langsSeen:     map[string]bool{},
 		tel:           telemetry.New(),
@@ -372,6 +377,7 @@ func NewAppFresh(apiURL string) *model {
 		typew:         effects.NewTypewriter(),
 		sparks:        effects.NewSparkles(),
 		verdictPulse:  effects.NewVerdictPulse(),
+		theme:         NewTheme(ProfileDefault),
 		achievements:  NewAchievements(),
 		langsSeen:     map[string]bool{},
 		tel:           telemetry.New(),

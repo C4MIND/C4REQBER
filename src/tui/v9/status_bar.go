@@ -72,7 +72,12 @@ func (m *model) renderStatusBar() string {
 
 	// 1. Connection
 	connStr := ConnGlyph(m.connState) + " " + ConnLabel(m.connState)
-	connStyled := lipgloss.NewStyle().Foreground(lipgloss.Color(connColor(m.connState))).Render(connStr)
+	connStyled := connStr
+	if m.theme != nil {
+		connStyled = m.theme.ConnectionStyle(m.connState).Render(connStr)
+	} else {
+		connStyled = lipgloss.NewStyle().Foreground(lipgloss.Color(connColor(m.connState))).Render(connStr)
+	}
 	parts = append(parts, connStyled)
 
 	// 2. Follow mode

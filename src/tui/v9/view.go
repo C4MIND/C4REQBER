@@ -106,6 +106,15 @@ func (m *model) renderHeader() string {
 			hdr += fmt.Sprintf(" +%s", elapsed)
 		}
 	}
+	// v9.13 (§11): theme-aware mode pill. The active mode gets a
+	// colored box; the inactive ones get a faint outline.
+	if m.theme != nil {
+		activeMode := string(m.mode)
+		// Append "[mode]" colored by the active mode
+		hdr = m.theme.StyleBold("highlight").Render("[") +
+			m.theme.StyleBold("success").Render(activeMode) +
+			m.theme.StyleBold("highlight").Render("]") + " " + hdr
+	}
 	right := " " + string(m.mode) + " "
 	if len(hdr)+len(right) < m.width {
 		hdr += strings.Repeat(" ", m.width-len(hdr)-len(right))

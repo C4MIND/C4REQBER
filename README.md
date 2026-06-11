@@ -49,6 +49,8 @@ A cognitive exoskeleton for AI agents and humans.
 
 **v5.6.0:** "Dead Code Cleanup + API Integration + Pydantic V2 + TUI v8 Polish" — removed 6 dead modules (r1/, skills/, arxiv_adapter, prior_art, dependencies_v6, v6_schemas); integrated 14 API keys into MultiSourceSearcher; Pydantic V1→V2 migration complete; citation verifier hardened against hallucinated theory names; TUI v8 mascot rewritten (Quantum→Cube) with theme-aware colors and S-rank jump animation; Go audit: go vet clean, staticcheck 0 warnings; 9908+ tests collected.
 
+**v9.13.0:** "TUI v9 Simulation Surface" — TUI v9 now has a full simulation/verification cockpit surface. New: capabilities overlay (`Ctrl+Shift+C`) listing 32 engine + 27 verifier availability with per-platform status and install hints; `CardSimulation` kind rendered in the feed with engine/verdict/fallback-chain/install-hint; typed SSE decoder ready for backend's new `sim_started/sim_finished/sim_skipped` events; 4 new sim-specific achievements (Sim Explorer, Devil's Advocate, Fallback Chef, Cloud Native); command palette (`:`) fuzzy-matches 35+ commands; per-card expansion (Enter to see FullBody, Esc to collapse); adaptive layout (T0/T1/T2/T3); status bar (Ctrl+B); debug overlay (Ctrl+Shift+D); solarized-dark color profile; feed.jsonl persistence + resume on launch; 132 golden snapshots, 100% i18n parity across 7 languages via `regen_i18n.py`. 27 commits, +7302 lines, 0 critical bugs. Branch `friendely-merge-tui-upgrade` ready to merge.
+
 ## Output Formats (6, auto-detected)
 
 | Format | turbo pages | When auto-selected |
@@ -214,7 +216,7 @@ Copy these into your `.env` file. Keys marked **Required** will disable the sour
 - **Open-ended exploration** — Literature anomaly detection (IsolationForest) + surprise-driven question generation + formal framework extension
 - **Knowledge search** — 33+ source adapters (arXiv, PubMed, Crossref, Europe PMC, Semantic Scholar, OpenAlex, Zenodo, Figshare, NCBI, PubChem, ChEMBL, Materials Project, AFLOW, Kaggle, UCI ML, Harvard Dataverse, re3data, STRING, ClinicalTrials.gov, GBIF, Allen Brain, USGS, CERN, USPTO, OpenReview, HuggingFace, OpenFDA, NASA Earthdata, CyberLeninka, Math-Net.Ru, and more)
 - **Python TUI** (blast tui) — Textual interface with real-time progress, chat, history, slash commands
-- **Go TUI v8** (src/tui/v8) — Bubble Tea interface with 7-phase pipeline, C4 grid, cube mascot, 7-language i18n, 3 themes
+- **Go TUI v9** (src/tui/v9) — Bubble Tea v2 interface with 7-phase pipeline, C4 grid, sim surface (CardSimulation kind + capabilities overlay Ctrl+Shift+C), command palette `:`, debug overlay Ctrl+Shift+D, status bar Ctrl+B, 7-language i18n (100% parity), 7 color profiles (incl. solarized-dark), adaptive layout (T0/T1/T2/T3), 132 golden snapshots
 - **Falsification** — Domain-aware simulation + statistical tests with Bonferroni correction
 - **MCP server** — 20 tools verified working for AI agent integration
 
@@ -251,7 +253,8 @@ All documentation lives in the repo — no separate docs site needed.
 | `CHANGELOG.md` | Full version history |
 | `TECHNICAL_DEBT_ROADMAP.md` | Deferred architectural fixes — when and why each debt item becomes payable |
 | `ARCHITECTURE_C4R.md` | C4R system architecture (cognitive, knowledge, simulation, verification) |
-| `ARCHITECTURE_TUI_V8.md` | Go TUI v8 architecture (Bubble Tea, widgets, backend bridge) |
+| `ARCHITECTURE_TUI_V9.md` | Go TUI v9 architecture (Bubble Tea v2, cards package, sim surface, command palette, golden snapshots) |
+| `audit/TUI_V9_UNIFIED_PLAN_2026-06-11.md` | TUI v9 unified plan — 25 sections, 8 sprints, 27 design decisions, 13 backend contracts |
 | `INSTALL.md` | Full developer setup (Python + Go + engines + API keys) |
 | `QUICKSTART.md` | First discovery in 5 minutes |
 | `docs/onboarding/API_KEYS.md` | How to obtain every API key (registration links, pricing, rate limits) |

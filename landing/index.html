@@ -98,7 +98,7 @@
   <div class="orb orb-3"></div>
   <div class="hero-content">
     <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:32px;flex-wrap:wrap">
-      <div class="badge" style="margin-bottom:0"><span class="dot"></span> <span data-i18n="hero_badge">v5.6.0 · PRODUCTION · 0 mypy errors</span></div>
+       <div class="badge" style="margin-bottom:0"><span class="dot"></span> <span data-i18n="hero_badge">v9.13.0 · PRODUCTION · TUI v9 simulation surface · 132 goldens</span></div>
       <a id="github-badge" class="github-badge" href="https://github.com/c4reqber/c4reqber" rel="noopener noreferrer" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:100px;padding:6px 16px;font-size:13px;color:var(--fg-2);text-decoration:none">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
         <span data-i18n="github_stars">Be the first star!</span>
@@ -566,31 +566,34 @@
   <div class="container">
     <div class="section-header">
       <span class="section-label">The Terminal is the Interface</span>
-      <h2 class="section-title">TUI v8 Experience</h2>
-      <p class="section-desc">ASCII cube. Gradient bars. Spark particles. Night mode. The terminal is not a fallback — it is the primary interface.</p>
+      <h2 class="section-title">TUI v9 Experience</h2>
+      <p class="section-desc">32 sim engines, 27 verifiers, capabilities overlay, command palette. The simulation/verification cockpit is in the terminal — not a fallback, the primary interface.</p>
     </div>
     <div class="tui-window" style="max-width:700px;margin:0 auto;background:var(--bg-4);border-radius:var(--radius);border:1px solid rgba(255,255,255,.06);overflow:hidden">
-      <div class="term-header"><span class="term-dot red"></span><span class="term-dot yellow"></span><span class="term-dot green"></span><span class="term-title">c4reqber — TUI v8</span></div>
+      <div class="term-header"><span class="term-dot red"></span><span class="term-dot yellow"></span><span class="term-dot green"></span><span class="term-title">c4reqber — TUI v9 (capabilities overlay)</span></div>
       <div class="term-body" style="font-family:var(--mono);font-size:13px;line-height:1.8;color:var(--fg-2);padding:20px">
-        <div style="color:var(--tui-primary)">c4reqber ❯ blast solve "quantum biology in photosynthesis"</div>
-        <div style="color:var(--fg-3)">[C4] State: F⟨Present, Abstract, Other⟩ (T=0, S=0, A=0)</div>
-        <div style="color:var(--fg-3)">[TRIZ] Segmentation · Extraction · Local Quality</div>
-        <div style="color:var(--fg-3)">[UCOS] 4-layer analysis complete</div>
-        <div style="color:var(--fg-3)">[GAP] 12 gaps mined from 124 papers</div>
-        <div style="color:var(--tui-secondary)">[VERIFY] Lean4 proof skeleton generated</div>
-        <div style="color:var(--green)">[DONE] Dissertation exported to LaTeX + BibTeX</div>
+        <div style="color:var(--tui-primary)">⏚ Simulation Capabilities (Darwin arm64)</div>
+        <div style="color:var(--fg-3)">  ● newton       Apple M3 Pro · 18 GB unified (49 patterns)</div>
+        <div style="color:var(--fg-3)">  ● jaxsim       MPS (12 patterns)</div>
+        <div style="color:var(--fg-3)">  ● torchsim     MPS (9 patterns)</div>
+        <div style="color:var(--fg-3)">  ● openmm       CPU/Metal — biology, protein_folding</div>
+        <div style="color:var(--fg-3)">  ● vinda        CPU</div>
+        <div style="color:var(--fg-3)">  ● mesa         CPU</div>
+        <div style="color:var(--fg-3)">  ○ fenicsx      (no arm64 wheel)</div>
+        <div style="color:var(--fg-3)">      ⓘ conda install -c conda-forge fenics-dolfinx</div>
+        <div style="color:var(--green)">  ✓ 22/32 engines available across 6 domains</div>
         <div style="margin-top:12px;color:var(--tui-primary);animation:blink 1s step-end infinite">_</div>
       </div>
     </div>
     <div style="display:flex;gap:12px;justify-content:center;margin-top:24px;flex-wrap:wrap">
-      <span class="tag" style="font-size:12px">Tab: Switch mode</span>
-      <span class="tag" style="font-size:12px">A: Alert panel</span>
-      <span class="tag" style="font-size:12px">B: Budget gauge</span>
-      <span class="tag" style="font-size:12px">D: Depth ladder</span>
-      <span class="tag" style="font-size:12px">T: Article canvas</span>
-      <span class="tag" style="font-size:12px">R: Proof graph</span>
-      <span class="tag" style="font-size:12px">V: Cube nav</span>
-      <span class="tag" style="font-size:12px">F: Live feed</span>
+      <span class="tag" style="font-size:12px">: Command palette</span>
+      <span class="tag" style="font-size:12px">Ctrl+Shift+C: Capabilities</span>
+      <span class="tag" style="font-size:12px">Ctrl+Shift+D: Debug</span>
+      <span class="tag" style="font-size:12px">Ctrl+B: Status bar</span>
+      <span class="tag" style="font-size:12px">j/k: Focus card</span>
+      <span class="tag" style="font-size:12px">Enter: Expand</span>
+      <span class="tag" style="font-size:12px">i: Install hint</span>
+      <span class="tag" style="font-size:12px">f: Fallback chain</span>
     </div>
   </div>
 </section>
@@ -876,7 +879,26 @@
     </div>
     <div class="term-block" style="border-left:3px solid var(--amber)">
       <div class="term-header"><span class="term-dot red"></span><span class="term-dot yellow"></span><span class="term-dot green"></span><span class="term-title" data-i18n="roadmap_v56">v5.6 — Q3 2026</span></div>
-      <div class="term-body" data-i18n="roadmap_v56_body">✓ Dead code cleanup (6 modules + orphaned tests removed)
+      <div class="term-body" data-i18n="roadmap_v56_body">✓ TUI v9 simulation surface: capabilities overlay (32 engines + 27 verifiers)
+✓ CardSimulation kind with engine/verdict/fallback chain/install hint
+✓ Command palette (:) with 35+ fuzzy-matched commands
+✓ Typed SSE decoder for sim_started/sim_finished/sim_skipped events
+✓ 4 new sim achievements (Sim Explorer, Devil's Advocate, Fallback Chef, Cloud Native)
+✓ Adaptive layout (T0/T1/T2/T3 tiers) + status bar + debug overlay
+✓ Per-card expansion (Enter to see FullBody, Esc to collapse)
+✓ Feed.jsonl persistence + resume on launch
+✓ 132 golden snapshots (6 fixtures × 22 scenarios)
+✓ 100% i18n parity across 7 languages via regen_i18n.py
+✓ Solarized-dark color profile (warm low-blue, easy on eyes)
+✓ 7th color profile: 7 total (default, hc, prot, deut, trit, mono, solarized)
+✓ Theme helper: real colorMap integration across header/status bar/cards
+✓ Per-card sim actions: i (install hint), f (fallback chain), o (open plot)
+✓ Verdict chips on hypothesis cards (✓/✗/? color-coded)
+✓ Effects perf: Rain grid pooled (was 720k allocs/sec → 0)
+✓ Effects bug: Burst per-particle fade (was using b.parts[0] for all cells)
+✓ Wizard bug: F-13 fix — wizard now actually advances through 3 steps
+✓ F-15 cost: header reads from sim cost events, not fake tick ticker
+✓ Dead code cleanup (6 modules + orphaned tests removed)
 ✓ 14 API keys wired into MultiSourceSearcher
 ✓ Pydantic V2 migration (ConfigDict, field_validator)
 ✓ Citation verifier with hallucination detection

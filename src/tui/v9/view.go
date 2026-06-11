@@ -148,16 +148,14 @@ func (m *model) renderFooter() string {
 }
 
 func (m *model) layout() {
-	header, footer, input := 1, 1, 3
-	feedH := m.height - header - footer - input
-	if feedH < 5 {
-		feedH = 5
-	}
-	m.vp.SetWidth(m.width)
-	m.vp.SetHeight(feedH)
-	m.ta.SetWidth(m.width)
-	m.rain.SetSize(m.width, feedH)
-	m.sparks.SetSize(m.width, input)
+	// v9.13: use the new ComputeLayout engine (§4 of the unified plan).
+	l := ComputeLayout(m.width, m.height, m.showStatusBar)
+	m.vp.SetWidth(l.Feed.W)
+	m.vp.SetHeight(l.Feed.H)
+	m.ta.SetWidth(l.Input.W)
+	m.ta.SetHeight(l.Input.H)
+	m.rain.SetSize(l.Feed.W, l.Feed.H)
+	m.sparks.SetSize(l.Input.W, l.Input.H)
 }
 
 // overlayRegion paints overlay over base starting at line fromY.

@@ -62,8 +62,9 @@ func (m *model) renderStatusBar() string {
 	if !m.showStatusBar {
 		return ""
 	}
-	if m.width < 100 {
-		// T0/T1 — too narrow; status bar would crowd the footer
+	// Use the layout engine: status bar only exists at T2+
+	l := ComputeLayout(m.width, m.height, m.showStatusBar)
+	if l.StatusBar.H == 0 {
 		return ""
 	}
 

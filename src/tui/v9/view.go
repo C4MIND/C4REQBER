@@ -9,6 +9,7 @@ import (
 	"charm.land/lipgloss/v2"
 	zone "github.com/lrstanley/bubblezone/v2"
 
+	"github.com/figuramax/c4reqber-tui-v9/cards"
 	"github.com/figuramax/c4reqber-tui-v9/i18n"
 )
 
@@ -203,7 +204,7 @@ func renderCard(c Card, width int) string {
 		body := lipgloss.NewStyle().Foreground(lipgloss.Color("7")).Render(c.Body)
 		meta := ""
 		for _, m := range c.Meta {
-			meta += "\n" + border + "  " + lipgloss.NewStyle().Foreground(lipgloss.Color("8")).Render("↳ "+m)
+			meta += "\n" + border + "  " + lipgloss.NewStyle().Foreground(lipgloss.Color("8")).Render("↳ "+m.Key+": "+m.Value)
 		}
 		return zone.Mark(zoneID, style.Render(border+" "+title+"\n"+border+"  "+body+meta))
 	case CardPaper:
@@ -211,13 +212,65 @@ func renderCard(c Card, width int) string {
 		body := lipgloss.NewStyle().Foreground(lipgloss.Color("7")).Render(c.Body)
 		meta := ""
 		for _, m := range c.Meta {
-			meta += "\n" + border + "  " + lipgloss.NewStyle().Foreground(lipgloss.Color("8")).Render(m)
+			meta += "\n" + border + "  " + lipgloss.NewStyle().Foreground(lipgloss.Color("8")).Render(m.Key+": "+m.Value)
 		}
 		return zone.Mark(zoneID, style.Render(border+" "+title+"\n"+border+"  "+body+meta))
 	case CardCode:
 		title := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("5")).Render("⚙ " + c.Title)
 		body := lipgloss.NewStyle().Foreground(lipgloss.Color("7")).Render(c.Body)
 		return zone.Mark(zoneID, style.Render(border+" "+title+"\n"+border+"  "+body))
+	case CardSimulation:
+		// NEW in v9.13 (TI-SIM-01). Status icon + engine + pattern + domain.
+		icon := cards.StatusIcon(c.Sim.EngineStatus)
+		if icon == "?" {
+			icon = "⏣"
+		}
+		statusColor := "8"
+		switch c.Sim.EngineStatus {
+		case "available", "success":
+			statusColor = "2"
+		case "slow":
+			statusColor = "3"
+		case "unavailable":
+			statusColor = "1"
+		case "budget_exceeded":
+			statusColor = "1"
+		case "delegated", "delegated_to_cloud":
+			statusColor = "6"
+		}
+		verdictIcon := cards.VerdictIcon(c.Sim.Verdict)
+		titleLine := icon + " " + c.Sim.Engine + "  " + verdictIcon + " " + c.Sim.Pattern + "  " + c.Sim.Domain
+		title := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color(statusColor)).Render(titleLine)
+		// Body — short summary (verdict + key metric + cost)
+		verdictText := c.Sim.Verdict
+		if verdictText == "" {
+			verdictText = c.Sim.EngineStatus
+		}
+		costStr := fmt.Sprintf("$%.3f", c.Sim.CostUSD)
+		body := fmt.Sprintf("verdict: %s · elapsed %dms · %s · %s", verdictText, c.Sim.ElapsedMS, costStr, c.Sim.BackendHost)
+		bodyRendered := lipgloss.NewStyle().Foreground(lipgloss.Color("7")).Render(body)
+		// Meta — fallback chain (what was tried)
+		meta := ""
+		for _, t := range c.Sim.PatternsTried {
+			row := fmt.Sprintf("  %s %s", t.Engine, t.Status)
+			if t.Reason != "" {
+				row += " (" + t.Reason + ")"
+			}
+			meta += "\n" + border + "  " + lipgloss.NewStyle().Foreground(lipgloss.Color("8")).Render(row)
+		}
+		// Action strip
+		acts := cards.ActionsFor(c)
+		actStr := ""
+		for i, a := range acts {
+			if i > 0 {
+				actStr += " · "
+			}
+			actStr += "[" + a.Key + "] " + a.Label
+		}
+		if actStr != "" {
+			meta += "\n" + border + "  " + lipgloss.NewStyle().Foreground(lipgloss.Color("8")).Render("↳ "+actStr)
+		}
+		return zone.Mark(zoneID, style.Render(border+" "+title+"\n"+border+"  "+bodyRendered+meta))
 	case CardError:
 		title := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("1")).Render("✗ " + c.Title)
 		body := lipgloss.NewStyle().Foreground(lipgloss.Color("9")).Render(c.Body)

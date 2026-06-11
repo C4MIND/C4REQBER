@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/figuramax/c4reqber-tui-v9/cards"
 	"github.com/figuramax/c4reqber-tui-v9/i18n"
 )
 
@@ -110,7 +111,7 @@ func TestGoldenWithHypothesisCard(t *testing.T) {
 		Kind:   CardHypothesis,
 		Title:  "Hypothesis",
 		Body:   "Use truncated 17-nt guide RNAs with NGG PAM to reduce off-target binding in T-cells.",
-		Meta:   []string{"confidence 0.87", "derived from: 3 papers"},
+		Meta:   []cards.MetaKV{{Key: "confidence", Value: "0.87"}, {Key: "derived_from", Value: "3 papers"}},
 		Time:   time.Now(),
 		Status: "done",
 	})

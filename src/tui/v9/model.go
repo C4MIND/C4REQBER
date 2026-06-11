@@ -10,35 +10,31 @@ import (
 	tea "charm.land/bubbletea/v2"
 
 	"github.com/figuramax/c4reqber-tui-v9/api"
+	"github.com/figuramax/c4reqber-tui-v9/cards"
 	"github.com/figuramax/c4reqber-tui-v9/effects"
 	"github.com/figuramax/c4reqber-tui-v9/i18n"
 	"github.com/figuramax/c4reqber-tui-v9/persist"
 	"github.com/figuramax/c4reqber-tui-v9/telemetry"
 )
 
-// Card kinds.
-type CardKind int
+// CardKind is a thin alias preserving the legacy names used in view.go and
+// update.go. New code should prefer cards.Kind.
+type CardKind = cards.Kind
 
 const (
-	CardEmpty CardKind = iota
-	CardPhase
-	CardHypothesis
-	CardPaper
-	CardCode
-	CardError
+	CardEmpty      = cards.KindEmpty
+	CardPhase      = cards.KindPhase
+	CardHypothesis = cards.KindHypothesis
+	CardPaper      = cards.KindPaper
+	CardCode       = cards.KindCode
+	CardError      = cards.KindError
+	CardSimulation = cards.KindSimulation
 )
 
-// Card is one row in the feed.
-type Card struct {
-	Kind     CardKind
-	Title    string
-	Body     string
-	Meta     []string
-	Actions  []string
-	Time     time.Time
-	Progress float64
-	Status   string
-}
+// Card is a type alias preserving the legacy field names used in view.go
+// and update.go. New code should prefer the cards.Card struct directly;
+// this alias exists only to avoid touching every render branch in one go.
+type Card = cards.Card
 
 // Mode — what kind of discovery.
 type Mode string

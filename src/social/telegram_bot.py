@@ -182,9 +182,9 @@ class TelegramBot:
 
         # Call LLM via ProviderRouter
         try:
-            from src.llm.router import ProviderRouter
-            router = ProviderRouter()
-            response = await router.generate("proof_generation", prompt)
+            from src.llm.gateway import DefaultGateway
+            router = DefaultGateway()
+            response = await router.generate_for_stage("proof_generation", prompt)
             new_content = getattr(response, "content", str(response)) if hasattr(response, "content") else str(response)
 
             md_file.write_text(new_content, encoding="utf-8")

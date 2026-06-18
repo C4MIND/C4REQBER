@@ -11,7 +11,7 @@ from typing import Any
 import numpy as np
 
 from src.llm.embeddings import EmbeddingEngine
-from src.llm.router import ProviderRouter
+from src.llm.gateway import DefaultGateway
 
 
 logger = logging.getLogger("c4reqber.exploration")
@@ -22,7 +22,7 @@ class SurpriseDrivenQuestionGenerator:
 
     def __init__(self) -> None:
         self._embedding = EmbeddingEngine()
-        self._router = ProviderRouter()
+        self._router = DefaultGateway()
 
     async def generate(
         self,
@@ -80,7 +80,7 @@ Requirements:
 
 Return one question per line, no numbering, no extra text."""
 
-        response = await self._router.generate(
+        response = await self._router.generate_for_stage(
             stage_name="question_generation",
             prompt=prompt,
             system_prompt="You are a creative research strategist.",

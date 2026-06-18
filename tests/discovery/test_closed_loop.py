@@ -116,7 +116,7 @@ class TestHypothesisRefiner:
 
         mock_response = AsyncMock()
         mock_response.content = "Refined: H1 under condition C"
-        with patch.object(refiner._router, "generate", return_value=mock_response):
+        with patch.object(refiner._router, "generate_for_stage", return_value=mock_response):
             result = await refiner.refine("H1", tracker)
 
         assert result == "Refined: H1 under condition C"
@@ -129,7 +129,7 @@ class TestHypothesisRefiner:
 
         mock_response = AsyncMock()
         mock_response.content = "NO_REFINEMENT_NEEDED"
-        with patch.object(refiner._router, "generate", return_value=mock_response):
+        with patch.object(refiner._router, "generate_for_stage", return_value=mock_response):
             result = await refiner.refine("H1", tracker)
 
         assert result is None

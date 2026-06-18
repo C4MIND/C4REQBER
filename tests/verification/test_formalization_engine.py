@@ -68,7 +68,7 @@ class TestFormalizationEngine:
         })
 
         with patch.object(
-            engine._router, "generate", new_callable=AsyncMock, return_value=mock_response
+            engine._router, "generate_for_stage", new_callable=AsyncMock, return_value=mock_response
         ):
             result = await engine.formalize({"text": "Adding zero to a number gives the same number"})
 
@@ -90,7 +90,7 @@ class TestFormalizationEngine:
         })
 
         with patch.object(
-            engine._router, "generate", new_callable=AsyncMock, return_value=mock_response
+            engine._router, "generate_for_stage", new_callable=AsyncMock, return_value=mock_response
         ):
             result = await engine.formalize({"text": "Something about stuff"})
 
@@ -105,7 +105,7 @@ class TestFormalizationEngine:
         mock_response.content = "not valid json"
 
         with patch.object(
-            engine._router, "generate", new_callable=AsyncMock, return_value=mock_response
+            engine._router, "generate_for_stage", new_callable=AsyncMock, return_value=mock_response
         ):
             result = await engine.formalize({"text": "test"})
 
@@ -116,7 +116,7 @@ class TestFormalizationEngine:
     async def test_formalize_llm_error(self) -> None:
         engine = FormalizationEngine()
         with patch.object(
-            engine._router, "generate", new_callable=AsyncMock, side_effect=RuntimeError("API down")
+            engine._router, "generate_for_stage", new_callable=AsyncMock, side_effect=RuntimeError("API down")
         ):
             result = await engine.formalize({"text": "test"})
 
@@ -135,7 +135,7 @@ class TestFormalizationEngine:
         })
 
         with patch.object(
-            engine._router, "generate", new_callable=AsyncMock, return_value=mock_response
+            engine._router, "generate_for_stage", new_callable=AsyncMock, return_value=mock_response
         ) as mock_gen:
             result = await engine.formalize(
                 {"text": "Gravity affects time"},
@@ -163,7 +163,7 @@ class TestFormalizationEngine:
 """
 
         with patch.object(
-            engine._router, "generate", new_callable=AsyncMock, return_value=mock_response
+            engine._router, "generate_for_stage", new_callable=AsyncMock, return_value=mock_response
         ):
             result = await engine.formalize({"text": "test"})
 

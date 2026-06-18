@@ -12,7 +12,7 @@ import re
 from dataclasses import dataclass
 from typing import Any
 
-from src.llm.router import ProviderRouter
+from src.llm.gateway import DefaultGateway
 
 
 logger = logging.getLogger("c4reqber.verification.formalization")
@@ -92,7 +92,7 @@ class FormalizationEngine:
     """Transform natural-language hypothesis into formalizable theorem statement."""
 
     def __init__(self) -> None:
-        self._router = ProviderRouter()
+        self._router = DefaultGateway()
 
     async def formalize(
         self,
@@ -128,7 +128,7 @@ class FormalizationEngine:
         )
 
         try:
-            response = await self._router.generate(
+            response = await self._router.generate_for_stage(
                 stage_name="formalization",
                 prompt=prompt,
                 system_prompt="You are a precise formal verification engineer. Output valid JSON only.",

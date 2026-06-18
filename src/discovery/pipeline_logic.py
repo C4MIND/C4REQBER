@@ -17,7 +17,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from src.llm.providers.unified import LLMProviderRouter
+from src.llm.gateway import get_gateway
 
 
 logger = logging.getLogger("c4_cdi_turbo.api.v8.discovery")
@@ -350,7 +350,7 @@ async def generate_hypothesis(problem: str, c4_path: dict[str, Any], triz_princi
     llm_text = ""
     try:
         paper_titles = "\n".join(f"- {p.get('title', '')[:100]}" for p in (papers or [])[:8])
-        llm_text = await LLMProviderRouter.chat(messages=[{"role": "user", "content": "Generate a specific scientific hypothesis based on this problem. " f"Problem: {_sanitize_for_prompt(problem)}\n" f"Relevant papers:\n{paper_titles}\n" "The hypothesis should: (1) be specific and falsifiable, (2) propose a novel mechanism or relationship, (3) predict measurable outcomes. Write 3-4 sentences. No markdown, no bullet points."}], max_tokens=300, temperature=0.4)
+        llm_text = await get_gateway().chat(messages=[{"role": "user", "content": "Generate a specific scientific hypothesis based on this problem. " f"Problem: {_sanitize_for_prompt(problem)}\n" f"Relevant papers:\n{paper_titles}\n" "The hypothesis should: (1) be specific and falsifiable, (2) propose a novel mechanism or relationship, (3) predict measurable outcomes. Write 3-4 sentences. No markdown, no bullet points."}], max_tokens=300, temperature=0.4)
     except (ImportError, ModuleNotFoundError, RuntimeError, OSError):
         pass
     if not llm_text or len(llm_text) < 50:
@@ -381,7 +381,7 @@ async def generate_competing_hypotheses(problem: str, primary_hypothesis: str, t
                 f"Relevant papers:\n{paper_titles}\n"
                 f"Generate a COMPETING hypothesis using this framing. 2-3 sentences. Be specific and falsifiable."
             )
-            text = await LLMProviderRouter.chat(
+            text = await get_gateway().chat(
                 messages=[{"role": "user", "content": prompt}],
                 max_tokens=200, temperature=0.6
             )
@@ -839,7 +839,7 @@ def _domain_worsening_param(domain: str) -> str:
 async def _run_self_critique(hypothesis, top_papers, novelty_report) -> dict[str, Any]:
     closest_titles = [p.get("title", "")[:100] for p in top_papers[:5]]
     try:
-        result = await LLMProviderRouter.chat_json(messages=[{"role": "user", "content": "You are a skeptical Nature reviewer. Find 3 reasons why this is NOT a genuine discovery.\n\n" f"HYPOTHESIS: {_sanitize_for_prompt(hypothesis[:500])}\n\n" "CLOSEST EXISTING PAPERS:\n" + "\n".join(f"- {t}" for t in closest_titles) + "\n\n" 'Output JSON: {"reasons":["...","...","..."],' '"recommendation":"PUBLISH"|"NEEDS_MORE_EVIDENCE"|"REJECT",' '"explanation":"..."}'}], max_tokens=500)
+        result = await get_gateway().chat_json(messages=[{"role": "user", "content": "You are a skeptical Nature reviewer. Find 3 reasons why this is NOT a genuine discovery.\n\n" f"HYPOTHESIS: {_sanitize_for_prompt(hypothesis[:500])}\n\n" "CLOSEST EXISTING PAPERS:\n" + "\n".join(f"- {t}" for t in closest_titles) + "\n\n" 'Output JSON: {"reasons":["...","...","..."],' '"recommendation":"PUBLISH"|"NEEDS_MORE_EVIDENCE"|"REJECT",' '"explanation":"..."}'}], max_tokens=500)
         if isinstance(result, dict) and result.get("reasons"):
             return result
     except (ImportError, ModuleNotFoundError, RuntimeError, OSError):
@@ -852,7 +852,7 @@ async def _refine_hypothesis_llm(problem, hypothesis, abort_reasons, top_papers,
     abort_text = "\n".join(f"- {r}" for r in abort_reasons[:3])
     competing_framings_text = "None" if not competing_hypotheses else "\n".join(f"- {h[:120]}" for h in competing_hypotheses[:3])
     try:
-        result = await LLMProviderRouter.chat_json(messages=[{"role": "user", "content": f"Refinement {iteration}/{max_iterations}. ORIGINAL PROBLEM: {_sanitize_for_prompt(problem, max_len=400)}\n" f"CURRENT HYPOTHESIS: {_sanitize_for_prompt(hypothesis[:300])}\n" f"REJECTION: {abort_text}\n" f"PAPERS: {closest_titles}\n" f"COMPETING FRAMINGS: {competing_framings_text}\n\n" "Refine the hypothesis. Narrow, reframe, or intersect with a new concept. Consider these competing framings and pivot if one is superior. " 'Output JSON: {"strategy":"narrow|reframe|intersect|shift|scale",' '"refined_problem":"...","refined_hypothesis":"...",' '"why_better":"...","no_improvement":false}'}], temperature=0.6, max_tokens=600)
+        result = await get_gateway().chat_json(messages=[{"role": "user", "content": f"Refinement {iteration}/{max_iterations}. ORIGINAL PROBLEM: {_sanitize_for_prompt(problem, max_len=400)}\n" f"CURRENT HYPOTHESIS: {_sanitize_for_prompt(hypothesis[:300])}\n" f"REJECTION: {abort_text}\n" f"PAPERS: {closest_titles}\n" f"COMPETING FRAMINGS: {competing_framings_text}\n\n" "Refine the hypothesis. Narrow, reframe, or intersect with a new concept. Consider these competing framings and pivot if one is superior. " 'Output JSON: {"strategy":"narrow|reframe|intersect|shift|scale",' '"refined_problem":"...","refined_hypothesis":"...",' '"why_better":"...","no_improvement":false}'}], temperature=0.6, max_tokens=600)
         if isinstance(result, dict) and "refined_hypothesis" in result:
             return result
     except Exception as e:

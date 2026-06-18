@@ -574,9 +574,9 @@ class GapMiner(GapAnalyzer):
         llm_gaps = []
 
         try:
-            from llm.providers.unified import LLMProviderRouter
+            from src.llm.gateway import get_gateway
             paper_titles = "; ".join(p.get("title", "")[:80] for p in papers[:10])
-            result = await LLMProviderRouter.chat_json(
+            result = await get_gateway().chat_json(
                 messages=[{
                     "role": "user",
                     "content": (

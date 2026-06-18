@@ -18,7 +18,7 @@ from pydantic import BaseModel
 
 from src.api.v8_routers.discovery.jobs import JobStore, get_job_store
 from src.api.v8_routers.discovery.search import search_knowledge
-from src.llm.providers.unified import LLMProviderRouter
+from src.llm.gateway import get_gateway
 from src.discovery.pipeline_logic import (
     _build_dissertation,
     _domain_improving_param,
@@ -462,7 +462,7 @@ async def dissertation_mode(request: DissertationRequest) -> dict[str, Any]:
         if iteration < request.max_iterations:
             try:
                 refine_prompt = f"Iteration {iteration}/{request.max_iterations}. Current hypothesis rejected. Reasons: {'; '.join(abort_reasons[:2])}. Critique: {critique_rec}. Refine the research question to find a genuine unexplored angle. Original problem: {request.problem[:300]}. Current: {current_problem[:300]}. Output ONLY a new one-sentence problem statement."
-                refined = await LLMProviderRouter.chat([{"role": "user", "content": refine_prompt}], temperature=0.7, max_tokens=200)
+                refined = await get_gateway().chat([{"role": "user", "content": refine_prompt}], temperature=0.7, max_tokens=200)
                 if refined and len(refined) > 20:
                     current_problem = refined.strip()
                 else:

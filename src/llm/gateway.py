@@ -51,6 +51,14 @@ class LLMGateway(Protocol):
         json_mode: bool = False,
     ) -> str: ...
 
+    async def chat_json(
+        self,
+        messages: list[dict[str, Any]],
+        system_prompt: str = "",
+        temperature: float = 0.3,
+        max_tokens: int = 800,
+    ) -> dict[str, Any]: ...
+
 
 class DefaultGateway:
     """Default LLMGateway: a transparent facade over the existing strategies.
@@ -123,6 +131,22 @@ class DefaultGateway:
             temperature=temperature,
             max_tokens=max_tokens,
             json_mode=json_mode,
+        )
+
+    async def chat_json(
+        self,
+        messages: list[dict[str, Any]],
+        system_prompt: str = "",
+        temperature: float = 0.3,
+        max_tokens: int = 800,
+    ) -> dict[str, Any]:
+        from src.llm.providers.unified import LLMProviderRouter
+
+        return await LLMProviderRouter.chat_json(
+            messages,
+            system_prompt=system_prompt,
+            temperature=temperature,
+            max_tokens=max_tokens,
         )
 
     async def close(self) -> None:

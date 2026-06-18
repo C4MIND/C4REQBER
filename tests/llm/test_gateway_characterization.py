@@ -243,3 +243,23 @@ class TestGatewayEquivalence:
         assert out == "RESULT"
         assert "deepseek.com" in calls[0]["url"]
         assert calls[0]["model"] == "deepseek-v4-flash"
+
+    @pytest.mark.asyncio
+    async def test_chat_json_matches_provider_router(self, stable_env):
+        from src.llm.gateway import DefaultGateway
+
+        calls: list[dict] = []
+
+        def fake_call(url, key, model, messages, temperature, max_tokens, extra, timeout):  # noqa: ANN001
+            calls.append({"extra": extra, "model": model})
+            return '{"ok": true}'
+
+        with patch(
+            "src.llm.providers.unified.LLMProviderRouter._call_openai_sync",
+            staticmethod(fake_call),
+        ):
+            out = await DefaultGateway().chat_json([{"role": "user", "content": "P"}])
+        assert out == {"ok": True}
+        # chat_json forces json_mode → response_format on the wire
+        assert calls[0]["extra"] == {"response_format": {"type": "json_object"}}
+        assert calls[0]["model"] == "deepseek-v4-flash"

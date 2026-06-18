@@ -7,7 +7,7 @@ from dataclasses import dataclass
 
 
 @dataclass
-class C4State:
+class C4Archetype:
     """Single C4 cognitive state."""
 
     code: str
@@ -23,8 +23,8 @@ class C4State:
 
 
 # The 27 C4 archetypes
-ARCHETYPE_MAP: dict[str, C4State] = {
-    "000": C4State(
+ARCHETYPE_MAP: dict[str, C4Archetype] = {
+    "000": C4Archetype(
         code="000",
         time="Past",
         scale="Concrete",
@@ -36,7 +36,7 @@ ARCHETYPE_MAP: dict[str, C4State] = {
         strengths=["pattern recognition", "historical analysis", "learning from experience", "detail orientation"],
         color="#3B82F6",
     ),
-    "001": C4State(
+    "001": C4Archetype(
         code="001",
         time="Past",
         scale="Concrete",
@@ -48,7 +48,7 @@ ARCHETYPE_MAP: dict[str, C4State] = {
         strengths=["documentation", "collective memory", "storytelling", "continuity"],
         color="#60A5FA",
     ),
-    "002": C4State(
+    "002": C4Archetype(
         code="002",
         time="Past",
         scale="Concrete",
@@ -60,7 +60,7 @@ ARCHETYPE_MAP: dict[str, C4State] = {
         strengths=["systematic record-keeping", "data retrieval", "organizational memory", "taxonomy"],
         color="#93C5FD",
     ),
-    "010": C4State(
+    "010": C4Archetype(
         code="010",
         time="Past",
         scale="Abstract",
@@ -72,7 +72,7 @@ ARCHETYPE_MAP: dict[str, C4State] = {
         strengths=["abstraction", "principle derivation", "conceptual modeling", "reflection"],
         color="#8B5CF6",
     ),
-    "011": C4State(
+    "011": C4Archetype(
         code="011",
         time="Past",
         scale="Abstract",
@@ -84,7 +84,7 @@ ARCHETYPE_MAP: dict[str, C4State] = {
         strengths=["synthesis", "comparative analysis", "trend identification", "framework building"],
         color="#A78BFA",
     ),
-    "012": C4State(
+    "012": C4Archetype(
         code="012",
         time="Past",
         scale="Abstract",
@@ -96,7 +96,7 @@ ARCHETYPE_MAP: dict[str, C4State] = {
         strengths=["systems thinking", "evolutionary analysis", "structural modeling", "pattern generalization"],
         color="#C4B5FD",
     ),
-    "020": C4State(
+    "020": C4Archetype(
         code="020",
         time="Past",
         scale="Meta",
@@ -108,7 +108,7 @@ ARCHETYPE_MAP: dict[str, C4State] = {
         strengths=["meta-cognition", "epistemological inquiry", "self-reflection", "wisdom synthesis"],
         color="#EC4899",
     ),
-    "021": C4State(
+    "021": C4Archetype(
         code="021",
         time="Past",
         scale="Meta",
@@ -120,7 +120,7 @@ ARCHETYPE_MAP: dict[str, C4State] = {
         strengths=["interpretation", "meaning-making", "cultural analysis", "narrative understanding"],
         color="#F472B6",
     ),
-    "022": C4State(
+    "022": C4Archetype(
         code="022",
         time="Past",
         scale="Meta",
@@ -132,7 +132,7 @@ ARCHETYPE_MAP: dict[str, C4State] = {
         strengths=["knowledge systems", "learning theory", "epistemic frameworks", "institutional memory"],
         color="#FBCFE8",
     ),
-    "100": C4State(
+    "100": C4Archetype(
         code="100",
         time="Present",
         scale="Concrete",
@@ -144,7 +144,7 @@ ARCHETYPE_MAP: dict[str, C4State] = {
         strengths=["sensory awareness", "embodied cognition", "immediate perception", "reactivity"],
         color="#10B981",
     ),
-    "101": C4State(
+    "101": C4Archetype(
         code="101",
         time="Present",
         scale="Concrete",
@@ -156,7 +156,7 @@ ARCHETYPE_MAP: dict[str, C4State] = {
         strengths=["coordination", "teamwork", "communication", "mutual adaptation"],
         color="#34D399",
     ),
-    "102": C4State(
+    "102": C4Archetype(
         code="102",
         time="Present",
         scale="Concrete",
@@ -168,7 +168,7 @@ ARCHETYPE_MAP: dict[str, C4State] = {
         strengths=["process management", "operational oversight", "quality control", "execution"],
         color="#6EE7B7",
     ),
-    "110": C4State(
+    "110": C4Archetype(
         code="110",
         time="Present",
         scale="Abstract",
@@ -180,7 +180,7 @@ ARCHETYPE_MAP: dict[str, C4State] = {
         strengths=["pattern recognition", "conceptual abstraction", "insight generation", "modeling"],
         color="#F59E0B",
     ),
-    "111": C4State(
+    "111": C4Archetype(
         code="111",
         time="Present",
         scale="Abstract",
@@ -192,7 +192,7 @@ ARCHETYPE_MAP: dict[str, C4State] = {
         strengths=["perspective integration", "conflict resolution", "consensus building", "facilitation"],
         color="#FBBF24",
     ),
-    "112": C4State(
+    "112": C4Archetype(
         code="112",
         time="Present",
         scale="Abstract",
@@ -204,7 +204,7 @@ ARCHETYPE_MAP: dict[str, C4State] = {
         strengths=["system design", "structural thinking", "framework creation", "pattern instantiation"],
         color="#FCD34D",
     ),
-    "120": C4State(
+    "120": C4Archetype(
         code="120",
         time="Present",
         scale="Meta",
@@ -216,7 +216,7 @@ ARCHETYPE_MAP: dict[str, C4State] = {
         strengths=["self-monitoring", "cognitive regulation", "awareness", "reflective practice"],
         color="#EF4444",
     ),
-    "121": C4State(
+    "121": C4Archetype(
         code="121",
         time="Present",
         scale="Meta",
@@ -228,7 +228,7 @@ ARCHETYPE_MAP: dict[str, C4State] = {
         strengths=["process facilitation", "group dynamics", "decision analysis", "collaborative optimization"],
         color="#F87171",
     ),
-    "122": C4State(
+    "122": C4Archetype(
         code="122",
         time="Present",
         scale="Meta",
@@ -240,7 +240,7 @@ ARCHETYPE_MAP: dict[str, C4State] = {
         strengths=["ecosystem design", "meta-systems", "orchestration", "framework architecture"],
         color="#FCA5A5",
     ),
-    "200": C4State(
+    "200": C4Archetype(
         code="200",
         time="Future",
         scale="Concrete",
@@ -252,7 +252,7 @@ ARCHETYPE_MAP: dict[str, C4State] = {
         strengths=["goal setting", "vision crafting", "strategic planning", "future modeling"],
         color="#06B6D4",
     ),
-    "201": C4State(
+    "201": C4Archetype(
         code="201",
         time="Future",
         scale="Concrete",
@@ -264,7 +264,7 @@ ARCHETYPE_MAP: dict[str, C4State] = {
         strengths=["project planning", "resource allocation", "timeline management", "coordination"],
         color="#22D3EE",
     ),
-    "202": C4State(
+    "202": C4Archetype(
         code="202",
         time="Future",
         scale="Concrete",
@@ -276,7 +276,7 @@ ARCHETYPE_MAP: dict[str, C4State] = {
         strengths=["forecasting", "prediction", "trend extrapolation", "scenario planning"],
         color="#67E8F9",
     ),
-    "210": C4State(
+    "210": C4Archetype(
         code="210",
         time="Future",
         scale="Abstract",
@@ -288,7 +288,7 @@ ARCHETYPE_MAP: dict[str, C4State] = {
         strengths=["strategic thinking", "long-term planning", "abstract visioning", "path optimization"],
         color="#8B5CF6",
     ),
-    "211": C4State(
+    "211": C4Archetype(
         code="211",
         time="Future",
         scale="Abstract",
@@ -300,7 +300,7 @@ ARCHETYPE_MAP: dict[str, C4State] = {
         strengths=["vision integration", "collective future shaping", "narrative construction", "shared meaning"],
         color="#A78BFA",
     ),
-    "212": C4State(
+    "212": C4Archetype(
         code="212",
         time="Future",
         scale="Abstract",
@@ -312,7 +312,7 @@ ARCHETYPE_MAP: dict[str, C4State] = {
         strengths=["trend analysis", "future studies", "systems forecasting", "evolutionary prediction"],
         color="#C4B5FD",
     ),
-    "220": C4State(
+    "220": C4Archetype(
         code="220",
         time="Future",
         scale="Meta",
@@ -324,7 +324,7 @@ ARCHETYPE_MAP: dict[str, C4State] = {
         strengths=["transformational vision", "meta-level growth", "self-actualization", "paradigm shifting"],
         color="#F43F5E",
     ),
-    "221": C4State(
+    "221": C4Archetype(
         code="221",
         time="Future",
         scale="Meta",
@@ -336,7 +336,7 @@ ARCHETYPE_MAP: dict[str, C4State] = {
         strengths=["transformational facilitation", "evolutionary design", "collective growth", "paradigm engineering"],
         color="#FB7185",
     ),
-    "222": C4State(
+    "222": C4Archetype(
         code="222",
         time="Future",
         scale="Meta",
@@ -357,12 +357,12 @@ SCALE_MAP = {"0": "Concrete", "1": "Abstract", "2": "Meta"}
 AGENCY_MAP = {"0": "Self", "1": "Other", "2": "System"}
 
 
-def get_archetype(code: str) -> C4State | None:
+def get_archetype(code: str) -> C4Archetype | None:
     """Get archetype by C4 code."""
     return ARCHETYPE_MAP.get(code)
 
 
-def get_all_archetypes() -> list[C4State]:
+def get_all_archetypes() -> list[C4Archetype]:
     """Get all 27 archetypes ordered by code."""
     return [ARCHETYPE_MAP[f"{t}{d}{a}"] for t in "012" for d in "012" for a in "012"]
 

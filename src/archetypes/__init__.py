@@ -4,7 +4,7 @@ Z₃³ hypercube: Time × Scale × Agency
 """
 from __future__ import annotations
 
-from .data import ARCHETYPE_MAP, C4State, get_all_archetypes, get_archetype
+from .data import ARCHETYPE_MAP, C4Archetype, get_all_archetypes, get_archetype
 from .engine import (
     build_agent_prompt,
     build_synergy_matrix,
@@ -17,7 +17,7 @@ from .engine import (
 
 __all__ = [
     "ARCHETYPE_MAP",
-    "C4State",
+    "C4Archetype",
     "get_archetype",
     "get_all_archetypes",
     "get_synergy_coefficient",

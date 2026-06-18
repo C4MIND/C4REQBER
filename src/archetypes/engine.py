@@ -7,7 +7,7 @@ from typing import Any
 
 from src.c4.state import C4State as CanonicalC4State
 
-from .data import ARCHETYPE_MAP, C4State, decode_code, get_all_archetypes
+from .data import ARCHETYPE_MAP, C4Archetype, decode_code, get_all_archetypes
 
 
 # Agent affinity by cognitive dimension
@@ -70,7 +70,7 @@ def build_synergy_matrix() -> dict[str, dict[str, float]]:
     return matrix  # type: ignore[no-any-return]
 
 
-def get_neighbors(code: str, distance: int = 1) -> list[C4State]:
+def get_neighbors(code: str, distance: int = 1) -> list[C4Archetype]:
     """Get archetypes within Hamming distance."""
     from src.c4.engine import C4Space
 
@@ -82,7 +82,7 @@ def get_neighbors(code: str, distance: int = 1) -> list[C4State]:
 
 def get_optimal_team(
     task_codes: list[str], team_size: int = 3, diversity_boost: bool = True
-) -> list[C4State]:
+) -> list[C4Archetype]:
     """
     Assemble optimal agent team for a task.
 
@@ -136,7 +136,7 @@ def get_optimal_team(
 
 def select_agents_for_task(
     problem: str, num_agents: int = 3
-) -> list[C4State]:
+) -> list[C4Archetype]:
     """
     Select agents based on problem characteristics.
     Uses keyword matching to infer optimal C4 states.
@@ -288,7 +288,7 @@ def build_council_prompt(
 
 
 def build_team_prompt(
-    problem: str, team: list[C4State], language: str = "en"
+    problem: str, team: list[C4Archetype], language: str = "en"
 ) -> str:
     """Build prompt for a collaborative agent team."""
     if language == "ru":

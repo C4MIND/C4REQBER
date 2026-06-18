@@ -199,6 +199,10 @@ bin/
 *.txt
 !requirements.txt
 !README.txt
+# TUI v9 golden-snapshot fixtures are committed test data, not temp .txt files.
+# Without this exception the blanket *.txt rule silently dropped 102 of the 132
+# fixtures, leaving TestGoldenSnapshotsAll red on every clean checkout.
+!src/tui/v9/tests/golden/*.txt
 
 # Archive backups & temp docs
 archive/*.backup

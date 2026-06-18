@@ -305,3 +305,26 @@ func TestKeyMap_ReauthStringContainsLabel(t *testing.T) {
 		t.Errorf("darwin ActReauth label %q should contain Cmd", label2)
 	}
 }
+
+// TestKeyMap_FocusFirstLast_CaseSensitive guards the g/G collision: matching is
+// case-sensitive for single letters so "G" reaches ActFocusLast (focus last /
+// re-enable follow) instead of being swallowed by ActFocusFirst's "g".
+func TestKeyMap_FocusFirstLast_CaseSensitive(t *testing.T) {
+	km := NewKeyMap(PlatformLinux)
+	if !km.Matches(ActFocusFirst, "g") {
+		t.Error(`"g" should match ActFocusFirst`)
+	}
+	if km.Matches(ActFocusFirst, "G") {
+		t.Error(`"G" must NOT match ActFocusFirst (it collides with focus-last)`)
+	}
+	if !km.Matches(ActFocusLast, "G") {
+		t.Error(`"G" should match ActFocusLast`)
+	}
+	if km.Matches(ActFocusLast, "g") {
+		t.Error(`"g" must NOT match ActFocusLast`)
+	}
+	// Lowercase "l" still cycles language, and uppercase "L" (shift+l) too.
+	if !km.Matches(ActLang, "l") || !km.Matches(ActLang, "L") {
+		t.Error(`both "l" and "L" should match ActLang`)
+	}
+}

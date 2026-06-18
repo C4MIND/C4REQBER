@@ -110,7 +110,7 @@ func defaultBindings() map[Action][]keyBinding {
 		ActQuit:         {{label: "Ctrl+C", keys: []string{"ctrl+c"}}},
 		ActCancel:       {{label: "Esc", keys: []string{"esc"}}},
 		ActCycleMode:    {{label: "Tab", keys: []string{"tab"}}},
-		ActLang:         {{label: "L", keys: []string{"l", "shift+l"}}},
+		ActLang:         {{label: "L", keys: []string{"l", "L", "shift+l"}}},
 		ActReauth:       {{label: "Ctrl+L", keys: []string{"ctrl+l"}}},
 		ActSearch:       {{label: "/", keys: []string{"/"}}},
 		ActCopy:         {{label: "c", keys: []string{"c"}}},
@@ -221,19 +221,38 @@ func (km *KeyMap) Labels(a Action) []string {
 // memory from Linux/Windows keeps working.
 func (km *KeyMap) Matches(a Action, keyStr string) bool {
 	// Don't trim — a literal space " " is a valid key (Enter alias for
-	// some terminals). Just normalize case.
-	keyStr = strings.ToLower(keyStr)
+	// some terminals).
 	if keyStr == "" {
 		return false
 	}
 	for _, b := range km.bindings[a] {
 		for _, k := range b.keys {
-			if strings.EqualFold(k, keyStr) {
+			if keyMatch(k, keyStr) {
 				return true
 			}
 		}
 	}
 	return false
+}
+
+// keyMatch compares a binding key against an input keystroke. A single
+// alphabetic key is matched case-SENSITIVELY so that "g" (focus first) and
+// "G" (focus last) are distinct bindings rather than colliding; every other
+// key (modifier combos like "ctrl+l", named keys like "tab") is matched
+// case-insensitively so "Ctrl+L"/"ctrl+l" still agree.
+func keyMatch(binding, input string) bool {
+	if isSingleLetter(binding) && isSingleLetter(input) {
+		return binding == input
+	}
+	return strings.EqualFold(binding, input)
+}
+
+func isSingleLetter(s string) bool {
+	r := []rune(s)
+	if len(r) != 1 {
+		return false
+	}
+	return (r[0] >= 'a' && r[0] <= 'z') || (r[0] >= 'A' && r[0] <= 'Z')
 }
 
 // HelpRow describes one line in the help overlay.

@@ -3,7 +3,6 @@ package persist
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 	"path/filepath"
 	"sync"
@@ -48,7 +47,12 @@ func New(path string) (*Store, error) {
 	// Default: first run is true until saved
 	s := &Store{path: path, state: State{FirstRun: true}}
 	if err := s.load(); err != nil && !os.IsNotExist(err) {
-		return s, fmt.Errorf("load: %w", err)
+		// Corrupt/unreadable state file. Do NOT propagate the error: the caller
+		// drops the store on error, which permanently disables persistence and
+		// never repairs the bad file. Instead reset to a fresh default and keep
+		// a usable store — the next Save overwrites the bad file, self-healing.
+		s.state = State{FirstRun: true}
+		return s, nil
 	}
 	return s, nil
 }
@@ -74,7 +78,14 @@ func (s *Store) Save() error {
 	if err := os.MkdirAll(filepath.Dir(s.path), 0755); err != nil {
 		return err
 	}
-	return os.WriteFile(s.path, data, 0644)
+	// Write atomically: a crash/full-disk mid-write must not truncate the live
+	// state file (which would then disable persistence on next launch). Write to
+	// a temp file and rename over the target.
+	tmp := s.path + ".tmp"
+	if err := os.WriteFile(tmp, data, 0644); err != nil {
+		return err
+	}
+	return os.Rename(tmp, s.path)
 }
 
 // HasAchievement checks if a kind is already unlocked.

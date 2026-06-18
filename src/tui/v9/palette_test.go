@@ -169,3 +169,27 @@ func minInt2(a, b int) int {
 	}
 	return b
 }
+
+// TestNewApp_BindsPaletteWhenNoPlaceholder guards the regression where
+// bindRegistry() was nested inside the showPlaceholder branch, leaving every
+// palette command with a nil Run (a silent no-op) whenever the empty
+// placeholder was suppressed — i.e. for any returning user (restored cards) or
+// while the first-run wizard is active. A fresh HOME makes the wizard active,
+// so showPlaceholder is false; the palette must still be bound.
+func TestNewApp_BindsPaletteWhenNoPlaceholder(t *testing.T) {
+	tmp := t.TempDir()
+	t.Setenv("HOME", tmp) // fresh store -> first-run wizard -> showPlaceholder=false
+	m := NewApp("http://test")
+	if m.wizard == nil || !m.wizard.Active() {
+		t.Skip("expected first-run wizard active to exercise the no-placeholder path")
+	}
+	cmds := m.paletteRegistry.All()
+	if len(cmds) == 0 {
+		t.Fatal("palette registry is empty")
+	}
+	for _, c := range cmds {
+		if c.Run == nil {
+			t.Errorf("palette command %q has nil Run — bindRegistry was skipped", c.ID)
+		}
+	}
+}

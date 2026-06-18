@@ -108,6 +108,28 @@ Each item ships as its own branch/commit, test-gated, with its mini-plan appende
 
 ## Mini-plans (filled in at execution time)
 
+### P2-A — LLM Gateway · mini-plan (reviewed; not yet executed)
+**Decisions (owner, 2026-06-18):** scope = **consolidation only, keep OpenRouter** as the transport (no native Anthropic backend for now); goal = **behavioral equivalence to the existing system** (owner is still learning the code).
+
+**Why equivalence reframes this:** the audit's "make the gateway apply guardian+retry+cost+cache to ALL paths" is a *behavior change* (paths that lack a feature would gain it — e.g. `ProviderRouter` calls would newly get guardian-scanned and could be blocked). That violates "equivalent to existing." So P2-A splits into two clearly separated tracks:
+
+- **A1 — equivalence-preserving consolidation (this round, no-regret):** one `LLMGateway` *facade* that is the single entry, but each caller's path keeps its **current** model selection, retry strategy, and guardian-or-not — byte-for-byte behavior. The win here is structural: one entry point, dead/duplicate clients removed (`UnifiedLLMClient`, the `ProviderRouter`/`LocalLLMClient` name-collision dups), one model-ID source that **reproduces what each live path resolves to today** (not a new policy). The 21 raw `/chat/completions` sites are migrated to gateway calls that **reproduce their current direct-httpx behavior** (same model/params, no added cross-cutting).
+- **A2 — cross-cutting unification (separate, opt-in, owner-gated):** apply guardian/cost/cache/one-retry-policy uniformly to every call. This is the audit's real prize but it **changes behavior** → defer; do it deliberately, per-concern, with the owner aware (e.g. "now every LLM call is guardian-scanned").
+
+**The stage→model tables (4, disagreeing):** do NOT invent a canonical policy. For A1, first **determine which table each live path actually resolves through at runtime** and preserve exactly that. Centralizing model IDs = collapsing to one table whose values reproduce today's resolved models per path, not a redesign. (Owner deferred the policy decision: keep existing behavior.)
+
+**Method = characterization-test-first refactor** (right tool when the owner doesn't fully know the code):
+1. **Characterize**: for each live entrypoint + a sample of the 21 raw sites, capture what model/params/headers it resolves to today (via the fake-LLM harness from stab/12, asserting the outgoing request shape). These tests encode "current behavior."
+2. **Introduce `LLMGateway` facade** that delegates to the existing strategies unchanged; characterization tests stay green.
+3. **Migrate callers** to the facade one file at a time; each migration must keep its characterization test green (proves equivalence).
+4. **Delete** the now-unused dead clients/dups + collapse the model-ID tables to one (values unchanged per path).
+5. Regression test locking the single-entry invariant: no `/chat/completions` httpx call outside the gateway/provider layer.
+
+**Risk:** medium — the 21 raw sites are the exposure. Mitigation: characterization test per site, migrate one at a time. **A2 not started until A1 ships and the owner okays each behavior change.**
+
+---
+
+
 ### P0 — Security & correctness · ✅ code parts done (`fix/tui-v9-audit-batch1`)
 **P0-1 (secrets):**
 - Done by me: `git rm archive/harness/value-keys.tex`; `.gitignore` rule (`*value-keys*`, `archive/harness/value-keys.*`); generated `.secrets.baseline` so the (previously broken — referenced a missing baseline) detect-secrets hook is functional. Root cause of the leak: `.git/hooks/pre-commit` was **never installed**, so the already-configured gitleaks/detect-secrets hooks never ran. Spot-checked the 6 highest-risk detect-secrets hits (knowledge/config, auth/web3, p6_adapters, vastai_delegate, reasoner_client, llm_classifier) — no hardcoded live secrets; the 95 baseline entries are false positives (env refs, doc examples, hashes). Confirms value-keys.tex was the only live exposure.

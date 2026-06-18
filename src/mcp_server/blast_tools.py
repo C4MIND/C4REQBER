@@ -110,10 +110,10 @@ async def blast_flash(question: str, with_sources: bool = False, deep: bool = Fa
     try:
         _ = validate_tool_input("blast_flash", {"question": question})
         from src.knowledge.orchestrator import MultiSourceSearcher
-        from src.llm.async_client import AsyncLLMClient
+        from src.llm.gateway import get_gateway
         from src.plugins.unified_registry import WebSearchPlugin
 
-        llm = AsyncLLMClient()
+        llm = get_gateway()
         context = ""
         sources = []
         usp_context = {}
@@ -225,14 +225,14 @@ async def blast_turbofactory(domain: str, scale: str = "standard", max_concurren
 
         from src.agents.pipeline import UniversalSolvePipeline
         from src.core.profile_manager import UserProfileManager
-        from src.llm.async_client import AsyncLLMClient
+        from src.llm.gateway import get_gateway
         from src.pipeline.hil_pipeline import HILDiscoveryPipeline
 
         manager = UserProfileManager()
         user_profile = manager.load()
         config = manager.get_config()
 
-        llm = AsyncLLMClient()
+        llm = get_gateway()
         prompt = f"Given the domain '{domain}', generate {n_pipelines} distinct research sub-problems. Format as numbered list."
         response = await llm.generate(prompt, max_tokens=1200, temperature=0.8)
         import re

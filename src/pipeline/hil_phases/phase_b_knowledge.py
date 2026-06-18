@@ -7,7 +7,7 @@ import logging
 from typing import Any
 
 from src.knowledge.orchestrator import MultiSourceSearcher
-from src.plugins.registry import WebSearchPlugin
+from src.plugins.unified_registry import WebSearchPlugin
 
 
 logger = logging.getLogger(__name__)

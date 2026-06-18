@@ -94,7 +94,7 @@ class PluginDAG:
             The problem text passed to every plugin.
         executor:
             Callable with signature ``(plugin_id, problem, context) -> result``.
-            Defaults to ``src.plugins.v2_registry.execute_plugin``.
+            Defaults to ``src.plugins.unified_registry.execute_plugin``.
 
         Returns
         -------
@@ -102,7 +102,7 @@ class PluginDAG:
         contains the accumulated context after all plugins have run.
         """
         if executor is None:
-            from src.plugins.v2_registry import execute_plugin as default_executor
+            from src.plugins.unified_registry import execute_plugin as default_executor
 
             executor = default_executor
 

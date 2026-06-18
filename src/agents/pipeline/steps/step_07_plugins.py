@@ -45,7 +45,7 @@ class PluginExecutionStep(PipelineStep):
                 duration_ms=(time.time() - start) * 1000,
             )
 
-        from src.plugins.v2_registry import execute_plugin
+        from src.plugins.unified_registry import execute_plugin
 
         for plugin_id in selected_plugins:
             try:

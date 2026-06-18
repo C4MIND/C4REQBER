@@ -786,7 +786,7 @@ async def blast_flash(question: str, with_sources: bool = False, deep: bool = Fa
     try:
         from src.knowledge.orchestrator import MultiSourceSearcher
         from src.llm.async_client import AsyncLLMClient
-        from src.plugins.registry import WebSearchPlugin
+        from src.plugins.unified_registry import WebSearchPlugin
 
         llm = AsyncLLMClient()
         context = ""

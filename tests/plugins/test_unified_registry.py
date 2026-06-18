@@ -1,7 +1,6 @@
 """Tests for src/plugins/unified_registry.py — PluginRegistry and PluginInfo."""
 from __future__ import annotations
 
-import inspect
 import math
 
 from src.plugins.unified_registry import (
@@ -97,11 +96,14 @@ class TestPopulatePluginInfos:
         assert info.name == "SWOT Analysis"
         assert info.category == "strategy"
 
-    def test_wasm_plugins_present_in_source(self) -> None:
-        source = inspect.getsource(_populate_plugin_infos_into)
-        assert "@wasm" in source
+    def test_wasm_stubs_not_registered(self) -> None:
+        # P2-E: the WASM compute plugin stubs (whose Python registration was
+        # disabled-by-design, so they never actually registered) were removed
+        # during the registry consolidation. Lock that they stay gone.
+        registry = PluginRegistry()
+        _populate_plugin_infos_into(registry)
         for wasm_id in ["monte_carlo_pi", "matrix_mult", "text_distance", "hash_fingerprint"]:
-            assert wasm_id in source, f"WASM plugin {wasm_id} not found in source"
+            assert wasm_id not in registry, f"WASM stub {wasm_id} should not be registered"
 
 
 class TestPluginRegistryLen:

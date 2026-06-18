@@ -159,7 +159,7 @@ def cmd_turbo(
 
     # Auto-select plugins based on topic complexity + domain + mode
     if plugins is None or plugins == "auto":
-        from src.plugins.v2_registry import select_plugins_for_problem
+        from src.plugins.unified_registry import select_plugins_for_problem
         selected = select_plugins_for_problem(topic, domain_hint="", auto_mode="turbo")
         console.print(f"[dim]Auto-plugins:[/dim] {selected}")
     else:
@@ -214,7 +214,7 @@ def cmd_flash(
     from src.llm.async_client import AsyncLLMClient
     from src.pipeline.config import PipelineConfig
     from src.pipeline.quality import QualityGates
-    from src.plugins.registry import WebSearchPlugin
+    from src.plugins.unified_registry import WebSearchPlugin
 
     console.print(f"[bold]BLAST flash[/bold] — {get_mode_description('flash')}")
     console.print(f"[dim]Format:[/dim] {format} | [dim]Sources:[/dim] {'yes' if with_sources else 'no'} | [dim]Deep:[/dim] {'yes' if deep else 'no'}")

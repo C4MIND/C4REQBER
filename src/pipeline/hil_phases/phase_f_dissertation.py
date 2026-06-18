@@ -12,7 +12,7 @@ from src.core.cdi_engine import CDIEngine, ContradictionType, PhysicalContradict
 from src.core.user_profile import UserProfile
 from src.metamodels.tote import ToteEngine
 from src.pipeline.config import PipelineConfig
-from src.plugins.registry import WebSearchPlugin
+from src.plugins.unified_registry import WebSearchPlugin
 from src.publishing.dissertation import DissertationGenerator
 
 

@@ -591,19 +591,12 @@ def _populate_plugin_infos_into(registry: PluginRegistry) -> None:
         "computation",
         "src.plugins.optimization",
     )
-    # WASM plugins (compiled from Rust, loaded via wasmtime)
-    _register_plugin_info(
-        registry, "monte_carlo_pi", "Monte Carlo π", "π estimation via Monte Carlo integration (WASM)", "computation", "wasm/plugins/monte_carlo_pi.wasm@wasm",
-    )
-    _register_plugin_info(
-        registry, "matrix_mult", "Matrix Multiplication", "Fast matrix multiplication (WASM)", "computation", "wasm/plugins/matrix_mult.wasm@wasm",
-    )
-    _register_plugin_info(
-        registry, "text_distance", "Text Distance", "Levenshtein, Jaccard, Cosine distance (WASM)", "analysis", "wasm/plugins/text_distance.wasm@wasm",
-    )
-    _register_plugin_info(
-        registry, "hash_fingerprint", "Hash Fingerprint", "SHA256/BLAKE2b/MD5 fingerprinting (WASM)", "analysis", "wasm/plugins/hash_fingerprint.wasm@wasm",
-    )
+    # NOTE: WASM plugins (monte_carlo_pi/matrix_mult/text_distance/
+    # hash_fingerprint) were registered here as stubs but their Python
+    # registration was disabled-by-design (they execute via the wasm runtime,
+    # not a Python import), so they never actually registered. Removed as part
+    # of the registry consolidation (P2-E). The .wasm artifacts + wasm/runtime.py
+    # remain; revive via WASMToolPlugin if/when the runtime path is finished.
 
 
 def _select_plugins_for_problem(

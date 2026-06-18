@@ -21,6 +21,15 @@
 
 Each cluster below was **verified directly against the code** (import counts, instantiation checks), correcting a few imprecise audit claims. The fix recipe is identical for all: **define one protocol → make the rest strategies behind it → migrate N call-sites → delete the dead ones.** These are also the exact contract seams the Agda rewrite would need.
 
+### ⚠️ Consolidation safety gate (mandatory — lesson from the plan-audit)
+"N implementations of the same thing" **silently assumes they are behaviorally equivalent.** Often they are NOT — they are divergent implementations that evolved separately, and the differences encode intent, fixes, or coverage. Collapsing them naively *loses* those differences. So **before** any consolidation:
+1. **Behavioral diff** the N implementations — actually run them (compare registered sets / outputs / method sources; for routers, enumerate which features each has), don't eyeball.
+2. **Classify each difference**: `cosmetic` (drop freely) · `intentional divergence` (preserve in the union) · `bug-fix-in-one-only` (canonical must adopt the fixed behavior).
+3. **Preserve the union** of intentional behaviors — OR explicitly justify dropping one *in the commit message*.
+4. **Lock it** with a regression test capturing the preserved behavior.
+
+Audit status of consolidations done so far: **P2-E verified equivalent post-hoc** (plugin IDs 28≡28; `select_plugins_for_problem` identical 20/20 across problems×modes; `WebSearchPlugin` differs only by a removed docstring/comment — same stub body). **P2-F** is a pure rename (no behavior). Both safe — but P2-E was *asserted* a "superset" before being *proven* one; that ordering is the gap this gate closes.
+
 | ID | Cluster | Verified reality | Canonical target | Dead (delete) | Migration scope | Risk |
 |---|---|---|---|---|---|---|
 | **A** | LLM routing | 3 live entrypoints: `ProviderRouter` (13 importers), `AsyncLLMClient` (7), `LLMProviderRouter` (5); name-collision dups (`ProviderRouter`×2, `LocalLLMClient`×2); **21 raw `/chat/completions` sites** bypassing all routing/cost/retry/safety | one `LLMGateway` protocol; keep the 6 `BaseLLMClient` provider subclasses as the provider layer; routers → strategies | `UnifiedLLMClient` (0 importers) | ~28 importer-files + 21 raw sites | medium |
@@ -64,7 +73,11 @@ Each deletion re-grep-verified (fan-in 0 / no mounted router) immediately before
   - Repointed all 12 import sites (CLI/pipeline/HIL/MCP/dag/steps) from `registry`/`v2_registry` → `unified_registry`; deleted `src/plugins/{registry,v2_registry}.py`.
   - WASM: removed the 4 dead `@wasm` stub registrations (they never actually registered — Python registration was disabled-by-design, registry stays at 28 plugins) + stripped the phantom WASM ids (monte_carlo_pi/matrix_mult/text_distance/hash_fingerprint) from `plugin_stage_router` PHASE_PLUGINS/ALL_COMPUTE_PLUGINS. Kept the `.wasm` artifacts + `wasm/runtime.py` (revivable). Replaced the now-stale `test_wasm_plugins_present_in_source` with a regression test `test_wasm_stubs_not_registered` locking the removal.
   - Verified: plugin tests 49 passed, import-guard green, full logic suite green.
-- **P2-A** **LLM `Gateway`** *(A)* — *[no-regret]*. Define `LLMGateway` protocol (`generate(prompt, stage, ...) -> LLMResponse`) as the sole entry; routers become strategies; migrate the 21 raw sites; centralize keys/cost/retry/guardian; centralize model IDs on `model_catalog`; add a native Anthropic backend; fix Claude-4.x cost table.
+- **P2-A** **LLM `Gateway`** *(A)* — *[no-regret core]*. **⚠️ This is the consolidation-safety-gate's hardest case: the routers are NOT copies, they are genuinely divergent** (verified in the plan-audit):
+  - **Guardian safety scan** is in `LLMProviderRouter` + `AsyncLLMClient` but **absent in `ProviderRouter`** (the most-used, 13 importers) and all 21 raw sites → inconsistent coverage.
+  - **Retry/reliability**: THREE different strategies — `ProviderRetryManager` (11-provider backoff, only ProviderRouter) vs unified's 3-provider fallback chain vs async_client's own.
+  - **Stage→model routing**: FOUR disagreeing tables (router presets, `model_per_stage`, `model_catalog`, `depth_router`) with different Claude versions per phase.
+  - **Mandatory sub-step before code**: a *behavior inventory* of each router → reconcile into the gateway as the **union** (guardian for all; one explicit retry policy; **one** deliberate stage→model table). The stage→model reconciliation is a **product decision (owner): which model per phase** — not a mechanical merge. Then: `LLMGateway` protocol as sole entry; routers/raw-sites migrated behind it; centralize keys/cost/retry/guardian; fix Claude-4.x cost table. Native Anthropic backend = separate opt-in scope (feature, not consolidation).
 - **P2-B** **Step model → protocol** *(B)* — *[conditional]*. Executor drives `PipelineStep` via a registry; remove free-fn wrappers + `importlib` + string `STEP_PLAN`. **Prereq for P2-C.**
 - **P2-C** **Orchestrator spine** *(C)* — *[conditional]*. One `Pipeline`/`Phase` contract in `contracts`; express solve/turbo/flash/factory as compositions; move flash/factory out of `cli/`; one injected `ExecutionPolicy` (timeout/retry/cancel); replace the `phase_d_agents` `importlib` boundary with an injected `CognitiveAgentRunner` protocol.
 - **P2-D** **Pattern base + serializable result** *(D)* — *[conditional; partially no-regret as worker-POC]*. One ABC + JSON-safe `SimulationResult`; migrate 107 patterns; delete the reflection runner; break the `patterns↔simulations` cycle.

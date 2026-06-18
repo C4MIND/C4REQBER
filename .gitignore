@@ -122,8 +122,9 @@ tmp/
 temp/
 *.tmp
 
-# Model files (large)
+# Model files (large) — but keep tracked config/source under models/
 models/
+!models/**/*.json
 *.pkl
 *.h5
 *.onnx
@@ -231,14 +232,17 @@ dissertations/*
 discovery/*
 !discovery/README.md
 
-# Dead code (already removed, keep in ignore)
+# Dead code (already removed, keep in ignore) — but don't drop tracked source
 migrations/
+!migrations/*.sql
 alembic/
 structural_memory/
 
-# Legacy / experimental
+# Legacy / experimental — but don't drop tracked k8s manifests/scripts
 proto/
 k8s/
+!k8s/*.yaml
+!k8s/*.sh
 
 # Specific to c4reqber
 src/payments/
@@ -261,3 +265,6 @@ docs/design-system/*-backup.*
 
 # Runtime artifacts
 discoveries_run.json
+
+# Go coverage artifacts
+coverage.out

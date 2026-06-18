@@ -101,3 +101,13 @@ Each item ships as its own branch/commit, test-gated, with its mini-plan appende
   3. `pre-commit install` (and `detect-secrets audit .secrets.baseline` to triage the 95 entries) so the scanners actually run going forward.
 
 **P0-2 (disconnect):** ✅ added no-op `connect`/`disconnect` to `SQLiteDatabase` (`src/api/db_manager.py`) mirroring `PostgresDatabase`; verified `await db.disconnect()` no longer raises AttributeError. Fixes the shutdown error swallowed by lifespan's broad except.
+
+### P1 — Subtraction · ✅ done (`fix/tui-v9-audit-batch1`)
+Re-verified every target dead (0 src importers; not router-mounted) before removal. **155 files deleted.** Each "dead" package also carried a dedicated test suite — removed together (deleting dead code's tests is correct). Full Python logic suite after: **5134 passed / 0 failed** (was 5252; the −118 is the deleted dead-code tests). import-guard + collection both clean.
+- **Stub packages** (owner confirmed dead, not feature-stubs): `src/{payments,radar,skills,tutorial,bots}` + their tests.
+- **Dead infra**: `src/observability`, `src/cache`, `src/api/middleware/{policy,audit,rate_limit}.py`, `src/api/fast_metrics.py`, `src/api/database.py` (the unused Postgres module, not `db_manager`) + their tests.
+- **Dead scaffolding**: `src/patterns/library/{loader.py,_registry.py}` (+ `test_loader.py`); `loader.py` pointed at deleted `v6.engine.*` paths.
+- **Dead shims/legacy**: `src/mcp` deprecation shim (+`tests/mcp`); top-level `v6/` (+`test_v6_patterns.py`) and `v7/`.
+- **P1-7** `.gitignore`: added exceptions so the blanket `models/`/`migrations/`/`k8s/` ignores no longer silently drop tracked source (`!models/**/*.json`, `!migrations/*.sql`, `!k8s/*.yaml`, `!k8s/*.sh`).
+- **P1-8** removed `src/tui/v8/coverage.out` (Go coverage artifact) + ignore rule. *(Deferred, need decisions: duplicated WASM binaries `wasm/plugins` ↔ `wasm_plugins` → tangled with P2-E plugin/WASM resolution; docs/archive PDFs/CSVs/screenshots → not clearly junk; `src/tui/v8` legacy Go TUI → separate call.)*
+- **Deferred out of P1** (need design, not blind subtraction): `UnifiedLLMClient` is re-exported via `llm/local` → handle in **P2-A**; `contracts/c4_types.py` is the foundation module (T/S/A axes + C4Space protocol, only its own test imports it) → its dead `C4State` handled in **P2-F** (promote-vs-delete decision).

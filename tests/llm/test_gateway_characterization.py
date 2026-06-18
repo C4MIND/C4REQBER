@@ -190,3 +190,56 @@ class TestLLMProviderRouterCharacterization:
             [{"role": "user", "content": "P"}], temperature=0.3, max_tokens=800, json_mode=True,
         )
         assert capture_sync_call[0]["extra"] == {"response_format": {"type": "json_object"}}
+
+
+# ── 4. DefaultGateway equivalence: routing through the facade must produce the
+#       exact same wire request as calling the underlying strategy directly. ──
+class TestGatewayEquivalence:
+    def test_default_gateway_satisfies_protocol(self):
+        from src.llm.gateway import DefaultGateway, LLMGateway, get_gateway
+
+        assert isinstance(DefaultGateway(), LLMGateway)
+        assert get_gateway() is get_gateway()  # singleton
+
+    @pytest.mark.asyncio
+    async def test_generate_for_stage_matches_provider_router(self, capture_httpx, stable_env):
+        from src.llm.gateway import DefaultGateway
+
+        await DefaultGateway().generate_for_stage("synthesis", "PROMPT", use_retry=False)
+        req = capture_httpx[-1]["json"]
+        assert req["model"] == "deepseek-chat"
+        assert req["temperature"] == 0.6
+        assert req["max_tokens"] == 3000
+        assert req["messages"][-1] == {"role": "user", "content": "PROMPT"}
+
+    @pytest.mark.asyncio
+    async def test_generate_matches_async_client(self, capture_httpx, stable_env):
+        from src.llm.async_client import AsyncLLMClient
+        from src.llm.gateway import DefaultGateway
+
+        gw = DefaultGateway(async_client=AsyncLLMClient(cache=_NullCache()))
+        await gw.generate("PROMPT", max_tokens=800, temperature=0.3)
+        req = capture_httpx[-1]
+        assert "openrouter.ai" in req["url"]
+        assert req["json"]["model"] == "qwen/qwen-2.5-72b-instruct"
+        assert req["json"]["temperature"] == 0.3
+        assert req["json"]["max_tokens"] == 800
+
+    @pytest.mark.asyncio
+    async def test_chat_matches_provider_router(self, stable_env):
+        from src.llm.gateway import DefaultGateway
+
+        calls: list[dict] = []
+
+        def fake_call(url, key, model, messages, temperature, max_tokens, extra, timeout):  # noqa: ANN001
+            calls.append({"url": url, "model": model})
+            return "RESULT"
+
+        with patch(
+            "src.llm.providers.unified.LLMProviderRouter._call_openai_sync",
+            staticmethod(fake_call),
+        ):
+            out = await DefaultGateway().chat([{"role": "user", "content": "P"}], system_prompt="S")
+        assert out == "RESULT"
+        assert "deepseek.com" in calls[0]["url"]
+        assert calls[0]["model"] == "deepseek-v4-flash"

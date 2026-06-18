@@ -403,22 +403,13 @@ func NewAppFresh(apiURL string) *model {
 		simCostLimit:        5.00,
 		showStatusBar:        true,
 	}
-	// Load persisted state (achievements, langs). If store fails, fall back gracefully.
-	store, storeErr := persist.New(persist.DefaultPath())
-	if storeErr == nil {
-		m.store = store
-		// Repopulate langsSeen from disk
-		m.replaceLangsSeen(store.Snapshot().LangsSeen)
-	}
+	// Deliberately hermetic: NewAppFresh does NOT open persist.DefaultPath()
+	// (the $HOME-scoped store). Reading it would apply the developer's saved
+	// language/tier/profile and re-trigger the first-run wizard, leaking real
+	// local state into tests (e.g. a saved lang=ru overriding SetLang(EN), or
+	// the wizard overlay hiding the empty feed). Tests that need a backing
+	// store inject one via NewAppWithStore instead. m.store stays nil here.
 	m.addLangSeen(string(i18n.GetLang()))
-	// Apply persisted settings (tier/profile/lang)
-	if m.store != nil {
-		m.ApplySettings(m.store.GetSettings())
-		// First-run wizard
-		if m.store.IsFirstRun() {
-			m.wizard.Show()
-		}
-	}
 	m.bindRegistry()
 	m.appendCard(Card{Kind: CardEmpty, Title: i18n.T("empty.title"), Body: i18n.T("empty.hint"), Time: time.Now()})
 	return m

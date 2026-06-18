@@ -16,6 +16,7 @@ import (
 
 	"github.com/figuramax/c4reqber-tui-v9/capsim"
 	"github.com/figuramax/c4reqber-tui-v9/cards"
+	"github.com/figuramax/c4reqber-tui-v9/i18n"
 	"github.com/figuramax/c4reqber-tui-v9/persist"
 )
 
@@ -40,6 +41,10 @@ func freshGoldenModel(t *testing.T, w, h int) *model {
 	t.Helper()
 	tmp := t.TempDir()
 	t.Setenv("HOME", tmp)
+	// Pin the language BEFORE NewApp so the empty card (captured at append
+	// time) and every later render are English regardless of a leaked global
+	// lang or the developer's saved state. Goldens are English by design.
+	SetLang(i18n.LangEN)
 	// Mark first-run done so no wizard takes over the screen
 	store, err := persist.New(persist.DefaultPath())
 	if err == nil {
@@ -47,6 +52,9 @@ func freshGoldenModel(t *testing.T, w, h int) *model {
 		_ = store.Save()
 	}
 	m := NewApp("http://127.0.0.1:8000")
+	// Pin the platform so keybinding labels (Ctrl+ vs Cmd+) in the help/
+	// shortcuts widgets don't depend on the host OS that runs the test.
+	m.keymap = NewKeyMap(PlatformLinux)
 	m.width = w
 	m.height = h
 	_, _ = m.Update(tea.WindowSizeMsg{Width: w, Height: h})

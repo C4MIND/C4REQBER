@@ -293,6 +293,12 @@ func helpDescKey(a Action) string {
 		return "sim.action.fallback"
 	case ActOpenPlot:
 		return "sim.action.plot"
+	case ActStatusBar:
+		return "help.status_bar"
+	case ActDebug:
+		return "help.debug"
+	case ActPalette:
+		return "help.palette"
 	case ActColorProfile, ActProfileMac:
 		return "profile.cycle"
 	case ActNewTab:

@@ -168,6 +168,11 @@ func TestHelp_ToggleWithQuestionMark(t *testing.T) {
 }
 
 func TestHelp_RenderContainsTitle(t *testing.T) {
+	// HelpOverlay renders via the global i18n lang; pin EN so a leaked
+	// non-English lang from another test can't flip the asserted title.
+	original := i18n.GetLang()
+	defer SetLang(original)
+	SetLang(i18n.LangEN)
 	out := HelpOverlay(120, 40)
 	if !strings.Contains(out, "Keyboard shortcuts") {
 		t.Errorf("missing title in:\n%s", out)

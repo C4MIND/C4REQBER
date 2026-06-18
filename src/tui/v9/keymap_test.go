@@ -98,7 +98,10 @@ func TestKeyMap_Matches_BubbleteaKeys(t *testing.T) {
 		{ActReauth, "ctrl+l"},
 		{ActSearch, "/"},
 		{ActCopy, "c"},
-		{ActJump, "j"},
+		// j/k drive card focus (v9.13); Jump moved to ctrl+j to free them.
+		{ActFocusNext, "j"},
+		{ActFocusPrev, "k"},
+		{ActJump, "ctrl+j"},
 		{ActTier, "ctrl+y"},
 		{ActSettings, "ctrl+,"},
 		{ActUp, "up"},

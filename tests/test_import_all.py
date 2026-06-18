@@ -42,6 +42,9 @@ OPTIONAL_DEPS = {
     "z3", "pymc", "arviz", "dowhy", "wasmtime", "newton", "sklearn",
     "matplotlib", "plotly", "redis", "sqlalchemy", "asyncpg", "alembic",
     "psycopg2", "feedparser", "Bio", "sentry_sdk", "opentelemetry", "mcp",
+    # mlx_lm: Apple-silicon-only LLM runtime used solely by the TUI v9 i18n
+    # translation tool (src/tui/v9/i18n/pipeline/translate_hymt.py). Optional.
+    "mlx_lm",
 }
 
 def missing_optional(exc):

@@ -3,6 +3,8 @@ package tui
 import (
 	"strings"
 	"testing"
+
+	"github.com/figuramax/c4reqber-tui-v9/i18n"
 )
 
 func TestEmptyWidgets_RendersAllCards(t *testing.T) {
@@ -68,6 +70,11 @@ func TestTipExample_Rotates(t *testing.T) {
 }
 
 func TestTipShortcuts_PlatformAware(t *testing.T) {
+	// tipShortcuts renders via the global i18n lang; pin EN so a leaked
+	// non-English lang from another test can't flip the asserted labels.
+	original := i18n.GetLang()
+	defer SetLang(original)
+	SetLang(i18n.LangEN)
 	m := NewAppFresh("http://test")
 	out := m.tipShortcuts()
 	if !strings.Contains(out, m.keymap.Label(ActRun)) {

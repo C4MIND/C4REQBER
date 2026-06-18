@@ -81,12 +81,15 @@ func DecodeTypedEvent(data string) (TypedEvent, error) {
 	}
 	// Map legacy v8.12 "phase" → phase_progress when fields look right
 	if e.Type == "" {
-		// No type field — infer from fields
+		// No type field — infer from fields. A terminal status wins over
+		// phase/progress: the legacy v8.12 "complete" event also carries a
+		// final phase ("G: Quality") and progress=1.0, so the status check
+		// must come first or completion gets misread as phase progress.
 		switch {
-		case e.Phase != "" || e.Progress > 0:
-			e.Type = EventPhaseProgress
 		case e.Status == "complete" || e.Status == "failed":
 			e.Type = EventComplete
+		case e.Phase != "" || e.Progress > 0:
+			e.Type = EventPhaseProgress
 		default:
 			e.Type = EventLog
 		}

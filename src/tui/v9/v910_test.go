@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -50,8 +51,11 @@ func TestAchievementOverlay_LastUnlockHighlight(t *testing.T) {
 	a.Unlocked = 1
 	a.LastUnlock = a.Items[0].UnlockedAt
 	out := renderAchievementOverlay(*a, 120, 40)
-	if !strings.Contains(out, "1 / 7") {
-		t.Errorf("missing progress 1/7 in:\n%s", out)
+	// Derive the expected total from the system so the assertion doesn't drift
+	// each time an achievement is added (was "1 / 7", now 11 with sim ones).
+	want := fmt.Sprintf("1 / %d", a.Total)
+	if !strings.Contains(out, want) {
+		t.Errorf("missing progress %q in:\n%s", want, out)
 	}
 }
 

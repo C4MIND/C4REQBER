@@ -4,6 +4,7 @@ C4REQBER API: Authentication Router
 from __future__ import annotations
 
 import logging
+import sqlite3
 import time
 from collections import defaultdict
 from datetime import datetime
@@ -93,15 +94,27 @@ async def register(request: Request, user_data: UserCreate) -> UserResponse:
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             detail="Too many register attempts. Please wait.",
         )
-    user = await auth_manager.create_user(
-        email=user_data.email, password=user_data.password, name=user_data.name
-    )
-    return UserResponse(
-        id=user.id,
-        email=user.email,
-        name=user.name,
-        created_at=user.created_at or datetime.now(UTC),
-    )
+    try:
+        user = await auth_manager.create_user(
+            email=user_data.email, password=user_data.password, name=user_data.name
+        )
+        return UserResponse(
+            id=user.id,
+            email=user.email,
+            name=user.name,
+            created_at=user.created_at or datetime.now(UTC),
+        )
+    except sqlite3.IntegrityError:
+        # User already exists — idempotent, return 200 with existing user info
+        existing = await auth_manager.get_user_by_email(user_data.email)
+        if existing:
+            return UserResponse(
+                id=existing.id,
+                email=existing.email,
+                name=existing.name or "",
+                created_at=existing.created_at or datetime.now(UTC),
+            )
+        raise HTTPException(status_code=409, detail="User already exists")
 
 
 @router.post("/login", response_model=TokenResponse)

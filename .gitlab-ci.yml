@@ -84,3 +84,65 @@ deploy-production:
   only:
     - main
   when: manual
+
+# ═══════════════════════════════════════════════════════════════
+# TUI v9 — "The Cockpit" (Go bubbletea v2)
+# ═══════════════════════════════════════════════════════════════
+
+tui-v9:test:
+  stage: test
+  image: golang:1.23-alpine
+  before_script:
+    - apk add --no-cache git
+    - cd src/tui/v9
+  script:
+    - go mod download
+    - go test ./... -count=1 -race
+  rules:
+    - changes:
+        - src/tui/v9/**/*
+
+tui-v9:build:
+  stage: build
+  image: golang:1.23-alpine
+  before_script:
+    - apk add --no-cache git
+    - cd src/tui/v9
+  script:
+    - go mod download
+    - go build -ldflags="-s -w" -o ../../bin/c4tui-v9-${CI_COMMIT_REF_SLUG} ./cmd/c4tui-v9
+    - go build -ldflags="-s -w" -o ../../bin/c4tui-v9 ./cmd/c4tui-v9
+  artifacts:
+    when: always
+    paths:
+      - bin/c4tui-v9
+      - bin/c4tui-v9-${CI_COMMIT_REF_SLUG}
+    expire_in: 30 days
+  needs:
+    - tui-v9:test
+  rules:
+    - changes:
+        - src/tui/v9/**/*
+
+# ═══════════════════════════════════════════════════════════════
+# RELEASE — TUI v9 (manual: on git tag like v9.0.0)
+# ═══════════════════════════════════════════════════════════════
+
+tui-v9:release:
+  stage: deploy
+  image: golang:1.23-alpine
+  before_script:
+    - apk add --no-cache git
+  script:
+    - cd src/tui/v9
+    - go mod download
+    - go build -ldflags="-s -w" -o /tmp/c4tui-v9-${CI_COMMIT_REF_NAME}-linux-amd64 ./cmd/c4tui-v9
+    - GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w" -o /tmp/c4tui-v9-${CI_COMMIT_REF_NAME}-darwin-arm64 ./cmd/c4tui-v9
+    - GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o /tmp/c4tui-v9-${CI_COMMIT_REF_NAME}-windows-amd64.exe ./cmd/c4tui-v9
+  artifacts:
+    name: "c4tui-v9-${CI_COMMIT_REF_NAME}"
+    paths:
+      - /tmp/c4tui-v9-*
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^v9\..*/
+  allow_failure: true

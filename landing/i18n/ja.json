@@ -131,6 +131,7 @@
   "foot_product": "c4reqber v5.6.0",
   "foot_tests": "10,023 テスト · 0 mypy エラー",
   "foot_slogan": "Think. Simulate. Prove. Discover.",
+  "hero_shift": "SHIFT PARADIGMS",
   "hero_meta": "AGPL-3.0 · BYOK · Multi-Prompt Router · Terminal-First · OpenRouter · XAI · Mistral · Moonshot · DeepSeek · Liquid · NVIDIA · YandexGPT · Ollama · LM Studio · MLX",
   "fp_no_sim": "シミュレーションなし",
   "fp_no_sim_desc": "LLMは仮説を生成しますが、テストすることはできません。物理エンジンなし、統計的検証なし、グラウンドトゥルースなし。",

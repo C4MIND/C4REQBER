@@ -1,0 +1,1661 @@
+{
+  "total": 180,
+  "flagged": 62,
+  "threshold": 0.3,
+  "results": {
+    "ru": {
+      "app.title": {
+        "score": 1.0,
+        "skip": "verbatim",
+        "tgt": "C4REQBER v9"
+      },
+      "app.lang": {
+        "score": 1.0,
+        "skip": "verbatim",
+        "tgt": "RU"
+      },
+      "app.model": {
+        "score": 1.0,
+        "skip": "verbatim",
+        "tgt": "DeepSeek"
+      },
+      "footer.ready": {
+        "score": 0.5,
+        "back": "It's ready.",
+        "src": "READY",
+        "tgt": "ГОТОВО",
+        "flag": "ok"
+      },
+      "footer.running": {
+        "score": 0.0,
+        "back": "It is performed",
+        "src": "RUNNING",
+        "tgt": "Выполняется",
+        "flag": "low"
+      },
+      "footer.done": {
+        "score": 0.0,
+        "back": "Completed",
+        "src": "COMPLETE",
+        "tgt": "Завершено",
+        "flag": "low"
+      },
+      "footer.cost": {
+        "score": 1.0,
+        "skip": "verbatim",
+        "tgt": "$0.00"
+      },
+      "keymap.run": {
+        "score": 0.0,
+        "back": "Running and running.",
+        "src": "Run",
+        "tgt": "Бегать",
+        "flag": "low"
+      },
+      "keymap.help": {
+        "score": 0.5,
+        "back": "Help is needed.",
+        "src": "Help",
+        "tgt": "Помощь",
+        "flag": "ok"
+      },
+      "keymap.quit": {
+        "score": 0.0,
+        "back": "Stay away from it.",
+        "src": "Quit",
+        "tgt": "Отстань",
+        "flag": "low"
+      },
+      "keymap.cancel": {
+        "score": 0.0,
+        "back": "Cancellation of the event",
+        "src": "Cancel",
+        "tgt": "Отмена",
+        "flag": "low"
+      },
+      "phase.a": {
+        "score": 0.0,
+        "back": "Education",
+        "src": "Framing",
+        "tgt": "Образование",
+        "flag": "low"
+      },
+      "phase.b": {
+        "score": 0.5,
+        "back": "Acquiring knowledge",
+        "src": "Knowledge acquisition",
+        "tgt": "Приобретение знаний",
+        "flag": "ok"
+      },
+      "phase.c": {
+        "score": 0.0,
+        "back": "A review of the breaches",
+        "src": "Gap analysis",
+        "tgt": "Обзор разрывов",
+        "flag": "low"
+      },
+      "phase.d": {
+        "score": 0.182,
+        "back": "The generation of hypotheses is a very important factor.",
+        "src": "Hypothesis generation",
+        "tgt": "Генерация гипотез",
+        "flag": "low"
+      },
+      "phase.e": {
+        "score": 0.4,
+        "back": "Simulation is a simulation.",
+        "src": "Simulation",
+        "tgt": "Симуляция",
+        "flag": "ok"
+      },
+      "phase.f": {
+        "score": 1.0,
+        "back": "Dissertation ",
+        "src": "Dissertation",
+        "tgt": "Диссертация",
+        "flag": "ok"
+      },
+      "phase.g": {
+        "score": 0.4,
+        "back": "Quality control is the key to quality control.",
+        "src": "Quality control",
+        "tgt": "Контроль качества",
+        "flag": "ok"
+      },
+      "card.phase.status": {
+        "score": 0.4,
+        "back": "in the process",
+        "src": "in progress",
+        "tgt": "в процессе",
+        "flag": "ok"
+      },
+      "card.hypothesis.t": {
+        "score": 1.0,
+        "back": "hypothesis",
+        "src": "Hypothesis",
+        "tgt": "гипотеза",
+        "flag": "ok"
+      },
+      "card.paper.t": {
+        "score": 0.5,
+        "back": "Paper is paper.",
+        "src": "Paper",
+        "tgt": "Бумага",
+        "flag": "ok"
+      },
+      "card.code.t": {
+        "score": 0.4,
+        "back": "Simulation is a simulation.",
+        "src": "Simulation",
+        "tgt": "Симуляция",
+        "flag": "ok"
+      },
+      "card.error.t": {
+        "score": 0.5,
+        "back": "Error is made.",
+        "src": "Error",
+        "tgt": "Ошибка",
+        "flag": "ok"
+      },
+      "empty.title": {
+        "score": 0.0,
+        "error": "name 'sacrebleu' is not defined"
+      },
+      "empty.hint": {
+        "score": 0.0,
+        "error": "name 'sacrebleu' is not defined"
+      },
+      "placeholder": {
+        "score": 0.0,
+        "error": "name 'sacrebleu' is not defined"
+      },
+      "toast.empty": {
+        "score": 0.0,
+        "error": "name 'sacrebleu' is not defined"
+      },
+      "toast.cancelled": {
+        "score": 1.0,
+        "back": "Cancelled",
+        "src": "Cancelled",
+        "tgt": "Отменено",
+        "flag": "ok"
+      },
+      "toast.complete": {
+        "score": 0.0,
+        "back": "The opening is completed.",
+        "src": "Discovery complete",
+        "tgt": "Завершено открытие",
+        "flag": "low"
+      },
+      "toast.submit_failed": {
+        "score": 0.4,
+        "back": "The transmission failed.",
+        "src": "Submit failed",
+        "tgt": "Подача не удалась",
+        "flag": "ok"
+      }
+    },
+    "zh": {
+      "app.title": {
+        "score": 1.0,
+        "skip": "verbatim",
+        "tgt": "C4REQBER v9"
+      },
+      "app.lang": {
+        "score": 1.0,
+        "skip": "verbatim",
+        "tgt": "ZH"
+      },
+      "app.model": {
+        "score": 1.0,
+        "skip": "verbatim",
+        "tgt": "DeepSeek"
+      },
+      "footer.ready": {
+        "score": 0.5,
+        "back": "Ready to go.",
+        "src": "READY",
+        "tgt": "就绪",
+        "flag": "ok"
+      },
+      "footer.running": {
+        "score": 0.0,
+        "back": " in operation",
+        "src": "RUNNING",
+        "tgt": "运行中",
+        "flag": "low"
+      },
+      "footer.done": {
+        "score": 0.0,
+        "back": " completed",
+        "src": "COMPLETE",
+        "tgt": "完成",
+        "flag": "low"
+      },
+      "footer.cost": {
+        "score": 1.0,
+        "skip": "verbatim",
+        "tgt": "$0.00"
+      },
+      "keymap.run": {
+        "score": 1.0,
+        "back": " run",
+        "src": "Run",
+        "tgt": "运行",
+        "flag": "ok"
+      },
+      "keymap.help": {
+        "score": 1.0,
+        "back": " help",
+        "src": "Help",
+        "tgt": "帮助",
+        "flag": "ok"
+      },
+      "keymap.quit": {
+        "score": 0.0,
+        "back": " Stop",
+        "src": "Quit",
+        "tgt": "停止",
+        "flag": "low"
+      },
+      "keymap.cancel": {
+        "score": 0.0,
+        "back": "Canceling the order",
+        "src": "Cancel",
+        "tgt": "取消",
+        "flag": "low"
+      },
+      "phase.a": {
+        "score": 0.0,
+        "back": " framework",
+        "src": "Framing",
+        "tgt": "框架",
+        "flag": "low"
+      },
+      "phase.b": {
+        "score": 0.2,
+        "back": "Acquiring knowledge is the process of acquiring knowledge.",
+        "src": "Knowledge acquisition",
+        "tgt": "知识获取",
+        "flag": "low"
+      },
+      "phase.c": {
+        "score": 1.0,
+        "back": " Gap analysis",
+        "src": "Gap analysis",
+        "tgt": "差距分析",
+        "flag": "ok"
+      },
+      "phase.d": {
+        "score": 0.0,
+        "back": " assuming the generated",
+        "src": "Hypothesis generation",
+        "tgt": "假设生成",
+        "flag": "low"
+      },
+      "phase.e": {
+        "score": 0.0,
+        "back": " imitation ",
+        "src": "Simulation",
+        "tgt": "仿真",
+        "flag": "low"
+      },
+      "phase.f": {
+        "score": 0.0,
+        "back": " thesis ",
+        "src": "Dissertation",
+        "tgt": "论文",
+        "flag": "low"
+      },
+      "phase.g": {
+        "score": 1.0,
+        "back": "Quality control",
+        "src": "Quality control",
+        "tgt": "质量控制",
+        "flag": "ok"
+      },
+      "card.phase.status": {
+        "score": 0.0,
+        "back": " carried out ",
+        "src": "in progress",
+        "tgt": "进行中",
+        "flag": "low"
+      },
+      "card.hypothesis.t": {
+        "score": 0.0,
+        "back": " assumptions",
+        "src": "Hypothesis",
+        "tgt": "假设",
+        "flag": "low"
+      },
+      "card.paper.t": {
+        "score": 0.0,
+        "back": " thesis ",
+        "src": "Paper",
+        "tgt": "论文",
+        "flag": "low"
+      },
+      "card.code.t": {
+        "score": 0.0,
+        "back": " imitation ",
+        "src": "Simulation",
+        "tgt": "仿真",
+        "flag": "low"
+      },
+      "card.error.t": {
+        "score": 1.0,
+        "back": " error",
+        "src": "Error",
+        "tgt": "错误",
+        "flag": "ok"
+      },
+      "empty.title": {
+        "score": 0.0,
+        "error": "name 'sacrebleu' is not defined"
+      },
+      "empty.hint": {
+        "score": 0.0,
+        "error": "name 'sacrebleu' is not defined"
+      },
+      "placeholder": {
+        "score": 0.0,
+        "error": "name 'sacrebleu' is not defined"
+      },
+      "toast.empty": {
+        "score": 0.0,
+        "error": "name 'sacrebleu' is not defined"
+      },
+      "toast.cancelled": {
+        "score": 1.0,
+        "back": "Cancelled ",
+        "src": "Cancelled",
+        "tgt": "已取消",
+        "flag": "ok"
+      },
+      "toast.complete": {
+        "score": 0.5,
+        "back": " discovery completed",
+        "src": "Discovery complete",
+        "tgt": "发现完成",
+        "flag": "ok"
+      },
+      "toast.submit_failed": {
+        "score": 0.0,
+        "back": " submitting a failure",
+        "src": "Submit failed",
+        "tgt": "提交失败",
+        "flag": "low"
+      }
+    },
+    "ja": {
+      "app.title": {
+        "score": 1.0,
+        "skip": "verbatim",
+        "tgt": "C4REQBER v9"
+      },
+      "app.lang": {
+        "score": 1.0,
+        "skip": "verbatim",
+        "tgt": "JA"
+      },
+      "app.model": {
+        "score": 1.0,
+        "skip": "verbatim",
+        "tgt": "DeepSeek"
+      },
+      "footer.ready": {
+        "score": 0.5,
+        "back": " Ready to go",
+        "src": "READY",
+        "tgt": "準備完了",
+        "flag": "ok"
+      },
+      "footer.running": {
+        "score": 0.0,
+        "back": " in the process of being executed",
+        "src": "RUNNING",
+        "tgt": "実行中",
+        "flag": "low"
+      },
+      "footer.done": {
+        "score": 0.0,
+        "back": "It's over.",
+        "src": "COMPLETE",
+        "tgt": "完了",
+        "flag": "low"
+      },
+      "footer.cost": {
+        "score": 1.0,
+        "skip": "verbatim",
+        "tgt": "$0.00"
+      },
+      "keymap.run": {
+        "score": 0.0,
+        "back": " to execute",
+        "src": "Run",
+        "tgt": "実行する",
+        "flag": "low"
+      },
+      "keymap.help": {
+        "score": 0.667,
+        "back": " please help",
+        "src": "Help",
+        "tgt": "助けてください",
+        "flag": "ok"
+      },
+      "keymap.quit": {
+        "score": 0.5,
+        "back": "Quit the job",
+        "src": "Quit",
+        "tgt": "辞める",
+        "flag": "ok"
+      },
+      "keymap.cancel": {
+        "score": 0.5,
+        "back": "Cancel the order",
+        "src": "Cancel",
+        "tgt": "キャンセル",
+        "flag": "ok"
+      },
+      "phase.a": {
+        "score": 0.0,
+        "back": "Framed and framed.",
+        "src": "Framing",
+        "tgt": "枠組み化",
+        "flag": "low"
+      },
+      "phase.b": {
+        "score": 0.5,
+        "back": " acquiring knowledge",
+        "src": "Knowledge acquisition",
+        "tgt": "知識獲得",
+        "flag": "ok"
+      },
+      "phase.c": {
+        "score": 0.4,
+        "back": " Gap analysis is a process for creating gaps.",
+        "src": "Gap analysis",
+        "tgt": "ギャップ分析",
+        "flag": "ok"
+      },
+      "phase.d": {
+        "score": 0.5,
+        "back": " hypothesis generated",
+        "src": "Hypothesis generation",
+        "tgt": "仮説生成",
+        "flag": "ok"
+      },
+      "phase.e": {
+        "score": 0.4,
+        "back": "Simulation is a simulation.",
+        "src": "Simulation",
+        "tgt": "シミュレーション",
+        "flag": "ok"
+      },
+      "phase.f": {
+        "score": 1.0,
+        "back": " Dissertation",
+        "src": "Dissertation",
+        "tgt": "論文",
+        "flag": "ok"
+      },
+      "phase.g": {
+        "score": 0.5,
+        "back": " Quality management",
+        "src": "Quality control",
+        "tgt": "品質管理",
+        "flag": "ok"
+      },
+      "card.phase.status": {
+        "score": 1.0,
+        "back": " in progress",
+        "src": "in progress",
+        "tgt": "進行中",
+        "flag": "ok"
+      },
+      "card.hypothesis.t": {
+        "score": 0.222,
+        "back": "The hypothesis is that the hypothesis is true.",
+        "src": "Hypothesis",
+        "tgt": "仮説",
+        "flag": "low"
+      },
+      "card.paper.t": {
+        "score": 0.0,
+        "back": " Dissertation",
+        "src": "Paper",
+        "tgt": "論文",
+        "flag": "low"
+      },
+      "card.code.t": {
+        "score": 0.4,
+        "back": "Simulation is a simulation.",
+        "src": "Simulation",
+        "tgt": "シミュレーション",
+        "flag": "ok"
+      },
+      "card.error.t": {
+        "score": 1.0,
+        "back": "Error ",
+        "src": "Error",
+        "tgt": "エラー",
+        "flag": "ok"
+      },
+      "empty.title": {
+        "score": 0.0,
+        "error": "name 'sacrebleu' is not defined"
+      },
+      "empty.hint": {
+        "score": 0.0,
+        "error": "name 'sacrebleu' is not defined"
+      },
+      "placeholder": {
+        "score": 0.0,
+        "error": "name 'sacrebleu' is not defined"
+      },
+      "toast.empty": {
+        "score": 0.0,
+        "error": "name 'sacrebleu' is not defined"
+      },
+      "toast.cancelled": {
+        "score": 1.0,
+        "back": " cancelled",
+        "src": "Cancelled",
+        "tgt": "キャンセルされた",
+        "flag": "ok"
+      },
+      "toast.complete": {
+        "score": 0.0,
+        "back": " discovered completed",
+        "src": "Discovery complete",
+        "tgt": "発見完了",
+        "flag": "low"
+      },
+      "toast.submit_failed": {
+        "score": 0.0,
+        "back": " propose failure",
+        "src": "Submit failed",
+        "tgt": "提出失敗",
+        "flag": "low"
+      }
+    },
+    "de": {
+      "app.title": {
+        "score": 1.0,
+        "skip": "verbatim",
+        "tgt": "C4REQBER v9"
+      },
+      "app.lang": {
+        "score": 1.0,
+        "skip": "verbatim",
+        "tgt": "DE"
+      },
+      "app.model": {
+        "score": 1.0,
+        "skip": "verbatim",
+        "tgt": "DeepSeek"
+      },
+      "footer.ready": {
+        "score": 0.0,
+        "back": "Bereit",
+        "src": "READY",
+        "tgt": "Bereit",
+        "flag": "low"
+      },
+      "footer.running": {
+        "score": 0.0,
+        "back": "It is a very popular activity.",
+        "src": "RUNNING",
+        "tgt": "Läuft",
+        "flag": "low"
+      },
+      "footer.done": {
+        "score": 0.0,
+        "back": "Fertig is a fertig.",
+        "src": "COMPLETE",
+        "tgt": "Fertig",
+        "flag": "low"
+      },
+      "footer.cost": {
+        "score": 1.0,
+        "skip": "verbatim",
+        "tgt": "0,00 $"
+      },
+      "keymap.run": {
+        "score": 0.0,
+        "back": "Running is a good thing.",
+        "src": "Run",
+        "tgt": "Laufen",
+        "flag": "low"
+      },
+      "keymap.help": {
+        "score": 0.667,
+        "back": "Help Help",
+        "src": "Help",
+        "tgt": "Hilfe",
+        "flag": "ok"
+      },
+      "keymap.quit": {
+        "score": 0.0,
+        "back": "Beenden is a very good example.",
+        "src": "Quit",
+        "tgt": "Beenden",
+        "flag": "low"
+      },
+      "keymap.cancel": {
+        "score": 0.0,
+        "back": "The Stornieren is a story.",
+        "src": "Cancel",
+        "tgt": "Stornieren",
+        "flag": "low"
+      },
+      "phase.a": {
+        "score": 0.5,
+        "back": "Framing is framing.",
+        "src": "Framing",
+        "tgt": "Framing",
+        "flag": "ok"
+      },
+      "phase.b": {
+        "score": 0.0,
+        "back": "Wissenserwerb is a very useful tool.",
+        "src": "Knowledge acquisition",
+        "tgt": "Wissenserwerb",
+        "flag": "low"
+      },
+      "phase.c": {
+        "score": 0.0,
+        "back": "Lückeanalyse is a very useful tool.",
+        "src": "Gap analysis",
+        "tgt": "Lückeanalyse",
+        "flag": "low"
+      },
+      "phase.d": {
+        "score": 0.182,
+        "back": "The hypothesis is that the hypothesis is not true.",
+        "src": "Hypothesis generation",
+        "tgt": "Hypothesengenerierung",
+        "flag": "low"
+      },
+      "phase.e": {
+        "score": 0.4,
+        "back": "Simulation is a simulation.",
+        "src": "Simulation",
+        "tgt": "Simulation",
+        "flag": "ok"
+      },
+      "phase.f": {
+        "score": 0.4,
+        "back": "Dissertation is a dissertation.",
+        "src": "Dissertation",
+        "tgt": "Dissertation",
+        "flag": "ok"
+      },
+      "phase.g": {
+        "score": 0.308,
+        "back": "Quality control is a key part of the quality control process.",
+        "src": "Quality control",
+        "tgt": "Qualitätskontrolle",
+        "flag": "ok"
+      },
+      "card.phase.status": {
+        "score": 0.5,
+        "back": "in Processing",
+        "src": "in progress",
+        "tgt": "in Bearbeitung",
+        "flag": "ok"
+      },
+      "card.hypothesis.t": {
+        "score": 1.0,
+        "back": "Hypothesis ",
+        "src": "Hypothesis",
+        "tgt": "Hypothese",
+        "flag": "ok"
+      },
+      "card.paper.t": {
+        "score": 0.5,
+        "back": "Paper is paper.",
+        "src": "Paper",
+        "tgt": "Papier",
+        "flag": "ok"
+      },
+      "card.code.t": {
+        "score": 0.4,
+        "back": "Simulation is a simulation.",
+        "src": "Simulation",
+        "tgt": "Simulation",
+        "flag": "ok"
+      },
+      "card.error.t": {
+        "score": 0.0,
+        "back": "Errors are made.",
+        "src": "Error",
+        "tgt": "Fehler",
+        "flag": "low"
+      },
+      "empty.title": {
+        "score": 0.0,
+        "error": "name 'sacrebleu' is not defined"
+      },
+      "empty.hint": {
+        "score": 0.0,
+        "error": "name 'sacrebleu' is not defined"
+      },
+      "placeholder": {
+        "score": 0.0,
+        "error": "name 'sacrebleu' is not defined"
+      },
+      "toast.empty": {
+        "score": 0.0,
+        "error": "name 'sacrebleu' is not defined"
+      },
+      "toast.cancelled": {
+        "score": 0.0,
+        "back": "Abgebrochen is the name of the game.",
+        "src": "Cancelled",
+        "tgt": "Abgebrochen",
+        "flag": "low"
+      },
+      "toast.complete": {
+        "score": 0.0,
+        "back": "Closed and closed.",
+        "src": "Discovery complete",
+        "tgt": "Abgeschlossen",
+        "flag": "low"
+      },
+      "toast.submit_failed": {
+        "score": 0.0,
+        "back": "The transmission of the error message is not correct.",
+        "src": "Submit failed",
+        "tgt": "Übermittlung fehlgeschlagen",
+        "flag": "low"
+      }
+    },
+    "ar": {
+      "app.title": {
+        "score": 1.0,
+        "skip": "verbatim",
+        "tgt": "C4REQBER v9"
+      },
+      "app.lang": {
+        "score": 1.0,
+        "skip": "verbatim",
+        "tgt": "AR"
+      },
+      "app.model": {
+        "score": 1.0,
+        "skip": "verbatim",
+        "tgt": "DeepSeek"
+      },
+      "footer.ready": {
+        "score": 0.5,
+        "back": "Ready to go",
+        "src": "READY",
+        "tgt": "جاهز",
+        "flag": "ok"
+      },
+      "footer.running": {
+        "score": 0.4,
+        "back": "It's still running.",
+        "src": "RUNNING",
+        "tgt": "قيد التشغيل",
+        "flag": "ok"
+      },
+      "footer.done": {
+        "score": 0.0,
+        "back": "Completed",
+        "src": "COMPLETE",
+        "tgt": "مكتمل",
+        "flag": "low"
+      },
+      "footer.cost": {
+        "score": 0.571,
+        "back": "$0.00 is $0.00",
+        "src": "$0.00",
+        "tgt": "0.00 دولار",
+        "flag": "ok"
+      },
+      "keymap.run": {
+        "score": 0.0,
+        "back": "Running/Running",
+        "src": "Run",
+        "tgt": "تشغيل/الهروب",
+        "flag": "low"
+      },
+      "keymap.help": {
+        "score": 0.667,
+        "back": "Help help",
+        "src": "Help",
+        "tgt": "مساعدة",
+        "flag": "ok"
+      },
+      "keymap.quit": {
+        "score": 0.0,
+        "back": "Stop the car.",
+        "src": "Quit",
+        "tgt": "توقف",
+        "flag": "low"
+      },
+      "keymap.cancel": {
+        "score": 0.0,
+        "back": "Cancellation of the Order",
+        "src": "Cancel",
+        "tgt": "إلغاء",
+        "flag": "low"
+      },
+      "phase.a": {
+        "score": 0.0,
+        "back": "Determine the frame",
+        "src": "Framing",
+        "tgt": "تحديد الإطار",
+        "flag": "low"
+      },
+      "phase.b": {
+        "score": 0.5,
+        "back": "Gaining knowledge",
+        "src": "Knowledge acquisition",
+        "tgt": "اكتساب المعرفة",
+        "flag": "ok"
+      },
+      "phase.c": {
+        "score": 0.5,
+        "back": "Analysis of the gap is needed.",
+        "src": "Gap analysis",
+        "tgt": "تحليل الفجوة",
+        "flag": "ok"
+      },
+      "phase.d": {
+        "score": 0.333,
+        "back": "The generation of hypotheses",
+        "src": "Hypothesis generation",
+        "tgt": "توليد الفرضيات",
+        "flag": "ok"
+      },
+      "phase.e": {
+        "score": 0.333,
+        "back": "A simulation is a simulation.",
+        "src": "Simulation",
+        "tgt": "محاكاة",
+        "flag": "ok"
+      },
+      "phase.f": {
+        "score": 0.0,
+        "back": "Thesis thesis",
+        "src": "Dissertation",
+        "tgt": "أطروحة",
+        "flag": "low"
+      },
+      "phase.g": {
+        "score": 0.4,
+        "back": "Quality control is the key to quality control.",
+        "src": "Quality control",
+        "tgt": "مراقبة الجودة",
+        "flag": "ok"
+      },
+      "card.phase.status": {
+        "score": 0.286,
+        "back": "In the course of implementation",
+        "src": "in progress",
+        "tgt": "في طور التنفيذ",
+        "flag": "low"
+      },
+      "card.hypothesis.t": {
+        "score": 0.4,
+        "back": "A hypothesis is made.",
+        "src": "Hypothesis",
+        "tgt": "فرضية",
+        "flag": "ok"
+      },
+      "card.paper.t": {
+        "score": 0.4,
+        "back": "A sheet of paper",
+        "src": "Paper",
+        "tgt": "ورقة",
+        "flag": "ok"
+      },
+      "card.code.t": {
+        "score": 0.333,
+        "back": "A simulation is a simulation.",
+        "src": "Simulation",
+        "tgt": "محاكاة",
+        "flag": "ok"
+      },
+      "card.error.t": {
+        "score": 0.0,
+        "back": "It's a mistake.",
+        "src": "Error",
+        "tgt": "خطأ",
+        "flag": "low"
+      },
+      "empty.title": {
+        "score": 0.0,
+        "error": "name 'sacrebleu' is not defined"
+      },
+      "empty.hint": {
+        "score": 0.0,
+        "error": "name 'sacrebleu' is not defined"
+      },
+      "placeholder": {
+        "score": 0.0,
+        "error": "name 'sacrebleu' is not defined"
+      },
+      "toast.empty": {
+        "score": 0.0,
+        "error": "name 'sacrebleu' is not defined"
+      },
+      "toast.cancelled": {
+        "score": 0.0,
+        "back": "The answer is simple.",
+        "src": "Cancelled",
+        "tgt": "ملغى",
+        "flag": "low"
+      },
+      "toast.complete": {
+        "score": 0.8,
+        "back": "A complete discovery.",
+        "src": "Discovery complete",
+        "tgt": "اكتشاف مكتمل",
+        "flag": "ok"
+      },
+      "toast.submit_failed": {
+        "score": 0.4,
+        "back": "The transmission failed.",
+        "src": "Submit failed",
+        "tgt": "الإرسال فشل",
+        "flag": "ok"
+      }
+    },
+    "hi": {
+      "app.title": {
+        "score": 1.0,
+        "skip": "verbatim",
+        "tgt": "C4REQBER v9"
+      },
+      "app.lang": {
+        "score": 1.0,
+        "skip": "verbatim",
+        "tgt": "HI"
+      },
+      "app.model": {
+        "score": 1.0,
+        "skip": "verbatim",
+        "tgt": "DeepSeek"
+      },
+      "footer.ready": {
+        "score": 0.5,
+        "back": " Ready to go.",
+        "src": "READY",
+        "tgt": "तैयार",
+        "flag": "ok"
+      },
+      "footer.running": {
+        "score": 0.0,
+        "back": "It's going on.",
+        "src": "RUNNING",
+        "tgt": "चल रहा है",
+        "flag": "low"
+      },
+      "footer.done": {
+        "score": 0.667,
+        "back": " Complete complete",
+        "src": "COMPLETE",
+        "tgt": "पूर्ण",
+        "flag": "ok"
+      },
+      "footer.cost": {
+        "score": 1.0,
+        "back": "$0.00",
+        "src": "$0.00",
+        "tgt": "0.00 डॉलर",
+        "flag": "ok"
+      },
+      "keymap.run": {
+        "score": 0.0,
+        "back": "Let's go to the next one.",
+        "src": "Run",
+        "tgt": "चलो",
+        "flag": "low"
+      },
+      "keymap.help": {
+        "score": 0.667,
+        "back": "Help me",
+        "src": "Help",
+        "tgt": "सहायता करें",
+        "flag": "ok"
+      },
+      "keymap.quit": {
+        "score": 0.0,
+        "back": "Leave the job",
+        "src": "Quit",
+        "tgt": "काम छोड़ दें",
+        "flag": "low"
+      },
+      "keymap.cancel": {
+        "score": 0.667,
+        "back": "Cancel it",
+        "src": "Cancel",
+        "tgt": "रद्द करें",
+        "flag": "ok"
+      },
+      "phase.a": {
+        "score": 0.286,
+        "back": "Framing is the process of framing.",
+        "src": "Framing",
+        "tgt": "फ्रेमिंग",
+        "flag": "low"
+      },
+      "phase.b": {
+        "score": 0.333,
+        "back": "Acquiring knowledge and knowledge.",
+        "src": "Knowledge acquisition",
+        "tgt": "ज्ञान अधिग्रहण",
+        "flag": "ok"
+      },
+      "phase.c": {
+        "score": 0.333,
+        "back": "Difference analysis is needed.",
+        "src": "Gap analysis",
+        "tgt": "अंतर विश्लेषण",
+        "flag": "ok"
+      },
+      "phase.d": {
+        "score": 0.0,
+        "back": "The creation of hypotheses",
+        "src": "Hypothesis generation",
+        "tgt": "परिकल्पना निर्माण",
+        "flag": "low"
+      },
+      "phase.e": {
+        "score": 0.4,
+        "back": "Simulation is a simulation.",
+        "src": "Simulation",
+        "tgt": "सिमुलेशन",
+        "flag": "ok"
+      },
+      "phase.f": {
+        "score": 0.0,
+        "back": "Research paper/research",
+        "src": "Dissertation",
+        "tgt": "शोधपत्र/अनुसंधान",
+        "flag": "low"
+      },
+      "phase.g": {
+        "score": 0.4,
+        "back": "Quality control is the key to quality control.",
+        "src": "Quality control",
+        "tgt": "गुणवत्ता नियंत्रण",
+        "flag": "ok"
+      },
+      "card.phase.status": {
+        "score": 0.0,
+        "back": "It's going on.",
+        "src": "in progress",
+        "tgt": "चल रहा है",
+        "flag": "low"
+      },
+      "card.hypothesis.t": {
+        "score": 0.222,
+        "back": "The hypothesis is that it is a hypothesis.",
+        "src": "Hypothesis",
+        "tgt": "परिकल्पना",
+        "flag": "low"
+      },
+      "card.paper.t": {
+        "score": 0.667,
+        "back": "Paper/paper",
+        "src": "Paper",
+        "tgt": "कागज़/पेपर",
+        "flag": "ok"
+      },
+      "card.code.t": {
+        "score": 0.4,
+        "back": "Simulation is a simulation.",
+        "src": "Simulation",
+        "tgt": "सिमुलेशन",
+        "flag": "ok"
+      },
+      "card.error.t": {
+        "score": 0.5,
+        "back": "Error is error.",
+        "src": "Error",
+        "tgt": "त्रुटि",
+        "flag": "ok"
+      },
+      "empty.title": {
+        "score": 0.0,
+        "error": "name 'sacrebleu' is not defined"
+      },
+      "empty.hint": {
+        "score": 0.0,
+        "error": "name 'sacrebleu' is not defined"
+      },
+      "placeholder": {
+        "score": 0.0,
+        "error": "name 'sacrebleu' is not defined"
+      },
+      "toast.empty": {
+        "score": 0.0,
+        "error": "name 'sacrebleu' is not defined"
+      },
+      "toast.cancelled": {
+        "score": 0.667,
+        "back": "Cancelled Cancelled",
+        "src": "Cancelled",
+        "tgt": "रद्द",
+        "flag": "ok"
+      },
+      "toast.complete": {
+        "score": 0.0,
+        "back": "Full search",
+        "src": "Discovery complete",
+        "tgt": "खोज पूर्ण",
+        "flag": "low"
+      },
+      "toast.submit_failed": {
+        "score": 0.4,
+        "back": "The presentation failed.",
+        "src": "Submit failed",
+        "tgt": "प्रस्तुति विफल रही",
+        "flag": "ok"
+      }
+    }
+  },
+  "flagged_details": [
+    {
+      "lang": "ru",
+      "key": "footer.running",
+      "score": 0.0,
+      "src": "RUNNING",
+      "tgt": "Выполняется",
+      "back": "It is performed"
+    },
+    {
+      "lang": "ru",
+      "key": "footer.done",
+      "score": 0.0,
+      "src": "COMPLETE",
+      "tgt": "Завершено",
+      "back": "Completed"
+    },
+    {
+      "lang": "ru",
+      "key": "keymap.run",
+      "score": 0.0,
+      "src": "Run",
+      "tgt": "Бегать",
+      "back": "Running and running."
+    },
+    {
+      "lang": "ru",
+      "key": "keymap.quit",
+      "score": 0.0,
+      "src": "Quit",
+      "tgt": "Отстань",
+      "back": "Stay away from it."
+    },
+    {
+      "lang": "ru",
+      "key": "keymap.cancel",
+      "score": 0.0,
+      "src": "Cancel",
+      "tgt": "Отмена",
+      "back": "Cancellation of the event"
+    },
+    {
+      "lang": "ru",
+      "key": "phase.a",
+      "score": 0.0,
+      "src": "Framing",
+      "tgt": "Образование",
+      "back": "Education"
+    },
+    {
+      "lang": "ru",
+      "key": "phase.c",
+      "score": 0.0,
+      "src": "Gap analysis",
+      "tgt": "Обзор разрывов",
+      "back": "A review of the breaches"
+    },
+    {
+      "lang": "ru",
+      "key": "phase.d",
+      "score": 0.182,
+      "src": "Hypothesis generation",
+      "tgt": "Генерация гипотез",
+      "back": "The generation of hypotheses is a very important factor."
+    },
+    {
+      "lang": "ru",
+      "key": "toast.complete",
+      "score": 0.0,
+      "src": "Discovery complete",
+      "tgt": "Завершено открытие",
+      "back": "The opening is completed."
+    },
+    {
+      "lang": "zh",
+      "key": "footer.running",
+      "score": 0.0,
+      "src": "RUNNING",
+      "tgt": "运行中",
+      "back": " in operation"
+    },
+    {
+      "lang": "zh",
+      "key": "footer.done",
+      "score": 0.0,
+      "src": "COMPLETE",
+      "tgt": "完成",
+      "back": " completed"
+    },
+    {
+      "lang": "zh",
+      "key": "keymap.quit",
+      "score": 0.0,
+      "src": "Quit",
+      "tgt": "停止",
+      "back": " Stop"
+    },
+    {
+      "lang": "zh",
+      "key": "keymap.cancel",
+      "score": 0.0,
+      "src": "Cancel",
+      "tgt": "取消",
+      "back": "Canceling the order"
+    },
+    {
+      "lang": "zh",
+      "key": "phase.a",
+      "score": 0.0,
+      "src": "Framing",
+      "tgt": "框架",
+      "back": " framework"
+    },
+    {
+      "lang": "zh",
+      "key": "phase.b",
+      "score": 0.2,
+      "src": "Knowledge acquisition",
+      "tgt": "知识获取",
+      "back": "Acquiring knowledge is the process of acquiring knowledge."
+    },
+    {
+      "lang": "zh",
+      "key": "phase.d",
+      "score": 0.0,
+      "src": "Hypothesis generation",
+      "tgt": "假设生成",
+      "back": " assuming the generated"
+    },
+    {
+      "lang": "zh",
+      "key": "phase.e",
+      "score": 0.0,
+      "src": "Simulation",
+      "tgt": "仿真",
+      "back": " imitation "
+    },
+    {
+      "lang": "zh",
+      "key": "phase.f",
+      "score": 0.0,
+      "src": "Dissertation",
+      "tgt": "论文",
+      "back": " thesis "
+    },
+    {
+      "lang": "zh",
+      "key": "card.phase.status",
+      "score": 0.0,
+      "src": "in progress",
+      "tgt": "进行中",
+      "back": " carried out "
+    },
+    {
+      "lang": "zh",
+      "key": "card.hypothesis.t",
+      "score": 0.0,
+      "src": "Hypothesis",
+      "tgt": "假设",
+      "back": " assumptions"
+    },
+    {
+      "lang": "zh",
+      "key": "card.paper.t",
+      "score": 0.0,
+      "src": "Paper",
+      "tgt": "论文",
+      "back": " thesis "
+    },
+    {
+      "lang": "zh",
+      "key": "card.code.t",
+      "score": 0.0,
+      "src": "Simulation",
+      "tgt": "仿真",
+      "back": " imitation "
+    },
+    {
+      "lang": "zh",
+      "key": "toast.submit_failed",
+      "score": 0.0,
+      "src": "Submit failed",
+      "tgt": "提交失败",
+      "back": " submitting a failure"
+    },
+    {
+      "lang": "ja",
+      "key": "footer.running",
+      "score": 0.0,
+      "src": "RUNNING",
+      "tgt": "実行中",
+      "back": " in the process of being executed"
+    },
+    {
+      "lang": "ja",
+      "key": "footer.done",
+      "score": 0.0,
+      "src": "COMPLETE",
+      "tgt": "完了",
+      "back": "It's over."
+    },
+    {
+      "lang": "ja",
+      "key": "keymap.run",
+      "score": 0.0,
+      "src": "Run",
+      "tgt": "実行する",
+      "back": " to execute"
+    },
+    {
+      "lang": "ja",
+      "key": "phase.a",
+      "score": 0.0,
+      "src": "Framing",
+      "tgt": "枠組み化",
+      "back": "Framed and framed."
+    },
+    {
+      "lang": "ja",
+      "key": "card.hypothesis.t",
+      "score": 0.222,
+      "src": "Hypothesis",
+      "tgt": "仮説",
+      "back": "The hypothesis is that the hypothesis is true."
+    },
+    {
+      "lang": "ja",
+      "key": "card.paper.t",
+      "score": 0.0,
+      "src": "Paper",
+      "tgt": "論文",
+      "back": " Dissertation"
+    },
+    {
+      "lang": "ja",
+      "key": "toast.complete",
+      "score": 0.0,
+      "src": "Discovery complete",
+      "tgt": "発見完了",
+      "back": " discovered completed"
+    },
+    {
+      "lang": "ja",
+      "key": "toast.submit_failed",
+      "score": 0.0,
+      "src": "Submit failed",
+      "tgt": "提出失敗",
+      "back": " propose failure"
+    },
+    {
+      "lang": "de",
+      "key": "footer.ready",
+      "score": 0.0,
+      "src": "READY",
+      "tgt": "Bereit",
+      "back": "Bereit"
+    },
+    {
+      "lang": "de",
+      "key": "footer.running",
+      "score": 0.0,
+      "src": "RUNNING",
+      "tgt": "Läuft",
+      "back": "It is a very popular activity."
+    },
+    {
+      "lang": "de",
+      "key": "footer.done",
+      "score": 0.0,
+      "src": "COMPLETE",
+      "tgt": "Fertig",
+      "back": "Fertig is a fertig."
+    },
+    {
+      "lang": "de",
+      "key": "keymap.run",
+      "score": 0.0,
+      "src": "Run",
+      "tgt": "Laufen",
+      "back": "Running is a good thing."
+    },
+    {
+      "lang": "de",
+      "key": "keymap.quit",
+      "score": 0.0,
+      "src": "Quit",
+      "tgt": "Beenden",
+      "back": "Beenden is a very good example."
+    },
+    {
+      "lang": "de",
+      "key": "keymap.cancel",
+      "score": 0.0,
+      "src": "Cancel",
+      "tgt": "Stornieren",
+      "back": "The Stornieren is a story."
+    },
+    {
+      "lang": "de",
+      "key": "phase.b",
+      "score": 0.0,
+      "src": "Knowledge acquisition",
+      "tgt": "Wissenserwerb",
+      "back": "Wissenserwerb is a very useful tool."
+    },
+    {
+      "lang": "de",
+      "key": "phase.c",
+      "score": 0.0,
+      "src": "Gap analysis",
+      "tgt": "Lückeanalyse",
+      "back": "Lückeanalyse is a very useful tool."
+    },
+    {
+      "lang": "de",
+      "key": "phase.d",
+      "score": 0.182,
+      "src": "Hypothesis generation",
+      "tgt": "Hypothesengenerierung",
+      "back": "The hypothesis is that the hypothesis is not true."
+    },
+    {
+      "lang": "de",
+      "key": "card.error.t",
+      "score": 0.0,
+      "src": "Error",
+      "tgt": "Fehler",
+      "back": "Errors are made."
+    },
+    {
+      "lang": "de",
+      "key": "toast.cancelled",
+      "score": 0.0,
+      "src": "Cancelled",
+      "tgt": "Abgebrochen",
+      "back": "Abgebrochen is the name of the game."
+    },
+    {
+      "lang": "de",
+      "key": "toast.complete",
+      "score": 0.0,
+      "src": "Discovery complete",
+      "tgt": "Abgeschlossen",
+      "back": "Closed and closed."
+    },
+    {
+      "lang": "de",
+      "key": "toast.submit_failed",
+      "score": 0.0,
+      "src": "Submit failed",
+      "tgt": "Übermittlung fehlgeschlagen",
+      "back": "The transmission of the error message is not correct."
+    },
+    {
+      "lang": "ar",
+      "key": "footer.done",
+      "score": 0.0,
+      "src": "COMPLETE",
+      "tgt": "مكتمل",
+      "back": "Completed"
+    },
+    {
+      "lang": "ar",
+      "key": "keymap.run",
+      "score": 0.0,
+      "src": "Run",
+      "tgt": "تشغيل/الهروب",
+      "back": "Running/Running"
+    },
+    {
+      "lang": "ar",
+      "key": "keymap.quit",
+      "score": 0.0,
+      "src": "Quit",
+      "tgt": "توقف",
+      "back": "Stop the car."
+    },
+    {
+      "lang": "ar",
+      "key": "keymap.cancel",
+      "score": 0.0,
+      "src": "Cancel",
+      "tgt": "إلغاء",
+      "back": "Cancellation of the Order"
+    },
+    {
+      "lang": "ar",
+      "key": "phase.a",
+      "score": 0.0,
+      "src": "Framing",
+      "tgt": "تحديد الإطار",
+      "back": "Determine the frame"
+    },
+    {
+      "lang": "ar",
+      "key": "phase.f",
+      "score": 0.0,
+      "src": "Dissertation",
+      "tgt": "أطروحة",
+      "back": "Thesis thesis"
+    },
+    {
+      "lang": "ar",
+      "key": "card.phase.status",
+      "score": 0.286,
+      "src": "in progress",
+      "tgt": "في طور التنفيذ",
+      "back": "In the course of implementation"
+    },
+    {
+      "lang": "ar",
+      "key": "card.error.t",
+      "score": 0.0,
+      "src": "Error",
+      "tgt": "خطأ",
+      "back": "It's a mistake."
+    },
+    {
+      "lang": "ar",
+      "key": "toast.cancelled",
+      "score": 0.0,
+      "src": "Cancelled",
+      "tgt": "ملغى",
+      "back": "The answer is simple."
+    },
+    {
+      "lang": "hi",
+      "key": "footer.running",
+      "score": 0.0,
+      "src": "RUNNING",
+      "tgt": "चल रहा है",
+      "back": "It's going on."
+    },
+    {
+      "lang": "hi",
+      "key": "keymap.run",
+      "score": 0.0,
+      "src": "Run",
+      "tgt": "चलो",
+      "back": "Let's go to the next one."
+    },
+    {
+      "lang": "hi",
+      "key": "keymap.quit",
+      "score": 0.0,
+      "src": "Quit",
+      "tgt": "काम छोड़ दें",
+      "back": "Leave the job"
+    },
+    {
+      "lang": "hi",
+      "key": "phase.a",
+      "score": 0.286,
+      "src": "Framing",
+      "tgt": "फ्रेमिंग",
+      "back": "Framing is the process of framing."
+    },
+    {
+      "lang": "hi",
+      "key": "phase.d",
+      "score": 0.0,
+      "src": "Hypothesis generation",
+      "tgt": "परिकल्पना निर्माण",
+      "back": "The creation of hypotheses"
+    },
+    {
+      "lang": "hi",
+      "key": "phase.f",
+      "score": 0.0,
+      "src": "Dissertation",
+      "tgt": "शोधपत्र/अनुसंधान",
+      "back": "Research paper/research"
+    },
+    {
+      "lang": "hi",
+      "key": "card.phase.status",
+      "score": 0.0,
+      "src": "in progress",
+      "tgt": "चल रहा है",
+      "back": "It's going on."
+    },
+    {
+      "lang": "hi",
+      "key": "card.hypothesis.t",
+      "score": 0.222,
+      "src": "Hypothesis",
+      "tgt": "परिकल्पना",
+      "back": "The hypothesis is that it is a hypothesis."
+    },
+    {
+      "lang": "hi",
+      "key": "toast.complete",
+      "score": 0.0,
+      "src": "Discovery complete",
+      "tgt": "खोज पूर्ण",
+      "back": "Full search"
+    }
+  ]
+}

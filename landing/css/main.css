@@ -255,3 +255,12 @@ body{overflow-x:hidden;padding-top:56px}
   .hero-bg{animation:none}
   #mascot{opacity:0}
 }
+
+/* Glitch effect for SHIFT PARADIGMS */
+@keyframes glitchSkew {
+  0%, 90%, 100% { transform: skewX(0deg); opacity: 1; }
+  91% { transform: skewX(2deg); opacity: 0.8; }
+  92% { transform: skewX(-1deg); opacity: 0.9; }
+  93% { transform: skewX(3deg); opacity: 0.7; }
+  94% { transform: skewX(0deg); opacity: 1; }
+}

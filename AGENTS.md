@@ -1,6 +1,22 @@
-# c4reqber v5.6.0 — AI Agent Context File
+## 🔴 GIT REMOTE — PRIMARY: GitLab (NEVER say "github" in chat!)
 
-**Version:** 5.6.0 | **Date:** 2026-06-03 | Production — Dead Code Cleanup + API Integration + Pydantic V2 + TUI v8 Polish Complete
+**Primary remote:** GitLab (`git@gitlab.com:cognitive-functors/turbo-cdi.git`).
+**GitHub = read-only mirror** for promotion only. Do NOT push to github.com.
+
+When writing commits, tags, REPORT files, or any user-facing output:
+- ✅ Say "GitLab" / "gitlab" / "GitLab repo"
+- ❌ Never say "GitHub" / "github" — even casually
+- ❌ Never reference github.com URLs in reports
+
+When creating branches / PRs / releases: target GitLab (`git push gitlab ...`).
+
+This is a permanent rule. If you accidentally wrote "github" — flag it to the user and fix in the next commit.
+
+---
+
+# c4reqber v9.13.0 — AI Agent Context File
+
+**Version:** 9.13.0 (TUI v9 Simulation Surface) | **Branch:** `friendely-merge-tui-upgrade` (ready to merge) | **Date:** 2026-06-12 | Production — TUI v9 simulation/verification cockpit complete
 > Previous: Round 4 Audit (16 CRITICAL + 39 HIGH + 55 MEDIUM + 14 LOW fixes) | 2026-05-29
 > **Purpose:** Provide AI agents with instant project context. Loaded by Kilo CLI and compatible tools.
 
@@ -15,7 +31,7 @@ Updated during 2026-05-19 + 2026-05-21 + 2026-06-03 (Kimi Code CLI audit + v5.6.
 - **Social Publishing System** — 17 modules, 5 platform poster implementations (Twitter, Mastodon, Telegram, SciMatic, Bluesky) + webhook clients for Reddit/Discord/Slack, Zenodo/arXiv upload, ORCID integration, Fernet keyring, LatexCompiler, BYOK model
 - **Hoare logic verifier** (`src/verification/hoare_verifier.py`) — Z3-based WP calculus, full while+invariant support
 - **LLM Prover** (`src/verification/llm_prover.py`) — iterative LLM→compile→error→fix loop for 6 languages
-- **TUI v8** (Go Bubble Tea, cube mascot, 3-frame ASCII animation, theme-aware colors, S-rank jump, 7-language i18n) — all real, 0 lint errors, go vet clean, staticcheck 0 warnings
+- **TUI v9** (Go Bubble Tea v2, sim surface: `CardSimulation` kind + capabilities overlay Ctrl+Shift+C listing 32 engines + 27 verifiers with per-platform status and install hints, command palette `:`, debug overlay Ctrl+Shift+D, status bar Ctrl+B, per-card expansion Enter/Esc, 7-language i18n at 100% parity, 7 color profiles including solarized-dark, adaptive layout T0/T1/T2/T3, feed.jsonl persistence + resume on launch, 132 golden snapshots) — 0 critical bugs, 27 atomic commits, +7302 lines. **Branch `friendely-merge-tui-upgrade` is ready to merge.**
 - **CLI** (blast commands) — 14 commands + 7 social subcommands
 - **Agent system** (Pydantic AI, 11 skills, MCP bridge, memory, sub-agents, `/preprint`, LangGraph executor, FastMCP external tool discovery, ChromaDB memory)
 - **TRIZ** (40 principles, contradiction matrix) — semantic C4 mapping
@@ -90,7 +106,7 @@ Updated during 2026-05-19 + 2026-05-21 + 2026-06-03 (Kimi Code CLI audit + v5.6.
 
 ## What is this?
 
-**c4reqber** is a terminal-first scientific discovery pipeline with C4 state-space navigation layer. 27 Z₃³ states, 10 verification backends + MathDetector (Categories A/B/C) + guardrails, 6 virtual biology simulators, experimental protocol generator, simulation config (GPU/CPU/off), 6 output formats with auto-detection, 12 auto-detected LLM providers (MLX/LM Studio/Ollama/OpenRouter/DeepSeek/XAI/Mistral/Moonshot/Liquid/NVIDIA/YandexGPT), MLX-LM local ($0/MTok), file/OCR workflow, Live Intelligence Feed, 7-language i18n, **21 MCP tools** (all verified working post-audit), 16 TUI shortcuts, 11 slash commands, **1 main AI Agent** (skills, MCP, memory, sub-agents, Pydantic AI, `/preprint`), **Social Publishing module** (Zenodo/arXiv/Reddit/Discord/Slack/Telegram/ORCID — 9 platforms, BYOK), 14 CLI commands, 5 WASM plugins. **Security hardened**: auth bypass fixed, prompt injection fail-closed with nonce delimiters + HTML entity decoding + LaTeX escaping, subprocess shell-injection blocked, path traversal protected, SSRF protection on paper IDs, symlink guards, Agda module validation, rate-limiter token leak fixed, all 16 CRITICAL + 34 HIGH + 55 MEDIUM + 14 LOW findings resolved (Round 4 audit).
+**c4reqber** is a terminal-first scientific discovery pipeline with C4 state-space navigation layer. 27 Z₃³ states, 10 verification backends + MathDetector (Categories A/B/C) + guardrails, 6 virtual biology simulators, experimental protocol generator, simulation config (GPU/CPU/off), 6 output formats with auto-detection, 12 auto-detected LLM providers (MLX/LM Studio/Ollama/OpenRouter/DeepSeek/XAI/Mistral/Moonshot/Liquid/NVIDIA/YandexGPT), MLX-LM local ($0/MTok), file/OCR workflow, Live Intelligence Feed, 7-language i18n, **21 MCP tools** (all verified working post-audit), 16 TUI shortcuts, 11 slash commands, **1 main AI Agent** (skills, MCP, memory, sub-agents, Pydantic AI, `/preprint`), **Social Publishing module** (Zenodo/arXiv/Reddit/Discord/Slack/Telegram/ORCID — 9 platforms, BYOK), 14 CLI commands, 5 WASM plugins. **TUI v9** (v9.13.0) adds: simulation surface with 32 engines + 27 verifiers (capabilities overlay Ctrl+Shift+C), CardSimulation kind in the feed, typed SSE decoder for `sim_started/sim_finished/sim_skipped` events, command palette `:`, debug overlay Ctrl+Shift+D, status bar Ctrl+B, per-card expansion Enter/Esc, 7 color profiles including solarized-dark, adaptive layout T0/T1/T2/T3, feed.jsonl persistence + resume on launch, 132 golden snapshots. **Security hardened**: auth bypass fixed, prompt injection fail-closed with nonce delimiters + HTML entity decoding + LaTeX escaping, subprocess shell-injection blocked, path traversal protected, SSRF protection on paper IDs, symlink guards, Agda module validation, rate-limiter token leak fixed, all 16 CRITICAL + 34 HIGH + 55 MEDIUM + 14 LOW findings resolved (Round 4 audit).
 
 ---
 
@@ -354,6 +370,17 @@ Layer 5: Knowledge + Verification — 33+ sources (orchestrator.py), 32 simulati
 | `O` | Toggle Operations panel | `G` | Toggle GPU dashboard |
 | `M` | Toggle Module status | `I` | Toggle Provider dashboard |
 | `F` | Toggle Live Intelligence Feed | `Ctrl+R` | Force refresh feed/cache |
+
+## TUI v9 Keyboard Shortcuts (v9.13.0) — added on top of v5.4.0
+
+| Key | Action | Key | Action |
+|-----|--------|-----|--------|
+| `:` | Open command palette (fuzzy-matches 35+ cmds) | `Ctrl+Shift+C` | Capabilities overlay (32 engines + 27 verifiers) |
+| `Ctrl+Shift+D` | Debug overlay (live state dump) | `Ctrl+B` | Toggle status bar |
+| `j` / `k` | Focus next / prev card | `g g` / `G` | Focus first / last card |
+| `Enter` (on focused card) | Expand to FullBody | `Esc` (on expanded) | Collapse |
+| `i` (on sim card) | Show install hint | `f` (on sim card) | Show fallback chain |
+| `o` (on sim with image) | Open plot in browser | `c` (on focused) | Copy as markdown |
 | `←↑↓→` | Navigate 3×3×3 C4 cube | | |
 
 ---

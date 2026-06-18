@@ -1,6 +1,16 @@
 # c4reqber GitIgnore
 # ==================
 
+# Local key backups (user-added 2026-06-10)
+archive/*.rtf
+!archive/README.md
+!archive/audits/
+!archive/plans/
+!archive/site/
+!archive/legacy/
+!archive/harness/
+!archive/tests/
+
 # Environment & Secrets — NEVER commit
 .env
 .env.*

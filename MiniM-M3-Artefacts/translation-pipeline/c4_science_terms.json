@@ -1,0 +1,668 @@
+{
+  "hypothesis": {
+    "en": "hypothesis",
+    "ru": "гипотеза",
+    "zh": "假设",
+    "ja": "仮説",
+    "de": "Hypothese",
+    "ar": "فرضية",
+    "hi": "परिकल्पना"
+  },
+  "verification": {
+    "en": "verification",
+    "ru": "верификация",
+    "zh": "验证",
+    "ja": "検証",
+    "de": "Verifizierung",
+    "ar": "التحقق",
+    "hi": "सत्यापन"
+  },
+  "discovery": {
+    "en": "discovery",
+    "ru": "открытие",
+    "zh": "发现",
+    "ja": "発見",
+    "de": "Entdeckung",
+    "ar": "اكتشاف",
+    "hi": "खोज"
+  },
+  "discovery_potential": {
+    "en": "discovery potential",
+    "ru": "потенциал открытия",
+    "zh": "发现潜力",
+    "ja": "発見の可能性",
+    "de": "Entdeckungspotenzial",
+    "ar": "إمكانات الاكتشاف",
+    "hi": "खोज की क्षमता"
+  },
+  "paradigm_shift": {
+    "en": "paradigm shift",
+    "ru": "смена парадигмы",
+    "zh": "范式转换",
+    "ja": "パラダイムシフト",
+    "de": "Paradigmenwechsel",
+    "ar": "تحوّل النموذج",
+    "hi": "प्रतिमान बदलाव"
+  },
+  "hypothesis_generation": {
+    "en": "hypothesis generation",
+    "ru": "генерация гипотез",
+    "zh": "假设生成",
+    "ja": "仮説生成",
+    "de": "Hypothesengenerierung",
+    "ar": "توليد الفرضيات",
+    "hi": "परिकल्पना निर्माण"
+  },
+  "knowledge_acquisition": {
+    "en": "knowledge acquisition",
+    "ru": "приобретение знаний",
+    "zh": "知识获取",
+    "ja": "知識獲得",
+    "de": "Wissenserwerb",
+    "ar": "اكتساب المعرفة",
+    "hi": "ज्ञान अधिग्रहण"
+  },
+  "knowledge_source": {
+    "en": "knowledge source",
+    "ru": "источник знаний",
+    "zh": "知识源",
+    "ja": "知識源",
+    "de": "Wissensquelle",
+    "ar": "مصدر المعرفة",
+    "hi": "ज्ञान स्रोत"
+  },
+  "novelty": {
+    "en": "novelty",
+    "ru": "новизна",
+    "zh": "新颖性",
+    "ja": "新規性",
+    "de": "Neuheit",
+    "ar": "الجدة",
+    "hi": "नवीनता"
+  },
+  "quality": {
+    "en": "quality",
+    "ru": "качество",
+    "zh": "质量",
+    "ja": "品質",
+    "de": "Qualität",
+    "ar": "الجودة",
+    "hi": "गुणवत्ता"
+  },
+  "citation": {
+    "en": "citation",
+    "ru": "цитата",
+    "zh": "引文",
+    "ja": "引用",
+    "de": "Zitat",
+    "ar": "اقتباس",
+    "hi": "उद्धरण"
+  },
+  "paper": {
+    "en": "paper",
+    "ru": "статья",
+    "zh": "论文",
+    "ja": "論文",
+    "de": "Papier",
+    "ar": "ورقة",
+    "hi": "पेपर"
+  },
+  "simulation": {
+    "en": "simulation",
+    "ru": "симуляция",
+    "zh": "仿真",
+    "ja": "シミュレーション",
+    "de": "Simulation",
+    "ar": "محاكاة",
+    "hi": "सिमुलेशन"
+  },
+  "experiment": {
+    "en": "experiment",
+    "ru": "эксперимент",
+    "zh": "实验",
+    "ja": "実験",
+    "de": "Experiment",
+    "ar": "تجربة",
+    "hi": "प्रयोग"
+  },
+  "analysis": {
+    "en": "analysis",
+    "ru": "анализ",
+    "zh": "分析",
+    "ja": "分析",
+    "de": "Analyse",
+    "ar": "تحليل",
+    "hi": "विश्लेषण"
+  },
+  "research": {
+    "en": "research",
+    "ru": "исследование",
+    "zh": "研究",
+    "ja": "研究",
+    "de": "Forschung",
+    "ar": "بحث",
+    "hi": "अनुसंधान"
+  },
+  "cognition": {
+    "en": "cognition",
+    "ru": "познание",
+    "zh": "认知",
+    "ja": "認知",
+    "de": "Kognition",
+    "ar": "إدراك",
+    "hi": "संज्ञान"
+  },
+  "metaprogram": {
+    "en": "metaprogram",
+    "ru": "метапрограмма",
+    "zh": "元程序",
+    "ja": "メタプログラム",
+    "de": "Metaprogramm",
+    "ar": "برنامج ميتا",
+    "hi": "मेटाप्रोग्राम"
+  },
+  "agent": {
+    "en": "agent",
+    "ru": "агент",
+    "zh": "代理",
+    "ja": "エージェント",
+    "de": "Agent",
+    "ar": "وكيل",
+    "hi": "एजेंट"
+  },
+  "operator": {
+    "en": "operator",
+    "ru": "оператор",
+    "zh": "算子",
+    "ja": "演算子",
+    "de": "Operator",
+    "ar": "عامل",
+    "hi": "ऑपरेटर"
+  },
+  "state": {
+    "en": "state",
+    "ru": "состояние",
+    "zh": "状态",
+    "ja": "状態",
+    "de": "Zustand",
+    "ar": "حالة",
+    "hi": "स्थिति"
+  },
+  "transition": {
+    "en": "transition",
+    "ru": "переход",
+    "zh": "转换",
+    "ja": "遷移",
+    "de": "Übergang",
+    "ar": "انتقال",
+    "hi": "संक्रमण"
+  },
+  "engine": {
+    "en": "engine",
+    "ru": "движок",
+    "zh": "引擎",
+    "ja": "エンジン",
+    "de": "Engine",
+    "ar": "محرك",
+    "hi": "इंजन"
+  },
+  "pipeline": {
+    "en": "pipeline",
+    "ru": "конвейер",
+    "zh": "管线",
+    "ja": "パイプライン",
+    "de": "Pipeline",
+    "ar": "خط أنابيب",
+    "hi": "पाइपलाइन"
+  },
+  "search": {
+    "en": "search",
+    "ru": "поиск",
+    "zh": "搜索",
+    "ja": "検索",
+    "de": "Suche",
+    "ar": "بحث",
+    "hi": "खोज"
+  },
+  "filter": {
+    "en": "filter",
+    "ru": "фильтр",
+    "zh": "过滤",
+    "ja": "フィルター",
+    "de": "Filter",
+    "ar": "مرشح",
+    "hi": "फ़िल्टर"
+  },
+  "ranking": {
+    "en": "ranking",
+    "ru": "ранжирование",
+    "zh": "排名",
+    "ja": "ランキング",
+    "de": "Rangfolge",
+    "ar": "ترتيب",
+    "hi": "रैंकिंग"
+  },
+  "score": {
+    "en": "score",
+    "ru": "оценка",
+    "zh": "分数",
+    "ja": "スコア",
+    "de": "Punktzahl",
+    "ar": "نتيجة",
+    "hi": "स्कोर"
+  },
+  "insight": {
+    "en": "insight",
+    "ru": "инсайт",
+    "zh": "洞察",
+    "ja": "洞察",
+    "de": "Erkenntnis",
+    "ar": "بصيرة",
+    "hi": "अंतर्दृष्टि"
+  },
+  "innovation": {
+    "en": "innovation",
+    "ru": "инновация",
+    "zh": "创新",
+    "ja": "イノベーション",
+    "de": "Innovation",
+    "ar": "ابتكار",
+    "hi": "नवाचार"
+  },
+  "creativity": {
+    "en": "creativity",
+    "ru": "креативность",
+    "zh": "创造力",
+    "ja": "創造性",
+    "de": "Kreativität",
+    "ar": "إبداع",
+    "hi": "रचनात्मकता"
+  },
+  "exploration": {
+    "en": "exploration",
+    "ru": "исследование",
+    "zh": "探索",
+    "ja": "探索",
+    "de": "Erkundung",
+    "ar": "استكشاف",
+    "hi": "अन्वेषण"
+  },
+  "framework": {
+    "en": "framework",
+    "ru": "фреймворк",
+    "zh": "框架",
+    "ja": "フレームワーク",
+    "de": "Framework",
+    "ar": "إطار",
+    "hi": "ढाँचा"
+  },
+  "theorem": {
+    "en": "theorem",
+    "ru": "теорема",
+    "zh": "定理",
+    "ja": "定理",
+    "de": "Theorem",
+    "ar": "نظرية",
+    "hi": "प्रमेय"
+  },
+  "proof": {
+    "en": "proof",
+    "ru": "доказательство",
+    "zh": "证明",
+    "ja": "証明",
+    "de": "Beweis",
+    "ar": "دليل",
+    "hi": "प्रमाण"
+  },
+  "deduction": {
+    "en": "deduction",
+    "ru": "дедукция",
+    "zh": "演绎",
+    "ja": "演繹",
+    "de": "Deduktion",
+    "ar": "استنتاج",
+    "hi": "निगमन"
+  },
+  "abduction": {
+    "en": "abduction",
+    "ru": "абдукция",
+    "zh": "溯因",
+    "ja": "仮説形成",
+    "de": "Abduktion",
+    "ar": "افتراض",
+    "hi": "अपहरण"
+  },
+  "induction": {
+    "en": "induction",
+    "ru": "индукция",
+    "zh": "归纳",
+    "ja": "帰納",
+    "de": "Induktion",
+    "ar": "استقراء",
+    "hi": "आगमन"
+  },
+  "logic": {
+    "en": "logic",
+    "ru": "логика",
+    "zh": "逻辑",
+    "ja": "論理",
+    "de": "Logik",
+    "ar": "منطق",
+    "hi": "तर्क"
+  },
+  "axiom": {
+    "en": "axiom",
+    "ru": "аксиома",
+    "zh": "公理",
+    "ja": "公理",
+    "de": "Axiom",
+    "ar": "بديهية",
+    "hi": "अभिग्रहीत"
+  },
+  "conjecture": {
+    "en": "conjecture",
+    "ru": "гипотеза",
+    "zh": "猜想",
+    "ja": "推測",
+    "de": "Vermutung",
+    "ar": "تخمين",
+    "hi": "अनुमान"
+  },
+  "invariant": {
+    "en": "invariant",
+    "ru": "инвариант",
+    "zh": "不变量",
+    "ja": "不変量",
+    "de": "Invariante",
+    "ar": "ثابت",
+    "hi": "अचर"
+  },
+  "graph": {
+    "en": "graph",
+    "ru": "граф",
+    "zh": "图",
+    "ja": "グラフ",
+    "de": "Graph",
+    "ar": "رسم بياني",
+    "hi": "ग्राफ़"
+  },
+  "node": {
+    "en": "node",
+    "ru": "узел",
+    "zh": "节点",
+    "ja": "ノード",
+    "de": "Knoten",
+    "ar": "عقدة",
+    "hi": "नोड"
+  },
+  "edge": {
+    "en": "edge",
+    "ru": "ребро",
+    "zh": "边",
+    "ja": "エッジ",
+    "de": "Kante",
+    "ar": "حافة",
+    "hi": "किनारा"
+  },
+  "matrix": {
+    "en": "matrix",
+    "ru": "матрица",
+    "zh": "矩阵",
+    "ja": "行列",
+    "de": "Matrix",
+    "ar": "مصفوفة",
+    "hi": "मैट्रिक्स"
+  },
+  "tensor": {
+    "en": "tensor",
+    "ru": "тензор",
+    "zh": "张量",
+    "ja": "テンソル",
+    "de": "Tensor",
+    "ar": "موتر",
+    "hi": "टेंसर"
+  },
+  "vector": {
+    "en": "vector",
+    "ru": "вектор",
+    "zh": "向量",
+    "ja": "ベクトル",
+    "de": "Vektor",
+    "ar": "متجه",
+    "hi": "सदिश"
+  },
+  "entropy": {
+    "en": "entropy",
+    "ru": "энтропия",
+    "zh": "熵",
+    "ja": "エントロピー",
+    "de": "Entropie",
+    "ar": "إنتروبيا",
+    "hi": "एन्ट्रॉपी"
+  },
+  "module": {
+    "en": "module",
+    "ru": "модуль",
+    "zh": "模块",
+    "ja": "モジュール",
+    "de": "Modul",
+    "ar": "وحدة",
+    "hi": "मॉड्यूल"
+  },
+  "plugin": {
+    "en": "plugin",
+    "ru": "плагин",
+    "zh": "插件",
+    "ja": "プラグイン",
+    "de": "Plugin",
+    "ar": "إضافة",
+    "hi": "प्लगइन"
+  },
+  "extension": {
+    "en": "extension",
+    "ru": "расширение",
+    "zh": "扩展",
+    "ja": "拡張",
+    "de": "Erweiterung",
+    "ar": "امتداد",
+    "hi": "विस्तार"
+  },
+  "version": {
+    "en": "version",
+    "ru": "версия",
+    "zh": "版本",
+    "ja": "バージョン",
+    "de": "Version",
+    "ar": "إصدار",
+    "hi": "संस्करण"
+  },
+  "release": {
+    "en": "release",
+    "ru": "релиз",
+    "zh": "发布",
+    "ja": "リリース",
+    "de": "Veröffentlichung",
+    "ar": "إصدار",
+    "hi": "रिलीज़"
+  },
+  "tag": {
+    "en": "tag",
+    "ru": "тег",
+    "zh": "标签",
+    "ja": "タグ",
+    "de": "Tag",
+    "ar": "وسم",
+    "hi": "टैग"
+  },
+  "commit": {
+    "en": "commit",
+    "ru": "коммит",
+    "zh": "提交",
+    "ja": "コミット",
+    "de": "Commit",
+    "ar": "التزام",
+    "hi": "कमिट"
+  },
+  "branch": {
+    "en": "branch",
+    "ru": "ветка",
+    "zh": "分支",
+    "ja": "ブランチ",
+    "de": "Branch",
+    "ar": "فرع",
+    "hi": "शाखा"
+  },
+  "merge": {
+    "en": "merge",
+    "ru": "слияние",
+    "zh": "合并",
+    "ja": "マージ",
+    "de": "Merge",
+    "ar": "دمج",
+    "hi": "मर्ज"
+  },
+  "repository": {
+    "en": "repository",
+    "ru": "репозиторий",
+    "zh": "仓库",
+    "ja": "リポジトリ",
+    "de": "Repository",
+    "ar": "مستودع",
+    "hi": "रिपॉज़िटरी"
+  },
+  "test": {
+    "en": "test",
+    "ru": "тест",
+    "zh": "测试",
+    "ja": "テスト",
+    "de": "Test",
+    "ar": "اختبار",
+    "hi": "परीक्षण"
+  },
+  "benchmark": {
+    "en": "benchmark",
+    "ru": "бенчмарк",
+    "zh": "基准",
+    "ja": "ベンチマーク",
+    "de": "Benchmark",
+    "ar": "معيار",
+    "hi": "बेंचमार्क"
+  },
+  "performance": {
+    "en": "performance",
+    "ru": "производительность",
+    "zh": "性能",
+    "ja": "パフォーマンス",
+    "de": "Leistung",
+    "ar": "أداء",
+    "hi": "प्रदर्शन"
+  },
+  "metric": {
+    "en": "metric",
+    "ru": "метрика",
+    "zh": "指标",
+    "ja": "メトリック",
+    "de": "Metrik",
+    "ar": "مقياس",
+    "hi": "मीट्रिक"
+  },
+  "stable": {
+    "en": "stable",
+    "ru": "стабильный",
+    "zh": "稳定",
+    "ja": "安定",
+    "de": "stabil",
+    "ar": "مستقر",
+    "hi": "स्थिर"
+  },
+  "ready": {
+    "en": "ready",
+    "ru": "готов",
+    "zh": "就绪",
+    "ja": "準備完了",
+    "de": "bereit",
+    "ar": "جاهز",
+    "hi": "तैयार"
+  },
+  "running": {
+    "en": "running",
+    "ru": "выполняется",
+    "zh": "运行中",
+    "ja": "実行中",
+    "de": "läuft",
+    "ar": "قيد التشغيل",
+    "hi": "चल रहा है"
+  },
+  "cancelled": {
+    "en": "cancelled",
+    "ru": "отменено",
+    "zh": "已取消",
+    "ja": "キャンセル",
+    "de": "abgebrochen",
+    "ar": "ملغى",
+    "hi": "रद्द"
+  },
+  "complete": {
+    "en": "complete",
+    "ru": "завершено",
+    "zh": "完成",
+    "ja": "完了",
+    "de": "abgeschlossen",
+    "ar": "مكتمل",
+    "hi": "पूर्ण"
+  },
+  "DeepSeek": {
+    "en": "DeepSeek",
+    "ru": "DeepSeek",
+    "zh": "DeepSeek",
+    "ja": "DeepSeek",
+    "de": "DeepSeek",
+    "ar": "DeepSeek",
+    "hi": "DeepSeek"
+  },
+  "C4REQBER": {
+    "en": "C4REQBER",
+    "ru": "C4REQBER",
+    "zh": "C4REQBER",
+    "ja": "C4REQBER",
+    "de": "C4REQBER",
+    "ar": "C4REQBER",
+    "hi": "C4REQBER"
+  },
+  "READY": {
+    "en": "READY",
+    "ru": "ГОТОВО",
+    "zh": "就绪",
+    "ja": "準備完了",
+    "de": "Bereit",
+    "ar": "جاهز",
+    "hi": "तैयार"
+  },
+  "RUNNING": {
+    "en": "RUNNING",
+    "ru": "Выполняется",
+    "zh": "运行中",
+    "ja": "実行中",
+    "de": "Läuft",
+    "ar": "قيد التشغيل",
+    "hi": "चल रहा है"
+  },
+  "COMPLETE": {
+    "en": "COMPLETE",
+    "ru": "Завершено",
+    "zh": "完成",
+    "ja": "完了",
+    "de": "Abgeschlossen",
+    "ar": "مكتمل",
+    "hi": "पूर्ण"
+  },
+  "cancelled": {
+    "en": "cancelled",
+    "ru": "отменено",
+    "zh": "已取消",
+    "ja": "キャンセル",
+    "de": "abgebrochen",
+    "ar": "ملغى",
+    "hi": "रद्द"
+  }
+}

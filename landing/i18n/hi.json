@@ -131,6 +131,7 @@
   "foot_product": "c4reqber v5.6.0",
   "foot_tests": "10,023 टेस्ट · 0 mypy त्रुटियाँ",
   "foot_slogan": "सोचो। अनुकरण करो। साबित करो। खोजो।",
+  "hero_shift": "SHIFT PARADIGMS",
   "hero_meta": "AGPL-3.0 · BYOK · Multi-Prompt Router · Terminal-First · OpenRouter · XAI · Mistral · Moonshot · DeepSeek · Liquid · NVIDIA · YandexGPT · Ollama · LM Studio · MLX",
   "fp_no_sim": "कोई अनुकरण नहीं",
   "fp_no_sim_desc": "LLM परिकल्पनाएँ उत्पन्न करते हैं लेकिन उनकी जाँच नहीं कर सकते। कोई भौतिकी इंजन नहीं, कोई सांख्यिकीय सत्यापन नहीं, कोई ग्राउंड ट्रुथ नहीं।",

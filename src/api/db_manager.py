@@ -15,6 +15,22 @@ from typing import Any
 from src.compat import UTC
 
 
+def _hypothesis_text(h: Any) -> str:
+    """Extract hypothesis text whether input is str or dict."""
+    if isinstance(h, str):
+        return h
+    if isinstance(h, dict):
+        return str(h.get("hypothesis", h.get("text", "")))
+    return str(h)
+
+
+def _hypothesis_field(h: Any, key: str, default: Any) -> Any:
+    """Extract a field from a hypothesis that may be str or dict."""
+    if isinstance(h, dict):
+        return h.get(key, default)
+    return default
+
+
 # Optional PostgreSQL support
 try:
     import asyncpg
@@ -122,7 +138,7 @@ class SQLiteDatabase:
                 (
                     user_id,
                     problem,
-                    hypotheses[0].get("hypothesis") if hypotheses else None,
+                    _hypothesis_text(hypotheses[0]) if hypotheses else None,
                     duration,
                     cost,
                     datetime.now(UTC),
@@ -138,11 +154,11 @@ class SQLiteDatabase:
                     """,
                     (
                         discovery_id,
-                        h.get("hypothesis", ""),
-                        h.get("confidence", 0.0),
-                        h.get("method", ""),
-                        ",".join(h.get("c4_path", [])),
-                        ",".join(map(str, h.get("triz_principles", []))),
+                        _hypothesis_text(h),
+                        _hypothesis_field(h, "confidence", 0.0),
+                        _hypothesis_field(h, "method", ""),
+                        ",".join(_hypothesis_field(h, "c4_path", [])),
+                        ",".join(map(str, _hypothesis_field(h, "triz_principles", []))),
                     ),
                 )
             conn.commit()

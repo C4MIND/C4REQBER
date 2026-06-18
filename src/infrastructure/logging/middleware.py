@@ -10,7 +10,7 @@ from typing import Any
 from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from infrastructure.logging.config import get_logger, set_trace_id
+from src.infrastructure.logging.config import get_logger, set_trace_id
 
 
 logger = get_logger("c4_cdi_turbo.access")

@@ -1,0 +1,56 @@
+{
+  "timestamp": "2026-06-10T00:48:56+03:00",
+  "branch": "friend-stack-merged",
+  "fixes_applied": [
+    "src/infrastructure/__init__.py: from infrastructure.* → from src.infrastructure.*",
+    "src/infrastructure/logging/__init__.py: from infrastructure.* → from src.infrastructure.*",
+    "src/infrastructure/logging/middleware.py: from infrastructure.* → from src.infrastructure.*",
+    "src/infrastructure/cache/__init__.py: from infrastructure.* → from src.infrastructure.*",
+    "src/api/lifespan.py: removed -w '%{http_code}' from curl guard (false positive on shell-meta)"
+  ],
+  "providers": {
+    "local_lm_studio": {
+      "loaded_model": "qwen2.5-coder-7b-instruct:2",
+      "ram_footprint_gb": 4.0,
+      "load_time_sec": 7.91,
+      "endpoint": "http://localhost:1234/v1",
+      "alternatives_available_disk_only": [
+        "gemma-4-12b (won't fit — needs 50GB RAM, machine has less)",
+        "gemma-4-26b-a4b-it-qat-mlx (14GB on disk)",
+        "ministral-3-14b-reasoning-2512 (15GB on disk, marginal fit)",
+        "qwen2.5-0.5b-instruct-mlx (293MB, ultra-light)",
+        "llama-3.2-1b-instruct (712MB)"
+      ],
+      "health": "ok"
+    },
+    "deepseek": {
+      "endpoint": "https://api.deepseek.com/v1",
+      "available_models": ["deepseek-v4-flash", "deepseek-chat", "deepseek-reasoner"],
+      "health": "ok"
+    },
+    "xai": {
+      "endpoint": "https://api.x.ai/v1",
+      "available_models": ["grok-4.3", "grok-build-0.1"],
+      "model_actually_tested": "grok-4.3",
+      "health": "ok"
+    },
+    "openrouter": {
+      "endpoint": "https://openrouter.ai/api/v1",
+      "models_total": 342,
+      "models_tested": [
+        {"id": "anthropic/claude-haiku-4.5", "provider": "Amazon Bedrock", "status": "ok"},
+        {"id": "deepseek/deepseek-chat-v3.1", "provider": "DeepInfra", "status": "ok"},
+        {"id": "meta-llama/llama-3.1-70b-instruct", "provider": "DeepInfra", "status": "ok"}
+      ],
+      "health": "ok"
+    }
+  },
+  "backend": {
+    "host": "127.0.0.1",
+    "port": 8000,
+    "process": "uvicorn src.api.server:app",
+    "openapi_paths": 95,
+    "lifespan_status": "complete (LM Studio started; MLX Server did not start within 10s — flagged as warning, not fatal)"
+  },
+  "env_file_used": ".env.dontredact (not committed, in .gitignore via .env.* pattern)"
+}

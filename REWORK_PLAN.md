@@ -13,7 +13,9 @@
 - ✅ **TUI v9 line-level audit + fixes (batch 1)** — landed (`f7424a1`): SSE leak, palette, keymap g/G, persistence, golden-fixtures gitignore. Green on clean checkout.
 - ✅ **Project-wide architectural audit** — landed (`be4f752`, `ARCHITECTURE_AUDIT.md`).
 - ✅ **Duplication clusters verified against code** — see below.
-- ⏳ **This plan** — skeleton committed; execution not started.
+- ✅ **P0 (security/correctness code parts), P1 (subtraction, 155 files), P2-F, P2-E** — landed (`fix/tui-v9-audit-batch1`).
+- ✅ **P2-A track A1 (LLM gateway, equivalence-preserving)** — done; facade + 13 characterization tests + all ad-hoc callers migrated + dead routing/model-table deleted. A2 owner-gated, not started. See mini-plan.
+- ⏳ **Next** — pick the next general-rework item (P2-B…P2-D / P3). Owner-action items from P0 (rotate secrets, scrub history, `pre-commit install`) still pending.
 
 ---
 
@@ -108,7 +110,7 @@ Each item ships as its own branch/commit, test-gated, with its mini-plan appende
 
 ## Mini-plans (filled in at execution time)
 
-### P2-A — LLM Gateway · mini-plan (reviewed; not yet executed)
+### P2-A — LLM Gateway · mini-plan · **A1 ✅ done** (`fix/tui-v9-audit-batch1`)
 **Decisions (owner, 2026-06-18):** scope = **consolidation only, keep OpenRouter** as the transport (no native Anthropic backend for now); goal = **behavioral equivalence to the existing system** (owner is still learning the code).
 
 **Why equivalence reframes this:** the audit's "make the gateway apply guardian+retry+cost+cache to ALL paths" is a *behavior change* (paths that lack a feature would gain it — e.g. `ProviderRouter` calls would newly get guardian-scanned and could be blocked). That violates "equivalent to existing." So P2-A splits into two clearly separated tracks:
@@ -126,6 +128,23 @@ Each item ships as its own branch/commit, test-gated, with its mini-plan appende
 5. Regression test locking the single-entry invariant: no `/chat/completions` httpx call outside the gateway/provider layer.
 
 **Risk:** medium — the 21 raw sites are the exposure. Mitigation: characterization test per site, migrate one at a time. **A2 not started until A1 ships and the owner okays each behavior change.**
+
+#### A1 — outcome (owner closed A1, 2026-06-19)
+
+**Shipped (all equivalence-preserving; full suite 5146 passed / 0 failed at every step):**
+1. **Facade + safety net** — `src/llm/gateway.py` (`LLMGateway` Protocol + `DefaultGateway` + `get_gateway()`), 13 characterization tests (`tests/llm/test_gateway_characterization.py`) locking the wire behavior of all 3 entrypoints (ProviderRouter stage-routing, AsyncLLMClient default-model+cache, LLMProviderRouter guardian+fallback) plus DefaultGateway-equivalence assertions.
+2. **Dead-routing deletion** (step 2) — removed `src/llm/local/client_unified.py` (`UnifiedLLMClient`), `src/llm/routing/`, `src/llm/provider_router.py` + their tests; trimmed re-exports in `local_client.py`/`local/__init__.py`.
+3. **Caller migration** — every **ad-hoc direct** caller now routes through the gateway:
+   - group 1 (`discovery/{gap_miner,pipeline_logic}`, `api/v8_routers/discovery*`): `LLMProviderRouter.chat/chat_json` → `get_gateway().chat/chat_json`.
+   - group 2 (`mcp_server/{server,blast_tools}`, `cli/blast_core`): `AsyncLLMClient()` → `get_gateway()` (6 sites).
+   - group 3a-direct (`social/telegram_bot`, `verification/{semantic_alignment,formalization_engine,llm_prover}`, `discovery/closed_loop/refiner`, `exploration/{question_generator,formal_extender}`): `ProviderRouter()` → `DefaultGateway().generate_for_stage`; 5 test files repointed `_router.generate`→`generate_for_stage` (`e51a43d`).
+4. **Dead model-table deletion** — `src/llm/model_per_stage.py` (84 LOC, parallel stage→model dup, 0 importers) removed (`0540d29`).
+
+**Deliberately NOT done (owner decision):**
+- **group 3a-injection** (functor system: `functor_orchestrator` + `functors/{base,composite}` DI-default + 9 sub-agents calling `.generate(stage,…)`/`.generate_batch(stage,…)` + the e2e `FakeProviderRouter`) — **skipped as zero-value/high-churn.** These are *not* a parallel reimplementation: they already use clean dependency-injection on the **canonical** `ProviderRouter` (which the gateway merely wraps). Migrating would force a `.generate`→`.generate_for_stage` rename across 9 agents, a new `generate_batch_for_stage` on the gateway, and an e2e-harness rewrite — for no behavioral or structural gain. The 3 remaining `ProviderRouter()` literals in `src/` are exactly these injection defaults; leaving them is correct.
+
+**Boundary to A2 (still owner-gated, NOT started):**
+- The remaining **live** stage→model tables (`model_catalog`, `router.py` PRESETS, `model_assignment`, `depth_router`) serve **different** live consumers (cli / embeddings / tui-budget). Collapsing them is a **behavior change**, not equivalence → A2. Step 5's "single-entry httpx regression test" and the 21 raw `/chat/completions` sites are likewise A2 (they currently bypass the gateway by design = their current behavior). Do per-concern, behavioral-diff each, with owner aware.
 
 ---
 

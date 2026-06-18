@@ -91,4 +91,13 @@ Each item ships as its own branch/commit, test-gated, with its mini-plan appende
 ---
 
 ## Mini-plans (filled in at execution time)
-*(none yet — to be appended per item as work starts)*
+
+### P0 — Security & correctness · ✅ code parts done (`fix/tui-v9-audit-batch1`)
+**P0-1 (secrets):**
+- Done by me: `git rm archive/harness/value-keys.tex`; `.gitignore` rule (`*value-keys*`, `archive/harness/value-keys.*`); generated `.secrets.baseline` so the (previously broken — referenced a missing baseline) detect-secrets hook is functional. Root cause of the leak: `.git/hooks/pre-commit` was **never installed**, so the already-configured gitleaks/detect-secrets hooks never ran. Spot-checked the 6 highest-risk detect-secrets hits (knowledge/config, auth/web3, p6_adapters, vastai_delegate, reasoner_client, llm_classifier) — no hardcoded live secrets; the 95 baseline entries are false positives (env refs, doc examples, hashes). Confirms value-keys.tex was the only live exposure.
+- **REMAINING — owner actions (not done by me, by design):**
+  1. **Rotate** every credential that was in the file: OpenRouter, Moonshot, DeepSeek, GroQ, Kilo Gateway, NVIDIA, XAI, Brave, Exa, Tavily (LLM/search); Telegram bot (С4 Science Bot / @c4cditurbot); `my-api-key (c4-turbo-cdi)` (NOWPayments/license); X/Twitter, Mastodon (social); and the **PyPI publish token**.
+  2. **Scrub history** (the secrets are still in main's history since `bcf299d`): `git filter-repo --path archive/harness/value-keys.tex --invert-paths` then force-push. Destructive + rewrites origin/main → owner's call.
+  3. `pre-commit install` (and `detect-secrets audit .secrets.baseline` to triage the 95 entries) so the scanners actually run going forward.
+
+**P0-2 (disconnect):** ✅ added no-op `connect`/`disconnect` to `SQLiteDatabase` (`src/api/db_manager.py`) mirroring `PostgresDatabase`; verified `await db.disconnect()` no longer raises AttributeError. Fixes the shutdown error swallowed by lifespan's broad except.

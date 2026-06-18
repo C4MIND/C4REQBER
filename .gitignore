@@ -27,6 +27,10 @@ config/secrets/
 *secret*
 openrouter_key.txt
 ollama_config.yaml
+# Credential dumps (a .tex secrets dump leaked past the rules once — see
+# ARCHITECTURE_AUDIT.md §0). Belt-and-braces; the real guard is gitleaks.
+*value-keys*
+archive/harness/value-keys.*
 
 # Python
 __pycache__/

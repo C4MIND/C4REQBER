@@ -148,6 +148,22 @@ Each item ships as its own branch/commit, test-gated, with its mini-plan appende
 
 ---
 
+### P2-B — Step model → protocol · mini-plan (analyzed 2026-06-19; not started)
+
+**Careful-analysis finding (safety-gate "is it really a dup?"): YES, but the dup is *dispatch machinery*, not step logic.** Each `step_NN_*.py` already contains the canonical typed form — a `PipelineStep` ABC subclass (`ImpactIdentifyStep.execute(context)` etc., 14 of them). The step **logic lives exactly once**, in those classes. Layered *on top* are two redundant indirections the executor actually drives through:
+- **14 free-fn shims** (`step_impact_identify(...)`) — each a 3-line "legacy function-based API" that just `Cls(deps).execute({...})`. Re-exported from `steps/__init__.py` and imported (unused?) by `solve_pipeline.py`.
+- **String/importlib dispatch** — `STEP_PLAN` (executor.py) entries carry `"fn": "step_…"` strings + `build_args` lambdas; `_get_step_fn()` resolves them via `importlib.import_module(STEP_MODULES[name])` + a `globals()` cache hack; `STEP_MODULES`/`StepDefinition` live in `pipeline/step_definition.py`. Net: a **triple bounce** (string → importlib → free-fn → instantiate class → `.execute`) to call a method the executor could call directly.
+
+Single live orchestrator confirmed: `solve_pipeline.py` (233 LOC) **delegates** to `PipelineExecutor` (no own step loop) → P2-B is self-contained to `executor.py` + `steps/` + `step_definition.py`.
+
+**Target:** executor holds a registry of constructed `PipelineStep` instances (stage→step), loops calling `.execute(context)` against the shared `state` dict directly. Delete: the 14 free-fn shims, `STEP_MODULES`, `step_definition.py`, `_get_step_fn` + globals cache, the `"fn"` strings and `build_args` lambdas (the class reads inputs from `context`; constructor deps come from `pipeline`). Pure subtraction + de-cleverness; **prereq for P2-C** (orchestrator spine).
+
+**Risk: medium-high, and the net is thin.** The executor tangles step dispatch with the observer O₀→O₂ loops, deep-work branches, early-exit, and interleaved plugin/pattern steps — all keyed off STEP_PLAN `id`s. The ONLY end-to-end characterization (`tests/e2e/test_pipeline_fake_llm.py`) is **double-gated off** by default (`skipif RUN_PIPELINE_E2E` + `@mark.slow`, ~49s). **Mandatory step 0: build a fast, always-on executor-level characterization test** (fake pipeline, assert the exact event/stage sequence + key outputs of a full STEP_PLAN run) before touching dispatch. Then migrate per-step under green, verifying each `Cls.execute(context)` reproduces the free-fn path's positional-arg behavior (the `build_args` lambdas are the spec to preserve).
+
+**Owner note:** value is internal tidiness + unblocking P2-C, not a user-facing fix; weigh against the dead-end-Python stance. Cleanest as **P2-B+C as one track** (P2-B alone just tidies plumbing; the payoff lands when P2-C reshapes the spine).
+
+---
+
 
 ### P0 — Security & correctness · ✅ code parts done (`fix/tui-v9-audit-batch1`)
 **P0-1 (secrets):**

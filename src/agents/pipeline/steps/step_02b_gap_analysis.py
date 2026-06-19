@@ -54,12 +54,3 @@ class GapAnalysisStep(PipelineStep):
             duration_ms=(time.time() - start) * 1000,
             error=error,
         )
-
-
-# Function-based API
-async def step_gap_analysis(
-    sources: list[dict[str, Any]], topic: str, gap_analyzer: AutoGapAnalyzer
-) -> PipelineStepResult:
-    """Run gap analysis on prior art sources."""
-    step = GapAnalysisStep(gap_analyzer)
-    return await step.execute({"problem": topic, "sources": sources})

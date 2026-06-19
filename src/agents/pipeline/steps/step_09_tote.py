@@ -405,9 +405,3 @@ class ToteValidationStep(PipelineStep):
             duration_ms=(time.time() - start) * 1000,
             error=error,
         )
-
-
-async def step_validation(problem: str, solution: str) -> PipelineStepResult:
-    """Legacy function-based API."""
-    step = ToteValidationStep()
-    return await step.execute({"problem": problem, "solution": solution})

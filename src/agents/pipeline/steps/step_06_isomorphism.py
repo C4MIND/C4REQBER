@@ -211,23 +211,3 @@ class IsomorphismSearchStep(PipelineStep):
             duration_ms=(time.time() - start) * 1000,
             error=error,
         )
-
-
-async def step_isomorphism_search(
-    problem: str,
-    domain_hint: str | None,
-    c4_state: C4State,
-    transformer: DomainTransformer,
-    memory: StructuralMemoryBank,
-) -> PipelineStepResult:
-    """Legacy function-based API."""
-    step = IsomorphismSearchStep()
-    return await step.execute(
-        {
-            "problem": problem,
-            "domain_hint": domain_hint,
-            "c4_state": c4_state,
-            "transformer": transformer,
-            "memory": memory,
-        }
-    )

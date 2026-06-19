@@ -94,26 +94,6 @@ class MPRotationStep(PipelineStep):
         )
 
 
-async def step_mp_rotation(
-    problem: str,
-    c4_state: C4State,
-    mp_rotation: MPRotationEngine,
-    mp_llm_generator: Any,
-    provider_router: Any,
-) -> PipelineStepResult:
-    """Legacy function-based API."""
-    step = MPRotationStep()
-    return await step.execute(
-        {
-            "problem": problem,
-            "c4_state": c4_state,
-            "mp_rotation": mp_rotation,
-            "mp_llm_generator": mp_llm_generator,
-            "provider_router": provider_router,
-        }
-    )
-
-
 async def _enhance_perspectives_with_llm(
     problem: str,
     perspectives: list[AgentPerspective],

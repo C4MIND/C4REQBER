@@ -61,12 +61,3 @@ class PluginExecutionStep(PipelineStep):
             output_data={"plugin_results": plugin_results},
             duration_ms=(time.time() - start) * 1000,
         )
-
-
-async def step_plugins(
-    problem: str, selected_plugins: list[str]
-) -> tuple[list[dict[str, Any]], str]:
-    """Legacy function-based API."""
-    step = PluginExecutionStep()
-    result = await step.execute({"problem": problem, "selected_plugins": selected_plugins})
-    return result.output_data.get("plugin_results", []), result.status

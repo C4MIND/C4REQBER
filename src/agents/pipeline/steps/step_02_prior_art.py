@@ -123,14 +123,3 @@ class PriorArtStep(PipelineStep):
             "citation_count": paper.get("citation_count", 0),
             "cross_validated": paper.get("cross_validated", False),
         }
-
-
-# Backward compatibility: function-based API
-async def step_prior_art(
-    problem: str, prior_art: Any, multi_searcher: Any = None
-) -> tuple[PipelineStepResult, float]:
-    """Legacy function-based API."""
-    step = PriorArtStep(prior_art)
-    result = await step.execute({"problem": problem})
-    confidence = result.output_data.get("max_confidence", 0.0)
-    return result, confidence

@@ -64,14 +64,3 @@ class SimulationStep(PipelineStep):
             output_data={"pattern_results": pattern_results},
             duration_ms=(time.time() - start) * 1000,
         )
-
-
-async def step_simulation(
-    problem: str, selected_pattern: str | None
-) -> tuple[list[Any], str]:
-    """Legacy function-based API."""
-    step = SimulationStep()
-    result = await step.execute(
-        {"problem": problem, "selected_pattern": selected_pattern}
-    )
-    return result.output_data.get("pattern_results", []), result.status

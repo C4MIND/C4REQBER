@@ -68,12 +68,3 @@ class ImpactIdentifyStep(PipelineStep):
             duration_ms=(time.time() - start) * 1000,
             error=error,
         )
-
-
-# Backward compatibility: function-based API
-async def step_impact_identify(
-    problem: str, domain_hint: str | None, impact: ImpactEngine
-) -> PipelineStepResult:
-    """Legacy function-based API."""
-    step = ImpactIdentifyStep(impact)
-    return await step.execute({"problem": problem, "domain_hint": domain_hint})

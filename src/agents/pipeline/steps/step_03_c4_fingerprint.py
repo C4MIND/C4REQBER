@@ -70,15 +70,3 @@ class C4FingerprintStep(PipelineStep):
             duration_ms=(time.time() - start) * 1000,
             error=error,
         )
-
-
-
-
-# Backward compatibility: function-based API
-async def step_c4_fingerprint(
-    problem: str,
-    domain_hint: str | None,
-) -> PipelineStepResult:
-    """Legacy function-based API."""
-    step = C4FingerprintStep()
-    return await step.execute({"problem": problem, "domain_hint": domain_hint})

@@ -20,21 +20,8 @@ from typing import Any, Literal, TypedDict
 
 from src.agents.mp_llm_generator import MPLLMDynamicGenerator
 from src.agents.pipeline.steps.base import PipelineStage, PipelineStep
-
-# Re-export step functions for test mocking compatibility
-from src.agents.pipeline.steps.step_01_impact import step_impact_identify
-from src.agents.pipeline.steps.step_02_prior_art import step_prior_art
-from src.agents.pipeline.steps.step_03_c4_fingerprint import step_c4_fingerprint
-from src.agents.pipeline.steps.step_04_mp_rotation import step_mp_rotation
-from src.agents.pipeline.steps.step_05_qzrf import step_qzrf_select
-from src.agents.pipeline.steps.step_06_isomorphism import step_isomorphism_search
-from src.agents.pipeline.steps.step_07_plugins import step_plugins
-from src.agents.pipeline.steps.step_08_synthesis import step_synthesis
-from src.agents.pipeline.steps.step_09_tote import step_validation
-from src.agents.pipeline.steps.step_10_simulation import step_simulation
 from src.c4.engine import C4Space
 from src.c4.observer import ObserverController
-from src.c4.state import C4State
 from src.c4.transformer import DomainTransformer
 from src.discovery.gap_analyzer import AutoGapAnalyzer
 from src.llm.multi_provider import OpenRouterClient as AsyncLLMClient
@@ -47,7 +34,6 @@ from src.metamodels.mp.profiles import MPRotationEngine
 from src.metamodels.qzrf.operators import QzrfLibrary
 from src.pipeline.base import BasePipeline
 from src.pipeline.config import PipelineConfig
-from src.pipeline.quality import QualityGates
 
 
 class PipelineEvent(TypedDict, total=False):

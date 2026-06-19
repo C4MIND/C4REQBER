@@ -16,7 +16,8 @@
 - ✅ **P0 (security/correctness code parts), P1 (subtraction, 155 files), P2-F, P2-E** — landed (`fix/tui-v9-audit-batch1`).
 - ✅ **P2-A track A1 (LLM gateway, equivalence-preserving)** — done; facade + 13 characterization tests + all ad-hoc callers migrated + dead routing/model-table deleted. A2 owner-gated, not started. See mini-plan.
 - ✅ **P2-B (step model → PipelineStep registry)** — done; killed importlib/STEP_MODULES/step_definition dispatch + 14 free-fn shims, drives typed classes directly. Fast dispatch net + real-step e2e green. See mini-plan.
-- ⏳ **Next** — P2-C (orchestrator spine). Owner-action items from P0 (rotate secrets, scrub history, `pre-commit install`) still pending.
+- ⚠️ **P2-C (orchestrator spine)** — REVISED: the "one spine for 4 modes" premise fails the safety gate (the 4 modes are genuinely different, not N copies). Recommend **skipping** the grand unification; remaining items are cosmetic/optional. See revised P2-C.
+- ⏳ **Next** — owner's call: P2-D (pattern ABC + serializable result → worker-POC), A2 (LLM cross-cutting, owner-gated), or stop. P0 owner-actions (rotate secrets, scrub history, `pre-commit install`) still pending.
 
 ---
 
@@ -82,7 +83,15 @@ Each deletion re-grep-verified (fan-in 0 / no mounted router) immediately before
   - **Stage→model routing**: FOUR disagreeing tables (router presets, `model_per_stage`, `model_catalog`, `depth_router`) with different Claude versions per phase.
   - **Mandatory sub-step before code**: a *behavior inventory* of each router → reconcile into the gateway as the **union** (guardian for all; one explicit retry policy; **one** deliberate stage→model table). The stage→model reconciliation is a **product decision (owner): which model per phase** — not a mechanical merge. Then: `LLMGateway` protocol as sole entry; routers/raw-sites migrated behind it; centralize keys/cost/retry/guardian; fix Claude-4.x cost table. Native Anthropic backend = separate opt-in scope (feature, not consolidation).
 - **P2-B** **Step model → protocol** *(B)* — *[conditional]*. Executor drives `PipelineStep` via a registry; remove free-fn wrappers + `importlib` + string `STEP_PLAN`. **Prereq for P2-C.**
-- **P2-C** **Orchestrator spine** *(C)* — *[conditional]*. One `Pipeline`/`Phase` contract in `contracts`; express solve/turbo/flash/factory as compositions; move flash/factory out of `cli/`; one injected `ExecutionPolicy` (timeout/retry/cancel); replace the `phase_d_agents` `importlib` boundary with an injected `CognitiveAgentRunner` protocol.
+- **P2-C** **Orchestrator spine** *(C)* — ⚠️ **REVISED 2026-06-19 — the "one spine" premise does NOT survive the safety gate; do NOT force it.** Characterization (`blast_core.py`): the 4 modes are *genuinely different things*, not N copies of one orchestrator —
+  - `solve` → `UniversalSolvePipeline` (12-stage `PipelineStep` registry, just rebuilt in P2-B)
+  - `turbo` → `HILDiscoveryPipeline` (`src/pipeline/hil_pipeline.py`, 254 LOC, a *different* CommandHandler/phase architecture — no `PipelineStage`/`STEP_PLAN` overlap)
+  - `flash` → a quick LLM answer (~220 LOC inline; not a multi-phase pipeline at all)
+  - `turbofactory` → a parallel *runner* that fans out N solve/turbo pipelines + aggregates (not itself a pipeline)
+  Collapsing these into one `Pipeline`/`Phase` contract = inventing a false abstraction over genuinely different control-flows (the exact safety-gate failure the owner flagged). What the audit *actually* found here is shallow/optional, not a no-regret consolidation:
+  - **`phase_d_agents` `importlib`** (`hil_phases/phase_d_agents.py:29`) is **intentional late-binding** — it keeps the generic pipeline engine free of an import-time dependency on the agents package (documented + try/except-guarded). Converting it to an injected `CognitiveAgentRunner` protocol is *design polish*, not subtraction; low value vs the dead-end-Python stance.
+  - **CLI-command boilerplate** (banner + `asyncio.run(_run())` + `inject_mascot_status` repeated across the 4 `cmd_*`) is *cosmetic* dedup (~a dozen lines).
+  **Recommendation: skip the grand unification.** P2-B already delivered the real structural win (the solve spine). Spend effort on higher-value tracks (P2-D worker boundary / A2) instead.
 - **P2-D** **Pattern base + serializable result** *(D)* — *[conditional; partially no-regret as worker-POC]*. One ABC + JSON-safe `SimulationResult`; migrate 107 patterns; delete the reflection runner; break the `patterns↔simulations` cycle.
 
 ### Phase 3 — Contracts for polyglot / rewrite · *[conditional]*

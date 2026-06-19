@@ -15,7 +15,8 @@
 - ✅ **Duplication clusters verified against code** — see below.
 - ✅ **P0 (security/correctness code parts), P1 (subtraction, 155 files), P2-F, P2-E** — landed (`fix/tui-v9-audit-batch1`).
 - ✅ **P2-A track A1 (LLM gateway, equivalence-preserving)** — done; facade + 13 characterization tests + all ad-hoc callers migrated + dead routing/model-table deleted. A2 owner-gated, not started. See mini-plan.
-- ⏳ **Next** — pick the next general-rework item (P2-B…P2-D / P3). Owner-action items from P0 (rotate secrets, scrub history, `pre-commit install`) still pending.
+- ✅ **P2-B (step model → PipelineStep registry)** — done; killed importlib/STEP_MODULES/step_definition dispatch + 14 free-fn shims, drives typed classes directly. Fast dispatch net + real-step e2e green. See mini-plan.
+- ⏳ **Next** — P2-C (orchestrator spine). Owner-action items from P0 (rotate secrets, scrub history, `pre-commit install`) still pending.
 
 ---
 
@@ -148,7 +149,18 @@ Each item ships as its own branch/commit, test-gated, with its mini-plan appende
 
 ---
 
-### P2-B — Step model → protocol · mini-plan (analyzed 2026-06-19; not started)
+### P2-B — Step model → protocol · mini-plan · **✅ done 2026-06-19** (`fix/tui-v9-audit-batch1`)
+
+**Outcome (all under the fast dispatch net + real-step e2e, both green; full suite 5153/0):**
+- **Step 0** — built `tests/agents/test_executor_dispatch.py` (7 tests, ~1.7s, always-on): pins the exact event/stage sequence, turbo-skip, early-exit, plugin interleave, pattern simulation, deep-work extras, on_complete side-effects. Negative-control verified. (`f64c7cf`)
+- **Core** (`37dddef`) — executor now constructs typed `PipelineStep` subclasses via `make(pipeline)` + `build_context(pipeline,state,result)` and calls `.execute(context)` directly. Deleted: `_get_step_fn`+globals-cache+per-call `importlib`, `src/pipeline/step_definition.py` (STEP_MODULES/StepDefinition), the `unwrap_tuple` mechanism (prior_art's max_confidence already in output_data → via include_output), and the `build_args` pos/kwargs lambdas. Inline plugin/sim branches call the classes directly.
+- **Cleanup** (`02494dd`) — deleted the 14 now-dead `step_*` free-fn shims (AST-precise; kept class-only helper `_enhance_perspectives_with_llm`), their re-exports, the stale "for test mocking" imports, dead `step_11_verify.py`, and 3 pre-existing unused imports.
+
+The net's assertions never changed across the refactor — only its injection seam moved from `_get_step_fn` to `make` — which is the equivalence proof. **Next: P2-C** (orchestrator spine), the payoff this unblocks.
+
+---
+
+### P2-B — (original analysis, kept for reference)
 
 **Careful-analysis finding (safety-gate "is it really a dup?"): YES, but the dup is *dispatch machinery*, not step logic.** Each `step_NN_*.py` already contains the canonical typed form — a `PipelineStep` ABC subclass (`ImpactIdentifyStep.execute(context)` etc., 14 of them). The step **logic lives exactly once**, in those classes. Layered *on top* are two redundant indirections the executor actually drives through:
 - **14 free-fn shims** (`step_impact_identify(...)`) — each a 3-line "legacy function-based API" that just `Cls(deps).execute({...})`. Re-exported from `steps/__init__.py` and imported (unused?) by `solve_pipeline.py`.

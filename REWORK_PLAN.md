@@ -170,11 +170,11 @@ The reflection **`PatternRunner`** (`patterns/runner.py`, 306 LOC: `importlib` +
 The `patterns↔simulations` cycle is **lazy** (the 35 `NewtonBridge` imports are *inside method bodies*, not import-time) → not an import cycle; lower urgency than the plan implied.
 
 **Scoping reality (revises the plan's "easy ABC win"):** the "one ABC + registry + delete reflection runner" win requires migrating ~53 patterns (7 `BasePattern` + 46 bare) onto `SimulationPattern`+decorator — large churn for a dead-end-Python codebase. And `SimulationResult` is typed but **not guaranteed JSON-safe** (`data: dict[Any]`, `datetime`, enum fields) → genuine worker-boundary gap, but serializing at the chokepoint now has **no consumer** until the worker POC exists (speculative). So P2-D splits:
-- **D-core (bounded, real):** retire ONE of the two competing ABCs — fold the 7 `BasePattern` patterns onto `SimulationPattern`, delete `BasePattern`/`GPUMixin` if then-unused. Real subtraction (kills a parallel base), bounded churn (7), characterization-net-first like P2-B.
-- **D-bulk (large, optional):** migrate the 46 bare patterns onto the registry + delete the reflection `PatternRunner`. Big churn; value is internal tidiness unless the worker POC is being built.
-- **D-worker (deferred):** JSON-safe `SimulationResult` + serialize at the `run_pattern` chokepoint — only when P4 worker boundary is actually pursued (else speculative dead code).
+- **D-core:** fold the 7 `BasePattern` patterns onto `SimulationPattern`, delete `BasePattern`. **NOT the clean fold it first looked:** all 7 are **sync** `run()->dict`; 3 (`n_body`, `acoustic_waves`, `rigid_body`) depend on `GPUMixin` (heavy numerics — the literal "Python in a separate barrel" worker candidates). Folding = semantic migration (sync→async, dict→typed `SimulationResult`, preserve GPU) of working numeric code, with behavior-preservation risk. The reflection `PatternRunner` already tolerates both conventions via duck-typing, so these 7 work as-is today.
+- **D-bulk (large, optional):** migrate the 46 bare patterns onto the registry + delete the reflection `PatternRunner`. Big churn; internal tidiness only.
+- **D-worker (deferred):** JSON-safe `SimulationResult` + serialize at the `run_pattern` chokepoint — only when P4 worker boundary is actually pursued (else speculative dead code with no consumer).
 
-**Recommendation:** D-core is the no-regret nugget; D-bulk/D-worker are owner-appetite calls (defer absent a worker POC).
+**Revised recommendation: defer all of P2-D until the worker boundary (P4) is greenlit, then do it *as part of* building that POC.** Every slice is semantic migration of working numeric code, and the reflection runner already provides a working unification seam at the single `run_pattern` chokepoint. Speculative consolidation now = churn without a consumer, against the dead-end-Python stance. The one thing P4 genuinely needs (a serializable result across the process boundary) is cheapest to add *at the chokepoint when the worker exists*, not by migrating 53 patterns up front.
 
 ---
 

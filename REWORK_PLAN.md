@@ -158,6 +158,26 @@ Each item ships as its own branch/commit, test-gated, with its mini-plan appende
 
 ---
 
+### P2-D — Pattern base + serializable result · mini-plan (analyzed 2026-06-19; scoping decision pending)
+
+**Careful-analysis finding — THREE parallel "pattern" conventions (the real "one thing, N times"):**
+- **`SimulationPattern`** (`patterns/core.py`, ABC) — `async run(Hypothesis) -> SimulationResult` (typed), `@simulation_pattern` decorator + `PatternRegistry` (register/get/list). **~56 patterns.** The canonical/modern path; a typed `SimulationResult` and a registry *already exist here*.
+- **`BasePattern`** (`patterns/library/base.py`, ABC) — `def run(dict) -> dict` (sync), `GPUMixin`, `BaseConfig`. **7 patterns.** Legacy dict-based.
+- **Bare classes** — no base, no decorator (e.g. `adaptive_filter.AdaptiveFilterPattern`). **~46 files.** Work only via the reflection runner's duck-typing.
+
+The reflection **`PatternRunner`** (`patterns/runner.py`, 306 LOC: `importlib` + `inspect.getmembers` + `inspect.signature` adaptive dispatch) exists *because* categories 2–3 aren't on the registry. Single execution chokepoint: `PatternRunner.run_pattern` (~5 callers: step_10_simulation, cli/commands, hil phase_e, solver/strategies, api/routers/patterns).
+
+The `patterns↔simulations` cycle is **lazy** (the 35 `NewtonBridge` imports are *inside method bodies*, not import-time) → not an import cycle; lower urgency than the plan implied.
+
+**Scoping reality (revises the plan's "easy ABC win"):** the "one ABC + registry + delete reflection runner" win requires migrating ~53 patterns (7 `BasePattern` + 46 bare) onto `SimulationPattern`+decorator — large churn for a dead-end-Python codebase. And `SimulationResult` is typed but **not guaranteed JSON-safe** (`data: dict[Any]`, `datetime`, enum fields) → genuine worker-boundary gap, but serializing at the chokepoint now has **no consumer** until the worker POC exists (speculative). So P2-D splits:
+- **D-core (bounded, real):** retire ONE of the two competing ABCs — fold the 7 `BasePattern` patterns onto `SimulationPattern`, delete `BasePattern`/`GPUMixin` if then-unused. Real subtraction (kills a parallel base), bounded churn (7), characterization-net-first like P2-B.
+- **D-bulk (large, optional):** migrate the 46 bare patterns onto the registry + delete the reflection `PatternRunner`. Big churn; value is internal tidiness unless the worker POC is being built.
+- **D-worker (deferred):** JSON-safe `SimulationResult` + serialize at the `run_pattern` chokepoint — only when P4 worker boundary is actually pursued (else speculative dead code).
+
+**Recommendation:** D-core is the no-regret nugget; D-bulk/D-worker are owner-appetite calls (defer absent a worker POC).
+
+---
+
 ### P2-B — Step model → protocol · mini-plan · **✅ done 2026-06-19** (`fix/tui-v9-audit-batch1`)
 
 **Outcome (all under the fast dispatch net + real-step e2e, both green; full suite 5153/0):**

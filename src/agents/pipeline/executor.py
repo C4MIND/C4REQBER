@@ -9,45 +9,23 @@ import time
 from typing import Any
 
 from src.agents.pipeline.steps.base import PipelineStage, PipelineStepResult
+from src.agents.pipeline.steps.step_01_impact import ImpactIdentifyStep
+from src.agents.pipeline.steps.step_02_prior_art import PriorArtStep
+from src.agents.pipeline.steps.step_02b_gap_analysis import GapAnalysisStep
+from src.agents.pipeline.steps.step_02c_quality_gate import QualityGateStep
+from src.agents.pipeline.steps.step_02d_reality_check import RealityCheckStep
+from src.agents.pipeline.steps.step_03_c4_fingerprint import C4FingerprintStep
+from src.agents.pipeline.steps.step_04_mp_rotation import MPRotationStep
+from src.agents.pipeline.steps.step_05_qzrf import QzrfSelectStep
+from src.agents.pipeline.steps.step_05b_cross_domain_transfer import CrossDomainTransferStep
+from src.agents.pipeline.steps.step_06_isomorphism import IsomorphismSearchStep
+from src.agents.pipeline.steps.step_07_plugins import PluginExecutionStep
+from src.agents.pipeline.steps.step_08_synthesis import SynthesisStep
+from src.agents.pipeline.steps.step_09_tote import ToteValidationStep
+from src.agents.pipeline.steps.step_10_simulation import SimulationStep
 from src.c4.observer import ObserverController, ObserverPosition
 from src.c4.state import C4State
 from src.pipeline.observer import PipelineObserver
-from src.pipeline.step_definition import STEP_MODULES as _STEP_MODULES
-
-
-# Step functions are imported lazily to avoid circular imports.
-_step_impact_identify = None
-_step_prior_art = None
-_step_gap_analysis = None
-_step_quality_gate = None
-_step_reality_check = None
-_step_c4_fingerprint = None
-_step_cross_domain_transfer = None
-_step_mp_rotation = None
-_step_qzrf_select = None
-_step_isomorphism_search = None
-_step_plugins = None
-_step_synthesis = None
-_step_validation = None
-_step_simulation = None
-
-
-def _get_step_fn(name: str) -> Any:
-    """Lazy-import a step function from its real step module (cached)."""
-    globals_dict = globals()
-    cache_key = f"_{name}"
-    if globals_dict.get(cache_key) is not None:
-        return globals_dict[cache_key]
-
-    step_modules = _STEP_MODULES
-
-    import importlib
-
-    module_path = step_modules[name]
-    mod = importlib.import_module(module_path)
-    fn = getattr(mod, name)
-    globals_dict[cache_key] = fn
-    return fn
 
 
 MODE_CONFIG = {
@@ -131,130 +109,136 @@ def _on_s9(p, s, r, e):
 # STEP_PLAN — configuration-driven pipeline stage definitions
 #
 # Each entry specifies:
-#   id           – short identifier for branching logic in the loop
-#   stage        – PipelineStage enum member
-#   fn           – step function name (resolved via _get_step_fn)
-#   build_args   – callable(pipeline, state, result) -> (pos_args, kwargs)
-#   unwrap_tuple – if True, step fn returns (PipelineStepResult, extra_data)
+#   id             – short identifier for branching logic in the loop
+#   stage          – PipelineStage enum member
+#   make           – callable(pipeline) -> PipelineStep instance (constructor
+#                    deps come from the pipeline)
+#   build_context  – callable(pipeline, state, result) -> dict, passed straight
+#                    to step.execute()
 #   include_output – if True, merge step output_data into the completion event
-#   on_complete  – optional callable(pipeline, state, result, event) for
-#                  post-processing the step_complete event
+#   on_complete    – optional callable(pipeline, state, result, event) for
+#                    post-processing the step_complete event
 # ---------------------------------------------------------------------------
 STEP_PLAN: list[dict[str, Any]] = [
     {
         "id": "s1",
         "stage": PipelineStage.IMPACT_IDENTIFY,
-        "fn": "step_impact_identify",
-        "build_args": lambda p, s, r: ([s["problem"], s["domain_hint"], p.impact], {}),
+        "make": lambda p: ImpactIdentifyStep(p.impact),
+        "build_context": lambda p, s, r: {"problem": s["problem"], "domain_hint": s["domain_hint"]},
     },
     {
         "id": "s2",
         "stage": PipelineStage.PRIOR_ART,
-        "fn": "step_prior_art",
-        "unwrap_tuple": True,
+        "make": lambda p: PriorArtStep(p.prior_art),
         "include_output": True,
-        "build_args": lambda p, s, r: ([s["problem"], p.prior_art, p.multi_searcher], {}),
+        "build_context": lambda p, s, r: {"problem": s["problem"]},
         "on_complete": _on_s2,
     },
     {
         "id": "s2b",
         "stage": PipelineStage.GAP_ANALYSIS,
-        "fn": "step_gap_analysis",
+        "make": lambda p: GapAnalysisStep(p.gap_analyzer),
         "include_output": True,
-        "build_args": lambda p, s, r: (
-            [_step_output(r.steps, PipelineStage.PRIOR_ART, "merged_sources", []),
-             s["problem"], p.gap_analyzer], {},
-        ),
+        "build_context": lambda p, s, r: {
+            "problem": s["problem"],
+            "sources": _step_output(r.steps, PipelineStage.PRIOR_ART, "merged_sources", []),
+        },
         "on_complete": _on_s2b,
     },
     {
         "id": "s2c",
         "stage": PipelineStage.QUALITY_GATE,
-        "fn": "step_quality_gate",
+        "make": lambda p: QualityGateStep(p.quality_gates),
         "include_output": True,
-        "build_args": lambda p, s, r: (
-            [_step_output(r.steps, PipelineStage.PRIOR_ART, "merged_sources", []),
-             _step_output(r.steps, PipelineStage.GAP_ANALYSIS, "gaps", []),
-             p.quality_gates], {},
-        ),
+        "build_context": lambda p, s, r: {
+            "sources": _step_output(r.steps, PipelineStage.PRIOR_ART, "merged_sources", []),
+            "gaps": _step_output(r.steps, PipelineStage.GAP_ANALYSIS, "gaps", []),
+        },
         "on_complete": _on_s2c,
     },
     {
         "id": "s2d",
         "stage": PipelineStage.REALITY_CHECK,
-        "fn": "step_reality_check",
+        "make": lambda p: RealityCheckStep(),
         "include_output": True,
-        "build_args": lambda p, s, r: ([s["problem"]], {}),
+        "build_context": lambda p, s, r: {"problem": s["problem"], "solution": ""},
     },
     {
         "id": "s3",
         "stage": PipelineStage.C4_FINGERPRINT,
-        "fn": "step_c4_fingerprint",
+        "make": lambda p: C4FingerprintStep(),
         "include_output": True,
-        "build_args": lambda p, s, r: ([s["problem"], s["domain_hint"]], {}),
+        "build_context": lambda p, s, r: {"problem": s["problem"], "domain_hint": s["domain_hint"]},
         "on_complete": _on_s3,
     },
     {
         "id": "s3b",
         "stage": PipelineStage.CROSS_DOMAIN_TRANSFER,
-        "fn": "step_cross_domain_transfer",
+        "make": lambda p: CrossDomainTransferStep(),
         "include_output": True,
-        "build_args": lambda p, s, r: ([s["problem"], s["domain_hint"]], {}),
+        "build_context": lambda p, s, r: {"problem": s["problem"], "domain_hint": s["domain_hint"]},
     },
     {
         "id": "s4",
         "stage": PipelineStage.MP_ROTATION,
-        "fn": "step_mp_rotation",
-        "build_args": lambda p, s, r: (
-             [s["problem"], s["c4_state"],
-              p.mp_rotation, p.mp_llm_generator, p.provider_router], {},
-        ),
+        "make": lambda p: MPRotationStep(),
+        "build_context": lambda p, s, r: {
+            "problem": s["problem"],
+            "c4_state": s["c4_state"],
+            "mp_rotation": p.mp_rotation,
+            "mp_llm_generator": p.mp_llm_generator,
+            "provider_router": p.provider_router,
+        },
         "on_complete": _on_s4,
     },
     {
         "id": "s5",
         "stage": PipelineStage.QZRF_SELECT,
-        "fn": "step_qzrf_select",
-        "build_args": lambda p, s, r: ([s["c4_state"], p.qzrf], {}),
+        "make": lambda p: QzrfSelectStep(),
+        "build_context": lambda p, s, r: {"c4_state": s["c4_state"], "qzrf": p.qzrf},
         "on_complete": _on_s5,
     },
     {
         "id": "s6",
         "stage": PipelineStage.ISOMORPHISM_SEARCH,
-        "fn": "step_isomorphism_search",
-        "build_args": lambda p, s, r: (
-            [s["problem"], s["domain_hint"], s["c4_state"], p.transformer, p.memory], {},
-        ),
+        "make": lambda p: IsomorphismSearchStep(),
+        "build_context": lambda p, s, r: {
+            "problem": s["problem"],
+            "domain_hint": s["domain_hint"],
+            "c4_state": s["c4_state"],
+            "transformer": p.transformer,
+            "memory": p.memory,
+        },
         "on_complete": _on_s6,
     },
     {
         "id": "s8",
         "stage": PipelineStage.SYNTHESIS,
-        "fn": "step_synthesis",
-        "build_args": lambda p, s, r: (
-             [s["problem"],
-              r.mp_perspectives,
-              r.qzrf_recommendations,
-              s["c4_state"],
-              r.isomorphism_found,
-              {},
-              s.get("plugin_results", []),
-              p.provider_router,
-              p._cost_tracker,
-              p._prior_art_confidence],
-            {"gap_results": s.get("gap_results", []),
-             "quality_gate_results": s.get("quality_gate_results", {}),
-             "max_tokens": s.get("synthesis_tokens", 1500),
-             "observer_insights": s.get("observer_insights", []),
-             "sources": _step_output(r.steps, PipelineStage.PRIOR_ART, "sources", [])},
-        ),
+        "make": lambda p: SynthesisStep(),
+        "build_context": lambda p, s, r: {
+            "problem": s["problem"],
+            "perspectives": r.mp_perspectives,
+            "qzrf_ops": r.qzrf_recommendations,
+            "c4_state": s["c4_state"],
+            "isomorphism_found": r.isomorphism_found,
+            "mapping": {},
+            "observer_insights": s.get("observer_insights", []),
+            "plugin_results": s.get("plugin_results", []),
+            "provider_router": p.provider_router,
+            "cost_tracker": p._cost_tracker,
+            "prior_art_confidence": p._prior_art_confidence,
+            "gap_results": s.get("gap_results", []),
+            "quality_gate_results": s.get("quality_gate_results", {}),
+            "max_tokens": s.get("synthesis_tokens", 1500),
+            "sources": _step_output(r.steps, PipelineStage.PRIOR_ART, "sources", []),
+        },
         "on_complete": _on_s8,
     },
     {
         "id": "s9",
         "stage": PipelineStage.VALIDATION,
-        "fn": "step_validation",
-        "build_args": lambda p, s, r: ([s["problem"], r.final_solution], {}),
+        "make": lambda p: ToteValidationStep(),
+        "build_context": lambda p, s, r: {"problem": s["problem"], "solution": r.final_solution},
         "on_complete": _on_s9,
     },
 ]
@@ -288,7 +272,7 @@ class PipelineExecutor:
         result = self._pipeline._create_result(problem, mode)
 
         # Mutable state dict accumulates data across step iterations.
-        # build_args lambdas and on_complete callbacks read / mutate it.
+        # build_context callables and on_complete callbacks read / mutate it.
         state: dict[str, Any] = {
             "problem": problem,
             "domain_hint": domain_hint,
@@ -319,7 +303,11 @@ class PipelineExecutor:
                 selected_plugins = getattr(self._pipeline, "_selected_plugins", [])
                 if selected_plugins:
                     yield {"event": "step_start", "stage": "plugin_execution"}
-                    plugin_results, plugin_status = await _get_step_fn("step_plugins")(problem, selected_plugins)
+                    plugin_res = await PluginExecutionStep().execute(
+                        {"problem": problem, "selected_plugins": selected_plugins}
+                    )
+                    plugin_results = plugin_res.output_data.get("plugin_results", [])
+                    plugin_status = plugin_res.status
                     state["plugin_results"] = plugin_results
                     yield {
                         "event": "step_complete",
@@ -327,9 +315,6 @@ class PipelineExecutor:
                         "status": plugin_status,
                         "data": {"plugins_executed": len(plugin_results), "plugin_results": plugin_results},
                     }
-
-            # Resolve positional args and keyword args
-            pos_args, kwargs = step_def["build_args"](self._pipeline, state, result)
 
             # O₀ → O₁ self-diagnostic BEFORE synthesis (s8) so insights feed into synthesis
             if step_id == "s8" and self._observer_controller is not None:
@@ -340,7 +325,7 @@ class PipelineExecutor:
                     state["observer_insights"] = self._observer_insights
 
             # Execute the step
-            async for event in self._execute_step(step_def, pos_args, result, **kwargs):
+            async for event in self._execute_step(step_def, result):
                 yield event
 
             # After synthesis: track stagnation for potential O₁ → O₂ shift
@@ -400,8 +385,7 @@ class PipelineExecutor:
                     s8_def = next((s for s in STEP_PLAN if s["id"] == "s8"), None)
                     if s8_def:
                         yield {"event": "step_start", "stage": "synthesis_refinement"}
-                        pos_args, kwargs = s8_def["build_args"](self._pipeline, state, result)
-                        async for event in self._execute_step(s8_def, pos_args, result, **kwargs):
+                        async for event in self._execute_step(s8_def, result):
                             if event.get("event") == "step_complete":
                                 event["stage"] = "synthesis_refinement"
                             yield event
@@ -421,7 +405,11 @@ class PipelineExecutor:
         selected_pattern = getattr(self._pipeline, "_selected_pattern", None)
         if selected_pattern:
             yield {"event": "step_start", "stage": "pattern_simulation"}
-            pattern_results, sim_status = await _get_step_fn("step_simulation")(problem, selected_pattern)
+            sim_res = await SimulationStep().execute(
+                {"problem": problem, "selected_pattern": selected_pattern}
+            )
+            pattern_results = sim_res.output_data.get("pattern_results", [])
+            sim_status = sim_res.status
             yield {
                 "event": "step_complete",
                 "stage": "pattern_simulation",
@@ -599,32 +587,26 @@ class PipelineExecutor:
     async def _execute_step(
         self,
         step_def: dict[str, Any],
-        fn_args: list[Any],
         result: Any,
-        *,
-        extra_data: dict[str, Any] | None = None,
-        **fn_kwargs: Any,
     ) -> None:
-        """Unified step executor — replaces all _execute_stepN() methods."""
+        """Unified step executor — constructs the PipelineStep and runs it.
+
+        ``make(pipeline)`` builds the typed step with its constructor deps;
+        ``build_context(pipeline, state, result)`` produces the execute() dict.
+        """
         stage = step_def["stage"]
         stage_str = stage if isinstance(stage, str) else stage.value
 
         yield {"event": "step_start", "stage": stage_str}
 
-        step_fn = _get_step_fn(step_def["fn"])
-        raw = await step_fn(*fn_args, **fn_kwargs)
-
-        unwrap = step_def.get("unwrap_tuple", False)
-        if unwrap:
-            step_result, extra = raw
-        else:
-            step_result = raw
-            extra = None
+        step = step_def["make"](self._pipeline)
+        context = step_def["build_context"](self._pipeline, self._state, result)
+        step_result = await step.execute(context)
 
         result.steps.append(step_result)
 
         if step_result.error:
-            self._logger.warning("%s failed: %s", step_def["fn"], step_result.error)
+            self._logger.warning("%s failed: %s", stage_str, step_result.error)
 
         completion: dict[str, Any] = {
             "event": "step_complete",
@@ -635,12 +617,8 @@ class PipelineExecutor:
         }
 
         data: dict[str, Any] = {}
-        if unwrap and extra is not None:
-            data["max_confidence"] = extra
         if step_def.get("include_output"):
             data.update(step_result.output_data)
-        if extra_data:
-            data.update(extra_data)
         if data:
             completion["data"] = data
 

@@ -29,18 +29,16 @@ from src.agents.solve_pipeline import SolvePipelineResult
 from src.c4.state import C4State
 
 
-# ── canned per-step outputs the on_complete callbacks read ─────────────────
+# ── canned per-stage outputs the on_complete callbacks read ────────────────
+# Keyed by PipelineStage.value (stable; outlives the step free-fn names).
 _CANNED_OUTPUT: dict[str, dict] = {
-    "step_prior_art": {"recommendation": "REC", "merged_sources": [], "sources": []},
-    "step_synthesis": {"solution": "SOL", "confidence": 0.8},
-    "step_mp_rotation": {"perspectives": []},
-    "step_qzrf_select": {"operators": ["op-a", "op-b"]},
-    "step_isomorphism_search": {"found": True},
-    "step_validation": {"needs_revision": False},
+    "prior_art": {"recommendation": "REC", "merged_sources": [], "sources": []},
+    "synthesis": {"solution": "SOL", "confidence": 0.8},
+    "mp_rotation": {"perspectives": []},
+    "qzrf_select": {"operators": ["op-a", "op-b"]},
+    "isomorphism_search": {"found": True},
+    "validation": {"needs_revision": False},
 }
-# fn name -> PipelineStage, taken from the live plan (the result object the stub
-# returns must carry the right stage; some on_complete callbacks check it).
-_NAME_STAGE: dict[str, PipelineStage] = {sd["fn"]: sd["stage"] for sd in ex_mod.STEP_PLAN}
 
 
 class _FakePath:
@@ -79,33 +77,46 @@ def _make_fake_pipeline() -> SimpleNamespace:
     return p
 
 
-def _install_step_stubs(monkeypatch, recorder: list[str], *, prior_art_conf: float = 0.3) -> None:
-    """Replace executor._get_step_fn with a recording stub factory."""
+class _FakeStep:
+    """Records its stage and returns a canned result, ignoring the context."""
 
-    async def _stub(name: str, *args, **kwargs):  # noqa: ANN002, ANN003
-        recorder.append(name)
-        if name == "step_prior_art":  # unwrap_tuple step → (result, extra)
-            res = PipelineStepResult(
-                stage=PipelineStage.PRIOR_ART, status="completed",
-                output_data=_CANNED_OUTPUT["step_prior_art"],
-            )
-            return res, prior_art_conf
-        if name == "step_plugins":  # special inline branch → (results, status)
-            return [{"plugin": "p1", "ok": True}], "completed"
-        if name == "step_simulation":  # special post-loop branch → (results, status)
-            return [], "completed"
-        return PipelineStepResult(
-            stage=_NAME_STAGE.get(name, PipelineStage.SYNTHESIS),
-            status="completed",
-            output_data=_CANNED_OUTPUT.get(name, {}),
+    def __init__(self, stage: PipelineStage, recorder: list[str], *, extra: dict | None = None):
+        self._stage = stage
+        self._rec = recorder
+        self._extra = extra or {}
+
+    async def execute(self, context):  # noqa: ANN001
+        self._rec.append(self._stage.value)
+        out = dict(_CANNED_OUTPUT.get(self._stage.value, {}))
+        out.update(self._extra)
+        return PipelineStepResult(stage=self._stage, status="completed", output_data=out)
+
+
+def _install_step_stubs(monkeypatch, recorder: list[str], *, prior_art_conf: float = 0.3) -> None:
+    """Swap every step's ``make`` (and the inline plugin/sim classes) for fakes.
+
+    Injection seam for P2-B's class-registry dispatch: the assertions below are
+    unchanged from the pre-refactor net; only this wiring moved from
+    ``_get_step_fn`` to ``make``/the inline step classes.
+    """
+    for spec in ex_mod.STEP_PLAN:
+        stage = spec["stage"]
+        extra = {"max_confidence": prior_art_conf} if stage is PipelineStage.PRIOR_ART else None
+        monkeypatch.setitem(
+            spec, "make",
+            (lambda st, ex: (lambda p: _FakeStep(st, recorder, extra=ex)))(stage, extra),
         )
 
-    def _fake_get_step_fn(name: str):
-        async def _bound(*args, **kwargs):  # noqa: ANN002, ANN003
-            return await _stub(name, *args, **kwargs)
-        return _bound
-
-    monkeypatch.setattr(ex_mod, "_get_step_fn", _fake_get_step_fn)
+    # inline special-branch classes (plugins before synthesis, simulation post-loop)
+    monkeypatch.setattr(
+        ex_mod, "PluginExecutionStep",
+        lambda: _FakeStep(PipelineStage.PLUGIN_EXECUTION, recorder,
+                          extra={"plugin_results": [{"plugin": "p1", "ok": True}]}),
+    )
+    monkeypatch.setattr(
+        ex_mod, "SimulationStep",
+        lambda: _FakeStep(PipelineStage.SIMULATION, recorder, extra={"pattern_results": []}),
+    )
 
 
 async def _drive(pipeline, mode: str) -> list[dict]:
@@ -147,7 +158,7 @@ async def test_turbo_skips_validation(monkeypatch):
     _install_step_stubs(monkeypatch, rec)
     events = await _drive(_make_fake_pipeline(), "turbo")
     assert _completed_stages(events) == _TURBO_ORDER
-    assert "step_validation" not in rec  # s9 free-fn never resolved/called
+    assert "validation" not in rec  # s9 never executed in turbo
 
 
 @pytest.mark.asyncio
@@ -175,7 +186,7 @@ async def test_high_confidence_prior_art_early_exits(monkeypatch):
         "impact_identify", "prior_art", "gap_analysis", "quality_gate", "reality_check",
     ]
     assert events[-1]["event"] == "complete"
-    assert "step_synthesis" not in rec
+    assert "synthesis" not in rec
     assert "High-confidence prior art" in p._last_result.final_solution
     assert p._last_result.confidence == 0.95
 
@@ -192,7 +203,7 @@ async def test_selected_plugins_interleave_before_synthesis(monkeypatch):
     # plugin_execution fires after isomorphism_search, before synthesis
     assert "plugin_execution" in stages
     assert stages.index("plugin_execution") < stages.index("synthesis")
-    assert "step_plugins" in rec
+    assert "plugin_execution" in rec
 
 
 @pytest.mark.asyncio
@@ -206,7 +217,7 @@ async def test_selected_pattern_runs_simulation_after_loop(monkeypatch):
     stages = [e.get("stage") for e in events]
     assert "pattern_simulation" in stages
     assert stages.index("pattern_simulation") > stages.index("synthesis")
-    assert "step_simulation" in rec
+    assert "simulation" in rec
 
 
 @pytest.mark.asyncio

@@ -288,3 +288,34 @@ async def test_low_confidence_triggers_observer_o2_resynthesis(monkeypatch):
     # synthesis recorded twice: the main pass + the O₂ refinement pass
     assert rec.count("synthesis") == 2
     assert events[-1]["event"] == "complete"
+
+
+@pytest.mark.asyncio
+async def test_o2_refinement_keeps_the_better_synthesis(monkeypatch):
+    """O₂ re-run yields higher confidence → result is updated to the better one."""
+    rec: list[str] = []
+    _install_step_stubs(monkeypatch, rec, synthesis_confidence=0.5)
+
+    calls = {"n": 0}
+
+    class _StatefulSynth:
+        async def execute(self, ctx):  # noqa: ANN001
+            calls["n"] += 1
+            rec.append("synthesis")
+            conf = 0.5 if calls["n"] == 1 else 0.9  # refinement beats the first pass
+            return PipelineStepResult(
+                stage=PipelineStage.SYNTHESIS, status="completed",
+                output_data={"solution": f"SOL{calls['n']}", "confidence": conf},
+            )
+
+    for spec in ex_mod.STEP_PLAN:
+        if spec["stage"] is PipelineStage.SYNTHESIS:
+            monkeypatch.setitem(spec, "make", lambda p: _StatefulSynth())
+
+    p = _make_fake_pipeline()
+    p.observer = _FakeObserverController()
+    await _drive(p, "autopilot")
+
+    # the keep-better branch promoted the refinement result onto the final result
+    assert p._last_result.confidence == 0.9
+    assert p._last_result.final_solution == "SOL2"

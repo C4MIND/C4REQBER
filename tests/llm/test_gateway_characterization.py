@@ -263,3 +263,42 @@ class TestGatewayEquivalence:
         # chat_json forces json_mode → response_format on the wire
         assert calls[0]["extra"] == {"response_format": {"type": "json_object"}}
         assert calls[0]["model"] == "deepseek-v4-flash"
+
+
+# ── 5. DefaultGateway lifecycle: lazy strategy construction + close() ───────
+class TestGatewayLifecycle:
+    @pytest.mark.asyncio
+    async def test_generate_lazily_constructs_async_client(self, capture_httpx, stable_env):
+        from src.llm.gateway import DefaultGateway
+
+        gw = DefaultGateway()  # no injected client
+        assert gw._async_client is None
+        await gw.generate("LAZY_PROMPT", max_tokens=10, temperature=0.0)
+        assert gw._async_client is not None  # _client() built it on first use
+
+    @pytest.mark.asyncio
+    async def test_generate_for_stage_lazily_constructs_router(self, capture_httpx, stable_env):
+        from src.llm.gateway import DefaultGateway
+
+        gw = DefaultGateway()  # no injected router
+        assert gw._provider_router is None
+        await gw.generate_for_stage("synthesis", "P", use_retry=False)
+        assert gw._provider_router is not None  # _router() built it on first use
+
+    @pytest.mark.asyncio
+    async def test_close_releases_injected_strategies(self):
+        from unittest.mock import AsyncMock
+
+        from src.llm.gateway import DefaultGateway
+
+        router, client = AsyncMock(), AsyncMock()
+        gw = DefaultGateway(provider_router=router, async_client=client)
+        await gw.close()
+        router.close_all.assert_awaited_once()
+        client.close.assert_awaited_once()
+
+    @pytest.mark.asyncio
+    async def test_close_is_noop_when_nothing_constructed(self):
+        from src.llm.gateway import DefaultGateway
+
+        await DefaultGateway().close()  # must not raise with no strategies built

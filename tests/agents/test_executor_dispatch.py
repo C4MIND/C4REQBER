@@ -92,7 +92,10 @@ class _FakeStep:
         return PipelineStepResult(stage=self._stage, status="completed", output_data=out)
 
 
-def _install_step_stubs(monkeypatch, recorder: list[str], *, prior_art_conf: float = 0.3) -> None:
+def _install_step_stubs(
+    monkeypatch, recorder: list[str], *,
+    prior_art_conf: float = 0.3, synthesis_confidence: float = 0.8,
+) -> None:
     """Swap every step's ``make`` (and the inline plugin/sim classes) for fakes.
 
     Injection seam for P2-B's class-registry dispatch: the assertions below are
@@ -101,7 +104,12 @@ def _install_step_stubs(monkeypatch, recorder: list[str], *, prior_art_conf: flo
     """
     for spec in ex_mod.STEP_PLAN:
         stage = spec["stage"]
-        extra = {"max_confidence": prior_art_conf} if stage is PipelineStage.PRIOR_ART else None
+        if stage is PipelineStage.PRIOR_ART:
+            extra = {"max_confidence": prior_art_conf}
+        elif stage is PipelineStage.SYNTHESIS:
+            extra = {"confidence": synthesis_confidence}  # drive the O₂ low-confidence branch
+        else:
+            extra = None
         monkeypatch.setitem(
             spec, "make",
             (lambda st, ex: (lambda p: _FakeStep(st, recorder, extra=ex)))(stage, extra),
@@ -242,3 +250,41 @@ async def test_deep_work_adds_formal_verification_and_theorem_export(monkeypatch
     assert "formal_verification" in stages
     assert "theorem_export" in stages
     assert stages.index("formal_verification") > stages.index("synthesis")
+
+
+# ── observer O₂ low-confidence re-synthesis (self-review: the one edited path
+#    the core net left uncovered — it ran with observer=None). ────────────────
+class _FakeFrame:
+    def __init__(self):
+        self.observer_position = SimpleNamespace(name="META")
+        self.visible_states: list = []
+        self.blind_spots: list = []
+        self.insights: list = []
+
+
+class _FakeObserverController:
+    """Minimal ObserverController stand-in: observe()/shift_up() return frames."""
+
+    def observe(self, position, c4_state):  # noqa: ANN001
+        return _FakeFrame()
+
+    def shift_up(self, frame):  # noqa: ANN001
+        return _FakeFrame()
+
+
+@pytest.mark.asyncio
+async def test_low_confidence_triggers_observer_o2_resynthesis(monkeypatch):
+    rec: list[str] = []
+    # synthesis confidence < 0.72 + an observer present → post-loop O₂ re-runs s8
+    _install_step_stubs(monkeypatch, rec, synthesis_confidence=0.5)
+    p = _make_fake_pipeline()
+    p.observer = _FakeObserverController()
+    events = await _drive(p, "autopilot")
+
+    stages = [e.get("stage") for e in events]
+    # the O₂ branch fired and re-ran synthesis via _execute_step (the edited path)
+    assert "synthesis_refinement" in stages
+    assert any(e.get("event") == "observer_meta" for e in events)
+    # synthesis recorded twice: the main pass + the O₂ refinement pass
+    assert rec.count("synthesis") == 2
+    assert events[-1]["event"] == "complete"

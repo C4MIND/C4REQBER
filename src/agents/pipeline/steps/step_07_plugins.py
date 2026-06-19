@@ -45,7 +45,7 @@ class PluginExecutionStep(PipelineStep):
                 duration_ms=(time.time() - start) * 1000,
             )
 
-        from src.plugins.v2_registry import execute_plugin
+        from src.plugins.unified_registry import execute_plugin
 
         for plugin_id in selected_plugins:
             try:
@@ -61,12 +61,3 @@ class PluginExecutionStep(PipelineStep):
             output_data={"plugin_results": plugin_results},
             duration_ms=(time.time() - start) * 1000,
         )
-
-
-async def step_plugins(
-    problem: str, selected_plugins: list[str]
-) -> tuple[list[dict[str, Any]], str]:
-    """Legacy function-based API."""
-    step = PluginExecutionStep()
-    result = await step.execute({"problem": problem, "selected_plugins": selected_plugins})
-    return result.output_data.get("plugin_results", []), result.status

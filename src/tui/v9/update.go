@@ -103,6 +103,13 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				status, phase, progress, result, completed := extractResultFromSSEData(msg.event.Data)
 				m.handleLegacyPhase(status, phase, progress, result, completed)
 			}
+			// Terminal event: tear the stream down so the reader goroutine +
+			// HTTP connection don't linger, and stop re-issuing sseContinueCmd
+			// against a finished job.
+			if te.Type == api.EventComplete || te.Type == api.EventFailed || te.Type == api.EventCancelled {
+				m.teardownStream()
+				return m, nil
+			}
 		} else {
 			// Non-JSON data — ignore
 		}
@@ -113,16 +120,17 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 
 	case sseClosedMsg:
-		// SSE stream ended; fall back to polling for any final result
-		m.sseEvents = nil
+		// SSE stream ended; cancel its context (sseContinueCmd does not) before
+		// falling back to polling for any final result.
+		m.teardownStream()
 		if m.running && m.jobID != "" {
 			return m, pollCmd(m.api, m.jobID)
 		}
 		return m, nil
 
 	case sseErrorMsg:
-		m.sseEvents = nil
-		// SSE failed; fall back to polling
+		// SSE failed; cancel its context before falling back to polling.
+		m.teardownStream()
 		if m.running && m.jobID != "" {
 			return m, pollCmd(m.api, m.jobID)
 		}
@@ -156,8 +164,11 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 				return m, nil
 			case keyStr == "backspace":
-				if len(m.paletteQuery) > 0 {
-					m.paletteQuery = m.paletteQuery[:len(m.paletteQuery)-1]
+				// Delete one rune, not one byte — palette queries can contain
+				// multi-byte runes (CJK/Arabic/emoji); byte-slicing would leave
+				// invalid UTF-8.
+				if r := []rune(m.paletteQuery); len(r) > 0 {
+					m.paletteQuery = string(r[:len(r)-1])
 					m.refreshPaletteMatches()
 				}
 				return m, nil
@@ -177,6 +188,12 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case km.Matches(ActQuit, keyStr):
 			if m.saveHistory && m.tel != nil {
 				saveTelemetryHistory(m.tel, m.Config())
+			}
+			// Bound the append-only feed file on exit. Append runs on every
+			// card; without a prune the feed.jsonl grows without limit (only
+			// the last 50 are ever loaded, so the bloat is otherwise invisible).
+			if m.feedStore != nil {
+				_ = m.feedStore.Prune()
 			}
 			return m, tea.Quit
 		case km.Matches(ActRun, keyStr):
@@ -223,11 +240,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.running {
 				m.running = false
 				m.jobID = ""
-				if m.sseCancel != nil {
-					m.sseCancel()
-					m.sseCancel = nil
-				}
-				m.sseEvents = nil
+				m.teardownStream()
 				m.setToast(i18n.T("toast.cancelled"))
 				if m.tel != nil {
 					m.tel.IncAbort()
@@ -697,6 +710,10 @@ func (m *model) setToast(msg string) {
 }
 
 func (m *model) startDiscovery(query string) tea.Cmd {
+	// Cancel any in-flight stream before launching a new one, otherwise the
+	// previous job's reader goroutine + connection leak and m.sseCancel ends up
+	// pointing at the wrong stream.
+	m.teardownStream()
 	m.appendCard(Card{Kind: CardEmpty, Title: "→ " + query, Body: "submitting via " + string(m.mode) + "…", Time: time.Now()})
 	tier := m.llmTier.String()
 	m.running = true

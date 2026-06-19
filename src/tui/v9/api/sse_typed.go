@@ -86,7 +86,11 @@ func DecodeTypedEvent(data string) (TypedEvent, error) {
 		// final phase ("G: Quality") and progress=1.0, so the status check
 		// must come first or completion gets misread as phase progress.
 		switch {
-		case e.Status == "complete" || e.Status == "failed":
+		case e.Status == "failed":
+			e.Type = EventFailed
+		case e.Status == "cancelled":
+			e.Type = EventCancelled
+		case e.Status == "complete" || e.Status == "partial":
 			e.Type = EventComplete
 		case e.Phase != "" || e.Progress > 0:
 			e.Type = EventPhaseProgress

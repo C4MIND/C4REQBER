@@ -154,9 +154,19 @@ func (f *FeedStore) Prune() error {
 	}
 	enc := json.NewEncoder(file)
 	for _, e := range merged {
-		_ = enc.Encode(e)
+		if err := enc.Encode(e); err != nil {
+			file.Close()
+			os.Remove(tmp)
+			return err
+		}
 	}
-	file.Close()
+	if err := file.Close(); err != nil {
+		os.Remove(tmp)
+		return err
+	}
+	// Only promote the rewritten file once it's fully and successfully written,
+	// so a mid-write failure can never truncate the live feed (and silently
+	// drop the bookmarked entries this function is trying to preserve).
 	return os.Rename(tmp, f.path)
 }
 

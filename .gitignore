@@ -27,6 +27,10 @@ config/secrets/
 *secret*
 openrouter_key.txt
 ollama_config.yaml
+# Credential dumps (a .tex secrets dump leaked past the rules once — see
+# ARCHITECTURE_AUDIT.md §0). Belt-and-braces; the real guard is gitleaks.
+*value-keys*
+archive/harness/value-keys.*
 
 # Python
 __pycache__/
@@ -118,8 +122,9 @@ tmp/
 temp/
 *.tmp
 
-# Model files (large)
+# Model files (large) — but keep tracked config/source under models/
 models/
+!models/**/*.json
 *.pkl
 *.h5
 *.onnx
@@ -199,6 +204,10 @@ bin/
 *.txt
 !requirements.txt
 !README.txt
+# TUI v9 golden-snapshot fixtures are committed test data, not temp .txt files.
+# Without this exception the blanket *.txt rule silently dropped 102 of the 132
+# fixtures, leaving TestGoldenSnapshotsAll red on every clean checkout.
+!src/tui/v9/tests/golden/*.txt
 
 # Archive backups & temp docs
 archive/*.backup
@@ -223,14 +232,17 @@ dissertations/*
 discovery/*
 !discovery/README.md
 
-# Dead code (already removed, keep in ignore)
+# Dead code (already removed, keep in ignore) — but don't drop tracked source
 migrations/
+!migrations/*.sql
 alembic/
 structural_memory/
 
-# Legacy / experimental
+# Legacy / experimental — but don't drop tracked k8s manifests/scripts
 proto/
 k8s/
+!k8s/*.yaml
+!k8s/*.sh
 
 # Specific to c4reqber
 src/payments/
@@ -253,3 +265,6 @@ docs/design-system/*-backup.*
 
 # Runtime artifacts
 discoveries_run.json
+
+# Go coverage artifacts
+coverage.out

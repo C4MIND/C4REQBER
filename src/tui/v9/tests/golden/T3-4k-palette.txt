@@ -1,0 +1,41 @@
+⌘ Command Palette (: to open, Esc to close)
+
+> █
+
+▶ ⏏ Quit  App  [Ctrl+C]
+  🧙 Re-run first-run wizard  App
+  🔧 Show debug overlay  App  [Ctrl+Shift+D]
+  ? Show help overlay  App  [?]
+  📜 Show history  App
+  📊 Toggle status bar  App  [Ctrl+B]
+  🗑 Clear feed  Feed  [Ctrl+K]
+  ⤒ Focus first card  Feed  [g g]
+  ⤓ Focus last card  Feed  [G]
+  ▶ Toggle follow mode  Feed  [F]
+  🗝 Show keyboard shortcuts  Help
+  🌐 Language: ar  Language
+  🌐 Language: de  Language
+  🌐 Language: en  Language
+  🌐 Language: hi  Language
+  🌐 Language: ja  Language
+  🌐 Language: ru  Language
+  🌐 Language: zh  Language
+  🔄 Cycle mode (next)  Mode  [Tab]
+  🔬 Switch to DISCOVER mode  Mode
+  ⚡ Switch to FLASH mode  Mode
+  🚀 Switch to TURBO mode  Mode
+  🏭 Switch to TURBOFACTORY mode  Mode
+  ⚙ Open settings  Settings  [Ctrl+,]
+  ⏚ List simulation capabilities  Sim
+  ↻ Refresh sim capabilities (force)  Sim
+  $ Show sim cost this session  Sim
+  ⏚ Show simulation capabilities  Sim  [Ctrl+Shift+C]
+  🟢 Sim preference: auto  Sim
+  🟡 Sim preference: cpu_only  Sim
+  ⏸ Sim preference: off (skip sims)  Sim
+  🎨 Cycle color profile  Theme  [Ctrl+Shift+P]
+  🎨 Theme: default  Theme
+  🎨 Theme: high-contrast  Theme
+  🎨 Theme: solarized-dark  Theme
+
+  35 commands  ·  ↑↓ to navigate  ·  Enter to run  ·  Esc to close

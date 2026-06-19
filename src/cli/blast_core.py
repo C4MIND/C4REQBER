@@ -159,7 +159,7 @@ def cmd_turbo(
 
     # Auto-select plugins based on topic complexity + domain + mode
     if plugins is None or plugins == "auto":
-        from src.plugins.v2_registry import select_plugins_for_problem
+        from src.plugins.unified_registry import select_plugins_for_problem
         selected = select_plugins_for_problem(topic, domain_hint="", auto_mode="turbo")
         console.print(f"[dim]Auto-plugins:[/dim] {selected}")
     else:
@@ -211,16 +211,16 @@ def cmd_flash(
 ) -> None:
     """Get a quick answer (no pipeline, just fast LLM + optional web search)."""
     from src.knowledge.orchestrator import MultiSourceSearcher
-    from src.llm.async_client import AsyncLLMClient
+    from src.llm.gateway import get_gateway
     from src.pipeline.config import PipelineConfig
     from src.pipeline.quality import QualityGates
-    from src.plugins.registry import WebSearchPlugin
+    from src.plugins.unified_registry import WebSearchPlugin
 
     console.print(f"[bold]BLAST flash[/bold] — {get_mode_description('flash')}")
     console.print(f"[dim]Format:[/dim] {format} | [dim]Sources:[/dim] {'yes' if with_sources else 'no'} | [dim]Deep:[/dim] {'yes' if deep else 'no'}")
 
     async def _run() -> dict[str, Any]:
-        llm = AsyncLLMClient()
+        llm = get_gateway()
         context = ""
         sources = []
         quality_score = 0
@@ -466,7 +466,7 @@ def cmd_turbofactory(
     """
     from src.agents.pipeline import UniversalSolvePipeline
     from src.core.profile_manager import UserProfileManager
-    from src.llm.async_client import AsyncLLMClient
+    from src.llm.gateway import get_gateway
     from src.pipeline.hil_pipeline import HILDiscoveryPipeline
 
     n_pipelines = SCALE_MAP.get(scale, 10)
@@ -481,7 +481,7 @@ def cmd_turbofactory(
 
     async def _generate_subproblems(domain: str, n: int) -> list[str]:
         """Generate N distinct sub-problems for parallel research."""
-        llm = AsyncLLMClient()
+        llm = get_gateway()
         prompt = f"""Given the domain "{domain}", generate {n} distinct, specific research sub-problems.
 Each sub-problem should explore a different angle or facet of the domain.
 Make them specific enough for scientific research but distinct from each other.

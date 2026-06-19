@@ -13,7 +13,6 @@ from src.agents.pipeline.steps.base import (
     PipelineStepResult,
 )
 from src.c4_analysis.transfer_pipeline import (
-    TransferResult,
     cross_domain_transfer,
     should_auto_trigger,
 )
@@ -81,14 +80,3 @@ class CrossDomainTransferStep(PipelineStep):
             duration_ms=(time.time() - start) * 1000,
             error=error,
         )
-
-
-async def step_cross_domain_transfer(
-    problem: str,
-    domain_hint: str | None,
-) -> PipelineStepResult:
-    """Legacy function-based API."""
-    step = CrossDomainTransferStep()
-    return await step.execute(
-        {"problem": problem, "domain_hint": domain_hint}
-    )

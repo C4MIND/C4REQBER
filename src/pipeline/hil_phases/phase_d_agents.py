@@ -7,7 +7,7 @@ import importlib
 import logging
 from typing import Any
 
-from src.plugins.v2_registry import PLUGIN_REGISTRY
+from src.plugins.unified_registry import PLUGIN_REGISTRY
 
 # Note: FunctorOrchestrator (agents layer) is resolved by LATE BINDING inside
 # run_functors (see below), not imported statically. This pipeline phase invokes

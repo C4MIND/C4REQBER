@@ -268,6 +268,7 @@ func NewApp(apiURL string) *model {
 		api:           api.New(apiURL),
 		keymap:        NewKeyMap(DetectPlatform()),
 		mode:          ModeDiscover,
+		focusedCardIdx: -1, // -1 = follow last; avoids "focusing" the empty card at startup
 		ta:            ta,
 		vp:            vp,
 		focus:         true,
@@ -340,6 +341,12 @@ func NewApp(apiURL string) *model {
 			restoredCount++
 		}
 	}
+	// Bind the palette command closures unconditionally. This MUST run on
+	// every NewApp path — previously it was nested inside the showPlaceholder
+	// branch, so any returning user (cards restored from feed.jsonl) or an
+	// active first-run wizard left every palette command with Run==nil, making
+	// the whole command palette a silent no-op.
+	m.bindRegistry()
 	// Only append the empty placeholder if there are no restored cards
 	// AND the existing first-run wizard isn't going to take over the screen.
 	showPlaceholder := restoredCount == 0
@@ -347,8 +354,7 @@ func NewApp(apiURL string) *model {
 		showPlaceholder = false
 	}
 	if showPlaceholder {
-		m.bindRegistry()
-	m.appendCard(Card{Kind: CardEmpty, Title: i18n.T("empty.title"), Body: i18n.T("empty.hint"), Time: time.Now()})
+		m.appendCard(Card{Kind: CardEmpty, Title: i18n.T("empty.title"), Body: i18n.T("empty.hint"), Time: time.Now()})
 	}
 	if restoredCount > 0 {
 		m.setToast(fmt.Sprintf("restored %d cards from last session", restoredCount))
@@ -377,6 +383,7 @@ func NewAppFresh(apiURL string) *model {
 		api:           api.New(apiURL),
 		keymap:        NewKeyMap(DetectPlatform()),
 		mode:          ModeDiscover,
+		focusedCardIdx: -1, // -1 = follow last; avoids "focusing" the empty card at startup
 		ta:            ta,
 		vp:            vp,
 		focus:         true,
@@ -673,6 +680,18 @@ func simDomainForEngine(engine string) string {
 		return "astrophysics"
 	}
 	return "general"
+}
+
+// teardownStream cancels the live SSE stream's context and clears the model's
+// stream references. Safe to call when no stream is active. Centralizing the
+// cancel+nil bookkeeping here keeps the completion / failure / closed / error /
+// cancel paths from leaking the api.Stream reader goroutine + HTTP connection.
+func (m *model) teardownStream() {
+	if m.sseCancel != nil {
+		m.sseCancel()
+		m.sseCancel = nil
+	}
+	m.sseEvents = nil
 }
 
 // handleCompleteEvent handles a typed 'complete' event — final results.

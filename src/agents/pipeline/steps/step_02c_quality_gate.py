@@ -79,14 +79,3 @@ class QualityGateStep(PipelineStep):
             duration_ms=(time.time() - start) * 1000,
             error=error,
         )
-
-
-# Function-based API
-async def step_quality_gate(
-    sources: list[dict[str, Any]],
-    gaps: list[dict[str, Any]],
-    quality_gates: QualityGates,
-) -> PipelineStepResult:
-    """Run quality gates on sources and gaps."""
-    step = QualityGateStep(quality_gates)
-    return await step.execute({"sources": sources, "gaps": gaps})

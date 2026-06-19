@@ -44,7 +44,7 @@ class TestFormalFrameworkExtender:
     @pytest.mark.anyio(backend="asyncio")
     async def test_propose_with_mock(self) -> None:
         extender = FormalFrameworkExtender()
-        with patch.object(extender._router, "generate", new_callable=AsyncMock, return_value=AsyncMock(content="```lean4\nimport Mathlib\n```")):
+        with patch.object(extender._router, "generate_for_stage", new_callable=AsyncMock, return_value=AsyncMock(content="```lean4\nimport Mathlib\n```")):
             result = await extender.propose("mathlib4", "test gap")
         assert result is not None
         assert result.language == "lean4"

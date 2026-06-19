@@ -174,8 +174,8 @@ def wasm_load(
     console.print(f"  Runtime: {'wasmtime' if _wasm_runtime._has_wasmtime else 'stub (pip install wasmtime for execution)'}")
 
     # Register with plugin registry → appears in pipeline
-    from src.plugins.registry import ToolMetadata
-    from src.plugins.v2_registry import PLUGIN_REGISTRY, PluginInfo
+    from src.plugins.unified_registry import ToolMetadata
+    from src.plugins.unified_registry import PLUGIN_REGISTRY, PluginInfo
     from src.wasm.runtime import WASMToolPlugin
 
     wasm_meta = ToolMetadata(
@@ -233,7 +233,7 @@ def wasm_execute(
     plugin_name: str = typer.Argument(..., help="Registered plugin name (e.g. wasm_hello)"),
 ) -> None:
     """Execute a registered WASM plugin through the pipeline registry."""
-    from src.plugins.v2_registry import PLUGIN_REGISTRY
+    from src.plugins.unified_registry import PLUGIN_REGISTRY
 
     info = PLUGIN_REGISTRY.get(plugin_name)
     if info is None:

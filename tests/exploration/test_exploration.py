@@ -49,7 +49,7 @@ class TestSurpriseDrivenQuestionGenerator:
     @pytest.mark.anyio(backend="asyncio")
     async def test_generate_without_existing(self) -> None:
         gen = SurpriseDrivenQuestionGenerator()
-        with patch.object(gen._router, "generate", new_callable=AsyncMock) as mock_gen:
+        with patch.object(gen._router, "generate_for_stage", new_callable=AsyncMock) as mock_gen:
             mock_gen.return_value.content = "Q1?\nQ2?\nQ3?\nQ4?\nQ5?"
             result = await gen.generate([], "physics", n_candidates=5, top_k=3)
 
@@ -59,7 +59,7 @@ class TestSurpriseDrivenQuestionGenerator:
     @pytest.mark.anyio(backend="asyncio")
     async def test_generate_with_existing(self) -> None:
         gen = SurpriseDrivenQuestionGenerator()
-        with patch.object(gen._router, "generate", new_callable=AsyncMock) as mock_gen:
+        with patch.object(gen._router, "generate_for_stage", new_callable=AsyncMock) as mock_gen:
             mock_gen.return_value.content = "Q1?\nQ2?\nQ3?\nQ4?\nQ5?"
             with patch.object(gen._embedding, "embed", return_value=np.random.randn(5, 384)):
                 result = await gen.generate(["Old question?"], "physics", n_candidates=5, top_k=3)
@@ -84,7 +84,7 @@ class TestFormalFrameworkExtender:
         mock_response = AsyncMock()
         mock_response.content = "```lean4\ntheorem ext : True := by trivial\n```"
 
-        with patch.object(extender._router, "generate", return_value=mock_response):
+        with patch.object(extender._router, "generate_for_stage", return_value=mock_response):
             with patch.object(extender, "_verify_compilation", return_value=(True, None)):
                 result = await extender.propose_extension("mathlib", "test concept", "lean4")
 

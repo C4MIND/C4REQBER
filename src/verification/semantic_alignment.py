@@ -11,7 +11,7 @@ import re
 from dataclasses import dataclass
 from typing import Any
 
-from src.llm.router import ProviderRouter
+from src.llm.gateway import DefaultGateway
 
 
 logger = logging.getLogger("c4reqber.verification.alignment")
@@ -62,7 +62,7 @@ class SemanticAlignmentChecker:
     """Check semantic alignment between theorem statement and proof code."""
 
     def __init__(self) -> None:
-        self._router = ProviderRouter()
+        self._router = DefaultGateway()
 
     async def check_alignment(
         self,
@@ -113,7 +113,7 @@ class SemanticAlignmentChecker:
         )
 
         try:
-            response = await self._router.generate(
+            response = await self._router.generate_for_stage(
                 stage_name="semantic_alignment",
                 prompt=prompt,
                 system_prompt="You are a strict formal verification reviewer. Output valid JSON only.",

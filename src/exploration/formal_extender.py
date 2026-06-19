@@ -9,7 +9,7 @@ import logging
 from dataclasses import dataclass
 from typing import Any
 
-from src.llm.router import ProviderRouter
+from src.llm.gateway import DefaultGateway
 
 
 logger = logging.getLogger("c4reqber.exploration")
@@ -48,7 +48,7 @@ class FormalFrameworkExtender:
     """Propose formal library extensions."""
 
     def __init__(self) -> None:
-        self._router = ProviderRouter()
+        self._router = DefaultGateway()
 
     async def propose_extension(
         self,
@@ -73,7 +73,7 @@ class FormalFrameworkExtender:
         )
 
         try:
-            response = await self._router.generate(
+            response = await self._router.generate_for_stage(
                 stage_name="formal_extension",
                 prompt=prompt,
                 system_prompt=f"You are a {language} expert. Output valid code only.",

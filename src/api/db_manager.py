@@ -100,6 +100,17 @@ class SQLiteDatabase:
         conn.row_factory = sqlite3.Row
         return conn
 
+    async def connect(self) -> None:
+        """No-op for interface parity with PostgresDatabase. SQLite opens a
+        fresh connection per call (see _connection); there is no pool to open."""
+        return None
+
+    async def disconnect(self) -> None:
+        """No-op for interface parity with PostgresDatabase. Without this the
+        lifespan shutdown (`await db.disconnect()`) raised AttributeError on
+        every shutdown for the SQLite path."""
+        return None
+
     async def ping(self) -> bool:
         try:
             with self._connection() as conn:

@@ -156,7 +156,7 @@ async def generate_hypothesis(
     triz_names = ", ".join(p["name"] for p in triz_principles[:3])
     try:
         from src.api.v8_routers.discovery.pipeline import _sanitize_for_prompt
-        from src.llm.providers.unified import LLMProviderRouter
+        from src.llm.gateway import get_gateway
 
         # Sanitize user input before any prompt interpolation
         safe_problem = _sanitize_for_prompt(problem, max_len=500)
@@ -204,7 +204,7 @@ async def generate_hypothesis(
                 )
         except (ImportError, AttributeError, RuntimeError) as e:
             logger.debug("LLMCouncil unavailable for hypothesis: %s", e)
-            llm_text = await LLMProviderRouter.chat(
+            llm_text = await get_gateway().chat(
                 messages=[{"role": "user", "content":
                     f"Generate hypothesis. Problem: {safe_problem}\n"
                     f"TRIZ Principles: {triz_names}\n"

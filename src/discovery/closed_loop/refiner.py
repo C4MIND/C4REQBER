@@ -9,7 +9,7 @@ import logging
 from typing import Any
 
 from src.discovery.closed_loop.bayesian_tracker import BayesianHypothesisTracker
-from src.llm.router import ProviderRouter
+from src.llm.gateway import DefaultGateway
 
 
 logger = logging.getLogger("c4reqber.discovery.closed_loop")
@@ -42,7 +42,7 @@ class HypothesisRefiner:
     """Refine hypothesis based on simulation evidence."""
 
     def __init__(self) -> None:
-        self._router = ProviderRouter()
+        self._router = DefaultGateway()
 
     async def refine(
         self,
@@ -65,7 +65,7 @@ class HypothesisRefiner:
         )
 
         try:
-            response = await self._router.generate(
+            response = await self._router.generate_for_stage(
                 stage_name="hypothesis_refinement",
                 prompt=prompt,
                 system_prompt="You are a precise scientific editor. Be concise.",

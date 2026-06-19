@@ -1,0 +1,47 @@
+1;36m[m1;32mDISCOVERm1;36m]m  ● C4REQBER v9  F<1,1,0>  [en]  DeepSeek  $0.0000  <CLOCK>                                                         DISCOVER 
+ │ 90mReady for your first discoverym                                                                                                                                       
+ │  37mType a question above and press Enterm                                                                                                                               
+ │ 1;36m▣ Am  [████████████████████]                                                                                                                                          
+ │  90mframingm                                                                                                                                                             
+ │ 1;36m▣ Bm  [████████████████████]                                                                                                                                          
+ │  90mknowledge acquisitionm                                                                                                                                               
+ │ 1;36m▣ Cm  [████████████████████]                                                                                                                                          
+ │  90mgap analysism                                                                                                                                                        
+ │ 1;32m● openmm  ◆✓ protein_folding  biologym                                                                                                                                
+ │  37mverdict: supports_hypothesis · elapsed 0ms · $0.012 · m                                                                                                              
+ │  90m↳ [y] yank · [e] expand · [b] bookmarkm                                                                                                                              
+ │ 1;36m▣ Dm  [█████████████▌░░░░░░]                                                                                                                                          
+ │  90mscoring hypothesesm                                                                                                                                                  
+                                                                                                                                                                        
+                                                                                                                                                                        
+                                                                                                                                                                        
+                                                                                                                                                                        
+                                                                                                                                                                        
+                                                                                                                                                                        
+                                                                                                                                                                        
+                                                                                                                                                                        
+                                                                                                                                                                        
+                                                                                                                                                                        
+                                                                                                                                                                        
+                                                                                                                                                                        
+                                                                                                                                                                        
+                                                                                                                                                                        
+                                                                                                                                                                        
+                                                                                                                                                                        
+                                                                                                                                                                        
+                                                                                                                                                                        
+                                                                                                                                                                        
+                                                                                                                                                                        
+                                                                                                                                                                        
+                                                                                                                                                                        
+                                                                                                                                                                        
+                                                                                                                                                                        
+                                                                                                                                                                        
+                                                                                                                                                                        
+                                                                                                                                                                        
+                                                                                                                                                                        
+40m37m❯ mm40m38;5;240;40m  1 mm40m7mdmm40m38;5;240mesign a CRISPR guide RNA with minimal off-targets in T-cellsmm40m                                                                                                     m
+38;5;240m37m❯ mm30m m                                                                                                                                                                     
+38;5;240m37m❯ mm30m m                                                                                                                                                                     
+                                                                                                                              90m90m? ?m  ·  ▶ follow  ·  ▣ 6/6m
+ ▶ READY                                                                                                                           [Enter] Run  [?] Help  [Ctrl+C] Qui

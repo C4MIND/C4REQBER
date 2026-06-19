@@ -182,10 +182,3 @@ class RealityCheckStep(PipelineStep):
             duration_ms=(time.time() - start) * 1000,
             error=error,
         )
-
-
-# Function-based API
-async def step_reality_check(problem: str, solution: str = "") -> PipelineStepResult:
-    """Run reality check on problem and optional solution text."""
-    step = RealityCheckStep()
-    return await step.execute({"problem": problem, "solution": solution})

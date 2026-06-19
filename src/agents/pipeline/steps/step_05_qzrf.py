@@ -57,9 +57,3 @@ class QzrfSelectStep(PipelineStep):
             duration_ms=(time.time() - start) * 1000,
             error=error,
         )
-
-
-async def step_qzrf_select(c4_state: C4State, qzrf: QzrfLibrary) -> PipelineStepResult:
-    """Legacy function-based API."""
-    step = QzrfSelectStep()
-    return await step.execute({"c4_state": c4_state, "qzrf": qzrf})

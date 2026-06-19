@@ -26,7 +26,7 @@ import time
 from dataclasses import dataclass, field
 from typing import Any
 
-from src.llm.router import ProviderRouter
+from src.llm.gateway import DefaultGateway
 
 
 def _sanitize_for_prompt(text: str, max_len: int = 2000) -> str:
@@ -157,7 +157,7 @@ class LLMProver:
     """
 
     def __init__(self) -> None:
-        self._router = ProviderRouter()
+        self._router = DefaultGateway()
         self._client_cache: dict[str, Any] = {}
 
     # ------------------------------------------------------------------
@@ -308,7 +308,7 @@ class LLMProver:
         ``LLMResponse`` with ``.content``, ``.model``, ``.usage``.
         """
         try:
-            response = await self._router.generate(
+            response = await self._router.generate_for_stage(
                 stage_name="proof_generation",
                 prompt=prompt,
             )

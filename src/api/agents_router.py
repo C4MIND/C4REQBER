@@ -12,7 +12,7 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from pydantic import BaseModel
 
-from src.archetypes.data import C4State, get_all_archetypes, get_archetype
+from src.archetypes.data import C4Archetype, get_all_archetypes, get_archetype
 from src.archetypes.engine import (
     build_agent_prompt,
     build_council_prompt,
@@ -130,8 +130,8 @@ class DevilAdvocateResponse(BaseModel):
 # ═══════════════════════════════════════════════════════════════════
 
 
-def _to_response(state: C4State) -> ArchetypeResponse:
-    """Convert C4State to response model."""
+def _to_response(state: C4Archetype) -> ArchetypeResponse:
+    """Convert C4Archetype to response model."""
     return ArchetypeResponse(
         code=state.code,
         time=state.time,

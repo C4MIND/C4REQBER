@@ -12,6 +12,7 @@ Usage:
 """
 import argparse
 import json
+import os
 import re
 import sys
 from collections import Counter
@@ -102,7 +103,7 @@ def main():
     p = argparse.ArgumentParser()
     p.add_argument("--i18n-dir", required=True)
     p.add_argument("--output", required=True)
-    p.add_argument("--model", default="/Users/figuramax/.c4reqber/models/nllb-200")
+    p.add_argument("--model", default=os.path.expanduser("~/.c4reqber/models/nllb-200"))
     p.add_argument("--threshold", type=float, default=0.55,
                    help="F1 threshold below which translations are flagged")
     args = p.parse_args()

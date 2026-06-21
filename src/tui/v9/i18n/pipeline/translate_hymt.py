@@ -98,8 +98,8 @@ def main():
     p.add_argument("--src", required=True, help="Path to en.toml")
     p.add_argument("--out-dir", required=True, help="Output dir for ru/zh/ja/de/ar/hi.toml")
     p.add_argument("--glossary", required=True, help="c4_science_terms.json")
-    p.add_argument("--model", default="/Users/figuramax/.c4reqber/models/hy-mt",
-                   help="HY-MT1.5-1.8B MLX path")
+    default_model = os.path.expanduser("~/.c4reqber/models/hy-mt")
+    p.add_argument("--model", default=default_model, help="HY-MT1.5-1.8B MLX path")
     p.add_argument("--max-tokens", type=int, default=512)
     args = p.parse_args()
 

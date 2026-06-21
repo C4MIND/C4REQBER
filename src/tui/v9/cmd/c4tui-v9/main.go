@@ -25,7 +25,7 @@ import (
 )
 
 // version is set at build time via -ldflags "-X main.version=..."
-var version = "v9.12.6"
+var version = "v9.13.0"
 
 // gitRef returns the git commit short hash, or empty if not available.
 func gitRef() string {
@@ -45,11 +45,14 @@ func main() {
 	showHistory := false
 	pruneDays := 0
 	exportPath := ""
+	noSplash := false
 	topic := "design a CRISPR guide RNA with minimal off-targets in T-cells"
 	for i, arg := range os.Args[1:] {
 		switch {
 		case arg == "--demo":
 			demoMode = true
+		case arg == "--no-splash":
+			noSplash = true
 		case strings.HasPrefix(arg, "--story="):
 			demoStory = strings.TrimPrefix(arg, "--story=")
 		case arg == "--version" || arg == "-v":
@@ -109,12 +112,8 @@ func main() {
 	app := tui.NewApp(cfg.APIURL)
 	cfg.ApplyToModel(app)
 
-	if cfg.SaveHistory {
-		defer saveHistory(cfg)
-	}
-
-	// Run splash first, then the app
-	if os.Getenv("C4_NO_SPLASH") == "" && os.Getenv("C4_SPLASH") != "0" {
+	// Run splash first, then the app (history is saved by the model on Ctrl+C quit).
+	if !noSplash && os.Getenv("C4_NO_SPLASH") == "" && os.Getenv("C4_SPLASH") != "0" {
 		runSplash(version, gitRef())
 	}
 
@@ -159,15 +158,6 @@ func runSplash(version, gitRef string) {
 		// Non-fatal: splash is decorative
 		return
 	}
-}
-
-func saveHistory(cfg tui.Config) {
-	// We can't easily get the app's telemetry from main after Run() returns
-	// because the model is internal. So we read it from disk if it exists
-	// (it's been written by the model itself on shutdown).
-	// For now, this is a no-op stub — full implementation deferred to v9.7
-	// where we add a hook to pass tel back from model to main.
-	_ = cfg
 }
 
 func runStats() {

@@ -168,12 +168,12 @@ func runStats() {
 		os.Exit(1)
 	}
 	if len(files) == 0 {
-		fmt.Println("No history files found in ~/.config/c4reqber/")
+		fmt.Println("No history files found in ~/.c4reqber/")
 		fmt.Println("(Run c4tui-v9 at least once to generate history.)")
 		return
 	}
 	stats := tui.Aggregate(files)
-	fmt.Printf("Loaded %d history file(s) from ~/.config/c4reqber/\n\n", len(files))
+	fmt.Printf("Loaded %d history file(s) from ~/.c4reqber/\n\n", len(files))
 	fmt.Print(stats.FormatStats())
 }
 

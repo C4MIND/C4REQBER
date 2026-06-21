@@ -2,6 +2,7 @@ package tui
 
 import (
 	"fmt"
+	"math"
 	"math/rand"
 	"strings"
 
@@ -120,7 +121,7 @@ func (pf *ParticleField) ComposeOverlays(buffer []string, width int) []string {
 
 // BloomFrame returns the cube lines with progressive bloom-in
 // (frame 0 = no bloom, frame bloomFrames = full cube).
-// v9 polish: organic center bloom + soft edge dither + slight asymmetry for alive feel.
+// Micro-polished: easeOutCubic curve + subtle overshoot settle + richer fringe.
 func BloomFrame(artLines []string, frame, total int) []string {
 	if total <= 0 {
 		return artLines
@@ -132,7 +133,8 @@ func BloomFrame(artLines []string, frame, total int) []string {
 	if t < 0 {
 		t = 0
 	}
-	// Bloom-in: cube expands from center outward with soft falloff
+	// easeOutCubic for more premium "arriving" feel
+	te := 1.0 - math.Pow(1.0-t, 3)
 	out := make([]string, len(artLines))
 	for i, line := range artLines {
 		plain := stripSplashANSI(line)
@@ -148,14 +150,16 @@ func BloomFrame(artLines []string, frame, total int) []string {
 		if dist < 0 {
 			dist = -dist
 		}
-		// Softer vertical reveal + bias bottom for "rising" legendary cube
-		revealLinesUpTo := int((t*t*0.7 + t*0.3) * float64(totalLines+2))
+		revealLinesUpTo := int(te * float64(totalLines+1))
 		if dist > revealLinesUpTo {
 			out[i] = strings.Repeat(" ", plainLen)
 			continue
 		}
-		// Char bloom radius + soft edge (last 2 cols may dither)
-		maxRadius := int((t*t*0.6 + t*0.5) * float64(plainLen+2))
+		maxRadius := int(te * float64(plainLen+1))
+		// tiny overshoot settle on final 2 frames for "lock in" pop
+		if frame > total-3 {
+			maxRadius += 1
+		}
 		newRunes := make([]rune, plainLen)
 		pr := []rune(plain)
 		for j := 0; j < plainLen; j++ {
@@ -165,8 +169,7 @@ func BloomFrame(artLines []string, frame, total int) []string {
 			}
 			if dc <= maxRadius {
 				newRunes[j] = pr[j]
-			} else if dc <= maxRadius+2 && (j+i)%3 != 0 {
-				// soft fringe dither on bloom edge
+			} else if dc <= maxRadius+3 && (j+i+frame)%4 != 0 {
 				newRunes[j] = '░'
 			} else {
 				newRunes[j] = ' '

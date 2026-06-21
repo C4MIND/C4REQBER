@@ -32,19 +32,23 @@ def _get_desktop_version() -> str:
         return "v9"
 
 def render_desktop_splash(first_run: bool) -> None:
-    """Static rich splash banner — port of terminal splash (subtitle/motto/footer + branding).
-    Desktop version of the splash. Go TUI animated splash follows for the full experience.
+    """Upgraded desktop splash banner.
+    Port of the polished terminal splash animation feel (crystal bloom → aurora dissolve → living cube).
+    Root art idea / texts preserved. Go TUI v9 takes over with full animation.
     """
     ver = _get_desktop_version()
 
-    # Mini art port (simplified cube / crystal vibe)
+    # Upgraded mini art: evokes polished crystal bloom + aurora on final cube/C4R
+    # (colors chosen to mirror BioAurora palette: magenta crystal -> cyan/green aurora)
     art = Text("    ▗▖  ▗▖  \n", style="magenta")
     art.append("   ▐▌  ▐▌   \n", style="magenta")
-    art.append("  ▗▞▚▞▚▞▚▖  \n", style="magenta")
-    art.append("  ▐      ▌  ", style="magenta")
+    art.append("  ▗▞▚▞▚▞▚▖  \n", style="bright_magenta")
+    art.append("  ▐", style="magenta")
+    art.append("  ░░  ", style="cyan")   # hint of bloom/aurora energy
+    art.append("▌  ", style="magenta")
     art.append("C4\n", style="bold green")
-    art.append("   ▝▚▞▚▞▘   \n", style="magenta")
-    art.append("    ▝▘  ▝▘  ", style="magenta")
+    art.append("   ▝▚▞▚▞▘   \n", style="bright_cyan")
+    art.append("    ▝▘  ▝▘  ", style="green")  # aurora settle green
 
     # Title block
     title = Text("C4REQBER", style="bold yellow")
@@ -78,6 +82,10 @@ def render_desktop_splash(first_run: bool) -> None:
     if first_run:
         content.append("\n\n", style="")
         content.append("first run — full settings + keys via ~/.c4reqber (central)", style="green")
+    else:
+        # Micro port of "bloom/aurora" energy
+        content.append("\n", style="")
+        content.append("◆ awakening cube state ◆", style="dim cyan")
 
     panel = Panel.fit(
         content,

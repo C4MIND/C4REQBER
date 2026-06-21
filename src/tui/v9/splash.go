@@ -289,10 +289,14 @@ func blendSplashRow(prev, curr []string, row, tick int, rng *rand.Rand) string {
 		if i < len(currRunes) {
 			c = currRunes[i]
 		}
-		// Blend: show current form once tick passes its row position
-		threshold := i / 3
+		// Micro-polished dissolve: smoother threshold + tiny noise for organic feel
+		threshold := i / 2
 		if tick >= threshold {
-			out[i] = c
+			if rng.Float64() < 0.08 {
+				out[i] = ' '
+			} else {
+				out[i] = c
+			}
 		} else {
 			out[i] = p
 		}
@@ -309,6 +313,21 @@ func scrambleSplashRow(form []string, row int, rng *rand.Rand) string {
 	for i := range runes {
 		if runes[i] != ' ' && rng.Float64() < 0.7 {
 			runes[i] = chars[rng.Intn(len(chars))]
+		}
+	}
+	return string(runes)
+}
+
+// dimFlickerRow: micro-polish for crystal flicker frames — dims instead of full scramble
+// to keep the beautiful crystal structure while adding life.
+func dimFlickerRow(line string, rng *rand.Rand) string {
+	runes := []rune(line)
+	for i := range runes {
+		if runes[i] != ' ' && rng.Float64() < 0.45 {
+			// keep glyph but rely on color dimming in render; here slight noise
+			if rng.Float64() < 0.3 {
+				runes[i] = '░'
+			}
 		}
 	}
 	return string(runes)
@@ -554,11 +573,11 @@ func buildCrystalFrames(seedArt string, h int, compact bool, rng *rand.Rand, tar
 			forms[f][row] = string(out)
 		}
 	}
-	// Frame 7-8: dim flicker (scramble)
+	// Frame 7-8: dim flicker (scramble) — micro-polished to keep crystal structure more visible
 	for f := 7; f <= 8; f++ {
 		forms[f] = make([]string, len(seedLines))
 		for row := 0; row < len(seedLines); row++ {
-			forms[f][row] = scrambleSplashRow(seedLines, row, rng)
+			forms[f][row] = dimFlickerRow(seedLines[row], rng)
 		}
 	}
 	// Frame 9: full seed (back to as-is)
@@ -1026,12 +1045,16 @@ func (m SplashModel) coloredArtLines(primary, success, accent, muted, highlight 
 			artLines = splitSplashLines(m.seedArt)
 		}
 	case "dissolve":
-		// Blend between accent and success
+		// Micro-polished: richer color journey from crystal purple toward green success
 		progress := 0.0
 		if total := m.totalMorphTicks(); total > 0 {
 			progress = splashEaseOutQuad(float64(m.morphTick) / float64(total))
 		}
-		blended := splashLerpColor("#5f5fff", "#5fff5f", progress) // accent→success
+		// purple-ish -> cyan -> green
+		blended := splashLerpColor("#5f5fff", "#5fffaf", progress*0.6)
+		if progress > 0.55 {
+			blended = splashLerpColor(blended, "#5fff5f", (progress-0.55)/0.45)
+		}
 		blendStyle := lipgloss.NewStyle().Foreground(lipgloss.Color(blended))
 		for _, line := range m.morphLines {
 			artLines = append(artLines, blendStyle.Render(line))

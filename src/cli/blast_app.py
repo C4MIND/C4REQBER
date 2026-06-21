@@ -724,9 +724,13 @@ def blast_tui(
         extra.append("--no-splash")
 
     from src.cli.config_init import apply_config_to_env
+    from src.config.paths import apply_config_to_env as central_apply
     from src.cli.tui_launcher import launch_tui_v9
 
-    apply_config_to_env()
+    try:
+        central_apply()
+    except Exception:
+        apply_config_to_env()  # fallback
     if demo:
         import os
 

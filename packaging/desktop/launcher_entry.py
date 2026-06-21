@@ -1,6 +1,6 @@
-"""Desktop app entry — runs blast init on first launch, then TUI v9.
-Polished for full settings experience: config.toml + models.json + env export
-(OPENROUTER, DEEPSEEK, BRAVE, TAVILY, EXA, XAI + Lean4).
+"""Desktop app entry — first-run wizard + always-seed models.json + TUI v9.
+Full settings out-of-the-box (config + models + keys for all providers).
+Robust: never crashes desktop on missing keys or partial config.
 """
 from __future__ import annotations
 
@@ -14,24 +14,31 @@ from src.llm.model_assignment import ModelAssignment
 
 
 def main() -> int:
-    central_apply()
-
-    # Ensure core config
-    if not config_exists():
-        run_init_wizard(force=False)
+    try:
         central_apply()
+    except Exception:
+        pass  # never block desktop start
 
-    # Polish: ensure models.json exists with sensible default (balanced tier)
-    # so TUI/CLI have "all settings" ready out of box for desktop app
+    first_run = not config_exists()
+
+    # Ensure core config + wizard
+    if first_run:
+        try:
+            run_init_wizard(force=False)
+            central_apply()
+        except Exception:
+            pass
+
+    # Always ensure models.json (full settings even if user skipped wizard or deleted it)
     from src.config.paths import MODELS_JSON
     if not MODELS_JSON.exists():
         try:
             assignment = ModelAssignment.create_default("balanced")
             assignment.save()
         except Exception:
-            pass  # non-fatal for first run
+            pass
 
-    central_apply()  # re-apply after possible model setup
+    central_apply()
     return launch_tui_v9([], build_if_missing=True)
 
 

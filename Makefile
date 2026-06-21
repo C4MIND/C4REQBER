@@ -143,12 +143,12 @@ generate:
 
 db-migrate:
 	@echo "=== Running Alembic migrations ==="
-	python3 -m alembic upgrade head
+	PYTHONPATH=src python3 -m alembic upgrade head
 
 ## db-revision — Create new Alembic migration (use: make db-revision msg="description")
 db-revision:
-	@echo "=== Creating Alembic revision ==="
-	python3 -m alembic revision --autogenerate -m "$(msg)"
+	@echo "=== Creating Alembic migration (autogenerate from src/data/orm.py) ==="
+	PYTHONPATH=src python3 -m alembic revision --autogenerate -m "$(msg)"
 
 ## benchmark — Run scientific pattern benchmarks
 benchmark:

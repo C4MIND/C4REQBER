@@ -246,11 +246,17 @@ migrations/
 alembic/
 structural_memory/
 
-# Legacy / experimental — but don't drop tracked k8s manifests/scripts
+# Legacy / experimental
 proto/
-k8s/
-!k8s/*.yaml
-!k8s/*.sh
+# K8s: track manifests, ignore live secrets only (see k8s/secrets.yaml below)
+k8s/secrets.yaml
+
+# Legacy engine trees (local only, never commit)
+v6/
+v7/
+
+# K8s secrets (use secrets.example.yaml as template)
+k8s/secrets.yaml
 
 # Specific to c4reqber
 src/payments/

@@ -1,35 +1,16 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: turbo-cdi-engine
-  namespace: turbo-cdi
+  name: c4reqber-api
+  namespace: c4reqber
+  labels:
+    app: c4reqber-api
 spec:
-  type: LoadBalancer
-  ports:
-  - port: 80
-    targetPort: 8000
-    protocol: TCP
-    name: http
+  type: ClusterIP
   selector:
-    app: turbo-cdi-engine
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: turbo-cdi-engine
-  namespace: turbo-cdi
-  annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
-    nginx.ingress.kubernetes.io/enable-cors: "true"
-spec:
-  rules:
-  - host: turbo-cdi.local
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: turbo-cdi-engine
-            port:
-              number: 80
+    app: c4reqber-api
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8000
+      protocol: TCP

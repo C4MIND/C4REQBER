@@ -137,6 +137,17 @@ models/
 # Documentation builds
 docs/_build/
 site/
+
+# TUI v9 build artifacts (binaries rebuilt via `make -C src/tui/v9` or packaging)
+src/tui/v9/c4tui-v9
+src/tui/v9/bin/c4tui-v9
+src/tui/v9/bin/c4tui-v9-*
+
+# Local agent/tool session state (Claude Desktop, repowise/kilo, MCP inspectors)
+.claude/
+.repowise/
+.mcp.json
+.kilo/
 docs-site/
 
 # Archive — exclude historical reports

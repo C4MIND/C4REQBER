@@ -8,16 +8,11 @@ import logging
 from pathlib import Path
 from typing import Any
 
+from src.config.paths import CONFIG_DIR, PROFILE_JSON as PROFILE_FILE  # unified ~/.c4reqber
 from src.core.user_profile import UserProfile
 from src.contracts.pipeline_config import PipelineConfig
 
-
 logger = logging.getLogger(__name__)
-
-# Default config directory — unified to ~/.c4reqber for consistency across Python/Go/desktop
-# (matches config_init, model_assignment, simulations, etc.)
-CONFIG_DIR = Path.home() / ".c4reqber"
-PROFILE_FILE = CONFIG_DIR / "profile.json"
 
 
 class UserProfileManager:
@@ -25,7 +20,7 @@ class UserProfileManager:
 
     def __init__(self, config_dir: Path | None = None) -> None:
         self.config_dir = config_dir or CONFIG_DIR
-        self.profile_file = self.config_dir / "profile.json"
+        self.profile_file = PROFILE_FILE if config_dir is None else (config_dir / "profile.json")
         self._ensure_dir()
 
     def _ensure_dir(self) -> None:

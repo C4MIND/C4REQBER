@@ -7,9 +7,11 @@ from pathlib import Path
 from typing import Any
 
 
-AGENT_CONFIG_DIR = Path.home() / ".c4reqber"
-AGENT_CONFIG_PATH = AGENT_CONFIG_DIR / "agent.json"
-AGENT_HISTORY_PATH = AGENT_CONFIG_DIR / "agent_history.jsonl"
+from src.config.paths import CONFIG_DIR
+
+AGENT_CONFIG_DIR = CONFIG_DIR
+AGENT_CONFIG_PATH = CONFIG_DIR / "agent.json"
+AGENT_HISTORY_PATH = CONFIG_DIR / "agent_history.jsonl"
 
 
 @dataclass

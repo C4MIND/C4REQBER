@@ -10,8 +10,7 @@ from rich.prompt import Confirm, Prompt
 
 console = Console()
 
-CONFIG_DIR = Path.home() / ".c4reqber"
-CONFIG_PATH = CONFIG_DIR / "config.toml"
+from src.config.paths import CONFIG_DIR, CONFIG_TOML as CONFIG_PATH  # unified ~/.c4reqber
 
 
 def config_exists() -> bool:

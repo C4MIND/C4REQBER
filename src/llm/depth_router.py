@@ -17,7 +17,7 @@ class DepthBasedRouter:
             "local": "mlx-community/Qwen2.5-Coder-7B-4bit",   # $0 — Apple GPU
             "cheap": "mlx-community/Qwen2.5-Coder-7B-4bit",
             "balanced": "openai/gpt-4o-mini",
-            "premium": "google/gemini-2.0-flash-001",
+            "premium": "google/gemini-2.0-flash-001",  # fast + cheap premium
         },
         1: {
             "cheap": "openai/gpt-4o-mini",               # $0.15/MTok — discovery/search
@@ -26,13 +26,13 @@ class DepthBasedRouter:
         },
         2: {
             "cheap": "qwen/qwen-2.5-7b-instruct",
-            "balanced": "anthropic/claude-3-haiku",       # $0.25/MTok — fast formalization
-            "premium": "anthropic/claude-sonnet-4.6",  # high-quality reasoning (Sonnet 4.6)
+            "balanced": "deepseek/deepseek-chat",        # cheap + strong reasoning
+            "premium": "anthropic/claude-sonnet-4.6",    # high-quality reasoning (Sonnet 4.6)
         },
         3: {
-            "cheap": "anthropic/claude-3-haiku",
-            "balanced": "deepseek/deepseek-chat",         # $2/MTok — powerful verification
-            "premium": "anthropic/claude-sonnet-4.6",  # final quality (Sonnet 4.6)
+            "cheap": "deepseek/deepseek-chat",
+            "balanced": "deepseek/deepseek-chat",        # powerful verification (cheap tier)
+            "premium": "anthropic/claude-sonnet-4.6",    # final quality (Sonnet 4.6)
         },
     }
 
@@ -41,7 +41,6 @@ class DepthBasedRouter:
         "qwen/qwen-2.5-7b-instruct": 0.00007,
         "google/gemini-2.0-flash-001": 0.00015,
         "deepseek/deepseek-chat": 0.00014,
-        "anthropic/claude-3-haiku": 0.00025,
         "anthropic/claude-sonnet-4.6": 0.003,
     }
 

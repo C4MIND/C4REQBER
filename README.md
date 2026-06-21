@@ -87,14 +87,22 @@ Press `:` to open fuzzy-search command palette. Examples:
 
 Legacy Python TUI slash commands (`/models`, `/council`, …) apply to **v8 only**. Use `blast config` for LLM/council setup with v9.
 
-## Quick Config
+## Quick Config & First Run (Polished Desktop Experience)
 
 ```bash
-blast config --show                    # View current setup
-blast config --set F=claude-sonnet-4  # Phase F → Claude
-blast config council --show            # Council model lists
-blast config council --set premium=claude-sonnet-4,gpt-4.5,deepseek-r1 --save
+# First run — beautiful wizard that sets everything
+blast init
+
+# Full settings view
+blast config user --show          # ~/.c4reqber/config.toml + keys
+blast config keys                 # Quick key status
+blast config --show               # Model assignments per phase
+
+# Set models
+blast config --set D=anthropic/claude-sonnet-4.6 --save
 ```
+
+All keys (OpenRouter, DeepSeek, Brave, Tavily, Exa, XAI, Lean4...) are managed in `~/.c4reqber/config.toml` + `models.json`. The desktop app, CLI and TUI all read from the same place.
 
 ## Install from source
 

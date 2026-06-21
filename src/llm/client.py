@@ -11,6 +11,8 @@ import urllib.request
 from dataclasses import dataclass
 from typing import Any
 
+from src.config import get_key
+
 
 @dataclass
 class LLMResponse:
@@ -43,7 +45,8 @@ class LLMClient:
     }
 
     def __init__(self, api_key: str | None = None) -> None:
-        self.api_key = api_key or os.getenv("OPENROUTER_API_KEY")
+        # Prefer central config (~/.c4reqber) with env override
+        self.api_key = api_key or get_key("openrouter") or os.getenv("OPENROUTER_API_KEY")
         self.base_url = "https://openrouter.ai/api/v1"
         self.referer = "https://c4reqber.org"  # Required by OpenRouter
 

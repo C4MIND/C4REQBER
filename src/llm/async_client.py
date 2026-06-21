@@ -12,6 +12,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from src.llm.cache import AsyncLLMCache, hash_prompt
+from src.config import get_key
 
 
 # Try to import httpx for async support
@@ -62,7 +63,8 @@ class AsyncLLMClient:
         if not HAS_HTTPX:
             raise ImportError("httpx required for async LLM client. Install: pip install httpx")
 
-        self.api_key = api_key or os.getenv("OPENROUTER_API_KEY") or os.getenv("OPENAI_API_KEY", "")
+        # Prefer central ~/.c4reqber config (env still overrides)
+        self.api_key = api_key or get_key("openrouter") or os.getenv("OPENROUTER_API_KEY") or os.getenv("OPENAI_API_KEY", "")
         custom_base = os.getenv("OPENAI_BASE_URL", "")
         self.base_url = custom_base if custom_base else "https://openrouter.ai/api/v1"
         self.referer = "https://c4reqber.org"

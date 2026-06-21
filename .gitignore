@@ -182,11 +182,19 @@ docs/planning/
 # Kilo CLI workspace
 .kilo/
 
+# White papers & marketing reports — internal, not for public repo
+WHITEPAPER.md
+*.WHITEPAPER.md
+MARKET_REPORT*.md
+MARKETING_REPORT*.md
+
 # Audit & planning artifacts (internal only)
 AUDIT*.md
 CODEBASE_AUDIT.md
 CODE_REVIEW_REPORT.md
 PLAN*.md
+PRODUCTION_UPGRADE_PLAN.md
+PRODUCTION_UPGRADE_PLAN*.md
 PRD*.md
 REMAINING*.md
 TECHNICAL_DEBT*.md

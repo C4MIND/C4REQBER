@@ -39,6 +39,8 @@ def main() -> int:
             pass
 
     central_apply()
+    if first_run:
+        print("c4reqber desktop: full settings ready (~/.c4reqber + models.json)")
     return launch_tui_v9([], build_if_missing=True)
 
 

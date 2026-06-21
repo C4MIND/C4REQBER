@@ -261,7 +261,7 @@ You are an AI research and engineering assistant with deep access to the c4reqbe
             model = OpenAIModel(
                 model_name=provider.model,
                 base_url=provider.api_base,
-                api_key=get_key("openrouter") or os.environ.get("OPENROUTER_API_KEY", ""),
+                api_key=get_key("openrouter") or os.environ.get("OPENROUTER_API_KEY", ""),  # central first
             )
 
             # Build system prompt from first message

@@ -23,11 +23,20 @@ from src.llm.model_assignment import ModelAssignment
 console = Console()
 
 
-def render_desktop_splash(first_run: bool, version_hint: str = "v9") -> None:
-    """Static rich splash banner — port of terminal splash subtitle/motto/footer + branding.
-    Shown briefly before handing off to the Go TUI (which runs its full crystal/morph/aurora splash).
-    This is the "desktop version" of the splash screen.
+def _get_desktop_version() -> str:
+    try:
+        # Try to get from the bundled TUI or package
+        from src.tui.v9.cmd.c4tui_v9 import main as _  # type: ignore  # noqa
+        return "v9"
+    except Exception:
+        return "v9"
+
+def render_desktop_splash(first_run: bool) -> None:
+    """Static rich splash banner — port of terminal splash (subtitle/motto/footer + branding).
+    Desktop version of the splash. Go TUI animated splash follows for the full experience.
     """
+    ver = _get_desktop_version()
+
     # Mini art port (simplified cube / crystal vibe)
     art = Text("    ▗▖  ▗▖  \n", style="magenta")
     art.append("   ▐▌  ▐▌   \n", style="magenta")
@@ -40,7 +49,7 @@ def render_desktop_splash(first_run: bool, version_hint: str = "v9") -> None:
     # Title block
     title = Text("C4REQBER", style="bold yellow")
     title.append("  DESKTOP  ", style="bold cyan")
-    title.append(version_hint, style="dim")
+    title.append(ver, style="dim")
 
     # Subtitle (from terminal splash, EN base for desktop branding)
     sub = Text("Creative & Destructive Insights", style="dim")
@@ -68,7 +77,7 @@ def render_desktop_splash(first_run: bool, version_hint: str = "v9") -> None:
 
     if first_run:
         content.append("\n\n", style="")
-        content.append("first run — full settings seeded (~/.c4reqber + models.json)", style="green")
+        content.append("first run — full settings + keys via ~/.c4reqber (central)", style="green")
 
     panel = Panel.fit(
         content,

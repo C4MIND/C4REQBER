@@ -766,7 +766,7 @@ class Falsifier:
     ) -> dict[str, Any]:
         """Async wrapper that also attempts LLM-based critique if API key is present."""
         result = copy.deepcopy(self.check(hypothesis, domain))
-        or_key = get_key("openrouter") or os.getenv("OPENROUTER_API_KEY", "")
+        or_key = get_key("openrouter") or os.getenv("OPENROUTER_API_KEY", "")  # get_key from ~/.c4reqber preferred
         if or_key:
             try:
                 import httpx

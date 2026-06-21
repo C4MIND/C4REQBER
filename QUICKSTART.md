@@ -44,19 +44,26 @@ blast flash "What is the current SOTA for protein folding?" --with-sources
 
 ---
 
-## 4. Interactive TUI
+## 4. Interactive TUI (v9 Cockpit)
 
 ```bash
+# Start backend first (in another terminal):
+uvicorn src.api.server:app --port 8000
+
+# Launch TUI v9:
 blast tui
+# or: cd src/tui/v9 && ./bin/c4tui-v9
+
+# Demo without backend:
+blast tui --demo --story=crispr
 ```
 
-**Slash commands:**
-- `/models` — per-phase LLM picker
-- `/council` — multi-model consensus
-- `/connect` — register new provider
-- `/plugins` — toggle 28 cognitive plugins
-- `/sim` — simulation engine status
-- `/help` — all commands
+**Key bindings:**
+- `Enter` — run discovery
+- `Tab` — cycle mode (Discover / Flash / Turbo / TurboFactory)
+- `:` — command palette (settings, capabilities, language, debug)
+- `?` — help overlay
+- `Ctrl+Shift+C` — simulation/verifier capabilities overlay
 
 ---
 

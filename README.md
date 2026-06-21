@@ -19,8 +19,9 @@ blast turbo "your topic"            # Paradigm-shifting research proposal + veri
 blast flash "your question"         # Quick answer
 blast auto "your query"             # Auto-routed to best mode (solve/turbo/flash)
 blast turbofactory "your domain"    # Parallel pipeline factory (mini/standard/mega/giga scale)
-blast tui                           # Interactive terminal with / slash commands
-blast serve --mcp                   # MCP server for AI agents (20 tools)
+blast tui                           # TUI v9 Cockpit (feed-driven discovery UI)
+blast tui --demo --story=crispr     # Demo without backend
+blast serve --mcp                   # MCP server for AI agents (21 tools)
 ```
 
 ## What is this?
@@ -39,7 +40,7 @@ A cognitive exoskeleton for AI agents and humans.
 - **Embedding pipeline acceleration**: semantic dedup, smart evidence matching, coverage analysis
 - **Multi-LLM Council**: 3-model consensus with cheap/balanced/premium budgets
 - **Kuhn Paradigm Shift Assessment**: 4-stage model, 5 values, iterative refinement
-- **11 TUI slash commands**: /models, /council, /connect, /api, /test, /profile, /plugins, /debug, /config, /sim, /help
+- **TUI v9 command palette** (`:` key): fuzzy-match 35+ commands (settings, capabilities, history, language, debug)
 - **11 LLM providers**: OpenRouter, XAI, Mistral, Moonshot, DeepSeek, Liquid AI, NVIDIA NIM, YandexGPT, Ollama, LM Studio, MLX — auto-detected with depth-based routing
 - **43 active knowledge source adapters** (MultiSourceSearcher with circuit breaker, semantic dedup, domain-aware routing) — arXiv, PubMed, Crossref, Europe PMC, Semantic Scholar, OpenAlex, Zenodo, Figshare, NCBI E-utilities, PubChem, ChEMBL, Materials Project, AFLOW, Kaggle, UCI ML, Harvard Dataverse, re3data, STRING, ClinicalTrials.gov, GBIF, Allen Brain, USGS, CERN, USPTO, OpenReview, HuggingFace, OpenFDA, NASA Earthdata, CyberLeninka, Math-Net.Ru, DBLP, Datacite, DOAJ, Inspire-HEP, Europe PMC, and more + 40 TRIZ principles + **101+ simulation patterns + 38 simulation engines** (5 internal GPU engines + 33 P1 open-source bridges: FEniCSx, OpenFOAM, GROMACS, LAMMPS, MDAnalysis, PySCF, Psi4, Quantum ESPRESSO, Tellurium, NEURON, Brian2, Jaxley, COPASI, xarray, WRF, Mesa, SimPy, Rebound, AMUSE, MuJoCo, PyBullet, diffeqpy, Taichi, JAX MD, JAX-LaB, ModelingToolkit.jl, OpenMM, Vina, BoolNet, COBRApy, SLiM, BoolNet, SLiM)
 
@@ -72,21 +73,19 @@ Lean4 → Coq → Dafny → Agda → Z3 → CVC5 → Hoare → Haskell → TLA+ 
                     Auto-fallback to Z3    Proof export to .lean/.v/.smt2
 ```
 
-## TUI Slash Commands (`/` key)
+## TUI v9 — Command Palette (`:` key)
+
+Press `:` to open fuzzy-search command palette. Examples:
 
 | Command | Action |
 |---------|--------|
-| `/models` | Per-phase LLM picker (A-G) |
-| `/council` | Council model composition (cheap/balanced/premium) |
-| `/connect` | Register LLM provider (15 known providers, auto-fetch models) |
-| `/api` | Local LLM endpoints + API keys |
-| `/test` | Connection health check |
-| `/profile` | Save/load config profiles |
-| `/plugins` | Toggle 28 cognitive plugins |
-| `/debug` | Toggle logging level |
-| `/config` | Show full configuration |
-| `/sim` | Simulation config (mode, GPU, cost limit) |
-| `/help` | Full keyboard shortcuts + CLI reference |
+| Settings | `Ctrl+,` — LLM tier, language, color profile, history |
+| Capabilities | `Ctrl+Shift+C` — 32 sim engines + 27 verifiers status |
+| Help | `?` — keyboard shortcuts overlay |
+| Debug | `Ctrl+Shift+D` — SSE/job debug snapshot |
+| Language | `L` — cycle EN/RU/ZH/JA/DE/AR/HI |
+
+Legacy Python TUI slash commands (`/models`, `/council`, …) apply to **v8 only**. Use `blast config` for LLM/council setup with v9.
 
 ## Quick Config
 

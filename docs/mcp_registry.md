@@ -24,7 +24,7 @@ Cognitive exoskeleton for AI agents. Provides formal cognitive architecture (C4,
 
 - **Tools (10+):** `c4_fingerprint`, `triz_contradiction`, `pattern_simulate`, `abductive_infer`, `causal_analyze`, `paradigm_detect`, `lean4_verify`, `knowledge_search`, `bayesian_update`, `system_dynamics`
 - **License:** AGPL-3.0 + Commercial
-- **Install:** `pip install c4reqber && c4reqber serve --mcp`
+- **Install:** `pip install c4reqber && blast serve --mcp`
 ```
 
 ### Required Files in Repo
@@ -33,7 +33,7 @@ Cognitive exoskeleton for AI agents. Provides formal cognitive architecture (C4,
 |------|---------|--------|
 | `README.md` | Project overview with MCP badge | ✅ Complete |
 | `LICENSE` | AGPL-3.0 | ✅ Ready |
-| `src/mcp/server.py` | MCP server implementation | Deploying |
+| `src/mcp_server/server.py` | MCP server implementation | ✅ Ready |
 | `CONTRIBUTING.md` | Contribution guidelines | ✅ Complete |
 | `CODE_OF_CONDUCT.md` | Community standards | ✅ Complete |
 | `SECURITY.md` | Security policy | ✅ Complete |

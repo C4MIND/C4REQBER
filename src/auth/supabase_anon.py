@@ -13,7 +13,11 @@ from typing import Any
 import httpx
 
 
-SESSION_PATH = Path.home() / ".config" / "c4reqber" / "supabase_session.json"
+# Unified with ~/.c4reqber (Python wizard + Go persist). Fallback for migration.
+_c4_home = Path.home() / ".c4reqber"
+if not _c4_home.exists():
+    _c4_home = Path.home() / ".config" / "c4reqber"
+SESSION_PATH = _c4_home / "supabase_session.json"
 
 _HAS_SUPABASE = False
 try:

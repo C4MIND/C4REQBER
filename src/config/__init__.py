@@ -11,6 +11,9 @@ from src.config.paths import (
     PROFILE_JSON,
     ensure_config_dir,
     get_config_path,
+    get_user_keys,
+    apply_config_to_env,
+    load_config_toml,
 )
 
 __all__ = [
@@ -23,4 +26,7 @@ __all__ = [
     "PROFILE_JSON",
     "ensure_config_dir",
     "get_config_path",
+    "get_user_keys",
+    "apply_config_to_env",
+    "load_config_toml",
 ]

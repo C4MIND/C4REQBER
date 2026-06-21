@@ -6,7 +6,7 @@ using HY-MT1.5-1.8B via mlx-lm with glossary intervention.
 
 Usage:
     python3 translate_hymt.py --src en.toml --glossary c4_science_terms.json
-                              --out-dir /Users/figuramax/LocalProjects/c4reqber/src/tui/v9/i18n/
+                              --out-dir ./src/tui/v9/i18n/   # or $HOME/.../c4reqber/... 
 """
 import argparse
 import json

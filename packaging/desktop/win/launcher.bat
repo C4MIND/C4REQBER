@@ -34,4 +34,10 @@ if not exist "%TUI%" (
   exit /b 1
 )
 
+REM Desktop splash header (port of terminal splash)
+echo C4REQBER DESKTOP  ·  Creative ^& Destructive Insights · At Your Fingertips
+echo Discover. Invent. Shift paradigms.
+echo GitLab · c4reqber · Z₃³
+echo.
+
 "%TUI%" %*

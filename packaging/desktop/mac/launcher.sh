@@ -32,4 +32,10 @@ if [[ ! -x "${TUI_BIN}" ]]; then
   exit 1
 fi
 
+# Desktop splash header (port of terminal splash text) — Go TUI will show full animated splash
+echo "C4REQBER DESKTOP  ·  Creative & Destructive Insights · At Your Fingertips"
+echo "Discover. Invent. Shift paradigms."
+echo "GitLab · c4reqber · Z₃³"
+echo
+
 exec "${TUI_BIN}" "$@"

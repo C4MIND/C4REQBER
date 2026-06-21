@@ -120,6 +120,7 @@ func (pf *ParticleField) ComposeOverlays(buffer []string, width int) []string {
 
 // BloomFrame returns the cube lines with progressive bloom-in
 // (frame 0 = no bloom, frame bloomFrames = full cube).
+// v9 polish: organic center bloom + soft edge dither + slight asymmetry for alive feel.
 func BloomFrame(artLines []string, frame, total int) []string {
 	if total <= 0 {
 		return artLines
@@ -131,8 +132,7 @@ func BloomFrame(artLines []string, frame, total int) []string {
 	if t < 0 {
 		t = 0
 	}
-	// Bloom-in: cube expands from center outward
-	// For each line, reveal chars symmetrically from center
+	// Bloom-in: cube expands from center outward with soft falloff
 	out := make([]string, len(artLines))
 	for i, line := range artLines {
 		plain := stripSplashANSI(line)
@@ -141,33 +141,33 @@ func BloomFrame(artLines []string, frame, total int) []string {
 			out[i] = line
 			continue
 		}
-		// Distance from center of this line's middle row
 		center := plainLen / 2
-		// Vertical expansion: how many lines from top should be revealed
 		totalLines := len(artLines)
 		centerLine := totalLines / 2
 		dist := i - centerLine
 		if dist < 0 {
 			dist = -dist
 		}
-		// Reveal threshold: at t=0, only center line. At t=1, all lines.
-		revealLinesUpTo := int(t * float64(totalLines+1))
+		// Softer vertical reveal + bias bottom for "rising" legendary cube
+		revealLinesUpTo := int((t*t*0.7 + t*0.3) * float64(totalLines+2))
 		if dist > revealLinesUpTo {
-			// Line not yet revealed
 			out[i] = strings.Repeat(" ", plainLen)
 			continue
 		}
-		// Within revealed lines, also bloom chars from center outward
-		// Character bloom: per-line, reveal radius grows with t
-		maxRadius := int(t * float64(plainLen+1))
+		// Char bloom radius + soft edge (last 2 cols may dither)
+		maxRadius := int((t*t*0.6 + t*0.5) * float64(plainLen+2))
 		newRunes := make([]rune, plainLen)
+		pr := []rune(plain)
 		for j := 0; j < plainLen; j++ {
 			dc := j - center
 			if dc < 0 {
 				dc = -dc
 			}
 			if dc <= maxRadius {
-				newRunes[j] = []rune(plain)[j]
+				newRunes[j] = pr[j]
+			} else if dc <= maxRadius+2 && (j+i)%3 != 0 {
+				// soft fringe dither on bloom edge
+				newRunes[j] = '░'
 			} else {
 				newRunes[j] = ' '
 			}

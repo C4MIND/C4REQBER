@@ -9,20 +9,13 @@ import (
 
 // BioAurora creates bio-cognitive morphing color effects on top of
 // static art. It applies several smooth wave functions (low frequencies,
-// sub-audio — no epilepsy risk) that determine a "color state" for each
-// (x, y) cell at time t, then maps that state to a 6-color organic palette.
+// sub-audio — no epilepsy risk) + ultra-slow global breathing phase
+// that determine a "color state" for each (x, y) cell at time t,
+// then maps that state to a 6-color organic palette.
 //
-// Palette: green → cyan → blue → magenta → red (organic sci-cog gradient).
-// All transitions are smooth (sine), no abrupt flashes.
-//
-// v9.11.2 changes:
-//   - Max opacity reduced from 1.0 → 0.55 so aurora never paints over
-//     the C4R art, only tints it
-//   - Per-rune dithering pattern prevents long monochrome streaks that
-//     looked like a broken display
-//   - Horizontal energy band y-range restricted to avoid covering C4R
-//     text (Y rows where C4R lives are skipped)
-//   - Color jumps damped: norm rescaled with tanh for soft saturation
+// Palette: green → cyan → blue → magenta → yellow (organic sci-cog gradient).
+// All transitions are smooth (sine), no abrupt flashes. v9 polish: globalPhase
+// drift + tuned waves for more "alive legendary" aurora on the cube.
 type BioAurora struct {
 	startTime float64 // seconds since splash started
 	artRows   int     // number of rows occupied by art (skip these)
@@ -42,6 +35,12 @@ func NewBioAurora(artRows int) *BioAurora {
 // Tick advances the aurora animation clock.
 func (ba *BioAurora) Tick(elapsedSec float64) {
 	ba.startTime = elapsedSec
+}
+
+// globalPhase gives a very slow (0.02Hz) overall palette drift for
+// "breathing" legendary organic feel without any flicker.
+func (ba *BioAurora) globalPhase() float64 {
+	return math.Sin(ba.startTime * 2 * math.Pi / 48.0) * 0.08
 }
 
 // auroraPalette is the 6-color organic gradient used for the bio-morphing.
@@ -74,10 +73,11 @@ const maxAuroraOpacity = 0.55
 // visible dwell time per color is ~2-3 seconds.
 func (ba *BioAurora) colorAt(x, y int) int {
 	t := ba.startTime
-	// Three waves with periods 4.3s, 6.7s, 8.1s (all sub-1Hz)
-	w1 := math.Sin(t*2*math.Pi/4.3 + float64(x)*0.3 + float64(y)*0.2)
-	w2 := math.Sin(t*2*math.Pi/6.7 + float64(x)*0.15 - float64(y)*0.4)
-	w3 := math.Sin(t*2*math.Pi/8.1 - float64(x)*0.25 + float64(y)*0.35)
+	gp := ba.globalPhase()
+	// Three waves with periods 4.3s, 6.7s, 8.1s (all sub-1Hz) + slow global drift
+	w1 := math.Sin(t*2*math.Pi/4.3 + float64(x)*0.3 + float64(y)*0.2 + gp)
+	w2 := math.Sin(t*2*math.Pi/6.7 + float64(x)*0.15 - float64(y)*0.4 - gp*0.7)
+	w3 := math.Sin(t*2*math.Pi/8.1 - float64(x)*0.25 + float64(y)*0.35 + gp*1.1)
 	// Combine: average + offsets for shifting bands
 	v := (w1 + w2 + w3) / 3.0 // -1..+1
 	// Dampen the horizontal energy band: in v9.11.1 this created long
@@ -89,11 +89,11 @@ func (ba *BioAurora) colorAt(x, y int) int {
 		v += w1 * 0.15
 	} else {
 		// Outside C4R: full horizontal energy band can roam freely.
-		band := math.Sin(t*2*math.Pi/12.5 - float64(x)*0.15)
+		band := math.Sin(t*2*math.Pi/12.5 - float64(x)*0.15 + gp)
 		v += band * 0.3
 	}
 	// Vertical pulse: top brighter, bottom dimmer (or vice versa)
-	pulse := math.Sin(t * 2 * math.Pi / 7.0)
+	pulse := math.Sin(t * 2 * math.Pi / 7.0 + gp*2)
 	v += pulse * 0.2
 	// Soft saturation: tanh compresses the extremes.
 	norm := (math.Tanh(v) + 1.0) / 2.0 // 0..1, smooth
@@ -131,10 +131,11 @@ func (ba *BioAurora) colorAt(x, y int) int {
 // (the 4-char wall of C, the 5-char leg of R).
 func (ba *BioAurora) intensityAt(x, y int) float64 {
 	t := ba.startTime
-	b1 := math.Sin(t*2*math.Pi/5.2 + float64(x)*0.1 + float64(y)*0.15)
-	b2 := math.Sin(t*2*math.Pi/3.8 - float64(x)*0.05)
+	gp := ba.globalPhase() * 1.5
+	b1 := math.Sin(t*2*math.Pi/5.2 + float64(x)*0.1 + float64(y)*0.15 + gp)
+	b2 := math.Sin(t*2*math.Pi/3.8 - float64(x)*0.05 - gp)
 	// 0.2..1.0 range, then capped at maxAuroraOpacity
-	intensity := 0.4 + 0.4*(b1+b2)/2 + 0.2
+	intensity := 0.38 + 0.42*(b1+b2)/2 + 0.2
 	cap := maxAuroraOpacity
 	if ba.isInArtRegion(y) {
 		cap = 0.15 // very subtle inside C4R — was 0.30, looked glitchy

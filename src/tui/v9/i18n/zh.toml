@@ -138,8 +138,8 @@ settings.telemetry.desc = "运行统计信息（每次会话重置）。"
 achievement.unlocked = "成就解锁！"
 subtitle.line1 = "创意与破坏性的洞察"
 subtitle.line2 = "触手可及"
-easter.line1 = "о'лскульный русский science"
-easter.line2 = "♭ Garmon doloy — bito useyut ♭"
+easter.line1 = "ow's me ol'skool Russian science"
+easter.line2 = "♭ Garmon doloy — bito usee ♭"
 
 # v9.11.7: empty-state dashboard widgets
 widget.tip.title = "提示"

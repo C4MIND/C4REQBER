@@ -52,12 +52,12 @@ type SplashModel struct {
 // Splash constants
 const (
 	splashFormDuration  = 10                     // ticks per morph form
-	splashTickInterval  = 90 * time.Millisecond  // slower morph (was 60ms)
-	splashCrystalDelay  = 6 * time.Second        // longer hold (v9.10.3: 4s→6s for visible animation)
+	splashTickInterval  = 75 * time.Millisecond  // polished smooth morph (tuned 90→75ms for legend feel)
+	splashCrystalDelay  = 5500 * time.Millisecond // tuned hold for crystal reveal (visible + not too long)
 	splashArtReserve    = 14                     // tagline+motto+version+status+footer+spacers+tier
-	splashPulseInterval = 650 * time.Millisecond // calmer pulse (was 400ms)
-	splashTextFade      = 120 * time.Millisecond // slower text fade-in
-	splashFadeOutMs     = 800 * time.Millisecond // fade-out duration
+	splashPulseInterval = 600 * time.Millisecond // calmer + responsive pulse
+	splashTextFade      = 100 * time.Millisecond // crisper text fade-in
+	splashFadeOutMs     = 700 * time.Millisecond // tighter fade-out
 	splashBottomLift    = 2
 	splashMorphForms    = 6  // more intermediate morph forms (was 4)
 	splashBloomFrames   = 12 // bloom-in animation frames for cube

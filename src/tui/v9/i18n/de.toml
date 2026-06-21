@@ -138,8 +138,8 @@ settings.telemetry.desc = "Statistiken berechnen (jede Sitzung neu starten)."
 achievement.unlocked = "Erfolg gelöst!"
 subtitle.line1 = "Kreative & zerstörerische Erkenntnisse"
 subtitle.line2 = "An der Handfläche"
-easter.line1 = "о'лскульный русский science"
-easter.line2 = "♭ Garmon doloy — bito useyut ♭"
+easter.line1 = "ow's me ol'skool Russian science"
+easter.line2 = "♭ Garmon doloy — bito usee ♭"
 
 # v9.11.7: empty-state dashboard widgets
 widget.tip.title = "Tipp"

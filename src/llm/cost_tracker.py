@@ -12,12 +12,14 @@ from typing import Any
 from src.di.container import get_container
 
 
-# USD per 1M tokens (input / output)
+# USD per 1M tokens (input / output) — updated for current models in balanced/premium
 _PROVIDER_PRICES: dict[str, dict[str, tuple[float, float]]] = {
-    "gpt-4o": {"input": 2.50, "output": 10.00},  # type: ignore[dict-item]
-    "claude-3.5": {"input": 3.00, "output": 15.00},  # type: ignore[dict-item]
-    "gemini-1.5": {"input": 0.50, "output": 1.50},  # type: ignore[dict-item]
-    "local": {"input": 0.0, "output": 0.0},  # type: ignore[dict-item]
+    "gpt-4o": {"input": 2.50, "output": 10.00},
+    "claude-3.5": {"input": 3.00, "output": 15.00},
+    "claude-sonnet-4.6": {"input": 3.00, "output": 15.00},  # approx, via OpenRouter
+    "claude-opus-4.6": {"input": 15.00, "output": 75.00},
+    "gemini-1.5": {"input": 0.50, "output": 1.50},
+    "local": {"input": 0.0, "output": 0.0},
 }
 
 
@@ -26,6 +28,10 @@ def _normalize_model(model: str) -> str:
     model_lower = model.lower()
     if "gpt-4o" in model_lower:
         return "gpt-4o"
+    if "claude-sonnet-4.6" in model_lower or "claude-4.6" in model_lower:
+        return "claude-sonnet-4.6"
+    if "claude-opus-4.6" in model_lower or "claude-opus" in model_lower:
+        return "claude-opus-4.6"
     if "claude-3.5" in model_lower or "claude-3-5" in model_lower:
         return "claude-3.5"
     if "gemini-1.5" in model_lower or "gemini-1.5" in model_lower:

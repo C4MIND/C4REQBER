@@ -14,8 +14,9 @@ from src.contracts.pipeline_config import PipelineConfig
 
 logger = logging.getLogger(__name__)
 
-# Default config directory
-CONFIG_DIR = Path.home() / ".config" / "c4reqber"
+# Default config directory — unified to ~/.c4reqber for consistency across Python/Go/desktop
+# (matches config_init, model_assignment, simulations, etc.)
+CONFIG_DIR = Path.home() / ".c4reqber"
 PROFILE_FILE = CONFIG_DIR / "profile.json"
 
 

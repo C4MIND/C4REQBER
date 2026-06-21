@@ -16,11 +16,26 @@ a = Analysis(
         "src.mcp_server.fastmcp_bridge",
         "src.cli.blast_app",
         "src.cli.config_init",
+        "src.cli.tui_launcher",
+        "toml",
+        "rich",
+        "typer",
+        "pydantic",
+        "httpx",
+        # Add common runtime needs for packaged desktop (knowledge, llm, etc.)
+        "src.knowledge.orchestrator",
+        "src.llm.gateway",
+        "src.pipeline.config",
     ],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=["matplotlib", "pandas", "scipy", "gensim"],
+    # Do not exclude core science libs - many patterns/simulations need numpy etc.
+    # Only exclude truly optional heavy GUI ones if desired.
+    excludes=["matplotlib", "gensim"],  # keep numpy/pandas/scipy for real sims
+    datas=[
+        # If any Python-side data files needed in bundle (i18n, templates, etc.)
+    ],
     noarchive=False,
     optimize=0,
 )

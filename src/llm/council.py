@@ -40,12 +40,12 @@ COUNCIL_MODELS = {
         "openai/gpt-4o-mini",
     ],
     "balanced": [
-        "anthropic/claude-sonnet-4-20250514",
+        "anthropic/claude-sonnet-4.6",
         "deepseek/deepseek-r1",
         "qwen/qwen-2.5-72b-instruct",
     ],
     "premium": [
-        "anthropic/claude-sonnet-4-20250514",
+        "anthropic/claude-sonnet-4.6",
         "openai/gpt-4.5-preview",
         "deepseek/deepseek-r1",
     ],

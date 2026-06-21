@@ -13,12 +13,33 @@ def _repo_root() -> Path:
 
 
 def find_tui_v9_binary() -> Path | None:
-    """Locate a built c4tui-v9 binary, or None if not found."""
+    """Locate a built c4tui-v9 binary, or None if not found.
+    Handles source tree, PATH, and PyInstaller desktop bundle (Resources for mac, next to exe for win).
+    """
+    # 1. Bundled PyInstaller desktop app case
+    if getattr(sys, "frozen", False):
+        exe_dir = Path(sys.executable).resolve().parent
+        if sys.platform == "darwin":
+            # .app/Contents/MacOS/blast -> .app/Contents/Resources/c4tui-v9
+            res = exe_dir.parent / "Resources" / "c4tui-v9"
+            if res.is_file() and os.access(res, os.X_OK):
+                return res
+        else:
+            # Windows: alongside the exe or in dist
+            for cand in [
+                exe_dir / "c4tui-v9.exe",
+                exe_dir / "c4tui-v9",
+            ]:
+                if cand.is_file():
+                    return cand
+        # fallback to PATH even in frozen
+    # 2. Source tree / dev
     root = _repo_root()
     candidates = [
         root / "src" / "tui" / "v9" / "bin" / "c4tui-v9",
         root / "bin" / "c4tui-v9",
         Path(shutil.which("c4tui-v9") or ""),
+        Path(shutil.which("c4tui-v9.exe") or ""),
     ]
     for path in candidates:
         if path and path.is_file() and os.access(path, os.X_OK):

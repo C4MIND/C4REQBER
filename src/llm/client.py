@@ -36,9 +36,9 @@ class LLMClient:
 
     # Models optimized for different tasks
     MODELS = {
-        "hypothesis": "anthropic/claude-3.5-sonnet",  # Best for scientific reasoning
+        "hypothesis": "anthropic/claude-sonnet-4.6",  # Best for scientific reasoning
         "falsifiability": "openai/gpt-4o",  # Good at structured criteria
-        "synthesis": "anthropic/claude-3.5-sonnet",  # Coherent synthesis
+        "synthesis": "anthropic/claude-sonnet-4.6",  # Coherent synthesis
         "cheap": "openai/gpt-4o-mini",  # Cost-effective
     }
 
@@ -61,7 +61,7 @@ class LLMClient:
 
         Args:
             prompt: User prompt
-            model: Model identifier (default: claude-3.5-sonnet)
+            model: Model identifier (default: claude-sonnet-4.6)
             temperature: 0-1 (0=deterministic, 1=creative)
             max_tokens: Maximum response length
             system_prompt: System instructions

@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 
 _DEFAULT_MODEL = "deepseek/deepseek-chat"
 _FALLBACK_MODELS = [
-    "anthropic/claude-3.5-sonnet",
+    "anthropic/claude-sonnet-4.6",
     "openai/gpt-4o-mini",
 ]
 

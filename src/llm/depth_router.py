@@ -27,12 +27,12 @@ class DepthBasedRouter:
         2: {
             "cheap": "qwen/qwen-2.5-7b-instruct",
             "balanced": "anthropic/claude-3-haiku",       # $0.25/MTok — fast formalization
-            "premium": "anthropic/claude-sonnet-4-20250514",  # $3/MTok — high-quality reasoning
+            "premium": "anthropic/claude-sonnet-4.6",  # high-quality reasoning (Sonnet 4.6)
         },
         3: {
             "cheap": "anthropic/claude-3-haiku",
             "balanced": "deepseek/deepseek-chat",         # $2/MTok — powerful verification
-            "premium": "anthropic/claude-sonnet-4-20250514",  # $3/MTok — final quality
+            "premium": "anthropic/claude-sonnet-4.6",  # final quality (Sonnet 4.6)
         },
     }
 
@@ -42,7 +42,7 @@ class DepthBasedRouter:
         "google/gemini-2.0-flash-001": 0.00015,
         "deepseek/deepseek-chat": 0.00014,
         "anthropic/claude-3-haiku": 0.00025,
-        "anthropic/claude-sonnet-4-20250514": 0.003,
+        "anthropic/claude-sonnet-4.6": 0.003,
     }
 
     STAGE_TO_DEPTH: ClassVar[dict[int, int]] = {

@@ -44,7 +44,7 @@ def _llm_generate(prompt: str, max_tokens: int = 2000, temperature: float = 0.7)
         key = os.environ.get("DEEPSEEK_API_KEY", DEEPSEEK_KEY)
     if not key:
         return "[LLM generation disabled: no API key configured]"
-    model = os.environ.get("DISSERTATION_MODEL", "anthropic/claude-3.5-sonnet")
+    model = os.environ.get("DISSERTATION_MODEL", "anthropic/claude-sonnet-4.6")
     try:
         resp = httpx.post(
             "https://openrouter.ai/api/v1/chat/completions" if "sk-or-" in key else DEEPSEEK_URL,

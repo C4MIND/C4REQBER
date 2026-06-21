@@ -47,9 +47,9 @@ class AsyncLLMClient:
 
     # Models optimized for different tasks
     MODELS = {
-        "hypothesis": "anthropic/claude-3.5-sonnet",
+        "hypothesis": "anthropic/claude-sonnet-4.6",
         "falsifiability": "openai/gpt-4o",
-        "synthesis": "anthropic/claude-3.5-sonnet",
+        "synthesis": "anthropic/claude-sonnet-4.6",
         "cheap": "openai/gpt-4o-mini",
     }
 

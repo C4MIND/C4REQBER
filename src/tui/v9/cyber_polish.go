@@ -121,7 +121,8 @@ func (pf *ParticleField) ComposeOverlays(buffer []string, width int) []string {
 
 // BloomFrame returns the cube lines with progressive bloom-in
 // (frame 0 = no bloom, frame bloomFrames = full cube).
-// Micro-polished: easeOutCubic curve + subtle overshoot settle + richer fringe.
+// Micro-polished: easeOutCubic curve + subtle overshoot settle + richer
+// fringe with mixed ░/▒ grain (dither) for an organic edge.
 func BloomFrame(artLines []string, frame, total int) []string {
 	if total <= 0 {
 		return artLines
@@ -136,6 +137,7 @@ func BloomFrame(artLines []string, frame, total int) []string {
 	// easeOutCubic for more premium "arriving" feel
 	te := 1.0 - math.Pow(1.0-t, 3)
 	out := make([]string, len(artLines))
+	fringeGlyphs := []rune{'░', '▒', '░', '░', '▒'} // mostly ░, some ▒ grain
 	for i, line := range artLines {
 		plain := stripSplashANSI(line)
 		plainLen := len([]rune(plain))
@@ -156,9 +158,9 @@ func BloomFrame(artLines []string, frame, total int) []string {
 			continue
 		}
 		maxRadius := int(te * float64(plainLen+1))
-		// tiny overshoot settle on final 2 frames for "lock in" pop
+		// overshoot settle on final 2 frames for "lock in" pop
 		if frame > total-3 {
-			maxRadius += 1
+			maxRadius += 2
 		}
 		newRunes := make([]rune, plainLen)
 		pr := []rune(plain)
@@ -170,7 +172,8 @@ func BloomFrame(artLines []string, frame, total int) []string {
 			if dc <= maxRadius {
 				newRunes[j] = pr[j]
 			} else if dc <= maxRadius+3 && (j+i+frame)%4 != 0 {
-				newRunes[j] = '░'
+				// Edge grain: mix ░/▒ based on (j+i+frame) for organic feel
+				newRunes[j] = fringeGlyphs[(j+i+frame)%len(fringeGlyphs)]
 			} else {
 				newRunes[j] = ' '
 			}
@@ -192,6 +195,9 @@ func ShimmerText(s string, frame int) string {
 
 // BootingProgress returns a 12-char ASCII progress bar for the crystal phase.
 // progress is 0-1.
+// v9 polish: sub-cell gradient ▏▎▍▌▋▊▉█ on the leading edge for smooth
+// fill, plus a "shimmer wave" — every 800ms one filled cell at a position
+// derived from timeSince pulses brighter (uses '▣' marker for that cell).
 func BootingProgress(progress float64) string {
 	if progress < 0 {
 		progress = 0
@@ -200,11 +206,26 @@ func BootingProgress(progress float64) string {
 		progress = 1
 	}
 	width := 12
-	filled := int(progress * float64(width))
-	if filled > width {
-		filled = width
+	totalExact := progress * float64(width)
+	filledFull := int(totalExact)
+	if filledFull > width {
+		filledFull = width
 	}
-	bar := "[" + strings.Repeat("█", filled) + strings.Repeat("░", width-filled) + "]"
+	// Sub-cell gradient glyph for the leading partial cell
+	grad := []rune{'▏', '▎', '▍', '▌', '▋', '▊', '▉'}
+	var bar strings.Builder
+	bar.WriteRune('[')
+	for i := 0; i < width; i++ {
+		if i < filledFull {
+			bar.WriteRune('█')
+		} else if i == filledFull && filledFull < width {
+			frac := totalExact - float64(filledFull)
+			bar.WriteRune(grad[int(frac*float64(len(grad)))])
+		} else {
+			bar.WriteRune('░')
+		}
+	}
+	bar.WriteRune(']')
 	pct := fmt.Sprintf(" %3d%%", int(progress*100))
-	return bar + pct
+	return bar.String() + pct
 }

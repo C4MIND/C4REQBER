@@ -115,6 +115,10 @@ func (ba *BioAurora) colorAt(x, y int) int {
 // capped at 0.15 (very subtle tint) to keep letter shapes stable and
 // avoid the "every cell a different color" glitch on small glyphs
 // (the 4-char wall of C, the 5-char leg of R).
+//
+// v9 polish: adds micro-flares — every ~9s the aurora briefly peaks at
+// +0.10 intensity for 200ms, simulating a distant "star flare" pulse
+// that breathes new life into the legend.
 func (ba *BioAurora) intensityAt(x, y int) float64 {
 	t := ba.startTime
 	gp := ba.globalPhase() * 1.5
@@ -123,6 +127,19 @@ func (ba *BioAurora) intensityAt(x, y int) float64 {
 	// Gentle breathing + micro vertical drift
 	drift := math.Sin(t*2*math.Pi/11.0 + float64(y)*0.12) * 0.06
 	intensity := 0.37 + 0.43*(b1+b2)/2 + 0.18 + drift
+
+	// ── Micro-flare: every 9s, brief peak (+0.10 for ~200ms)
+	// Implemented as a sinusoidal bump on the 9s period with narrow gate.
+	flarePhase := math.Mod(t, 9.0)
+	if flarePhase < 0.6 {
+		// smooth bump from 0 → 0.10 → 0 over 0.6s
+		flare := (1.0 - math.Abs(flarePhase-0.3)/0.3) * 0.10
+		if flare < 0 {
+			flare = 0
+		}
+		intensity += flare
+	}
+
 	cap := maxAuroraOpacity
 	if ba.isInArtRegion(y) {
 		cap = 0.15
@@ -130,8 +147,8 @@ func (ba *BioAurora) intensityAt(x, y int) float64 {
 	if intensity > cap {
 		intensity = cap
 	}
-	if intensity < 0.09 {
-		intensity = 0.09
+	if intensity < 0.15 {
+		intensity = 0.15
 	}
 	return intensity
 }

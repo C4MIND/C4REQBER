@@ -21,4 +21,4 @@
  │  90m▶ Factory    —  parallel pipeline factory (5-100 parallel jobs)m             
  │ 1;36m▣ Achievementsm  [░░░░░░░░░░░░░░░░░░░░]                                       
 40m37m❯ mm40m38;5;240;40m  1 mm40m7mdmm40m38;5;240mesign a CRISPR guide RNA with minimal off-targets in T-cellsmm40m             m
- ▶ READY                                   [Enter] Run  [?] Help  [Ctrl+C] Qui
+ ▶ READY                                   [Enter] Run  [?] Help  [Ctrl+C] Quit 

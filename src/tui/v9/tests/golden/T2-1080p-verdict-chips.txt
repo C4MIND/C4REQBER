@@ -46,4 +46,4 @@
 38;5;240m37m❯ mm30m m                                                                                                                                                                                             
 38;5;240m37m❯ mm30m m                                                                                                                                                                                             
                                                                                                                                                       90m90m? ?m  ·  ▶ follow  ·  ▣ 4/4m
- ▶ READY                                                                                                                                                   [Enter] Run  [?] Help  [Ctrl+C] Qui
+ ▶ READY                                                                                                                                                   [Enter] Run  [?] Help  [Ctrl+C] Quit 

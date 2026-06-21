@@ -47,6 +47,13 @@ type SplashModel struct {
 	appVersion   string
 	gitRef       string    // e.g. "v9.4.0 (abcdef0)"
 	crystalStart time.Time // for boot progress display
+	phaseStart   time.Time // start time of current phase (for timed reveals + breathes)
+	// micro-polish additions (v9 polish pack)
+	crtY         int     // CRT scanline drift Y (crystal phase)
+	crtActive    bool    // enable CRT scanline during crystal phase
+	bloomShock   int     // bloom shockwave counter (0 = not firing)
+	starsPattern []rune  // pre-computed ASCII stars background
+	starsActive  bool    // render stars background (crystal + early waiting)
 }
 
 // Splash constants
@@ -69,13 +76,17 @@ var splashAnsiPattern = regexp.MustCompile(`\x1b\[[0-9;]*[a-zA-Z]`)
 func NewSplash(version, gitRef string) SplashModel {
 	tmp := SplashModel{height: 50, width: 200}
 	seed := tmp.pickANSI()
+	now := time.Now()
 	return SplashModel{
 		phase:        "crystal",
 		rng:          rand.New(rand.NewSource(time.Now().UnixNano())),
 		appVersion:   version,
 		gitRef:       gitRef,
 		seedArt:      seed,
-		crystalStart: time.Now(),
+		crystalStart: now,
+		phaseStart:   now,
+		crtActive:    true,
+		starsActive:  true,
 		aurora:       NewBioAurora(11), // C4R art occupies 11 rows; aurora respects this
 	}
 }
@@ -108,8 +119,10 @@ func (m SplashModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m.startDissolve()
 		case "dissolve":
 			m.phase = "waiting"
+			m.phaseStart = time.Now()
 			m.morphLines = make([]string, len(m.forms[len(m.forms)-1]))
 			copy(m.morphLines, m.forms[len(m.forms)-1])
+			m.bloomShock = 1
 			return m, splashPulseCmd()
 		case "waiting":
 			m.phase = "fadeout"
@@ -132,6 +145,12 @@ func (m SplashModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.morphLines = make([]string, len(forms[m.crystalFrame]))
 				copy(m.morphLines, forms[m.crystalFrame])
 			}
+			// CRT scanline drift — increments every 7 ticks (~525ms)
+			if m.crtActive && msg.tick%7 == 0 {
+				if h := m.artHeight(); h > 0 {
+					m.crtY = (m.crtY + 1) % h
+				}
+			}
 			// Wait for crystal delay
 			elapsedMs := msg.tick * int(splashTickInterval/time.Millisecond)
 			if elapsedMs >= int(splashCrystalDelay/time.Millisecond) {
@@ -146,6 +165,8 @@ func (m SplashModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, splashTickCmd(m.morphTick + 1)
 			}
 			m.phase = "waiting"
+			m.phaseStart = time.Now()
+			m.bloomShock = 1
 			return m, splashPulseCmd()
 		}
 		return m, nil
@@ -156,6 +177,13 @@ func (m SplashModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			// Bloom-in: cube expands from center over splashBloomFrames frames
 			if m.bloomFrame < splashBloomFrames {
 				m.bloomFrame++
+			}
+			// Bloom shockwave countdown (3 frames ~1.8s peak then decay)
+			if m.bloomShock > 0 {
+				m.bloomShock++
+				if m.bloomShock > 4 {
+					m.bloomShock = 0
+				}
 			}
 			// Bio-aurora clock: advance based on real time (smooth, not frame-based)
 			if m.aurora != nil {
@@ -201,6 +229,7 @@ func (m SplashModel) startDissolve() (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 	m.phase = "dissolve"
+	m.phaseStart = time.Now()
 	m.seedArt = stripSplashANSI(m.pickANSI())
 	m.rng.Seed(time.Now().UnixNano())
 	// Build the multi-frame dissolve sequence:
@@ -857,6 +886,21 @@ func (m SplashModel) View() tea.View {
 		}
 	}
 
+	// ── ASCII stars background (crystal + early waiting phases only) ───────
+	if m.starsActive && (m.phase == "crystal" || (m.phase == "waiting" && time.Since(m.phaseStart).Seconds() < 2.0)) {
+		m.overlayStars(final)
+	}
+
+	// ── CRT scanline drift (crystal phase only) ────────────────────────────
+	if m.crtActive && m.phase == "crystal" && m.crtY >= 0 && m.crtY < len(final) {
+		final[m.crtY] = overlayScanline(final[m.crtY], m.width, m.crtY)
+	}
+
+	// ── Bloom shockwave (brief brightness boost on waiting entry) ──────────
+	if m.bloomShock > 0 && m.phase == "waiting" {
+		m.applyBloomShockwave(final)
+	}
+
 	// Overlay particles (only in dissolve/waiting/fadeout, not crystal)
 
 	v := tea.NewView(strings.Join(final, "\n"))
@@ -902,6 +946,85 @@ func findLastNonBlank(s string) int {
 		}
 	}
 	return -1
+}
+
+// ── Micro-polish helpers ─────────────────────────────────────────────────────
+
+// overlayStars sprinkles subtle ASCII "stars" (· ° •) across empty rows
+// in the final viewport buffer. Only paints over spaces so it never
+// clobbers rendered art or text. Deterministic positions for a given
+// (crystalStart, width, height) so the pattern feels stable, not jittery.
+func (m SplashModel) overlayStars(final []string) {
+	stars := []rune{'·', '·', '·', '°', '·', '·', '•', '·'}
+	w := m.width
+	if w <= 0 || len(final) == 0 {
+		return
+	}
+	// Use crystalStart second-resolution as seed so the pattern drifts
+	// gently across seconds without flickering every render.
+	seed := int64(m.crystalStart.Unix())
+	// Pre-pick ~24 star positions
+	for i := 0; i < 24; i++ {
+		x := int((seed*73 + int64(i)*131) % int64(w))
+		y := int((seed*101 + int64(i)*197) % int64(len(final)))
+		if x < 0 {
+			x = -x
+		}
+		if y < 0 {
+			y = -y
+		}
+		if y >= len(final) {
+			continue
+		}
+		runes := []rune(final[y])
+		if x >= len(runes) {
+			continue
+		}
+		// Only paint over spaces
+		if runes[x] == ' ' {
+			runes[x] = stars[i%len(stars)]
+			final[y] = string(runes)
+		}
+	}
+}
+
+// overlayScanline paints a faint horizontal scanline on one row of the
+// viewport — a CRT-style "scanning" effect that drifts upward. Uses
+// `▔` (upper half block) on even rows, `▁` (lower) on odd rows for a
+// subtle alternating pattern that feels analog.
+func overlayScanline(row string, width, y int) string {
+	runes := []rune(row)
+	glyph := '▁'
+	if y%2 == 0 {
+		glyph = '▔'
+	}
+	for x := 0; x < width && x < len(runes); x++ {
+		if runes[x] == ' ' {
+			runes[x] = glyph
+		}
+	}
+	return string(runes)
+}
+
+// applyBloomShockwave brightens the rendered viewport briefly when the
+// bloom completes — a subtle "lock-in" pulse that lasts ~3 frames
+// (≈1.8s at 600ms tick). Strength fades as m.bloomShock counts up.
+func (m SplashModel) applyBloomShockwave(final []string) {
+	if m.bloomShock <= 0 {
+		return
+	}
+	// Strength fades from 1 → 0 over 4 increments
+	strength := float64(5-m.bloomShock) / 4.0
+	if strength <= 0 {
+		return
+	}
+	style := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("6"))
+	for i, line := range final {
+		if i%3 == int(m.bloomShock)%3 {
+			final[i] = style.Render("▌ " + line)
+			_ = strength // reserved for future per-cell alpha
+		}
+	}
 }
 
 // visualCenterColumnSplash returns the column (in art-local coords)
@@ -1044,6 +1167,22 @@ func (m SplashModel) coloredArtLines(primary, success, accent, muted, highlight 
 		} else {
 			artLines = splitSplashLines(m.seedArt)
 		}
+		// ── Crystal slow hue drift: during 5.5s hold, drift from purple
+		// (#5f5fff) toward blue-purple (#5fafff) so the dissolve transition
+		// feels organic (no harsh color jump). Drift proportional to elapsed
+		// time vs splashCrystalDelay.
+		driftProg := float64(0)
+		if splashCrystalDelay > 0 {
+			driftProg = float64(time.Since(m.crystalStart)) / float64(splashCrystalDelay)
+			if driftProg > 1.0 {
+				driftProg = 1.0
+			}
+		}
+		driftHex := splashLerpColor("#5f5fff", "#5fafff", driftProg)
+		driftStyle := lipgloss.NewStyle().Foreground(lipgloss.Color(driftHex))
+		for i, line := range artLines {
+			artLines[i] = driftStyle.Render(line)
+		}
 	case "dissolve":
 		// Micro-polished: richer color journey from crystal purple toward green success
 		progress := 0.0
@@ -1094,63 +1233,159 @@ func (m SplashModel) splashTextLines(primary, success, accent, muted, highlight 
 	primaryStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color(primary))
 	mutedStyle := lipgloss.NewStyle().Foreground(lipgloss.Color(muted))
 	highlightStyle := lipgloss.NewStyle().Foreground(lipgloss.Color(highlight))
-	greenStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("2"))     // for "Shift"
-	redOrangeStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("9")) // for "paradigms"
 	easterStyle := lipgloss.NewStyle().Italic(true).Foreground(lipgloss.Color("6"))  // easter egg
+
+	// ── Shift hue breathe: the "Shift" word subtly oscillates between
+	// green and teal (6) over ~12s — emphasizes the action word, fits
+	// the project's "paradigm-shift" theme.
+	shiftHue := "2"
+	if m.phase != "crystal" {
+		// sin wave between -1 and 1; map to hue string
+		breathe := math.Sin(time.Since(m.phaseStart).Seconds() * 2 * math.Pi / 12.0)
+		if breathe > 0.3 {
+			shiftHue = "6" // teal/cyan
+		}
+	}
+	greenStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color(shiftHue))
+
+	// ── "paradigms." hue breathe: red-orange → yellow (3) over 30s cycle,
+	// very subtle so the word still reads as "warning/important".
+	paradigmHue := "9"
+	if m.phase != "crystal" {
+		b := math.Sin(time.Since(m.phaseStart).Seconds() * 2 * math.Pi / 30.0)
+		if b > 0.5 {
+			paradigmHue = "3"
+		}
+	}
+	redOrangeStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color(paradigmHue))
 
 	var lines []string
 
-	// Subtitle (1 line, dim) — combines the 2 lines via " · " separator
+	// ── Subtitle typewriter: in the first 350ms after dissolve/waiting
+	// starts, type out the subtitle char-by-char (~3ms/char).
 	sub1 := i18n.T("subtitle.line1")
 	sub2 := i18n.T("subtitle.line2")
-	tagline := primaryStyle.Render("COGNITIVE EXOSKELETON FOR AI-AGENTS AND HUMANS")
-	subtitleCombined := mutedStyle.Render(sub1 + "  ·  " + sub2)
+	fullSub := sub1 + "  ·  " + sub2
+	if (m.phase == "dissolve" || m.phase == "waiting") && time.Since(m.phaseStart).Seconds() < 0.35 {
+		elapsed := time.Since(m.phaseStart).Seconds()
+		cut := int(elapsed / 0.003) // 3ms per char
+		if cut < len(fullSub) {
+			fullSub = fullSub[:cut]
+		}
+	}
+	subtitleCombined := mutedStyle.Render(fullSub)
 	lines = append(lines, subtitleCombined)
 
-	// Tagline
-	lines = append(lines, tagline)
+	// Tagline (delayed fade-in: 250ms after dissolve starts; always shown
+	// once we reach waiting phase)
+	showTagline := m.phase == "waiting" ||
+		(m.phase == "dissolve" && time.Since(m.phaseStart).Seconds() > 0.25)
+	if showTagline {
+		tagline := primaryStyle.Render("COGNITIVE EXOSKELETON FOR AI-AGENTS AND HUMANS")
+		lines = append(lines, tagline)
+	} else {
+		lines = append(lines, "")
+	}
 
-	// Motto (visible in dissolve & waiting)
-	// "Discover.  Invent.  Shift paradigms." — "Shift" green, "paradigms" red-orange
+	// ── Motto letter-stagger: during dissolve & early waiting, the
+	// three phrases reveal one at a time (Discover / Invent / Shift
+	// paradigms). After ~1.8s, all three are visible.
 	if m.phase != "crystal" {
-		discover := mutedStyle.Render("Discover.  ")
-		invent := highlightStyle.Render("Invent.  ")
-		shift := greenStyle.Render("Shift")
-		space := mutedStyle.Render(" ")
-		paradigms := redOrangeStyle.Render("paradigms.")
-		motto := discover + invent + shift + space + paradigms
+		discoverStr := "Discover.  "
+		inventStr := "Invent.  "
+		shiftStr := "Shift"
+		spaceStr := " "
+		paradigmsStr := "paradigms."
+
+		elapsed := time.Since(m.phaseStart).Seconds()
+		discover := ""
+		invent := ""
+		shift := ""
+		space := ""
+		paradigms := ""
+		if elapsed > 0.0 {
+			discover = discoverStr
+		}
+		if elapsed > 0.6 {
+			invent = inventStr
+		}
+		if elapsed > 1.2 {
+			shift = shiftStr
+		}
+		if elapsed > 1.2 {
+			space = spaceStr
+		}
+		if elapsed > 1.2 {
+			paradigms = paradigmHueBracket(paradigmHue, paradigmsStr)
+		}
+
+		motto := mutedStyle.Render(discover) +
+			highlightStyle.Render(invent) +
+			greenStyle.Render(shift) +
+			mutedStyle.Render(space) +
+			redOrangeStyle.Render(paradigms)
 		lines = append(lines, motto)
 	}
 
-	// Version line
-	version := mutedStyle.Render("C4REQBER " + m.appVersion)
-	if m.gitRef != "" {
-		version += mutedStyle.Render("  (" + m.gitRef + ")")
+	// ── Version line (250ms after tagline = ~500ms after phase start;
+	// always shown once waiting). Also: blink the "." in version dot at
+	// 0.5Hz for a "live build" feel.
+	showVersion := m.phase == "waiting" ||
+		(m.phase == "dissolve" && time.Since(m.phaseStart).Seconds() > 0.5)
+	if showVersion {
+		verText := "C4REQBER " + m.appVersion
+		// Version dot micro-blink — alternate . and · every ~2s
+		if math.Sin(time.Since(m.phaseStart).Seconds()*2*math.Pi/2.0) > 0.0 {
+			verText = strings.ReplaceAll(verText, ".", "·")
+		}
+		version := mutedStyle.Render(verText)
+		if m.gitRef != "" {
+			version += mutedStyle.Render("  (" + m.gitRef + ")")
+		}
+		lines = append(lines, version)
+	} else {
+		lines = append(lines, "")
 	}
-	lines = append(lines, version)
 
 	// Spacer
 	lines = append(lines, "")
 
-	// Status / hint
+	// ── Status / hint. Includes a subtle "·" micro-blink for the
+	// separators in crystal & waiting (0.3Hz, ~3.3s cycle).
+	sep := "·"
+	if math.Sin(time.Since(m.phaseStart).Seconds()*2*math.Pi/3.3) > 0.5 {
+		sep = " "
+	}
 	var status string
 	switch m.phase {
 	case "crystal":
 		elapsed := time.Since(m.crystalStart).Seconds()
 		bootProgress := BootingProgress(elapsed / splashCrystalDelay.Seconds())
 		bootStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("3"))
-		status = mutedStyle.Render("booting in "+splashCrystalDelay.String()+" · ") + bootStyle.Render(bootProgress) + mutedStyle.Render(" · press any key to skip")
+		status = mutedStyle.Render("booting in "+splashCrystalDelay.String()+" "+sep+" ") +
+			bootStyle.Render(bootProgress) +
+			mutedStyle.Render(" "+sep+" press any key to skip")
 	case "dissolve":
 		status = primaryStyle.Render("◆ awakening cube state ◆")
 	case "waiting":
-		status = highlightStyle.Render("✨ ready · press any key to launch")
+		status = highlightStyle.Render("✨ ready "+sep+" press any key to launch")
 	case "fadeout":
 		status = mutedStyle.Render("transitioning...")
 	}
 	lines = append(lines, status)
 
-	// Footer
-	footer := mutedStyle.Render("GitLab · c4reqber · Z₃³")
+	// ── Footer with staged Z₃³ reveal (Z → Z₃ → Z₃³ over first 1.5s).
+	footerBase := "GitLab · c4reqber · "
+	var footerSuffix string
+	elapsed := time.Since(m.phaseStart).Seconds()
+	if m.phase == "crystal" || elapsed < 0.5 {
+		footerSuffix = "Z"
+	} else if elapsed < 1.0 {
+		footerSuffix = "Z₃"
+	} else {
+		footerSuffix = "Z₃³"
+	}
+	footer := mutedStyle.Render(footerBase + footerSuffix)
 	lines = append(lines, footer)
 
 	// Easter egg (dim, only in waiting phase — rare sighting, vibe farm)
@@ -1161,6 +1396,11 @@ func (m SplashModel) splashTextLines(primary, success, accent, muted, highlight 
 
 	return lines
 }
+
+// paradigmHueBracket returns the paradigms string with the period possibly
+// dimmed (for the slow pulse of the trailing "."). Reserved for future use;
+// currently returns input unchanged.
+func paradigmHueBracket(hue, s string) string { return s }
 
 // ── Tea messages ────────────────────────────────────────────────────────────
 

@@ -337,7 +337,8 @@ func TestHistoryDir_CreatesDir(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	expected := filepath.Join(tmp, ".config", "c4reqber")
+	// v9.13.x: unified to ~/.c4reqber (matches Python central config + desktop launcher).
+	expected := filepath.Join(tmp, ".c4reqber")
 	if dir != expected {
 		t.Errorf("HistoryDir = %s, want %s", dir, expected)
 	}

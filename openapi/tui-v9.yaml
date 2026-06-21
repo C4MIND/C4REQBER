@@ -1,0 +1,332 @@
+openapi: 3.1.0
+info:
+  title: c4reqber TUI v9 API Contract
+  version: 5.6.0+tui9.13.0
+  description: |
+    Wire contract between Go TUI v9 and the FastAPI backend.
+    Source of truth for request/response shapes and SSE event types.
+servers:
+  - url: http://127.0.0.1:8000
+    description: Local development
+paths:
+  /api/v1/health:
+    get:
+      operationId: healthCheck
+      tags: [system]
+      responses:
+        "200":
+          description: Service healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+  /api/v1/auth/login:
+    post:
+      operationId: authLogin
+      tags: [auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: JWT issued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+  /api/v1/auth/register:
+    post:
+      operationId: authRegister
+      tags: [auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+      responses:
+        "200":
+          description: User created or already exists
+  /v8/discover/one-click:
+    post:
+      operationId: discoverOneClick
+      tags: [discovery]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OneClickRequest"
+      responses:
+        "200":
+          description: Job queued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobCreatedResponse"
+  /v8/discover/flash:
+    post:
+      operationId: discoverFlash
+      tags: [discovery]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FlashRequest"
+      responses:
+        "200":
+          description: Job queued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobCreatedResponse"
+  /v8/discover/status/{job_id}:
+    get:
+      operationId: discoverJobStatus
+      tags: [discovery]
+      parameters:
+        - name: job_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Job status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobStatusResponse"
+  /v8/discover/stream/{job_id}:
+    get:
+      operationId: discoverJobStream
+      tags: [discovery]
+      description: |
+        Server-Sent Events stream. Each `data:` line is JSON with a required `type` field.
+      parameters:
+        - name: job_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: SSE stream
+          content:
+            text/event-stream:
+              schema:
+                $ref: "#/components/schemas/SSEEventEnvelope"
+components:
+  schemas:
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        version:
+          type: string
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+        name:
+          type: string
+    LoginResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+        token_type:
+          type: string
+    RegisterRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+        name:
+          type: string
+    OneClickRequest:
+      type: object
+      required: [problem]
+      properties:
+        problem:
+          type: string
+        domain:
+          type: string
+          default: science
+        llm_tier:
+          type: string
+          enum: [C1, C2, C3, ""]
+        output_mode:
+          type: string
+          enum: [human, explain]
+          default: human
+    FlashRequest:
+      type: object
+      required: [problem]
+      properties:
+        problem:
+          type: string
+        domain:
+          type: string
+          default: science
+    JobCreatedResponse:
+      type: object
+      required: [job_id, status]
+      properties:
+        job_id:
+          type: string
+        status:
+          type: string
+    JobStatusResponse:
+      type: object
+      properties:
+        job_id:
+          type: string
+        status:
+          type: string
+        phase:
+          type: string
+        phase_detail:
+          type: string
+        progress:
+          type: number
+          format: float
+        result:
+          type: object
+          additionalProperties: true
+        errors:
+          type: array
+          items:
+            type: string
+    SSEEventEnvelope:
+      description: JSON payload inside SSE data lines
+      oneOf:
+        - $ref: "#/components/schemas/SSEPhaseProgress"
+        - $ref: "#/components/schemas/SSESimStarted"
+        - $ref: "#/components/schemas/SSESimFinished"
+        - $ref: "#/components/schemas/SSESimSkipped"
+        - $ref: "#/components/schemas/SSEComplete"
+        - $ref: "#/components/schemas/SSEFailed"
+        - $ref: "#/components/schemas/SSEError"
+      discriminator:
+        propertyName: type
+        mapping:
+          phase_progress: "#/components/schemas/SSEPhaseProgress"
+          sim_started: "#/components/schemas/SSESimStarted"
+          sim_finished: "#/components/schemas/SSESimFinished"
+          sim_skipped: "#/components/schemas/SSESimSkipped"
+          complete: "#/components/schemas/SSEComplete"
+          failed: "#/components/schemas/SSEFailed"
+          error: "#/components/schemas/SSEError"
+    SSEBase:
+      type: object
+      required: [type]
+      properties:
+        type:
+          type: string
+        ts:
+          type: string
+        job_id:
+          type: string
+    SSEPhaseProgress:
+      allOf:
+        - $ref: "#/components/schemas/SSEBase"
+        - type: object
+          properties:
+            phase:
+              type: string
+            detail:
+              type: string
+            progress:
+              type: number
+            status:
+              type: string
+    SSESimStarted:
+      allOf:
+        - $ref: "#/components/schemas/SSEBase"
+        - type: object
+          properties:
+            engine:
+              type: string
+            pattern:
+              type: string
+            engine_status:
+              type: string
+    SSESimFinished:
+      allOf:
+        - $ref: "#/components/schemas/SSEBase"
+        - type: object
+          properties:
+            engine:
+              type: string
+            pattern:
+              type: string
+            verdict:
+              type: string
+            engine_status:
+              type: string
+    SSESimSkipped:
+      allOf:
+        - $ref: "#/components/schemas/SSEBase"
+        - type: object
+          properties:
+            engine:
+              type: string
+            pattern:
+              type: string
+            reason:
+              type: string
+            engine_status:
+              type: string
+    SSEComplete:
+      allOf:
+        - $ref: "#/components/schemas/SSEBase"
+        - type: object
+          properties:
+            status:
+              type: string
+            phase:
+              type: string
+            progress:
+              type: number
+            result:
+              type: object
+              additionalProperties: true
+            errors:
+              type: array
+              items:
+                type: string
+    SSEFailed:
+      allOf:
+        - $ref: "#/components/schemas/SSEBase"
+        - type: object
+          properties:
+            status:
+              type: string
+            phase:
+              type: string
+            progress:
+              type: number
+            errors:
+              type: array
+              items:
+                type: string
+    SSEError:
+      allOf:
+        - $ref: "#/components/schemas/SSEBase"
+        - type: object
+          properties:
+            detail:
+              type: string

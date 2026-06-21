@@ -128,6 +128,11 @@ proto:
 	@echo "=== Generating proto code ==="
 	buf generate
 
+## openapi — regenerate TUI v9 Go types from openapi/tui-v9.yaml
+openapi:
+	@echo "=== OpenAPI codegen (TUI v9) ==="
+	cd src/tui/v9 && $(MAKE) openapi-gen
+
 ## generate — proto code generation (stub)
 generate:
 	@echo "=== Proto code generation ==="

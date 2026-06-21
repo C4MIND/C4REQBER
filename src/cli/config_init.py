@@ -138,6 +138,14 @@ def run_init_wizard(*, force: bool = False) -> Path:
         default=existing.get("lean4_path", os.getenv("LEAN4_PATH", "")),
     )
 
+    # For polished desktop "all settings" app: allow choosing initial LLM tier
+    tier = Prompt.ask(
+        "Initial LLM cost tier (balanced/premium/budget/local)",
+        default="balanced",
+    ).lower().strip()
+    if tier not in ("balanced", "premium", "budget", "local", "ultra_budget"):
+        tier = "balanced"
+
     path = write_config(
         {
             "api_url": api_url,
@@ -152,6 +160,17 @@ def run_init_wizard(*, force: bool = False) -> Path:
             "lean4_path": lean_path,
         }
     )
+
+    # Polish: also seed models.json with chosen tier for "all settings" ready immediately
+    try:
+        from src.llm.model_assignment import ModelAssignment
+        models_path = CONFIG_DIR / "models.json"
+        if not models_path.exists():
+            assignment = ModelAssignment.create_default(tier)
+            assignment.save(models_path)
+    except Exception:
+        pass
+
     console.print(f"\n[green]✓[/] Config written to [bold]{path}[/]")
     console.print("[dim]Desktop/CLI/TUI use this + models.json. Exported envs:[/]")
     console.print("[dim]  Core + OPENROUTER/DEEPSEEK/BRAVE keys + LEAN4_PATH[/]")

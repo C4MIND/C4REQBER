@@ -44,7 +44,7 @@ type FeedStore struct {
 }
 
 // NewFeedStore opens the feed at ~/.c4reqber/tui-v9-feed.jsonl (preferred)
-// falling back to ~/.config/c4reqber (XDG migration), with the given cap.
+// falling back to ~/.config/c4reqber (XDG migration only), with the given cap.
 func NewFeedStore(maxLen int) (*FeedStore, error) {
 	if maxLen <= 0 {
 		maxLen = 50

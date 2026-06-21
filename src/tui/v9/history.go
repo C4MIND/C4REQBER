@@ -30,8 +30,8 @@ type HistoryFile struct {
 	Snapshot   telemetry.Snapshot `json:"snapshot"`
 }
 
-// HistoryDir returns ~/.c4reqber (preferred for desktop consistency) or
-// ~/.config/c4reqber (XDG fallback + migration). Creates if missing.
+// HistoryDir returns ~/.c4reqber (preferred, unified with Python) or
+// ~/.config/c4reqber (XDG fallback + migration only). Creates if missing.
 func HistoryDir() (string, error) {
 	home, err := os.UserHomeDir()
 	if err != nil {

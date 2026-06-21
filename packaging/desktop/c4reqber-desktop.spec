@@ -1,5 +1,5 @@
 # -*- mode: python ; coding: utf-8 -*-
-"""PyInstaller spec for C4REQBER macOS/Windows desktop bundle."""
+"""PyInstaller spec for C4REQBER macOS/Windows desktop bundle (full settings: config + models + keys)."""
 
 import sys
 from pathlib import Path
@@ -17,6 +17,7 @@ a = Analysis(
         "src.cli.blast_app",
         "src.cli.config_init",
         "src.cli.tui_launcher",
+        "src.config.paths",
         "toml",
         "rich",
         "typer",

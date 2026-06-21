@@ -12,7 +12,7 @@ if [[ ! -f "${CONFIG}" ]]; then
   "${BUNDLE_ROOT}/Contents/MacOS/blast" init
 fi
 
-# Export config.toml → env for polished desktop experience (supports full settings)
+# Export config.toml → env for polished desktop (full settings via central ~/.c4reqber + keys)
 if [[ -f "${CONFIG}" ]]; then
   export C4_API_URL="${C4_API_URL:-$(grep -E '^api_url' "${CONFIG}" 2>/dev/null | head -1 | sed 's/.*= *"\(.*\)".*/\1/')}"
   export C4_LANG="${C4_LANG:-$(grep -E '^language' "${CONFIG}" 2>/dev/null | head -1 | sed 's/.*= *"\(.*\)".*/\1/')}"

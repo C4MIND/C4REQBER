@@ -1,5 +1,5 @@
 """
-C4REQBER API: Conceptual Blending Router (/v7/conceptual-blending)
+C4REQBER API: Conceptual Blending Router (legacy /v7/ mount for compat)
 """
 from __future__ import annotations
 

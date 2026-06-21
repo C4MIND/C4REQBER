@@ -1,4 +1,4 @@
-"""Meta Layer API Router — /v7/meta"""
+"""Meta Layer API Router — /v7/meta (legacy compat mount)"""
 from __future__ import annotations
 
 from typing import Any

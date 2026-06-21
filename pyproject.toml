@@ -100,7 +100,7 @@ disallow_untyped_defs = false
 ignore_missing_imports = true
 warn_unreachable = true
 show_error_codes = true
-exclude = ["tests/", "archive/", "wasm/", "src/patterns/v6_legacy/", "alembic/", "scripts/", "fix_.*\\.py$", "split_patterns\\.py$", "test-ws-client\\.py$"]
+exclude = ["tests/", "archive/", "wasm/", "alembic/", "scripts/", "fix_.*\\.py$", "split_patterns\\.py$", "test-ws-client\\.py$"]
 
 [[tool.mypy.overrides]]
 module = ["src.patterns.library.*", "src.patterns.*"]
@@ -130,7 +130,6 @@ module = ["src.agents.functors.*", "src.agents.functor_orchestrator", "src.agent
 ignore_errors = true
 
 [tool.ruff.lint.per-file-ignores]
-"src/patterns/v6_legacy/*" = ["ALL"]
 "archive/**" = ["ALL"]
 "tests/**" = ["E501", "UP017"]
 "src/llm/local_client.py" = ["E501"]

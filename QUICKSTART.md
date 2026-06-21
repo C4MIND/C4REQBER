@@ -1,6 +1,8 @@
 # QUICKSTART — First Discovery in 5 Minutes
 
-> **Prerequisite:** `c4reqber` installed + API keys configured. See [INSTALL.md](INSTALL.md) and [docs/onboarding/API_KEYS.md](docs/onboarding/API_KEYS.md) if not.
+> **Prerequisite:** `c4reqber` installed.
+> First run: `blast init` — sets up `~/.c4reqber/` with all keys and models (recommended).
+> See [INSTALL.md](INSTALL.md) and the new `blast config keys` / `blast config user --show`.
 
 ---
 

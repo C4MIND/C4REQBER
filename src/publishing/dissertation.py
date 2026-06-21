@@ -39,7 +39,7 @@ DEEPSEEK_URL = "https://api.deepseek.com/v1/chat/completions"
 
 def _llm_generate(prompt: str, max_tokens: int = 2000, temperature: float = 0.7) -> str:
     """Generate text via OpenRouter API — model configurable via DISSERTATION_MODEL env var."""
-    key = os.environ.get("OPENROUTER_API_KEY", "")
+    key = get_key("openrouter") or os.environ.get("OPENROUTER_API_KEY", "")
     if not key:
         key = os.environ.get("DEEPSEEK_API_KEY", DEEPSEEK_KEY)
     if not key:

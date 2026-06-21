@@ -231,7 +231,7 @@ class NoveltyValidator:
         self, hypothesis: str, domain: str
     ) -> dict[str, Any]:
         """Real semantic novelty check via LLM (kept for backward compatibility)."""
-        or_key = os.getenv("OPENROUTER_API_KEY", "")
+        or_key = get_key("openrouter") or os.getenv("OPENROUTER_API_KEY", "")
         if not or_key:
             return await self.check(hypothesis, domain)
 

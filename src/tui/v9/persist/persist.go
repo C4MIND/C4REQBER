@@ -36,12 +36,8 @@ type Store struct {
 
 func DefaultPath() string {
 	home, _ := os.UserHomeDir()
-	// Align with Python side (~/.c4reqber) for desktop app consistency.
-	// Fallback to XDG-style ~/.config/c4reqber if .c4reqber does not exist yet.
+	// Always ~/.c4reqber for full consistency with Python CLI/desktop/launcher_entry.
 	c4dir := filepath.Join(home, ".c4reqber")
-	if _, err := os.Stat(c4dir); os.IsNotExist(err) {
-		c4dir = filepath.Join(home, ".config", "c4reqber")
-	}
 	return filepath.Join(c4dir, "tui-v9-state.json")
 }
 

@@ -126,16 +126,13 @@ def main() -> int:
     if not no_splash:
         render_desktop_splash(first_run)
 
-    # Forward args minus our internal ones if needed; launch Go TUI (its splash will run unless --no-splash)
+    # Forward args; launch Go TUI v9 (the animated splash + full cockpit)
     extra = [a for a in sys.argv[1:] if a not in ("--no-splash",)]
-    # Always forward --no-splash if user asked (respects both layers)
     if "--no-splash" in sys.argv:
         extra.append("--no-splash")
 
-    if first_run and not no_splash:
-        # One-line note (rich banner already announced full settings)
-        pass
-
+    # In bundled desktop, the TUI binary is next to us in Resources (mac) or alongside (win)
+    # launch_tui_v9 will find it or auto-build in dev.
     return launch_tui_v9(extra, build_if_missing=True)
 
 

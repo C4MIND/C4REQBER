@@ -23,7 +23,20 @@ APP="dist/C4REQBER.app"
 mkdir -p "${APP}/Contents/Resources"
 cp "${TUI_SRC}" "${APP}/Contents/Resources/c4tui-v9"
 chmod +x "${APP}/Contents/Resources/c4tui-v9"
-cp packaging/desktop/mac/Info.plist "${APP}/Contents/Info.plist"
+
+# Ensure Info.plist (for proper .app)
+cp packaging/desktop/mac/Info.plist "${APP}/Contents/Info.plist" 2>/dev/null || true
+
+# Verify critical pieces for working mac desktop (user will test)
+if [[ ! -x "${APP}/Contents/Resources/c4tui-v9" ]]; then
+  echo "ERROR: c4tui-v9 not found in bundle Resources"
+  exit 1
+fi
+if [[ ! -x "${APP}/Contents/MacOS/blast" ]]; then
+  echo "ERROR: blast (launcher_entry) missing"
+  exit 1
+fi
 
 echo "==> Built ${APP}"
+echo "Run: open ${APP}   (or ${APP}/Contents/MacOS/blast tui)"
 echo "Optional notarization: packaging/desktop/mac/notarize-mac.sh ${APP}"

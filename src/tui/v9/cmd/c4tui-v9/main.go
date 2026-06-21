@@ -211,7 +211,7 @@ func runPrune(days int) {
 	for _, f := range files {
 		if f.SessionEnd.Before(cutoff) {
 			home, _ := os.UserHomeDir()
-			path := fmt.Sprintf("%s/.config/c4reqber/tui-v9-history-%s.json",
+			path := fmt.Sprintf("%s/.c4reqber/tui-v9-history-%s.json",
 				home, f.SessionEnd.Format("2006-01-02-15-04-05"))
 			if err := os.Remove(path); err == nil {
 				removed++

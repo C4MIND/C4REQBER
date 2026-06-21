@@ -40,4 +40,5 @@ echo Discover. Invent. Shift paradigms.
 echo GitLab · c4reqber · Z₃³
 echo.
 
+REM Launch TUI v9 (rich splash from launcher_entry handles desktop branding)
 "%TUI%" %*

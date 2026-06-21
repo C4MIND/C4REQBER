@@ -12,7 +12,8 @@ import (
 )
 
 // saveTelemetryHistory writes the current telemetry snapshot to disk
-// at ~/.config/c4reqber/tui-v9-history-{timestamp}.json. Called on Ctrl+C / shutdown.
+// at ~/.c4reqber/tui-v9-history-{timestamp}.json (with .config fallback for migration).
+// Called on Ctrl+C / shutdown.
 func saveTelemetryHistory(tel *telemetry.Telemetry, cfg Config) {
 	if tel == nil {
 		return
@@ -29,13 +30,18 @@ type HistoryFile struct {
 	Snapshot   telemetry.Snapshot `json:"snapshot"`
 }
 
-// HistoryDir returns ~/.config/c4reqber (created if missing).
+// HistoryDir returns ~/.c4reqber (preferred for desktop consistency) or
+// ~/.config/c4reqber (XDG fallback + migration). Creates if missing.
 func HistoryDir() (string, error) {
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return "", err
 	}
-	dir := filepath.Join(home, ".config", "c4reqber")
+	// Prefer unified ~/.c4reqber (matches Python wizard + launcher_entry)
+	dir := filepath.Join(home, ".c4reqber")
+	if _, statErr := os.Stat(dir); os.IsNotExist(statErr) {
+		dir = filepath.Join(home, ".config", "c4reqber")
+	}
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		return "", err
 	}

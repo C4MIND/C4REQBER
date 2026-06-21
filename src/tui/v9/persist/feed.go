@@ -43,14 +43,19 @@ type FeedStore struct {
 	maxLen int
 }
 
-// NewFeedStore opens the feed at ~/.config/c4reqber/tui-v9-feed.jsonl
-// with the given cap (max lines retained).
+// NewFeedStore opens the feed at ~/.c4reqber/tui-v9-feed.jsonl (preferred)
+// falling back to ~/.config/c4reqber (XDG migration), with the given cap.
 func NewFeedStore(maxLen int) (*FeedStore, error) {
 	if maxLen <= 0 {
 		maxLen = 50
 	}
 	home, _ := os.UserHomeDir()
-	p := filepath.Join(home, ".config", "c4reqber", "tui-v9-feed.jsonl")
+	// Align with Python + persist.DefaultPath for unified desktop config dir
+	dir := filepath.Join(home, ".c4reqber")
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		dir = filepath.Join(home, ".config", "c4reqber")
+	}
+	p := filepath.Join(dir, "tui-v9-feed.jsonl")
 	return &FeedStore{path: p, maxLen: maxLen}, nil
 }
 
@@ -184,14 +189,18 @@ type HistoryItem struct {
 	LastUsed time.Time `json:"last_used"`
 }
 
-// NewInputHistory creates a store at ~/.config/c4reqber/tui-v9-input-history.json
-// with the given cap (default 200).
+// NewInputHistory creates a store at ~/.c4reqber/tui-v9-input-history.json (unified)
+// or ~/.config fallback, with the given cap (default 200).
 func NewInputHistory(limit int) (*InputHistory, error) {
 	if limit <= 0 {
 		limit = 200
 	}
 	home, _ := os.UserHomeDir()
-	p := filepath.Join(home, ".config", "c4reqber", "tui-v9-input-history.json")
+	dir := filepath.Join(home, ".c4reqber")
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		dir = filepath.Join(home, ".config", "c4reqber")
+	}
+	p := filepath.Join(dir, "tui-v9-input-history.json")
 	h := &InputHistory{path: p, limit: limit}
 	h.load()
 	return h, nil

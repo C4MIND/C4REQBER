@@ -287,19 +287,19 @@ def blast_models(
 
 @app.command("config")
 def blast_config(
-    section: str = typer.Argument("models", help="Config section: models"),
+    section: str = typer.Argument("models", help="Config section: models | user | keys"),
     cost_tier: str = typer.Option("", "--tier", "-t", help="Cost tier: budget|balanced|premium|local|ultra_budget"),
     set_phase: str = typer.Option("", "--set", "-s", help="Set model for phase: e.g. 'D=claude-sonnet-4.6'"),
     show: bool = typer.Option(False, "--show", help="Show current model assignments"),
     save: bool = typer.Option(False, "--save", help="Save config to ~/.c4reqber/models.json"),
 ) -> None:
-    """Configure model assignments per pipeline phase.
+    """Configure model assignments per pipeline phase (or full user config).
 
     Examples:
         blast config --show                    # View current assignments
+        blast config user --show               # Show full ~/.c4reqber/config.toml + keys
         blast config --tier budget             # Switch to budget tier
         blast config --set D=claude-sonnet-4.6 --save  # Phase D → Claude Sonnet
-        blast config --set B=gemma4:26b       # Phase B → local Gemma 4
     """
     from src.llm.model_assignment import (
         CONFIG_FILE,
@@ -310,6 +310,13 @@ def blast_config(
 
     # Load existing or create default
     assignment = ModelAssignment.load()
+
+    if section.lower() in ("user", "keys", "full"):
+        from src.cli.config_init import show_current_config
+        show_current_config()
+        if show or section:
+            return
+        # fallthrough only for other ops
 
     # Apply cost tier
     if cost_tier:

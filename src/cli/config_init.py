@@ -17,22 +17,30 @@ def config_exists() -> bool:
     return CONFIG_PATH.is_file()
 
 
-def _read_config_sections() -> dict[str, dict[str, str]]:
-    if not CONFIG_PATH.is_file():
-        return {}
-    try:
-        import toml
+def show_current_config() -> None:
+    """Pretty print current config (for desktop 'all settings' visibility)."""
+    from rich.table import Table
 
-        raw = toml.load(CONFIG_PATH)
-    except Exception:
-        return {}
-    if not isinstance(raw, dict):
-        return {}
-    out: dict[str, dict[str, str]] = {}
-    for section, values in raw.items():
-        if isinstance(values, dict):
-            out[str(section)] = {str(k): str(v) for k, v in values.items()}
-    return out
+    sections = _read_config_sections()
+    console.print("\n[bold]Current c4reqber config[/] (~/.c4reqber/config.toml)\n")
+    if not sections:
+        console.print("[dim]No config yet. Run 'blast init'.[/]")
+        return
+    table = Table(show_header=True, header_style="bold magenta")
+    table.add_column("Section")
+    table.add_column("Key")
+    table.add_column("Value (masked keys)")
+    for sec, vals in sections.items():
+        for k, v in vals.items():
+            masked = "****" if any(x in k.lower() for x in ("key", "pass", "secret")) and v else v
+            table.add_row(sec, k, masked)
+    console.print(table)
+    console.print("[dim]models.json + state files also live in the same dir for full settings.[/]")
+
+
+def _read_config_sections() -> dict[str, dict[str, str]]:
+    from src.config.paths import load_config_toml
+    return load_config_toml()
 
 
 def load_existing() -> dict[str, str]:
@@ -202,29 +210,18 @@ def run_init_wizard(*, force: bool = False) -> Path:
 
 def apply_config_to_env() -> None:
     """Export config.toml values into os.environ when not already set."""
+    from src.config.paths import apply_config_to_env as _central_apply
+    # also export a few extra that central doesn't cover yet (auth etc)
     sections = _read_config_sections()
-    if not sections:
-        return
+    _central_apply()
     core = sections.get("core", {})
     auth = sections.get("auth", {})
-    llm = sections.get("llm", {})
-    keys = sections.get("keys", {})
-    mapping = {
-        "C4_API_URL": core.get("api_url"),
+    extra = {
         "C4_LANG": core.get("language"),
         "C4_API_EMAIL": auth.get("email"),
         "C4_API_PASSWORD": auth.get("password"),
         "C4_API_NAME": auth.get("name"),
-        "OPENROUTER_API_KEY": llm.get("openrouter_api_key"),
-        "DEEPSEEK_API_KEY": keys.get("deepseek_api_key"),
-        "BRAVE_API_KEY": keys.get("brave_api_key"),
-        "TAVILY_API_KEY": keys.get("tavily_api_key"),
-        "EXA_API_KEY": keys.get("exa_api_key"),
-        "XAI_API_KEY": keys.get("xai_api_key"),
-        "LEAN4_PATH": keys.get("lean4_path"),
     }
-    if core.get("demo_mode") in ("true", "1", "True"):
-        mapping["C4_DEMO_AUTH"] = "1"
-    for key, val in mapping.items():
+    for key, val in extra.items():
         if val and not os.getenv(key):
             os.environ[key] = str(val)

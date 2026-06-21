@@ -20,7 +20,8 @@ type Layout struct {
 	Width       int
 	Height      int
 	Header      Region // 1 row
-	Feed        Region // the middle
+	BasePanel   Region // ALWAYS-VISIBLE base-layout widgets (between header and feed)
+	Feed        Region // the middle (scrollable discoveries)
 	Input       Region // 3 rows (T1+), 1 row (T0)
 	Footer      Region // 2 rows (T2+), 1 row (T1/T0)
 	StatusBar   Region // 0 rows (T0/T1), 1 row (T2+ when toggled)
@@ -36,7 +37,9 @@ type Region struct {
 
 // ComputeLayout decides the tier and computes regions.
 // Pure function — no model state, fully testable.
-func ComputeLayout(width, height int, showStatusBar bool) Layout {
+// basePanelH: optional height of the always-visible base-layout widget
+// panel (between header and feed). 0 = no panel (legacy layout).
+func ComputeLayout(width, height int, showStatusBar bool, basePanelH ...int) Layout {
 	l := Layout{Width: width, Height: height}
 
 	// Tier from width
@@ -94,17 +97,27 @@ func ComputeLayout(width, height int, showStatusBar bool) Layout {
 	}
 	l.Input = Region{0, height - footerH - statusH - inputH, width, inputH}
 
-	// Feed = the rest
+	// Base panel (always-visible base-layout widgets). Optional.
+	var bpH int
+	if len(basePanelH) > 0 {
+		bpH = basePanelH[0]
+	}
+	if bpH > 0 {
+		l.BasePanel = Region{0, 1, width, bpH}
+	}
+
+	// Feed = the rest (below header + base panel, above input)
 	feedX := 0
 	feedW := width
 	if l.HasRightRail {
 		feedW = l.RightRail.X
 	}
-	feedH := l.Input.Y - 1 // from below header to above input
+	feedTop := 1 + bpH
+	feedH := l.Input.Y - feedTop
 	if feedH < 3 {
 		feedH = 3
 	}
-	l.Feed = Region{feedX, 1, feedW, feedH}
+	l.Feed = Region{feedX, feedTop, feedW, feedH}
 
 	// IsCompact = true at T0/T1
 	l.IsCompact = l.Tier <= TierCompact

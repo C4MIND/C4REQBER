@@ -125,6 +125,9 @@ type model struct {
 	// showTelemetry toggles the bottom telemetry panel (Ctrl+T)
 	showTelemetry bool
 
+	// basePanelH caches the base-layout panel height (computed in layout()).
+	basePanelH int
+
 	// showHelp toggles the fullscreen keymap help overlay (?)
 	showHelp bool
 

@@ -13,25 +13,100 @@ import (
 // known height (3-5 lines) so the viewport doesn't show a huge
 // black void below the empty placeholder.
 //
-// v9.13.x polish: simplified to a SINGLE clean placeholder card. The
-// previous 7-widget wall (tip / examples / status / shortcuts / modes /
-// achievements) was reported as "куча команд reflected in chat" — it
-// visually overwhelmed the fixed layout and made the feed look chaotic
-// at first run. Help lives in the footer keymap, ? overlay, and Ctrl+,
-// settings — not in the feed.
+// v9.13.x polish: 7 base-layout widgets form the ALWAYS-VISIBLE base
+// panel between header and feed (per user design intent: "базовый
+// layout-интерфейса, который должен отображаться ВСЕГДА"). The 3
+// placeholder widgets (empty/title/tip/examples) only show when feed
+// is empty; the 4 dashboard widgets (status/shortcuts/modes/achievements)
+// stay visible across discoveries so the user always has a live
+// cockpit dashboard.
 func (m *model) emptyWidgets() []Card {
 	now := m.startedAt
 	if now.IsZero() {
 		now = timeNow()
 	}
-	return []Card{
-		{
-			Kind:  CardEmpty,
-			Title: i18n.T("empty.title"),
-			Body:  i18n.T("empty.hint"),
-			Time:  now,
-		},
+	stats := ""
+	if m.tel != nil {
+		s := m.tel.Get()
+		stats = fmt.Sprintf("ticks=%d  runs=%d  ok=%d  fail=%d  abort=%d  cost=$%.4f  apis=%d  errs=%d",
+			s.TotalTicks, s.Discoveries, s.DiscoveriesOK, s.DiscoveriesFail, s.DiscoveriesAbort,
+			s.TotalCost, s.TotalAPICalls, s.APIErrors)
 	}
+	run := "Discover"
+	switch m.mode {
+	case ModeFlash:
+		run = "Flash"
+	case ModeTurbo:
+		run = "Turbo"
+	case ModeTurboFactory:
+		run = "TurboFactory"
+	}
+	tier := m.llmTier.String()
+	profile := m.colorProfile.String()
+	lang := string(i18n.GetLang())
+	discoveries := m.completedDisc
+	langs := len(m.langsSeen)
+
+	cards := []Card{}
+
+	// Placeholder widgets: only when no discoveries yet
+	if m.feedIsEmpty() {
+		cards = append(cards,
+			Card{
+				Kind:  CardEmpty,
+				Title: i18n.T("empty.title"),
+				Body:  i18n.T("empty.hint"),
+				Time:  now,
+			},
+			Card{
+				Kind:  CardPhase,
+				Title: i18n.T("widget.tip.title"),
+				Body:  i18n.T("widget.tip.body"),
+				Time:  now.Add(timeSecond(1)),
+			},
+			Card{
+				Kind:  CardPhase,
+				Title: i18n.T("widget.examples.title"),
+				Body:  m.tipExample(),
+				Time:  now.Add(timeSecond(2)),
+			},
+		)
+	}
+
+	// Dashboard widgets: always visible (status, shortcuts, modes, achievements)
+	cards = append(cards,
+		Card{
+			Kind: CardPhase,
+			Title: i18n.T("widget.status.title"),
+			Body: fmt.Sprintf(
+				"%s  •  %s  •  %s  •  %s  •  %d %s  •  %d %s",
+				run, tier, profile, lang,
+				discoveries, i18n.T("widget.discoveries"),
+				langs, i18n.T("widget.languages"),
+			) + "\n" + stats,
+			Time: now.Add(timeSecond(3)),
+		},
+		Card{
+			Kind:  CardPhase,
+			Title: i18n.T("widget.shortcuts.title"),
+			Body:  m.tipShortcuts(),
+			Time:  now.Add(timeSecond(4)),
+		},
+		Card{
+			Kind:  CardPhase,
+			Title: i18n.T("widget.modes.title"),
+			Body:  m.tipModes(),
+			Time:  now.Add(timeSecond(5)),
+		},
+		Card{
+			Kind:  CardPhase,
+			Title: i18n.T("widget.achievements.title"),
+			Body:  i18n.T("widget.achievements.body"),
+			Time:  now.Add(timeSecond(6)),
+		},
+	)
+
+	return cards
 }
 
 // tipExample returns a rotating example query to inspire the user.

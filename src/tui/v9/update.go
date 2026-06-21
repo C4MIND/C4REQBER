@@ -841,23 +841,19 @@ func (m *model) updateLangSeen() {
 
 func (m *model) rebuildFeedContent() {
 	var b strings.Builder
-	// v9.11.7: when the feed is empty OR contains only CardEmpty
-	// placeholders, render the dashboard widgets instead. Without
-	// this, the viewport is 45 lines tall but content is just 2-3
-	// lines, producing a black void below the placeholder.
-	if m.feedIsEmpty() {
-		b.WriteString(m.renderEmptyWidgets())
-	} else {
-		for idx, card := range m.feed {
-			chips := ""
-			if card.Kind == CardHypothesis {
-				chips = m.verdictChipsForCard(card)
-			}
-			focused := idx == m.focusedCardIdx
-			expanded := focused && card.State == cards.StateExpanded
-			b.WriteString(renderCard(card, m.width, chips, focused, expanded))
-			b.WriteString("\n")
+	// v9.13.x: empty widgets no longer rendered into the scrollable
+	// feed viewport — they live in the ALWAYS-VISIBLE base panel above.
+	// The feed now only renders real discovery cards, so the empty
+	// feed just shows a blank scrollable area below the base panel.
+	for idx, card := range m.feed {
+		chips := ""
+		if card.Kind == CardHypothesis {
+			chips = m.verdictChipsForCard(card)
 		}
+		focused := idx == m.focusedCardIdx
+		expanded := focused && card.State == cards.StateExpanded
+		b.WriteString(renderCard(card, m.width, chips, focused, expanded))
+		b.WriteString("\n")
 	}
 	m.vp.SetContent(b.String())
 }

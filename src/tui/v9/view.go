@@ -17,19 +17,22 @@ import (
 // init registers bubblezone for the package.
 func init() { zone.NewGlobal() }
 
-// View composes the 4 regions.
+// View composes the regions.
 func (m *model) View() tea.View {
 	if m.width == 0 {
 		v := tea.NewView("loading…")
 		v.AltScreen = true
 		return v
 	}
-	regions := []string{
-		m.renderHeader(),
-		m.renderFeed(),
-		m.renderInput(),
-		m.renderFooter(),
+	// v9.13.x: ALWAYS-VISIBLE base-layout panel between header and feed
+	// (per user design intent). The 7 widgets form a fixed dashboard
+	// that doesn't scroll away when discoveries are added.
+	parts := []string{m.renderHeader()}
+	if bp := m.renderBasePanel(); bp != "" {
+		parts = append(parts, bp)
 	}
+	parts = append(parts, m.renderFeed(), m.renderInput(), m.renderFooter())
+	regions := parts
 	// v9.13 (§3.3): status bar (1 line, between footer and input).
 	// Renders empty string at T0/T1 or when toggled off.
 	if bar := m.renderStatusBar(); bar != "" {
@@ -130,6 +133,29 @@ func (m *model) renderFeed() string {
 	return m.vp.View()
 }
 
+// renderBasePanel renders the ALWAYS-VISIBLE base-layout widget panel
+// (7 dashboard widgets: empty placeholder, tip, examples, status,
+// shortcuts, modes, achievements). Truncated to basePanelH rows so
+// the layout stays fixed regardless of terminal size.
+func (m *model) renderBasePanel() string {
+	if m.basePanelH <= 0 {
+		return ""
+	}
+	raw := m.renderEmptyWidgets()
+	lines := strings.Split(raw, "\n")
+	// Truncate to allocated height (or pad with blanks to fill the region).
+	if len(lines) > m.basePanelH {
+		lines = lines[:m.basePanelH]
+	} else if len(lines) < m.basePanelH {
+		pad := make([]string, m.basePanelH-len(lines))
+		for i := range pad {
+			pad[i] = strings.Repeat(" ", m.width)
+		}
+		lines = append(lines, pad...)
+	}
+	return strings.Join(lines, "\n")
+}
+
 func (m *model) renderInput() string {
 	return m.ta.View()
 }
@@ -176,14 +202,36 @@ func (m *model) renderFooter() string {
 }
 
 func (m *model) layout() {
-	// v9.13: use the new ComputeLayout engine (§4 of the unified plan).
-	l := ComputeLayout(m.width, m.height, m.showStatusBar)
+	// v9.13.x: use the new ComputeLayout engine with the always-visible
+	// base-layout panel between header and feed (per user design intent).
+	baseH := m.computeBasePanelHeight()
+	l := ComputeLayout(m.width, m.height, m.showStatusBar, baseH)
 	m.vp.SetWidth(l.Feed.W)
 	m.vp.SetHeight(l.Feed.H)
 	m.ta.SetWidth(l.Input.W)
 	m.ta.SetHeight(l.Input.H)
 	m.rain.SetSize(l.Feed.W, l.Feed.H)
 	m.sparks.SetSize(l.Input.W, l.Input.H)
+	m.basePanelH = baseH
+}
+
+// computeBasePanelHeight returns the desired height (in rows) of the
+// always-visible base-layout widget panel. Adapts to terminal tier:
+// small terminals hide the panel to keep the feed usable; large
+// terminals show the full 7-widget dashboard.
+func (m *model) computeBasePanelHeight() int {
+	tierW, tierH := m.width, m.height
+	_ = tierH
+	if tierW < 100 {
+		return 0 // T0: hide panel, keep feed
+	}
+	if tierW < 140 {
+		return 16 // T1: compact panel
+	}
+	if tierW < 200 {
+		return 22 // T2: standard panel
+	}
+	return 28 // T3: full panel
 }
 
 // overlayRegion paints overlay over base starting at line fromY.

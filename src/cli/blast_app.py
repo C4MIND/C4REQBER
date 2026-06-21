@@ -671,6 +671,43 @@ def blast_social(
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# TUI — Interactive Cockpit (Go TUI v9)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+@app.command("tui")
+def blast_tui(
+    packages: bool = typer.Option(False, "--packages", help="Arrow-key scientific package installer"),
+    demo: bool = typer.Option(False, "--demo", help="Scripted demo without backend"),
+    story: str = typer.Option("", "--story", help="Demo story: crispr|sleep|lang"),
+    no_splash: bool = typer.Option(False, "--no-splash", help="Skip splash screen on launch"),
+    no_build: bool = typer.Option(False, "--no-build", help="Do not auto-build c4tui-v9 if missing"),
+) -> None:
+    """Launch TUI v9 Cockpit — feed-driven discovery UI.
+
+    \b
+        blast tui                          # Interactive discovery cockpit
+        blast tui --demo --story=crispr    # Demo without backend
+        blast tui --packages               # Package installer (Rich UI)
+        blast tui --no-splash              # Skip boot animation
+    """
+    if packages:
+        from src.cli.tui_launcher import launch_package_installer
+        raise typer.Exit(launch_package_installer())
+
+    extra: list[str] = []
+    if demo:
+        extra.append("--demo")
+    if story:
+        extra.extend(["--story", story])
+    if no_splash:
+        extra.append("--no-splash")
+
+    from src.cli.tui_launcher import launch_tui_v9
+    code = launch_tui_v9(extra, build_if_missing=not no_build)
+    raise typer.Exit(code)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # Serve — MCP Server
 # ═══════════════════════════════════════════════════════════════════════════════
 

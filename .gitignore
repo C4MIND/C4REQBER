@@ -255,9 +255,6 @@ k8s/secrets.yaml
 v6/
 v7/
 
-# K8s secrets (use secrets.example.yaml as template)
-k8s/secrets.yaml
-
 # Specific to c4reqber
 src/payments/
 .env.development

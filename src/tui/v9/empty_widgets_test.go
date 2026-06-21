@@ -10,18 +10,14 @@ import (
 func TestEmptyWidgets_RendersAllCards(t *testing.T) {
 	m := NewAppFresh("http://test")
 	widgets := m.emptyWidgets()
-	if len(widgets) < 5 {
-		t.Errorf("expected at least 5 empty widgets, got %d", len(widgets))
+	// v9.13.x: simplified to a single clean placeholder card. Other
+	// helpers (keymap, modes, achievements) live in footer/? overlay/
+	// settings, not the feed — keeps the fixed layout clean.
+	if len(widgets) != 1 {
+		t.Errorf("expected exactly 1 empty widget, got %d", len(widgets))
 	}
-	// First card should be the CardEmpty placeholder.
 	if widgets[0].Kind != CardEmpty {
 		t.Errorf("first widget should be CardEmpty, got %v", widgets[0].Kind)
-	}
-	// All other widgets should be CardPhase.
-	for i, w := range widgets[1:] {
-		if w.Kind != CardPhase {
-			t.Errorf("widget %d should be CardPhase, got %v", i+1, w.Kind)
-		}
 	}
 }
 
@@ -34,12 +30,8 @@ func TestRenderEmptyWidgets_NonTrivialHeight(t *testing.T) {
 	if len(out) == 0 {
 		t.Fatal("renderEmptyWidgets returned empty string")
 	}
-	// Count newlines — should be at least 20 (we have 7 widgets
-	// each producing 3-5 lines of content).
-	lines := strings.Count(out, "\n") + 1
-	if lines < 20 {
-		t.Errorf("empty widgets produce only %d lines, expected at least 20 to fill 45-line viewport", lines)
-	}
+	// v9.13.x: simplified to 1 card. We accept any non-empty output
+	// (footer keymap + ? overlay cover what used to live here).
 }
 
 func TestFeedIsEmpty_OnlyCardEmpty(t *testing.T) {

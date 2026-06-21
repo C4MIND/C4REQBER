@@ -311,12 +311,24 @@ def blast_config(
     # Load existing or create default
     assignment = ModelAssignment.load()
 
-    if section.lower() in ("user", "keys", "full"):
+    if section.lower() in ("user", "full"):
         from src.cli.config_init import show_current_config
         show_current_config()
         if show or section:
             return
         # fallthrough only for other ops
+
+    if section.lower() == "keys":
+        from src.config import get_user_keys
+        keys = get_user_keys()
+        console.print("\n[bold]Current API keys (from ~/.c4reqber + env)[/bold]\n")
+        important = ["openrouter_api_key", "deepseek_api_key", "brave_api_key", "tavily_api_key", "exa_api_key", "xai_api_key"]
+        for k in important:
+            val = keys.get(k, "")
+            masked = "****" + val[-4:] if len(val) > 8 else "(not set)"
+            console.print(f"  {k}: {masked}")
+        console.print("\n[dim]Use 'blast init' to set keys interactively, or edit ~/.c4reqber/config.toml[/]")
+        return
 
     # Apply cost tier
     if cost_tier:

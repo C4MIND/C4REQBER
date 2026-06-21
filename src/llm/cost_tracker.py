@@ -13,12 +13,15 @@ from src.di.container import get_container
 
 
 # USD per 1M tokens (input / output) — updated for current models in balanced/premium
-_PROVIDER_PRICES: dict[str, dict[str, tuple[float, float]]] = {
+_PROVIDER_PRICES: dict[str, dict[str, float]] = {
     "gpt-4o": {"input": 2.50, "output": 10.00},
+    "gpt-4o-mini": {"input": 0.15, "output": 0.60},
     "claude-3.5": {"input": 3.00, "output": 15.00},
     "claude-sonnet-4.6": {"input": 3.00, "output": 15.00},  # approx, via OpenRouter
     "claude-opus-4.6": {"input": 15.00, "output": 75.00},
     "gemini-1.5": {"input": 0.50, "output": 1.50},
+    "deepseek": {"input": 0.14, "output": 0.28},
+    "qwen": {"input": 0.50, "output": 1.50},
     "local": {"input": 0.0, "output": 0.0},
 }
 
@@ -34,9 +37,15 @@ def _normalize_model(model: str) -> str:
         return "claude-opus-4.6"
     if "claude-3.5" in model_lower or "claude-3-5" in model_lower:
         return "claude-3.5"
-    if "gemini-1.5" in model_lower or "gemini-1.5" in model_lower:
+    if "gemini-1.5" in model_lower or "gemini" in model_lower:
         return "gemini-1.5"
-    if any(local in model_lower for local in ("ollama", "lm_studio", "local", "qwen2.5")):
+    if "deepseek" in model_lower:
+        return "deepseek"
+    if "qwen" in model_lower:
+        return "qwen"
+    if "gpt-4o-mini" in model_lower or "4o-mini" in model_lower:
+        return "gpt-4o-mini"
+    if any(local in model_lower for local in ("ollama", "lm_studio", "local", "qwen2.5", "qwen3")):
         return "local"
     return "gpt-4o"  # Default pricing
 

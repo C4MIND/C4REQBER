@@ -9,7 +9,7 @@ import logging
 logger = logging.getLogger("c4_cdi_turbo.pipeline.discovery.phase5")
 
 
-async def run_verification_suite(problem, domain, results, errors) -> dict:
+async def run_verification_suite(problem, domain, results, errors, job_id: str | None = None) -> dict:
     """Run verification suite."""
     import asyncio
     import time
@@ -26,7 +26,10 @@ async def run_verification_suite(problem, domain, results, errors) -> dict:
 
     try:
         hypothesis_for_sim = results.get("hypothesis", {})
-        simulation = await asyncio.wait_for(run_relevant_simulation(domain, hypothesis_for_sim), timeout=2.0)
+        simulation = await asyncio.wait_for(
+            run_relevant_simulation(domain, hypothesis_for_sim, job_id=job_id),
+            timeout=2.0,
+        )
         results["simulation"] = simulation
     except TimeoutError:
         results["simulation"] = {"status": "timeout", "note": "Simulation exceeded time budget", "domain": domain}

@@ -396,20 +396,85 @@ async def generate_competing_hypotheses(problem: str, primary_hypothesis: str, t
     return competing
 
 
-async def run_relevant_simulation(domain: str, hypothesis: dict[str, Any]) -> dict[str, Any]:
+async def run_relevant_simulation(
+    domain: str,
+    hypothesis: dict[str, Any],
+    *,
+    job_id: str | None = None,
+) -> dict[str, Any]:
     try:
+        from src.api.v8_routers.discovery.jobs import get_job_store
         from src.simulations.domain_selector import get_domain_simulations
         from src.simulations.newton_bridge import NewtonBridge
+
         pattern_ids = get_domain_simulations(domain, count=4)
         results = {}
         newton = NewtonBridge()
+        engine = "newton"
+        store = get_job_store() if job_id else None
+
         for pid in pattern_ids[:3]:
+            if store and job_id:
+                await store.push_event(
+                    job_id,
+                    "sim_started",
+                    {
+                        "type": "sim_started",
+                        "engine": engine,
+                        "pattern": pid,
+                        "engine_status": "running",
+                    },
+                )
             try:
-                sim_result = newton.run_simulation({"pattern_id": pid, "domain": domain, "duration": 10.0, "dt": 0.01, "hypothesis": hypothesis.get("text", "")[:100]})
-                results[pid] = {"status": sim_result.status if hasattr(sim_result, 'status') else "completed", "final_state": str(sim_result.final_state)[:200] if hasattr(sim_result, 'final_state') else "ok", "time_steps": getattr(sim_result, 'time_steps', 0)}
+                sim_result = newton.run_simulation(
+                    {
+                        "pattern_id": pid,
+                        "domain": domain,
+                        "duration": 10.0,
+                        "dt": 0.01,
+                        "hypothesis": hypothesis.get("text", "")[:100],
+                    }
+                )
+                status = sim_result.status if hasattr(sim_result, "status") else "completed"
+                results[pid] = {
+                    "status": status,
+                    "final_state": str(sim_result.final_state)[:200] if hasattr(sim_result, "final_state") else "ok",
+                    "time_steps": getattr(sim_result, "time_steps", 0),
+                }
+                if store and job_id:
+                    await store.push_event(
+                        job_id,
+                        "sim_finished",
+                        {
+                            "type": "sim_finished",
+                            "engine": engine,
+                            "pattern": pid,
+                            "verdict": status,
+                            "engine_status": "ok",
+                        },
+                    )
             except (RuntimeError, OSError) as e:
                 results[pid] = {"status": "error", "error": str(e)[:100]}
-        return {"engine": "newton", "domain": domain, "patterns_run": len(results), "pattern_ids": pattern_ids[:3], "results": results, "status": "completed" if results else "no_patterns"}
+                if store and job_id:
+                    await store.push_event(
+                        job_id,
+                        "sim_skipped",
+                        {
+                            "type": "sim_skipped",
+                            "engine": engine,
+                            "pattern": pid,
+                            "reason": str(e)[:200],
+                            "engine_status": "error",
+                        },
+                    )
+        return {
+            "engine": engine,
+            "domain": domain,
+            "patterns_run": len(results),
+            "pattern_ids": pattern_ids[:3],
+            "results": results,
+            "status": "completed" if results else "no_patterns",
+        }
     except (ImportError, ModuleNotFoundError) as e:
         raise RuntimeError(f"NewtonBridge unavailable: {e}") from e
 

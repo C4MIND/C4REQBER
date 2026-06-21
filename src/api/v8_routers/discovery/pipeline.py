@@ -146,6 +146,19 @@ async def _update_phase(
     if job_id:
         store = get_job_store()
         await store.update_phase(job_id, phase_name, detail, progress)
+        job = await store.get(job_id)
+        status = job.status.value if job else "running"
+        await store.push_event(
+            job_id,
+            "phase_progress",
+            {
+                "type": "phase_progress",
+                "phase": phase_name,
+                "detail": detail,
+                "progress": progress if progress is not None else (job.progress if job else 0.0),
+                "status": status,
+            },
+        )
 
 
 async def one_click_discovery(
@@ -228,7 +241,7 @@ async def one_click_discovery(
 
     await _update_phase(job_id, "E: Sim", "Simulation & verification", 0.60)
     from src.pipeline.discovery_phases.phase_5_verification import run_verification_suite
-    results = await run_verification_suite(problem, domain, results, errors)
+    results = await run_verification_suite(problem, domain, results, errors, job_id=job_id)
 
     await _update_phase(job_id, "F: Dissertation", "Quality assessment", 0.75)
     from src.pipeline.discovery_phases.phase_6_quality import run_quality_and_output

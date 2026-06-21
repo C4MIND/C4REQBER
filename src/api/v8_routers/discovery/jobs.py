@@ -4,8 +4,19 @@ from __future__ import annotations
 import asyncio
 import time
 import uuid
+from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
+
+
+@dataclass
+class JobEvent:
+    """One SSE event queued for a job (drained by the stream endpoint)."""
+
+    seq: int
+    event_type: str
+    data: dict[str, Any]
+    ts: float = field(default_factory=time.time)
 
 
 class JobStatus(str, Enum):
@@ -55,6 +66,8 @@ class Job:
         self.created_at = time.time()
         self.updated_at = self.created_at
         self.completed_at: float | None = None
+        self.events: list[JobEvent] = []
+        self._event_seq: int = 0
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -145,7 +158,30 @@ class JobStore:
                 job.status = JobStatus.RUNNING
                 job.updated_at = time.time()
 
+    async def push_event(self, job_id: str, event_type: str, data: dict[str, Any]) -> None:
+        """Append a typed SSE event to the job queue."""
+        async with self._lock:
+            job = self._jobs.get(job_id)
+            if job is None:
+                return
+            job._event_seq += 1
+            payload = dict(data)
+            payload.setdefault("type", event_type)
+            payload.setdefault("job_id", job_id)
+            payload.setdefault("ts", time.time())
+            job.events.append(JobEvent(seq=job._event_seq, event_type=event_type, data=payload))
+            job.updated_at = time.time()
+
+    async def drain_events(self, job_id: str, after_seq: int) -> list[JobEvent]:
+        """Return events with seq > after_seq (for SSE streaming)."""
+        async with self._lock:
+            job = self._jobs.get(job_id)
+            if job is None:
+                return []
+            return [e for e in job.events if e.seq > after_seq]
+
     async def set_complete(self, job_id: str, result: dict[str, Any]) -> None:
+        phase = ""
         async with self._lock:
             job = self._jobs.get(job_id)
             if job is not None:
@@ -154,8 +190,22 @@ class JobStore:
                 job.progress = 1.0
                 job.completed_at = time.time()
                 job.updated_at = job.completed_at
+                phase = job.phase
+        await self.push_event(
+            job_id,
+            "complete",
+            {
+                "type": "complete",
+                "status": JobStatus.COMPLETE.value,
+                "phase": phase,
+                "progress": 1.0,
+                "result": result,
+            },
+        )
 
     async def set_failed(self, job_id: str, errors: list[str]) -> None:
+        phase = ""
+        progress = 0.0
         async with self._lock:
             job = self._jobs.get(job_id)
             if job is not None:
@@ -163,6 +213,19 @@ class JobStore:
                 job.errors.extend(errors)
                 job.completed_at = time.time()
                 job.updated_at = job.completed_at
+                phase = job.phase
+                progress = job.progress
+        await self.push_event(
+            job_id,
+            "failed",
+            {
+                "type": "failed",
+                "status": JobStatus.FAILED.value,
+                "phase": phase,
+                "progress": progress,
+                "errors": errors,
+            },
+        )
 
     async def list_all(self) -> list[dict[str, Any]]:
         async with self._lock:

@@ -155,35 +155,37 @@ async def _sse_stream(job_id: str) -> Any:
     store = get_job_store()
     job = await store.get(job_id)
     if job is None:
-        yield "event: error\ndata: {\"detail\": \"Job not found\"}\n\n"
+        yield 'event: error\ndata: {"type": "error", "detail": "Job not found"}\n\n'
         return
 
-    last_status: str | None = None
+    last_event_seq = 0
+    terminal_sent = False
     while True:
         job = await store.get(job_id)
         if job is None:
-            yield "event: error\ndata: {\"detail\": \"Job disappeared\"}\n\n"
+            yield 'event: error\ndata: {"type": "error", "detail": "Job disappeared"}\n\n'
             return
 
-        if job.status.value != last_status:
-            last_status = job.status.value
+        for ev in await store.drain_events(job_id, last_event_seq):
+            last_event_seq = ev.seq
+            yield f"event: {ev.event_type}\ndata: {json.dumps(ev.data)}\n\n"
+            if ev.event_type in ("complete", "failed"):
+                terminal_sent = True
+                return
+
+        if not terminal_sent and job.status in (JobStatus.COMPLETE, JobStatus.FAILED):
+            # Back-compat: emit terminal frame if set_complete/set_failed raced the drain.
+            event_type = "complete" if job.status == JobStatus.COMPLETE else "failed"
             payload = {
+                "type": event_type,
                 "phase": job.phase,
                 "status": job.status.value,
                 "progress": job.progress,
                 "detail": job.phase_detail,
-            }
-            yield f"event: phase\ndata: {json.dumps(payload)}\n\n"
-
-        if job.status in (JobStatus.COMPLETE, JobStatus.FAILED):
-            result_payload = {
-                "phase": job.phase,
-                "status": job.status.value,
-                "progress": job.progress,
                 "result": job.result,
                 "errors": job.errors,
             }
-            yield f"event: complete\ndata: {json.dumps(result_payload)}\n\n"
+            yield f"event: {event_type}\ndata: {json.dumps(payload)}\n\n"
             return
 
         await asyncio.sleep(0.5)

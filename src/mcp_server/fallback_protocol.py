@@ -133,10 +133,17 @@ class _FallbackServer:
                         sys.stdout.write(err_response + "\n")
                         sys.stdout.flush()
                         continue
+                    timeout_s = tool_timeout_seconds(tool_name)
                     try:
-                        result = await asyncio.wait_for(self._tools[tool_name](**tool_args), timeout=30)
+                        result = await asyncio.wait_for(self._tools[tool_name](**tool_args), timeout=timeout_s)
                     except TimeoutError:
-                        result = {"status": "error", "errors": ["Tool execution timed out after 30 seconds"]}
+                        result = {
+                            "status": "error",
+                            "code": "TIMEOUT",
+                            "errors": [f"Tool execution timed out after {int(timeout_s)} seconds"],
+                            "tool": tool_name,
+                            "hint": "For long pipelines use blast CLI directly or retry with a narrower query.",
+                        }
                     except (IndexError, KeyError, TypeError) as e:
                         result = {"status": "error", "errors": [str(e)]}
                     if isinstance(result, str):
@@ -164,6 +171,27 @@ from src.security.prompt_sanitizer import MAX_FLASH_CHARS, MAX_PIPELINE_CHARS, S
 
 
 _mcp_logger = logging.getLogger("c44tcdi.mcp_server")
+
+# Per-tool execution timeouts (seconds). Long pipelines need headroom for LLM + verification.
+DEFAULT_TOOL_TIMEOUT = 60.0
+TOOL_TIMEOUTS: dict[str, float] = {
+    "blast_turbo": 600.0,
+    "blast_solve": 600.0,
+    "blast_turbofactory": 900.0,
+    "c4_solve": 600.0,
+    "c4_autoresearch": 600.0,
+    "c4_chain": 600.0,
+    "blast_flash": 120.0,
+    "c4_verify": 180.0,
+    "c4_prove": 180.0,
+    "c4_simulate": 120.0,
+}
+
+
+def tool_timeout_seconds(tool_name: str) -> float:
+    """Return the configured timeout for an MCP tool."""
+    return TOOL_TIMEOUTS.get(tool_name, DEFAULT_TOOL_TIMEOUT)
+
 
 TOOL_STRING_ARGS: dict[str, list[str]] = {
     "c4_solve": ["problem", "domain"],

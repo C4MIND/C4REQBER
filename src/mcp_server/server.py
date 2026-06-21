@@ -130,14 +130,21 @@ class _FallbackServer:
                         extra_keys = input_keys - allowed_keys
                         if extra_keys and not schema.get('additionalProperties', True):
                             raise ValueError(f"Extra arguments not allowed: {extra_keys}")
-                    # Execute with 30s timeout
+                    from src.mcp_server.fallback_protocol import tool_timeout_seconds
+
+                    timeout_s = tool_timeout_seconds(tool_name)
                     try:
                         result = await asyncio.wait_for(
                             self._tools[tool_name](**tool_args),
-                            timeout=30
+                            timeout=timeout_s,
                         )
                     except TimeoutError:
-                        result = {"error": "Tool execution timed out after 30 seconds"}
+                        result = {
+                            "status": "error",
+                            "code": "TIMEOUT",
+                            "errors": [f"Tool execution timed out after {int(timeout_s)} seconds"],
+                            "tool": tool_name,
+                        }
                     except (IndexError, KeyError, TypeError) as e:
                         result = {"error": str(e)}
                     response = json.dumps({"jsonrpc": "2.0", "id": request.get("id"), "result": result})

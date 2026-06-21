@@ -7,7 +7,6 @@ Model Context Protocol server for AI agents.
 Run: pip install mcp && python3 -m c44tcdi.mcp_server
 """
 import asyncio
-import hashlib
 import json
 import sys
 from typing import Any
@@ -50,113 +49,7 @@ except ImportError as e:
     print(f"⚠️  Some tool dependencies not found: {e}", file=sys.stderr)
 
 
-class _FallbackServer:
-    """Minimal JSON-RPC stdio server when MCP SDK is unavailable."""
-    def __init__(self, name: str):
-        self.name = name
-        self._tools: dict[str, Any] = {}
-        self.verified_hashes: dict[str, str] = {}
-
-    def tool(self, name: str):
-        """Decorator to register a tool."""
-        def decorator(func):
-            """Decorator."""
-            self._tools[name] = func
-            return func
-        return decorator
-
-    def _compute_tool_hash(self, tool_name: str) -> str:
-        tool = self._tools[tool_name]
-        schema = getattr(tool, 'schema', {})
-        schema_str = json.dumps(schema, sort_keys=True)
-        return hashlib.sha256(schema_str.encode()).hexdigest()
-
-    def _verify_tool_hash(self, tool_name: str) -> None:
-        if tool_name not in self._tools:
-            return
-        current_hash = self._compute_tool_hash(tool_name)
-        if tool_name in self.verified_hashes:
-            assert current_hash == self.verified_hashes[tool_name], f"Rug pull detected: {tool_name}"
-        else:
-            self.verified_hashes[tool_name] = current_hash
-
-    async def run_stdio_fallback(self):
-        """Read JSON-RPC requests from stdin, write responses to stdout."""
-        reader = asyncio.StreamReader()
-        protocol = asyncio.StreamReaderProtocol(reader)
-        await asyncio.get_event_loop().connect_read_pipe(lambda: protocol, sys.stdin)
-
-        while True:
-            line = await reader.readline()
-            if not line:
-                break
-            try:
-                request = json.loads(line)
-                method = request.get("method", "")
-                if method == "tools/list":
-                    tools = []
-                    for tool_name, tool_func in self._tools.items():
-                        current_hash = self._compute_tool_hash(tool_name)
-                        if tool_name in self.verified_hashes:
-                            assert current_hash == self.verified_hashes[tool_name], f"Rug pull detected: {tool_name}"
-                        else:
-                            self.verified_hashes[tool_name] = current_hash
-                        tools.append({
-                        "name": tool_name,
-                        "description": tool_func.__doc__ or "",
-                        "inputSchema": getattr(tool_func, "schema", {
-                            "type": "object",
-                            "properties": {},
-                        }),
-                    })
-                    response = json.dumps({"jsonrpc": "2.0", "id": request.get("id"), "result": {"tools": tools}})
-                elif method == "tools/call":
-                    tool_name = request["params"]["name"]
-                    tool_args = request["params"].get("arguments", {})
-                    if tool_name not in self._tools:
-                        response = json.dumps({"jsonrpc": "2.0", "id": request.get("id"), "error": {"code": -32601, "message": f"Tool not found: {tool_name}"}})
-                        sys.stdout.write(response + "\n")
-                        sys.stdout.flush()
-                        continue
-                    # Re-verify hash before execution
-                    self._verify_tool_hash(tool_name)
-                    # Sanitize arguments against schema
-                    tool = self._tools[tool_name]
-                    schema = getattr(tool, 'schema', {})
-                    if schema:
-                        properties = schema.get('properties', {})
-                        allowed_keys = set(properties.keys())
-                        input_keys = set(tool_args.keys())
-                        extra_keys = input_keys - allowed_keys
-                        if extra_keys and not schema.get('additionalProperties', True):
-                            raise ValueError(f"Extra arguments not allowed: {extra_keys}")
-                    from src.mcp_server.fallback_protocol import tool_timeout_seconds
-
-                    timeout_s = tool_timeout_seconds(tool_name)
-                    try:
-                        result = await asyncio.wait_for(
-                            self._tools[tool_name](**tool_args),
-                            timeout=timeout_s,
-                        )
-                    except TimeoutError:
-                        result = {
-                            "status": "error",
-                            "code": "TIMEOUT",
-                            "errors": [f"Tool execution timed out after {int(timeout_s)} seconds"],
-                            "tool": tool_name,
-                        }
-                    except (IndexError, KeyError, TypeError) as e:
-                        result = {"error": str(e)}
-                    response = json.dumps({"jsonrpc": "2.0", "id": request.get("id"), "result": result})
-                else:
-                    response = json.dumps({"jsonrpc": "2.0", "id": request.get("id"), "result": {}})
-                sys.stdout.write(response + "\n")
-                sys.stdout.flush()
-            except (TimeoutError, AttributeError, IndexError, KeyError, TypeError, ValueError, json.JSONDecodeError) as e:
-                error_response = json.dumps({"jsonrpc": "2.0", "id": None, "error": {"code": -32700, "message": f"Parse error: {e}"}})
-                sys.stdout.write(error_response + "\n")
-                sys.stdout.flush()
-                continue
+from src.mcp_server.fallback_protocol import _FallbackServer
 
 
 # Create server instance with or without MCP SDK

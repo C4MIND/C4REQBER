@@ -62,7 +62,7 @@ class C4REQBERShell(cmd.Cmd):
         self.exporter = ExportManager()
         self.viz = C4Visualizer()
         self.llm = LLMProvider(
-            openrouter_key=os.getenv("OPENROUTER_API_KEY"), prefer_local=False
+            openrouter_key=get_key("openrouter") or os.getenv("OPENROUTER_API_KEY"), prefer_local=False
         )
         self.current_project: int | None = None
 

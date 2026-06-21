@@ -79,7 +79,7 @@ async def _generate_code_with_llm(
     try:
         import httpx
 
-        api_key = os.getenv("OPENROUTER_API_KEY")
+        api_key = get_key("openrouter") or os.getenv("OPENROUTER_API_KEY")
         if not api_key:
             raise RuntimeError("No LLM provider available")
 

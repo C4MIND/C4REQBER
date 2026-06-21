@@ -25,6 +25,7 @@ config/secrets/
 *apikey*
 # Removed: *token* was too broad, use specific rules
 *secret*
+!scripts/k8s-init-secrets.sh
 openrouter_key.txt
 ollama_config.yaml
 # Credential dumps (a .tex secrets dump leaked past the rules once — see
@@ -243,7 +244,7 @@ discovery/*
 # Dead code (already removed, keep in ignore) — but don't drop tracked source
 migrations/
 !migrations/*.sql
-alembic/
+# alembic/ — tracked (migrations live in alembic/versions/)
 structural_memory/
 
 # Legacy / experimental

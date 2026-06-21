@@ -1,10 +1,10 @@
 .PHONY: build test snapshot run clean tidy openapi-gen
 
 OAPI_CODEGEN ?= $(HOME)/go/bin/oapi-codegen
-OPENAPI_SPEC := ../../openapi/tui-v9.yaml
+OAPI_CONFIG := oapi-codegen.yaml
 
 openapi-gen:
-	$(OAPI_CODEGEN) -generate types -package api -o api/openapi_types.gen.go $(OPENAPI_SPEC)
+	$(OAPI_CODEGEN) -config $(OAPI_CONFIG) ../../../openapi/tui-v9.yaml
 
 build:
 	go build -o bin/c4tui-v9 ./cmd/c4tui-v9

@@ -1,4 +1,4 @@
-.PHONY: help install lint typecheck test test-backend test-frontend test-e2e coverage format security clean generate release db-migrate db-revision benchmark
+.PHONY: help install lint typecheck test test-backend test-frontend test-e2e coverage format security clean generate release db-migrate db-revision benchmark openapi
 
 # ═══════════════════════════════════════════════════════════════════
 # c4-cdi-turbo Makefile 2.0

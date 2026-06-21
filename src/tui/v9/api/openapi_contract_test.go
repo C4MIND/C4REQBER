@@ -3,12 +3,14 @@ package api
 import (
 	"encoding/json"
 	"testing"
+
+	"github.com/figuramax/c4reqber-tui-v9/internal/oapi"
 )
 
 // Contract tests: handwritten SSE decoder must accept OpenAPI-generated payloads.
 func TestOpenAPIContract_PhaseProgress(t *testing.T) {
 	raw := `{"type":"phase_progress","phase":"A: Framing","progress":0.15,"status":"running","job_id":"job_abc"}`
-	var gen SSEPhaseProgress
+	var gen oapi.SSEPhaseProgress
 	if err := json.Unmarshal([]byte(raw), &gen); err != nil {
 		t.Fatalf("generated type unmarshal: %v", err)
 	}
@@ -26,7 +28,7 @@ func TestOpenAPIContract_PhaseProgress(t *testing.T) {
 
 func TestOpenAPIContract_SimFinished(t *testing.T) {
 	raw := `{"type":"sim_finished","engine":"newton","pattern":"pid_tuning","verdict":"completed","engine_status":"ok"}`
-	var gen SSESimFinished
+	var gen oapi.SSESimFinished
 	if err := json.Unmarshal([]byte(raw), &gen); err != nil {
 		t.Fatalf("generated type unmarshal: %v", err)
 	}
@@ -44,7 +46,7 @@ func TestOpenAPIContract_SimFinished(t *testing.T) {
 
 func TestOpenAPIContract_Complete(t *testing.T) {
 	raw := `{"type":"complete","status":"complete","phase":"G: Quality","progress":1.0}`
-	var gen SSEComplete
+	var gen oapi.SSEComplete
 	if err := json.Unmarshal([]byte(raw), &gen); err != nil {
 		t.Fatalf("generated type unmarshal: %v", err)
 	}

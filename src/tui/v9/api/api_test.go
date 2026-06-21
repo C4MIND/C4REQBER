@@ -5,6 +5,7 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"math"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -23,12 +24,17 @@ func mockServer(t *testing.T, routes map[string]http.HandlerFunc) *httptest.Serv
 	return srv
 }
 
+func writeJSON(w http.ResponseWriter, status int, body string) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	_, _ = w.Write([]byte(body))
+}
+
 func TestMock_RegisterLoginSubmit(t *testing.T) {
 	srv := mockServer(t, map[string]http.HandlerFunc{
 		"/api/v1/health": func(w http.ResponseWriter, r *http.Request) {
 			http.SetCookie(w, &http.Cookie{Name: "csrf_token", Value: "test-csrf-token-1234567890abcdef", MaxAge: 3600, Path: "/", SameSite: http.SameSiteStrictMode})
-			w.WriteHeader(200)
-			w.Write([]byte(`{"status":"healthy"}`))
+			writeJSON(w, 200, `{"status":"healthy"}`)
 		},
 		"/api/v1/auth/register": func(w http.ResponseWriter, r *http.Request) {
 			var body map[string]any
@@ -37,7 +43,7 @@ func TestMock_RegisterLoginSubmit(t *testing.T) {
 				http.Error(w, "missing email", 400)
 				return
 			}
-			w.Write([]byte(`{"id":"u-1","email":"kilo@test.com","name":"Kilo"}`))
+			writeJSON(w, 200, `{"id":"u-1","email":"kilo@test.com","name":"Kilo"}`)
 		},
 		"/api/v1/auth/login": func(w http.ResponseWriter, r *http.Request) {
 			var body map[string]any
@@ -46,10 +52,10 @@ func TestMock_RegisterLoginSubmit(t *testing.T) {
 				http.Error(w, "invalid creds", 401)
 				return
 			}
-			w.Write([]byte(`{"access_token":"jwt-test-token","token_type":"bearer"}`))
+			writeJSON(w, 200, `{"access_token":"jwt-test-token","token_type":"bearer"}`)
 		},
 		"/v8/discover/one-click": func(w http.ResponseWriter, r *http.Request) {
-			w.Write([]byte(`{"job_id":"job_test_1","status":"queued"}`))
+			writeJSON(w, 200, `{"job_id":"job_test_1","status":"queued"}`)
 		},
 	})
 
@@ -84,10 +90,10 @@ func TestMock_RegisterLoginSubmit(t *testing.T) {
 func TestMock_FlashReturnsInline(t *testing.T) {
 	srv := mockServer(t, map[string]http.HandlerFunc{
 		"/v8/discover/flash": func(w http.ResponseWriter, r *http.Request) {
-			w.Write([]byte(`{
+			writeJSON(w, 200, `{
 				"hypothesis": {"source": "LLMProvider/v8", "text": "Use truncated 17-nt guides"},
 				"papers": [{"title": "Optimized sgRNA", "venue": "Nature", "year": 2016, "doi": "10.1038/..."}]
-			}`))
+			}`)
 		},
 	})
 	c := New(srv.URL)
@@ -105,14 +111,14 @@ func TestMock_FlashReturnsInline(t *testing.T) {
 func TestMock_KnowledgeSearch(t *testing.T) {
 	srv := mockServer(t, map[string]http.HandlerFunc{
 		"/v8/knowledge/search": func(w http.ResponseWriter, r *http.Request) {
-			w.Write([]byte(`{
+			writeJSON(w, 200, `{
 				"results": [
 					{"title": "Memory function of sleep", "authors": ["Diekelmann"], "year": 2010, "venue": "Nature", "doi": "10.1038/nrn2762", "citation_count": 3728, "source": "openalex"},
 					{"title": "Sleep and synaptic homeostasis", "authors": ["Tononi"], "year": 2014, "venue": "Neuron", "doi": "10.1016/...", "citation_count": 2380, "source": "openalex"}
 				],
 				"total": 28,
 				"query": "sleep memory"
-			}`))
+			}`)
 		},
 	})
 	c := New(srv.URL)
@@ -132,14 +138,14 @@ func TestMock_KnowledgeSearch(t *testing.T) {
 func TestMock_JobStatusParsing(t *testing.T) {
 	srv := mockServer(t, map[string]http.HandlerFunc{
 		"/v8/discover/status/job_test_1": func(w http.ResponseWriter, r *http.Request) {
-			w.Write([]byte(`{
+			writeJSON(w, 200, `{
 				"job_id": "job_test_1",
 				"status": "phase_e",
 				"phase": "E: Sim",
 				"progress": 0.6,
 				"result": null,
 				"errors": []
-			}`))
+			}`)
 		},
 	})
 	c := New(srv.URL)
@@ -154,7 +160,7 @@ func TestMock_JobStatusParsing(t *testing.T) {
 	if js.Phase != "E: Sim" {
 		t.Errorf("phase wrong: %s", js.Phase)
 	}
-	if js.Progress != 0.6 {
+	if math.Abs(js.Progress-0.6) > 0.001 {
 		t.Errorf("progress wrong: %v", js.Progress)
 	}
 	if js.Completed {
@@ -165,7 +171,7 @@ func TestMock_JobStatusParsing(t *testing.T) {
 func TestMock_JobStatusCompleted(t *testing.T) {
 	srv := mockServer(t, map[string]http.HandlerFunc{
 		"/v8/discover/status/job_done": func(w http.ResponseWriter, r *http.Request) {
-			w.Write([]byte(`{
+			writeJSON(w, 200, `{
 				"job_id": "job_done",
 				"status": "complete",
 				"phase": "G: Quality",
@@ -179,7 +185,7 @@ func TestMock_JobStatusCompleted(t *testing.T) {
 					],
 					"total_time_seconds": 47.2
 				}
-			}`))
+			}`)
 		},
 	})
 	c := New(srv.URL)

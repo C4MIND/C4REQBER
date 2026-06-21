@@ -1,20 +1,19 @@
 // Package api wraps the c4reqber backend HTTP client for TUI v9.
+// REST calls delegate to the OpenAPI-generated client in internal/oapi.
 package api
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/cookiejar"
-	"net/url"
 	"strings"
 	"time"
+
+	"github.com/figuramax/c4reqber-tui-v9/internal/oapi"
 )
 
-const (
-	defaultTimeout = 30 * time.Second
-)
+const defaultTimeout = 30 * time.Second
 
 type Client struct {
 	BaseURL string
@@ -22,79 +21,115 @@ type Client struct {
 	csrf    string
 	token   string
 	http    *http.Client
+	gen     *oapi.ClientWithResponses
 }
 
 func New(baseURL string) *Client {
 	jar, _ := cookiejar.New(nil)
-	return &Client{
+	httpClient := &http.Client{Timeout: defaultTimeout, Jar: jar}
+	c := &Client{
 		BaseURL: baseURL,
 		jar:     jar,
-		http:    &http.Client{Timeout: defaultTimeout, Jar: jar},
+		http:    httpClient,
 	}
+	editor := func(ctx context.Context, req *http.Request) error {
+		if req.Header.Get("Content-Type") == "" {
+			req.Header.Set("Content-Type", "application/json")
+		}
+		if c.token != "" {
+			req.Header.Set("Authorization", "Bearer "+c.token)
+		}
+		if c.csrf != "" {
+			req.Header.Set("X-CSRF-Token", c.csrf)
+		}
+		return nil
+	}
+	gen, err := oapi.NewClientWithResponses(
+		baseURL,
+		oapi.WithHTTPClient(httpClient),
+		oapi.WithRequestEditorFn(editor),
+	)
+	if err == nil {
+		c.gen = gen
+	}
+	return c
+}
+
+func (c *Client) requireGen() (*oapi.ClientWithResponses, error) {
+	if c.gen == nil {
+		return nil, fmt.Errorf("openapi client not initialized")
+	}
+	return c.gen, nil
 }
 
 // Health checks connectivity and harvests the CSRF cookie.
 func (c *Client) Health(ctx context.Context) error {
-	req, _ := http.NewRequestWithContext(ctx, "GET", c.BaseURL+"/api/v1/health", nil)
-	resp, err := c.http.Do(req)
+	gen, err := c.requireGen()
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
-	for _, ck := range resp.Cookies() {
-		if ck.Name == "csrf_token" {
-			c.csrf = ck.Value
+	resp, err := gen.HealthCheckWithResponse(ctx)
+	if err != nil {
+		return err
+	}
+	if resp.HTTPResponse != nil {
+		for _, ck := range resp.HTTPResponse.Cookies() {
+			if ck.Name == "csrf_token" {
+				c.csrf = ck.Value
+			}
 		}
+	}
+	if resp.StatusCode() >= 400 {
+		return fmt.Errorf("health status %d", resp.StatusCode())
 	}
 	return nil
 }
 
-// CSRF returns the current CSRF token (after Health/Auth).
 func (c *Client) CSRF() string { return c.csrf }
-
-// Token returns the current JWT bearer token.
 func (c *Client) Token() string { return c.token }
 
 // Register creates a new user (idempotent — server returns 200/409/422 if exists).
 func (c *Client) Register(ctx context.Context, email, password, name string) error {
-	body := fmt.Sprintf(`{"email":%q,"password":%q,"name":%q}`, email, password, name)
-	req, _ := http.NewRequestWithContext(ctx, "POST", c.BaseURL+"/api/v1/auth/register", strings.NewReader(body))
-	c.addCommonHeaders(req)
-	resp, err := c.http.Do(req)
+	gen, err := c.requireGen()
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
-	// 200 = created, 409/422 = already exists, anything else = error
-	if resp.StatusCode == 200 || resp.StatusCode == 409 || resp.StatusCode == 422 {
+	resp, err := gen.AuthRegisterWithResponse(ctx, oapi.RegisterRequest{
+		Email:    email,
+		Password: password,
+		Name:     &name,
+	})
+	if err != nil {
+		return err
+	}
+	code := resp.StatusCode()
+	if code == 200 || code == 409 || code == 422 {
 		return nil
 	}
-	return fmt.Errorf("register status %d", resp.StatusCode)
+	return fmt.Errorf("register status %d", code)
 }
 
 // Login exchanges credentials for a JWT bearer token.
 func (c *Client) Login(ctx context.Context, email, password string) error {
-	body := fmt.Sprintf(`{"email":%q,"password":%q,"name":""}`, email, password)
-	req, _ := http.NewRequestWithContext(ctx, "POST", c.BaseURL+"/api/v1/auth/login", strings.NewReader(body))
-	c.addCommonHeaders(req)
-	resp, err := c.http.Do(req)
+	gen, err := c.requireGen()
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
-	if resp.StatusCode >= 400 {
-		// Read response body for diagnostics
-		buf := make([]byte, 1024)
-		n, _ := resp.Body.Read(buf)
-		return fmt.Errorf("login status %d: %s", resp.StatusCode, string(buf[:n]))
-	}
-	var out struct {
-		AccessToken string `json:"access_token"`
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
+	emptyName := ""
+	resp, err := gen.AuthLoginWithResponse(ctx, oapi.LoginRequest{
+		Email:    email,
+		Password: password,
+		Name:     &emptyName,
+	})
+	if err != nil {
 		return err
 	}
-	c.token = out.AccessToken
+	if resp.StatusCode() >= 400 {
+		return fmt.Errorf("login status %d: %s", resp.StatusCode(), string(resp.Body))
+	}
+	if resp.JSON200 != nil && resp.JSON200.AccessToken != nil {
+		c.token = *resp.JSON200.AccessToken
+	}
 	return nil
 }
 
@@ -104,135 +139,132 @@ func (c *Client) OneClick(ctx context.Context, problem, domain string) (string, 
 }
 
 // OneClickWithTier sends a discovery request with explicit LLM tier (C1/C2/C3).
-// outputMode: "human" (clean paper) or "explain" (with pipeline internals).
 func (c *Client) OneClickWithTier(ctx context.Context, problem, domain, tier, outputMode string) (string, error) {
+	gen, err := c.requireGen()
+	if err != nil {
+		return "", err
+	}
 	if domain == "" {
 		domain = "science"
 	}
 	if outputMode == "" {
 		outputMode = "human"
 	}
-	body := fmt.Sprintf(`{"problem":%q,"domain":%q,"llm_tier":%q,"output_mode":%q}`, problem, domain, tier, outputMode)
-	req, _ := http.NewRequestWithContext(ctx, "POST", c.BaseURL+"/v8/discover/one-click", strings.NewReader(body))
-	c.addCommonHeaders(req)
-	resp, err := c.http.Do(req)
+	req := oapi.OneClickRequest{
+		Problem: problem,
+		Domain:  &domain,
+	}
+	if tier != "" {
+		t := oapi.OneClickRequestLlmTier(tier)
+		req.LlmTier = &t
+	}
+	mode := oapi.OneClickRequestOutputMode(outputMode)
+	req.OutputMode = &mode
+
+	resp, err := gen.DiscoverOneClickWithResponse(ctx, req)
 	if err != nil {
 		return "", err
 	}
-	defer resp.Body.Close()
-	if resp.StatusCode >= 400 {
-		return "", fmt.Errorf("one-click status %d", resp.StatusCode)
+	if resp.StatusCode() >= 400 {
+		return "", fmt.Errorf("one-click status %d", resp.StatusCode())
 	}
-	var out struct {
-		JobID string `json:"job_id"`
+	if resp.JSON200 == nil {
+		return "", fmt.Errorf("one-click: empty response")
 	}
-	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
-		return "", err
-	}
-	return out.JobID, nil
+	return resp.JSON200.JobId, nil
 }
 
 // JobStatus polls the job status endpoint.
 func (c *Client) JobStatus(ctx context.Context, jobID string) (JobStatus, error) {
-	u := c.BaseURL + "/v8/discover/status/" + url.PathEscape(jobID)
-	req, _ := http.NewRequestWithContext(ctx, "GET", u, nil)
-	c.addCommonHeaders(req)
-	resp, err := c.http.Do(req)
+	gen, err := c.requireGen()
 	if err != nil {
 		return JobStatus{}, err
 	}
-	defer resp.Body.Close()
-	if resp.StatusCode >= 400 {
-		return JobStatus{}, fmt.Errorf("job status %d", resp.StatusCode)
-	}
-	var raw map[string]any
-	if err := json.NewDecoder(resp.Body).Decode(&raw); err != nil {
+	resp, err := gen.DiscoverJobStatusWithResponse(ctx, jobID)
+	if err != nil {
 		return JobStatus{}, err
 	}
-	js := JobStatus{
-		Status:   fieldString(raw, "status"),
-		Phase:    fieldString(raw, "phase"),
-		Progress: fieldFloat(raw, "progress"),
+	if resp.StatusCode() >= 400 {
+		return JobStatus{}, fmt.Errorf("job status %d", resp.StatusCode())
 	}
-	if res, ok := raw["result"].(map[string]any); ok {
-		js.Result = res
-	}
-	js.Completed = js.Status == "complete" || js.Status == "failed" || js.Status == "partial"
-	return js, nil
+	return jobStatusFromOAPI(resp.JSON200), nil
 }
 
-// Flash submits /v8/discover/flash (sync, lightweight).
+// Flash submits /v8/discover/flash.
 func (c *Client) Flash(ctx context.Context, problem, domain string) (map[string]any, error) {
+	gen, err := c.requireGen()
+	if err != nil {
+		return nil, err
+	}
 	if domain == "" {
 		domain = "science"
 	}
-	body := fmt.Sprintf(`{"problem":%q,"domain":%q}`, problem, domain)
-	req, _ := http.NewRequestWithContext(ctx, "POST", c.BaseURL+"/v8/discover/flash", strings.NewReader(body))
-	c.addCommonHeaders(req)
-	resp, err := c.http.Do(req)
+	resp, err := gen.DiscoverFlashWithResponse(ctx, oapi.FlashRequest{
+		Problem: problem,
+		Domain:  &domain,
+	})
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
-	if resp.StatusCode >= 400 {
-		return nil, fmt.Errorf("flash status %d", resp.StatusCode)
+	if resp.StatusCode() >= 400 {
+		return nil, fmt.Errorf("flash status %d", resp.StatusCode())
 	}
-	var out map[string]any
-	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
-		return nil, err
-	}
-	return out, nil
+	return flexibleToMap(resp.JSON200), nil
 }
 
 // Multi submits /v8/discover/multi (sync, multi-hypothesis).
 func (c *Client) Multi(ctx context.Context, problem, domain string, count int) (map[string]any, error) {
+	gen, err := c.requireGen()
+	if err != nil {
+		return nil, err
+	}
 	if domain == "" {
 		domain = "science"
 	}
 	if count <= 0 {
 		count = 3
 	}
-	body := fmt.Sprintf(`{"problem":%q,"domain":%q,"count":%d}`, problem, domain, count)
-	req, _ := http.NewRequestWithContext(ctx, "POST", c.BaseURL+"/v8/discover/multi", strings.NewReader(body))
-	c.addCommonHeaders(req)
-	resp, err := c.http.Do(req)
+	resp, err := gen.DiscoverMultiWithResponse(ctx, oapi.MultiRequest{
+		Problem: problem,
+		Domain:  &domain,
+		Count:   &count,
+	})
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
-	if resp.StatusCode >= 400 {
-		return nil, fmt.Errorf("multi status %d", resp.StatusCode)
+	if resp.StatusCode() >= 400 {
+		return nil, fmt.Errorf("multi status %d", resp.StatusCode())
 	}
-	var out map[string]any
-	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
-		return nil, err
-	}
-	return out, nil
+	return flexibleToMap(resp.JSON200), nil
 }
 
 // KnowledgeSearch queries /v8/knowledge/search.
 func (c *Client) KnowledgeSearch(ctx context.Context, query string, maxResults int) ([]map[string]any, error) {
-	if maxResults <= 0 {
-		maxResults = 3
-	}
-	body := fmt.Sprintf(`{"query":%q,"max_results":%d}`, query, maxResults)
-	req, _ := http.NewRequestWithContext(ctx, "POST", c.BaseURL+"/v8/knowledge/search", strings.NewReader(body))
-	c.addCommonHeaders(req)
-	resp, err := c.http.Do(req)
+	gen, err := c.requireGen()
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
-	if resp.StatusCode >= 400 {
-		return nil, fmt.Errorf("knowledge search status %d", resp.StatusCode)
+	if maxResults <= 0 {
+		maxResults = 3
 	}
-	var raw struct {
-		Results []map[string]any `json:"results"`
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&raw); err != nil {
+	resp, err := gen.KnowledgeSearchWithResponse(ctx, oapi.KnowledgeSearchRequest{
+		Query:      query,
+		MaxResults: &maxResults,
+	})
+	if err != nil {
 		return nil, err
 	}
-	return raw.Results, nil
+	if resp.StatusCode() >= 400 {
+		return nil, fmt.Errorf("knowledge search status %d", resp.StatusCode())
+	}
+	if resp.JSON200 == nil || resp.JSON200.Results == nil {
+		return nil, nil
+	}
+	out := make([]map[string]any, 0, len(*resp.JSON200.Results))
+	for _, item := range *resp.JSON200.Results {
+		out = append(out, map[string]any(item))
+	}
+	return out, nil
 }
 
 // JobStatus describes a one-click job's current state.
@@ -251,31 +283,30 @@ type SSEEvent struct {
 }
 
 // Stream opens an SSE connection and returns a channel of events + an error.
-// The channel is closed when the server closes the connection or on error.
-// Caller MUST drain the channel and call the cancel func to release resources.
 func (c *Client) Stream(ctx context.Context, jobID string) (<-chan SSEEvent, func(), error) {
-	u := c.BaseURL + "/v8/discover/stream/" + url.PathEscape(jobID)
-	req, _ := http.NewRequestWithContext(ctx, "GET", u, nil)
-	req.Header.Set("Accept", "text/event-stream")
-	if c.token != "" {
-		req.Header.Set("Authorization", "Bearer "+c.token)
-	}
-	if c.csrf != "" {
-		req.Header.Set("X-CSRF-Token", c.csrf)
-	}
-	resp, err := c.http.Do(req)
+	gen, err := c.requireGen()
 	if err != nil {
 		return nil, nil, err
 	}
-	if resp.StatusCode >= 400 {
-		resp.Body.Close()
-		return nil, nil, fmt.Errorf("stream status %d", resp.StatusCode)
+	reqEditors := []oapi.RequestEditorFn{
+		func(ctx context.Context, req *http.Request) error {
+			req.Header.Set("Accept", "text/event-stream")
+			return nil
+		},
+	}
+	httpResp, err := gen.DiscoverJobStream(ctx, jobID, reqEditors...)
+	if err != nil {
+		return nil, nil, err
+	}
+	if httpResp.StatusCode >= 400 {
+		httpResp.Body.Close()
+		return nil, nil, fmt.Errorf("stream status %d", httpResp.StatusCode)
 	}
 	out := make(chan SSEEvent, 16)
 	streamCtx, cancel := context.WithCancel(ctx)
 	go func() {
 		defer close(out)
-		defer resp.Body.Close()
+		defer httpResp.Body.Close()
 		buf := make([]byte, 4096)
 		var pending string
 		for {
@@ -284,7 +315,7 @@ func (c *Client) Stream(ctx context.Context, jobID string) (<-chan SSEEvent, fun
 				return
 			default:
 			}
-			n, err := resp.Body.Read(buf)
+			n, readErr := httpResp.Body.Read(buf)
 			if n > 0 {
 				pending += string(buf[:n])
 				for {
@@ -303,7 +334,7 @@ func (c *Client) Stream(ctx context.Context, jobID string) (<-chan SSEEvent, fun
 					}
 				}
 			}
-			if err != nil {
+			if readErr != nil {
 				return
 			}
 		}
@@ -311,7 +342,34 @@ func (c *Client) Stream(ctx context.Context, jobID string) (<-chan SSEEvent, fun
 	return out, cancel, nil
 }
 
-// indexOfSSEBoundary finds "\n\n" in s. Returns -1 if not found.
+func jobStatusFromOAPI(raw *oapi.JobStatusResponse) JobStatus {
+	if raw == nil {
+		return JobStatus{}
+	}
+	js := JobStatus{}
+	if raw.Status != nil {
+		js.Status = *raw.Status
+	}
+	if raw.Phase != nil {
+		js.Phase = *raw.Phase
+	}
+	if raw.Progress != nil {
+		js.Progress = float64(*raw.Progress)
+	}
+	if raw.Result != nil {
+		js.Result = map[string]any(*raw.Result)
+	}
+	js.Completed = js.Status == "complete" || js.Status == "failed" || js.Status == "partial"
+	return js
+}
+
+func flexibleToMap(raw *oapi.FlexibleObject) map[string]any {
+	if raw == nil {
+		return nil
+	}
+	return map[string]any(*raw)
+}
+
 func indexOfSSEBoundary(s string) int {
 	for i := 0; i < len(s)-1; i++ {
 		if s[i] == '\n' && s[i+1] == '\n' {
@@ -321,12 +379,6 @@ func indexOfSSEBoundary(s string) int {
 	return -1
 }
 
-// parseSSEEvent parses a single SSE event block.
-// Format:
-// event: phase\n
-// data: {"status":"phase_b"}\n
-// \n
-// Multi-line data is concatenated with '\n' (SSE spec).
 func parseSSEEvent(block string) SSEEvent {
 	out := SSEEvent{}
 	var dataLines []string
@@ -344,38 +396,3 @@ func parseSSEEvent(block string) SSEEvent {
 	return out
 }
 
-func (c *Client) addCommonHeaders(req *http.Request) {
-	req.Header.Set("Content-Type", "application/json")
-	if c.token != "" {
-		req.Header.Set("Authorization", "Bearer "+c.token)
-	}
-	if c.csrf != "" {
-		req.Header.Set("X-CSRF-Token", c.csrf)
-	}
-}
-
-// fieldString safely extracts a string field from a generic map.
-func fieldString(m map[string]any, key string) string {
-	if m == nil {
-		return ""
-	}
-	v, ok := m[key]
-	if !ok || v == nil {
-		return ""
-	}
-	if s, ok := v.(string); ok {
-		return s
-	}
-	return fmt.Sprintf("%v", v)
-}
-
-// fieldFloat safely extracts a float field from a generic map.
-func fieldFloat(m map[string]any, key string) float64 {
-	if m == nil {
-		return 0
-	}
-	if v, ok := m[key].(float64); ok {
-		return v
-	}
-	return 0
-}

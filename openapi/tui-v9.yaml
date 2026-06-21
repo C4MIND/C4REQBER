@@ -79,11 +79,45 @@ paths:
               $ref: "#/components/schemas/FlashRequest"
       responses:
         "200":
-          description: Job queued
+          description: Flash discovery result or queued job
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/JobCreatedResponse"
+                $ref: "#/components/schemas/FlexibleObject"
+  /v8/discover/multi:
+    post:
+      operationId: discoverMulti
+      tags: [discovery]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MultiRequest"
+      responses:
+        "200":
+          description: Multi-hypothesis discovery result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FlexibleObject"
+  /v8/knowledge/search:
+    post:
+      operationId: knowledgeSearch
+      tags: [knowledge]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/KnowledgeSearchRequest"
+      responses:
+        "200":
+          description: Knowledge search results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KnowledgeSearchResponse"
   /v8/discover/status/{job_id}:
     get:
       operationId: discoverJobStatus
@@ -181,6 +215,45 @@ components:
         domain:
           type: string
           default: science
+    MultiRequest:
+      type: object
+      required: [problem]
+      properties:
+        problem:
+          type: string
+        domain:
+          type: string
+          default: science
+        count:
+          type: integer
+          default: 3
+    KnowledgeSearchRequest:
+      type: object
+      required: [query]
+      properties:
+        query:
+          type: string
+        max_results:
+          type: integer
+          default: 20
+    KnowledgeSearchResponse:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            $ref: "#/components/schemas/FlexibleObject"
+        total:
+          type: integer
+        query:
+          type: string
+        sources_used:
+          type: array
+          items:
+            type: string
+    FlexibleObject:
+      type: object
+      additionalProperties: true
     JobCreatedResponse:
       type: object
       required: [job_id, status]

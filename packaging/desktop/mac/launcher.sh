@@ -21,6 +21,9 @@ if [[ -f "${CONFIG}" ]]; then
   export OPENROUTER_API_KEY="${OPENROUTER_API_KEY:-$(grep -E '^openrouter_api_key' "${CONFIG}" 2>/dev/null | head -1 | sed 's/.*= *"\(.*\)".*/\1/')}"
   export DEEPSEEK_API_KEY="${DEEPSEEK_API_KEY:-$(grep -E '^deepseek_api_key' "${CONFIG}" 2>/dev/null | head -1 | sed 's/.*= *"\(.*\)".*/\1/')}"
   export BRAVE_API_KEY="${BRAVE_API_KEY:-$(grep -E '^brave_api_key' "${CONFIG}" 2>/dev/null | head -1 | sed 's/.*= *"\(.*\)".*/\1/')}"
+  export TAVILY_API_KEY="${TAVILY_API_KEY:-$(grep -E '^tavily_api_key' "${CONFIG}" 2>/dev/null | head -1 | sed 's/.*= *"\(.*\)".*/\1/')}"
+  export EXA_API_KEY="${EXA_API_KEY:-$(grep -E '^exa_api_key' "${CONFIG}" 2>/dev/null | head -1 | sed 's/.*= *"\(.*\)".*/\1/')}"
+  export XAI_API_KEY="${XAI_API_KEY:-$(grep -E '^xai_api_key' "${CONFIG}" 2>/dev/null | head -1 | sed 's/.*= *"\(.*\)".*/\1/')}"
   export LEAN4_PATH="${LEAN4_PATH:-$(grep -E '^lean4_path' "${CONFIG}" 2>/dev/null | head -1 | sed 's/.*= *"\(.*\)".*/\1/')}"
 fi
 

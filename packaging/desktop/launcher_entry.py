@@ -1,5 +1,6 @@
 """Desktop app entry — runs blast init on first launch, then TUI v9.
-Polished for full settings experience: config.toml + models.json + env export.
+Polished for full settings experience: config.toml + models.json + env export
+(OPENROUTER, DEEPSEEK, BRAVE, TAVILY, EXA, XAI + Lean4).
 """
 from __future__ import annotations
 

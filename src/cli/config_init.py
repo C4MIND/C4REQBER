@@ -52,6 +52,9 @@ def load_existing() -> dict[str, str]:
         "openrouter_api_key": llm.get("openrouter_api_key", ""),
         "deepseek_api_key": keys.get("deepseek_api_key", ""),
         "brave_api_key": keys.get("brave_api_key", ""),
+        "tavily_api_key": keys.get("tavily_api_key", ""),
+        "exa_api_key": keys.get("exa_api_key", ""),
+        "xai_api_key": keys.get("xai_api_key", ""),
         "lean4_path": keys.get("lean4_path", ""),
     }
 
@@ -78,6 +81,9 @@ def write_config(values: dict[str, str]) -> Path:
         "[keys]",
         f'deepseek_api_key = "{values.get("deepseek_api_key", "")}"',
         f'brave_api_key = "{values.get("brave_api_key", "")}"',
+        f'tavily_api_key = "{values.get("tavily_api_key", "")}"',
+        f'exa_api_key = "{values.get("exa_api_key", "")}"',
+        f'xai_api_key = "{values.get("xai_api_key", "")}"',
         f'lean4_path = "{values.get("lean4_path", "")}"',
         "",
     ]
@@ -133,6 +139,21 @@ def run_init_wizard(*, force: bool = False) -> Path:
         password=True,
         default=existing.get("brave_api_key", os.getenv("BRAVE_API_KEY", "")),
     )
+    tavily = Prompt.ask(
+        "Tavily API key (high-quality search, recommended)",
+        password=True,
+        default=existing.get("tavily_api_key", os.getenv("TAVILY_API_KEY", "")),
+    )
+    exa = Prompt.ask(
+        "Exa API key (semantic web search)",
+        password=True,
+        default=existing.get("exa_api_key", os.getenv("EXA_API_KEY", "")),
+    )
+    xai = Prompt.ask(
+        "XAI / Grok API key (optional)",
+        password=True,
+        default=existing.get("xai_api_key", os.getenv("XAI_API_KEY", "")),
+    )
     lean_path = Prompt.ask(
         "Lean4 path (optional, for formal verification; leave empty to auto-detect)",
         default=existing.get("lean4_path", os.getenv("LEAN4_PATH", "")),
@@ -157,6 +178,9 @@ def run_init_wizard(*, force: bool = False) -> Path:
             "openrouter_api_key": openrouter,
             "deepseek_api_key": deepseek,
             "brave_api_key": brave,
+            "tavily_api_key": tavily,
+            "exa_api_key": exa,
+            "xai_api_key": xai,
             "lean4_path": lean_path,
         }
     )
@@ -173,7 +197,7 @@ def run_init_wizard(*, force: bool = False) -> Path:
 
     console.print(f"\n[green]✓[/] Config written to [bold]{path}[/]")
     console.print("[dim]Desktop/CLI/TUI use this + models.json. Exported envs:[/]")
-    console.print("[dim]  Core + OPENROUTER/DEEPSEEK/BRAVE keys + LEAN4_PATH[/]")
+    console.print("[dim]  Core + OPENROUTER/DEEPSEEK/BRAVE/TAVILY/EXA/XAI keys + LEAN4_PATH[/]")
     return path
 
 
@@ -195,6 +219,9 @@ def apply_config_to_env() -> None:
         "OPENROUTER_API_KEY": llm.get("openrouter_api_key"),
         "DEEPSEEK_API_KEY": keys.get("deepseek_api_key"),
         "BRAVE_API_KEY": keys.get("brave_api_key"),
+        "TAVILY_API_KEY": keys.get("tavily_api_key"),
+        "EXA_API_KEY": keys.get("exa_api_key"),
+        "XAI_API_KEY": keys.get("xai_api_key"),
         "LEAN4_PATH": keys.get("lean4_path"),
     }
     if core.get("demo_mode") in ("true", "1", "True"):

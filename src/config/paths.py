@@ -8,6 +8,7 @@ This reduces duplication and makes desktop/CLI first-run consistent.
 from __future__ import annotations
 
 import os
+from dataclasses import dataclass
 from pathlib import Path
 
 # Primary unified location for all user data (config.toml, models.json, state, keys, etc.)
@@ -103,3 +104,34 @@ def apply_config_to_env() -> None:
         )
         if val and not os.getenv(env_key):
             os.environ[env_key] = str(val)
+
+
+# --- Minimal Settings object (start toward P3 "one Settings(BaseSettings)" from audit) ---
+
+@dataclass
+class UserSettings:
+    """Lightweight view of user ~/.c4reqber settings (config + models tier etc)."""
+    config_dir: Path = CONFIG_DIR
+    api_url: str = "http://127.0.0.1:8000"
+    language: str = "en"
+    demo_mode: bool = False
+    openrouter_api_key: str = ""
+    deepseek_api_key: str = ""
+    # ... add more as needed; keys loaded via get_user_keys
+
+    @classmethod
+    def load(cls) -> "UserSettings":
+        sections = load_config_toml()
+        core = sections.get("core", {})
+        keys = get_user_keys()
+        return cls(
+            api_url=core.get("api_url", "http://127.0.0.1:8000"),
+            language=core.get("language", "en"),
+            demo_mode=core.get("demo_mode", "false").lower() in ("true", "1"),
+            openrouter_api_key=keys.get("openrouter_api_key", ""),
+            deepseek_api_key=keys.get("deepseek_api_key", ""),
+        )
+
+    def apply(self) -> None:
+        """Apply this settings instance to env."""
+        apply_config_to_env()

@@ -14,6 +14,7 @@ from src.config.paths import (
     get_user_keys,
     apply_config_to_env,
     load_config_toml,
+    UserSettings,
 )
 
 __all__ = [
@@ -29,4 +30,5 @@ __all__ = [
     "get_user_keys",
     "apply_config_to_env",
     "load_config_toml",
+    "UserSettings",
 ]

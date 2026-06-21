@@ -193,19 +193,20 @@ def run_init_wizard(*, force: bool = False) -> Path:
         }
     )
 
-    # Polish: also seed models.json with chosen tier for "all settings" ready immediately
+    # Polish: ensure models.json with chosen tier (always for reconfig / full settings)
     try:
         from src.llm.model_assignment import ModelAssignment
-        models_path = CONFIG_DIR / "models.json"
-        if not models_path.exists():
+        from src.config.paths import MODELS_JSON
+        if not MODELS_JSON.exists() or tier:  # re-seed on explicit tier choice
             assignment = ModelAssignment.create_default(tier)
-            assignment.save(models_path)
+            assignment.save()
     except Exception:
         pass
 
     console.print(f"\n[green]✓[/] Config written to [bold]{path}[/]")
-    console.print("[dim]Desktop/CLI/TUI use this + models.json. Exported envs:[/]")
-    console.print("[dim]  Core + OPENROUTER/DEEPSEEK/BRAVE/TAVILY/EXA/XAI keys + LEAN4_PATH[/]")
+    console.print("[dim]Desktop/CLI/TUI use this + models.json for full settings.[/]")
+    console.print("[dim]Exported: OPENROUTER/DEEPSEEK/BRAVE/TAVILY/EXA/XAI + LEAN4 + core.[/]")
+    console.print("[dim]Tip: blast config user --show   |   blast config --show   |   re-run 'blast init'[/]")
     return path
 
 

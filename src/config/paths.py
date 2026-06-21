@@ -85,6 +85,8 @@ def get_user_keys() -> dict[str, str]:
         "xai_api_key": pick("xai_api_key", "XAI_API_KEY"),
         "lean4_path": pick("lean4_path", "LEAN4_PATH"),
         "api_url": pick("api_url", "C4_API_URL", core.get("api_url")),
+        "language": core.get("language", "en"),
+        "demo_mode": core.get("demo_mode", "false"),
     }
 
 
@@ -96,12 +98,17 @@ def apply_config_to_env() -> None:
     mapping = get_user_keys()
     extra = {}
     sections = load_config_toml()
-    if sections.get("core", {}).get("demo_mode") in ("true", "1", "True"):
+    core = sections.get("core", {})
+    if core.get("demo_mode") in ("true", "1", "True"):
         extra["C4_DEMO_AUTH"] = "1"
+    if core.get("language"):
+        extra.setdefault("C4_LANG", core["language"])
     for key, val in {**mapping, **extra}.items():
-        env_key = key.upper() if not key.startswith("C4_") and key != "api_url" else (
-            "C4_API_URL" if key == "api_url" else key
-        )
+        if key in ("language", "demo_mode"):
+            continue  # handled above or via specific
+        env_key = {
+            "api_url": "C4_API_URL",
+        }.get(key, key.upper())
         if val and not os.getenv(env_key):
             os.environ[env_key] = str(val)
 

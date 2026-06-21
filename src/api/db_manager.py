@@ -250,7 +250,7 @@ class SQLiteDatabase:
 
 
 class PostgresDatabase:
-    """PostgreSQL async database manager (optional)."""
+    """PostgreSQL async database manager (production path)."""
 
     def __init__(self) -> None:
         self.pool: asyncpg.Pool | None = None
@@ -266,16 +266,167 @@ class PostgresDatabase:
     async def disconnect(self) -> None:
         if self.pool:
             await self.pool.close()
+            self.pool = None
 
     async def ping(self) -> bool:
+        if self.pool is None:
+            return False
         try:
-            async with self.pool.acquire() as conn:  # type: ignore[union-attr]
+            async with self.pool.acquire() as conn:
                 await conn.fetchval("SELECT 1")
             return True
         except (OSError, RuntimeError):
             return False
 
-    # ... (delegate to pool)
+    async def save_discovery(self, result: Any, user_id: str | None) -> str:
+        problem = (
+            result.get("problem") if isinstance(result, dict) else getattr(result, "problem", "")
+        )
+        hypotheses = (
+            result.get("hypotheses", [])
+            if isinstance(result, dict)
+            else getattr(result, "hypotheses", [])
+        )
+        duration = (
+            result.get("duration_seconds", 0.0)
+            if isinstance(result, dict)
+            else getattr(result, "duration_seconds", 0.0)
+        )
+        cost = (
+            result.get("estimated_cost_usd", 0.0)
+            if isinstance(result, dict)
+            else getattr(result, "estimated_cost_usd", 0.0)
+        )
+        top_hyp = _hypothesis_text(hypotheses[0]) if hypotheses else None
+
+        async with self.pool.acquire() as conn:  # type: ignore[union-attr]
+            discovery_id = await conn.fetchval(
+                """
+                INSERT INTO discoveries (
+                    user_id, problem, top_hypothesis, duration_seconds,
+                    estimated_cost, created_at, updated_at
+                )
+                VALUES ($1::uuid, $2, $3, $4, $5, $6, $6)
+                RETURNING id::text
+                """,
+                user_id,
+                problem,
+                top_hyp,
+                duration,
+                cost,
+                datetime.now(UTC),
+            )
+            for h in hypotheses:
+                c4_path = _hypothesis_field(h, "c4_path", [])
+                triz = _hypothesis_field(h, "triz_principles", [])
+                await conn.execute(
+                    """
+                    INSERT INTO hypotheses (
+                        discovery_id, hypothesis_text, confidence, method,
+                        c4_path, triz_principles
+                    )
+                    VALUES ($1::uuid, $2, $3, $4, $5, $6)
+                    """,
+                    discovery_id,
+                    _hypothesis_text(h),
+                    _hypothesis_field(h, "confidence", 0.0),
+                    _hypothesis_field(h, "method", ""),
+                    c4_path if isinstance(c4_path, list) else [],
+                    triz if isinstance(triz, list) else [],
+                )
+            return str(discovery_id)
+
+    async def get_discovery(self, discovery_id: str, user_id: str | None = None) -> dict | None:  # type: ignore[type-arg]
+        async with self.pool.acquire() as conn:  # type: ignore[union-attr]
+            if user_id:
+                row = await conn.fetchrow(
+                    "SELECT * FROM discoveries WHERE id = $1::uuid AND user_id = $2::uuid",
+                    discovery_id,
+                    user_id,
+                )
+            else:
+                row = await conn.fetchrow(
+                    "SELECT * FROM discoveries WHERE id = $1::uuid",
+                    discovery_id,
+                )
+            return dict(row) if row else None
+
+    async def get_user_discoveries(self, user_id: str, skip: int, limit: int) -> list[dict]:  # type: ignore[type-arg]
+        limit = min(max(limit, 0), 100)
+        skip = max(skip, 0)
+        async with self.pool.acquire() as conn:  # type: ignore[union-attr]
+            rows = await conn.fetch(
+                """
+                SELECT * FROM discoveries
+                WHERE user_id = $1::uuid
+                ORDER BY created_at DESC
+                LIMIT $2 OFFSET $3
+                """,
+                user_id,
+                limit,
+                skip,
+            )
+            return [dict(r) for r in rows]
+
+    async def get_all_discoveries(self, skip: int, limit: int) -> list[dict]:  # type: ignore[type-arg]
+        limit = min(max(limit, 0), 100)
+        skip = max(skip, 0)
+        async with self.pool.acquire() as conn:  # type: ignore[union-attr]
+            rows = await conn.fetch(
+                "SELECT * FROM discoveries ORDER BY created_at DESC LIMIT $1 OFFSET $2",
+                limit,
+                skip,
+            )
+            return [dict(r) for r in rows]
+
+    async def update_discovery_status(
+        self, discovery_id: str, status: str, notes: str | None, user_id: str
+    ) -> None:
+        async with self.pool.acquire() as conn:  # type: ignore[union-attr]
+            await conn.execute(
+                """
+                UPDATE discoveries
+                SET status = $1, validation_notes = $2, updated_at = $3
+                WHERE id = $4::uuid AND user_id = $5::uuid
+                """,
+                status,
+                notes,
+                datetime.now(UTC),
+                discovery_id,
+                user_id,
+            )
+
+    async def count_discoveries(self) -> int:
+        async with self.pool.acquire() as conn:  # type: ignore[union-attr]
+            val = await conn.fetchval("SELECT COUNT(*) FROM discoveries")
+            return int(val or 0)
+
+    async def count_hypotheses(self) -> int:
+        async with self.pool.acquire() as conn:  # type: ignore[union-attr]
+            val = await conn.fetchval("SELECT COUNT(*) FROM hypotheses")
+            return int(val or 0)
+
+    async def count_active_experiments(self) -> int:
+        async with self.pool.acquire() as conn:  # type: ignore[union-attr]
+            val = await conn.fetchval(
+                "SELECT COUNT(*) FROM discoveries WHERE status = 'running'"
+            )
+            return int(val or 0)
+
+    async def get_validation_rate(self) -> float:
+        async with self.pool.acquire() as conn:  # type: ignore[union-attr]
+            total = await conn.fetchval("SELECT COUNT(*) FROM discoveries")
+            if not total:
+                return 0.0
+            validated = await conn.fetchval(
+                "SELECT COUNT(*) FROM discoveries WHERE status IN ('validated', 'falsified')"
+            )
+            return float(validated or 0) / float(total)
+
+    async def get_avg_confidence(self) -> float:
+        async with self.pool.acquire() as conn:  # type: ignore[union-attr]
+            val = await conn.fetchval("SELECT COALESCE(AVG(confidence), 0) FROM hypotheses")
+            return float(val or 0.0)
 
 
 # Unified database interface

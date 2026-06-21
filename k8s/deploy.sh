@@ -20,6 +20,16 @@ kubectl apply -f namespace.yaml
 kubectl apply -f configmap.yaml
 kubectl apply -f secrets.yaml
 kubectl apply -f postgres.yaml
+kubectl apply -f redis.yaml
+
+echo "Waiting for redis..."
+kubectl rollout status deployment/redis -n c4reqber --timeout=120s
+
+echo "Running Alembic migrations..."
+kubectl delete job c4reqber-migrate -n c4reqber --ignore-not-found
+kubectl apply -f migrate-job.yaml
+kubectl wait --for=condition=complete job/c4reqber-migrate -n c4reqber --timeout=180s
+
 kubectl apply -f deployment.yaml
 kubectl apply -f service.yaml
 kubectl apply -f hpa.yaml
@@ -38,3 +48,5 @@ echo "Port-forward API:"
 echo "  kubectl port-forward svc/c4reqber-api 8000:80 -n c4reqber"
 echo "Health:"
 echo "  curl http://127.0.0.1:8000/api/v1/health"
+echo "Readiness:"
+echo "  curl http://127.0.0.1:8000/api/v1/health/ready"

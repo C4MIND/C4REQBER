@@ -232,12 +232,20 @@ class JobStore:
             return [j.to_dict() for j in self._jobs.values()]
 
 
-# Global job store instance (per-process; scale with Redis later)
+# Global job store: in-memory default; Redis when REDIS_URL is set (multi-replica).
 _job_store: JobStore | None = None
 
 
 def get_job_store() -> JobStore:
     global _job_store
     if _job_store is None:
-        _job_store = JobStore()
+        import os
+
+        redis_url = os.getenv("REDIS_URL", "").strip()
+        if redis_url:
+            from src.api.v8_routers.discovery.job_store_redis import RedisJobStore
+
+            _job_store = RedisJobStore(redis_url)
+        else:
+            _job_store = JobStore()
     return _job_store

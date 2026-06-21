@@ -11,6 +11,7 @@ data:
   POOL_TIMEOUT: "30"
   POOL_RECYCLE: "1800"
   POOL_PRE_PING: "true"
-  CACHE_BACKEND: memory
-  CORS_ORIGINS: "https://c4reqber.org,https://gitlab.com"
+  CACHE_BACKEND: redis
+  ALLOWED_ORIGINS: "https://c4reqber.org,https://gitlab.com"
+  REDIS_URL: "redis://redis.c4reqber.svc.cluster.local:6379/0"
   LLM_PROVIDER: openrouter

@@ -671,6 +671,20 @@ def blast_social(
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# Init — first-run configuration
+# ═══════════════════════════════════════════════════════════════════════════════
+
+@app.command("init")
+def blast_init(
+    force: bool = typer.Option(False, "--force", "-f", help="Overwrite existing ~/.c4reqber/config.toml"),
+) -> None:
+    """Interactive setup wizard — writes ~/.c4reqber/config.toml for desktop and TUI."""
+    from src.cli.config_init import run_init_wizard
+
+    run_init_wizard(force=force)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # TUI — Interactive Cockpit (Go TUI v9)
 # ═══════════════════════════════════════════════════════════════════════════════
 
@@ -702,7 +716,14 @@ def blast_tui(
     if no_splash:
         extra.append("--no-splash")
 
+    from src.cli.config_init import apply_config_to_env
     from src.cli.tui_launcher import launch_tui_v9
+
+    apply_config_to_env()
+    if demo:
+        import os
+
+        os.environ.setdefault("C4_DEMO_AUTH", "1")
     code = launch_tui_v9(extra, build_if_missing=not no_build)
     raise typer.Exit(code)
 

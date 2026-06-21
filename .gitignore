@@ -153,8 +153,7 @@ archive/old-ui/
 # Rust WASM build artifacts
 wasm/plugins/target/
 
-# Frontend build sites (not needed in repo)
-web-v2/
+# Legacy frontend (superseded by web-v2/)
 web/
 
 # Archive — keep roadmap, hide competitive intel & plans

@@ -190,6 +190,40 @@ func (c *Client) JobStatus(ctx context.Context, jobID string) (JobStatus, error)
 	return jobStatusFromOAPI(resp.JSON200), nil
 }
 
+// FlashAndWait runs flash; if the API returns job_id, polls until complete.
+func (c *Client) FlashAndWait(ctx context.Context, problem, domain string) (map[string]any, error) {
+	raw, err := c.Flash(ctx, problem, domain)
+	if err != nil {
+		return nil, err
+	}
+	if raw == nil {
+		return nil, nil
+	}
+	jobID, _ := raw["job_id"].(string)
+	if jobID == "" {
+		return raw, nil
+	}
+	ticker := time.NewTicker(2 * time.Second)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		case <-ticker.C:
+			js, err := c.JobStatus(ctx, jobID)
+			if err != nil {
+				continue
+			}
+			if js.Completed {
+				if js.Result != nil {
+					return js.Result, nil
+				}
+				return map[string]any{"job_id": jobID, "status": js.Status}, nil
+			}
+		}
+	}
+}
+
 // Flash submits /v8/discover/flash.
 func (c *Client) Flash(ctx context.Context, problem, domain string) (map[string]any, error) {
 	gen, err := c.requireGen()

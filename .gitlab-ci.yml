@@ -22,7 +22,7 @@ test-backend:
     - pip install pytest pytest-asyncio ruff
   script:
     - ruff check src/ --exclude="archive/" --select=E9,F821,F822,F823
-    - PYTHONPATH=. pytest tests/ -v --tb=short
+    - PYTHONPATH=. pytest tests/ -v --tb=short --junitxml=report.xml
   variables:
     DATABASE_URL: "sqlite:///tmp/test.db"
     CACHE_BACKEND: "memory"
@@ -150,6 +150,22 @@ tui-v9:release:
 # ═══════════════════════════════════════════════════════════════
 # GitLab Pages — static site (landing/)
 # ═══════════════════════════════════════════════════════════════
+
+web-v2:build:
+  stage: build
+  image: node:${NODE_VERSION}-alpine
+  before_script:
+    - cd web-v2
+    - npm ci || npm install
+  script:
+    - npm run build
+  artifacts:
+    paths:
+      - web-v2/dist/
+    expire_in: 14 days
+  rules:
+    - changes:
+        - web-v2/**/*
 
 pages:
   stage: deploy

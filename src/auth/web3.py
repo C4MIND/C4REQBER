@@ -55,8 +55,16 @@ def _get_jwt_secret(_self: Any = None) -> str:
     global _JWT_SECRET
     if _JWT_SECRET is None:
         _JWT_SECRET = os.environ.get("C4REQBER_JWT_SECRET") or os.environ.get("JWT_SECRET")
+        dev = os.environ.get("DEV_MODE", "").lower() in ("1", "true", "yes")
         if not _JWT_SECRET:
-            _JWT_SECRET = "dev-secret-do-not-use-in-production"
+            if dev:
+                _JWT_SECRET = "dev-secret-do-not-use-in-production-min-32-chars"
+            else:
+                raise RuntimeError(
+                    "JWT_SECRET (or C4REQBER_JWT_SECRET) must be set in production"
+                )
+        elif len(_JWT_SECRET) < 32 and not dev:
+            raise RuntimeError("JWT_SECRET must be at least 32 characters in production")
     return _JWT_SECRET
 
 

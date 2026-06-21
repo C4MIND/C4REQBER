@@ -155,13 +155,24 @@ func (m *model) renderFooter() string {
 	if m.toast != "" {
 		right = m.toast + "  " + right
 	}
-	// v9.12.3: simple padding to width — lipgloss.Width() miscalculates
-	// Unicode characters (▶⏵ etc.) causing overflow and terminal wrap.
-	line := left + strings.Repeat(" ", max(1, m.width-len([]rune(left))-len([]rune(right)))) + right
-	if len([]rune(line)) < m.width {
-		line += strings.Repeat(" ", m.width-len([]rune(line)))
+	// v9.12.3 + v9.13.x: pad by RUNE counts and slice by runes, never bytes.
+	// Mixing `len(line)` (bytes) with `m.width` (rune columns) used to slice
+	// mid-UTF-8 when `left` contained multi-byte glyphs (▶⏵), cutting the
+	// right portion of the footer (e.g. "letter t missing" on the right edge).
+	leftRunes := len([]rune(left))
+	rightRunes := len([]rune(right))
+	gap := m.width - leftRunes - rightRunes
+	if gap < 1 {
+		gap = 1
 	}
-	return line[:min(len(line), m.width)]
+	line := left + strings.Repeat(" ", gap) + right
+	runes := []rune(line)
+	if len(runes) < m.width {
+		runes = append(runes, []rune(strings.Repeat(" ", m.width-len(runes)))...)
+	} else if len(runes) > m.width {
+		runes = runes[:m.width]
+	}
+	return string(runes)
 }
 
 func (m *model) layout() {

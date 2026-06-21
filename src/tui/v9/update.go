@@ -183,6 +183,31 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		keyStr := msg.String()
 		km := m.keymap
+
+		// Wizard 'd'/'r'/'?' shortcuts (always active when wizard is on screen,
+		// even on the welcome/help steps). Each closes the wizard and gives
+		// the user the relevant hint.
+		if m.wizard != nil && m.wizard.Active() {
+			switch keyStr {
+			case "d", "D":
+				m.wizard.Done()
+				m.MarkFirstRunDone()
+				m.setToast("💡 demo mode: relaunch with --demo  (e.g. blast tui --demo --story=crispr)")
+				return m, nil
+			case "r", "R":
+				m.wizard.Done()
+				m.MarkFirstRunDone()
+				m.setToast("✨ ready · type your query and press Enter")
+				return m, nil
+			case "?":
+				m.wizard.Done()
+				m.MarkFirstRunDone()
+				m.showHelp = true
+				m.setToast(i18n.T("help.shown"))
+				return m, nil
+			}
+		}
+
 		switch {
 
 		case km.Matches(ActQuit, keyStr):
@@ -526,6 +551,11 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.PersistSettings()
 			return m, nil
 		}
+		// v9.13.x fix: explicit return so we DON'T fall through to the
+		// outer m.ta.Update(msg) at the bottom of Update() — otherwise
+		// unmatched letter keys (a/b/x/etc.) were inserted into the
+		// textarea TWICE (duplication/triplication glitch).
+		return m, nil
 
 	case tea.MouseClickMsg:
 		// Mouse click on a card → find the card whose zone contains the click

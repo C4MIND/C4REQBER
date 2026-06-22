@@ -4,6 +4,7 @@ Physical and chemical effects for problem solving
 """
 
 from dataclasses import dataclass
+from typing import Any, Dict, List, Optional
 
 
 @dataclass

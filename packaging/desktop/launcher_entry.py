@@ -23,20 +23,21 @@ from src.llm.model_assignment import ModelAssignment
 console = Console()
 
 
-def _get_desktop_version() -> str:
-    try:
-        # Try to get from the bundled TUI or package
-        from src.tui.v9.cmd.c4tui_v9 import main as _  # type: ignore  # noqa
-        return "v9"
-    except Exception:
-        return "v9"
+# Desktop version is sourced from the bundled Go TUI v9 binary at
+# runtime via the central `tui_v9_version()` helper (see src/cli/tui_launcher.py)
+# — a static "v9" string here would drift from the actual release the
+# user is running.  Pass it in via the launch_tui_v9() call instead.
 
-def render_desktop_splash(first_run: bool) -> None:
+def render_desktop_splash(first_run: bool, version: str = "v9") -> None:
     """Upgraded desktop splash banner.
     Port of the polished terminal splash animation feel (crystal bloom → aurora dissolve → living cube).
     Root art idea / texts preserved. Go TUI v9 takes over with full animation.
+
+    `version` is passed in by main() so the banner reflects the actual
+    bundled TUI release (sourced from launch_tui_v9) rather than a
+    hardcoded string that drifts from the real version.
     """
-    ver = _get_desktop_version()
+    ver = version
 
     # Upgraded mini art: evokes polished crystal bloom + aurora on final cube/C4R
     # (colors chosen to mirror BioAurora palette: magenta crystal -> cyan/green aurora)
@@ -132,7 +133,15 @@ def main() -> int:
         or os.environ.get("C4_SPLASH", "1") == "0"
     )
     if not no_splash:
-        render_desktop_splash(first_run)
+        # Source the actual TUI version from the central launcher so the
+        # banner reads e.g. "v9.13.0" instead of a hardcoded "v9" that
+        # drifts from the real release.
+        try:
+            from src.cli.tui_launcher import tui_v9_version
+            ver = tui_v9_version()
+        except Exception:
+            ver = "v9"
+        render_desktop_splash(first_run, version=ver)
 
     # Forward args; launch Go TUI v9 (the animated splash + full cockpit)
     extra = [a for a in sys.argv[1:] if a not in ("--no-splash",)]

@@ -12,6 +12,34 @@ def _repo_root() -> Path:
     return Path(__file__).resolve().parents[2]
 
 
+def tui_v9_version() -> str:
+    """Return the version string of the c4tui-v9 binary (e.g. "v9.13.0"),
+    or a sane fallback ("v9") if the binary cannot be found or run.
+
+    Used by the desktop splash banner so the displayed version matches
+    the actual bundled TUI release rather than drifting from a hardcoded
+    string.
+    """
+    import re
+    binary = find_tui_v9_binary()
+    if binary is None:
+        return "v9"
+    try:
+        proc = subprocess.run(
+            [str(binary), "--version"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return "v9"
+    out = (proc.stdout or "") + (proc.stderr or "")
+    # Expected output: "c4tui-v9 v9.13.0 (commit=abc1234)" — grab the
+    # first vMAJOR.MINOR.PATCH token. Fall back to "v9" if not found.
+    m = re.search(r"v\d+\.\d+\.\d+", out)
+    return m.group(0) if m else "v9"
+
+
 def find_tui_v9_binary() -> Path | None:
     """Locate a built c4tui-v9 binary, or None if not found.
     Handles source tree, PATH, and PyInstaller desktop bundle (Resources for mac, next to exe for win).

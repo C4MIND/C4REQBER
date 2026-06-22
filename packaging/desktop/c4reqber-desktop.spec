@@ -75,11 +75,17 @@ if sys.platform == "darwin":
     app = BUNDLE(
         coll,
         name="C4REQBER.app",
-        icon=None,
+        icon=None,  # no .icns yet — falls back to generic app icon
         bundle_identifier="org.c4reqber.desktop",
         info_plist={
-            "CFBundleShortVersionString": "5.6.0",
-            "CFBundleVersion": "560",
+            # Kept in sync with the canonical Go TUI version
+            # (src/tui/v9/cmd/c4tui-v9/main.go: `var version = "v9.13.0"`).
+            # When the Go side bumps, update here AND packaging/desktop/mac/Info.plist
+            # AND packaging/desktop/win/build.iss (3 places, see CHANGELOG).
+            "CFBundleShortVersionString": "9.13.0",
+            "CFBundleVersion": "913",
             "LSMinimumSystemVersion": "12.0",
+            "LSApplicationCategoryType": "public.app-category.developer-tools",
+            "CFBundleCopyright": "(c) 2026 c4reqber",
         },
     )

@@ -85,7 +85,7 @@ def _extract_token(request: Request) -> str | None:
     return None
 
 
-@router.post("/register", response_model=UserResponse)
+@router.post("/register", response_model=UserResponse, operation_id="authRegister")
 async def register(request: Request, user_data: UserCreate) -> UserResponse:
     """Register."""
     ip = request.client.host if request.client else "unknown"
@@ -117,7 +117,7 @@ async def register(request: Request, user_data: UserCreate) -> UserResponse:
         raise HTTPException(status_code=409, detail="User already exists")
 
 
-@router.post("/login", response_model=TokenResponse)
+@router.post("/login", response_model=TokenResponse, operation_id="authLogin")
 async def login(request: Request, credentials: UserCreate) -> TokenResponse:
     """Login."""
     ip = request.client.host if request.client else "unknown"

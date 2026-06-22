@@ -63,7 +63,7 @@ async def _run_flash_job(job_id: str, request: FlashRequest) -> None:
 # ---------------------------------------------------------------------------
 # Routes
 # ---------------------------------------------------------------------------
-@router.post("/one-click")
+@router.post("/one-click", operation_id="discoverOneClick")
 async def one_click_discovery_route(request: OneClickRequest) -> dict[str, Any]:
     store = get_job_store()
     job = await store.create("one-click", request.model_dump())
@@ -76,7 +76,7 @@ async def one_click_discovery_route(request: OneClickRequest) -> dict[str, Any]:
     return {"job_id": job.job_id, "status": job.status.value}
 
 
-@router.post("/flash")
+@router.post("/flash", operation_id="discoverFlash")
 async def flash_discovery_route(request: FlashRequest) -> dict[str, Any]:
     store = get_job_store()
     job = await store.create("flash", request.model_dump())
@@ -100,7 +100,7 @@ async def _supervised_task(coro, *, job_id: str, kind: str) -> None:
             logger.exception("could not mark job %s as failed", job_id)
 
 
-@router.post("/multi")
+@router.post("/multi", operation_id="discoverMulti")
 async def multi_hypothesis_discovery_route(request: MultiHypothesisRequest) -> dict[str, Any]:
     return await multi_hypothesis_discovery(request)
 
@@ -130,7 +130,7 @@ async def navigate_c4_route(request: C4NavigateRequest) -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 # Job status polling
 # ---------------------------------------------------------------------------
-@router.get("/status/{job_id}")
+@router.get("/status/{job_id}", operation_id="discoverJobStatus")
 async def job_status_route(job_id: str) -> dict[str, Any]:
     store = get_job_store()
     job = await store.get(job_id)
@@ -182,7 +182,7 @@ async def _sse_stream(job_id: str) -> Any:
         await asyncio.sleep(0.5)
 
 
-@router.get("/stream/{job_id}")
+@router.get("/stream/{job_id}", operation_id="discoverJobStream")
 async def job_stream_route(job_id: str) -> StreamingResponse:
     return StreamingResponse(
         _sse_stream(job_id),

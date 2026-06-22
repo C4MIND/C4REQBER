@@ -26,6 +26,11 @@ config/secrets/
 # Removed: *token* was too broad, use specific rules
 *secret*
 !scripts/k8s-init-secrets.sh
+# Audit 2026-06-22: .secrets.baseline is the detect-secrets reference
+# file (what counts as 'known false positives'). Without this exception
+# the blanket *secret* rule silently drops the file and every developer
+# gets a fresh scan with 103 'new' findings, breaking pre-commit.
+!.secrets.baseline
 openrouter_key.txt
 ollama_config.yaml
 # Credential dumps (a .tex secrets dump leaked past the rules once — see

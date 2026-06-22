@@ -5,7 +5,6 @@ import (
 	"sort"
 	"strconv"
 	"sync"
-
 	"time"
 
 	"charm.land/lipgloss/v2"
@@ -229,6 +228,8 @@ func (a *AchievementSystem) Check(discoveries int, lastQuality float64, papersCo
 //                    (i.e. fallback chain was invoked)
 //   AchSimDelegate — at least one CardSimulation with EngineStatus == "delegated"
 func (a *AchievementSystem) CheckSimAchievements(feed []Card) []Achievement {
+	a.mu.Lock()
+	defer a.mu.Unlock()
 	engines := map[string]bool{}
 	hasRefutes := false
 	skippedCount := 0

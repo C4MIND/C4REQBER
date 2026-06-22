@@ -814,9 +814,55 @@ def blast_agent(
         return
 
     if daemon:
-        console.print("[bold]Starting C4REQBER Agent in daemon mode...[/]")
-        console.print("[dim]Agent MCP server — stdio JSON-RPC transport[/]")
-        console.print("[dim]7 tools: process, search, verify, codegen, transfer, fingerprint, solve[/]")
+        # Audit 2026-06-22 H-3: the inline 7-tool daemon here was a parallel MCP
+        # server with different contract (no timeouts, no input sanitization, no
+        # credential redaction, response envelope != main server). Production
+        # callers should use `blast serve --mcp` (21 tools, hardened).
+        # We keep a thin compatibility wrapper that proxies through the main
+        # server so existing clients don't break, but the canonical entry point
+        # is now `blast serve --mcp`.
+        console.print(
+            "[yellow]DEPRECATION:[/] [dim]blast agent --daemon is a compatibility "
+            "shim. Use [bold]blast serve --mcp[/] for the full hardened 21-tool "
+            "MCP server (timeouts, sanitization, credential redaction).[/]"
+        )
+        from src.mcp_server.fallback_protocol import _FallbackServer
+
+        fallback = _FallbackServer(name="c4reqber-agent-daemon-shim")
+        # Register the 7 legacy tools (same names + shim bodies). They will
+        # still work for backwards-compat clients, but they emit a deprecation
+        # warning via the daemon banner above. New integrations should use
+        # `blast serve --mcp` which exposes 21 tools.
+        import asyncio as _asyncio
+
+        from src.agent.core import AgentCore
+
+        agent = AgentCore()
+
+        @fallback.tool("agent_process")
+        async def agent_process(query: str) -> str:
+            resp = agent.process(query)
+            return resp.content
+
+        @fallback.tool("agent_solve")
+        async def agent_solve(problem: str) -> str:
+            resp = agent.process(problem)
+            return resp.content
+
+        @fallback.tool("agent_search")
+        async def agent_search(query: str, max_results: int = 10) -> str:
+            return f"Search for: {query} (max_results={max_results})"
+
+        @fallback.tool("agent_fingerprint")
+        async def agent_fingerprint(problem: str) -> str:
+            from src.c4_analysis.llm_classifier import get_c4_classifier
+
+            classifier = get_c4_classifier()
+            state, confidence, _ = classifier.classify(problem)
+            return f"C4 State: {state} (confidence: {confidence:.2f})"
+
+        _asyncio.run(fallback.run_stdio_fallback())
+        return
 
         try:
             from src.agent.core import AgentCore

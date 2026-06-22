@@ -72,7 +72,7 @@ async def c4_solve(problem: str, domain: str = "science") -> dict[str, Any]:
     """
     try:
         if not HAS_TOOLS:
-            return {"error": "Tool dependencies not available", "status": "failed"}
+            return {"error": "Tool dependencies not available", "status": "error"}
 
         from src.core.profile_manager import UserProfileManager
         from src.pipeline.hil_pipeline import HILDiscoveryPipeline
@@ -102,21 +102,41 @@ async def c4_solve(problem: str, domain: str = "science") -> dict[str, Any]:
 
         return result
     except Exception as e:
-        return {"error": str(e), "status": "failed"}
+        return {"error": str(e), "status": "error"}
 
 
 @server.tool("c4_search")
 
-async def c4_search(query: str, sources: list[str] | None = None) -> list[dict[str, Any]]:
+async def c4_search(query: str, sources: list[str] | None = None) -> dict[str, Any]:
     """Search across 33 knowledge sources via orchestrator.py (arXiv, PubMed, ORCID, etc.)."""
     try:
         if not HAS_TOOLS:
-            return [{"error": "MultiSourceSearcher not available"}]
+            return {
+                "status": "error",
+                "data": [],
+                "errors": ["MultiSourceSearcher not available"],
+                "metadata": {"query": query, "sources": sources},
+            }
         searcher = MultiSourceSearcher()
         results = await searcher.search_all(query, sources=sources)
-        return results[:10]  # Limit to 10 results
+        truncated = results[:10]
+        return {
+            "status": "success",
+            "data": truncated,
+            "metadata": {
+                "query": query,
+                "sources": sources,
+                "total_found": len(results),
+                "returned": len(truncated),
+            },
+        }
     except (AttributeError, ImportError) as e:
-        return [{"error": str(e)}]
+        return {
+            "status": "error",
+            "data": [],
+            "errors": [str(e)],
+            "metadata": {"query": query, "sources": sources},
+        }
 
 
 @server.tool("c4_triz")
@@ -285,7 +305,7 @@ async def c4_verify(code: str, language: str | None = None) -> dict[str, Any]:
                 try:
                     s.from_string(code)
                 except z3.Z3Exception as e:
-                    return {"error": f"Z3 parse error: {e}", "status": "failed", "language": language}
+                    return {"error": f"Z3 parse error: {e}", "status": "error", "language": language}
                 except (ValueError, RuntimeError):
                     # Fallback: use AST validation for safe evaluation
                     # Whitelist allowed nodes
@@ -382,7 +402,7 @@ async def c4_transfer(problem: str, source_domain: str, target_domain: str) -> d
         result = pipeline.transfer(problem, source_domain, target_domain)
         return result.to_dict()
     except (AttributeError, ImportError) as e:
-        return {"error": str(e), "status": "failed"}
+        return {"error": str(e), "status": "error"}
 
 
 @server.tool("c4_simulate")
@@ -485,7 +505,7 @@ async def c4_autoresearch(
             "improvement_trace": report.improvement_trace,
         }
     except Exception as e:
-        return {"error": str(e), "status": "failed"}
+        return {"error": str(e), "status": "error"}
 
 
 @server.tool("c4_chain")
@@ -626,7 +646,7 @@ async def blast_solve(problem: str, output_format: str = "auto", domain: str | N
             "cost_usd": result.cost_usd,
         }
     except Exception as e:
-        return {"error": str(e), "status": "failed", "mode": "solve"}
+        return {"error": str(e), "status": "error", "mode": "solve"}
 
 
 @server.tool("blast_turbo")
@@ -670,7 +690,7 @@ async def blast_turbo(topic: str, verify_backend: str = "hybrid", functors: bool
             "dissertation_path": f"dissertations/live/HIL_v2_{topic.replace(' ', '_')[:30]}.md",
         }
     except Exception as e:
-        return {"error": str(e), "status": "failed", "mode": "turbo"}
+        return {"error": str(e), "status": "error", "mode": "turbo"}
 
 
 @server.tool("blast_flash")
@@ -776,7 +796,7 @@ Answer:"""
             "usp_context": usp_context,
         }
     except Exception as e:
-        return {"error": str(e), "status": "failed", "mode": "flash"}
+        return {"error": str(e), "status": "error", "mode": "flash"}
 
 
 @server.tool("blast_turbofactory")
@@ -884,7 +904,7 @@ async def blast_turbofactory(domain: str, scale: str = "standard", max_concurren
             "results": results,
         }
     except Exception as e:
-        return {"error": str(e), "status": "failed", "mode": "turbofactory"}
+        return {"error": str(e), "status": "error", "mode": "turbofactory"}
 
 
 @server.tool("blast_auto")
@@ -921,7 +941,7 @@ async def blast_auto(query: str) -> dict[str, Any]:
         result["mode_description"] = description
         return result
     except Exception as e:
-        return {"error": str(e), "status": "failed", "mode": "auto"}
+        return {"error": str(e), "status": "error", "mode": "auto"}
 
 
 async def main():

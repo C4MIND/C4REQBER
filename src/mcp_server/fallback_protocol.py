@@ -170,7 +170,7 @@ from src.security.credential_guard import redact_credentials
 from src.security.prompt_sanitizer import MAX_FLASH_CHARS, MAX_PIPELINE_CHARS, SanitizerInput
 
 
-_mcp_logger = logging.getLogger("c44tcdi.mcp_server")
+_mcp_logger = logging.getLogger("c4reqber.mcp_server")
 
 # Per-tool execution timeouts (seconds). Long pipelines need headroom for LLM + verification.
 DEFAULT_TOOL_TIMEOUT = 60.0
@@ -185,6 +185,7 @@ TOOL_TIMEOUTS: dict[str, float] = {
     "c4_verify": 180.0,
     "c4_prove": 180.0,
     "c4_simulate": 120.0,
+    "c4_codegen": 180.0,
 }
 
 
@@ -212,6 +213,7 @@ TOOL_STRING_ARGS: dict[str, list[str]] = {
     "blast_flash": ["question"],
     "blast_turbofactory": ["domain", "scale", "pipeline_mode"],
     "blast_auto": ["query"],
+    "c4_codegen": ["specification"],
 }
 
 

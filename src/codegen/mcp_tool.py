@@ -389,16 +389,6 @@ async def _verify_code(code: str, backend: str) -> dict[str, Any]:
     if backend == "coq":
         coq_client = CoqClient()
         if not coq_client.is_available():
-            return {"verified": False, "error": "Lean4 not installed"}
-        result = client.check_proof(code)
-        return {
-            "verified": result.get("success", False),
-            "details": result,
-            "error": result["errors"][0]["message"] if result.get("errors") else None,
-        }
-    if backend == "coq":
-        coq_client = CoqClient()
-        if not coq_client.is_available():
             return {"verified": False, "error": "Coq not installed"}
         result = coq_client.check_proof(code)
         return {
@@ -512,3 +502,39 @@ async def c4_codegen(
         "errors": errors,
         "suggestions": suggestions,
     }
+
+
+# JSON Schema attached to the tool for AI-agent discovery (audit C-6).
+# Must be set on the function object so _FallbackServer.run_stdio_fallback
+# (which reads tool_func.schema) can surface parameters to clients.
+c4_codegen.schema = {
+    "type": "object",
+    "title": "c4_codegen",
+    "description": "Generate code from a natural language specification, then optionally verify it.",
+    "properties": {
+        "specification": {
+            "type": "string",
+            "description": "Natural language description of the code to generate.",
+            "minLength": 1,
+        },
+        "language": {
+            "type": "string",
+            "enum": ["python", "rust", "cpp"],
+            "default": "python",
+            "description": "Target language.",
+        },
+        "verify": {
+            "type": "boolean",
+            "default": True,
+            "description": "Whether to verify generated code with formal methods.",
+        },
+        "optimization_target": {
+            "type": ["string", "null"],
+            "enum": ["speed", "memory", "readability", None],
+            "default": None,
+            "description": "Optimization focus (speed, memory, readability).",
+        },
+    },
+    "required": ["specification"],
+    "additionalProperties": False,
+}

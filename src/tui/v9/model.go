@@ -254,8 +254,19 @@ func NewAppWithStore(apiURL string, store *persist.Store) *model {
 	return m
 }
 
-// NewApp exports the constructor for cmd/c4tui-v9.
-func NewApp(apiURL string) *model {
+// newModelSkeleton builds the model with all shared UI components
+// (textarea, viewport, effects, keymap, etc.) wired up to their
+// production defaults. Both NewApp (production, with persistence)
+// and NewAppFresh (tests, hermetic) call this and then do their
+// own additional setup. Extracted from the previous 2x-duplicated
+// inline struct literal in v9.13.x to prevent the two constructors
+// from drifting on shared fields (which already happened once:
+// saveHistory was set in NewApp but missing from NewAppFresh).
+func newModelSkeleton(apiURL string) *model {
+	cfg := DefaultConfig()
+	if apiURL == "" {
+		apiURL = cfg.APIURL
+	}
 	ta := textarea.New()
 	ta.Placeholder = i18n.T("placeholder")
 	ta.Prompt = "❯ "
@@ -266,39 +277,47 @@ func NewApp(apiURL string) *model {
 	vp := viewport.New(viewport.WithWidth(80), viewport.WithHeight(20))
 	vp.MouseWheelEnabled = true
 
-	m := &model{
-		apiURL:        apiURL,
-		api:           api.New(apiURL),
-		keymap:        NewKeyMap(DetectPlatform()),
-		mode:          ModeDiscover,
-		focusedCardIdx: -1, // -1 = follow last; avoids "focusing" the empty card at startup
-		ta:            ta,
-		vp:            vp,
-		focus:         true,
-		follow:        true,
-		rain:          effects.NewRain(),
-		burst:         effects.NewBurst(),
-		slide:         effects.NewSlideIn(),
-		typew:         effects.NewTypewriter(),
-		sparks:        effects.NewSparkles(),
-		verdictPulse:  effects.NewVerdictPulse(),
-		theme:         NewTheme(ProfileDefault),
+	return &model{
+		apiURL:          apiURL,
+		api:             api.New(apiURL),
+		keymap:          NewKeyMap(DetectPlatform()),
+		mode:            ModeDiscover,
+		focusedCardIdx:  -1, // -1 = follow last; avoids "focusing" the empty card at startup
+		ta:              ta,
+		vp:              vp,
+		focus:           true,
+		follow:          true,
+		rain:            effects.NewRain(),
+		burst:           effects.NewBurst(),
+		slide:           effects.NewSlideIn(),
+		typew:           effects.NewTypewriter(),
+		sparks:          effects.NewSparkles(),
+		verdictPulse:    effects.NewVerdictPulse(),
+		theme:           NewTheme(ProfileDefault),
 		paletteRegistry: buildRegistry(),
-		achievements:  NewAchievements(),
-		langsSeen:     map[string]bool{},
-		tel:           telemetry.New(),
-		dream:         NewDreamState(),
-		saveHistory:   true,
-		llmTier:       TierC2,
-		colorProfile:  ProfileDefault,
-		wizard:        NewWizardState(),
-		capsimClient:        capsim.NewClient(apiURL),
-		feedStore:           initFeedStore(),
-		inputHistory:        initInputHistory(),
-		simPreference:       "auto",
-		simCostLimit:        5.00,
-		showStatusBar:        true,
+		achievements:    NewAchievements(),
+		langsSeen:       map[string]bool{},
+		tel:             telemetry.New(),
+		dream:           NewDreamState(),
+		saveHistory:     true,
+		llmTier:         TierC2,
+		colorProfile:    ProfileDefault,
+		wizard:          NewWizardState(),
+		capsimClient:    capsim.NewClient(apiURL),
+		feedStore:       initFeedStore(),
+		inputHistory:    initInputHistory(),
+		simPreference:   "auto",
+		simCostLimit:    5.00,
+		showStatusBar:   true,
 	}
+}
+
+// NewApp exports the constructor for cmd/c4tui-v9. Loads persisted
+// state from ~/.c4reqber (achievements, langs, settings), restores
+// the last N cards from feed.jsonl, and shows the first-run wizard
+// when the on-disk FirstRun flag is set.
+func NewApp(apiURL string) *model {
+	m := newModelSkeleton(apiURL)
 	// Load persisted state (achievements, langs). If store fails, fall back gracefully.
 	store, storeErr := persist.New(persist.DefaultPath())
 	if storeErr == nil {
@@ -371,62 +390,20 @@ func NewApp(apiURL string) *model {
 
 // NewAppFresh creates a model without loading any persisted state (test-friendly).
 // Use this in tests that need a clean slate.
+//
+// Deliberately hermetic: NewAppFresh does NOT open persist.DefaultPath()
+// (the $HOME-scoped store). Reading it would apply the developer's saved
+// language/tier/profile and re-trigger the first-run wizard, leaking real
+// local state into tests (e.g. a saved lang=ru overriding SetLang(EN), or
+// the wizard overlay hiding the empty feed). Tests that need a backing
+// store inject one via NewAppWithStore instead. m.store stays nil here.
+//
+// feedStore/inputHistory are still set (via initFeedStore/initInputHistory
+// which read $HOME) so persistence-path tests work — they always
+// `t.Setenv("HOME", tmp)` first, so writes go to the temp dir, not the
+// developer's real ~/.c4reqber.
 func NewAppFresh(apiURL string) *model {
-	cfg := DefaultConfig()
-	if apiURL == "" {
-		apiURL = cfg.APIURL
-	}
-	ta := textarea.New()
-	ta.Placeholder = i18n.T("placeholder")
-	ta.ShowLineNumbers = false
-	ta.CharLimit = 0
-	ta.SetWidth(80)
-	ta.SetHeight(3)
-	vp := viewport.New()
-	m := &model{
-		apiURL:        apiURL,
-		api:           api.New(apiURL),
-		keymap:        NewKeyMap(DetectPlatform()),
-		mode:          ModeDiscover,
-		focusedCardIdx: -1, // -1 = follow last; avoids "focusing" the empty card at startup
-		ta:            ta,
-		vp:            vp,
-		focus:         true,
-		follow:        true,
-		rain:          effects.NewRain(),
-		burst:         effects.NewBurst(),
-		slide:         effects.NewSlideIn(),
-		typew:         effects.NewTypewriter(),
-		sparks:        effects.NewSparkles(),
-		verdictPulse:  effects.NewVerdictPulse(),
-		theme:         NewTheme(ProfileDefault),
-		paletteRegistry: buildRegistry(),
-		achievements:  NewAchievements(),
-		langsSeen:     map[string]bool{},
-		tel:           telemetry.New(),
-		dream:         NewDreamState(),
-		saveHistory:   true, // match NewApp; was missing here, drifted from production
-		llmTier:       TierC2,
-		colorProfile:  ProfileDefault,
-		wizard:        NewWizardState(),
-		capsimClient:        capsim.NewClient(apiURL),
-		feedStore:           initFeedStore(),
-		inputHistory:        initInputHistory(),
-		simPreference:       "auto",
-		simCostLimit:        5.00,
-		showStatusBar:       true,
-	}
-	// Deliberately hermetic: NewAppFresh does NOT open persist.DefaultPath()
-	// (the $HOME-scoped store). Reading it would apply the developer's saved
-	// language/tier/profile and re-trigger the first-run wizard, leaking real
-	// local state into tests (e.g. a saved lang=ru overriding SetLang(EN), or
-	// the wizard overlay hiding the empty feed). Tests that need a backing
-	// store inject one via NewAppWithStore instead. m.store stays nil here.
-	//
-	// feedStore/inputHistory are still set (via initFeedStore/initInputHistory
-	// which read $HOME) so persistence-path tests work — they always
-	// `t.Setenv("HOME", tmp)` first, so writes go to the temp dir, not the
-	// developer's real ~/.c4reqber.
+	m := newModelSkeleton(apiURL)
 	m.addLangSeen(string(i18n.GetLang()))
 	m.bindRegistry()
 	m.appendCard(Card{Kind: CardEmpty, Title: i18n.T("empty.title"), Body: i18n.T("empty.hint"), Time: time.Now()})

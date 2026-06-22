@@ -63,6 +63,9 @@ dev = [
     "mypy",
     "build",
     "twine",
+    "pre-commit",
+    "detect-secrets",
+    "gitleaks",
 ]
 
 [project.scripts]

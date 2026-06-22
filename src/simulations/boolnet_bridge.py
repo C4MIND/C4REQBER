@@ -81,9 +81,53 @@ class BoolNetBridge(BaseSimulationAdapter):
 
     @staticmethod
     def _eval_rule(rule: str, state: dict[str, int]) -> int:
-        """Evaluate a simple Boolean rule."""
-        rule = rule.strip().replace("!", "not ").replace("&", " and ").replace("|", " or ")
+        """Evaluate a simple Boolean rule safely (no eval, AST-based).
+
+        Supported syntax: variable names, integers 0/1, NOT (!), AND (&), OR (|),
+        parentheses. Anything else returns 0. State values come from the local
+        state dict only — no attribute access, no function calls, no dunder names.
+        """
+        import ast
+
+        rule = rule.strip()
+        if not rule:
+            return 0
+
+        # Normalize Boolean operators to Python syntax.
+        rule = rule.replace("!", "not ").replace("&", " and ").replace("|", " or ")
+
         try:
-            return int(eval(rule, {"__builtins__": {}}, state))
+            tree = ast.parse(rule, mode="eval")
+        except SyntaxError:
+            return 0
+
+        def _eval(node: ast.AST) -> int:
+            if isinstance(node, ast.Expression):
+                return _eval(node.body)
+            if isinstance(node, ast.Constant):
+                if isinstance(node.value, (int, bool)):
+                    return 1 if node.value else 0
+                return 0
+            if isinstance(node, ast.Name):
+                if node.id.startswith("__"):
+                    return 0
+                val = state.get(node.id)
+                if isinstance(val, (int, bool)):
+                    return 1 if val else 0
+                return 0
+            if isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.Not):
+                return 0 if _eval(node.operand) else 1
+            if isinstance(node, ast.BoolOp):
+                values = [_eval(v) for v in node.values]
+                if isinstance(node.op, ast.And):
+                    return 1 if all(values) else 0
+                if isinstance(node.op, ast.Or):
+                    return 1 if any(values) else 0
+                return 0
+            # Reject calls, attributes, comparisons, subscripts, etc.
+            return 0
+
+        try:
+            return _eval(tree)
         except Exception:
             return 0

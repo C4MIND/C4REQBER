@@ -4,10 +4,7 @@ package demo
 
 import (
 	"context"
-	"fmt"
 	"time"
-
-	"github.com/figuramax/c4reqber-tui-v9/api"
 )
 
 // CardEvent is one scripted card emission.
@@ -174,11 +171,8 @@ func (s *Script) Run(ctx context.Context, emit func(CardEvent)) error {
 		}
 		emit(e)
 	}
-	_ = fmt.Sprintf("demo %s complete in %s", s.Topic, s.TotalTime)
 	return nil
 }
-
-var _ = api.JobStatus{} // keep import alive for future use
 
 // DemoScript is a public alias for demo.Script (exported for v9 tests).
 type DemoScript = Script

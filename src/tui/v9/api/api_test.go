@@ -247,3 +247,77 @@ func TestMock_SSEBoundaryIndex(t *testing.T) {
 		}
 	}
 }
+
+// TestMock_FlashAndWait_BailsOnRepeatedFailures guards the v9.13.x
+// fix where FlashAndWait polled JobStatus every 2s with `continue` on
+// transient errors, looping forever if the backend went down. After
+// 3 consecutive errors the function now returns a wrapped error
+// (instead of spinning until ctx expires, which on a 60s flash
+// timeout would have meant 30 wasted polls).
+func TestMock_FlashAndWait_BailsOnRepeatedFailures(t *testing.T) {
+	failCount := 0
+	srv := mockServer(t, map[string]http.HandlerFunc{
+		"/v8/discover/flash": func(w http.ResponseWriter, r *http.Request) {
+			writeJSON(w, 200, `{"job_id":"job_dead","status":"queued"}`)
+		},
+		"/v8/discover/status/job_dead": func(w http.ResponseWriter, r *http.Request) {
+			failCount++
+			http.Error(w, "backend down", http.StatusInternalServerError)
+		},
+	})
+	c := New(srv.URL)
+	// 10s timeout, enough to make >=3 polls at 2s each.
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	start := time.Now()
+	_, err := c.FlashAndWait(ctx, "test", "science")
+	elapsed := time.Since(start)
+	if err == nil {
+		t.Fatal("expected error after repeated status failures, got nil")
+	}
+	if !strings.Contains(err.Error(), "consecutive") {
+		t.Errorf("expected error to mention 'consecutive' failures, got: %v", err)
+	}
+	if elapsed > 9*time.Second {
+		t.Errorf("expected to bail at ~6s (3 polls x 2s), took %v", elapsed)
+	}
+	if failCount != 3 {
+		t.Errorf("expected exactly 3 status polls before bailing, got %d", failCount)
+	}
+}
+
+// TestMock_FlashAndWait_RecoversAfterTransientError verifies that
+// ONE transient error doesn't cause the retry-cap to trip — the
+// counter resets on a successful poll.
+func TestMock_FlashAndWait_RecoversAfterTransientError(t *testing.T) {
+	polls := 0
+	srv := mockServer(t, map[string]http.HandlerFunc{
+		"/v8/discover/flash": func(w http.ResponseWriter, r *http.Request) {
+			writeJSON(w, 200, `{"job_id":"job_flaky","status":"queued"}`)
+		},
+		"/v8/discover/status/job_flaky": func(w http.ResponseWriter, r *http.Request) {
+			polls++
+			if polls == 1 {
+				// First poll fails (transient)
+				http.Error(w, "transient", http.StatusServiceUnavailable)
+				return
+			}
+			// Subsequent polls return complete
+			writeJSON(w, 200, `{"status":"complete","result":{"answer":42}}`)
+		},
+	})
+	c := New(srv.URL)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	res, err := c.FlashAndWait(ctx, "test", "science")
+	if err != nil {
+		t.Fatalf("expected to recover after one transient error, got: %v", err)
+	}
+	if res == nil {
+		t.Fatal("expected non-nil result")
+	}
+	// JSON numbers decode to float64 by default in interface{}.
+	if v, _ := res["answer"].(float64); v != 42 {
+		t.Errorf("expected result.answer=42, got %T %v", res["answer"], res["answer"])
+	}
+}

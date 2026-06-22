@@ -104,25 +104,17 @@ func TestStateMachine_BGColorHandled(t *testing.T) {
 }
 
 func TestStateMachine_LangSwitch(t *testing.T) {
+	// Use NewAppFresh to avoid touching the developer's real
+	// ~/.c4reqber (NewApp would load the persisted lang and
+	// overwrite it on the L keypress, leaking into the next
+	// `go test` run for that user).
 	defer i18n.SetLang(i18n.LangEN)
-	m := NewApp("http://test")
+	m := NewAppFresh("http://test")
 	u, _ := m.Update(teaKeyMsg("L"))
 	_ = u.(*model)
-	// current lang should be different from EN
-	if i18n.GetLang() == i18n.LangEN {
-		// possible if cycle started at EN, but normally next is RU
-		_ = "ok"
-	}
-	_ = m
-	// Restore disk state — the lang switch handler calls
-	// PersistSettings which writes to ~/.config/c4reqber/. The defer
-	// above only restores the in-process i18n state.
-	if m.store != nil {
-		s := m.store.GetSettings()
-		s.Lang = "en"
-		m.store.SetSettings(s)
-		_ = m.store.Save()
-	}
+	// After L, the lang should have cycled. The i18n.GetLang() call
+	// returns the package-level current lang (process-wide), so
+	// restoring it in the defer is sufficient.
 }
 
 func TestStateMachine_CheckAchievements_EmptyModel(t *testing.T) {

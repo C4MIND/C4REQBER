@@ -10,9 +10,8 @@ from typing import Any
 
 
 try:
-    from mcp.server.stdio import stdio_server
-
     from mcp.server import Server
+    from mcp.server.stdio import stdio_server
 
     HAS_MCP = True
 except ImportError:

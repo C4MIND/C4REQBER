@@ -6,8 +6,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-
 from src.config.paths import CONFIG_DIR
+
 
 AGENT_CONFIG_DIR = CONFIG_DIR
 AGENT_CONFIG_PATH = CONFIG_DIR / "agent.json"

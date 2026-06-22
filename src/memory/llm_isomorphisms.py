@@ -20,12 +20,11 @@ import logging
 import os
 from typing import Any
 
-from src.config import get_key
-
 import httpx
 
 from src.c4.engine import C4Space, C4State
 from src.c4.routing import FRARouter, QualityPreset
+from src.config import get_key
 
 
 logger = logging.getLogger(__name__)

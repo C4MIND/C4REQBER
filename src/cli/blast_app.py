@@ -174,8 +174,7 @@ def wasm_load(
     console.print(f"  Runtime: {'wasmtime' if _wasm_runtime._has_wasmtime else 'stub (pip install wasmtime for execution)'}")
 
     # Register with plugin registry → appears in pipeline
-    from src.plugins.unified_registry import ToolMetadata
-    from src.plugins.unified_registry import PLUGIN_REGISTRY, PluginInfo
+    from src.plugins.unified_registry import PLUGIN_REGISTRY, PluginInfo, ToolMetadata
     from src.wasm.runtime import WASMToolPlugin
 
     wasm_meta = ToolMetadata(
@@ -736,8 +735,8 @@ def blast_tui(
         extra.append("--no-splash")
 
     from src.cli.config_init import apply_config_to_env
-    from src.config.paths import apply_config_to_env as central_apply
     from src.cli.tui_launcher import launch_tui_v9
+    from src.config.paths import apply_config_to_env as central_apply
 
     try:
         central_apply()

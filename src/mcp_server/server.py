@@ -14,9 +14,8 @@ from typing import Any
 
 # Optional MCP SDK — falls back to stdio JSON-RPC if not installed
 try:
-    from mcp.server.stdio import stdio_server
-
     from mcp.server import Server as MCPSDKServer
+    from mcp.server.stdio import stdio_server
     HAS_MCP = True
     Server = MCPSDKServer
 except ImportError:

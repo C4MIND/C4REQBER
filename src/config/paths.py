@@ -11,6 +11,7 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 
+
 # Primary unified location for all user data (config.toml, models.json, state, keys, etc.)
 # Override with env C4REQBER_CONFIG=/custom/path for tests or containers.
 CONFIG_DIR: Path = Path(os.environ.get("C4REQBER_CONFIG", Path.home() / ".c4reqber"))
@@ -173,7 +174,7 @@ class UserSettings:
     lean4_path: str = ""
 
     @classmethod
-    def load(cls) -> "UserSettings":
+    def load(cls) -> UserSettings:
         sections = load_config_toml()
         core = sections.get("core", {})
         keys = get_user_keys()

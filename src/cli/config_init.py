@@ -8,9 +8,11 @@ import typer
 from rich.console import Console
 from rich.prompt import Confirm, Prompt
 
+
 console = Console()
 
-from src.config.paths import CONFIG_DIR, CONFIG_TOML as CONFIG_PATH  # unified ~/.c4reqber
+from src.config.paths import CONFIG_DIR  # unified ~/.c4reqber
+from src.config.paths import CONFIG_TOML as CONFIG_PATH
 
 
 def config_exists() -> bool:
@@ -195,8 +197,8 @@ def run_init_wizard(*, force: bool = False) -> Path:
 
     # Polish: ensure models.json with chosen tier (always for reconfig / full settings)
     try:
-        from src.llm.model_assignment import ModelAssignment
         from src.config.paths import MODELS_JSON
+        from src.llm.model_assignment import ModelAssignment
         if not MODELS_JSON.exists() or tier:  # re-seed on explicit tier choice
             assignment = ModelAssignment.create_default(tier)
             assignment.save()

@@ -17,10 +17,9 @@ def create_agent_server() -> Any:
 
     Returns an MCP server instance that can be run via stdio.
     """
+    from mcp.server import NotificationOptions, Server
     from mcp.server.models import InitializationOptions
     from mcp.types import CallToolResult, TextContent, Tool
-
-    from mcp.server import NotificationOptions, Server
 
     agent = AgentCore()
     server = Server("c4reqber-agent")
@@ -171,10 +170,9 @@ def create_agent_server() -> Any:
 
 def run_daemon_stdio() -> None:
     """Run the agent daemon via stdio (for `blast agent --daemon`)."""
+    from mcp.server import NotificationOptions
     from mcp.server.models import InitializationOptions
     from mcp.server.stdio import stdio_server
-
-    from mcp.server import NotificationOptions
 
     server = create_agent_server()
 

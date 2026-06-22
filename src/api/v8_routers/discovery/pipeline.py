@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+
 """Discovery API endpoints + request models.
 
 Domain logic lives in src.discovery.pipeline_logic and is re-exported here for
@@ -18,7 +19,6 @@ from pydantic import BaseModel
 
 from src.api.v8_routers.discovery.jobs import JobStore, get_job_store
 from src.api.v8_routers.discovery.search import search_knowledge
-from src.llm.gateway import get_gateway
 from src.discovery.pipeline_logic import (
     _build_dissertation,
     _domain_improving_param,
@@ -57,6 +57,7 @@ from src.discovery.pipeline_logic import (
     run_strong_inference,
     search_isomorphisms,
 )
+from src.llm.gateway import get_gateway
 
 
 logger = logging.getLogger("c4_cdi_turbo.api.v8.discovery")
@@ -221,7 +222,7 @@ async def one_click_discovery(
             run_deep_analysis(problem, domain, papers, results, thresholds, errors),
             timeout=300.0,
         )
-    except asyncio.TimeoutError:
+    except TimeoutError:
         errors.append("Phase C (gap analysis) timed out after 300s")
         gap_potential = 0.0
         hypothesis = {"source": "timeout", "text": "Phase C timed out"}

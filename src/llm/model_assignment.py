@@ -12,9 +12,10 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-
 # Default config location — unified via central paths
-from src.config.paths import CONFIG_DIR, MODELS_JSON as CONFIG_FILE  # type: ignore[assignment]
+from src.config.paths import CONFIG_DIR  # type: ignore[assignment]
+from src.config.paths import MODELS_JSON as CONFIG_FILE
+
 
 # Phase descriptions (shown in CLI)
 PHASE_DESCRIPTIONS = {

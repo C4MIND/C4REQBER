@@ -15,7 +15,8 @@ import sys
 import time
 from pathlib import Path
 
-from mlx_lm import load, generate
+from mlx_lm import generate, load
+
 
 LANG_MAP = {
     "ru": "Russian",

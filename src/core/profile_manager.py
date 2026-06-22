@@ -8,9 +8,11 @@ import logging
 from pathlib import Path
 from typing import Any
 
-from src.config.paths import CONFIG_DIR, PROFILE_JSON as PROFILE_FILE  # unified ~/.c4reqber
-from src.core.user_profile import UserProfile
+from src.config.paths import CONFIG_DIR  # unified ~/.c4reqber
+from src.config.paths import PROFILE_JSON as PROFILE_FILE
 from src.contracts.pipeline_config import PipelineConfig
+from src.core.user_profile import UserProfile
+
 
 logger = logging.getLogger(__name__)
 

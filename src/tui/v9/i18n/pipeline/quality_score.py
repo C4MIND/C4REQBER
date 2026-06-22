@@ -181,7 +181,7 @@ def main():
         "flagged_details": flagged,
     }
     Path(args.output).write_text(json.dumps(summary, indent=2, ensure_ascii=False), encoding="utf-8")
-    print(f"\n=== Summary ===")
+    print("\n=== Summary ===")
     print(f"Total scored: {total}")
     print(f"Flagged: {flagged_count} ({100*flagged_count/max(1,total):.1f}%)")
     print(f"Report: {args.output}")

@@ -9,15 +9,16 @@ from src.config.paths import (
     CONFIG_TOML,
     MODELS_JSON,
     PROFILE_JSON,
+    UserSettings,
+    apply_config_to_env,
     ensure_config_dir,
     get_config_path,
-    get_user_keys,
     get_key,
     get_search_keys,
-    apply_config_to_env,
+    get_user_keys,
     load_config_toml,
-    UserSettings,
 )
+
 
 __all__ = [
     "DatabaseConfig",

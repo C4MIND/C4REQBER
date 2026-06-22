@@ -25,8 +25,8 @@ from src.agents.pipeline.steps.base import (
     PipelineStep,
     PipelineStepResult,
 )
-from src.discovery.pipeline_logic import _sanitize_for_prompt
 from src.c4.state import C4State
+from src.discovery.pipeline_logic import _sanitize_for_prompt
 from src.knowledge.citation_verifier import CitationVerifier
 from src.knowledge.novelty_scorer import NoveltyScorer
 from src.metamodels.mp.profiles import AgentPerspective

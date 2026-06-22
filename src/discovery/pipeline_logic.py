@@ -25,7 +25,6 @@ logger = logging.getLogger("c4_cdi_turbo.api.v8.discovery")
 
 def _sanitize_for_prompt(text: str, max_len: int = 500) -> str:
     import html
-    import re
     import secrets
     # Decode HTML entities so &lt;system&gt; becomes <system> and gets caught
     text = html.unescape(text)
@@ -944,13 +943,13 @@ def _build_dissertation(discovery: dict, attempts: list) -> dict:
     hyp_text = hypothesis.get("text", "")
     thresholds = discovery.get("_thresholds", {})
     output_mode = thresholds.get("output_mode", "human") if isinstance(thresholds, dict) else "human"
-    
+
     # Shared content
     papers_found = discovery.get("_papers_found", 0)
     gaps_found = discovery.get("gap_miner", {}).get("gaps_found", 0)
     contradictions = discovery.get("contradiction_mining", {}).get("contradictions_found", 0)
     sources = discovery.get("_sources_used", 0)
-    
+
     # Format references with numbered citations [1], [2], ...
     papers_list_raw = discovery.get("_papers_list", []) or discovery.get("papers", [])
     refs = []
@@ -968,7 +967,7 @@ def _build_dissertation(discovery: dict, attempts: list) -> dict:
         doi = p.get("doi", "")
         doi_str = f". DOI: {doi}" if doi else ""
         refs.append(f"[{i}] {authors} ({year}). {title}. {venue}{doi_str}.")
-    
+
     # Format BibTeX entries for export
     bibtex_entries = []
     for i, p in enumerate(papers_list_raw[:25]):
@@ -991,10 +990,10 @@ def _build_dissertation(discovery: dict, attempts: list) -> dict:
   journal = {{{journal}}},
   year    = {{{year}}}{doi_line},
 }}""")
-    
+
     ref_text = "\n".join(refs)
     bibtex_text = "\n".join(bibtex_entries)
-    
+
     # Literature review with inline citations — reference up to 5 key papers
     key_papers = papers_list_raw[:5]
     lit_review_parts = [f"A comprehensive search across {sources} databases returned {papers_found} relevant publications."]
@@ -1014,13 +1013,13 @@ def _build_dissertation(discovery: dict, attempts: list) -> dict:
         for j, c in enumerate(top_cs[:2], 1):
             lit_review_parts.append(f"Contradiction {j}: \"{c.get('claim_a','')[:100]}\" vs \"{c.get('claim_b','')[:100]}\" (score: {c.get('score',0):.2f}).")
     lit_review = "\n".join(lit_review_parts)
-    
+
     common = {
         "title": f"On the {discovery.get('problem', 'Unknown Problem')[:100]}",
         "abstract": hyp_text[:500] if hyp_text else "Abstract pending.",
         "keywords": discovery.get("keywords", []),
     }
-    
+
     # Standard research sections with inline citations
     sections = [
         {"heading": "1. Introduction", "content": f"{hyp_text[:300]}" if hyp_text else "Introduction pending."},
@@ -1033,7 +1032,7 @@ def _build_dissertation(discovery: dict, attempts: list) -> dict:
         {"heading": "8. Conclusion", "content": f"{hyp_text[:300]}" if hyp_text else "Conclusion pending."},
         {"heading": "References", "content": ref_text},
     ]
-    
+
     # Dev/explain mode: add technical appendix
     if output_mode == "explain":
         contradictions_top = discovery.get("contradiction_mining", {}).get("top_contradictions", [])
@@ -1064,7 +1063,7 @@ Sequence, Parallelize) were applied during hypothesis formulation.
 {bibtex_text}
 ```"""
         sections.append({"heading": "9. Technical Appendix", "content": tech_appendix})
-    
+
     return {**discovery, "dissertation": {
         **common,
         "sections": sections,

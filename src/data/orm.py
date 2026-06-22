@@ -23,7 +23,7 @@ class User(Base):
     )
     email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
-    name: Mapped[Optional[str]] = mapped_column(String(255))
+    name: Mapped[str | None] = mapped_column(String(255))
     tier: Mapped[str] = mapped_column(String(50), server_default="free")
     created_at: Mapped[datetime] = mapped_column(
         DateTime, server_default=func.current_timestamp()
@@ -42,15 +42,15 @@ class Discovery(Base):
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
     )
-    user_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+    user_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE")
     )
     problem: Mapped[str] = mapped_column(Text, nullable=False)
-    top_hypothesis: Mapped[Optional[str]] = mapped_column(Text)
+    top_hypothesis: Mapped[str | None] = mapped_column(Text)
     status: Mapped[str] = mapped_column(String(50), server_default="pending")
-    duration_seconds: Mapped[Optional[float]] = mapped_column(Float)
-    estimated_cost: Mapped[Optional[float]] = mapped_column(Float)
-    validation_notes: Mapped[Optional[str]] = mapped_column(Text)
+    duration_seconds: Mapped[float | None] = mapped_column(Float)
+    estimated_cost: Mapped[float | None] = mapped_column(Float)
+    validation_notes: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(
         DateTime, server_default=func.current_timestamp()
     )
@@ -58,7 +58,7 @@ class Discovery(Base):
         DateTime, server_default=func.current_timestamp(), onupdate=func.current_timestamp()
     )
 
-    user: Mapped[Optional[User]] = relationship(back_populates="discoveries")
+    user: Mapped[User | None] = relationship(back_populates="discoveries")
     hypotheses: Mapped[list[Hypothesis]] = relationship(back_populates="discovery")
 
 
@@ -68,19 +68,19 @@ class Hypothesis(Base):
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
     )
-    discovery_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+    discovery_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("discoveries.id", ondelete="CASCADE")
     )
     hypothesis_text: Mapped[str] = mapped_column(Text, nullable=False)
-    confidence: Mapped[Optional[float]] = mapped_column(Float)
-    method: Mapped[Optional[str]] = mapped_column(String(100))
-    c4_path: Mapped[Optional[list[str]]] = mapped_column(ARRAY(Text))
-    triz_principles: Mapped[Optional[list[int]]] = mapped_column(ARRAY(Integer))
+    confidence: Mapped[float | None] = mapped_column(Float)
+    method: Mapped[str | None] = mapped_column(String(100))
+    c4_path: Mapped[list[str] | None] = mapped_column(ARRAY(Text))
+    triz_principles: Mapped[list[int] | None] = mapped_column(ARRAY(Integer))
     created_at: Mapped[datetime] = mapped_column(
         DateTime, server_default=func.current_timestamp()
     )
 
-    discovery: Mapped[Optional[Discovery]] = relationship(back_populates="hypotheses")
+    discovery: Mapped[Discovery | None] = relationship(back_populates="hypotheses")
 
 
 class ApiLog(Base):
@@ -89,15 +89,15 @@ class ApiLog(Base):
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
     )
-    user_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+    user_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE")
     )
-    endpoint: Mapped[Optional[str]] = mapped_column(String(255))
-    method: Mapped[Optional[str]] = mapped_column(String(10))
-    status_code: Mapped[Optional[int]] = mapped_column(Integer)
-    response_time_ms: Mapped[Optional[float]] = mapped_column(Float)
+    endpoint: Mapped[str | None] = mapped_column(String(255))
+    method: Mapped[str | None] = mapped_column(String(10))
+    status_code: Mapped[int | None] = mapped_column(Integer)
+    response_time_ms: Mapped[float | None] = mapped_column(Float)
     created_at: Mapped[datetime] = mapped_column(
         DateTime, server_default=func.current_timestamp()
     )
 
-    user: Mapped[Optional[User]] = relationship(back_populates="api_logs")
+    user: Mapped[User | None] = relationship(back_populates="api_logs")

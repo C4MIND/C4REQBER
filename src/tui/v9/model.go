@@ -376,8 +376,6 @@ func NewAppFresh(apiURL string) *model {
 	if apiURL == "" {
 		apiURL = cfg.APIURL
 	}
-	zoneId := 0
-	_ = zoneId
 	ta := textarea.New()
 	ta.Placeholder = i18n.T("placeholder")
 	ta.ShowLineNumbers = false
@@ -407,6 +405,7 @@ func NewAppFresh(apiURL string) *model {
 		langsSeen:     map[string]bool{},
 		tel:           telemetry.New(),
 		dream:         NewDreamState(),
+		saveHistory:   true, // match NewApp; was missing here, drifted from production
 		llmTier:       TierC2,
 		colorProfile:  ProfileDefault,
 		wizard:        NewWizardState(),
@@ -415,7 +414,7 @@ func NewAppFresh(apiURL string) *model {
 		inputHistory:        initInputHistory(),
 		simPreference:       "auto",
 		simCostLimit:        5.00,
-		showStatusBar:        true,
+		showStatusBar:       true,
 	}
 	// Deliberately hermetic: NewAppFresh does NOT open persist.DefaultPath()
 	// (the $HOME-scoped store). Reading it would apply the developer's saved
@@ -423,6 +422,11 @@ func NewAppFresh(apiURL string) *model {
 	// local state into tests (e.g. a saved lang=ru overriding SetLang(EN), or
 	// the wizard overlay hiding the empty feed). Tests that need a backing
 	// store inject one via NewAppWithStore instead. m.store stays nil here.
+	//
+	// feedStore/inputHistory are still set (via initFeedStore/initInputHistory
+	// which read $HOME) so persistence-path tests work — they always
+	// `t.Setenv("HOME", tmp)` first, so writes go to the temp dir, not the
+	// developer's real ~/.c4reqber.
 	m.addLangSeen(string(i18n.GetLang()))
 	m.bindRegistry()
 	m.appendCard(Card{Kind: CardEmpty, Title: i18n.T("empty.title"), Body: i18n.T("empty.hint"), Time: time.Now()})

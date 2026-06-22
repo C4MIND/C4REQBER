@@ -806,6 +806,12 @@ func (m *model) checkAchievements() {
 	unlocked := m.achievements.Check(m.completedDisc, m.lastQuality, m.lastPapersCount, seconds, langs)
 	// v9.13: also check sim-specific achievements (TI-SIM-08).
 	unlocked = append(unlocked, m.achievements.CheckSimAchievements(m.feed)...)
+	// Per-achievement side effects: append a feed card + record on the
+	// in-memory store. Persistence + telemetry are batched below the
+	// loop because they describe the *discovery*, not the unlock:
+	// previously they ran N times per check (one per unlocked ach),
+	// which inflated the discovery counter and rewrote the state file
+	// N times — a real bug caught by review of state_machine_test.
 	for _, a := range unlocked {
 		m.appendCard(Card{
 			Kind:   CardPhase,
@@ -814,10 +820,16 @@ func (m *model) checkAchievements() {
 			Time:   a.UnlockedAt,
 			Status: "done",
 		})
-		// Persist to disk + telemetry
 		if m.store != nil {
 			m.store.AddAchievement(int(a.Kind))
 			m.store.AddLangSeen(string(i18n.GetLang()))
+		}
+	}
+	// Batched: one Save, one IncrementDiscovery, one telemetry event
+	// per check (i.e. per discovery completion), regardless of how many
+	// achievements fired in this batch.
+	if len(unlocked) > 0 {
+		if m.store != nil {
 			m.store.IncrementDiscovery()
 			if err := m.store.Save(); err != nil {
 				m.setToast("⚠ save: " + err.Error())
@@ -826,10 +838,13 @@ func (m *model) checkAchievements() {
 		if m.tel != nil {
 			m.tel.IncDiscoveryResult(true, seconds)
 		}
-	}
-	if len(unlocked) > 0 {
+		// Show overlay for the *most recent* unlock (last in the slice),
+		// not the first — if a single discovery triggers 3 achievements
+		// (e.g. FirstDiscovery + QualityS + MultiPaper), the user sees
+		// the headline achievement they actually earned, not whatever
+		// happened to be first in the registry.
 		m.showAchievementOverlay = true
-		m.achievements.ShowOverlay(i18n.T(unlocked[0].Name), 2*time.Second)
+		m.achievements.ShowOverlay(i18n.T(unlocked[len(unlocked)-1].Name), 2*time.Second)
 	}
 }
 

@@ -293,6 +293,3 @@ func (h *InputHistory) Recent(n int) []HistoryItem {
 	copy(out, h.items[:n])
 	return out
 }
-
-// ensure import is used
-var _ = fmt.Sprintf

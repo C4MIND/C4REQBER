@@ -1,11 +1,13 @@
 package tui
 
 import (
+	"path/filepath"
 	"testing"
 	"time"
 
 	"github.com/figuramax/c4reqber-tui-v9/api"
 	"github.com/figuramax/c4reqber-tui-v9/i18n"
+	"github.com/figuramax/c4reqber-tui-v9/persist"
 )
 
 func TestStateMachine_WindowSize(t *testing.T) {
@@ -151,7 +153,7 @@ func TestStateMachine_CheckAchievements_AfterDiscover(t *testing.T) {
 }
 
 func TestStateMachine_CheckAchievements_Idempotent(t *testing.T) {
-	m := NewApp("http://test")
+	m := NewAppFresh("http://test")
 	m.completedDisc = 1
 	m.checkAchievements()
 	unlockedAfter1 := m.achievements.Unlocked
@@ -160,6 +162,81 @@ func TestStateMachine_CheckAchievements_Idempotent(t *testing.T) {
 	unlockedAfter2 := m.achievements.Unlocked
 	if unlockedAfter1 != unlockedAfter2 {
 		t.Errorf("unlock count changed: %d → %d", unlockedAfter1, unlockedAfter2)
+	}
+}
+
+// TestStateMachine_CheckAchievements_IncrementsOnce guards the v9.13.x
+// fix where m.store.IncrementDiscovery and m.store.Save were called once
+// PER unlocked achievement. With 3 simultaneous unlocks (e.g.
+// FirstDiscovery + QualityS + MultiPaper for a clean first run), the
+// discovery count was being incremented 3x — the feed counter and the
+// on-disk counter drifted, and Save() rewrote the state file 3x for a
+// single logical event.
+func TestStateMachine_CheckAchievements_IncrementsOnce(t *testing.T) {
+	tmp := t.TempDir()
+	store, err := persist.New(filepath.Join(tmp, "state.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	m := NewAppFresh("http://test")
+	m.store = store
+	// Drive all 3 achievements to fire at once: 1+ discoveries (>=1),
+	// quality >= 0.8 (QualityS), papersCount >= 3 (MultiPaper), and
+	// secondsTaken < 30 (Speedster). That should give us >=4 unlocks.
+	m.completedDisc = 1
+	m.lastQuality = 0.95
+	m.lastPapersCount = 5
+	m.startedAt = time.Now().Add(-1 * time.Minute) // secondsTaken = 60 → no Speedster
+	// Reset start time to 5s ago to get Speedster too:
+	m.startedAt = time.Now().Add(-5 * time.Second)
+	m.replaceLangsSeen([]string{"EN", "RU", "ZH"}) // Linguist
+	m.checkAchievements()
+	unlocked := m.achievements.Unlocked
+	if unlocked < 3 {
+		t.Fatalf("expected ≥3 unlocks to test the bug, got %d", unlocked)
+	}
+	// Bug: this used to be `unlocked`, not 1.
+	if got := store.Snapshot().DiscoveryCount; got != 1 {
+		t.Errorf("IncrementDiscovery was called %dx (expected 1x) — each "+
+			"checkAchievements call must batch the increment even when "+
+			"multiple achievements fire", got)
+	}
+}
+
+// TestStateMachine_CheckAchievements_OverlayUsesLastUnlock guards the
+// v9.13.x fix where checkAchievements picked unlocked[0] for the
+// overlay name — but if the user just earned MultiPaper (index 3) the
+// overlay still said "First Discovery" (index 0). Now it should show
+// the LAST (most recent) unlock.
+func TestStateMachine_CheckAchievements_OverlayUsesLastUnlock(t *testing.T) {
+	tmp := t.TempDir()
+	store, _ := persist.New(filepath.Join(tmp, "state.json"))
+	m := NewAppFresh("http://test")
+	m.store = store
+	m.completedDisc = 1
+	m.lastQuality = 0.95
+	m.lastPapersCount = 5
+	m.startedAt = time.Now().Add(-5 * time.Second)
+	m.replaceLangsSeen([]string{"EN", "RU", "ZH"})
+	m.checkAchievements()
+	if !m.showAchievementOverlay {
+		t.Fatal("overlay should be triggered when achievements unlock")
+	}
+	// The overlayMessage is what renderAchievementOverlay would show
+	// as the achievement name. We can't easily assert the i18n
+	// translation, but we can assert it corresponds to one of the
+	// unlocked Items (not stuck on "First Discovery" — registry index
+	// 0 — when MultiPaper was the more recent unlock).
+	overlayName := m.achievements.OverlayMessage()
+	if overlayName == "" {
+		t.Error("overlay message should be set after checkAchievements")
+	}
+	// Compare against the i18n keys of the actually-unlocked items.
+	// If overlayName equals "First Discovery" while MultiPaper is
+	// also unlocked, the bug is back.
+	if m.achievements.Items[AchMultiPaper].Unlocked && overlayName == i18n.T("achievement.first.name") {
+		t.Error("overlay shows FIRST achievement name when MultiPaper is also " +
+			"unlocked — should show the most recent (MultiPaper)")
 	}
 }
 

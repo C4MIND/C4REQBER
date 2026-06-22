@@ -59,6 +59,38 @@ func TestAchievementOverlay_LastUnlockHighlight(t *testing.T) {
 	}
 }
 
+// TestAchievementOverlay_ShowsMostRecentUnlock guards the v9.13.x fix
+// where the overlay ALWAYS showed AchFirstDiscovery (the first item in
+// the registry) regardless of which achievement was actually unlocked
+// most recently. The bug surfaced when a user earned QualityS or
+// MultiPaper — the overlay still said "First Discovery".
+//
+// Test sets 3 achievements as unlocked with strictly different
+// UnlockedAt times. The rendered overlay must contain the name of the
+// achievement with the LATEST UnlockedAt, not the first one in the
+// registry.
+func TestAchievementOverlay_ShowsMostRecentUnlock(t *testing.T) {
+	a := NewAchievements()
+	now := time.Now()
+	// Unlock AchFirstDiscovery, AchQualityS, AchMultiPaper with
+	// strictly increasing timestamps.
+	a.Items[AchFirstDiscovery].Unlocked = true
+	a.Items[AchFirstDiscovery].UnlockedAt = now.Add(-3 * time.Second)
+	a.Items[AchQualityS].Unlocked = true
+	a.Items[AchQualityS].UnlockedAt = now.Add(-2 * time.Second)
+	a.Items[AchMultiPaper].Unlocked = true
+	a.Items[AchMultiPaper].UnlockedAt = now.Add(-1 * time.Second)
+	a.Unlocked = 3
+	a.LastUnlock = a.Items[AchMultiPaper].UnlockedAt
+
+	out := renderAchievementOverlay(a, 120, 40)
+	// en.toml: achievement.multiPaper.name = "Paper Trail"
+	if !strings.Contains(out, "Paper Trail") {
+		t.Errorf("overlay should feature the MOST RECENT unlock (Paper Trail / Multi-Paper), "+
+			"but rendered:\n%s", out)
+	}
+}
+
 func TestSettingsMenu_OpensAndCloses(t *testing.T) {
 	m := NewAppFresh("http://test")
 	m.width, m.height = 120, 40

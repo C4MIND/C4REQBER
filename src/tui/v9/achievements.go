@@ -102,6 +102,16 @@ func (a *AchievementSystem) ShowOverlay(message string, duration time.Duration) 
 	a.overlayMessage = message
 }
 
+// OverlayMessage returns the i18n-rendered name of the most recent
+// unlock shown on the overlay (or "" if no overlay is active).
+// Exposed for tests; renderAchievementOverlay uses it indirectly
+// via the same Items[] walk.
+func (a *AchievementSystem) OverlayMessage() string {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	return a.overlayMessage
+}
+
 // HideOverlay clears the overlay (called from Update tick).
 func (a *AchievementSystem) HideOverlay() {
 	a.overlayActive = false
@@ -127,12 +137,29 @@ func renderAchievementOverlay(a *AchievementSystem, width, height int) string {
 	title := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("3")).Render(
 		"🏆  " + i18n.T("achievement.unlocked"))
 
+	// Find the most-recently-unlocked achievement to feature. The
+	// previous code picked the FIRST unlocked item in registry order,
+	// which was always AchFirstDiscovery — so even after unlocking
+	// QualityS or MultiPaper the overlay still said "First Discovery".
+	// Fall back to any unlocked item if for some reason none have a
+	// timestamp (e.g. hydrated by LoadFromStore which doesn't set
+	// UnlockedAt — only sets Unlocked=true).
 	var nameAch Achievement
+	haveName := false
 	for i := range a.Items {
-		if a.Items[i].Unlocked {
-			nameAch = a.Items[i]
-			break
+		if !a.Items[i].Unlocked {
+			continue
 		}
+		if !haveName || a.Items[i].UnlockedAt.After(nameAch.UnlockedAt) {
+			nameAch = a.Items[i]
+			haveName = true
+		}
+	}
+	// If we still have no item (e.g. zero unlocked yet — shouldn't
+	// happen since the overlay only fires when len(unlocked) > 0, but
+	// be defensive), fall back to the first item rather than panic.
+	if !haveName && len(a.Items) > 0 {
+		nameAch = a.Items[0]
 	}
 	name := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("11")).Render(
 		i18n.T(nameAch.Name))

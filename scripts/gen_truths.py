@@ -46,14 +46,27 @@ def count_py_tests() -> int:
 
 
 def count_mcp_tools() -> int:
-    """Count @server.tool decorators in src/mcp_server/server.py + codegen/mcp_tool.py."""
-    main_count = len(re.findall(r"@server\.tool\(", (REPO / "src/mcp_server/server.py").read_text()))
-    codegen_path = REPO / "src/codegen/mcp_tool.py"
-    if codegen_path.exists():
-        codegen_count = len(re.findall(r"@server\.tool\(", codegen_path.read_text()))
-    else:
-        codegen_count = 0
-    return main_count + codegen_count
+    """Count @server.tool DECORATORS (not comments) in server.py + codegen/mcp_tool.py.
+
+    Matches only decorators: must start with `@server.tool` followed by `(`, optionally
+    with a name argument. Excludes comment lines.
+    """
+    def count_real_decorators(text: str) -> int:
+        count = 0
+        for line in text.splitlines():
+            stripped = line.lstrip()
+            if stripped.startswith("#"):
+                continue
+            if re.match(r"^@server\.tool\(", stripped):
+                count += 1
+        return count
+
+    main = count_real_decorators((REPO / "src/mcp_server/server.py").read_text())
+    codegen = 0
+    cp = REPO / "src/codegen/mcp_tool.py"
+    if cp.exists():
+        codegen = count_real_decorators(cp.read_text())
+    return main + codegen
 
 
 def count_cli_commands() -> int:

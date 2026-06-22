@@ -1,9 +1,9 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "generated_at": "2026-06-22T03:11:53Z",
+  "generated_at": "2026-06-22T03:12:33Z",
   "version_backend": "5.6.0",
   "version_tui": "v9.13.0",
-  "git_head": "b94e3fb",
+  "git_head": "d3cff45",
   "git_branch": "feat/production-upgrade",
   "python": {
     "loc": 223880,
@@ -13,7 +13,7 @@
     "loc_tui_v9": 21064
   },
   "mcp": {
-    "tools": 22
+    "tools": 21
   },
   "cli": {
     "commands": 24

@@ -431,6 +431,34 @@ func TestStateMachine_MouseClickLeft(t *testing.T) {
 	_ = u
 }
 
+// TestStateMachine_KeyPress_NoDoubleTextareaUpdate guards the v9.13.x
+// audit fix where the KeyPressMsg case did `m.ta, cmd = m.ta.Update(msg)`
+// TWICE for the same message (once at the start of the case, once
+// at the fallthrough). For regular characters, this caused every
+// typed key to be processed twice — i.e. characters appeared doubled
+// in the input. The fix moved textarea.Update to a single call at
+// the fallthrough, so special keys (Esc/Enter/arrows/Tab) skip the
+// textarea entirely (correct — they're TUI-level, not input-level).
+func TestStateMachine_KeyPress_NoDoubleTextareaUpdate(t *testing.T) {
+	m := NewAppFresh("http://test")
+	// Type 'a' (printable, no inner case match, falls through to
+	// the single textarea.Update at the end of Update()).
+	u, _ := m.Update(teaKeyMsg("a"))
+	mm := u.(*model)
+	// After one keystroke, the textarea should contain exactly 'a',
+	// not 'aa'. If the old double-update bug were back, value would
+	// be 'aa'.
+	if got := mm.ta.Value(); got != "a" {
+		t.Errorf("expected textarea value 'a' after one keystroke, got %q (double-update bug?)", got)
+	}
+	// Type 'b' — same check.
+	u, _ = mm.Update(teaKeyMsg("b"))
+	mm = u.(*model)
+	if got := mm.ta.Value(); got != "ab" {
+		t.Errorf("expected 'ab' after two keystrokes, got %q", got)
+	}
+}
+
 func TestStateMachine_LangSwitchAddsToSeen(t *testing.T) {
 	m := NewApp("http://test")
 	defer i18n.SetLang(i18n.LangEN)

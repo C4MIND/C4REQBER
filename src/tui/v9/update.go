@@ -560,12 +560,12 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.PersistSettings()
 			return m, nil
 		}
-		// v9.13.x fix: explicit return so we DON'T fall through to the
-		// outer m.ta.Update(msg) at the bottom of Update() — otherwise
-		// unmatched letter keys (a/b/x/etc.) were inserted into the
-		// textarea TWICE (duplication/triplication glitch).
-		return m, nil
-
+		// Unmatched key (a/b/c/x/etc. — not bound to any TUI action):
+		// fall through to the bottom of Update() so the textarea
+		// receives the keystroke exactly once. Special keys (Esc/Enter/
+		// arrows/Tab) that ARE bound to actions return early above,
+		// so they never reach this fallthrough — that's intentional
+		// (TUI-level keys should not be inserted into the input).
 	case tea.MouseClickMsg:
 		// Mouse click on a card → find the card whose zone contains the click
 		if msg.Button != tea.MouseLeft {

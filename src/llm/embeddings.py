@@ -383,19 +383,21 @@ def _call_llm(model: str, prompt: str, max_tokens: int = 300) -> str:
     try:
         import os
 
-        import httpx
+        # Audit 2026-06-22 H-8 Tier 1: sync variant of guarded wrapper.
+        from src.llm.guarded_call import guarded_chat_completion_sync
         key = os.environ.get("OPENROUTER_API_KEY", "")
         if not key:
             raise RuntimeError("OPENROUTER_API_KEY required for embeddings")
-        with httpx.Client(timeout=20.0) as client:
-            r = client.post(
-                "https://openrouter.ai/api/v1/chat/completions",
-                headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
-                json={"model": model, "messages": [{"role": "user", "content": prompt}], "max_tokens": max_tokens, "temperature": 0.3},
-            )
-            if r.status_code == 200:
-                return r.json()["choices"][0]["message"]["content"]  # type: ignore[no-any-return]
-            raise RuntimeError(f"LLM call failed: HTTP {r.status_code}")
+        data = guarded_chat_completion_sync(
+            url="https://openrouter.ai/api/v1/chat/completions",
+            api_key=key,
+            model=model,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.3,
+            max_tokens=max_tokens,
+            timeout=20.0,
+        )
+        return data["choices"][0]["message"]["content"]
     except Exception as e:
         logger.debug("Fast LLM call failed: %s", e)
         raise RuntimeError("LLM call failed") from e

@@ -59,7 +59,7 @@ func (m *model) View() tea.View {
 	}
 	// v9.10: achievement fullscreen overlay
 	if m.showAchievementOverlay && !m.showHelp && (m.wizard == nil || !m.wizard.Active()) {
-		body = renderAchievementOverlay(*m.achievements, m.width, m.height)
+		body = renderAchievementOverlay(m.achievements, m.width, m.height)
 	}
 	if m.burst.Active() {
 		body = overlayRegion(body, m.burst.Render(), 0, 0, m.width)

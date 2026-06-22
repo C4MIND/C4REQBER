@@ -826,11 +826,10 @@ func (m *model) checkAchievements() {
 		if m.tel != nil {
 			m.tel.IncDiscoveryResult(true, seconds)
 		}
-		// Trigger fullscreen achievement overlay (v9.10)
-		if len(unlocked) > 0 {
-			m.showAchievementOverlay = true
-			m.achievements.ShowOverlay(i18n.T(a.Name), 2*time.Second)
-		}
+	}
+	if len(unlocked) > 0 {
+		m.showAchievementOverlay = true
+		m.achievements.ShowOverlay(i18n.T(unlocked[0].Name), 2*time.Second)
 	}
 }
 

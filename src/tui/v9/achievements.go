@@ -4,12 +4,14 @@ import (
 	"fmt"
 	"sort"
 	"strconv"
+	"sync"
 
 	"time"
 
 	"charm.land/lipgloss/v2"
 
 	"github.com/figuramax/c4reqber-tui-v9/i18n"
+	"github.com/figuramax/c4reqber-tui-v9/persist"
 	"github.com/figuramax/c4reqber-tui-v9/telemetry"
 )
 
@@ -41,6 +43,7 @@ type Achievement struct {
 
 // AchievementSystem tracks user achievements.
 type AchievementSystem struct {
+	mu         sync.Mutex
 	Items      []Achievement
 	Unlocked   int
 	Total      int
@@ -71,6 +74,27 @@ func NewAchievements() *AchievementSystem {
 	}
 }
 
+// LoadFromStore hydrates the AchievementSystem with already-unlocked
+// achievements from a persistent store. This prevents the same
+// achievement from being re-unlocked on every TUI restart (which
+// used to create duplicate cards in the feed across sessions).
+// v9.13.x fix: was missing — every restart was re-unlocking everything.
+func (a *AchievementSystem) LoadFromStore(store *persist.Store) {
+	if store == nil {
+		return
+	}
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	unlockedCount := 0
+	for i := range a.Items {
+		if store.HasAchievement(int(a.Items[i].Kind)) {
+			a.Items[i].Unlocked = true
+			unlockedCount++
+		}
+	}
+	a.Unlocked = unlockedCount
+}
+
 // ShowOverlay triggers a 2s fullscreen achievement overlay.
 // Called by Update when a new achievement is unlocked.
 func (a *AchievementSystem) ShowOverlay(message string, duration time.Duration) {
@@ -99,7 +123,7 @@ func (a *AchievementSystem) OverlayActive() bool {
 
 // renderAchievementOverlay returns a fullscreen overlay (centered) for
 // the most recent unlock. Auto-dismisses after the configured duration.
-func renderAchievementOverlay(a AchievementSystem, width, height int) string {
+func renderAchievementOverlay(a *AchievementSystem, width, height int) string {
 	// Build big centered card
 	title := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("3")).Render(
 		"🏆  " + i18n.T("achievement.unlocked"))
@@ -156,6 +180,8 @@ func min(a, b int) int {
 //   - secondsTaken float
 //   - langsUsed []string (distinct lang codes user has seen)
 func (a *AchievementSystem) Check(discoveries int, lastQuality float64, papersCount int, secondsTaken float64, langsUsed []string) []Achievement {
+	a.mu.Lock()
+	defer a.mu.Unlock()
 	justUnlocked := []Achievement{}
 	for i := range a.Items {
 		ach := &a.Items[i]

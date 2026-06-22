@@ -305,6 +305,10 @@ func NewApp(apiURL string) *model {
 		m.store = store
 		// Repopulate langsSeen from disk
 		m.replaceLangsSeen(store.Snapshot().LangsSeen)
+		// v9.13.x: hydrate AchievementSystem from store so previously
+		// unlocked achievements don't get re-unlocked (which created
+		// duplicate cards in the feed across sessions).
+		m.achievements.LoadFromStore(store)
 	}
 	m.addLangSeen(string(i18n.GetLang()))
 	// Apply persisted settings (tier/profile/lang)

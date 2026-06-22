@@ -135,7 +135,7 @@ func TestStateMachine_CheckAchievements_EmptyModel(t *testing.T) {
 }
 
 func TestStateMachine_CheckAchievements_AfterDiscover(t *testing.T) {
-	m := NewApp("http://test")
+	m := NewAppFresh("http://test")
 	m.completedDisc = 1
 	m.lastQuality = 0.95
 	m.lastPapersCount = 5

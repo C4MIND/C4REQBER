@@ -85,6 +85,10 @@ func (f *FeedStore) Append(e FeedEntry) error {
 }
 
 // LoadRecent reads the last N entries (most recent first).
+// v9.13.x: deduplicates entries with the same (Kind, Title) — historically
+// achievement cards were re-appended on every TUI restart, leaving
+// multiple "First Discovery" / "Quality S" rows in the feed. We keep
+// only the most recent entry per (Kind, Title) pair.
 func (f *FeedStore) LoadRecent(n int) ([]FeedEntry, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
@@ -109,22 +113,48 @@ func (f *FeedStore) LoadRecent(n int) ([]FeedEntry, error) {
 	if err := scanner.Err(); err != nil {
 		return nil, err
 	}
-	// Take last n
-	if n > 0 && len(lines) > n {
-		lines = lines[len(lines)-n:]
+	// Take last n (over-read for dedup window)
+	if n > 0 && len(lines) > n*2 {
+		lines = lines[len(lines)-n*2:]
 	}
 	out := make([]FeedEntry, 0, len(lines))
+	// Track seen (Kind, Title) pairs — keep only the first (most recent
+	// after the upcoming reverse).
+	seen := map[string]bool{}
 	for _, raw := range lines {
 		var e FeedEntry
-		if err := json.Unmarshal(raw, &e); err == nil {
-			out = append(out, e)
+		if err := json.Unmarshal(raw, &e); err != nil {
+			continue
 		}
+		// Bookmark entries are never deduped (they're user-pinned).
+		if e.Bookmark {
+			out = append(out, e)
+			continue
+		}
+		key := feedDedupKey(e)
+		if seen[key] {
+			continue
+		}
+		seen[key] = true
+		out = append(out, e)
+	}
+	// Cap to n
+	if n > 0 && len(out) > n {
+		out = out[:n]
 	}
 	// Reverse to most-recent-first
 	for i, j := 0, len(out)-1; i < j; i, j = i+1, j-1 {
 		out[i], out[j] = out[j], out[i]
 	}
 	return out, nil
+}
+
+// feedDedupKey returns a stable identity for an entry so duplicates
+// can be collapsed. Title alone is usually enough (achievements are
+// titled by name), but we also include Kind to avoid collapsing
+// different cards that happen to share a title.
+func feedDedupKey(e FeedEntry) string {
+	return fmt.Sprintf("%d|%s", e.Kind, e.Title)
 }
 
 // Prune keeps the most recent maxLen entries (bookmarked always kept).

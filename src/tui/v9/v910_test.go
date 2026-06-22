@@ -38,7 +38,7 @@ func TestAchievementOverlay_ManualHide(t *testing.T) {
 func TestAchievementOverlay_RendersTitle(t *testing.T) {
 	a := NewAchievements()
 	a.ShowOverlay("Test", time.Hour)
-	out := renderAchievementOverlay(*a, 120, 40)
+	out := renderAchievementOverlay(a, 120, 40)
 	if !strings.Contains(out, "Achievement") {
 		t.Errorf("missing 'Achievement' in overlay:\n%s", out)
 	}
@@ -50,7 +50,7 @@ func TestAchievementOverlay_LastUnlockHighlight(t *testing.T) {
 	a.Items[0].UnlockedAt = time.Now()
 	a.Unlocked = 1
 	a.LastUnlock = a.Items[0].UnlockedAt
-	out := renderAchievementOverlay(*a, 120, 40)
+	out := renderAchievementOverlay(a, 120, 40)
 	// Derive the expected total from the system so the assertion doesn't drift
 	// each time an achievement is added (was "1 / 7", now 11 with sim ones).
 	want := fmt.Sprintf("1 / %d", a.Total)

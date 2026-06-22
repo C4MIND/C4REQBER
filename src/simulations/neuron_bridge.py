@@ -28,7 +28,7 @@ class NeuronBridge(BaseSimulationAdapter):
     def run(self, input_data: dict[str, Any] | None = None) -> SimulationResult:
         def _run(data: dict[str, Any]) -> dict[str, Any]:
             from neuron import h
-            from neuron.units import ms, mV
+            from neuron.units import ms
 
             soma = h.Section(name="soma")
             soma.L = soma.diam = 20

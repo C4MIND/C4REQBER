@@ -163,7 +163,6 @@ def matrix_rain_text(rows: int = 20, cols: int = 60, tick: int = 0) -> Text:
 def tron_glow_panel(content: Any, title: str = "", subtitle: str = "", border_color: str = "#4ECDC4", padding: tuple = (1,2)) -> Panel:
     """Panel with TRON-style glow borders and half-block accents."""
     bright = f"bold {border_color}"
-    dim = f"dim {border_color}"
     return Panel(
         content,
         title=f"[{bright}]{title}[/]" if title else "",

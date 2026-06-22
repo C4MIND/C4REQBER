@@ -60,7 +60,7 @@ def run_main_loop(tui_instance, renderer, console, ONBOARDED_FLAG, EXPORT_DIR) -
             tui_instance.problem = problem
 
             # Diagnostic wizard before discovery
-            diagnostic = run_diagnostic_wizard(
+            run_diagnostic_wizard(
                 KeyboardReader, make_diagnostic_wizard, None
             )
 

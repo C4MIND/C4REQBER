@@ -5,7 +5,7 @@ import os
 from pathlib import Path
 from typing import Any
 
-from cryptography.fernet import Fernet, MultiFernet
+from cryptography.fernet import Fernet
 
 
 KEYRING_DIR = Path.home() / ".c4reqber"

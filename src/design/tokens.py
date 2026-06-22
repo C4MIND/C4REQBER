@@ -8,7 +8,6 @@ Centralized Design System for c44tcdi
 Single source of truth for all visual properties
 """
 from dataclasses import dataclass
-from typing import Tuple
 
 
 @dataclass(frozen=True)

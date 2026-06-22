@@ -11,13 +11,12 @@ import json
 import logging
 import re
 import time
-from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 from pydantic import BaseModel
 
-from src.api.v8_routers.discovery.jobs import JobStore, get_job_store
+from src.api.v8_routers.discovery.jobs import get_job_store
 from src.api.v8_routers.discovery.search import search_knowledge
 from src.discovery.pipeline_logic import (
     _build_dissertation,
@@ -225,7 +224,6 @@ async def one_click_discovery(
     except TimeoutError:
         errors.append("Phase C (gap analysis) timed out after 300s")
         gap_potential = 0.0
-        hypothesis = {"source": "timeout", "text": "Phase C timed out"}
         logger.warning("PHASE_C timed out after 300s")
     results["_gap_potential"] = gap_potential
     results["_papers_list"] = papers
@@ -441,7 +439,7 @@ async def dissertation_mode(request: DissertationRequest) -> dict[str, Any]:
                 from src.export.manager import ExportManager
                 export_dir = Path("discovery/batch_v5/exports")
                 export_dir.mkdir(parents=True, exist_ok=True)
-                em = ExportManager(str(export_dir))
+                ExportManager(str(export_dir))
                 exports: dict[str, str] = {}
                 safe_slug = re.sub(r'[^a-zA-Z0-9_-]', '_', request.problem[:50].lower())
                 # Avoid Windows reserved names

@@ -146,7 +146,7 @@ class CyberpunkTheme:
         """Render Braille sparkline from float values [0.0, 1.0]."""
         if not values or width <= 0:
             return ""
-        max_val = max(values) or 1.0
+        max(values) or 1.0
         braille_chars = ["⠀", "⠁", "⠂", "⠃", "⠄", "⠅", "⠆", "⠇",
                          "⠈", "⠉", "⠊", "⠋", "⠌", "⠍", "⠎", "⠏",
                          "⠐", "⠑", "⠒", "⠓", "⠔", "⠕", "⠖", "⠗",

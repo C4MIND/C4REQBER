@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Any
 
 import httpx
+from src.config import get_key
 
 
 logger = logging.getLogger(__name__)
@@ -331,8 +332,8 @@ Write the COMPLETE text. Ensure the final sentence is complete."""
             author_block += "\n"
 
         # Config-driven settings
-        max_refs = getattr(config, "max_references", 15) if config else 15
-        include_appendices = getattr(config, "include_appendices", True) if config else True
+        getattr(config, "max_references", 15) if config else 15
+        getattr(config, "include_appendices", True) if config else True
         include_epistemic = getattr(config, "include_epistemic_notice", True) if config else True
 
         # Assemble

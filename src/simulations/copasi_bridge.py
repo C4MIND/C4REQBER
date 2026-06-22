@@ -31,9 +31,9 @@ class CopasiBridge(BaseSimulationAdapter):
             # Load SBML or create a simple model
             sbml = data.get("sbml")
             if sbml:
-                dm = basico.load_model(sbml)
+                basico.load_model(sbml)
             else:
-                dm = basico.new_model(name="c4reqber")
+                basico.new_model(name="c4reqber")
                 basico.add_reaction("R1", "A -> B", {"A": 10, "B": 0})
 
             tc = basico.run_time_course(duration=50, intervals=100)

@@ -341,8 +341,7 @@ class ReactionDiffusionPattern(SimulationPattern):
             return "homogeneous"
 
         # Count connected components approximation
-        threshold = np.mean(V)
-        binary = V > threshold
+        np.mean(V)
 
         # Simple pattern classification based on variance and structure
         if var > 0.05:

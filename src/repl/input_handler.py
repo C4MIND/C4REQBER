@@ -188,7 +188,7 @@ class ReplInput:
         if not self._spark.is_alive():
             return
 
-        now = time.monotonic()
+        time.monotonic()
         dt = 0.03
         for col_p, row_p, char, ansi in self._spark.tick(dt):
             if row_p >= 0:

@@ -407,7 +407,7 @@ def gelman_rubin(chains: NDArray[np.float64]) -> float:
 
     chain_means = np.mean(chains, axis=1)
     chain_vars = np.var(chains, axis=1, ddof=1)
-    overall_mean = np.mean(chain_means)
+    np.mean(chain_means)
 
     b = n * np.var(chain_means, ddof=1)
     w = np.mean(chain_vars)

@@ -404,7 +404,7 @@ class QueueingNetworkSimulator:
             # Time-average queue length
             if len(stats["queue_length_samples"]) > 1:
                 times, lengths = zip(*stats["queue_length_samples"], strict=False)
-                total_time = (
+                (
                     times[-1] - cfg.warmup_time if times[-1] > cfg.warmup_time else 1.0
                 )
                 mean_queue = np.mean(

@@ -165,7 +165,6 @@ class FingerprintEngine:
         # Present-focused → Present(1)
         # Historical/retrospective → Past(0)
         if features.has_temporal_refs:
-            text_lower = ""
             # We don't have original text here, use vector hints
             t_score = vec[6] * 0.5 + vec[0] * 0.3 + vec[2] * 0.2
         else:

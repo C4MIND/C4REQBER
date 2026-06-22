@@ -23,9 +23,9 @@ def _run_pipeline_modules(problem: str, papers_raw: list, hypothesis_text: str, 
     # 1. GPU Providers — detect hardware
     try:
         from compute.gpu_providers import detect_local_gpu
-        gpu_status = detect_local_gpu()
+        detect_local_gpu()
     except ImportError:
-        gpu_status = "cpu_only"
+        pass
 
     # 2. Gap Miner — find research gaps
     try:
@@ -125,14 +125,9 @@ def _run_pipeline_modules(problem: str, papers_raw: list, hypothesis_text: str, 
 
 def run_discovery_pipeline_sync(problem: str, live, _update_render, _advance_pipeline_step, _pipeline_completion, _mascot, play_sound_fn) -> dict:
     """Запустити пайплайн відкриття (пошаговий, ожідає Enter)."""
-    running = True
-    phase = "running"
-    messages: list[str] = []
-    current_step = 0
     results = None
     all_glow: set[Any] = set()
     completion_flash = False
-    export_file = None
     _pipeline_step_index = 0
     _pipeline_stories = []
     _pipeline_total: int = 0

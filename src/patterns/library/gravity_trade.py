@@ -127,8 +127,6 @@ class GravityTradeModel:
         Returns:
             Dict with equilibrium values
         """
-        cfg = self.config
-        n = cfg.n_countries
 
         # Iterate to find equilibrium wages
         for _ in range(max_iter):
@@ -191,7 +189,7 @@ class GravityTradeModel:
             # Counterfactual scenario
             original_costs = self.trade_costs.copy()
             self.trade_costs = counterfactual_costs
-            counterfactual = self.solve_equilibrium()
+            self.solve_equilibrium()
             P_cf = self._compute_price_indices()
             real_wage_cf = self.wages / P_cf
 
@@ -301,7 +299,6 @@ class GravityTradeModel:
         Returns:
             Dict with elasticity analysis
         """
-        cfg = self.config
         baseline = self.solve_equilibrium()
         X_base = np.array(baseline["trade_flows"])
 

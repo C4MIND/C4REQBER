@@ -8,6 +8,7 @@ from difflib import SequenceMatcher
 from typing import Any
 
 import numpy as np
+from src.config import get_key
 
 
 logger = logging.getLogger("c44tcdi.discovery.novelty_validator")

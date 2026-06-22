@@ -165,10 +165,9 @@ class DSGEPattern(SimulationPattern):
     async def _rbc_model(self, hypothesis: Hypothesis, config: dict[str, Any]) -> dict[str, Any]:
         """Real Business Cycle model simulation"""
 
-        params = hypothesis.parameters
         T = config.get("periods", 200)
         beta = config.get("discount_factor", 0.99)
-        gamma = config.get("risk_aversion", 2.0)
+        config.get("risk_aversion", 2.0)
         delta = config.get("depreciation", 0.025)
         alpha = config.get("capital_share", 0.36)
         sigma_z = config.get("shock_std", 0.01)
@@ -221,8 +220,8 @@ class DSGEPattern(SimulationPattern):
                 await asyncio.sleep(0)
 
         # Calculate statistics
-        y_levels = Y_ss * np.exp(y)
-        c_levels = C_ss * np.exp(c)
+        Y_ss * np.exp(y)
+        C_ss * np.exp(c)
 
         # Volatility
         y_vol = float(np.std(y)) * 100  # As percentage

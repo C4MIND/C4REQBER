@@ -134,7 +134,7 @@ class DiscoveryWorkflow(Static):  # type: ignore[misc]
         self.running = True
         btn = self.query_one("#start", Button)
         btn.disabled = True
-        progress = self.query_one("#progress", ProgressBar)
+        self.query_one("#progress", ProgressBar)
 
         from src.agents.pipeline import UniversalSolvePipeline
 

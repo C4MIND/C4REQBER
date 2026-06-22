@@ -124,7 +124,6 @@ class CulturalDiffusionPattern:
         Attempt interaction between agents i and j.
         Returns True if interaction occurred.
         """
-        cfg = self.config
 
         similarity = self._cultural_similarity(i, j)
 

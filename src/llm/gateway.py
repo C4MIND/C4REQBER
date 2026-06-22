@@ -126,7 +126,7 @@ class DefaultGateway:
             )
             _record_llm_call(provider, model, "success", time.monotonic() - t0)
             return result
-        except Exception as exc:
+        except Exception:
             _record_llm_call(provider, model, "error", time.monotonic() - t0)
             raise
 
@@ -152,7 +152,7 @@ class DefaultGateway:
             )
             _record_llm_call(provider, model or "default", "success", time.monotonic() - t0)
             return result
-        except Exception as exc:
+        except Exception:
             _record_llm_call(provider, model or "default", "error", time.monotonic() - t0)
             raise
 
@@ -178,7 +178,7 @@ class DefaultGateway:
             )
             _record_llm_call(provider, "chat", "success", time.monotonic() - t0)
             return result
-        except Exception as exc:
+        except Exception:
             _record_llm_call(provider, "chat", "error", time.monotonic() - t0)
             raise
 
@@ -202,7 +202,7 @@ class DefaultGateway:
             )
             _record_llm_call(provider, "chat_json", "success", time.monotonic() - t0)
             return result
-        except Exception as exc:
+        except Exception:
             _record_llm_call(provider, "chat_json", "error", time.monotonic() - t0)
             raise
 

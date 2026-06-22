@@ -189,7 +189,7 @@ class QuantumHarmonicOscillatorPattern(SimulationPattern):
             prob = np.abs(psi)**2
 
             # Position uncertainty: <x^2> = (n + 0.5) / alpha^2
-            dx = x[1] - x[0]
+            x[1] - x[0]
             x_mean = np.trapezoid(x * prob, x)
             x2_mean = np.trapezoid(x**2 * prob, x)
             sigma_x = np.sqrt(x2_mean - x_mean**2)

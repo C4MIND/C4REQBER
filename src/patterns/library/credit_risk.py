@@ -183,7 +183,7 @@ class CreditRiskModel:
         }
 
         # Simulate migrations
-        n = len(current_ratings)
+        len(current_ratings)
         future_ratings = []
 
         for rating in current_ratings:
@@ -223,7 +223,7 @@ class CreditRiskModel:
             Dict with concentration metrics
         """
         total_exposure = np.sum(exposures)
-        n = len(exposures)
+        len(exposures)
 
         # Herfindahl index
         shares = exposures / total_exposure

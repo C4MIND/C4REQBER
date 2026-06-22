@@ -591,7 +591,7 @@ class TestGroundwater(unittest.TestCase):
         config = GroundwaterConfig(dt=100)
         pattern = GroundwaterPattern(config)
 
-        h_before = pattern.h.copy()
+        pattern.h.copy()
         pattern._step(0)
 
         # Should produce finite results

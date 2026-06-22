@@ -41,12 +41,15 @@ def _normalize_model(model: str) -> str:
         return "gemini-1.5"
     if "deepseek" in model_lower:
         return "deepseek"
+    # Local providers first (Ollama, LM Studio, MLX). Audit 2026-06-22:
+    # "qwen2.5" was being caught by the "qwen" rule below and returned
+    # "qwen" pricing ($2/MTok) instead of free local pricing.
+    if any(local in model_lower for local in ("ollama", "lm_studio", "local", "qwen2.5", "qwen3")):
+        return "local"
     if "qwen" in model_lower:
         return "qwen"
     if "gpt-4o-mini" in model_lower or "4o-mini" in model_lower:
         return "gpt-4o-mini"
-    if any(local in model_lower for local in ("ollama", "lm_studio", "local", "qwen2.5", "qwen3")):
-        return "local"
     return "gpt-4o"  # Default pricing
 
 

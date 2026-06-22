@@ -46,7 +46,7 @@ def cmd_solve(
     from src.core.profile_manager import UserProfileManager
 
     manager = UserProfileManager()
-    user_profile = manager.load()
+    manager.load()
 
     console.print(f"[bold]BLAST solve[/bold] — {get_mode_description('solve')}")
     console.print(f"[dim]Problem:[/dim] {problem[:80]}...")
@@ -81,7 +81,6 @@ def _print_explain_report(record: Any, topic: str) -> None:
     # C4 State reasoning
     c4 = getattr(record, "c4_state", "")
     if c4:
-        from src.c4.state import Agency, C4State, Scale, Time
         try:
             parts = c4.replace("C4(", "").replace(")", "").split(",")
             t, s, a = int(parts[0]), int(parts[1]), int(parts[2])

@@ -22,7 +22,7 @@ class C4Block:
     @property
     def badge(self) -> str:
         """Badge."""
-        layer_symbol = {1: "①", 2: "②", 3: "③"}.get(self.layer, "◌")
+        {1: "①", 2: "②", 3: "③"}.get(self.layer, "◌")
         verify_symbol = {"verified": "✓", "falsified": "✗"}.get(self.verification or "", "")
         return f"[C{self.layer}{verify_symbol}] {self.stage}"
 

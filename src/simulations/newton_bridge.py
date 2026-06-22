@@ -432,20 +432,19 @@ class NewtonBridge:
     def _run_fluid_simulation(self, config: dict[str, Any]) -> dict[str, Any]:
         """Run fluid dynamics simulation."""
         try:
-            newton = self._newton_module
 
             grid_size = config.get("grid_size", 50)
             num_particles = config.get("num_particles", grid_size * grid_size)
             dt = config.get("dt", 1e-3)
             num_steps = config.get("num_steps", 100)
             viscosity = config.get("viscosity", 0.1)
-            domain_size = config.get("domain_size", 1.0)
+            config.get("domain_size", 1.0)
 
             if self._warp_module and self.is_gpu_mode():
                 wp = self._warp_module
 
-                positions = wp.zeros(num_particles, dtype=wp.vec3)
-                velocities = wp.zeros(num_particles, dtype=wp.vec3)
+                wp.zeros(num_particles, dtype=wp.vec3)
+                wp.zeros(num_particles, dtype=wp.vec3)
 
                 metrics = {
                     "num_particles": float(num_particles),

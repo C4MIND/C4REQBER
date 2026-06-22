@@ -304,7 +304,7 @@ class Elasticity3D(BasePattern):
         """Apply fixed boundary conditions."""
         nx = self.config.nx + 1
         ny = self.config.ny + 1
-        nz = self.config.nz + 1
+        self.config.nz + 1
 
         # Fix bottom surface (z = 0)
         for j in range(ny):
@@ -577,7 +577,7 @@ class Elasticity3D(BasePattern):
                 top_disp.append(disp_reshaped[node_idx])
 
         # Volume change
-        original_volume = self.config.Lx * self.config.Ly * self.config.Lz
+        self.config.Lx * self.config.Ly * self.config.Lz
 
         # Approximate volume change from displacement divergence
         vol_change = 0.0

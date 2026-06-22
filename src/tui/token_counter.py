@@ -2,8 +2,6 @@
 # Copyright (c) 2026 c4reqber Contributors
 from __future__ import annotations
 
-import sys
-from typing import Optional
 
 
 try:

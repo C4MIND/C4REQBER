@@ -18,6 +18,7 @@ from src.verification.calibrator import VerificationCalibrator, VerificationCont
 from src.verification.coq_client import CoqClient
 from src.verification.dafny_client import DafnyClient
 from src.verification.lean4_client import Lean4Client
+from src.config import get_key
 
 
 LANGUAGE_PROMPTS: dict[str, str] = {

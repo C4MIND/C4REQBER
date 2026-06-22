@@ -299,7 +299,6 @@ def fast_summarize(text: str, max_sentences: int = 5) -> str:
 
 def _extract_json_block(text: str) -> str:
     """Find outermost JSON array/object in text using bracket matching."""
-    import json
     start = -1
     for i, ch in enumerate(text):
         if ch in "[{":

@@ -213,9 +213,6 @@ class IsingModelPattern(SimulationPattern):
     async def _simulate(self, hypothesis: Hypothesis) -> dict[str, Any]:
         """Run Ising simulation"""
         L = self.config.lattice_size  # type: ignore[union-attr]
-        T = self.config.temperature  # type: ignore[union-attr]
-        J = self.config.J  # type: ignore[union-attr]
-        h = self.config.h  # type: ignore[union-attr]
 
         # Initialize lattice: random spins ±1
         self.lattice = 2 * self.rng.integers(0, 2, size=(L, L)) - 1
@@ -432,7 +429,7 @@ class IsingModelPattern(SimulationPattern):
         abs_M_vals = np.array(self.measurements["abs_magnetization"])
         M2_vals = np.array(self.measurements["magnetization_squared"])
         E_vals = np.array(self.measurements["energy"])
-        E2_vals = np.array(self.measurements["energy_squared"])
+        np.array(self.measurements["energy_squared"])
 
         # Magnetization (use |M| for T < Tc)
         M_mean = float(np.mean(abs_M_vals))

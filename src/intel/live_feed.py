@@ -244,7 +244,7 @@ class LiveFeed:
 
         for word, count in words.most_common(10):
             if count >= 3:
-                pid = f"anomaly:{hash(word) % 1000000:06d}"
+                f"anomaly:{hash(word) % 1000000:06d}"
                 self._add_problem(
                     title=f"Trending: '{word}' ({count} mentions in {len(recent)} posts)",
                     source="anomaly_detector",

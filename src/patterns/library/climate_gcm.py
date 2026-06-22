@@ -220,7 +220,7 @@ class ClimateGCMPattern:
         qs = 0.622 * es / p
 
         # Relative humidity
-        RH = self.q / qs
+        self.q / qs
 
         # Precipitation where RH > 100%
         precip = np.zeros((cfg.n_lat, cfg.n_lon))

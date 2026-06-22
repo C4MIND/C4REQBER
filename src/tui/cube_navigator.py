@@ -63,9 +63,6 @@ class InteractiveCube:
         """Render."""
         t, s, a = self._state
         grid = Table.grid(padding=(0, 1))
-        axis_labels = {
-            0: (" Past ", "dim"), 1: ("Present", "bold white"), 2: ("Future", "dim"),
-        }
         for t_val in range(3):
             row: list[Text] = []
             for a_val in range(3):

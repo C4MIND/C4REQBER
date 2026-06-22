@@ -10,7 +10,6 @@ This module provides the legacy ``MegaDatabase`` API for backward compatibility.
 from __future__ import annotations
 
 import logging
-import warnings
 from typing import Any
 
 
@@ -156,7 +155,6 @@ class MegaDatabase:
         the orchestrator returns no results.
         """
         # Try orchestrator first (25+ sources)
-        import asyncio
 
         searcher = self._get()
         result = await searcher.search_all(query=identifier, max_per_source=5)

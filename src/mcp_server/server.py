@@ -7,7 +7,6 @@ Model Context Protocol server for AI agents.
 Run: pip install mcp && python3 -m c44tcdi.mcp_server
 """
 import asyncio
-import json
 import sys
 from typing import Any
 
@@ -625,7 +624,7 @@ async def blast_solve(problem: str, output_format: str = "auto", domain: str | N
         from src.core.profile_manager import UserProfileManager
 
         manager = UserProfileManager()
-        user_profile = manager.load()
+        manager.load()
         config = manager.get_config()
 
         pipeline = UniversalSolvePipeline(config=config)
@@ -990,7 +989,6 @@ async def c4_social(action: str, draft_id: str = "", platform: str = "") -> dict
         draft_id: Draft ID for publish/preview/post actions
         platform: Target platform for post action (twitter, mastodon, reddit, discord, slack)
     """
-    import asyncio
     from pathlib import Path
 
     if action == "status":

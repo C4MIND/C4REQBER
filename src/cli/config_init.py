@@ -4,14 +4,12 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-import typer
 from rich.console import Console
 from rich.prompt import Confirm, Prompt
 
 
 console = Console()
 
-from src.config.paths import CONFIG_DIR  # unified ~/.c4reqber
 from src.config.paths import CONFIG_TOML as CONFIG_PATH
 
 

@@ -9,12 +9,9 @@ Depends only inward (llm, c4, triz, discovery, ...), never on the api package.
 from __future__ import annotations
 
 import asyncio
-import json
 import logging
 import re
-import time
 from datetime import datetime
-from pathlib import Path
 from typing import Any
 
 from src.llm.gateway import get_gateway
@@ -345,7 +342,7 @@ def run_reproducibility_check(problem: str) -> dict[str, Any]:
 
 
 async def generate_hypothesis(problem: str, c4_path: dict[str, Any], triz_principles: list[dict[str, Any]], papers: list[dict[str, Any]]) -> dict[str, Any]:
-    triz_names = ", ".join(p["name"] for p in triz_principles[:3])
+    ", ".join(p["name"] for p in triz_principles[:3])
     llm_text = ""
     try:
         paper_titles = "\n".join(f"- {p.get('title', '')[:100]}" for p in (papers or [])[:8])
@@ -1036,7 +1033,7 @@ def _build_dissertation(discovery: dict, attempts: list) -> dict:
     # Dev/explain mode: add technical appendix
     if output_mode == "explain":
         contradictions_top = discovery.get("contradiction_mining", {}).get("top_contradictions", [])
-        contradictions_text = "\n".join(
+        "\n".join(
             f"  A: {c.get('claim_a','')[:80]}\n  B: {c.get('claim_b','')[:80]}\n  Score: {c.get('score',0)}"
             for c in contradictions_top[:2]
         )

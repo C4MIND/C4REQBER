@@ -170,7 +170,7 @@ class HILDiscoveryPipeline(BasePipeline):
                 "hypothesis_text": record.hypotheses[0].get("text", "") if record.hypotheses else "",
                 "abort_reasons": getattr(record, "abort_reasons", []),
             }
-            obs_record = observer.observe(iteration=0, metrics=obs_metrics)
+            observer.observe(iteration=0, metrics=obs_metrics)
             record, record.quality_report, _ = await phase_g.run_iterative_improvement(
                 self, topic, record, record.quality_report
             )
@@ -182,7 +182,7 @@ class HILDiscoveryPipeline(BasePipeline):
                 )
 
         assert record.quality_report is not None
-        obs = observer.observe(iteration=1, metrics={
+        observer.observe(iteration=1, metrics={
             "novelty_score": record.quality_report.overall_score / 100,
             "gap_potential": len(record.gaps) / max(1, cfg.min_gaps),
             "hypothesis_text": record.hypotheses[0].get("text", "") if record.hypotheses else "",

@@ -305,7 +305,6 @@ class PlasmaPICPattern(SimulationPattern):
         self.solver.initialize_particles_1d()
 
         nx = config.nx
-        dx = config.dx
         dt = config.dt
 
         omega_p = np.sqrt(config.n0 * self.q_e**2 / (self.m_e * self.eps0))

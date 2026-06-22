@@ -156,14 +156,13 @@ class QualityGates:
             score *= total / cfg.min_hypotheses
 
         # Check for numerical constraints
-        has_numbers_str = "N/A"
         if cfg.require_numerical_constraints:
             has_numbers = 0
             for h in hypotheses:
                 text = f"{h.get('title', '')} {h.get('description', '')}"
                 if re.search(r"\d+(?:\.\d+)?(?:\s*%|\s*cells|fold|times|MPa|days|years|mm|μm)", text):
                     has_numbers += 1
-            has_numbers_str = str(has_numbers)
+            str(has_numbers)
             if has_numbers < len(hypotheses) * 0.5:
                 errors.append(f"Only {has_numbers}/{total} hypotheses have numerical predictions")
                 score *= has_numbers / max(1, total)
@@ -293,7 +292,6 @@ class QualityGates:
     # ── Step 6: Bibliography Quality ──────────────────────────────────
 
     def check_bibliography(self, bib: list[dict[str, Any]]) -> GateResult:
-        cfg = self.config
         errors = []
         score = 1.0
 

@@ -35,7 +35,7 @@ class OpenFOAMBridge(BaseSimulationAdapter):
             # Create a minimal cavity case in a temp dir
             with tempfile.TemporaryDirectory(prefix="c4reqber_of_") as td:
                 case_path = Path(td)
-                case = FoamCase(case_path)
+                FoamCase(case_path)
                 # foamlib can load existing tutorials; here we return a stub
                 # indicating the engine is reachable.
                 return {

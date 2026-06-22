@@ -80,7 +80,6 @@ def stationarity_test(data: list[float]) -> dict[str, Any]:
     test_stat = beta / se_beta if se_beta > 0 else 0.0
 
     # Critical values (approximate)
-    critical = {-3.43: 0.01, -2.86: 0.05, -2.57: 0.10}
     stationary = test_stat < -2.86
 
     slope = sum((i - (n - 1) / 2) * (data[i] - sum(data) / n) for i in range(n)) / \

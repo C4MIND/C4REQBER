@@ -370,7 +370,7 @@ class HeterogeneousAgentsModel:
 
         # Average consumption equivalent welfare
         mean_emp = np.mean(employment)
-        mean_assets = np.mean(assets)
+        np.mean(assets)
 
         # Simplified welfare calculation
         welfare_complete = np.log(1.0) / (1 - cfg.beta)  # Complete markets benchmark

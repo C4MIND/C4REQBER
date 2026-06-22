@@ -153,7 +153,6 @@ def _incomplete_beta(a: float, b: float, x: float) -> float:
         return 1.0
     # Lentz's continued fraction
     tiny = 1e-30
-    f = 1.0
     c = 1.0
     d = 1.0 - (a + b) * x / (a + 1)
     if abs(d) < tiny:

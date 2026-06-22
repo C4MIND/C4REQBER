@@ -4,11 +4,9 @@ from __future__ import annotations
 import threading
 import time
 import uuid
-from dataclasses import dataclass, field
-from typing import Any
+from dataclasses import dataclass
 
 from src.agent.config import AgentConfig
-from src.agent.skills import SkillRegistry
 
 
 @dataclass

@@ -348,7 +348,6 @@ class BiogeochemistryPattern:
 
     def _calculate_primary_production(self) -> float:
         """Calculate total primary production"""
-        cfg = self.config
 
         I = self._light_profile()
         growth = self._nutrient_uptake(self.N, self.P, I)
@@ -602,7 +601,7 @@ class TestBiogeochemistry(unittest.TestCase):
         config = BiogeochemistryConfig(dt=100)
         pattern = BiogeochemistryPattern(config)
 
-        N_before = pattern.N.copy()
+        pattern.N.copy()
         pattern._step()
 
         # Values should remain non-negative

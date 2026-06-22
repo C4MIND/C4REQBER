@@ -141,7 +141,6 @@ class MultiSourceSearcher:
             # adding circuit-breaker with longer cooldown.
             # "semantic_scholar": SemanticScholarAdapter,
             "openalex": OpenAlexAdapter,
-            "openalex": OpenAlexAdapter,
             "crossref": CrossrefAdapter,
             "arxiv": ArxivAdapter,
             "pubmed": PubmedAdapter,

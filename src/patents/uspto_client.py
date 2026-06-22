@@ -6,7 +6,6 @@ Replaces the deprecated PatentsView v1 API which now returns 301 redirects.
 """
 from __future__ import annotations
 
-import asyncio
 import logging
 from dataclasses import dataclass
 from typing import Any

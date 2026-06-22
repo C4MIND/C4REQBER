@@ -6,7 +6,7 @@ import os
 import time
 from typing import Any
 
-from src.api.v8_routers.discovery.jobs import Job, JobEvent, JobStatus, JobStore, _phase_to_status
+from src.api.v8_routers.discovery.jobs import Job, JobEvent, JobStatus, JobStore
 
 
 def _redis_url() -> str | None:

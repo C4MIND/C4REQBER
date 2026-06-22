@@ -3,12 +3,10 @@ TURBO-CDI: Multi-Agent System
 AI Co-Scientist style multi-agent scientific discovery
 """
 
-import asyncio
-import json
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any
 
 from rich.console import Console
 from rich.panel import Panel
@@ -292,7 +290,7 @@ class ScientistAgent(BaseAgent):
         """Generate hypotheses using C4 operators."""
         from src.core.c4_state import C4Space
 
-        space = C4Space()
+        C4Space()
 
         # Common C4 paths for innovation
         paths = [
@@ -518,7 +516,7 @@ class SynthesizerAgent(BaseAgent):
         # Gather all outputs from memory
         hypotheses_msgs = self.get_relevant_memory("hypotheses")
         critique_msgs = self.get_relevant_memory("critique")
-        analysis_msgs = self.get_relevant_memory("analysis")
+        self.get_relevant_memory("analysis")
 
         all_hypotheses = []
         all_critiques = []

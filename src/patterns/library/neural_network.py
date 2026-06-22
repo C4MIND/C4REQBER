@@ -171,7 +171,6 @@ class NeuralNetworkPattern(SimulationPattern):
     async def _lif_simulation(self, hypothesis: Hypothesis, config: dict[str, Any]) -> dict[str, Any]:
         """Leaky Integrate-and-Fire neuron simulation"""
 
-        params = hypothesis.parameters
         N = config.get("num_neurons", 100)
         T = config.get("simulation_time", 1000.0)
         dt = config.get("dt", 0.1)

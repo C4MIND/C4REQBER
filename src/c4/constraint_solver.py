@@ -125,8 +125,7 @@ class ConstraintSolver:
             }
 
         _, s, vt = np.linalg.svd(mat, full_matrices=True)
-        tol = max(mat.shape) * np.finfo(mat.dtype).eps * max(s) if len(s) > 0 else 1e-10
-        null_mask = s < tol
+        max(mat.shape) * np.finfo(mat.dtype).eps * max(s) if len(s) > 0 else 1e-10
         null_vectors = vt[-null_dim:] if null_dim > 0 else np.zeros((0, n_vars))
 
         pi_groups: list[str] = []

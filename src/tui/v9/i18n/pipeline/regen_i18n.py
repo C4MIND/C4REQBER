@@ -3,7 +3,6 @@
 Regenerate i18n.go from TOML files.
 Produces: const LangEN/RU/ZH/etc. + translations map[Lang]map[string]string
 """
-import re
 import sys
 from pathlib import Path
 

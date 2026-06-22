@@ -74,7 +74,6 @@ class StatisticalValidator:
                 }
 
         try:
-            from scipy import stats
 
             if test_type == "ttest":
                 result = self._run_ttest(data, alpha)

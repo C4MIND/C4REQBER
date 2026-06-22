@@ -201,7 +201,7 @@ class SystemAnalyzer:
     ) -> list[dict[str, Any]]:
         """Decompose into sub-problems with explicit dependencies."""
         sub_problems = []
-        n = len(entities)
+        len(entities)
 
         for i, entity in enumerate(entities):
             depends_on = list(deps.get(entity, set()))

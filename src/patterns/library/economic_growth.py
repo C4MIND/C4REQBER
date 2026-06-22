@@ -316,8 +316,8 @@ class EconomicGrowthModel:
             )
 
         # Conditional convergence: poorer countries grow faster
-        initial_ks = [c["initial_k"] for c in countries]
-        initial_growth = [c["growth_rate_initial"] for c in countries]
+        [c["initial_k"] for c in countries]
+        [c["growth_rate_initial"] for c in countries]
 
         return {
             "countries": countries,

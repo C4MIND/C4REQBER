@@ -5,7 +5,6 @@ Scores research questions by multi-criteria priority.
 """
 from __future__ import annotations
 
-from typing import Any
 
 from src.agenda.feasibility import FeasibilityResult
 from src.agenda.generator import ResearchQuestion

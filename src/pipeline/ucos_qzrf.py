@@ -178,7 +178,7 @@ class UCOSAnalyzer:
     ) -> dict[str, Any]:
         """Evaluate solution quality through meta-cognitive reflection."""
         hypothesis_text = hypothesis if isinstance(hypothesis, str) else str(hypothesis)
-        has_hypothesis = len(hypothesis_text) > 50
+        len(hypothesis_text) > 50
         sections = {
             "has_hypothesis_statement": "Hypothesis" in hypothesis_text,
             "has_mechanism": "Mechanism" in hypothesis_text,
@@ -293,7 +293,7 @@ class QZRFAnalyzer:
 
         try:
             qzrf_lib = QzrfLibrary()
-            space = C4Space()
+            C4Space()
             start = C4State(T=0, S=0, A=0)
             end = C4State(T=2, S=2, A=2)
 

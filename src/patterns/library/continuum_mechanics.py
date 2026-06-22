@@ -314,7 +314,7 @@ class ContinuumMechanics(BasePattern):
         """Apply fixed boundary conditions."""
         nx = self.config.n_elements_x + 1
         ny = self.config.n_elements_y + 1
-        nz = self.config.n_elements_z + 1
+        self.config.n_elements_z + 1
 
         if self.config.fixed_boundary == "bottom":
             # Fix z = 0 plane

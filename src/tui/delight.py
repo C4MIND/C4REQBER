@@ -194,7 +194,6 @@ class ShutdownRitual:
             time.sleep(0.12)
 
         # Final message — fade in
-        msg = f"\n\n        {self._farewell}\n\n"
         for opacity in (0.2, 0.4, 0.6, 0.8, 1.0):
             r = int(0x06 * (1.0 - opacity) + 0xE0 * opacity * 0.5)
             g = int(0xD6 * (1.0 - opacity) + 0x40 * opacity * 0.3)

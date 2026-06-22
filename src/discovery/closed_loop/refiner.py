@@ -6,7 +6,6 @@ LLM-based refinement of hypothesis given simulation results.
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 from src.discovery.closed_loop.bayesian_tracker import BayesianHypothesisTracker
 from src.llm.gateway import DefaultGateway

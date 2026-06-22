@@ -552,7 +552,7 @@ func (m *model) handleSimEvent(te api.TypedEvent) {
 		ID:    cards.NextID(),
 		Kind:  CardSimulation,
 		Title: te.Engine + " · " + te.Pattern,
-		Body:  simBody(te),
+		Body:  m.simBody(te),
 		Time:  time.Now(),
 		Status: func() string {
 			switch te.Type {
@@ -621,7 +621,7 @@ func simStatusString(te api.TypedEvent) string {
 }
 
 // simBody returns a one-line description of the sim event.
-func simBody(te api.TypedEvent) string {
+func (m *model) simBody(te api.TypedEvent) string {
 	switch te.Type {
 	case api.EventSimStarted:
 		return fmt.Sprintf("starting %s on %s", te.Pattern, te.Engine)
@@ -637,7 +637,12 @@ func simBody(te api.TypedEvent) string {
 		}
 		return body
 	case api.EventSimBudgetExceeded:
-		return fmt.Sprintf("budget exceeded ($%.4f > limit $%.2f)", te.CostUSD, 5.0)
+		// Audit 2026-06-22 M-9: respect the model-configured limit (was $5.0 hardcode).
+		limit := m.simCostLimit
+		if limit <= 0 {
+			limit = 5.0
+		}
+		return fmt.Sprintf("budget exceeded ($%.4f > limit $%.2f)", te.CostUSD, limit)
 	}
 	return string(te.Type)
 }

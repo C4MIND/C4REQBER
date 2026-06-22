@@ -27,7 +27,6 @@ class JaxMDBridge(BaseSimulationAdapter):
 
     def run(self, input_data: dict[str, Any] | None = None) -> SimulationResult:
         def _run(data: dict[str, Any]) -> dict[str, Any]:
-            import jax.numpy as jnp
             from jax import random
             from jax_md import energy, simulate, space
 

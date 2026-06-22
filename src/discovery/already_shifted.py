@@ -74,7 +74,7 @@ class AlreadyShiftedDetector:
         """Check."""
         now_year = datetime.now(timezone.utc).year  # noqa: UP017
         keywords = self._extract_paradigm_keywords(hypothesis)
-        domain_str = keywords.get("domain", domain) if domain == "general" else domain
+        keywords.get("domain", domain) if domain == "general" else domain
 
         seminal = self._find_seminal_papers(papers, now_year)
         consensus = self._compute_consensus(papers, keywords, now_year)

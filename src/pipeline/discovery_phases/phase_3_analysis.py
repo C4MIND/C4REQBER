@@ -61,7 +61,7 @@ async def run_deep_analysis(problem, domain, papers, results, thresholds, errors
         search_isomorphisms,
     )
 
-    loop = asyncio.get_running_loop()
+    asyncio.get_running_loop()
     t0 = time.perf_counter()
 
     # Split papers into ~6 chunks for parallel contradiction mining.

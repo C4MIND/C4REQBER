@@ -42,7 +42,6 @@ class BoolNetBridge(BaseSimulationAdapter):
                     "note": "Computed attractors for Boolean network",
                 }
 
-            import rpy2.robjects as ro
             from rpy2.robjects.packages import importr
             boolnet = importr("BoolNet")
             net = boolnet.loadNetwork(network_file)

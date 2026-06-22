@@ -1,7 +1,6 @@
 """c4reqber: Publishing Orchestrator — draft → review → upload → DOI → social posts."""
 from __future__ import annotations
 
-import asyncio
 from pathlib import Path
 from typing import Any
 

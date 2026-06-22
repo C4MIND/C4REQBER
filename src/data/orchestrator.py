@@ -470,7 +470,6 @@ class DataOrchestrator:
 
     async def _string_db_to_dataframe(self, items: list[dict[str, Any]]) -> pd.DataFrame | None:
         client = self._get_client("string_db")
-        rows: list[dict[str, Any]] = []
         identifiers = [item.get("string_id") or item.get("preferred_name") for item in items[:20] if item]
         identifiers = [i for i in identifiers if i]
         if not identifiers:
@@ -575,7 +574,7 @@ class DataOrchestrator:
                 info = await client.get_dataset_info(ds_id)
                 if not isinstance(info, dict):
                     continue
-                features = info.get("features", [])
+                info.get("features", [])
                 rows = info.get("rows", [])
                 if rows and len(rows) >= self.MIN_ROWS:
                     return pd.DataFrame(rows)
@@ -646,7 +645,7 @@ def get_dataframe_for_hypothesis(
     """Sync wrapper around DataOrchestrator."""
     orch = DataOrchestrator()
     try:
-        loop = asyncio.get_running_loop()
+        asyncio.get_running_loop()
         # If already in an async context, schedule it
         future = asyncio.ensure_future(orch.get_dataframe_for_hypothesis(problem, domain))
         # We can't block; return None with a note

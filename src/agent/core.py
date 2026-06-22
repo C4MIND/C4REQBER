@@ -6,7 +6,6 @@ import json
 import os
 import subprocess
 import time
-import uuid
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -14,8 +13,9 @@ from typing import Any
 from rich.markdown import Markdown
 
 from src import __version__
-from src.agent.config import AGENT_CONFIG_DIR, AgentConfig, MCPServerConfig
+from src.agent.config import AgentConfig, MCPServerConfig
 from src.agent.skills import SkillRegistry, ToolCall
+from src.config import get_key
 
 
 @dataclass
@@ -113,8 +113,7 @@ class AgentCore:
     def _append_history(self, msg: Message) -> None:
         self.history.append(msg)
         try:
-            import asyncio
-            lock = self._get_history_lock()
+            self._get_history_lock()
             path = self._history_path()
             path.parent.mkdir(parents=True, exist_ok=True)
             with path.open("a", encoding="utf-8") as f:

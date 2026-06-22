@@ -2,14 +2,13 @@
 
 from __future__ import annotations
 
-import asyncio
 import os
 import time
 from typing import Any
 
 from src.config import get_key
 from src.llm.config import LLMProvider, get_default_model
-from src.llm.providers.base import BaseLLMClient, LLMResponse
+from src.llm.providers.base import BaseLLMClient
 
 
 class XAIClient(BaseLLMClient):

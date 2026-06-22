@@ -134,13 +134,13 @@ class CuBLASWrapper:
                 result = cp.asnumpy(c_gpu)
                 mem_mb = (a.nbytes + b.nbytes + result.nbytes) / (1024 * 1024)
                 self._bridge._cost_tracker.record_kernel(mem_mb)
-                elapsed = time.perf_counter() - start
+                time.perf_counter() - start
                 return result
             except Exception as e:
                 logger.warning(f"cuBLAS matmul failed, falling back to CPU: {e}")
 
         result = np.matmul(a, b)
-        elapsed = time.perf_counter() - start
+        time.perf_counter() - start
         return result
 
     def vector_dot(self, a: np.ndarray, b: np.ndarray) -> float:
@@ -206,7 +206,7 @@ class CuDNNWrapper:
         padding: tuple[int, int] = (0, 0),
     ) -> np.ndarray:
         """2D convolution. Falls back to SciPy or naive NumPy."""
-        start = time.perf_counter()
+        time.perf_counter()
         self._bridge._cost_tracker.start_session()
 
         if self._bridge.is_gpu_mode() and self._try_import():
@@ -303,7 +303,7 @@ class CuQuantumWrapper:
 
     def apply_gate(self, state_vector: np.ndarray, gate_matrix: np.ndarray, target_qubits: list[int]) -> np.ndarray:
         """Apply quantum gate to state vector. Falls back to NumPy."""
-        start = time.perf_counter()
+        time.perf_counter()
         self._bridge._cost_tracker.start_session()
 
         if self._bridge.is_gpu_mode() and self._try_import():

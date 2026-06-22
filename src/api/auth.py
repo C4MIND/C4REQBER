@@ -208,7 +208,7 @@ class AuthManager:
         """Create new user in SQLite database."""
         from src.api.db_manager import get_db
 
-        db = await get_db()
+        await get_db()
         user_id = str(uuid.uuid4())
         password_hash = self.hash_password(password)
 

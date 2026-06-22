@@ -7,10 +7,7 @@ beautiful output across all commands.
 """
 
 import sys
-from datetime import datetime
-from enum import Enum
 from pathlib import Path
-from typing import List, Optional
 
 import typer
 from rich.console import Console
@@ -25,14 +22,12 @@ sys.path.insert(0, str(Path(__file__).parent))
 from src.design import (
     ICONS,
     DesignTokens,
-    ErrorDisplay,
     PanelType,
     ProgressIndicator,
     ResultDisplay,
     StatusIndicator,
     StyledPanel,
     StyledTable,
-    print_divider,
     print_section_header,
 )
 
@@ -124,7 +119,7 @@ def solve_command(
         ]
 
         total_work = 100
-        work_per_stage = total_work / len(stages)
+        total_work / len(stages)
 
         for i, (stage_id, description) in enumerate(stages):
             task = progress.add_task(description, total=100)
@@ -362,7 +357,7 @@ def research_semantic(
 
     # Progress
     with ProgressIndicator.search_progress() as progress:
-        task = progress.add_task("Searching Semantic Scholar...")
+        progress.add_task("Searching Semantic Scholar...")
         import time
 
         time.sleep(0.5)

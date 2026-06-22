@@ -5,7 +5,6 @@ Arrow keys: navigate. Enter: install/remove. Q: quit.
 
 from __future__ import annotations
 
-import asyncio
 
 from rich.console import Console
 from rich.table import Table
@@ -48,7 +47,7 @@ def tui_package_manager() -> None:
                 PackageStatus.INCOMPATIBLE: "✗",
                 PackageStatus.UNKNOWN: "?",
             }
-            icon = icon_map.get(st, "?")
+            icon_map.get(st, "?")
             status_str = {
                 PackageStatus.INSTALLED: "[green]installed[/]",
                 PackageStatus.AVAILABLE: "[dim]available[/]",
@@ -101,7 +100,6 @@ def _keyboard_input() -> str:
     import sys
     try:
         from textual.app import App
-        from textual.events import Key
         active_app = App.get_running_app()  # type: ignore[attr-defined]
         if active_app:
             return ""  # Textual handles keys via on_key, not raw stdin

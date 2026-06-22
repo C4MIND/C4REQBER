@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import logging
 from contextlib import asynccontextmanager
-from typing import Any, AsyncGenerator, Optional
+from typing import Any, AsyncGenerator
 
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import (

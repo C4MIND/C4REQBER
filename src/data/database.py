@@ -13,7 +13,7 @@ import sqlite3
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from src.config.db_config import DatabaseConfig, get_database_config
 from src.di.container import get_container

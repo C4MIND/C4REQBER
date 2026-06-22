@@ -133,7 +133,7 @@ def anova_sample_size(
         raise ValueError("effect_size must be > 0")
     if k_groups < 2:
         raise ValueError("k_groups must be >= 2")
-    df_between = k_groups - 1
+    k_groups - 1
     z_alpha = stats.norm.ppf(1 - alpha)
     z_beta = stats.norm.ppf(power)
     n_per_group = ((z_alpha + z_beta) / effect_size) ** 2

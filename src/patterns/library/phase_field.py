@@ -296,7 +296,7 @@ class PhaseFieldPattern(SimulationPattern):
 
         # Final state
         final = self.history[-1]
-        initial = self.history[0]
+        self.history[0]
 
         # Growth exponent estimate
         if len(self.history) >= 3:

@@ -372,7 +372,7 @@ class MarketMaker(Agent):
             id=0, side=Side.BUY, order_type=OrderType.LIMIT,
             price=bid_price, quantity=500, timestamp=time, agent_id=self.agent_id
         )
-        ask_order = Order(
+        Order(
             id=0, side=Side.SELL, order_type=OrderType.LIMIT,
             price=ask_price, quantity=500, timestamp=time, agent_id=self.agent_id
         )

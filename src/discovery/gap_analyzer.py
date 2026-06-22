@@ -35,7 +35,7 @@ class AutoGapAnalyzer(GapAnalyzer):
             snippet = s.get("snippet", s.get("abstract", s.get("description", "")))
             texts.append(f"{title}. {snippet}")
 
-        corpus = "\n\n".join(texts)
+        "\n\n".join(texts)
 
         # Build rich corpus with real source attribution
         rich_corpus = ""

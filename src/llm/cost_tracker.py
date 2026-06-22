@@ -2,6 +2,7 @@
 
 Tracks token usage and estimated cost per request / session.
 """
+
 from __future__ import annotations
 
 import threading

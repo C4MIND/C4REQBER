@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import logging
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 import numpy as np
@@ -77,6 +77,55 @@ class BaseConfig:
     verbose: bool = False
 
 
+@dataclass
+class PatternResult:
+    """Structured, JSON-serializable result returned by every BasePattern.
+
+    Audit 2026-06-22 P2-D (PoC): unifies the pattern return shape so
+    results can cross process/RPC boundaries in the planned Agda
+    rewrite. Old dict-returning subclasses still work — convert via
+    PatternResult.from_dict(d).
+    """
+    pattern_id: str
+    status: str = "ok"  # ok | error | timeout | skipped
+    data: dict[str, Any] = field(default_factory=dict)
+    metrics: dict[str, float] = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
+    error_message: str = ""
+    elapsed_seconds: float = 0.0
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "pattern_id": self.pattern_id,
+            "status": self.status,
+            "data": self.data,
+            "metrics": self.metrics,
+            "metadata": self.metadata,
+            "error_message": self.error_message,
+            "elapsed_seconds": self.elapsed_seconds,
+        }
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> "PatternResult":
+        """Backward-compat: wrap a legacy dict return value."""
+        raw_data = d.get("data")
+        if isinstance(raw_data, dict):
+            data = raw_data
+        elif raw_data is None:
+            data = {}
+        else:
+            data = {"result": raw_data}
+        return cls(
+            pattern_id=str(d.get("pattern_id", "unknown")),
+            status=str(d.get("status", "ok")),
+            data=data,
+            metrics=dict(d.get("metrics", {})) if isinstance(d.get("metrics"), dict) else {},
+            metadata=dict(d.get("metadata", {})) if isinstance(d.get("metadata"), dict) else {},
+            error_message=str(d.get("error_message", d.get("error", ""))),
+            elapsed_seconds=float(d.get("elapsed_seconds", d.get("duration", 0.0))),
+        )
+
+
 class BasePattern(ABC):
     """Abstract base class for all C4REQBER patterns."""
 
@@ -94,7 +143,12 @@ class BasePattern(ABC):
 
     @abstractmethod
     def run(self, hypothesis: dict[str, Any] | None = None) -> dict[str, Any]:
-        """Execute the pattern simulation."""
+        """Execute the pattern simulation.
+
+        Note: subclasses should ideally return PatternResult (structured).
+        Legacy dict returns are still accepted by callers via
+        PatternResult.from_dict() for backward compatibility.
+        """
         pass
 
     @classmethod

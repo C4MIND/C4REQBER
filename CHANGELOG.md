@@ -2,7 +2,138 @@
 
 ## v9.13.x (2026-06-22) — feat/production-upgrade
 
-Production-upgrade audit pass: 9 atomic commits, +535/-220 lines,
+Production-upgrade audit pass: 14 atomic commits (2 rounds).
+
+### Round 2 — deep audit (staticcheck + manual + regression tests)
+
+- **CRITICAL: regular typing now works.** Round 1 removed
+  `m.ta.Update(msg)` from the start of the KeyPressMsg case
+  but left an earlier 'v9.13.x fix' explicit `return m, nil`
+  that blocked the fallthrough's textarea update — so typing
+  letters did NOTHING. Caught by the new
+  `TestStateMachine_KeyPress_NoDoubleTextareaUpdate` regression
+  test on the very first run. Fix: removed the explicit return
+  so unmatched letter keys fall through to the bottom of
+  Update() and the textarea gets the keystroke exactly once.
+
+- **persist.Save race fix.** `Store.Save()` was releasing the
+  mutex before `os.Rename` — two concurrent Saves could stomp
+  on each other's `s.path+".tmp"` file. Lock now held across
+  the whole marshal+write+rename.
+
+- **Test isolation (TestMain).** 33+ tests in the main package
+  were reading (and sometimes writing) the developer's real
+  `~/.c4reqber` because they called `NewApp("http://test")`
+  without setting HOME. New `main_test.go` defaults HOME to
+  a fresh tempdir at package init; per-test `t.Setenv("HOME",
+  tmp)` still works for tests that need real persistence
+  (resume_test, feed_persist_test).
+
+- **Dead code cleanup (staticcheck U1000).** Removed
+  `sseStreamWithReconnect` + `SSEStreamResult` (the actual
+  SSE path uses `sseContinueCmd`), `papersCmd`/`multiCmd`
+  unused API wrappers, `apiHypothesisMsg` type, `clampFocus`
+  method, `fmtDiscoveryMeta` helper, `starsPattern` field,
+  `smallCrystalLines` + `splashFadeOutMs` vars, `ansiRe` test
+  var, the entire `lang_helper_test.go` test file. Also
+  removed 3 dead `var _ = X` keep-alive lines whose purpose
+  never materialised.
+
+- **Style fixes (staticcheck S1002/S1023/ST1013).**
+  `ditherStyle.GetBold() == false` → `!ditherStyle.GetBold()`,
+  `m.paletteActive == false` → `!m.paletteActive`,
+  401 literal → `http.StatusUnauthorized`, 6 redundant
+  `; break` at end of switch cases. Applied gofumpt
+  (trailing commas in multi-line calls).
+
+- **Benchmark.** `BenchmarkFeedStoreLoadRecent_Dedup`
+  (141µs/op for 1000 entries with 50% dups, 2KB allocs)
+  locks in the O(n) dedup performance.
+
+### Round 1 — initial audit (5 correctness + 9 new tests + 5 packaging)
+
+- **Achievement dedup across restarts.** Previously every
+  TUI launch re-unlocked all previously-earned achievements,
+  which re-appended achievement cards in the feed on every
+  session and (more visibly) made the on-disk discovery
+  counter explode.
+  `AchievementSystem.LoadFromStore` now hydrates
+  `Items[].Unlocked` from the persisted `Store` on `NewApp`,
+  and `FeedStore.LoadRecent` self-heals the feed by deduping
+  entries with the same `(Kind, Title)` (bookmarks are
+  preserved).
+
+- **Missing mutex on `CheckSimAchievements`.** v9.13.x added
+  `sync.Mutex` to `Check()` but missed `CheckSimAchievements()`.
+  Caught by the new `TestAchievementSystem_ConcurrentCheck` under
+  `go test -race`. Both functions now hold `mu` for the full
+  read-modify-write of `Items[].Unlocked`.
+
+- **Per-achievement batching in `checkAchievements`.** Was
+  calling `m.store.IncrementDiscovery()` and `m.store.Save()`
+  once per unlocked achievement — a discovery that fired
+  FirstDiscovery + QualityS + MultiPaper would increment the
+  counter 3x and rewrite the state file 3x. Both are now
+  batched into a single call per `checkAchievements` invocation
+  (i.e. once per discovery completion).
+
+- **Overlay featured the wrong achievement.** `ShowOverlay` was
+  called with `unlocked[len-1].Name` (the most recent unlock)
+  but the render function picked `unlocked[0]` (registry-order
+  first, always `AchFirstDiscovery`). Result: even after
+  unlocking MultiPaper, the overlay still announced "First
+  Discovery". Both the render and the show path now use the
+  most recent unlock.
+
+- **NewAppFresh diverged from NewApp.** Was missing
+  `saveHistory: true`, had a dead `zoneId := 0` leftover from
+  an old refactor. Both fixed; `newModelSkeleton` extracted
+  as the shared constructor.
+
+### New tests (audit invariant locks)
+
+- `TestAchievementSystem_LoadFromStore` (+3 variants): hydrate
+  from store, nil-store, idempotent, no-re-unlock-after-load.
+- `TestAchievementSystem_ConcurrentCheck`: 8-goroutine race
+  on Check + CheckSimAchievements. Catches the bug in #2.
+- `TestFeedStore_LoadRecent_Dedup` (+2 variants): basic dedup,
+  bookmark preservation, dedup-window over-read.
+- `TestFeedPath_Preferred`: when `~/.c4reqber` exists, the
+  feed lives there (not `~/.config/c4reqber`).
+- `TestStateMachine_CheckAchievements_IncrementsOnce`:
+  asserts the on-disk `DiscoveryCount` is 1 after a multi-
+  unlock check (catches the per-achievement Save bug).
+- `TestStateMachine_CheckAchievements_OverlayUsesLastUnlock`
+  + `TestAchievementOverlay_ShowsMostRecentUnlock`: assert
+  the overlay features the most-recent unlock, not the first.
+- `TestStateMachine_KeyPress_NoDoubleTextareaUpdate`:
+  asserts typing 'a' results in ta.Value() == 'a' (catches
+  the round-1 input-breaking regression in the critical-UX
+  fix above).
+
+### Packaging (mac/win desktop)
+
+- **Version sync.** Three files claimed `5.6.0` while the Go
+  TUI is `v9.13.0` (`mac/Info.plist`, `c4reqber-desktop.spec`,
+  `win/build.iss`). All three bumped to `9.13.0`/`913` with
+  cross-reference comments so future bumps update all four
+  places (CHANGELOG is the 4th).
+- **Windows arm64 added.** Inno Setup installer was x64-only;
+  the Makefile `release-all` target now also produces
+  `c4tui-v9-windows-arm64.exe` for Snapdragon / Surface Pro X.
+- **Windows launcher.bat fixes.** `blast init` → `%~dp0blast.exe
+  init` (PATH lookup was unreliable for installer-bundled exes).
+  Added missing C4_LANG / C4_API_EMAIL / C4_API_PASSWORD env
+  exports (email/password auth was silently failing on Windows).
+  Mirrored the mac splash header byte-for-byte.
+- **mac Info.plist** gains `LSApplicationCategoryType`,
+  `CFBundleCopyright`, `NSHumanReadableCopyright`, `CFBundleDisplayName`.
+- **Python launcher_entry** removed the dead `_get_desktop_version`
+  function that always returned `"v9"`. Splash banner now reads
+  the version from the actual bundled TUI via the new
+  `tui_launcher.tui_v9_version()` helper.
+
+## v9.13.0 (2026-06-12) — friendely-merge-tui-upgrade
 all 9/9 test packages pass under `go test -race`, `go vet` clean.
 Branch: `feat/production-upgrade` (local commits only, no push).
 

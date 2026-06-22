@@ -97,7 +97,12 @@ async def _run_flash_job(job_id: str, request: FlashRequest) -> None:
 async def one_click_discovery_route(request: OneClickRequest) -> dict[str, Any]:
     store = get_job_store()
     job = await store.create("one-click", request.model_dump())
-    asyncio.create_task(_run_one_click_job(job.job_id, request))
+    # Audit 2026-06-22 M-5: fire-and-forget tasks can swallow exceptions
+    # after the 202 response is sent. Wrap in _supervised_task so any error
+    # is logged AND sets the job to 'failed' (not stuck in 'running' forever).
+    asyncio.create_task(
+        _supervised_task(_run_one_click_job(job.job_id, request), job_id=job.job_id, kind="one-click")
+    )
     return {"job_id": job.job_id, "status": job.status.value}
 
 
@@ -105,8 +110,24 @@ async def one_click_discovery_route(request: OneClickRequest) -> dict[str, Any]:
 async def flash_discovery_route(request: FlashRequest) -> dict[str, Any]:
     store = get_job_store()
     job = await store.create("flash", request.model_dump())
-    asyncio.create_task(_run_flash_job(job.job_id, request))
+    asyncio.create_task(
+        _supervised_task(_run_flash_job(job.job_id, request), job_id=job.job_id, kind="flash")
+    )
     return {"job_id": job.job_id, "status": job.status.value}
+
+
+async def _supervised_task(coro, *, job_id: str, kind: str) -> None:
+    """Wrap a fire-and-forget coroutine so uncaught exceptions are logged
+    and the job is marked failed (instead of silently stuck in 'running')."""
+    try:
+        await coro
+    except Exception as exc:
+        logger.exception("fire-and-forget task failed: %s (job_id=%s)", kind, job_id)
+        try:
+            store = get_job_store()
+            await store.set_failed(job_id, [f"{type(exc).__name__}: {exc}"])
+        except Exception:
+            logger.exception("could not mark job %s as failed", job_id)
 
 
 @router.post("/multi")

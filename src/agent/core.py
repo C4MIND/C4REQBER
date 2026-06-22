@@ -182,12 +182,19 @@ You are an AI research and engineering assistant with deep access to the c4reqbe
             if mcp_cfg.name in self._mcp_processes:
                 continue
             try:
+                # Audit 2026-06-22 M-6: close_fds=True prevents fd leaks across
+                # forks; start_new_session=True makes the child its own process
+                # group so we can kill it cleanly on shutdown without affecting
+                # the parent (avoids orphaned MCP server processes surviving
+                # agent stop, as observed in audit finding).
                 proc = subprocess.Popen(
                     [mcp_cfg.command] + mcp_cfg.args,
                     stdin=subprocess.PIPE,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
                     env={**os.environ, **mcp_cfg.env} if mcp_cfg.env else None,
+                    close_fds=True,
+                    start_new_session=True,
                 )
                 self._mcp_processes[mcp_cfg.name] = proc
             except Exception:

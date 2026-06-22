@@ -2,7 +2,60 @@
 
 ## v9.13.x (2026-06-22) — feat/production-upgrade
 
-Production-upgrade audit pass: 14 atomic commits (2 rounds).
+Production-upgrade audit pass: 16 atomic commits (3 rounds).
+
+### Round 3 — perf, memory, error-path coverage
+
+- **Zone ID collision fix.** `appendCard` and `renderCard` both
+  built the zone ID as `card-{c.Time.UnixNano()}` — two cards
+  appended in the same nanosecond (bursty: 100 papers in a
+  tight loop) shared a zone ID, and the mouse-click handler
+  routed to the WRONG card. Switched to `card-{c.ID}` (c.ID
+  is a monotonic uint64 from `cards.NextID()` — collision-free).
+  The click handler now parses the numeric ID instead of doing
+  `fmt.Sprintf` per feed card per click.
+
+- **FlashAndWait retry cap.** `api.FlashAndWait` polled every
+  2s and `continue`d on transient errors. If the backend went
+  down permanently, this looped until ctx expired (up to 60s
+  flash timeout = 30 wasted polls). Now counts consecutive
+  errors and bails with a wrapped error after 3 (counter
+  resets on success — one network blip doesn't burn the
+  budget).
+
+- **rebuildFeedContent pre-size.** Added `strings.Builder.Grow`
+  hint to avoid 3-4 `growSlice` reallocations as the feed grows.
+
+- **TestStore_ConcurrentSaves** (race-test): 8 goroutines × 20
+  saves each, then reload from disk and assert the on-disk
+  JSON is valid + has 160 achievements + no `.tmp` file left
+  over. Locks the round-2 Save-lock fix from regressing.
+
+- **TestStateMachine_ZoneIDs_Unique**: 100 bursty appends
+  produce 100 unique zone IDs. Locks the round-3 fix.
+
+- **TestMock_FlashAndWait_BailsOnRepeatedFailures** +
+  **TestMock_FlashAndWait_RecoversAfterTransientError**:
+  guards the retry-cap (must bail at 3 failures, must reset
+  counter on success).
+
+- **TestLoadLangFromToml** (4 sub-tests): TOML loader happy
+  path, unquoted values silently dropped, reload overwrites
+  (not merges), missing file is an error. Coverage 23.4% →
+  66.0%.
+
+- **Dead code cleanup (round 3)**: `demo/demo.go` had a
+  `var _ = fmt.Sprintf` inside `Run`, a `var _ = api.JobStatus{}`
+  keep-alive, and unused `fmt` + `api` imports. All dropped.
+
+- **New benchmarks**:
+  - `BenchmarkView_FullFeed`: 312µs/op at 50 cards (1.9% of
+    16.67ms 60fps budget). Largest single allocator is
+    `bubblezone.(*scanner).emit` (34%, third-party).
+  - `BenchmarkFeedStoreAppend`: 23µs/op (way under 1ms
+    budget — `feed.jsonl` is NOT a perf bottleneck).
+
+### Round 2 — deep audit (staticcheck + manual + regression tests)
 
 ### Round 2 — deep audit (staticcheck + manual + regression tests)
 

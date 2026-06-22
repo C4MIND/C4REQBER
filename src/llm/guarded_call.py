@@ -142,11 +142,14 @@ async def guarded_chat_completion(
     max_tokens: int = 800,
     timeout: float = 60.0,
     extra_body: dict[str, Any] | None = None,
+    extra_headers: dict[str, str] | None = None,
 ) -> dict[str, Any]:
     """Wrap a raw /chat/completions POST with observability + safety.
 
     Returns the JSON response on success. Raises httpx.HTTPError on transport
-    failure (caller handles as before).
+    failure (caller handles as before). `extra_headers` lets callers attach
+    provider-specific attribution headers (OpenRouter requires HTTP-Referer
+    + X-Title).
     """
     provider = _provider_from_url(url)
     sanitized = _scan_messages(messages)
@@ -159,17 +162,17 @@ async def guarded_chat_completion(
     if extra_body:
         payload.update(extra_body)
 
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+    }
+    if extra_headers:
+        headers.update(extra_headers)
+
     t0 = time.monotonic()
     try:
         async with httpx.AsyncClient(timeout=timeout) as client:
-            r = await client.post(
-                url,
-                headers={
-                    "Authorization": f"Bearer {api_key}",
-                    "Content-Type": "application/json",
-                },
-                json=payload,
-            )
+            r = await client.post(url, headers=headers, json=payload)
             r.raise_for_status()
             data = r.json()
             _record_metrics(provider, model, "success", time.monotonic() - t0)
@@ -203,10 +206,14 @@ def guarded_chat_completion_sync(
     max_tokens: int = 800,
     timeout: float = 20.0,
     extra_body: dict[str, Any] | None = None,
+    extra_headers: dict[str, str] | None = None,
 ) -> dict[str, Any]:
-    """Synchronous variant for non-async call sites (e.g. embeddings).
+    """Synchronous variant for non-async call sites (e.g. embeddings,
+    sync urllib migrations like src/llm/client.py).
 
     Same contract as guarded_chat_completion but uses httpx.Client.
+    `extra_headers` lets callers attach provider-specific attribution
+    headers (OpenRouter requires HTTP-Referer + X-Title).
     """
     provider = _provider_from_url(url)
     sanitized = _scan_messages(messages)
@@ -219,17 +226,17 @@ def guarded_chat_completion_sync(
     if extra_body:
         payload.update(extra_body)
 
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+    }
+    if extra_headers:
+        headers.update(extra_headers)
+
     t0 = time.monotonic()
     try:
         with httpx.Client(timeout=timeout) as client:
-            r = client.post(
-                url,
-                headers={
-                    "Authorization": f"Bearer {api_key}",
-                    "Content-Type": "application/json",
-                },
-                json=payload,
-            )
+            r = client.post(url, headers=headers, json=payload)
             r.raise_for_status()
             data = r.json()
             _record_metrics(provider, model, "success", time.monotonic() - t0)

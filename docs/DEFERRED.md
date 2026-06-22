@@ -128,7 +128,10 @@ not a code-cleanup decision — defer to the maintainer.*
 **What it is:** 26 commits on `reorg/01-subtraction` → `reorg/12-arch-doc`
 + `stab/01-bug-sweep` → `stab/08-import-sweep` representing an in-place
 refactor of the Python codebase (~84.5k LOC deletion in MR-1, 11-commit
-core de-cycling refactor in MR-2, etc.).
+core de-cycling refactor in MR-2, etc.). *(In practice the stack
+extended through `stab/12-pipeline-fake-llm-test` for a total of 24
+commits, but `MERGE_PLAN.md` only documented the 26 on the 12+8
+branches.)*
 
 **Why deferred:** Since the reorg was frozen (2026-06-08), `feat/production-upgrade`
 has accumulated 91+ commits of Round 5 audit work that touches most of
@@ -137,14 +140,14 @@ significantly drifted from the post-audit codebase, with merge conflicts
 on the LLM / pipeline / API paths in particular.
 
 **Proposed resolution:**
-- **(a) Rebase:** bring `stab/08-import-sweep` up to current
+- **(a) Rebase:** bring `stab/12-pipeline-fake-llm-test` up to current
   `feat/production-upgrade` head. High conflict risk on LLM paths. The
   work was *good* (proper dead-code deletion, acyclic dependency graph)
   but the cost of rebasing is real.
 - **(b) Abandon:** per the REWORK_PLAN "Python is a tidy dead-end" stance,
   the refactor was for a Python codebase we're not going to expand much.
   Close `reorg/*` and `stab/*` branches with a pointer to this deferral.
-  The 26 commits stay reachable in git history; the work is preserved
+  The 24 commits stay reachable in git history; the work is preserved
   for reference but not pursued.
 
 **Recommendation:** (b) Abandon. The refactor's *substance* (dead-code
@@ -154,13 +157,14 @@ of the reorg was the dependency-graph re-organization, which the audit's
 quick wins have already partially achieved (8-package DAG mentioned in
 the master audit).
 
-**Action taken (2026-06-22):** Tagged the reorg tip
-(`stab/08-import-sweep` = `9c44cee`) as `archive/phase1-reorg-2026-06-08`
-so the work is preserved in history. The 18 working branches
-(`reorg/01..12` + `stab/01..08`) remain reachable but not pursued.
-The tag's annotation includes the exact `git branch -D` command for a
-future maintainer who wants to clean them up. No branches were deleted
-(this audit only tags; deletion is a separate explicit step).
+**Action taken (2026-06-22, O-3):** Tagged the reorg tip
+(`stab/12-pipeline-fake-llm-test` = `1872d60`) as
+`archive/phase1-reorg-2026-06-08` so the work is preserved in history.
+The 24 working branches (`reorg/01..12` + `stab/01..12`) have been
+DELETED locally (work reachable from the tag via git's reflog and
+the tag's commit tree). The two `friend-stack-merged` /
+`friendely-merge-tui-upgrade` branches were left in place because
+they have remote refs and may be needed for history references.
 
 ---
 

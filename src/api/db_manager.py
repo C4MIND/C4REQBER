@@ -90,14 +90,25 @@ class SQLiteDatabase:
         self._init_db()
 
     def _init_db(self) -> None:
-        """Initialize SQLite schema."""
+        """Initialize SQLite schema + pragmas for concurrent access."""
         with sqlite3.connect(str(self.db_path)) as conn:
             conn.executescript(SQLITE_SCHEMA)
+            # Audit 2026-06-22 H-11: WAL mode for concurrent readers + one writer,
+            # busy_timeout to surface contention instead of raising immediately,
+            # and foreign_keys = ON to enforce schema invariants.
+            conn.execute("PRAGMA journal_mode = WAL")
+            conn.execute("PRAGMA busy_timeout = 5000")
+            conn.execute("PRAGMA foreign_keys = ON")
+            conn.execute("PRAGMA synchronous = NORMAL")
             conn.commit()
 
     def _connection(self) -> Any:
-        conn = sqlite3.connect(str(self.db_path))
+        conn = sqlite3.connect(str(self.db_path), timeout=5.0)
         conn.row_factory = sqlite3.Row
+        # Apply pragmas on every new connection (SQLite connections are independent).
+        conn.execute("PRAGMA journal_mode = WAL")
+        conn.execute("PRAGMA busy_timeout = 5000")
+        conn.execute("PRAGMA foreign_keys = ON")
         return conn
 
     async def connect(self) -> None:

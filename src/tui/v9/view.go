@@ -278,7 +278,7 @@ func renderCard(c Card, width int, verdictChips string, focused, expanded bool) 
 	if expanded {
 		border = "║" // yet another border on expand
 	}
-	zoneID := fmt.Sprintf("card-%d", c.Time.UnixNano())
+	zoneID := fmt.Sprintf("card-%d", c.ID)
 	var inner string
 	switch c.Kind {
 	case CardPhase:

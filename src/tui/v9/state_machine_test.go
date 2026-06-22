@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/figuramax/c4reqber-tui-v9/api"
+	"github.com/figuramax/c4reqber-tui-v9/cards"
 	"github.com/figuramax/c4reqber-tui-v9/i18n"
 	"github.com/figuramax/c4reqber-tui-v9/persist"
 )
@@ -431,7 +432,42 @@ func TestStateMachine_MouseClickLeft(t *testing.T) {
 	_ = u
 }
 
-// TestStateMachine_KeyPress_NoDoubleTextareaUpdate guards the v9.13.x
+// TestStateMachine_ZoneIDs_Unique guards the v9.13.x fix that
+// switched zone IDs from c.Time.UnixNano() (collision-prone for
+// bursty card appends — two cards in the same nanosecond shared
+// the same ID and the click handler routed to the wrong card) to
+// c.ID (monotonic uint64 from cards.NextID()). Asserts no two
+// zone IDs collide when many cards are appended rapidly.
+func TestStateMachine_ZoneIDs_Unique(t *testing.T) {
+	m := NewAppFresh("http://test")
+	// NewAppFresh starts with 1 empty placeholder card; capture
+	// its zone ID count so we measure the new appends only.
+	baseline := len(m.zoneIDs)
+	// Append 100 cards in a tight loop. With UnixNano() they
+	// would all get the same ID if executed in the same nanosecond
+	// (which happens on M-class CPUs). With c.ID they're guaranteed
+	// unique.
+	for i := 0; i < 100; i++ {
+		m.appendCard(cards.Card{
+			Kind:  cards.KindPaper,
+			Title: "burst paper " + string(rune('a'+i%26)),
+		})
+	}
+	if got := len(m.zoneIDs) - baseline; got != 100 {
+		t.Fatalf("expected 100 new zone IDs, got %d (baseline=%d, now=%d)",
+			got, baseline, len(m.zoneIDs))
+	}
+	seen := map[string]bool{}
+	for _, zid := range m.zoneIDs {
+		if seen[zid] {
+			t.Errorf("duplicate zone ID: %q (out of %d total)", zid, len(m.zoneIDs))
+		}
+		seen[zid] = true
+	}
+	if len(seen) != len(m.zoneIDs) {
+		t.Errorf("expected %d unique zone IDs, got %d", len(m.zoneIDs), len(seen))
+	}
+}
 // audit fix where the KeyPressMsg case did `m.ta, cmd = m.ta.Update(msg)`
 // TWICE for the same message (once at the start of the case, once
 // at the fallthrough). For regular characters, this caused every

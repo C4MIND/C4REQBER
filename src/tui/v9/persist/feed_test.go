@@ -274,3 +274,19 @@ func BenchmarkFeedStoreLoadRecent_Dedup(b *testing.B) {
 		_, _ = f.LoadRecent(50)
 	}
 }
+
+// BenchmarkFeedStoreAppend measures the per-card write cost on the
+// hot path (appendCard in the model calls this synchronously on every
+// new card). Goal: keep this well under 1ms so a 50-card session
+// doesn't spend 50ms at exit just on persistence.
+func BenchmarkFeedStoreAppend(b *testing.B) {
+	tmp := b.TempDir()
+	b.Setenv("HOME", tmp)
+	f, _ := NewFeedStore(50)
+	now := time.Now()
+	entry := FeedEntry{Kind: 7, Title: "bench", Time: now}
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_ = f.Append(entry)
+	}
+}

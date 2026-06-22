@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os/exec"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 
@@ -579,9 +580,16 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		for _, zid := range m.zoneIDs[start:] {
 			z := zone.Get(zid)
 			if z != nil && z.InBounds(msg) {
-				// Find the corresponding card and show its title
+				// Find the corresponding card and show its title.
+				// Zone IDs are 'card-{c.ID}' (see appendCard + renderCard)
+				// — was 'card-{c.Time.UnixNano()}' before, but two cards
+				// added in the same nanosecond (e.g. loading 100 papers
+				// at once) would share an ID and the click would route
+				// to the wrong one. c.ID is a monotonic uint64 from
+				// cards.NextID() so it's collision-free.
+				idStr := strings.TrimPrefix(zid, "card-")
 				for _, c := range m.feed {
-					if fmt.Sprintf("card-%d", c.Time.UnixNano()) == zid {
+					if strconv.FormatUint(uint64(c.ID), 10) == idStr {
 						m.setToast("selected: " + c.Title)
 						if len(m.toast) > 60 {
 							m.toast = m.toast[:60] + "…"
@@ -782,8 +790,11 @@ func (m *model) appendCard(c Card) {
 	if m.follow {
 		m.vp.GotoBottom()
 	}
-	// Track zone ID for mouse click routing
-	zoneID := fmt.Sprintf("card-%d", c.Time.UnixNano())
+	// Track zone ID for mouse click routing. Uses c.ID (not c.Time
+	// .UnixNano()) so two cards added in the same nanosecond don't
+	// share a zoneID and route clicks to the wrong card. The
+	// matching ID-keyed lookup is in the MouseClickMsg handler.
+	zoneID := fmt.Sprintf("card-%d", c.ID)
 	m.zoneIDs = append(m.zoneIDs, zoneID)
 	// v9.13: persist to feed.jsonl (best-effort, never blocks UI)
 	if m.feedStore != nil {
@@ -863,7 +874,11 @@ func (m *model) updateLangSeen() {
 }
 
 func (m *model) rebuildFeedContent() {
+	// Pre-size the builder. Cards render to ~width*2 bytes on
+	// average (border + body + meta); sizing avoids 3-4 growSlice
+	// reallocations as the feed grows.
 	var b strings.Builder
+	b.Grow(len(m.feed) * m.width * 2)
 	// v9.13.x: empty widgets no longer rendered into the scrollable
 	// feed viewport — they live in the ALWAYS-VISIBLE base panel above.
 	// The feed now only renders real discovery cards, so the empty

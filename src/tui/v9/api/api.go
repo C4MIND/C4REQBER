@@ -191,6 +191,11 @@ func (c *Client) JobStatus(ctx context.Context, jobID string) (JobStatus, error)
 }
 
 // FlashAndWait runs flash; if the API returns job_id, polls until complete.
+// Returns an error after 3 consecutive JobStatus failures (transient
+// errors are common and we tolerate them, but a sustained outage should
+// not make us poll forever — the user's context is typically 60s for
+// flash, so 3 failures × 2s = 6s of backoff plus the actual poll cadence
+// stays well under the timeout).
 func (c *Client) FlashAndWait(ctx context.Context, problem, domain string) (map[string]any, error) {
 	raw, err := c.Flash(ctx, problem, domain)
 	if err != nil {
@@ -205,6 +210,8 @@ func (c *Client) FlashAndWait(ctx context.Context, problem, domain string) (map[
 	}
 	ticker := time.NewTicker(2 * time.Second)
 	defer ticker.Stop()
+	const maxConsecutiveErrors = 3
+	consecutiveErrors := 0
 	for {
 		select {
 		case <-ctx.Done():
@@ -212,8 +219,13 @@ func (c *Client) FlashAndWait(ctx context.Context, problem, domain string) (map[
 		case <-ticker.C:
 			js, err := c.JobStatus(ctx, jobID)
 			if err != nil {
+				consecutiveErrors++
+				if consecutiveErrors >= maxConsecutiveErrors {
+					return nil, fmt.Errorf("job %s: %d consecutive status failures: %w", jobID, consecutiveErrors, err)
+				}
 				continue
 			}
+			consecutiveErrors = 0
 			if js.Completed {
 				if js.Result != nil {
 					return js.Result, nil

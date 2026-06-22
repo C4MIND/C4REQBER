@@ -203,3 +203,55 @@ pages:
     - if: $CI_COMMIT_BRANCH == "main"
     - if: $CI_COMMIT_BRANCH == "feat/production-upgrade"
   needs: []
+
+# ═══════════════════════════════════════════════════════════════
+# PyPI PUBLISH (GitLab-native)
+# ═══════════════════════════════════════════════════════════════
+# Owner action: add CI/CD variables in GitLab UI (Settings → CI/CD → Variables):
+#   - PYPI_API_TOKEN       (Protected, Masked) — production PyPI token
+#   - TEST_PYPI_API_TOKEN  (Protected, Masked) — TestPyPI token
+# Before tagging the first release. Audit 2026-06-22 H-1 (full resolution).
+#
+# - workflow_dispatch with PYPI_REPO=testpypi → TestPyPI dry-run
+# - Tag push v*.*.* → production PyPI
+# - Both require the matching CI variable to be present
+
+pypi-publish-test:
+  stage: deploy
+  image: python:3.11-slim
+  before_script:
+    - pip install --upgrade pip build twine
+  script:
+    - python -m build
+    - twine check dist/*
+    - twine upload --repository testpypi dist/*
+  variables:
+    TWINE_USERNAME: __token__
+    TWINE_PASSWORD: $TEST_PYPI_API_TOKEN
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "web"
+      when: manual
+      allow_failure: true
+  needs: ["test-backend"]
+  artifacts:
+    paths:
+      - dist/
+
+pypi-publish-prod:
+  stage: deploy
+  image: python:3.11-slim
+  before_script:
+    - pip install --upgrade pip build twine
+  script:
+    - python -m build
+    - twine check dist/*
+    - twine upload dist/*
+  variables:
+    TWINE_USERNAME: __token__
+    TWINE_PASSWORD: $PYPI_API_TOKEN
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/
+  needs: ["test-backend"]
+  artifacts:
+    paths:
+      - dist/

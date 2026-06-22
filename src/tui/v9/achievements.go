@@ -367,8 +367,3 @@ func cycleLangName(current i18n.Lang) i18n.Lang {
 	}
 	return i18n.LangEN
 }
-
-// fmtDiscoveryMeta is a helper for the discovery complete card.
-func fmtDiscoveryMeta(quality float64, paperCount int) string {
-	return fmt.Sprintf("quality=%.0f%% · papers=%d", quality*100, paperCount)
-}

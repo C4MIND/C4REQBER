@@ -175,7 +175,7 @@ func (ba *BioAurora) RenderAurora(plain string, y int, baseStyle, ditherStyle li
 	if ba == nil || plain == "" {
 		return baseStyle.Render(plain)
 	}
-	if ditherStyle.GetForeground() == (lipgloss.Color("")) && ditherStyle.GetBold() == false {
+	if ditherStyle.GetForeground() == (lipgloss.Color("")) && !ditherStyle.GetBold() {
 		// No dither style supplied — fall back to baseStyle for safety
 		// (caller forgot to pass it). Maintains backwards compat with
 		// v9.11.2 callers that didn't know about the second arg.

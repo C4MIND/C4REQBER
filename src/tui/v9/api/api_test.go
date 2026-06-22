@@ -49,7 +49,7 @@ func TestMock_RegisterLoginSubmit(t *testing.T) {
 			var body map[string]any
 			json.NewDecoder(r.Body).Decode(&body)
 			if body["email"] != "kilo@test.com" {
-				http.Error(w, "invalid creds", 401)
+				http.Error(w, "invalid creds", http.StatusUnauthorized)
 				return
 			}
 			writeJSON(w, 200, `{"access_token":"jwt-test-token","token_type":"bearer"}`)

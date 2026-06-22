@@ -214,10 +214,6 @@ type (
 		papers []map[string]any
 		err    error
 	}
-	apiHypothesisMsg struct {
-		hyp map[string]any
-		err error
-	}
 	sseEventMsg struct {
 		event  api.SSEEvent
 		events <-chan api.SSEEvent
@@ -762,18 +758,4 @@ func (m *model) focusedCard() *Card {
 		idx = len(m.feed) - 1
 	}
 	return &m.feed[idx]
-}
-
-// clampFocus ensures m.focusedCardIdx is in [0, len(feed)-1] after a mutation.
-func (m *model) clampFocus() {
-	if len(m.feed) == 0 {
-		m.focusedCardIdx = -1
-		return
-	}
-	if m.focusedCardIdx < 0 {
-		m.focusedCardIdx = len(m.feed) - 1
-	}
-	if m.focusedCardIdx >= len(m.feed) {
-		m.focusedCardIdx = len(m.feed) - 1
-	}
 }

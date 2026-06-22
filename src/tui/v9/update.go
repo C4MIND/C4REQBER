@@ -137,9 +137,19 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 
 	case tea.KeyPressMsg:
-		var cmd tea.Cmd
-		m.ta, cmd = m.ta.Update(msg)
-		cmds = append(cmds, cmd)
+		// v9.13.x AUDIT: the previous code did `m.ta, cmd = m.ta.Update(msg)`
+		// HERE, before any key handling. Combined with the fallthrough
+		// `m.ta, cmd = m.ta.Update(msg)` at the bottom of Update(), this
+		// meant every keystroke (including regular characters) was
+		// processed by the textarea TWICE — once here (and then the cmd
+		// was silently dropped by the early-return cases), once again
+		// at the fallthrough (where the cmd was actually returned).
+		// Net effect: typed characters appeared doubled in the input.
+		// The correct fix is to handle the textarea ONCE, at the
+		// fallthrough, so special keys (Esc/Enter/arrows/Tab) skip
+		// the textarea entirely (they're TUI-level, not input-level).
+		// regular characters reach the fallthrough and are processed
+		// exactly once.
 
 		// v9.13 (§16.2): when palette is open, route keystrokes to it
 		// BEFORE the main switch.
@@ -241,8 +251,8 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				_ = m.inputHistory.Add(val, string(m.mode))
 			}
 			m.ta.Reset()
-			cmd = m.startDiscovery(val)
-			return m, cmd
+			startCmd := m.startDiscovery(val)
+			return m, startCmd
 		case km.Matches(ActCancel, keyStr), km.Matches(ActEscape, keyStr):
 			// v9.13 (F-12): first, collapse any expanded card
 			if c := m.focusedCard(); c != nil && c.State == cards.StateExpanded {
@@ -493,7 +503,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.setToast("focused: last (follow on)")
 			}
 			return m, nil
-		case keyStr == "enter" && !m.ta.Focused() && m.paletteActive == false:
+		case keyStr == "enter" && !m.ta.Focused() && !m.paletteActive:
 			// v9.13 (F-12): toggle expand on focused card.
 			// Only fires when Enter is NOT consumed by the textarea
 			// (i.e. user is not in the input box) and not by the

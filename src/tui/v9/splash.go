@@ -49,11 +49,10 @@ type SplashModel struct {
 	crystalStart time.Time // for boot progress display
 	phaseStart   time.Time // start time of current phase (for timed reveals + breathes)
 	// micro-polish additions (v9 polish pack)
-	crtY         int     // CRT scanline drift Y (crystal phase)
-	crtActive    bool    // enable CRT scanline during crystal phase
-	bloomShock   int     // bloom shockwave counter (0 = not firing)
-	starsPattern []rune  // pre-computed ASCII stars background
-	starsActive  bool    // render stars background (crystal + early waiting)
+	crtY         int    // CRT scanline drift Y (crystal phase)
+	crtActive    bool   // enable CRT scanline during crystal phase
+	bloomShock   int    // bloom shockwave counter (0 = not firing)
+	starsActive  bool   // render stars background (crystal + early waiting)
 }
 
 // Splash constants
@@ -64,7 +63,6 @@ const (
 	splashArtReserve    = 14                     // tagline+motto+version+status+footer+spacers+tier
 	splashPulseInterval = 600 * time.Millisecond // calmer + responsive pulse
 	splashTextFade      = 100 * time.Millisecond // crisper text fade-in
-	splashFadeOutMs     = 700 * time.Millisecond // tighter fade-out
 	splashBottomLift    = 2
 	splashMorphForms    = 6  // more intermediate morph forms (was 4)
 	splashBloomFrames   = 12 // bloom-in animation frames for cube
@@ -388,9 +386,6 @@ const c4rCompact = v8AsciiC4R
 // bigCrystalLines — REAL v8 purple ANSI crystal (seed art for morph).
 // Used in crystal phase (with ANSI colors visible) and as morph start.
 var bigCrystalLines = v8RawANSI
-
-// smallCrystalLines — REAL v8 small purple crystal (compact).
-var smallCrystalLines = v8RawANSISmall
 
 func splitSplashLines(s string) []string {
 	return strings.Split(strings.Trim(s, "\n"), "\n")

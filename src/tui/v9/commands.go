@@ -85,19 +85,6 @@ func sseContinueCmd(events <-chan api.SSEEvent, cancel func()) tea.Cmd {
 	}
 }
 
-// papersCmd for /v8/knowledge/search.
-func papersCmd(c *api.Client, query string) tea.Cmd {
-	return func() tea.Msg {
-		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-		defer cancel()
-		papers, err := c.KnowledgeSearch(ctx, query, 3)
-		if err != nil {
-			return apiPapersMsg{err: err}
-		}
-		return apiPapersMsg{papers: papers}
-	}
-}
-
 // flashCmd runs /v8/discover/flash (sync, ~5-10s).
 func flashCmd(c *api.Client, query string) tea.Cmd {
 	return func() tea.Msg {
@@ -108,19 +95,6 @@ func flashCmd(c *api.Client, query string) tea.Cmd {
 		}
 		result, err := c.FlashAndWait(ctx, query, "science")
 		return flashResultMsg{result: result, err: err}
-	}
-}
-
-// multiCmd runs /v8/discover/multi (sync, multi-hypothesis).
-func multiCmd(c *api.Client, query string) tea.Cmd {
-	return func() tea.Msg {
-		ctx, cancel := context.WithTimeout(context.Background(), 90*time.Second)
-		defer cancel()
-		if err := ensureAPIAuth(ctx, c); err != nil {
-			return multiResultMsg{err: err}
-		}
-		result, err := c.Multi(ctx, query, "science", 3)
-		return multiResultMsg{result: result, err: err}
 	}
 }
 

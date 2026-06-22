@@ -3,18 +3,17 @@ package tui
 import (
 	"context"
 	"fmt"
-	"strings"
-	"time"
-
 	"os/exec"
 	"runtime"
+	"strings"
+	"time"
 
 	tea "charm.land/bubbletea/v2"
 	zone "github.com/lrstanley/bubblezone/v2"
 
 	"github.com/figuramax/c4reqber-tui-v9/api"
-	"github.com/figuramax/c4reqber-tui-v9/cards"
 	"github.com/figuramax/c4reqber-tui-v9/capsim"
+	"github.com/figuramax/c4reqber-tui-v9/cards"
 	"github.com/figuramax/c4reqber-tui-v9/i18n"
 	"github.com/figuramax/c4reqber-tui-v9/persist"
 )

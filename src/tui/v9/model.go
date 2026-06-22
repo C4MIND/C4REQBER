@@ -12,8 +12,8 @@ import (
 	tea "charm.land/bubbletea/v2"
 
 	"github.com/figuramax/c4reqber-tui-v9/api"
-	"github.com/figuramax/c4reqber-tui-v9/cards"
 	"github.com/figuramax/c4reqber-tui-v9/capsim"
+	"github.com/figuramax/c4reqber-tui-v9/cards"
 	"github.com/figuramax/c4reqber-tui-v9/effects"
 	"github.com/figuramax/c4reqber-tui-v9/i18n"
 	"github.com/figuramax/c4reqber-tui-v9/persist"
@@ -22,8 +22,10 @@ import (
 
 // CardKind is a thin alias preserving the legacy names used in view.go and
 // update.go. New code should prefer cards.Kind.
-type CardKind = cards.Kind
-type CardState = cards.State
+type (
+	CardKind  = cards.Kind
+	CardState = cards.State
+)
 
 const (
 	CardEmpty      = cards.KindEmpty
@@ -88,11 +90,11 @@ type model struct {
 	tick int
 
 	// game-feel effects
-	rain   *effects.Rain
-	burst  *effects.Burst
-	slide  *effects.SlideIn
-	typew  *effects.Typewriter
-	sparks *effects.Sparkles
+	rain         *effects.Rain
+	burst        *effects.Burst
+	slide        *effects.SlideIn
+	typew        *effects.Typewriter
+	sparks       *effects.Sparkles
 	verdictPulse *effects.VerdictPulse // v9.13: pulses on sim verdicts (§12.5)
 
 	// SSE stream state
@@ -155,18 +157,18 @@ type model struct {
 	showAchievementOverlay bool
 
 	// v9.13 (TI-SIM-02): capabilities overlay
-	capsimClient    *capsim.Client
-	capsimReport    *capsim.Report
+	capsimClient     *capsim.Client
+	capsimReport     *capsim.Report
 	showCapabilities bool
-	capsimLoading   bool
+	capsimLoading    bool
 
 	// v9.13 (TI-SIM-07): sim settings — preference, cost limit, session spend.
 	// simPreference: "auto" | "cpu_only" | "off" — controls whether sims run
 	// simCostLimit: USD per discovery; over → emit CardSimulation with budget_exceeded
 	// simSpendThisSession: running total from cost_update events (placeholder
 	//   until backend B-07 ships; today just a counter)
-	simPreference     string
-	simCostLimit      float64
+	simPreference       string
+	simCostLimit        float64
 	simSpendThisSession float64
 
 	// v9.13 (§3.3): status bar — 1-line context strip with conn/follow/sim.
@@ -185,15 +187,15 @@ type model struct {
 	theme *Theme
 
 	// v9.13 (§16.2): command palette
-	paletteActive    bool
-	paletteQuery     string
-	paletteFocused   int
-	paletteMatches   []MatchResult
-	paletteRegistry  *Registry
+	paletteActive   bool
+	paletteQuery    string
+	paletteFocused  int
+	paletteMatches  []MatchResult
+	paletteRegistry *Registry
 
 	// v9.13 (§10): persistence — feed store and input history.
-	feedStore     *persist.FeedStore
-	inputHistory  *persist.InputHistory
+	feedStore    *persist.FeedStore
+	inputHistory *persist.InputHistory
 }
 
 // message types for bubbletea

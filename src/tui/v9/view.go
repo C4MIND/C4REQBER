@@ -220,8 +220,7 @@ func (m *model) layout() {
 // small terminals hide the panel to keep the feed usable; large
 // terminals show the full 7-widget dashboard.
 func (m *model) computeBasePanelHeight() int {
-	tierW, tierH := m.width, m.height
-	_ = tierH
+	tierW := m.width
 	if tierW < 100 {
 		return 0 // T0: hide panel, keep feed
 	}
@@ -308,7 +307,7 @@ func renderCard(c Card, width int, verdictChips string, focused, expanded bool) 
 		if verdictChips != "" {
 			meta = "\n" + border + "  " + verdictChips + meta
 		}
-		inner = border+" "+title+"\n"+border+"  "+body+meta
+		inner = border + " " + title + "\n" + border + "  " + body + meta
 	case CardPaper:
 		title := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("4")).Render("📚 " + c.Title)
 		body := lipgloss.NewStyle().Foreground(lipgloss.Color("7")).Render(c.Body)
@@ -316,11 +315,11 @@ func renderCard(c Card, width int, verdictChips string, focused, expanded bool) 
 		for _, m := range c.Meta {
 			meta += "\n" + border + "  " + lipgloss.NewStyle().Foreground(lipgloss.Color("8")).Render(m.Key+": "+m.Value)
 		}
-		inner = border+" "+title+"\n"+border+"  "+body+meta
+		inner = border + " " + title + "\n" + border + "  " + body + meta
 	case CardCode:
 		title := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("5")).Render("⚙ " + c.Title)
 		body := lipgloss.NewStyle().Foreground(lipgloss.Color("7")).Render(c.Body)
-		inner = border+" "+title+"\n"+border+"  "+body
+		inner = border + " " + title + "\n" + border + "  " + body
 	case CardSimulation:
 		// NEW in v9.13 (TI-SIM-01). Status icon + engine + pattern + domain.
 		icon := cards.StatusIcon(c.Sim.EngineStatus)
@@ -372,15 +371,15 @@ func renderCard(c Card, width int, verdictChips string, focused, expanded bool) 
 		if actStr != "" {
 			meta += "\n" + border + "  " + lipgloss.NewStyle().Foreground(lipgloss.Color("8")).Render("↳ "+actStr)
 		}
-		inner = border+" "+title+"\n"+border+"  "+bodyRendered+meta
+		inner = border + " " + title + "\n" + border + "  " + bodyRendered + meta
 	case CardError:
 		title := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("1")).Render("✗ " + c.Title)
 		body := lipgloss.NewStyle().Foreground(lipgloss.Color("9")).Render(c.Body)
-		inner = border+" "+title+"\n"+border+"  "+body
+		inner = border + " " + title + "\n" + border + "  " + body
 	default:
 		title := lipgloss.NewStyle().Foreground(lipgloss.Color("8")).Render(c.Title)
 		body := lipgloss.NewStyle().Foreground(lipgloss.Color("7")).Render(c.Body)
-		inner = border+" "+title+"\n"+border+"  "+body
+		inner = border + " " + title + "\n" + border + "  " + body
 	}
 	// v9.13 (F-12): if expanded and FullBody is set, append it as
 	// additional body lines. Wrap to width. If no FullBody, show a

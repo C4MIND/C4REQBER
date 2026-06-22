@@ -135,7 +135,8 @@ func (a *AchievementSystem) OverlayActive() bool {
 func renderAchievementOverlay(a *AchievementSystem, width, height int) string {
 	// Build big centered card
 	title := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("3")).Render(
-		"🏆  " + i18n.T("achievement.unlocked"))
+		"🏆  " + i18n.T("achievement.unlocked"),
+	)
 
 	// Find the most-recently-unlocked achievement to feature. The
 	// previous code picked the FIRST unlocked item in registry order,
@@ -162,11 +163,14 @@ func renderAchievementOverlay(a *AchievementSystem, width, height int) string {
 		nameAch = a.Items[0]
 	}
 	name := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("11")).Render(
-		i18n.T(nameAch.Name))
+		i18n.T(nameAch.Name),
+	)
 	desc := lipgloss.NewStyle().Foreground(lipgloss.Color("7")).Render(
-		i18n.T(nameAch.Description))
+		i18n.T(nameAch.Description),
+	)
 	progress := lipgloss.NewStyle().Foreground(lipgloss.Color("6")).Render(
-		fmt.Sprintf("%d / %d", a.Unlocked, a.Total))
+		fmt.Sprintf("%d / %d", a.Unlocked, a.Total),
+	)
 
 	body := lipgloss.JoinVertical(lipgloss.Center,
 		title,
@@ -178,7 +182,8 @@ func renderAchievementOverlay(a *AchievementSystem, width, height int) string {
 		progress,
 		"",
 		lipgloss.NewStyle().Foreground(lipgloss.Color("8")).Render(
-			fmt.Sprintf("progress: %d/%d unlocked", a.Unlocked, a.Total)))
+			fmt.Sprintf("progress: %d/%d unlocked", a.Unlocked, a.Total),
+		))
 
 	boxStyle := lipgloss.NewStyle().
 		Border(lipgloss.DoubleBorder()).
@@ -230,8 +235,8 @@ func (a *AchievementSystem) Check(discoveries int, lastQuality float64, papersCo
 			unlock = len(langsUsed) >= 3
 		case AchStreak:
 			unlock = discoveries >= 5 // simplified: 5 in session
-		// Sim achievements (TI-SIM-08) are checked by CheckSimAchievements,
-		// not by this function (they need the feed, not aggregate counters).
+			// Sim achievements (TI-SIM-08) are checked by CheckSimAchievements,
+			// not by this function (they need the feed, not aggregate counters).
 		}
 		if unlock {
 			ach.Unlocked = true
@@ -249,11 +254,12 @@ func (a *AchievementSystem) Check(discoveries int, lastQuality float64, papersCo
 // achievements (same shape as Check).
 //
 // Rules:
-//   AchSimExplorer — 5+ different sim engines ran successfully in this session
-//   AchSimSaver    — at least one CardSimulation with verdict "refutes_hypothesis"
-//   AchSimChef     — 3+ CardSimulation with EngineStatus == "skipped" or "unavailable"
-//                    (i.e. fallback chain was invoked)
-//   AchSimDelegate — at least one CardSimulation with EngineStatus == "delegated"
+//
+//	AchSimExplorer — 5+ different sim engines ran successfully in this session
+//	AchSimSaver    — at least one CardSimulation with verdict "refutes_hypothesis"
+//	AchSimChef     — 3+ CardSimulation with EngineStatus == "skipped" or "unavailable"
+//	                 (i.e. fallback chain was invoked)
+//	AchSimDelegate — at least one CardSimulation with EngineStatus == "delegated"
 func (a *AchievementSystem) CheckSimAchievements(feed []Card) []Achievement {
 	a.mu.Lock()
 	defer a.mu.Unlock()

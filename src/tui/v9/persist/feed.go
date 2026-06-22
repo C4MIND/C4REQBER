@@ -66,10 +66,10 @@ func (f *FeedStore) Path() string { return f.path }
 func (f *FeedStore) Append(e FeedEntry) error {
 	f.mu.Lock()
 	defer f.mu.Unlock()
-	if err := os.MkdirAll(filepath.Dir(f.path), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(f.path), 0o755); err != nil {
 		return err
 	}
-	file, err := os.OpenFile(f.path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	file, err := os.OpenFile(f.path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
 	if err != nil {
 		return err
 	}
@@ -207,10 +207,10 @@ func (f *FeedStore) Prune() error {
 
 // InputHistory persists the last N queries, deduped MRU.
 type InputHistory struct {
-	mu     sync.Mutex
-	path   string
-	limit  int
-	items  []HistoryItem
+	mu    sync.Mutex
+	path  string
+	limit int
+	items []HistoryItem
 }
 
 type HistoryItem struct {
@@ -250,10 +250,10 @@ func (h *InputHistory) save() error {
 	if err != nil {
 		return err
 	}
-	if err := os.MkdirAll(filepath.Dir(h.path), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(h.path), 0o755); err != nil {
 		return err
 	}
-	return os.WriteFile(h.path, data, 0644)
+	return os.WriteFile(h.path, data, 0o644)
 }
 
 // Add inserts a query at the head (MRU). Dedupes against existing

@@ -226,7 +226,7 @@ func TestFeedStore_LoadRecent_DedupWindow(t *testing.T) {
 func TestFeedPath_Preferred(t *testing.T) {
 	tmp := t.TempDir()
 	c4dir := filepath.Join(tmp, ".c4reqber")
-	if err := os.MkdirAll(c4dir, 0755); err != nil {
+	if err := os.MkdirAll(c4dir, 0o755); err != nil {
 		t.Fatal(err)
 	}
 	t.Setenv("HOME", tmp)
@@ -243,4 +243,34 @@ func titlesOf(es []FeedEntry) []string {
 		out[i] = e.Title
 	}
 	return out
+}
+
+// BenchmarkFeedStoreLoadRecent_Dedup benchmarks the v9.13.x fix that
+// dedupes entries by (Kind, Title) on read. With 1000 entries and 50%
+// duplicates, the dedup should remain well under 10ms (it's O(n) with
+// a small map lookup per entry, plus an n*2 over-read window).
+func BenchmarkFeedStoreLoadRecent_Dedup(b *testing.B) {
+	tmp := b.TempDir()
+	b.Setenv("HOME", tmp)
+	f, _ := NewFeedStore(50)
+	now := time.Now()
+	// Pre-populate: 500 unique + 500 duplicates of the first 500.
+	for i := 0; i < 500; i++ {
+		_ = f.Append(FeedEntry{
+			Kind:  i,
+			Title: "unique_" + string(rune('a'+i%26)),
+			Time:  now.Add(time.Duration(i) * time.Millisecond),
+		})
+	}
+	for i := 0; i < 500; i++ {
+		_ = f.Append(FeedEntry{
+			Kind:  i,
+			Title: "unique_" + string(rune('a'+i%26)),
+			Time:  now.Add(time.Duration(500+i) * time.Millisecond),
+		})
+	}
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_, _ = f.LoadRecent(50)
+	}
 }

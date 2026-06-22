@@ -1003,21 +1003,15 @@ func overlayScanline(row string, width, y int) string {
 
 // applyBloomShockwave brightens the rendered viewport briefly when the
 // bloom completes — a subtle "lock-in" pulse that lasts ~3 frames
-// (≈1.8s at 600ms tick). Strength fades as m.bloomShock counts up.
+// (≈1.8s at 600ms tick).
 func (m SplashModel) applyBloomShockwave(final []string) {
 	if m.bloomShock <= 0 {
-		return
-	}
-	// Strength fades from 1 → 0 over 4 increments
-	strength := float64(5-m.bloomShock) / 4.0
-	if strength <= 0 {
 		return
 	}
 	style := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("6"))
 	for i, line := range final {
 		if i%3 == int(m.bloomShock)%3 {
 			final[i] = style.Render("▌ " + line)
-			_ = strength // reserved for future per-cell alpha
 		}
 	}
 }

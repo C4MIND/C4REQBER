@@ -101,11 +101,11 @@ def _record_cost(model: str, input_tokens: int, output_tokens: int) -> None:
         return
     try:
         price_key = normalize(model)
-        from src.llm.cost_tracker import CostEntry, COST_TABLE  # noqa: F401
+        from src.llm.cost_tracker import COST_TABLE, CostEntry  # noqa: F401
         cost = 0.0
         if price_key in COST_TABLE:
-            input_rate, output_rate = COST_TABLE[price_key]
-            cost = (input_tokens / 1_000_000) * input_rate + (output_tokens / 1_000_000) * output_rate
+            rates = COST_TABLE[price_key]
+            cost = (input_tokens / 1_000_000) * rates["input"] + (output_tokens / 1_000_000) * rates["output"]
         CostTracker.add(CostEntry(
             provider="guarded",
             model=model,

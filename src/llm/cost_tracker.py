@@ -25,6 +25,11 @@ _PROVIDER_PRICES: dict[str, dict[str, float]] = {
     "local": {"input": 0.0, "output": 0.0},
 }
 
+# Public alias for the price table (used by guarded_call + BaseLLMClient._record_cost
+# to look up rates directly). The internal name stays private; the alias is the
+# supported import path. Audit 2026-06-22 H-8 Tier 1 follow-up.
+COST_TABLE: dict[str, dict[str, float]] = _PROVIDER_PRICES
+
 
 def _normalize_model(model: str) -> str:
     """Map a raw model string to a known pricing key."""
@@ -111,6 +116,19 @@ class CostTracker:
             self._entries.append(entry)
 
         return cost_usd  # type: ignore[no-any-return]
+
+    @classmethod
+    def add(cls, entry: CostEntry) -> None:
+        """Append a pre-computed cost entry to the global singleton. Audit 2026-06-22 H-8 Tier 1.
+
+        Used by guarded_call / BaseLLMClient / AsyncLLMClient which call
+        `CostTracker.add(entry)` (not on an instance) because they don't
+        want to depend on DI / `get_cost_tracker()`. The entry lands in the
+        same singleton that `get_session_cost()` / `get_stats()` read.
+        """
+        tracker = get_cost_tracker()
+        with tracker._lock:
+            tracker._entries.append(entry)
 
     def get_stats(self) -> dict[str, Any]:
         """Return aggregate statistics for all tracked requests."""

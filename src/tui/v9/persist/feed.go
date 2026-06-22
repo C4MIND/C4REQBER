@@ -160,7 +160,7 @@ func feedDedupKey(e FeedEntry) string {
 // Prune keeps the most recent maxLen entries (bookmarked always kept).
 // On a 50-cap file this is sub-millisecond.
 func (f *FeedStore) Prune() error {
-	entries, err := f.LoadRecent(f.maxLen * 4) // over-read
+	entries, err := f.LoadRecent(f.maxLen * 2) // over-read 2x for headroom (audit M-11)
 	if err != nil {
 		return err
 	}

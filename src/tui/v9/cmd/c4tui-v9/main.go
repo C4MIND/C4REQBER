@@ -64,7 +64,7 @@ func main() {
 		case arg == "--history":
 			showHistory = true
 		case arg == "--export-stats":
-			if i+1 < len(os.Args)-1 {
+			if i+1 < len(os.Args) {
 				exportPath = os.Args[i+2]
 			}
 		case strings.HasPrefix(arg, "--prune-history="):

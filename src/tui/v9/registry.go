@@ -345,8 +345,7 @@ func (m *model) refreshPaletteMatches() {
 	}
 }
 
-// silence unused import
-var _ = strings.Contains
+// silence unused import (audit 2026-06-22 M-3: hack removed, strings IS used at line 360)
 
 // RenderCommandPalette renders the fullscreen palette overlay.
 // Pure function so it's testable independently of the model.

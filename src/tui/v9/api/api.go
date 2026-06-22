@@ -26,7 +26,18 @@ type Client struct {
 
 func New(baseURL string) *Client {
 	jar, _ := cookiejar.New(nil)
-	httpClient := &http.Client{Timeout: defaultTimeout, Jar: jar}
+	// Audit 2026-06-22 H-6: custom Transport with ResponseHeaderTimeout prevents
+	// the SSE goroutine from hanging indefinitely on half-closed connections
+	// (where httpResp.Body.Read blocks returning (0, nil)). Without this,
+	// repeated discovery launches under flaky WiFi accumulate zombie goroutines.
+	httpClient := &http.Client{
+		Timeout: defaultTimeout,
+		Jar:     jar,
+		Transport: &http.Transport{
+			ResponseHeaderTimeout: 5 * time.Second,
+			IdleConnTimeout:       90 * time.Second,
+		},
+	}
 	c := &Client{
 		BaseURL: baseURL,
 		jar:     jar,

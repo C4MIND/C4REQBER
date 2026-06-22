@@ -154,19 +154,25 @@ class MultiProviderReasonerClient:
             headers["HTTP-Referer"] = "https://c4reqber.ai"
             headers["X-Title"] = "c4reqber"
 
-        resp = await self._client.post(
-            provider.base_url,
-            headers=headers,
-            json={
-                "model": provider.model,
-                "messages": messages,
-                "temperature": temperature,
-                "max_tokens": max_tokens or provider.max_tokens,
-            },
+        # Audit 2026-06-22 H-8 Tier 1: wrap the per-provider POST in
+        # guarded_chat_completion for sanitization + cost tracking +
+        # Prometheus metrics. We don't track the fallback chain as a
+        # single metric — each provider attempt gets its own row, so
+        # you can see in /metrics which fallback step succeeded.
+        from src.llm.guarded_call import guarded_chat_completion
+        data = await guarded_chat_completion(
+            url=provider.base_url,
+            api_key=key,
+            model=provider.model,
+            temperature=temperature,
+            max_tokens=max_tokens or provider.max_tokens,
             timeout=provider.timeout,
+            extra_headers={
+                k: v for k, v in headers.items()
+                if k not in ("Authorization", "Content-Type")
+            },
+            messages=messages,
         )
-        resp.raise_for_status()
-        data = resp.json()
         return data["choices"][0]["message"]["content"]
 
     def _strip_code_blocks(self, text: str) -> str:

@@ -32,8 +32,10 @@ class OpenRouterClient(BaseLLMClient):
             "max_tokens": max_tokens,
         }
         start = time.time()
-        response = await self._client.post(f"{self.base_url}/chat/completions", json=data)  # type: ignore[union-attr]
-        response.raise_for_status()
-        result = response.json()
+        data = await self.guarded_post(
+            url=f"{self.base_url}/chat/completions",
+            json_body=data,
+            model_name=model,
+        )  # type: ignore[union-attr]
         latency_ms = (time.time() - start) * 1000
-        return self._parse_openai_response(result, model, latency_ms)
+        return self._parse_openai_response(data, model, latency_ms)

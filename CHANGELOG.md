@@ -186,6 +186,33 @@ atomic commits (~2800 lines added, ~1300 removed).
 3. **Approve stage→model table reconciliation** (H-8) before merging
    any LLM gateway consolidation code.
 
+### H-8 Tier 1 follow-up (silent-failure hotfix, 2026-06-22)
+
+The H-8 Tier 1 follow-up commit (`e21d693`, `e8fb686`) shipped cost-tracking
+math that was silently broken: every `_record_cost` call hit `try/except`
+and no-op'd. Found during H-8 Tier 1 expansion to `BaseLLMClient.guarded_post`.
+
+- **`src/llm/cost_tracker.py`**: exposed `COST_TABLE` public alias
+  (was `_PROVIDER_PRICES` private); added `CostTracker.add(entry)` classmethod
+  (was being called as an instance method → `AttributeError`).
+- **`src/llm/guarded_call.py`, `src/llm/async_client.py`,
+  `src/llm/providers/base.py`**: `input_rate, output_rate = COST_TABLE[key]`
+  was unpacking **dict keys** (strings `'input'`/`'output'`) instead of
+  values → `float * str` = `TypeError`. Fixed to `rates = COST_TABLE[key]`
+  + `rates["input"]`/`rates["output"]` (same pattern as `track_request`).
+- **`src/llm/providers/base.py`**: added `logger = logging.getLogger(__name__)`
+  — `guarded_post` / `_record_metric` / `_record_cost` referenced `logger`
+  but it wasn't defined, so the `except` branches would raise `NameError`,
+  violating the "observability never crashes callers" contract.
+- **`tests/llm/test_guarded_post_base.py`** (new, 11 tests): locks the
+  fixes — `COST_TABLE` export, `add()` classmethod, `logger` defined,
+  `_record_cost` records correct $ amount (`gpt-4o` $2.50/$10.00),
+  local providers record $0, `guarded_post` increments success/error
+  Prometheus counters and appends/rejects cost entry on the right paths.
+
+Net: cost tracking for `guarded_call` + `BaseLLMClient.guarded_post` +
+`AsyncLLMClient` is now actually functional, not theater.
+
 ---
 
 ## v9.13.x (2026-06-22) — feat/production-upgrade

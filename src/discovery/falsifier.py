@@ -770,56 +770,54 @@ class Falsifier:
         or_key = get_key("openrouter") or os.getenv("OPENROUTER_API_KEY", "")  # get_key from ~/.c4reqber preferred
         if or_key:
             try:
-                import httpx
+                # Audit 2026-06-22 H-8 Tier 1: migrate raw httpx call to
+                # guarded_chat_completion for prompt-injection scan + cost
+                # tracking + Prometheus metrics + credential redaction.
+                from src.llm.guarded_call import guarded_chat_completion
 
-                async with httpx.AsyncClient(timeout=60) as c:
-                    r = await c.post(
-                        "https://openrouter.ai/api/v1/chat/completions",
-                        headers={
-                            "Authorization": f"Bearer {or_key}",
-                            "Content-Type": "application/json",
+                response = await guarded_chat_completion(
+                    url="https://openrouter.ai/api/v1/chat/completions",
+                    api_key=or_key,
+                    model=self.llm_model,
+                    temperature=self.llm_temperature,
+                    max_tokens=self.llm_max_tokens,
+                    timeout=60.0,
+                    messages=[
+                        {
+                            "role": "system",
+                            "content": (
+                                "You are a rigorous scientific reviewer. Evaluate the hypothesis "
+                                "using these criteria:\n"
+                                "1. LOGICAL FLAWS: identify fallacies, circular reasoning, or contradictions\n"
+                                "2. MISSING CONTROLS: list control experiments, confounders, or baselines omitted\n"
+                                "3. UNSTATED ASSUMPTIONS: surface hidden premises or domain boundaries\n"
+                                "4. PHYSICAL IMPOSSIBILITIES: flag violations of known laws\n"
+                                "5. STATISTICAL VALIDITY: note sample size, power, p-hacking risks\n"
+                                "Output JSON: {"
+                                "logical_flaws: [...], missing_controls: [...], "
+                                "unstated_assumptions: [...], physical_impossibilities: [...], "
+                                "statistical_concerns: [...], verdict: 'PASS'|'REJECT'|'REVISE', "
+                                "confidence: float, severity_score: float}"
+                            ),
                         },
-                        json={
-                            "model": self.llm_model,
-                            "temperature": self.llm_temperature,
-                            "max_tokens": self.llm_max_tokens,
-                            "messages": [
-                                {
-                                    "role": "system",
-                                    "content": (
-                                        "You are a rigorous scientific reviewer. Evaluate the hypothesis "
-                                        "using these criteria:\n"
-                                        "1. LOGICAL FLAWS: identify fallacies, circular reasoning, or contradictions\n"
-                                        "2. MISSING CONTROLS: list control experiments, confounders, or baselines omitted\n"
-                                        "3. UNSTATED ASSUMPTIONS: surface hidden premises or domain boundaries\n"
-                                        "4. PHYSICAL IMPOSSIBILITIES: flag violations of known laws\n"
-                                        "5. STATISTICAL VALIDITY: note sample size, power, p-hacking risks\n"
-                                        "Output JSON: {"
-                                        "logical_flaws: [...], missing_controls: [...], "
-                                        "unstated_assumptions: [...], physical_impossibilities: [...], "
-                                        "statistical_concerns: [...], verdict: 'PASS'|'REJECT'|'REVISE', "
-                                        "confidence: float, severity_score: float}"
-                                    ),
-                                },
-                                {
-                                    "role": "user",
-                                    "content": f"Hypothesis: {hypothesis[:1000].replace('<', '[').replace('>', ']')}. Domain: {domain.replace('<', '[').replace('>', ']')}.",
-                                },
-                            ],
+                        {
+                            "role": "user",
+                            "content": f"Hypothesis: {hypothesis[:1000].replace('<', '[').replace('>', ']')}. Domain: {domain.replace('<', '[').replace('>', ']')}.",
                         },
-                    )
-                    llm_critique = _extract_json(
-                        r.json()["choices"][0]["message"]["content"]
-                    )
-                    result.critique["llm_critique"] = llm_critique
-                    # Blend confidence with LLM assessment
-                    llm_conf = llm_critique.get("confidence", 0.5)
-                    result.confidence = round(
-                        0.7 * result.confidence + 0.3 * llm_conf, 4
-                    )
-                    if llm_critique.get("verdict") == "REJECT":
-                        result.falsifiable = True
-                        result.recommendation = "Reject"
+                    ],
+                )
+                llm_critique = _extract_json(
+                    response["choices"][0]["message"]["content"]
+                )
+                result.critique["llm_critique"] = llm_critique
+                # Blend confidence with LLM assessment
+                llm_conf = llm_critique.get("confidence", 0.5)
+                result.confidence = round(
+                    0.7 * result.confidence + 0.3 * llm_conf, 4
+                )
+                if llm_critique.get("verdict") == "REJECT":
+                    result.falsifiable = True
+                    result.recommendation = "Reject"
             except Exception as e:
                 logger.warning("LLM adversarial check failed: %s", e)
                 result.critique["adversarial_check_status"] = "failed"

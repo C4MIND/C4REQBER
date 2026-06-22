@@ -1,6 +1,11 @@
 """
 C4REQBER API: Security Middleware (Hardened)
 CSP without unsafe-inline, CORS allowlist, rate limiting, API key headers.
+
+CORS is configured separately in `setup_cors()` (src/api/middleware/cors.py).
+Do NOT add CORSMiddleware here — audit 2026-06-22 found CORS being mounted
+twice (here + in cors.py), causing duplicate Access-Control-* headers that
+browsers reject. CORS registration is the sole responsibility of setup_cors().
 """
 from __future__ import annotations
 
@@ -9,7 +14,6 @@ import time
 from typing import Any
 
 from fastapi import FastAPI, Request
-from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
@@ -219,24 +223,8 @@ def setup_security_middleware(app: FastAPI) -> None:
     # CSRF protection for state-changing requests
     app.add_middleware(CSRFProtectionMiddleware)
 
-    # CORS with allowlist (no wildcard in production)
-    allowed_origins = os.getenv(
-        "ALLOWED_ORIGINS",
-        "http://localhost:3000,http://localhost:5173,http://localhost:8000",
-    ).split(",")
-    if os.getenv("ENV") == "production":
-        # No wildcard in production
-        allowed_origins = [o.strip() for o in allowed_origins if o.strip() and o.strip() != "*"]
-
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=allowed_origins,
-        allow_credentials=True,
-        allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        allow_headers=["Authorization", "Content-Type", "X-Request-ID", "X-Trace-ID", "X-API-Key"],
-        expose_headers=["X-Trace-ID", "X-RateLimit-Limit", "X-RateLimit-Remaining"],
-        max_age=600,
-    )
+    # CORS registration moved to setup_cors() (src/api/middleware/cors.py).
+    # Audit 2026-06-22 C-8: removed duplicate mount that produced double headers.
 
     # Rate limiting with configurable per-endpoint limits
     rpm = int(os.getenv("RATE_LIMIT_RPM", "60"))

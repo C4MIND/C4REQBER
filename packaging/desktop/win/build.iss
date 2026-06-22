@@ -33,7 +33,10 @@ MinVersion=10.0
 
 [Files]
 Source: "..\..\..\dist\C4REQBER\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs
+; Audit 2026-06-22 H-2: ship BOTH x86_64 and arm64 TUI binaries.
+; launcher.bat picks the right one based on %PROCESSOR_ARCHITECTURE%.
 Source: "c4tui-v9.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "c4tui-v9-arm64.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "launcher.bat"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]

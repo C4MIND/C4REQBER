@@ -1,7 +1,16 @@
 @echo off
 setlocal EnableExtensions EnableDelayedExpansion
 set CONFIG=%USERPROFILE%\.c4reqber\config.toml
-set TUI=%~dp0c4tui-v9.exe
+
+REM Audit 2026-06-22 H-2: select correct TUI binary for current architecture.
+REM %PROCESSOR_ARCHITECTURE% is "AMD64" on x86_64 and "ARM64" on Windows on ARM.
+REM The Makefile builds both binaries; the installer ships both. Without this
+REM branch, Windows-on-ARM users run the x86_64 binary under emulation.
+if /i "%PROCESSOR_ARCHITECTURE%"=="ARM64" (
+  set TUI=%~dp0c4tui-v9-arm64.exe
+) else (
+  set TUI=%~dp0c4tui-v9.exe
+)
 set BLAST=%~dp0blast.exe
 
 REM First-run guard: create the central config if missing.

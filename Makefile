@@ -133,6 +133,16 @@ openapi:
 	@echo "=== OpenAPI codegen (TUI v9) ==="
 	cd src/tui/v9 && $(MAKE) openapi-gen
 
+## openapi-export — regenerate openapi/fastapi.json from the live FastAPI app
+openapi-export:
+	@echo "=== Export FastAPI OpenAPI schema ==="
+	python3 scripts/export_openapi.py
+
+## openapi-check — validate TUI contract against FastAPI spec (REWORK_PLAN P3-1)
+openapi-check:
+	@echo "=== OpenAPI contract check (TUI v9) ==="
+	python3 scripts/check_openapi_contract.py
+
 ## generate — proto code generation (stub)
 generate:
 	@echo "=== Proto code generation ==="

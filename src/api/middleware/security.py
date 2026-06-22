@@ -19,6 +19,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 
 from src.api.middleware.auth import JWTAuthMiddleware
 from src.api.middleware.csrf import CSRFProtectionMiddleware
+from src.api.routers.metrics import API_REQUESTS, RATE_LIMIT_HITS
 
 
 class SecurityHeadersMiddleware:
@@ -69,6 +70,19 @@ class SecurityHeadersMiddleware:
                         )
                     )
                 message["headers"] = headers
+                # Audit 2026-06-22: increment API_REQUESTS Prometheus counter
+                # here so every HTTP request contributes. Endpoint label uses
+                # the route template (scope["path"]) which the
+                # SecurityHeadersMiddleware captures before path params expand.
+                try:
+                    method = scope.get("method", "UNKNOWN")
+                    path = scope.get("path", "unknown")
+                    status_code = message.get("status", 0)
+                    API_REQUESTS.labels(
+                        method=method, endpoint=path, status_code=str(status_code)
+                    ).inc()
+                except Exception:
+                    pass  # observability must never crash the response
             await send(message)
 
         await self.app(scope, receive, send_with_headers)
@@ -140,6 +154,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             _, count, _, _ = await pipe.execute()
             if count >= limit:
                 retry_after = int(window)
+                RATE_LIMIT_HITS.labels(endpoint=path).inc()
                 return JSONResponse(
                     status_code=429,
                     content={"detail": "Rate limit exceeded. Try again later."},
@@ -155,6 +170,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         valid = [t for t in timestamps if now - t < window]
 
         if len(valid) >= limit:
+            RATE_LIMIT_HITS.labels(endpoint=path).inc()
             return JSONResponse(
                 status_code=429,
                 content={"detail": "Rate limit exceeded. Try again later."},

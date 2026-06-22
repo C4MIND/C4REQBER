@@ -7,7 +7,10 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "src"))
+# Project root must be on sys.path so 'src' is importable as a package.
+# Adding ROOT/src alone only exposes its submodules directly (e.g.
+# 'api.server'), but FastAPI's app is reachable as 'src.api.server:app'.
+sys.path.insert(0, str(ROOT))
 
 
 def export_full_openapi(out: Path) -> None:

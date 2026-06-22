@@ -149,6 +149,23 @@ async def verify_hypothesis(req: HypothesisVerifyRequest) -> dict[str, Any]:
     # 3. Compute unified score
     unified = compute_unified_score(req.hypothesis, backend_results)
 
+    # Audit 2026-06-22: increment VERIFICATION_RUNS per backend result so
+    # /metrics reflects per-backend run volume (the 5th Prometheus counter
+    # left at zero after the v9.14.0 master audit C-2 fix). Best-effort —
+    # observability must never crash callers.
+    try:
+        from src.api.routers.metrics import VERIFICATION_RUNS
+
+        for r in backend_results:
+            # Normalize: hybrid_verifier's per-backend label (e.g. "lean4",
+            # "z3") flows through; "statistical"/"math_detector" map to
+            # themselves. Status is whatever BackendResult reports.
+            backend_label = r.backend or "unknown"
+            status_label = r.status or "unknown"
+            VERIFICATION_RUNS.labels(backend=backend_label, status=status_label).inc()
+    except Exception:
+        pass
+
     payload = {
         "verify_id": verify_id,
         "status": "completed",

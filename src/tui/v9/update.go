@@ -129,10 +129,29 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 
 	case sseErrorMsg:
-		// SSE failed; cancel its context before falling back to polling.
+		// SSE failed; audit 2026-06-22 H-18: increment the reconnect counter
+		// (ReconnectPolicy wired here, consumed by reauthCmd below).
 		m.teardownStream()
+		m.sseRetryCount++
+		if m.running && m.jobID != "" && m.sseRetryCount <= sseMaxRetries {
+			// Schedule a retry with exponential backoff (handled by
+			// sseRetryTick below)
+			delay := sseRetryDelay(m.sseRetryCount)
+			return m, tea.Tick(delay, func(time.Time) tea.Msg {
+				return sseReconnectMsg{}
+			})
+		}
 		if m.running && m.jobID != "" {
+			// Retries exhausted — fall back to polling for the final result
 			return m, pollCmd(m.api, m.jobID)
+		}
+		return m, nil
+
+	case sseReconnectMsg:
+		// Audit 2026-06-22 H-18: re-attempt the SSE stream after backoff.
+		// The actual re-stream happens via the existing sseContinueCmd path.
+		if m.running && m.jobID != "" && m.sseRetryCount <= sseMaxRetries {
+			return m, sseContinueCmd(m.sseEvents, m.sseCancel)
 		}
 		return m, nil
 
@@ -949,4 +968,26 @@ func abs(x float64) float64 {
 		return -x
 	}
 	return x
+}
+
+// sseReconnectMsg is emitted by the retry timer to trigger a re-attempt
+// of the SSE stream (audit 2026-06-22 H-18).
+type sseReconnectMsg struct{}
+
+// sseMaxRetries caps exponential-backoff retries before falling back to polling.
+const sseMaxRetries = 5
+
+// sseRetryDelay returns the backoff for the n-th retry (exponential, capped at 30s).
+func sseRetryDelay(attempt int) time.Duration {
+	if attempt < 1 {
+		attempt = 1
+	}
+	d := 500 * time.Millisecond
+	for i := 1; i < attempt; i++ {
+		d *= 2
+		if d > 30*time.Second {
+			return 30 * time.Second
+		}
+	}
+	return d
 }

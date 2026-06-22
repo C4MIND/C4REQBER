@@ -171,6 +171,10 @@ type model struct {
 	simCostLimit        float64
 	simSpendThisSession float64
 
+	// Audit 2026-06-22 H-18: SSE reconnect state. Counts consecutive
+	// sseErrorMsg events; on reaching sseMaxRetries, falls back to polling.
+	sseRetryCount int
+
 	// v9.13 (§3.3): status bar — 1-line context strip with conn/follow/sim.
 	// showStatusBar: user toggle (Ctrl+B, default true at T2+).
 	// connState: live state of SSE/polling pipeline (§8.2).

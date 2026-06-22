@@ -1,16 +1,16 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "generated_at": "2026-06-22T03:12:33Z",
+  "generated_at": "2026-06-22T05:20:49Z",
   "version_backend": "5.6.0",
   "version_tui": "v9.13.0",
-  "git_head": "d3cff45",
+  "git_head": "3ceffdd",
   "git_branch": "feat/production-upgrade",
   "python": {
-    "loc": 223880,
-    "tests_collected": 9747
+    "loc": 222970,
+    "tests_collected": 9756
   },
   "go": {
-    "loc_tui_v9": 21064
+    "loc_tui_v9": 21124
   },
   "mcp": {
     "tools": 21

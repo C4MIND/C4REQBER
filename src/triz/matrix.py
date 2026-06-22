@@ -5,7 +5,17 @@ Provides query functions: get_recommended_principles, get_all_matrix_cells, coun
 """
 from __future__ import annotations
 
-from src.triz.matrix_core import MATRIX
+from src.triz.matrix_core import MATRIX, PARAMETERS, get_parameter_id, get_parameter_name
+
+__all__ = [
+    "MATRIX",
+    "PARAMETERS",
+    "count_cells",
+    "get_all_matrix_cells",
+    "get_parameter_id",
+    "get_parameter_name",
+    "get_recommended_principles",
+]
 
 
 def get_recommended_principles(improving: int, worsening: int) -> list[int]:

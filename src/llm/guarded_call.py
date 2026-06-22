@@ -30,6 +30,7 @@ Usage:
         max_tokens=800,
     )
 """
+
 from __future__ import annotations
 
 import logging
@@ -46,6 +47,7 @@ logger = logging.getLogger(__name__)
 def _try_import_sanitizer():
     try:
         from src.security.prompt_sanitizer import SanitizerInput
+
         return SanitizerInput
     except Exception:
         return None
@@ -54,6 +56,7 @@ def _try_import_sanitizer():
 def _try_import_cost_tracker():
     try:
         from src.llm.cost_tracker import CostTracker, _normalize_model
+
         return CostTracker, _normalize_model
     except Exception:
         return None, None
@@ -62,6 +65,7 @@ def _try_import_cost_tracker():
 def _try_import_metrics():
     try:
         from src.api.routers.metrics import LLM_CALLS, LLM_LATENCY
+
         return LLM_CALLS, LLM_LATENCY
     except Exception:
         return None, None
@@ -102,18 +106,23 @@ def _record_cost(model: str, input_tokens: int, output_tokens: int) -> None:
     try:
         price_key = normalize(model)
         from src.llm.cost_tracker import COST_TABLE, CostEntry  # noqa: F401
+
         cost = 0.0
         if price_key in COST_TABLE:
             rates = COST_TABLE[price_key]
-            cost = (input_tokens / 1_000_000) * rates["input"] + (output_tokens / 1_000_000) * rates["output"]
-        CostTracker.add(CostEntry(
-            provider="guarded",
-            model=model,
-            input_tokens=input_tokens,
-            output_tokens=output_tokens,
-            duration_ms=0.0,
-            cost_usd=cost,
-        ))
+            cost = (input_tokens / 1_000_000) * rates["input"] + (
+                output_tokens / 1_000_000
+            ) * rates["output"]
+        CostTracker.add(
+            CostEntry(
+                provider="guarded",
+                model=model,
+                input_tokens=input_tokens,
+                output_tokens=output_tokens,
+                duration_ms=0.0,
+                cost_usd=cost,
+            )
+        )
     except Exception as exc:
         logger.debug("cost tracking failed: %s", exc)
 
@@ -187,6 +196,7 @@ async def guarded_chat_completion(
         _record_metrics(provider, model, "error", time.monotonic() - t0)
         # Redact credentials before logging
         from src.security.credential_guard import redact_credentials
+
         logger.warning(
             "guarded_chat_completion failed for provider=%s model=%s: %s",
             redact_credentials(provider),
@@ -249,6 +259,7 @@ def guarded_chat_completion_sync(
     except httpx.HTTPError as exc:
         _record_metrics(provider, model, "error", time.monotonic() - t0)
         from src.security.credential_guard import redact_credentials
+
         logger.warning(
             "guarded_chat_completion_sync failed for provider=%s model=%s: %s",
             redact_credentials(provider),

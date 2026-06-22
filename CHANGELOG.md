@@ -1,5 +1,88 @@
 # Changelog — TUI v9 + Backend Pipeline
 
+## v9.13.x (2026-06-22) — feat/production-upgrade
+
+Production-upgrade audit pass: 9 atomic commits, +535/-220 lines,
+all 9/9 test packages pass under `go test -race`, `go vet` clean.
+Branch: `feat/production-upgrade` (local commits only, no push).
+
+### Correctness fixes (from v9.13.x audit)
+
+- **Achievement dedup across restarts.** Previously every TUI
+  launch re-unlocked all previously-earned achievements, which
+  re-appended achievement cards in the feed on every session and
+  (more visibly) made the on-disk discovery counter explode.
+  `AchievementSystem.LoadFromStore` now hydrates `Items[].Unlocked`
+  from the persisted `Store` on `NewApp`, and `FeedStore.LoadRecent`
+  self-heals the feed by deduping entries with the same
+  `(Kind, Title)` (bookmarks are preserved).
+
+- **Missing mutex on `CheckSimAchievements`.** v9.13.x added
+  `sync.Mutex` to `Check()` but missed `CheckSimAchievements()`.
+  Caught by the new `TestAchievementSystem_ConcurrentCheck` under
+  `go test -race`. Both functions now hold `mu` for the full
+  read-modify-write of `Items[].Unlocked`.
+
+- **Per-achievement batching in `checkAchievements`.** Was
+  calling `m.store.IncrementDiscovery()` and `m.store.Save()`
+  once per unlocked achievement — a discovery that fired
+  FirstDiscovery + QualityS + MultiPaper would increment the
+  counter 3x and rewrite the state file 3x. Both are now
+  batched into a single call per `checkAchievements` invocation
+  (i.e. once per discovery completion).
+
+- **Overlay featured the wrong achievement.** `ShowOverlay` was
+  called with `unlocked[len-1].Name` (the most recent unlock)
+  but the render function picked `unlocked[0]` (registry-order
+  first, always `AchFirstDiscovery`). Result: even after
+  unlocking MultiPaper, the overlay still announced "First
+  Discovery". Both the render and the show path now use the
+  most recent unlock.
+
+- **NewAppFresh diverged from NewApp.** Was missing
+  `saveHistory: true`, had a dead `zoneId := 0` leftover from
+  an old refactor. Both fixed; `newModelSkeleton` extracted
+  as the shared constructor.
+
+### New tests (audit invariant locks)
+
+- `TestAchievementSystem_LoadFromStore` (+3 variants): hydrate
+  from store, nil-store, idempotent, no-re-unlock-after-load.
+- `TestAchievementSystem_ConcurrentCheck`: 8-goroutine race
+  on Check + CheckSimAchievements. Catches the missing mutex.
+- `TestFeedStore_LoadRecent_Dedup` (+2 variants): basic dedup,
+  bookmark preservation, dedup-window over-read.
+- `TestFeedPath_Preferred`: when `~/.c4reqber` exists, the
+  feed lives there (not `~/.config/c4reqber`).
+- `TestStateMachine_CheckAchievements_IncrementsOnce`:
+  asserts the on-disk `DiscoveryCount` is 1 after a multi-
+  unlock check (catches the per-achievement Save bug).
+- `TestStateMachine_CheckAchievements_OverlayUsesLastUnlock`
+  + `TestAchievementOverlay_ShowsMostRecentUnlock`: assert
+  the overlay features the most-recent unlock, not the first.
+
+### Packaging (mac/win desktop)
+
+- **Version sync.** Three files claimed `5.6.0` while the Go
+  TUI is `v9.13.0` (`mac/Info.plist`, `c4reqber-desktop.spec`,
+  `win/build.iss`). All three bumped to `9.13.0`/`913` with
+  cross-reference comments so future bumps update all four
+  places (CHANGELOG is the 4th).
+- **Windows arm64 added.** Inno Setup installer was x64-only;
+  the Makefile `release-all` target now also produces
+  `c4tui-v9-windows-arm64.exe` for Snapdragon / Surface Pro X.
+- **Windows launcher.bat fixes.** `blast init` → `%~dp0blast.exe
+  init` (PATH lookup was unreliable for installer-bundled exes).
+  Added missing C4_LANG / C4_API_EMAIL / C4_API_PASSWORD env
+  exports (email/password auth was silently failing on Windows).
+  Mirrored the mac splash header byte-for-byte.
+- **mac Info.plist** gains `LSApplicationCategoryType`,
+  `CFBundleCopyright`, `NSHumanReadableCopyright`, `CFBundleDisplayName`.
+- **Python launcher_entry** removed the dead `_get_desktop_version`
+  function that always returned `"v9"`. Splash banner now reads
+  the version from the actual bundled TUI via the new
+  `tui_launcher.tui_v9_version()` helper.
+
 ## v9.13.0 (2026-06-12) — friendely-merge-tui-upgrade
 
 TUI surface overhaul: simulation/verification engine capabilities are

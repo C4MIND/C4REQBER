@@ -154,8 +154,13 @@ of the reorg was the dependency-graph re-organization, which the audit's
 quick wins have already partially achieved (8-package DAG mentioned in
 the master audit).
 
-**Action:** When the maintainer confirms, this section becomes the final
-decision. Until then, the branches stay reachable but not pursued.
+**Action taken (2026-06-22):** Tagged the reorg tip
+(`stab/08-import-sweep` = `9c44cee`) as `archive/phase1-reorg-2026-06-08`
+so the work is preserved in history. The 18 working branches
+(`reorg/01..12` + `stab/01..08`) remain reachable but not pursued.
+The tag's annotation includes the exact `git branch -D` command for a
+future maintainer who wants to clean them up. No branches were deleted
+(this audit only tags; deletion is a separate explicit step).
 
 ---
 

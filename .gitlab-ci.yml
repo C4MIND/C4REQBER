@@ -26,6 +26,7 @@ test-backend:
     # Truth assertion: docs must match what the code actually has.
     - python3 scripts/gen_truths.py --check
     - python3 scripts/gen_mcp_registry.py --check
+    - python3 scripts/check_i18n_parity.py
     # Fast smoke first (catches imports / decorator errors / missing schemas).
     - PYTHONPATH=. pytest tests/mcp_server/ tests/utils/ -v --tb=short
     # Full suite.

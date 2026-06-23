@@ -27,7 +27,6 @@ from fastapi import FastAPI
 
 from src import __version__
 from src.api.lifespan import lifespan
-from src.api.middleware.cors import setup_cors
 from src.api.middleware.security import setup_security_middleware
 from src.api.routers import (
     auth,
@@ -76,8 +75,9 @@ register_error_handlers(app)
 # Add request ID middleware for structured logging
 app.middleware("http")(get_request_id_middleware())
 
+# CORS is mounted once, inside setup_security_middleware (it previously also ran
+# via a second, byte-identical setup_cors(app) call — the duplicate is removed).
 setup_security_middleware(app)
-setup_cors(app)
 
 logger.info("api_server_initializing", env=_env, version=__version__)
 

@@ -5,7 +5,12 @@ from __future__ import annotations
 
 import pytest
 
-from src.llm.cost_tracker import CostTracker, _normalize_model, get_cost_tracker
+from src.llm.cost_tracker import (
+    _PROVIDER_PRICES,
+    CostTracker,
+    _normalize_model,
+    get_cost_tracker,
+)
 
 
 class TestNormalizeModel:
@@ -16,6 +21,24 @@ class TestNormalizeModel:
     def test_claude(self):
         assert _normalize_model("anthropic/claude-3.5-sonnet") == "claude-3.5"
         assert _normalize_model("claude-3-5-haiku") == "claude-3.5"
+
+    def test_claude_4x_families(self):
+        # Hyphenated, dotted, and dated id forms all resolve to the 4.x family.
+        assert _normalize_model("claude-opus-4-8") == "claude-opus-4"
+        assert _normalize_model("anthropic/claude-opus-4.6") == "claude-opus-4"
+        assert _normalize_model("claude-sonnet-4-6") == "claude-sonnet-4"
+        assert _normalize_model("anthropic/claude-sonnet-4-20250514") == "claude-sonnet-4"
+        assert _normalize_model("claude-haiku-4-5") == "claude-haiku-4"
+
+    def test_claude_4x_not_mispriced_as_gpt4o(self):
+        # Regression: Claude-4.x previously fell through to the gpt-4o default.
+        for model in ("claude-opus-4-8", "claude-sonnet-4-6", "claude-haiku-4-5"):
+            assert _normalize_model(model) != "gpt-4o"
+
+    def test_claude_4x_prices(self):
+        assert _PROVIDER_PRICES["claude-opus-4"] == {"input": 5.00, "output": 25.00}
+        assert _PROVIDER_PRICES["claude-sonnet-4"] == {"input": 3.00, "output": 15.00}
+        assert _PROVIDER_PRICES["claude-haiku-4"] == {"input": 1.00, "output": 5.00}
 
     def test_gemini(self):
         assert _normalize_model("google/gemini-1.5-pro") == "gemini-1.5"

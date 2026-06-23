@@ -15,6 +15,10 @@ from src.di.container import get_container
 # USD per 1M tokens (input / output)
 _PROVIDER_PRICES: dict[str, dict[str, tuple[float, float]]] = {
     "gpt-4o": {"input": 2.50, "output": 10.00},  # type: ignore[dict-item]
+    # Claude 4.x pricing (per the claude-api model catalog).
+    "claude-opus-4": {"input": 5.00, "output": 25.00},  # type: ignore[dict-item]
+    "claude-sonnet-4": {"input": 3.00, "output": 15.00},  # type: ignore[dict-item]
+    "claude-haiku-4": {"input": 1.00, "output": 5.00},  # type: ignore[dict-item]
     "claude-3.5": {"input": 3.00, "output": 15.00},  # type: ignore[dict-item]
     "gemini-1.5": {"input": 0.50, "output": 1.50},  # type: ignore[dict-item]
     "local": {"input": 0.0, "output": 0.0},  # type: ignore[dict-item]
@@ -22,15 +26,28 @@ _PROVIDER_PRICES: dict[str, dict[str, tuple[float, float]]] = {
 
 
 def _normalize_model(model: str) -> str:
-    """Map a raw model string to a known pricing key."""
-    model_lower = model.lower()
+    """Map a raw model string to a known pricing key.
+
+    Claude IDs appear across the routing tables in several forms — hyphenated
+    (``claude-opus-4-8``), dotted (``claude-opus-4.6``), and dated
+    (``claude-sonnet-4-20250514``) — so match on the family substring with the
+    digit separator normalised, rather than on an exact id.
+    """
+    model_lower = model.lower().replace(".", "-")
     if "gpt-4o" in model_lower:
         return "gpt-4o"
-    if "claude-3.5" in model_lower or "claude-3-5" in model_lower:
+    # Claude 4.x — check before the legacy claude-3.5 branch.
+    if "claude-opus-4" in model_lower:
+        return "claude-opus-4"
+    if "claude-sonnet-4" in model_lower:
+        return "claude-sonnet-4"
+    if "claude-haiku-4" in model_lower:
+        return "claude-haiku-4"
+    if "claude-3-5" in model_lower:
         return "claude-3.5"
-    if "gemini-1.5" in model_lower or "gemini-1.5" in model_lower:
+    if "gemini-1-5" in model_lower:
         return "gemini-1.5"
-    if any(local in model_lower for local in ("ollama", "lm_studio", "local", "qwen2.5")):
+    if any(local in model_lower for local in ("ollama", "lm_studio", "local", "qwen2-5")):
         return "local"
     return "gpt-4o"  # Default pricing
 

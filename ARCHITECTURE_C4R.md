@@ -1,5 +1,9 @@
 # C4REQBER Architecture (C4R)
 
+> ⚠️ **HISTORICAL (v5.6.0, 2026-06-03).** Superseded for the current architectural
+> picture by [`ARCHITECTURE_AUDIT.md`](./ARCHITECTURE_AUDIT.md) (refreshed 2026-06-24).
+> Kept for the C4/QZRF/UCOS design rationale; treat structural/path claims as dated.
+
 > **Version:** 5.6.0  
 > **Date:** 2026-06-03  
 > **Systems:** C4 · QZRF · UCOS · CDI · TOTE · MatrixDream
@@ -382,7 +386,7 @@ class BaseSimulationAdapter(abc.ABC):
 
 ### 8.1 Textual v8
 
-Bubble Tea-based terminal interface (`src/tui/v7/`):
+Bubble Tea-based terminal interface (`src/tui/v9/`; there is no `src/tui/v7/`):
 - 7-phase cognitive pipeline visualization
 - Reactive widget tree
 - Living Quantum Mascot (emotional ASCII companion)

@@ -1,5 +1,9 @@
 # c4reqber v5.4.0 — BLAST Architecture Document
 
+> ⚠️ **HISTORICAL (v5.4.0).** Superseded for the current architectural picture by
+> [`/ARCHITECTURE_AUDIT.md`](../ARCHITECTURE_AUDIT.md) (refreshed 2026-06-24).
+> Kept for historical context; treat version numbers and structural claims as dated.
+
 ## 🧠 System Overview
 
 c4reqber (formerly TURBO-CDI) v5.4.0 is **BLAST** — Brain-like Adaptive System for Thought. A cognitive exoskeleton with a 4-mode pipeline system, terminal-first UI/UX, and formal C4-META architecture. **The UI/UX Polish + Code Quality Audit Release.**

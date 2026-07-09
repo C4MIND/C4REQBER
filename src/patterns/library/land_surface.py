@@ -191,7 +191,6 @@ class LandSurfacePattern:
         sigma = 5.67e-8  # Stefan-Boltzmann
         rho_air = 1.225  # kg/m^3
         cp = 1004.0
-        Lv = 2.5e6
 
         # Albedo
         albedo = self._surface_albedo()
@@ -533,7 +532,7 @@ class TestLandSurface(unittest.TestCase):
         config = LandSurfaceConfig()
         pattern = LandSurfacePattern(config)
 
-        sm_before = pattern.soil_moisture.copy()
+        pattern.soil_moisture.copy()
 
         precip = np.ones((config.nx, config.ny)) * 10.0  # 10 mm
         ET = np.ones((config.nx, config.ny)) * 50.0  # W/m^2
@@ -565,7 +564,7 @@ class TestLandSurface(unittest.TestCase):
         precip = np.ones((config.nx, config.ny)) * 10.0
         T_atm = np.ones((config.nx, config.ny)) * 260.0  # Cold
 
-        liquid = pattern._snow_update(precip, T_atm)
+        pattern._snow_update(precip, T_atm)
 
         # Should accumulate snow
         self.assertTrue(np.all(pattern.swe > 0))

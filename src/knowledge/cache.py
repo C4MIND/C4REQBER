@@ -27,6 +27,16 @@ class SearchCache:
             return None
         # Promote to MRU
         self._store.move_to_end(key)
+        # Audit 2026-06-22: best-effort Prometheus hit counter. CACHE_MISSES
+        # is intentionally NOT incremented here — misses are too noisy (every
+        # fresh search is a miss). Operators wanting miss rate can compute
+        # (queries - hits) from logs.
+        try:
+            from src.api.routers.metrics import CACHE_HITS
+
+            CACHE_HITS.labels(cache_type="search").inc()
+        except Exception:
+            pass
         return value
 
     def set(self, key: str, value: Any) -> None:

@@ -312,7 +312,6 @@ class CCDSolver(IKSolverBase):
         trajectory = [q.copy()]
 
         for iteration in range(self.config.max_iterations):
-            converged = True
 
             # Iterate through joints from end to base
             for i in range(self.kinematics.n_dof - 1, -1, -1):
@@ -344,7 +343,7 @@ class CCDSolver(IKSolverBase):
 
                 # Check convergence for this joint
                 if abs(angle) > self.config.tolerance:
-                    converged = False
+                    pass
 
             trajectory.append(q.copy())
 

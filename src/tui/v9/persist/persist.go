@@ -36,7 +36,9 @@ type Store struct {
 
 func DefaultPath() string {
 	home, _ := os.UserHomeDir()
-	return filepath.Join(home, ".config", "c4reqber", "tui-v9-state.json")
+	// Always ~/.c4reqber for full consistency with Python CLI/desktop/launcher_entry.
+	c4dir := filepath.Join(home, ".c4reqber")
+	return filepath.Join(c4dir, "tui-v9-state.json")
 }
 
 // New creates a Store, loading existing state if available.
@@ -65,12 +67,16 @@ func (s *Store) load() error {
 	return json.Unmarshal(data, &s.state)
 }
 
-// Save writes current state to disk.
+// Save writes current state to disk. Atomic via temp-file + rename:
+// a crash or full-disk mid-write will not truncate the live state file.
+// The lock is held across the whole write so two concurrent Saves don't
+// stomp on each other's temp file (was previously unlocked, which let
+// parallel callers race the same s.path+".tmp" file).
 func (s *Store) Save() error {
 	s.mu.Lock()
+	defer s.mu.Unlock()
 	s.state.UpdatedAt = time.Now()
 	data, err := json.MarshalIndent(s.state, "", "  ")
-	s.mu.Unlock()
 	if err != nil {
 		return err
 	}

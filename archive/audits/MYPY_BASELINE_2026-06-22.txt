@@ -1,0 +1,62 @@
+# Auto-generated mypy baseline. Refresh with --update.
+src/adapters/arxiv_adapter.py:126: error: Item "None" of "Element[str] | None" has no attribute "text"
+src/adapters/arxiv_adapter.py:129: error: Item "None" of "Element[str] | None" has no attribute "text"
+src/adapters/arxiv_adapter.py:169: error: Argument "id" to "ArxivPaper" has incompatible type "str | None"; expected "str"
+src/adapters/arxiv_adapter.py:173: error: Argument "published" to "ArxivPaper" has incompatible type "str | None"; expected "str"
+src/adapters/arxiv_adapter.py:174: error: Argument "updated" to "ArxivPaper" has incompatible type "str | None"; expected "str"
+src/agent/core.py:267: error: No overload variant of "OpenAIModel" matches argument types "str", "str", "str"
+src/agent/core.py:283: error: "AgentRunResult[str]" has no attribute "data"
+src/agent/discovery_agent.py:409: error: Need type annotation for "methods" (hint: "methods: dict[<type>, <type>] = ...")
+src/agent/discovery_agent.py:421: error: Argument "key" to "max" has incompatible type overloaded function; expected "Callable[[str], SupportsDunderLT[Any] | SupportsDunderGT[Any]]"
+src/agents/multi_agent.py:350: error: "object" has no attribute "lower"
+src/agents/solve_pipeline.py:167: error: Incompatible types in assignment (expression has type "CostTracker", variable has type "None")
+src/agents/solve_pipeline.py:168: error: "None" has no attribute "reset"
+src/agents/solve_pipeline.py:170: error: "None" has no attribute "__aiter__" (not async iterable)
+src/agents/solve_pipeline.py:170: error: "solve_streaming" of "UniversalSolvePipeline" does not return a value (it only ever returns None)
+src/agents/solve_pipeline.py:190: error: Argument 1 to "append" of "list" has incompatible type "PipelineStepResult"; expected "PipelineStep"
+src/agents/solve_pipeline.py:200: error: "None" has no attribute "get_session_cost"
+src/agents/solve_pipeline.py:207: error: The return type of an async generator function should be "AsyncGenerator" or one of its supertypes
+src/agents/solve_pipeline.py:218: error: "None" has no attribute "__aiter__" (not async iterable)
+src/agents/solve_pipeline.py:218: error: "execute" of "PipelineExecutor" does not return a value (it only ever returns None)
+src/agents/solve_pipeline.py:81: error: "PipelineStep" has no attribute "status"
+src/agents/solve_pipeline.py:82: error: "PipelineStep" has no attribute "duration_ms"
+src/agents/solve_pipeline.py:83: error: "PipelineStep" has no attribute "error"
+src/agents/solve_pipeline.py:84: error: "PipelineStep" has no attribute "input_data"
+src/agents/solve_pipeline.py:85: error: "PipelineStep" has no attribute "output_data"
+src/api/routers/websocket.py:72: error: "None" has no attribute "__aiter__" (not async iterable)
+src/api/routers/websocket.py:72: error: "solve_streaming" of "UniversalSolvePipeline" does not return a value (it only ever returns None)
+src/cli/blast_app.py:860: error: "Coroutine[Any, Any, tuple[C4State, float, str]]" object is not iterable
+src/cli/blast_app.py:861: error: Cannot determine type of "confidence"
+src/cli/blast_app.py:861: error: Cannot determine type of "state"
+src/cli/blast_app.py:866: error: Statement is unreachable
+src/cli/blast_core.py:533: error: Incompatible types in assignment (expression has type "HILDiscoveryPipeline", variable has type "UniversalSolvePipeline")
+src/cli/blast_core.py:534: error: "UniversalSolvePipeline" has no attribute "discover"
+src/config/paths.py:49: error: Library stubs not installed for "toml"
+src/discovery/closed_loop/refiner.py:67: error: Unexpected keyword argument "stage_name" for "generate_for_stage" of "DefaultGateway"
+src/discovery/gap_miner.py:594: error: Subclass of "dict[str, Any]" and "list[Any]" cannot exist: have distinct disjoint bases
+src/discovery/gap_miner.py:595: error: Statement is unreachable
+src/effects/database.py:18: error: Incompatible types in assignment (expression has type "None", variable has type "list[str]")
+src/effects/database.py:19: error: Incompatible types in assignment (expression has type "None", variable has type "list[str]")
+src/exploration/formal_extender.py:76: error: Unexpected keyword argument "stage_name" for "generate_for_stage" of "DefaultGateway"
+src/exploration/question_generator.py:82: error: Unexpected keyword argument "stage_name" for "generate_for_stage" of "DefaultGateway"
+src/knowledge/citation_chaser.py:171: error: Incompatible types in assignment (expression has type "str | None", variable has type "str")
+src/knowledge/citation_chaser.py:173: error: Statement is unreachable
+src/knowledge/citation_chaser.py:220: error: Incompatible types in assignment (expression has type "str | None", variable has type "str")
+src/knowledge/citation_chaser.py:222: error: Statement is unreachable
+src/llm/async_client.py:269: error: Argument 1 to "_record_metric" of "AsyncLLMClient" has incompatible type "object"; expected "str"
+src/llm/async_client.py:281: error: Argument 1 to "_record_cost" of "AsyncLLMClient" has incompatible type "object"; expected "str"
+src/llm/providers/mlx_provider.py:60: error: Too many values to unpack (2 expected, 3 provided)
+src/triz/contradiction_matrix.py:373: error: Argument "key" to "max" has incompatible type overloaded function; expected "Callable[[int], SupportsDunderLT[Any] | SupportsDunderGT[Any]]"
+src/triz/contradiction_matrix.py:378: error: Argument "key" to "max" has incompatible type overloaded function; expected "Callable[[int], SupportsDunderLT[Any] | SupportsDunderGT[Any]]"
+src/tui/token_counter.py:13: error: Incompatible types in assignment (expression has type "None", variable has type "Encoding")
+src/tui/v9/i18n/pipeline/nllb_check.py:66: error: Need type annotation for "result" (hint: "result: dict[<type>, <type>] = ...")
+src/tui/v9/i18n/pipeline/translate_hymt.py:63: error: Need type annotation for "result" (hint: "result: dict[<type>, <type>] = ...")
+src/utils/validators.py:106: error: Statement is unreachable
+src/utils/validators.py:156: error: Statement is unreachable
+src/utils/validators.py:252: error: Statement is unreachable
+src/utils/validators.py:321: error: Statement is unreachable
+src/utils/validators.py:40: error: Statement is unreachable
+src/validation/core.py:193: error: Argument 1 to "Path" has incompatible type "str | PathLike[str] | None"; expected "str | PathLike[str]"
+src/verification/formalization_engine.py:131: error: Unexpected keyword argument "stage_name" for "generate_for_stage" of "DefaultGateway"
+src/verification/llm_prover.py:309: error: Unexpected keyword argument "stage_name" for "generate_for_stage" of "DefaultGateway"
+src/verification/semantic_alignment.py:116: error: Unexpected keyword argument "stage_name" for "generate_for_stage" of "DefaultGateway"

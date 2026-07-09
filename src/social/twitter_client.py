@@ -33,8 +33,8 @@ class TwitterClient:
 
     async def _ensure_bearer(self) -> str:
         if not self._bearer:
-            async with httpx.AsyncClient() as c:
-                from requests_oauthlib import OAuth1Session  # type: ignore[import-untyped]
+            async with httpx.AsyncClient():
+                pass  # type: ignore[import-untyped]
             self._bearer = f"{self.api_key}:{self.api_secret}"
         return self._bearer
 

@@ -3,13 +3,14 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass, field
-from pathlib import Path
 from typing import Any
 
+from src.config.paths import CONFIG_DIR
 
-AGENT_CONFIG_DIR = Path.home() / ".c4reqber"
-AGENT_CONFIG_PATH = AGENT_CONFIG_DIR / "agent.json"
-AGENT_HISTORY_PATH = AGENT_CONFIG_DIR / "agent_history.jsonl"
+
+AGENT_CONFIG_DIR = CONFIG_DIR
+AGENT_CONFIG_PATH = CONFIG_DIR / "agent.json"
+AGENT_HISTORY_PATH = CONFIG_DIR / "agent_history.jsonl"
 
 
 @dataclass

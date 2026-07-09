@@ -91,8 +91,6 @@ class LeanDojoAdapter:
         try:
             import time
 
-            import lean_dojo
-            from lean_dojo import ProofState, TacticState
 
             t0 = time.perf_counter()
 

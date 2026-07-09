@@ -341,7 +341,7 @@ class SynapticPlasticityPattern(SimulationPattern):
 
         # Run simulation
         for step in range(n_steps):
-            t = step * cfg.dt
+            step * cfg.dt
 
             # Generate Poisson spikes
             pre_spikes = self.rng.random(cfg.num_pre) < (cfg.input_rate * cfg.dt / 1000)

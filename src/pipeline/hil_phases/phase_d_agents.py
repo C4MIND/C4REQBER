@@ -9,6 +9,7 @@ from typing import Any
 
 from src.plugins.unified_registry import PLUGIN_REGISTRY
 
+
 # Note: FunctorOrchestrator (agents layer) is resolved by LATE BINDING inside
 # run_functors (see below), not imported statically. This pipeline phase invokes
 # the agent layer only at runtime, so the generic pipeline engine has no static

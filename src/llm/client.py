@@ -1,15 +1,23 @@
 """LLM Client.
 
-Multi-provider LLM interface (OpenRouter, Claude, local)
+Multi-provider LLM interface (OpenRouter, Claude, local).
+
+Audit 2026-06-22 H-8 Tier 1: migrated from urllib.request (stdlib) to
+httpx so the guarded_call wrapper can add observability (sanitization,
+metrics, cost tracking, credential redaction). The behavioral contract
+is unchanged.
 """
+
 from __future__ import annotations
 
 import json
 import os
-import urllib.error
-import urllib.request
 from dataclasses import dataclass
 from typing import Any
+
+import httpx
+
+from src.config import get_key
 
 
 @dataclass
@@ -36,14 +44,15 @@ class LLMClient:
 
     # Models optimized for different tasks
     MODELS = {
-        "hypothesis": "anthropic/claude-3.5-sonnet",  # Best for scientific reasoning
+        "hypothesis": "anthropic/claude-sonnet-4.6",  # Best for scientific reasoning
         "falsifiability": "openai/gpt-4o",  # Good at structured criteria
-        "synthesis": "anthropic/claude-3.5-sonnet",  # Coherent synthesis
+        "synthesis": "anthropic/claude-sonnet-4.6",  # Coherent synthesis
         "cheap": "openai/gpt-4o-mini",  # Cost-effective
     }
 
     def __init__(self, api_key: str | None = None) -> None:
-        self.api_key = api_key or os.getenv("OPENROUTER_API_KEY")
+        # Prefer central config (~/.c4reqber) with env override
+        self.api_key = api_key or get_key("openrouter") or os.getenv("OPENROUTER_API_KEY")
         self.base_url = "https://openrouter.ai/api/v1"
         self.referer = "https://c4reqber.org"  # Required by OpenRouter
 
@@ -61,7 +70,7 @@ class LLMClient:
 
         Args:
             prompt: User prompt
-            model: Model identifier (default: claude-3.5-sonnet)
+            model: Model identifier (default: claude-sonnet-4.6)
             temperature: 0-1 (0=deterministic, 1=creative)
             max_tokens: Maximum response length
             system_prompt: System instructions
@@ -72,8 +81,7 @@ class LLMClient:
         """
         if not self.api_key:
             raise ValueError(
-                "OpenRouter API key required. "
-                "Set OPENROUTER_API_KEY environment variable."
+                "OpenRouter API key required. " "Set OPENROUTER_API_KEY environment variable."
             )
 
         model = model or self.DEFAULT_MODEL
@@ -83,45 +91,47 @@ class LLMClient:
             messages.append({"role": "system", "content": system_prompt})
         messages.append({"role": "user", "content": prompt})
 
-        data = {
-            "model": model,
-            "messages": messages,
-            "temperature": temperature,
-            "max_tokens": max_tokens,
-        }
+        # Audit 2026-06-22 H-8 Tier 1: wrapped via guarded_call_sync
+        # for prompt injection scan + Prometheus metrics + cost tracking
+        # + credential redaction. Preserves OpenRouter attribution
+        # headers via extra_headers parameter.
+        from src.llm.guarded_call import guarded_chat_completion_sync
 
+        extra_body: dict[str, Any] | None = None
         if response_format == "json":
-            data["response_format"] = {"type": "json_object"}
-
-        headers = {
-            "Authorization": f"Bearer {self.api_key}",
-            "Content-Type": "application/json",
-            "HTTP-Referer": self.referer,
-            "X-Title": "C4Reqber",
-        }
-
-        req = urllib.request.Request(
-            f"{self.base_url}/chat/completions",
-            data=json.dumps(data).encode(),
-            headers=headers,
-            method="POST",
-        )
+            extra_body = {"response_format": {"type": "json_object"}}
 
         try:
-            with urllib.request.urlopen(req, timeout=60) as response:
-                result = json.loads(response.read().decode())
-
-                return LLMResponse(
-                    content=result["choices"][0]["message"]["content"],
-                    model=result.get("model", model),
-                    usage=result.get("usage", {}),
-                    raw_response=result,
-                )
-        except urllib.error.HTTPError as e:
-            error_body = e.read().decode()
-            raise RuntimeError(f"LLM API error: {e.code} - {error_body}") from e
-        except (ConnectionError, TimeoutError, OSError, ValueError) as e:
+            result = guarded_chat_completion_sync(
+                url=f"{self.base_url}/chat/completions",
+                api_key=self.api_key,
+                model=model,
+                temperature=temperature,
+                max_tokens=max_tokens,
+                timeout=60.0,
+                messages=messages,
+                extra_body=extra_body,
+                extra_headers={
+                    "HTTP-Referer": self.referer,
+                    "X-Title": "C4Reqber",
+                },
+            )
+        except httpx.HTTPStatusError as e:
+            # Read body for error context, then re-raise as RuntimeError
+            # so callers can keep their existing except clauses.
+            error_body = e.response.text if e.response is not None else str(e)
+            raise RuntimeError(
+                f"LLM API error: {e.response.status_code if e.response else '?'} - {error_body}"
+            ) from e
+        except httpx.HTTPError as e:
             raise RuntimeError(f"LLM request failed: {e}") from e
+
+        return LLMResponse(
+            content=result["choices"][0]["message"]["content"],
+            model=result.get("model", model),
+            usage=result.get("usage", {}),
+            raw_response=result,
+        )
 
     def generate_structured(
         self, prompt: str, schema: dict[str, Any], model: str | None = None
@@ -175,4 +185,4 @@ Respond ONLY with JSON, no markdown formatting, no explanations."""
 
 
 # MockLLMClient intentionally omitted — use real providers only in production.
-        # For testing, register a test provider explicitly.
+# For testing, register a test provider explicitly.

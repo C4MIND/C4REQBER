@@ -141,7 +141,7 @@ class QuantumPattern:
     def _init_vqe(self) -> None:
         """Initialize Variational Quantum Eigensolver"""
         cfg = self.config
-        n = 2**cfg.n_qubits
+        2**cfg.n_qubits
 
         # Create a simple Hamiltonian (Heisenberg model)
         self.hamiltonian = self._heisenberg_hamiltonian(cfg.n_qubits)
@@ -253,7 +253,7 @@ class QuantumPattern:
     def _apply_gate(self, gate_type: str, qubits: list[int], angle: float = 0.0) -> None:
         """Apply quantum gate to state"""
         cfg = self.config
-        n = 2**cfg.n_qubits
+        2**cfg.n_qubits
 
         # Build gate matrix
         if gate_type == "H":
@@ -425,7 +425,6 @@ class QuantumPattern:
 
     def _vqe_gradient(self) -> np.ndarray:
         """Calculate gradient using parameter shift rule"""
-        cfg = self.config
         eps = np.pi / 2
 
         grad = np.zeros_like(self.ansatz_params)

@@ -101,6 +101,15 @@ def export_discovery(req: ExportRequest) -> ExportResponse:
             filepath = manager.export_dashboard_html(stats, [req.discovery])
         content = Path(filepath).read_text()
         preview = content[:500] + ("..." if len(content) > 500 else "")
+        # Audit 2026-06-22: increment DISCOVERIES_GENERATED Prometheus counter
+        # on successful export. Best-effort — observability must not crash
+        # the response.
+        try:
+            from src.api.routers.metrics import DISCOVERIES_GENERATED
+
+            DISCOVERIES_GENERATED.labels(output_format=fmt).inc()
+        except Exception:
+            pass
         return ExportResponse(status="success", format=fmt, filepath=filepath, content_preview=preview)
     except HTTPException:
         raise

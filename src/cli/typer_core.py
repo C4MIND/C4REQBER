@@ -68,7 +68,7 @@ def solve_command(
             ("synthesizing", f"{ICONS['hypothesis']} Synthesizing final recommendations..."),
         ]
         total_work = 100
-        work_per_stage = total_work / len(stages)
+        total_work / len(stages)
         for _i, (_stage_id, description) in enumerate(stages):
             task = progress.add_task(description, total=100)
             import time

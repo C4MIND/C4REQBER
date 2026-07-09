@@ -160,7 +160,6 @@ class LandUsePattern:
 
     def _calculate_competition(self, zone: int, lu_type_idx: int) -> float:
         """Calculate competition cost (negative externality)"""
-        cfg = self.config
 
         # Competition = total development pressure in zone
         total_allocation = np.sum(self.allocation[zone])  # type: ignore[index]

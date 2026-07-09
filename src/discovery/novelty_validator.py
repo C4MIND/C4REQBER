@@ -1,4 +1,5 @@
 """Novelty Validator — checks hypothesis novelty using semantic embeddings."""
+
 from __future__ import annotations
 
 import json
@@ -8,6 +9,8 @@ from difflib import SequenceMatcher
 from typing import Any
 
 import numpy as np
+
+from src.config import get_key
 
 
 logger = logging.getLogger("c44tcdi.discovery.novelty_validator")
@@ -25,6 +28,7 @@ except ImportError:
 def _get_embedding_model() -> Any:
     """Lazy-load the sentence-transformer model (22MB)."""
     from src.di.container import get_container
+
     container = get_container()
     if not container.has("embedding_model") and _SENTENCE_TRANSFORMERS_AVAILABLE:
         try:
@@ -44,9 +48,7 @@ def _cosine_similarity(a: np.ndarray, b: np.ndarray) -> float:
     return float(np.dot(a, b) / (norm_a * norm_b))
 
 
-def _compute_semantic_similarity(
-    hypothesis: str, paper_text: str, model: Any
-) -> float:
+def _compute_semantic_similarity(hypothesis: str, paper_text: str, model: Any) -> float:
     """Compute semantic similarity using sentence-transformer embeddings."""
     if model is None:
         return _compute_fallback_similarity(hypothesis, paper_text)
@@ -114,9 +116,7 @@ class NoveltyValidator:
         self._timeout = timeout
         self._model = _get_embedding_model()
 
-    async def check(
-        self, hypothesis: str, domain: str = "general"
-    ) -> dict[str, Any]:
+    async def check(self, hypothesis: str, domain: str = "general") -> dict[str, Any]:
         """Check novelty of a hypothesis against existing literature.
 
         Returns:
@@ -133,16 +133,12 @@ class NoveltyValidator:
             from src.knowledge.crossref_client import CrossRefClient
 
             keywords = _extract_keywords(hypothesis)
-            domain_keywords = (
-                f"{domain} {keywords}" if domain and domain != "general" else keywords
-            )
+            domain_keywords = f"{domain} {keywords}" if domain and domain != "general" else keywords
 
             closest_papers: list[dict[str, Any]] = []
             all_similarities: list[float] = []
 
-            async with CrossRefClient(
-                mailto=self._mailto, timeout=self._timeout
-            ) as client:
+            async with CrossRefClient(mailto=self._mailto, timeout=self._timeout) as client:
                 queries = [keywords[:200], domain_keywords[:200]]
                 seen_titles: set[str] = set()
 
@@ -165,18 +161,18 @@ class NoveltyValidator:
                             # Extract citation lists if available
                             hyp_citations = paper.get("hypothesis_citations", [])
                             paper_citations = paper.get("references", [])
-                            cit_overlap = _citation_overlap(
-                                hyp_citations, paper_citations
-                            )
+                            cit_overlap = _citation_overlap(hyp_citations, paper_citations)
 
-                            closest_papers.append({
-                                "title": title[:200],
-                                "similarity": round(similarity, 4),
-                                "doi": paper.get("doi", ""),
-                                "year": paper.get("year", 0),
-                                "source": "crossref",
-                                "citation_overlap": cit_overlap,
-                            })
+                            closest_papers.append(
+                                {
+                                    "title": title[:200],
+                                    "similarity": round(similarity, 4),
+                                    "doi": paper.get("doi", ""),
+                                    "year": paper.get("year", 0),
+                                    "source": "crossref",
+                                    "citation_overlap": cit_overlap,
+                                }
+                            )
                     except (TimeoutError, TypeError) as e:
                         logger.warning(
                             "CrossRef search error for query '%s': %s",
@@ -227,65 +223,57 @@ class NoveltyValidator:
                 "error": str(e)[:200],
             }
 
-    async def check_semantic(
-        self, hypothesis: str, domain: str
-    ) -> dict[str, Any]:
+    async def check_semantic(self, hypothesis: str, domain: str) -> dict[str, Any]:
         """Real semantic novelty check via LLM (kept for backward compatibility)."""
-        or_key = os.getenv("OPENROUTER_API_KEY", "")
+        or_key = get_key("openrouter") or os.getenv(
+            "OPENROUTER_API_KEY", ""
+        )  # central ~/.c4reqber first
         if not or_key:
             return await self.check(hypothesis, domain)
 
-        import httpx
+        # Audit 2026-06-22 H-8 Tier 1: guarded wrapper adds metrics + sanitization.
+        from src.llm.guarded_call import guarded_chat_completion
 
-        async with httpx.AsyncClient(timeout=60) as c:
-            r = await c.post(
-                "https://openrouter.ai/api/v1/chat/completions",
-                headers={
-                    "Authorization": f"Bearer {or_key}",
-                    "Content-Type": "application/json",
+        response = await guarded_chat_completion(
+            url="https://openrouter.ai/api/v1/chat/completions",
+            api_key=or_key,
+            model="deepseek/deepseek-chat",
+            temperature=0.3,
+            max_tokens=500,
+            timeout=60.0,
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "You are a scientific novelty validator. Rate the hypothesis novelty 0-1. "
+                        "Check against known literature. Output JSON: "
+                        "{novelty_score: float, reasoning: str, closest_known_work: str}."
+                    ),
                 },
-                json={
-                    "model": "deepseek/deepseek-chat",
-                    "temperature": 0.3,
-                    "max_tokens": 500,
-                    "messages": [
-                        {
-                            "role": "system",
-                            "content": (
-                                "You are a scientific novelty validator. Rate the hypothesis novelty 0-1. "
-                                "Check against known literature. Output JSON: "
-                                "{novelty_score: float, reasoning: str, closest_known_work: str}."
-                            ),
-                        },
-                        {
-                            "role": "user",
-                            "content": f"Hypothesis: {hypothesis[:1000]}. Domain: {domain}. Is this genuinely novel?",
-                        },
-                    ],
+                {
+                    "role": "user",
+                    "content": f"Hypothesis: {hypothesis[:1000]}. Domain: {domain}. Is this genuinely novel?",
                 },
-            )
-            try:
-                result = json.loads(
-                    r.json()["choices"][0]["message"]["content"]
-                )
-                return {
-                    "semantic_novelty": result.get("novelty_score", 0.5),
-                    "reasoning": result.get("reasoning", ""),
-                    "closest_work": result.get("closest_known_work", ""),
-                }
-            except (
-                AttributeError,
-                ImportError,
-                IndexError,
-                KeyError,
-                TypeError,
-                httpx.HTTPError,
-            ):
-                return {"semantic_novelty": 0.5}
+            ],
+        )
+        try:
+            result = json.loads(response["choices"][0]["message"]["content"])
+            return {
+                "semantic_novelty": result.get("novelty_score", 0.5),
+                "reasoning": result.get("reasoning", ""),
+                "closest_work": result.get("closest_known_work", ""),
+            }
+        except (
+            AttributeError,
+            ImportError,
+            IndexError,
+            KeyError,
+            TypeError,
+            json.JSONDecodeError,
+        ):
+            return {"semantic_novelty": 0.5}
 
-    async def _fallback_check(
-        self, hypothesis: str, domain: str
-    ) -> dict[str, Any]:
+    async def _fallback_check(self, hypothesis: str, domain: str) -> dict[str, Any]:
         """Fallback: use raw httpx to search CrossRef directly."""
         try:
             import httpx
@@ -296,9 +284,7 @@ class NoveltyValidator:
                 r = await client.get(
                     "https://api.crossref.org/works",
                     params={"query": keywords, "rows": 10},
-                    headers={
-                        "User-Agent": "c44tcdi (mailto:c44tcdi@example.com)"
-                    },
+                    headers={"User-Agent": "c44tcdi (mailto:c44tcdi@example.com)"},
                 )
                 if r.status_code != 200:
                     return {
@@ -325,32 +311,28 @@ class NoveltyValidator:
                     title = ""
                     title_list = paper.get("title", [])
                     if title_list:
-                        title = (
-                            title_list[0]
-                            if isinstance(title_list, list)
-                            else str(title_list)
-                        )
+                        title = title_list[0] if isinstance(title_list, list) else str(title_list)
                     if not title:
                         continue
 
                     paper_text = f"{title} {paper.get('abstract', '')}"[:1000]
-                    similarity = _compute_semantic_similarity(
-                        hypothesis, paper_text, self._model
-                    )
+                    similarity = _compute_semantic_similarity(hypothesis, paper_text, self._model)
                     similarities.append(similarity)
-                    closest_papers.append({
-                        "title": title[:200],
-                        "similarity": round(similarity, 4),
-                        "doi": paper.get("DOI", ""),
-                        "year": 0,
-                        "source": "crossref",
-                        "citation_overlap": {
-                            "overlap_count": 0,
-                            "union_count": 0,
-                            "jaccard": 0.0,
-                            "shared_citations": [],
-                        },
-                    })
+                    closest_papers.append(
+                        {
+                            "title": title[:200],
+                            "similarity": round(similarity, 4),
+                            "doi": paper.get("DOI", ""),
+                            "year": 0,
+                            "source": "crossref",
+                            "citation_overlap": {
+                                "overlap_count": 0,
+                                "union_count": 0,
+                                "jaccard": 0.0,
+                                "shared_citations": [],
+                            },
+                        }
+                    )
 
                 max_similarity = max(similarities) if similarities else 0.0
                 closest_papers.sort(key=lambda p: p["similarity"], reverse=True)
@@ -388,7 +370,15 @@ class NoveltyValidator:
                 "papers_checked": 0,
                 "reason": "httpx not installed",
             }
-        except (TimeoutError, IndexError, KeyError, TypeError, ValueError, httpx.HTTPError, json.JSONDecodeError) as e:
+        except (
+            TimeoutError,
+            IndexError,
+            KeyError,
+            TypeError,
+            ValueError,
+            httpx.HTTPError,
+            json.JSONDecodeError,
+        ) as e:
             logger.error("Novelty fallback check error: %s", e)
             return {
                 "status": "unchecked",

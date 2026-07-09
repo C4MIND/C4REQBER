@@ -15,16 +15,6 @@ func init() {
 }
 
 // stripANSI removes ANSI escape codes for snapshot testing.
-var ansiRe = strings.NewReplacer(
-	"\x1b[0m", "", "\x1b[1m", "", "\x1b[2m", "", "\x1b[4m", "",
-	"\x1b[30m", "", "\x1b[31m", "", "\x1b[32m", "", "\x1b[33m", "",
-	"\x1b[34m", "", "\x1b[35m", "", "\x1b[36m", "", "\x1b[37m", "",
-	"\x1b[90m", "", "\x1b[91m", "", "\x1b[92m", "", "\x1b[93m", "",
-	"\x1b[94m", "", "\x1b[95m", "", "\x1b[96m", "", "\x1b[97m", "",
-	"\x1b[?25l", "", "\x1b[?25h", "", "\x1b[?1049h", "", "\x1b[?1049l", "",
-	"\x1b[K", "", "\x1b[H", "", "\x1b[2J", "",
-)
-
 func stripANSI(s string) string {
 	// Generic ESC[...m stripping
 	var out strings.Builder

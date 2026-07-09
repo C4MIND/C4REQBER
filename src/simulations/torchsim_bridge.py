@@ -244,7 +244,6 @@ class TorchSimBridge:
 
         try:
             ts = self._torch_sim
-            torch = self._torch
 
             integrator_name = config.get("integrator", "nvt_langevin").lower()
             n_steps = config.get("n_steps", 1000)
@@ -456,7 +455,6 @@ class TorchSimBridge:
             raise RuntimeError("TorchSim not available")
 
         ts = self._torch_sim
-        torch = self._torch
 
         model_map = {
             "lennard_jones": lambda: ts.models.LennardJonesModel(

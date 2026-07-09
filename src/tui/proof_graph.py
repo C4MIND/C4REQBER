@@ -73,7 +73,7 @@ class ProofGraph:
         if not node:
             return [f"{prefix}{'└─' if is_last else '├─'} {node_id}?"]
         connector = "└─" if is_last else "├─"
-        edge_style = {True: "══", False: "----", None: "····"}.get(
+        {True: "══", False: "----", None: "····"}.get(
             next((e.verified for e in self.edges if e.target == node_id), None), "····"
         )
         lines = [f"{prefix}{connector} {node.symbol} {node.label}"]

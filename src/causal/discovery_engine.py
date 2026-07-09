@@ -10,7 +10,6 @@ Implements causal discovery algorithms on tabular data:
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 import networkx as nx
 import numpy as np

@@ -7,24 +7,25 @@ Model Context Protocol server for AI agents.
 Run: pip install mcp && python3 -m c44tcdi.mcp_server
 """
 import asyncio
-import hashlib
-import json
+import logging
 import sys
 from typing import Any
 
 
+logger = logging.getLogger(__name__)
+
+
 # Optional MCP SDK — falls back to stdio JSON-RPC if not installed
 try:
-    from mcp.server.stdio import stdio_server
-
     from mcp.server import Server as MCPSDKServer
+    from mcp.server.stdio import stdio_server
     HAS_MCP = True
     Server = MCPSDKServer
 except ImportError:
     HAS_MCP = False
     Server = None
     stdio_server = None
-    print("⚠️  MCP SDK not installed. Run: pip install mcp", file=sys.stderr)
+    print("⚠️  MCP SDK not installed. Run: pip install mcp", file=sys.stderr)  # logger unavailable pre-init
 
 # Real MCP SDK doesn't have @server.tool() decorator — use fallback mode
 if HAS_MCP and not hasattr(Server, "tool"):
@@ -47,109 +48,10 @@ try:
     HAS_TOOLS = True
 except ImportError as e:
     HAS_TOOLS = False
-    print(f"⚠️  Some tool dependencies not found: {e}", file=sys.stderr)
+    logger.warning("Some tool dependencies not found: %s", e)
 
 
-class _FallbackServer:
-    """Minimal JSON-RPC stdio server when MCP SDK is unavailable."""
-    def __init__(self, name: str):
-        self.name = name
-        self._tools: dict[str, Any] = {}
-        self.verified_hashes: dict[str, str] = {}
-
-    def tool(self, name: str):
-        """Decorator to register a tool."""
-        def decorator(func):
-            """Decorator."""
-            self._tools[name] = func
-            return func
-        return decorator
-
-    def _compute_tool_hash(self, tool_name: str) -> str:
-        tool = self._tools[tool_name]
-        schema = getattr(tool, 'schema', {})
-        schema_str = json.dumps(schema, sort_keys=True)
-        return hashlib.sha256(schema_str.encode()).hexdigest()
-
-    def _verify_tool_hash(self, tool_name: str) -> None:
-        if tool_name not in self._tools:
-            return
-        current_hash = self._compute_tool_hash(tool_name)
-        if tool_name in self.verified_hashes:
-            assert current_hash == self.verified_hashes[tool_name], f"Rug pull detected: {tool_name}"
-        else:
-            self.verified_hashes[tool_name] = current_hash
-
-    async def run_stdio_fallback(self):
-        """Read JSON-RPC requests from stdin, write responses to stdout."""
-        reader = asyncio.StreamReader()
-        protocol = asyncio.StreamReaderProtocol(reader)
-        await asyncio.get_event_loop().connect_read_pipe(lambda: protocol, sys.stdin)
-
-        while True:
-            line = await reader.readline()
-            if not line:
-                break
-            try:
-                request = json.loads(line)
-                method = request.get("method", "")
-                if method == "tools/list":
-                    tools = []
-                    for tool_name, tool_func in self._tools.items():
-                        current_hash = self._compute_tool_hash(tool_name)
-                        if tool_name in self.verified_hashes:
-                            assert current_hash == self.verified_hashes[tool_name], f"Rug pull detected: {tool_name}"
-                        else:
-                            self.verified_hashes[tool_name] = current_hash
-                        tools.append({
-                        "name": tool_name,
-                        "description": tool_func.__doc__ or "",
-                        "inputSchema": getattr(tool_func, "schema", {
-                            "type": "object",
-                            "properties": {},
-                        }),
-                    })
-                    response = json.dumps({"jsonrpc": "2.0", "id": request.get("id"), "result": {"tools": tools}})
-                elif method == "tools/call":
-                    tool_name = request["params"]["name"]
-                    tool_args = request["params"].get("arguments", {})
-                    if tool_name not in self._tools:
-                        response = json.dumps({"jsonrpc": "2.0", "id": request.get("id"), "error": {"code": -32601, "message": f"Tool not found: {tool_name}"}})
-                        sys.stdout.write(response + "\n")
-                        sys.stdout.flush()
-                        continue
-                    # Re-verify hash before execution
-                    self._verify_tool_hash(tool_name)
-                    # Sanitize arguments against schema
-                    tool = self._tools[tool_name]
-                    schema = getattr(tool, 'schema', {})
-                    if schema:
-                        properties = schema.get('properties', {})
-                        allowed_keys = set(properties.keys())
-                        input_keys = set(tool_args.keys())
-                        extra_keys = input_keys - allowed_keys
-                        if extra_keys and not schema.get('additionalProperties', True):
-                            raise ValueError(f"Extra arguments not allowed: {extra_keys}")
-                    # Execute with 30s timeout
-                    try:
-                        result = await asyncio.wait_for(
-                            self._tools[tool_name](**tool_args),
-                            timeout=30
-                        )
-                    except TimeoutError:
-                        result = {"error": "Tool execution timed out after 30 seconds"}
-                    except (IndexError, KeyError, TypeError) as e:
-                        result = {"error": str(e)}
-                    response = json.dumps({"jsonrpc": "2.0", "id": request.get("id"), "result": result})
-                else:
-                    response = json.dumps({"jsonrpc": "2.0", "id": request.get("id"), "result": {}})
-                sys.stdout.write(response + "\n")
-                sys.stdout.flush()
-            except (TimeoutError, AttributeError, IndexError, KeyError, TypeError, ValueError, json.JSONDecodeError) as e:
-                error_response = json.dumps({"jsonrpc": "2.0", "id": None, "error": {"code": -32700, "message": f"Parse error: {e}"}})
-                sys.stdout.write(error_response + "\n")
-                sys.stdout.flush()
-                continue
+from src.mcp_server.fallback_protocol import _FallbackServer
 
 
 # Create server instance with or without MCP SDK
@@ -160,7 +62,7 @@ server: Any = _server
 try:
     from src.codegen.mcp_tool import c4_codegen
 except ImportError as e:
-    print(f"⚠️  c4_codegen not available: {e}", file=sys.stderr)
+    logger.warning("c4_codegen not available: %s", e)
 
 
 @server.tool("c4_solve")
@@ -172,7 +74,7 @@ async def c4_solve(problem: str, domain: str = "science") -> dict[str, Any]:
     """
     try:
         if not HAS_TOOLS:
-            return {"error": "Tool dependencies not available", "status": "failed"}
+            return {"error": "Tool dependencies not available", "status": "error"}
 
         from src.core.profile_manager import UserProfileManager
         from src.pipeline.hil_pipeline import HILDiscoveryPipeline
@@ -202,21 +104,42 @@ async def c4_solve(problem: str, domain: str = "science") -> dict[str, Any]:
 
         return result
     except Exception as e:
-        return {"error": str(e), "status": "failed"}
+        logger.exception("MCP tool failed")
+        return {"error": str(e), "status": "error"}
 
 
 @server.tool("c4_search")
 
-async def c4_search(query: str, sources: list[str] | None = None) -> list[dict[str, Any]]:
+async def c4_search(query: str, sources: list[str] | None = None) -> dict[str, Any]:
     """Search across 33 knowledge sources via orchestrator.py (arXiv, PubMed, ORCID, etc.)."""
     try:
         if not HAS_TOOLS:
-            return [{"error": "MultiSourceSearcher not available"}]
+            return {
+                "status": "error",
+                "data": [],
+                "errors": ["MultiSourceSearcher not available"],
+                "metadata": {"query": query, "sources": sources},
+            }
         searcher = MultiSourceSearcher()
         results = await searcher.search_all(query, sources=sources)
-        return results[:10]  # Limit to 10 results
+        truncated = results[:10]
+        return {
+            "status": "success",
+            "data": truncated,
+            "metadata": {
+                "query": query,
+                "sources": sources,
+                "total_found": len(results),
+                "returned": len(truncated),
+            },
+        }
     except (AttributeError, ImportError) as e:
-        return [{"error": str(e)}]
+        return {
+            "status": "error",
+            "data": [],
+            "errors": [str(e)],
+            "metadata": {"query": query, "sources": sources},
+        }
 
 
 @server.tool("c4_triz")
@@ -294,6 +217,7 @@ async def c4_triz(
         return {"error": f"Unknown mode: {mode}. Use matrix|ariz|standard|sufield"}
 
     except (AttributeError, ImportError) as e:
+        logger.warning("MCP tool optional dep missing: %s", e)
         return {"error": str(e)}
 
 
@@ -335,6 +259,7 @@ async def c4_fingerprint(problem: str) -> dict[str, Any]:
             state = space._heuristic_classify(problem)
         return {"problem": problem, "state": list(state.to_tuple()), "fingerprint": str(state)}
     except (AttributeError, ImportError) as e:
+        logger.warning("MCP tool optional dep missing: %s", e)
         return {"error": str(e)}
 
 
@@ -385,7 +310,8 @@ async def c4_verify(code: str, language: str | None = None) -> dict[str, Any]:
                 try:
                     s.from_string(code)
                 except z3.Z3Exception as e:
-                    return {"error": f"Z3 parse error: {e}", "status": "failed", "language": language}
+                    logger.warning("Z3 parse error: language=%s error=%s", language, e)
+                    return {"error": f"Z3 parse error: {e}", "status": "error", "language": language}
                 except (ValueError, RuntimeError):
                     # Fallback: use AST validation for safe evaluation
                     # Whitelist allowed nodes
@@ -428,6 +354,7 @@ async def c4_verify(code: str, language: str | None = None) -> dict[str, Any]:
                     "details": {"status": str(result), "model": str(s.model()) if is_sat else None},
                 }
             except (z3.Z3Exception, ValueError, RuntimeError) as e:
+                logger.warning("Z3 verification error: language=%s error=%s", language, e)
                 return {"valid": False, "error": f"Z3 error: {e}", "language": language}
         elif language == "hoare":
             from src.verification.hoare_verifier import HoareVerifier
@@ -443,6 +370,7 @@ async def c4_verify(code: str, language: str | None = None) -> dict[str, Any]:
         else:
             return {"valid": False, "error": f"Unsupported language: {language}"}
     except (AttributeError, ImportError) as e:
+        logger.warning("MCP tool optional dep missing: %s", e)
         return {"error": str(e)}
 
 
@@ -469,6 +397,7 @@ async def c4_prove(hypothesis: str, language: str = "lean4") -> dict[str, Any]:
         result = await prover.prove(hypothesis, language, max_iterations=3)
         return result.to_dict()
     except Exception as e:
+        logger.exception("MCP tool failed")
         return {"valid": False, "error": str(e)}
 
 
@@ -482,7 +411,8 @@ async def c4_transfer(problem: str, source_domain: str, target_domain: str) -> d
         result = pipeline.transfer(problem, source_domain, target_domain)
         return result.to_dict()
     except (AttributeError, ImportError) as e:
-        return {"error": str(e), "status": "failed"}
+        logger.warning("MCP tool optional dep missing: %s", e)
+        return {"error": str(e), "status": "error"}
 
 
 @server.tool("c4_simulate")
@@ -496,6 +426,7 @@ async def c4_simulate(pattern_id: str, hypothesis: dict[str, Any]) -> dict[str, 
         result = bridge.run(hypothesis)
         return {"pattern": pattern_id, "result": result}
     except (AttributeError, ImportError) as e:
+        logger.warning("MCP tool optional dep missing: %s", e)
         return {"error": str(e)}
 
 
@@ -510,6 +441,7 @@ async def c4_bayesian(models: dict[str, float], samples: int = 1000) -> dict[str
         result = await run_bma({"models": models, "samples": samples})
         return {"models": models, "samples": samples, "best_model": result.get("best_model", "")}
     except (AttributeError, ImportError) as e:
+        logger.warning("MCP tool optional dep missing: %s", e)
         return {"error": str(e)}
 
 
@@ -526,6 +458,7 @@ async def c4_causal(nodes: list[dict[str, Any]], treatment: str, outcome: str) -
         effect = dc.compute_effect(scm_nodes, treatment, outcome)
         return {"treatment": treatment, "outcome": outcome, "causal_effect": effect}
     except (AttributeError, ImportError) as e:
+        logger.warning("MCP tool optional dep missing: %s", e)
         return {"error": str(e)}
 
 
@@ -546,6 +479,7 @@ async def c4_export(discovery: dict[str, Any], format: str = "markdown") -> dict
             content = str(discovery)
         return {"status": "exported", "format": format, "content": content[:1000]}
     except (AttributeError, ImportError) as e:
+        logger.warning("MCP tool optional dep missing: %s", e)
         return {"error": str(e)}
 
 
@@ -585,7 +519,8 @@ async def c4_autoresearch(
             "improvement_trace": report.improvement_trace,
         }
     except Exception as e:
-        return {"error": str(e), "status": "failed"}
+        logger.exception("MCP tool failed")
+        return {"error": str(e), "status": "error"}
 
 
 @server.tool("c4_chain")
@@ -706,7 +641,7 @@ async def blast_solve(problem: str, output_format: str = "auto", domain: str | N
         from src.core.profile_manager import UserProfileManager
 
         manager = UserProfileManager()
-        user_profile = manager.load()
+        manager.load()
         config = manager.get_config()
 
         pipeline = UniversalSolvePipeline(config=config)
@@ -726,7 +661,7 @@ async def blast_solve(problem: str, output_format: str = "auto", domain: str | N
             "cost_usd": result.cost_usd,
         }
     except Exception as e:
-        return {"error": str(e), "status": "failed", "mode": "solve"}
+        return {"error": str(e), "status": "error", "mode": "solve"}
 
 
 @server.tool("blast_turbo")
@@ -770,7 +705,7 @@ async def blast_turbo(topic: str, verify_backend: str = "hybrid", functors: bool
             "dissertation_path": f"dissertations/live/HIL_v2_{topic.replace(' ', '_')[:30]}.md",
         }
     except Exception as e:
-        return {"error": str(e), "status": "failed", "mode": "turbo"}
+        return {"error": str(e), "status": "error", "mode": "turbo"}
 
 
 @server.tool("blast_flash")
@@ -876,7 +811,7 @@ Answer:"""
             "usp_context": usp_context,
         }
     except Exception as e:
-        return {"error": str(e), "status": "failed", "mode": "flash"}
+        return {"error": str(e), "status": "error", "mode": "flash"}
 
 
 @server.tool("blast_turbofactory")
@@ -984,7 +919,7 @@ async def blast_turbofactory(domain: str, scale: str = "standard", max_concurren
             "results": results,
         }
     except Exception as e:
-        return {"error": str(e), "status": "failed", "mode": "turbofactory"}
+        return {"error": str(e), "status": "error", "mode": "turbofactory"}
 
 
 @server.tool("blast_auto")
@@ -1021,7 +956,7 @@ async def blast_auto(query: str) -> dict[str, Any]:
         result["mode_description"] = description
         return result
     except Exception as e:
-        return {"error": str(e), "status": "failed", "mode": "auto"}
+        return {"error": str(e), "status": "error", "mode": "auto"}
 
 
 async def main():
@@ -1031,7 +966,7 @@ async def main():
     elif hasattr(server, "run_stdio_fallback"):
         await server.run_stdio_fallback()
     else:
-        print("❌ Cannot start MCP server. Install: pip install mcp", file=sys.stderr)
+        logger.error("Cannot start MCP server — neither MCP SDK run() nor run_stdio_fallback() available. Install: pip install mcp")
         sys.exit(1)
 
 
@@ -1071,7 +1006,6 @@ async def c4_social(action: str, draft_id: str = "", platform: str = "") -> dict
         draft_id: Draft ID for publish/preview/post actions
         platform: Target platform for post action (twitter, mastodon, reddit, discord, slack)
     """
-    import asyncio
     from pathlib import Path
 
     if action == "status":

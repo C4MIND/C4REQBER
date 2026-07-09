@@ -29,7 +29,6 @@ class ProofExampleRetriever:
     def _build_index(self, language: str) -> dict[str, Any]:
         """Build TF-IDF index for a language."""
         from sklearn.feature_extraction.text import TfidfVectorizer
-        from sklearn.metrics.pairwise import cosine_similarity
 
         path = os.path.join(self._examples_dir, f"{language}_examples.json")
         if not os.path.exists(path):

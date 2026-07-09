@@ -97,7 +97,12 @@ class QualityGates:
             passed=passed,
             score=max(0.0, score),
             message="PASS" if passed else "; ".join(errors),
-            details={"total": total, "databases": len(dbs), "with_url": with_url, "dummy": dummy_count},
+            details={
+                "total": total,
+                "databases": len(dbs),
+                "with_url": with_url,
+                "dummy": dummy_count,
+            },
         )
 
     # ── Step 2: Gap Quality ───────────────────────────────────────────
@@ -119,11 +124,18 @@ class QualityGates:
             if len(ev) < cfg.min_gap_evidence_length:
                 weak_evidence += 1
         if weak_evidence > 0:
-            errors.append(f"{weak_evidence} gaps have weak evidence (<{cfg.min_gap_evidence_length} chars)")
+            errors.append(
+                f"{weak_evidence} gaps have weak evidence (<{cfg.min_gap_evidence_length} chars)"
+            )
             score *= max(0, 1 - weak_evidence * 0.15)
 
         # Check generic titles
-        generic = sum(1 for g in gaps if "unknown" in g.get("area", "").lower() or "understanding" in g.get("area", "").lower())
+        generic = sum(
+            1
+            for g in gaps
+            if "unknown" in g.get("area", "").lower()
+            or "understanding" in g.get("area", "").lower()
+        )
         if generic > 0:
             errors.append(f"{generic} gaps have generic titles")
             score *= max(0, 1 - generic * 0.1)
@@ -156,14 +168,15 @@ class QualityGates:
             score *= total / cfg.min_hypotheses
 
         # Check for numerical constraints
-        has_numbers_str = "N/A"
         if cfg.require_numerical_constraints:
             has_numbers = 0
             for h in hypotheses:
                 text = f"{h.get('title', '')} {h.get('description', '')}"
-                if re.search(r"\d+(?:\.\d+)?(?:\s*%|\s*cells|fold|times|MPa|days|years|mm|μm)", text):
+                if re.search(
+                    r"\d+(?:\.\d+)?(?:\s*%|\s*cells|fold|times|MPa|days|years|mm|μm)", text
+                ):
                     has_numbers += 1
-            has_numbers_str = str(has_numbers)
+            str(has_numbers)
             if has_numbers < len(hypotheses) * 0.5:
                 errors.append(f"Only {has_numbers}/{total} hypotheses have numerical predictions")
                 score *= has_numbers / max(1, total)
@@ -186,7 +199,10 @@ class QualityGates:
             passed=passed,
             score=max(0.0, score),
             message="PASS" if passed else "; ".join(errors),
-            details={"total": total, "with_numbers": has_numbers if cfg.require_numerical_constraints else "N/A"},
+            details={
+                "total": total,
+                "with_numbers": has_numbers if cfg.require_numerical_constraints else "N/A",
+            },
         )
 
     # ── Step 4: Simulation Quality ────────────────────────────────────
@@ -200,6 +216,20 @@ class QualityGates:
         else:
             sim_status = getattr(sim, "status", "") if sim else ""
             sim_metrics = getattr(sim, "metrics", {}) if sim else {}
+
+        if sim_status == "timeout":
+            exec_time = sim_metrics.get("execution_time", 0) if sim_metrics else 0
+            return GateResult(
+                step="simulation",
+                passed=False,
+                score=0.0,
+                message=(
+                    f"Simulation stopped at {cfg.simulation_timeout_seconds:.0f}s budget "
+                    f"(ran {exec_time:.1f}s)"
+                ),
+                details={"execution_time": exec_time, "status": "timeout"},
+            )
+
         if not sim or sim_status not in good_statuses:
             if cfg.require_simulation_success:
                 return GateResult(
@@ -223,7 +253,10 @@ class QualityGates:
                 step="simulation",
                 passed=False,
                 score=0.5,
-                message=f"Simulation timeout: {exec_time:.1f}s > {cfg.simulation_timeout_seconds}s",
+                message=(
+                    f"Simulation exceeded time budget: {exec_time:.1f}s > "
+                    f"{cfg.simulation_timeout_seconds}s (enforce timeout in runner)"
+                ),
                 details={"execution_time": exec_time},
             )
 
@@ -255,7 +288,15 @@ class QualityGates:
             verif_status = getattr(verif, "status", "")
             verif_backend = getattr(verif, "backend", "unknown")
 
-        good_statuses = {"verified", "consistent", "sat", "partial", "success", "not_applicable", "skipped"}
+        good_statuses = {
+            "verified",
+            "consistent",
+            "sat",
+            "partial",
+            "success",
+            "not_applicable",
+            "skipped",
+        }
         if verif_status in good_statuses:
             return GateResult(
                 step="verification",
@@ -293,7 +334,6 @@ class QualityGates:
     # ── Step 6: Bibliography Quality ──────────────────────────────────
 
     def check_bibliography(self, bib: list[dict[str, Any]]) -> GateResult:
-        cfg = self.config
         errors = []
         score = 1.0
 
@@ -364,7 +404,9 @@ class QualityGates:
             details={"words": words, "missing_sections": missing},
         )
 
-    def check_hypothesis_redundant(self, hypothesis_text: str, papers: list[dict[str, Any]]) -> GateResult:
+    def check_hypothesis_redundant(
+        self, hypothesis_text: str, papers: list[dict[str, Any]]
+    ) -> GateResult:
         try:
             gate = create_novelty_gate()
             try:
@@ -378,11 +420,15 @@ class QualityGates:
                 step="novelty",
                 passed=bool(result.passed),
                 score=result.confidence,
-                message=f"N-version novelty: {result.confidence:.0%} ({result.message})" if result.passed else f"LOW: {result.message}",
+                message=f"N-version novelty: {result.confidence:.0%} ({result.message})"
+                if result.passed
+                else f"LOW: {result.message}",
                 details={"votes": result.confidence},
             )
         except Exception:
-            return GateResult(step="novelty", passed=True, score=0.5, message="RedundantGate unavailable")
+            return GateResult(
+                step="novelty", passed=True, score=0.5, message="RedundantGate unavailable"
+            )
 
     # ── Overall Scoring ───────────────────────────────────────────────
 
@@ -410,8 +456,7 @@ class QualityGates:
         # N-version redundant novelty check (extra gate, weight 0.03 borrowed from hypotheses)
         try:
             extra_gate = self.check_hypothesis_redundant(
-                hypotheses[0].get("text", "") if hypotheses else "",
-                sources[:20] if sources else []
+                hypotheses[0].get("text", "") if hypotheses else "", sources[:20] if sources else []
             )
             gates.append(extra_gate)
         except Exception:
@@ -431,9 +476,11 @@ class QualityGates:
 
         actual_weights = {g.step: weights.get(g.step, 0.1) for g in gates}
         weight_sum = sum(actual_weights.values())
-        total = sum(
-            g.score * actual_weights[g.step] / weight_sum for g in gates
-        ) if weight_sum > 0 else 0.0
+        total = (
+            sum(g.score * actual_weights[g.step] / weight_sum for g in gates)
+            if weight_sum > 0
+            else 0.0
+        )
         score = int(total * 100)
 
         # Grade
@@ -451,6 +498,12 @@ class QualityGates:
             grade = "F"
 
         passed_all = all(g.passed for g in gates)
+        # Dissertation prose is mandatory — cap score if body is missing/invalid.
+        diss_failed = any(g.step == "dissertation" and not g.passed for g in gates)
+        if diss_failed:
+            score = min(score, 55)
+            grade = "F"
+            passed_all = False
         recommendations = self._generate_recommendations(gates)
 
         return QualityReport(

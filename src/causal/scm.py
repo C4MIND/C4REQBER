@@ -323,8 +323,6 @@ class StructuralCausalModel:
             node_to_next = self._dag.has_edge(node, next_node)
             next_to_node = self._dag.has_edge(next_node, node)
 
-            is_chain = (prev_to_node or node_to_prev) and (node_to_next or next_to_node)
-            is_fork = (node_to_prev or prev_to_node) and (node_to_next or next_to_node)
             is_collider = (prev_to_node or next_to_node) and (node_to_prev or node_to_next)
 
             if is_collider:

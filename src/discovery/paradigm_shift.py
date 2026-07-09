@@ -195,7 +195,7 @@ class TemporalClaimAnalyzer:
         sorted_claims = sorted(claims, key=lambda c: c.timestamp)
         vectorizer = TfidfVectorizer(stop_words="english")
         texts = [c.text for c in sorted_claims]
-        X = vectorizer.fit_transform(texts)
+        vectorizer.fit_transform(texts)
 
         # Sliding window similarity
         window_size = max(2, len(sorted_claims) // 4)

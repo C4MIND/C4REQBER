@@ -360,6 +360,7 @@ async def check_novelty(request: NoveltyCheckRequest) -> dict[str, Any]:
         result["status"] = "OVERLAP_DETECTED" if result.get("overall_novelty_score", 1.0) < 0.8 else "PASS"
         return result
     except (ImportError, AttributeError, RuntimeError) as e:
+        logger.warning("novelty validator failed: %s", e)
         errors.append(str(e))
         return {
             "status": "ERROR",
@@ -407,6 +408,7 @@ async def quick_novelty_check(hypothesis: str, domain: str = "general") -> dict[
             ),
         }
     except (ImportError, AttributeError, RuntimeError) as e:
+        logger.warning("novelty check failed: %s", e)
         raise HTTPException(status_code=500, detail=f"Novelty check failed: {e}") from e
 
 @router.post("/quick")
@@ -445,6 +447,7 @@ async def quick_novelty_check_post(request: NoveltyCheckRequest) -> dict[str, An
             ),
         }
     except (ImportError, AttributeError, RuntimeError) as e:
+        logger.warning("novelty check failed: %s", e)
         raise HTTPException(status_code=500, detail=f"Novelty check failed: {e}") from e
 
 @router.get("/already-published")
@@ -466,6 +469,7 @@ async def check_already_published(hypothesis: str, domain: str = "general") -> d
             }
         return {"already_published": False, "total_overlaps": 0, "max_similarity": 0}
     except (ImportError, AttributeError, RuntimeError) as e:
+        logger.warning("already-published check failed: %s", e)
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 

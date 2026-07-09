@@ -1,4 +1,4 @@
-.PHONY: help install lint typecheck test test-backend test-frontend test-e2e coverage format security clean generate release db-migrate db-revision benchmark
+.PHONY: help install lint typecheck test test-backend test-frontend test-e2e coverage format security clean generate release db-migrate db-revision benchmark openapi
 
 # ═══════════════════════════════════════════════════════════════════
 # c4-cdi-turbo Makefile 2.0
@@ -128,6 +128,21 @@ proto:
 	@echo "=== Generating proto code ==="
 	buf generate
 
+## openapi — regenerate TUI v9 Go types from openapi/tui-v9.yaml
+openapi:
+	@echo "=== OpenAPI codegen (TUI v9) ==="
+	cd src/tui/v9 && $(MAKE) openapi-gen
+
+## openapi-export — regenerate openapi/fastapi.json from the live FastAPI app
+openapi-export:
+	@echo "=== Export FastAPI OpenAPI schema ==="
+	python3 scripts/export_openapi.py
+
+## openapi-check — validate TUI contract against FastAPI spec (REWORK_PLAN P3-1)
+openapi-check:
+	@echo "=== OpenAPI contract check (TUI v9) ==="
+	python3 scripts/check_openapi_contract.py
+
 ## generate — proto code generation (stub)
 generate:
 	@echo "=== Proto code generation ==="
@@ -138,12 +153,12 @@ generate:
 
 db-migrate:
 	@echo "=== Running Alembic migrations ==="
-	python3 -m alembic upgrade head
+	PYTHONPATH=src python3 -m alembic upgrade head
 
 ## db-revision — Create new Alembic migration (use: make db-revision msg="description")
 db-revision:
-	@echo "=== Creating Alembic revision ==="
-	python3 -m alembic revision --autogenerate -m "$(msg)"
+	@echo "=== Creating Alembic migration (autogenerate from src/data/orm.py) ==="
+	PYTHONPATH=src python3 -m alembic revision --autogenerate -m "$(msg)"
 
 ## benchmark — Run scientific pattern benchmarks
 benchmark:

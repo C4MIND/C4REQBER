@@ -2,23 +2,27 @@
 C4REQBER API: FastAPI Server
 Production-ready REST API with structured logging, security, and health endpoints.
 """
+
 from __future__ import annotations
 
 import os
 from pathlib import Path
 
 
-# Load .env file before anything else
+# Load keys: ~/.kilo vault first, then repo .env overrides
 try:
     from dotenv import load_dotenv
+
+    from src.config.paths import load_kilo_env
+
+    load_kilo_env()
     _root = Path(__file__).resolve().parent.parent.parent
     _env_path = _root / ".env"
     if _env_path.exists():
         load_dotenv(_env_path)
-    # Explicit opt-in: load .env.dontredact for additional API keys
     _dontredact_path = _root / ".env.dontredact"
     if _dontredact_path.exists():
-        load_dotenv(_dontredact_path, override=False)
+        load_dotenv(_dontredact_path, override=True)
 except ImportError:
     pass
 
@@ -56,6 +60,26 @@ logger = get_logger(__name__)
 _env = os.getenv("ENV", "development")
 _docs_url = "/docs" if _env != "production" else None
 _redoc_url = "/redoc" if _env != "production" else None
+
+# Audit 2026-06-22 M-8: warn when production deploys rely on localhost defaults.
+# These are correct for dev but silent fallbacks in production (services not
+# found, no useful error). Loud warning at startup is better than silent prod.
+if _env == "production":
+    _localhost_dependent = [
+        ("REDIS_URL", os.getenv("REDIS_URL", "redis://localhost:6379/0")),
+        ("OLLAMA_HOST", os.getenv("OLLAMA_HOST", "http://localhost:11434")),
+        ("LMSTUDIO_URL", os.getenv("LMSTUDIO_URL", "http://localhost:1234/v1")),
+        ("MLX_URL", os.getenv("MLX_URL", "http://localhost:8001/v1")),
+        ("DATABASE_URL", os.getenv("DATABASE_URL", "sqlite:///./data/c4_cdi_turbo.db")),
+    ]
+    for name, value in _localhost_dependent:
+        if "localhost" in value or "127.0.0.1" in value:
+            logger.warning(
+                "ENV=production but %s=%s uses localhost. Set explicit "
+                "production values in your env or systemd unit.",
+                name,
+                value,
+            )
 
 app = FastAPI(
     title="c4reqber API",
@@ -103,7 +127,6 @@ from src.api.v8_router import router as v8_router
 
 app.include_router(agents_router)
 app.include_router(v8_router)
-
 
 
 if __name__ == "__main__":

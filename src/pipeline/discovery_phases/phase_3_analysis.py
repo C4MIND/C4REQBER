@@ -16,6 +16,7 @@ Architecture:
   5. Final mine_contradictions(centroid_papers) finds cross-block contradictions
   6. Merge all contradictions, sort by score, return top-5
 """
+
 from __future__ import annotations
 
 import logging
@@ -35,7 +36,7 @@ def _pick_centroids(
     in arbitrary order, so list-based iteration would mismatch chunks).
     Returns a flat list of centroid papers (one per chunk, top-k from each)."""
     centroids: list[dict] = []
-    for chunk_idx, cr in sorted(chunk_results.items()):
+    for chunk_idx, _cr in sorted(chunk_results.items()):
         if chunk_idx >= len(chunks):
             continue
         n = min(top_k, len(chunks[chunk_idx]))
@@ -61,7 +62,7 @@ async def run_deep_analysis(problem, domain, papers, results, thresholds, errors
         search_isomorphisms,
     )
 
-    loop = asyncio.get_running_loop()
+    asyncio.get_running_loop()
     t0 = time.perf_counter()
 
     # Split papers into ~6 chunks for parallel contradiction mining.
@@ -70,8 +71,10 @@ async def run_deep_analysis(problem, domain, papers, results, thresholds, errors
     n_papers = len(papers) if isinstance(papers, list) else 0
     n_workers = min(6, max(2, n_papers // 50))
     chunk_size = max(1, n_papers // n_workers) if n_workers > 0 else n_papers
-    chunks = [papers[i:i+chunk_size] for i in range(0, n_papers, chunk_size)]
-    logger.info("Phase C: %d papers split into %d chunks (size %d)", n_papers, len(chunks), chunk_size)
+    chunks = [papers[i : i + chunk_size] for i in range(0, n_papers, chunk_size)]
+    logger.info(
+        "Phase C: %d papers split into %d chunks (size %d)", n_papers, len(chunks), chunk_size
+    )
 
     with ProcessPoolExecutor(max_workers=n_workers + 1) as pool:
         # Launch all chunked contradiction mining jobs in parallel
@@ -101,18 +104,25 @@ async def run_deep_analysis(problem, domain, papers, results, thresholds, errors
                 logger.warning("Phase C worker %s failed: %s", name, e)
                 if name == "temporal_kg":
                     results["temporal_kg"] = {"error": str(e)}
-        logger.info("Intra-chunk contradiction mining: %d chunks in %.3fs", len(chunk_results), time.perf_counter() - t0)
+        logger.info(
+            "Intra-chunk contradiction mining: %d chunks in %.3fs",
+            len(chunk_results),
+            time.perf_counter() - t0,
+        )
 
-    # Cross-block centroid pass: combine top-5 papers from each chunk
-    # and run one more contradiction detection to find inter-chunk conflicts
+        # Cross-block centroid pass: combine top-5 papers from each chunk
+        # and run one more contradiction detection to find inter-chunk conflicts
         centroids = _pick_centroids(chunks, chunk_results, top_k=5)
     if len(centroids) > 1:
         try:
             cross_result = mine_contradictions(centroids)
             # Store cross-block result at index len(chunks) (one past the last chunk)
             chunk_results[len(chunks)] = cross_result
-            logger.info("Cross-block centroid pass: %d papers in %.3fs",
-                        len(centroids), time.perf_counter() - t0)
+            logger.info(
+                "Cross-block centroid pass: %d papers in %.3fs",
+                len(centroids),
+                time.perf_counter() - t0,
+            )
         except Exception as e:
             logger.warning("Cross-block centroid pass failed: %s", e)
 
@@ -129,13 +139,21 @@ async def run_deep_analysis(problem, domain, papers, results, thresholds, errors
         "contradictions_found": len(all_contradictions),
         "top_contradictions": all_contradictions[:5],
     }
-    logger.info("Contradiction mining: %d claims, %d contradictions merged in %.3fs",
-                total_claims, len(all_contradictions), time.perf_counter() - t0)
+    logger.info(
+        "Contradiction mining: %d claims, %d contradictions merged in %.3fs",
+        total_claims,
+        len(all_contradictions),
+        time.perf_counter() - t0,
+    )
 
     # Isomorphisms (mixed async/sync, networkx — CPU-bound)
     try:
         triz_list = results.get("triz", {}).get("principles", [])
-        iso_results = await search_isomorphisms(problem=problem, papers=papers if isinstance(papers, list) else [], triz_principles=triz_list if isinstance(triz_list, list) else [])
+        iso_results = await search_isomorphisms(
+            problem=problem,
+            papers=papers if isinstance(papers, list) else [],
+            triz_principles=triz_list if isinstance(triz_list, list) else [],
+        )
         results["isomorphisms"] = iso_results
     except Exception as e:
         results["isomorphisms"] = {"found": 0, "error": str(e)}
@@ -144,8 +162,11 @@ async def run_deep_analysis(problem, domain, papers, results, thresholds, errors
     # Gap miner (async)
     try:
         from src.discovery.gap_miner import GapMiner
+
         gm = GapMiner()
-        gap_result = await gm.mine_for_discovery(problem=problem, papers=papers if isinstance(papers, list) else [])
+        gap_result = await gm.mine_for_discovery(
+            problem=problem, papers=papers if isinstance(papers, list) else []
+        )
         results["gap_miner"] = gap_result
     except Exception as e:
         results["gap_miner"] = {"discovery_potential": 0, "error": str(e)}
@@ -154,11 +175,21 @@ async def run_deep_analysis(problem, domain, papers, results, thresholds, errors
     gap_potential: float = results.get("gap_miner", {}).get("discovery_potential", 0)
     if gap_potential < thresholds["min_gap_miner_potential"]:
         abort_reasons = results.setdefault("_abort_reasons", [])
-        abort_reasons.append(f"LOW_DISCOVERY_POTENTIAL: GapMiner score = {gap_potential:.2f} (minimum {thresholds['min_gap_miner_potential']}). Research opportunity not supported by literature.")
+        abort_reasons.append(
+            f"LOW_DISCOVERY_POTENTIAL: GapMiner score = {gap_potential:.2f} (minimum {thresholds['min_gap_miner_potential']}). Research opportunity not supported by literature."
+        )
 
     # Hypothesis generation (async, LLM-bound — timeout 20s)
     try:
-        hypothesis = await asyncio.wait_for(generate_hypothesis(problem=problem, c4_path=results.get("c4_path", {}), triz_principles=results.get("triz", {}).get("principles", []), papers=papers if isinstance(papers, list) else []), timeout=20.0)
+        hypothesis = await asyncio.wait_for(
+            generate_hypothesis(
+                problem=problem,
+                c4_path=results.get("c4_path", {}),
+                triz_principles=results.get("triz", {}).get("principles", []),
+                papers=papers if isinstance(papers, list) else [],
+            ),
+            timeout=20.0,
+        )
         results["hypothesis"] = hypothesis
         try:
             competing = await generate_competing_hypotheses(
@@ -178,8 +209,14 @@ async def run_deep_analysis(problem, domain, papers, results, thresholds, errors
 
     # Cognitive plugins (blocking, CPU-bound — runs after hypothesis is ready)
     try:
-        hypothesis_text = results.get("hypothesis", {}).get("text", "") if isinstance(results.get("hypothesis"), dict) else str(hypothesis)
-        results["cognitive_plugins"] = run_cognitive_plugins(problem=problem, hypothesis_text=hypothesis_text[:300], domain=domain)
+        hypothesis_text = (
+            results.get("hypothesis", {}).get("text", "")
+            if isinstance(results.get("hypothesis"), dict)
+            else str(hypothesis)
+        )
+        results["cognitive_plugins"] = run_cognitive_plugins(
+            problem=problem, hypothesis_text=hypothesis_text[:300], domain=domain
+        )
     except Exception as e:
         results["cognitive_plugins"] = {"plugins_run": 0, "error": str(e)}
         errors.append(f"cognitive_plugins: {str(e)}")
@@ -193,7 +230,9 @@ async def run_deep_analysis(problem, domain, papers, results, thresholds, errors
 
     # Strong inference (sync, CPU-light)
     try:
-        results["strong_inference"] = run_strong_inference(problem, domain, results.get("hypothesis", {}))
+        results["strong_inference"] = run_strong_inference(
+            problem, domain, results.get("hypothesis", {})
+        )
     except Exception as e:
         results["strong_inference"] = {"error": str(e)}
         errors.append(f"strong_inference: {str(e)}")

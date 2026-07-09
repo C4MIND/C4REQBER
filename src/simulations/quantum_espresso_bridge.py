@@ -27,7 +27,6 @@ class QuantumEspressoBridge(BaseSimulationAdapter):
     def run(self, input_data: dict[str, Any] | None = None) -> SimulationResult:
         def _run(data: dict[str, Any]) -> dict[str, Any]:
             import aiida
-            from aiida import orm
 
             profile = aiida.load_profile()
             return {

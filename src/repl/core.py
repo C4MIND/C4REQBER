@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """C4REQBER Interactive REPL Mode - Core shell and styling."""
+
 from __future__ import annotations
 
 import cmd
@@ -8,6 +9,8 @@ import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Any
+
+from src.config import get_key
 
 
 _project_root = Path(__file__).resolve().parent.parent
@@ -18,11 +21,12 @@ if str(_src) not in sys.path:
 from adapters.ollama_adapter import LLMProvider
 from bibliography.manager import BibliographyManager
 from core.cdi_engine import CDIEngine, ContradictionType, PhysicalContradiction
-from data.database import PatternDatabase
 from export.manager import ExportManager
 from extractors.contradiction import ContradictionExtractor
 from projects.manager import ProjectManager
 from visualization.c4_viz import C4Visualizer
+
+from data.database import PatternDatabase
 
 
 class Style:
@@ -62,7 +66,8 @@ class C4REQBERShell(cmd.Cmd):
         self.exporter = ExportManager()
         self.viz = C4Visualizer()
         self.llm = LLMProvider(
-            openrouter_key=os.getenv("OPENROUTER_API_KEY"), prefer_local=False
+            openrouter_key=get_key("openrouter") or os.getenv("OPENROUTER_API_KEY"),
+            prefer_local=False,
         )
         self.current_project: int | None = None
 
@@ -117,9 +122,7 @@ C4 Path: {" → ".join([t.operator for t in solution.c4_path])}
 Generate a specific scientific hypothesis."""
 
             response = self.llm.generate(prompt, temperature=0.7, max_tokens=500)
-            solution.hypothesis = (
-                response.content if hasattr(response, "content") else response
-            )
+            solution.hypothesis = response.content if hasattr(response, "content") else response
 
         print(f"\n{Style.GREEN}{Style.BOLD}═ HYPOTHESIS ═{Style.RESET}")
         print(solution.hypothesis)
@@ -160,15 +163,11 @@ Generate a specific scientific hypothesis."""
 
         print(f"\n{Style.BOLD}Base Operators (9):{Style.RESET}")
         for name, op in ops.base.items():
-            print(
-                f"  {Style.CYAN}{op.symbol:8}{Style.RESET} {name:20} - {op.description}"
-            )
+            print(f"  {Style.CYAN}{op.symbol:8}{Style.RESET} {name:20} - {op.description}")
 
         print(f"\n{Style.BOLD}Composed Operators (18):{Style.RESET}")
         for name, op in ops.composed.items():
-            print(
-                f"  {Style.MAGENTA}{op.symbol:8}{Style.RESET} {name:25} - {op.description}"
-            )
+            print(f"  {Style.MAGENTA}{op.symbol:8}{Style.RESET} {name:25} - {op.description}")
 
     # ========== System Commands ==========
 

@@ -16,6 +16,7 @@ import sys
 from collections import defaultdict
 from pathlib import Path
 
+
 # NLLB-200 lang codes
 NLLB_LANGS = {
     "en": "eng_Latn",

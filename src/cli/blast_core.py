@@ -32,10 +32,15 @@ console = Console()
 # Mode A: blast solve — Problem Solving (UniversalSolvePipeline v2)
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 def cmd_solve(
     problem: str = typer.Argument(..., help="Problem statement to solve"),
-    mode: str = typer.Option("autopilot", "--mode", "-m", help="Pipeline mode: autopilot|turbo|deep-work"),
-    output_format: str = typer.Option("auto", "--format", "-f", help="Output format: auto|prd|code|plan|blueprint|protocol"),
+    mode: str = typer.Option(
+        "autopilot", "--mode", "-m", help="Pipeline mode: autopilot|turbo|deep-work"
+    ),
+    output_format: str = typer.Option(
+        "auto", "--format", "-f", help="Output format: auto|prd|code|plan|blueprint|protocol"
+    ),
     domain: str | None = typer.Option(None, "--domain", "-d", help="Domain hint"),
     output: str | None = typer.Option(None, "--output", "-o", help="Output file path"),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Show detailed output"),
@@ -46,7 +51,7 @@ def cmd_solve(
     from src.core.profile_manager import UserProfileManager
 
     manager = UserProfileManager()
-    user_profile = manager.load()
+    manager.load()
 
     console.print(f"[bold]BLAST solve[/bold] — {get_mode_description('solve')}")
     console.print(f"[dim]Problem:[/dim] {problem[:80]}...")
@@ -61,8 +66,16 @@ def cmd_solve(
         console.print(f"\n[bold]Solution:[/bold]\n{result.final_solution[:500]}...")
 
     if output:
-        Path(output).write_text(result.final_solution, encoding="utf-8")
-        console.print(f"[green]Saved to:[/green] {output}")
+        text = (result.final_solution or "").strip()
+        if len(text.split()) < 400 or "[LLM unavailable" in text:
+            console.print(
+                f"[bold red]Refusing to save — synthesis too short or LLM failed "
+                f"({len(text.split())} words)[/bold red]"
+            )
+        else:
+            Path(output).parent.mkdir(parents=True, exist_ok=True)
+            Path(output).write_text(text, encoding="utf-8")
+            console.print(f"[green]Saved to:[/green] {output}")
 
     return result.to_dict()
 
@@ -70,6 +83,7 @@ def cmd_solve(
 # ═══════════════════════════════════════════════════════════════════════════════
 # Explainability — C4 state reasoning + provenance
 # ═══════════════════════════════════════════════════════════════════════════════
+
 
 def _print_explain_report(record: Any, topic: str) -> None:
     """Print a human-readable explanation of the pipeline's decisions."""
@@ -81,7 +95,6 @@ def _print_explain_report(record: Any, topic: str) -> None:
     # C4 State reasoning
     c4 = getattr(record, "c4_state", "")
     if c4:
-        from src.c4.state import Agency, C4State, Scale, Time
         try:
             parts = c4.replace("C4(", "").replace(")", "").split(",")
             t, s, a = int(parts[0]), int(parts[1]), int(parts[2])
@@ -89,10 +102,18 @@ def _print_explain_report(record: Any, topic: str) -> None:
             s_name = {0: "Concrete (S=0)", 1: "Abstract (S=1)", 2: "Meta (S=2)"}.get(s, "")
             a_name = {0: "Self (A=0)", 1: "Other (A=1)", 2: "System (A=2)"}.get(a, "")
             console.print(f"\n[bold]C4 State: {c4}[/]")
-            console.print(f"  Time: {t_name} — {'looking backward' if t==0 else 'present-focused' if t==1 else 'forward-looking'}")
-            console.print(f"  Scale: {s_name} — {'tangible/practical' if s==0 else 'theoretical' if s==1 else 'meta/framework-level'}")
-            console.print(f"  Agency: {a_name} — {'personal perspective' if a==0 else 'interpersonal' if a==1 else 'system-wide'}")
-            ops = {0:["τ+","λ+","κ+"], 1:["τ-","λ-","κ-"], 2:["ι"]}.get(sum([t,s,a]) % 3, [])
+            console.print(
+                f"  Time: {t_name} — {'looking backward' if t==0 else 'present-focused' if t==1 else 'forward-looking'}"
+            )
+            console.print(
+                f"  Scale: {s_name} — {'tangible/practical' if s==0 else 'theoretical' if s==1 else 'meta/framework-level'}"
+            )
+            console.print(
+                f"  Agency: {a_name} — {'personal perspective' if a==0 else 'interpersonal' if a==1 else 'system-wide'}"
+            )
+            ops = {0: ["τ+", "λ+", "κ+"], 1: ["τ-", "λ-", "κ-"], 2: ["ι"]}.get(
+                sum([t, s, a]) % 3, []
+            )
             console.print(f"  Recommended operators: {', '.join(ops)}")
         except Exception:
             pass
@@ -118,17 +139,31 @@ def _print_explain_report(record: Any, topic: str) -> None:
         if getattr(qr, "recommendations", []):
             console.print(f"  → {'; '.join(qr.recommendations)}")
 
+
 def cmd_turbo(
     topic: str = typer.Argument(..., help="Research topic to discover"),
     output: str | None = typer.Option(None, "--output", "-o", help="Output file path"),
     verify_backend: str = typer.Option("hybrid", "--verify-backend", help="Verification backend"),
-    functors: bool = typer.Option(True, "--functors/--no-functors", help="Enable 9 cognitive functor agents"),
+    functors: bool = typer.Option(
+        True, "--functors/--no-functors", help="Enable 9 cognitive functor agents"
+    ),
     plugins: str | None = typer.Option(None, "--plugins", "-p", help="Comma-separated plugins"),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Show quality report"),
-    competing: int = typer.Option(2, "--competing", help="Number of competing hypotheses (default 2)"),
-    no_iterative: bool = typer.Option(False, "--no-iterative", help="Skip iterative refinement loop"),
-    explain: bool = typer.Option(True, "--explain/--no-explain", "-e", help="Show explainability footer (C4 state, sources, reasoning)"),
-    dry_run: bool = typer.Option(False, "--dry-run", help="Preview without executing (shows cost, time, model)"),
+    competing: int = typer.Option(
+        2, "--competing", help="Number of competing hypotheses (default 2)"
+    ),
+    no_iterative: bool = typer.Option(
+        False, "--no-iterative", help="Skip iterative refinement loop"
+    ),
+    explain: bool = typer.Option(
+        True,
+        "--explain/--no-explain",
+        "-e",
+        help="Show explainability footer (C4 state, sources, reasoning)",
+    ),
+    dry_run: bool = typer.Option(
+        False, "--dry-run", help="Preview without executing (shows cost, time, model)"
+    ),
 ) -> None:
     """Generate paradigm-shifting research proposal."""
     if dry_run:
@@ -141,7 +176,9 @@ def cmd_turbo(
         console.print("  Estimated LLM calls: 3-5")
         console.print("  Estimated time: ~30s")
         console.print("  Estimated cost: ~$0.01 (DeepSeek)")
-        console.print(f"  Would save to: {output or 'dissertations/live/blast_' + topic[:30].replace(' ','_') + '.md'}")
+        console.print(
+            f"  Would save to: {output or 'dissertations/live/blast_' + topic[:30].replace(' ','_') + '.md'}"
+        )
         console.print("\n[dim]Remove --dry-run to execute.[/]")
         return
     from src.core.profile_manager import UserProfileManager
@@ -155,59 +192,92 @@ def cmd_turbo(
 
     console.print(f"[bold]BLAST turbo[/bold] — {get_mode_description('turbo')}")
     console.print(f"[dim]Topic:[/dim] {topic[:80]}...")
-    console.print(f"[dim]User:[/dim] {user_profile.name} | {user_profile.affiliation or 'no affiliation'}")
+    console.print(
+        f"[dim]User:[/dim] {user_profile.name} | {user_profile.affiliation or 'no affiliation'}"
+    )
 
     # Auto-select plugins based on topic complexity + domain + mode
     if plugins is None or plugins == "auto":
         from src.plugins.unified_registry import select_plugins_for_problem
+
         selected = select_plugins_for_problem(topic, domain_hint="", auto_mode="turbo")
         console.print(f"[dim]Auto-plugins:[/dim] {selected}")
     else:
         selected = [p.strip() for p in plugins.split(",") if p.strip()]
         console.print(f"[dim]Manual plugins:[/dim] {selected}")
 
-
     async def _run() -> Any:
         pipeline = HILDiscoveryPipeline(config=config, user_profile=user_profile)
-        return await pipeline.discover(topic, competing_hypotheses=competing, no_iterative=no_iterative)
+        return await pipeline.discover(
+            topic, competing_hypotheses=competing, no_iterative=no_iterative
+        )
 
     record = asyncio.run(_run())
 
     if record.quality_report:
         console.print()
         console.print(f"[bold]{'='*60}[/bold]")
-        console.print(f"[bold cyan]Quality Report: {record.quality_report.grade} (Score: {record.quality_report.overall_score}/100)[/bold cyan]")
+        console.print(
+            f"[bold cyan]Quality Report: {record.quality_report.grade} (Score: {record.quality_report.overall_score}/100)[/bold cyan]"
+        )
         console.print(f"[bold]{'='*60}[/bold]")
         for gate in record.quality_report.gates:
             status = "✅" if gate.passed else "⚠️"
             color = "green" if gate.passed else "yellow"
-            console.print(f"  [{color}]{status}[/{color}] {gate.step:12s} | score={gate.score:.2f} | {gate.message}")
+            console.print(
+                f"  [{color}]{status}[/{color}] {gate.step:12s} | score={gate.score:.2f} | {gate.message}"
+            )
         if record.quality_report.recommendations:
             console.print("\n[bold yellow]Recommendations:[/bold yellow]")
             for r in record.quality_report.recommendations:
                 console.print(f"  • {r}")
 
-    out_path = output or f"dissertations/live/blast_{topic.replace(' ', '_')[:30]}.md"
-    console.print(f"\n[green]Dissertation saved:[/green] {out_path}")
+    from src.publishing.dissertation import _sanitize_filename
+
+    hil_fname = _sanitize_filename(f"HIL_v2_{topic.replace(' ', '_')[:30]}.md")
+    hil_path = Path("dissertations/live") / hil_fname
+    out_path = (
+        output or f"dissertations/live/blast_{_sanitize_filename(topic.replace(' ', '_')[:30])}.md"
+    )
+    if hil_path.is_file():
+        text = hil_path.read_text(encoding="utf-8")
+        Path(out_path).parent.mkdir(parents=True, exist_ok=True)
+        Path(out_path).write_text(text, encoding="utf-8")
+        console.print(f"\n[green]Dissertation saved:[/green] {out_path}")
+    else:
+        console.print(f"\n[yellow]Dissertation not found at {hil_path}[/yellow]")
 
     if explain:
         _print_explain_report(record, topic)
 
     # ── Mascot ──────────────────────────────────────────────────────
     from src.cli.cube_mascot import inject_mascot_status
+
     console.print()
-    console.print(inject_mascot_status(mode="turbo", state="done", sources=len(record.sources), confidence=record.quality_report.overall_score / 100 if record.quality_report else 0))
+    console.print(
+        inject_mascot_status(
+            mode="turbo",
+            state="done",
+            sources=len(record.sources),
+            confidence=record.quality_report.overall_score / 100 if record.quality_report else 0,
+        )
+    )
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Mode C: blast flash — Quick Answers
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 def cmd_flash(
     question: str = typer.Argument(..., help="Question to answer quickly"),
     with_sources: bool = typer.Option(False, "--sources", "-s", help="Include source citations"),
-    deep: bool = typer.Option(False, "--deep", "-d", help="Deep flash: multi-source search + quality check"),
-    format: str = typer.Option("concise", "--format", "-f", help="Output format: concise|detailed|bullet|code"),
+    deep: bool = typer.Option(
+        False, "--deep", "-d", help="Deep flash: multi-source search + quality check"
+    ),
+    format: str = typer.Option(
+        "concise", "--format", "-f", help="Output format: concise|detailed|bullet|code"
+    ),
 ) -> None:
     """Get a quick answer (no pipeline, just fast LLM + optional web search)."""
     from src.knowledge.orchestrator import MultiSourceSearcher
@@ -217,7 +287,9 @@ def cmd_flash(
     from src.plugins.unified_registry import WebSearchPlugin
 
     console.print(f"[bold]BLAST flash[/bold] — {get_mode_description('flash')}")
-    console.print(f"[dim]Format:[/dim] {format} | [dim]Sources:[/dim] {'yes' if with_sources else 'no'} | [dim]Deep:[/dim] {'yes' if deep else 'no'}")
+    console.print(
+        f"[dim]Format:[/dim] {format} | [dim]Sources:[/dim] {'yes' if with_sources else 'no'} | [dim]Deep:[/dim] {'yes' if deep else 'no'}"
+    )
 
     async def _run() -> dict[str, Any]:
         llm = get_gateway()
@@ -246,7 +318,9 @@ def cmd_flash(
                 impact = ImpactEngine()
                 impact_result = impact.identify(question)  # type: ignore[attr-defined]
                 impact_mapped = impact.map(impact_result)  # type: ignore[attr-defined]
-                usp_context["impact"] = f"{len(impact_mapped.get('entities', []))} entities, {len(impact_mapped.get('stakeholders', []))} stakeholders"
+                usp_context["impact"] = (
+                    f"{len(impact_mapped.get('entities', []))} entities, {len(impact_mapped.get('stakeholders', []))} stakeholders"
+                )
                 console.print(f"  [dim]IMPACT: {usp_context['impact']}[/dim]")
             except Exception as e:
                 logger.debug("IMPACT failed: %s", e)
@@ -318,29 +392,31 @@ def cmd_flash(
                 result = await searcher.search_all(question)
                 papers = result.get("papers", [])[:5]
                 sources = papers
-                context = "\n".join([
-                    f"- {p.get('title', '')} ({p.get('_source', 'unknown')}): {p.get('snippet', p.get('abstract', ''))[:250]}"
-                    for p in papers
-                ])
-                console.print(f"[dim]Found {len(papers)} papers from {result.get('sources_used', 0)} sources[/dim]")
+                context = "\n".join(
+                    [
+                        f"- {p.get('title', '')} ({p.get('_source', 'unknown')}): {p.get('snippet', p.get('abstract', ''))[:250]}"
+                        for p in papers
+                    ]
+                )
+                console.print(
+                    f"[dim]Found {len(papers)} papers from {result.get('sources_used', 0)} sources[/dim]"
+                )
             except Exception as e:
                 console.print(f"[yellow]Multi-source search failed: {e}[/yellow]")
                 # Fallback to web search
                 searcher = WebSearchPlugin()
                 results = searcher.execute(question, max_results=5)
                 sources = results
-                context = "\n".join([
-                    f"- {r.get('title', '')}: {r.get('snippet', '')[:200]}"
-                    for r in results[:5]
-                ])
+                context = "\n".join(
+                    [f"- {r.get('title', '')}: {r.get('snippet', '')[:200]}" for r in results[:5]]
+                )
         elif with_sources:
             searcher = WebSearchPlugin()
             results = searcher.execute(question, max_results=3)
             sources = results
-            context = "\n".join([
-                f"- {r.get('title', '')}: {r.get('snippet', '')[:200]}"
-                for r in results[:3]
-            ])
+            context = "\n".join(
+                [f"- {r.get('title', '')}: {r.get('snippet', '')[:200]}" for r in results[:3]]
+            )
 
         # ═══════════════════════════════════════════════════════════════════
         # Build enriched prompt with USP context
@@ -436,6 +512,7 @@ Answer:"""
 
     # ── Mascot ──────────────────────────────────────────────────────
     from src.cli.cube_mascot import inject_mascot_status
+
     console.print()
     console.print(inject_mascot_status(mode="flash", state="done", sources=len(sources)))
 
@@ -454,10 +531,16 @@ SCALE_MAP = {
 
 def cmd_turbofactory(
     domain: str = typer.Argument(..., help="Domain or problem to research in depth"),
-    scale: str = typer.Option("standard", "--scale", "-s", help="Scale: mini(5)|standard(10)|mega(25)|giga(100)"),
+    scale: str = typer.Option(
+        "standard", "--scale", "-s", help="Scale: mini(5)|standard(10)|mega(25)|giga(100)"
+    ),
     output: str | None = typer.Option(None, "--output", "-o", help="Output file path"),
-    max_concurrent: int = typer.Option(5, "--max-concurrent", "-c", help="Max concurrent pipelines"),
-    pipeline_mode: str = typer.Option("mixed", "--pipeline", "-p", help="Pipeline mode: solve|turbo|mixed"),
+    max_concurrent: int = typer.Option(
+        5, "--max-concurrent", "-c", help="Max concurrent pipelines"
+    ),
+    pipeline_mode: str = typer.Option(
+        "mixed", "--pipeline", "-p", help="Pipeline mode: solve|turbo|mixed"
+    ),
 ) -> None:
     """Run parallel paradigm factory (10-100 pipelines) for ultimate domain reports.
 
@@ -472,7 +555,9 @@ def cmd_turbofactory(
     n_pipelines = SCALE_MAP.get(scale, 10)
     console.print(f"[bold]BLAST turbofactory[/bold] — {get_mode_description('turbofactory')}")
     console.print(f"[dim]Domain:[/dim] {domain}")
-    console.print(f"[dim]Scale:[/dim] {scale} ({n_pipelines} pipelines, max {max_concurrent} concurrent)")
+    console.print(
+        f"[dim]Scale:[/dim] {scale} ({n_pipelines} pipelines, max {max_concurrent} concurrent)"
+    )
     console.print(f"[dim]Pipeline mode:[/dim] {pipeline_mode}")
 
     manager = UserProfileManager()
@@ -492,9 +577,10 @@ Sub-problems:"""
         response = await llm.generate(prompt, max_tokens=1200, temperature=0.8)
         text = response.content
         import re
+
         problems = []
         for line in text.split("\n"):
-            m = re.match(r'^\s*\d+[\.\)]\s*(.+)', line.strip())
+            m = re.match(r"^\s*\d+[\.\)]\s*(.+)", line.strip())
             if m and len(m.group(1)) > 10:
                 problems.append(m.group(1).strip())
         # Ensure exact count
@@ -502,7 +588,9 @@ Sub-problems:"""
             problems.append(f"{domain} — aspect {len(problems)+1}")
         return problems[:n]
 
-    async def _run_single_pipeline(topic: str, sem: asyncio.Semaphore, use_solve: bool = False, use_turbo: bool = True) -> dict[str, Any]:
+    async def _run_single_pipeline(
+        topic: str, sem: asyncio.Semaphore, use_solve: bool = False, use_turbo: bool = True
+    ) -> dict[str, Any]:
         """Run one pipeline (solve or turbo or both) with semaphore-controlled concurrency."""
         async with sem:
             result: dict[str, Any] = {
@@ -536,11 +624,19 @@ Sub-problems:"""
                     result["turbo_result"] = {
                         "hypotheses": len(turbo_record.hypotheses),
                         "sources": len(turbo_record.sources),
-                        "quality_grade": turbo_record.quality_report.grade if turbo_record.quality_report else "N/A",
-                        "quality_score": turbo_record.quality_report.overall_score if turbo_record.quality_report else 0,
+                        "quality_grade": turbo_record.quality_report.grade
+                        if turbo_record.quality_report
+                        else "N/A",
+                        "quality_score": turbo_record.quality_report.overall_score
+                        if turbo_record.quality_report
+                        else 0,
                         "gaps": [g.get("area", "") for g in turbo_record.gaps[:3]],
-                        "simulation": turbo_record.simulation.get("status", "N/A") if turbo_record.simulation else "N/A",
-                        "verification": turbo_record.verification.get("status", "N/A") if turbo_record.verification else "N/A",
+                        "simulation": turbo_record.simulation.get("status", "N/A")
+                        if turbo_record.simulation
+                        else "N/A",
+                        "verification": turbo_record.verification.get("status", "N/A")
+                        if turbo_record.verification
+                        else "N/A",
                     }
                     result["pipeline_used"].append("turbo")
                 except Exception as e:
@@ -565,7 +661,10 @@ Sub-problems:"""
         sem = asyncio.Semaphore(max_concurrent)
         use_solve = pipeline_mode in ("solve", "mixed")
         use_turbo = pipeline_mode in ("turbo", "mixed")
-        tasks = [_run_single_pipeline(sp, sem, use_solve=use_solve, use_turbo=use_turbo) for sp in subproblems]
+        tasks = [
+            _run_single_pipeline(sp, sem, use_solve=use_solve, use_turbo=use_turbo)
+            for sp in subproblems
+        ]
 
         completed = 0
         results = []
@@ -584,11 +683,15 @@ Sub-problems:"""
         # Aggregate turbo results
         total_hypotheses = sum(r.get("turbo_result", {}).get("hypotheses", 0) for r in successful)
         total_sources = sum(r.get("turbo_result", {}).get("sources", 0) for r in successful)
-        avg_quality = sum(r.get("turbo_result", {}).get("quality_score", 0) for r in successful) / max(len(successful), 1)
+        avg_quality = sum(
+            r.get("turbo_result", {}).get("quality_score", 0) for r in successful
+        ) / max(len(successful), 1)
 
         # Aggregate solve results
         solve_successful = [r for r in successful if "solve" in r.get("pipeline_used", [])]
-        avg_solve_confidence = sum(r.get("solve_result", {}).get("confidence", 0) for r in solve_successful) / max(len(solve_successful), 1)
+        avg_solve_confidence = sum(
+            r.get("solve_result", {}).get("confidence", 0) for r in solve_successful
+        ) / max(len(solve_successful), 1)
 
         # Build ultimate report
         report = f"""# Turbofactory Report: {domain}
@@ -629,9 +732,11 @@ Sub-problems:"""
                 report += f"### {r['topic']}\n"
                 report += f"- Confidence: {solve.get('confidence', 0):.2f}\n"
                 report += f"- Sources: {solve.get('sources', 0)} | Gaps: {solve.get('gaps', 0)}\n"
-                if solve.get('quality_report'):
-                    qr = solve['quality_report']
-                    report += f"- Quality: {qr.get('grade', 'N/A')} ({qr.get('overall_score', 0)}/100)\n"
+                if solve.get("quality_report"):
+                    qr = solve["quality_report"]
+                    report += (
+                        f"- Quality: {qr.get('grade', 'N/A')} ({qr.get('overall_score', 0)}/100)\n"
+                    )
                 report += "\n"
 
         report += """
@@ -642,7 +747,10 @@ Sub-problems:"""
 |-------|-------|
 """
         from collections import Counter
-        grades = Counter([r.get("turbo_result", {}).get("quality_grade", "N/A") for r in successful])
+
+        grades = Counter(
+            [r.get("turbo_result", {}).get("quality_grade", "N/A") for r in successful]
+        )
         for grade, count in grades.most_common():
             report += f"| {grade} | {count} |\n"
 
@@ -662,9 +770,7 @@ Sub-problems:"""
         ts = time.strftime("%Y%m%d_%H%M%S")
         out_path = (
             output
-            or f"dissertations/live/"
-            f"{domain.replace(' ', '_')[:20]}/"
-            f"turbofactory_{ts}.md"
+            or f"dissertations/live/" f"{domain.replace(' ', '_')[:20]}/" f"turbofactory_{ts}.md"
         )
         Path(out_path).parent.mkdir(parents=True, exist_ok=True)
         Path(out_path).write_text(report, encoding="utf-8")
@@ -679,6 +785,7 @@ Sub-problems:"""
 
     # ── Mascot ──────────────────────────────────────────────────────
     from src.cli.cube_mascot import inject_mascot_status
+
     console.print()
     console.print(inject_mascot_status(mode="turbofactory", state="done", sources=0))
 
@@ -687,6 +794,7 @@ Sub-problems:"""
 # Auto-dispatch (mode not specified)
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 def cmd_auto(query: str) -> None:
     """Auto-dispatch to best mode based on query characteristics."""
     mode = auto_route(query)
@@ -694,10 +802,28 @@ def cmd_auto(query: str) -> None:
     console.print()
 
     if mode == "solve":
-        cmd_solve(problem=query, mode="autopilot", output_format="auto", domain=None, output=None, verbose=False)
+        cmd_solve(
+            problem=query,
+            mode="autopilot",
+            output_format="auto",
+            domain=None,
+            output=None,
+            verbose=False,
+        )
     elif mode == "turbo":
-        cmd_turbo(topic=query, output=None, verify_backend="hybrid", functors=True, plugins=None, verbose=False, competing=2, no_iterative=False)
+        cmd_turbo(
+            topic=query,
+            output=None,
+            verify_backend="hybrid",
+            functors=True,
+            plugins=None,
+            verbose=False,
+            competing=2,
+            no_iterative=False,
+        )
     elif mode == "flash":
         cmd_flash(question=query, with_sources=False, deep=False, format="concise")
     elif mode == "turbofactory":
-        cmd_turbofactory(domain=query, scale="standard", output=None, max_concurrent=5, pipeline_mode="mixed")
+        cmd_turbofactory(
+            domain=query, scale="standard", output=None, max_concurrent=5, pipeline_mode="mixed"
+        )

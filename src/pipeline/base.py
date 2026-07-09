@@ -116,6 +116,21 @@ class BasePipeline:
         logger.info("Phase %s: %s started", phase, name)
 
     async def emit_event(self, event_type: str, data: dict[str, Any], mode: str = "turbo") -> None:
+        # Prometheus instrumentation (audit C-2): wire PIPELINE_RUNS counter.
+        # Status label follows Prometheus convention: success/failed.
+        try:
+            if event_type in ("pipeline_start", "pipeline_complete", "pipeline_fail"):
+                from src.api.routers.metrics import PIPELINE_RUNS
+
+                status = (
+                    "running"
+                    if event_type == "pipeline_start"
+                    else ("success" if event_type == "pipeline_complete" else "failed")
+                )
+                PIPELINE_RUNS.labels(pipeline_type=mode, status=status).inc()
+        except Exception:
+            logger.debug("PIPELINE_RUNS metric increment skipped")
+
         try:
             await event_bus.emit(event_type, data, mode=mode)
         except Exception:

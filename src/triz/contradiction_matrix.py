@@ -5,7 +5,7 @@ Visual TRIZ contradiction matrix with interactive selection
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any
 
 
 class EngineeringParameter(Enum):

@@ -3,12 +3,10 @@ TURBO-CDI: Multi-Agent System
 AI Co-Scientist style multi-agent scientific discovery
 """
 
-import asyncio
-import json
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any
 
 from rich.console import Console
 from rich.panel import Panel
@@ -70,9 +68,7 @@ class BaseAgent:
         """Process input and produce output. Override in subclasses."""
         raise NotImplementedError
 
-    def get_relevant_memory(
-        self, message_type: str | None = None
-    ) -> list[AgentMessage]:
+    def get_relevant_memory(self, message_type: str | None = None) -> list[AgentMessage]:
         """Get relevant messages from memory."""
         if message_type:
             return [m for m in self.memory if m.message_type == message_type]
@@ -135,21 +131,15 @@ class AnalystAgent(BaseAgent):
 
         # Look for common patterns
         if "increase" in problem.lower() or "improve" in problem.lower():
-            parts.append(
-                {"type": "optimization", "description": "Maximization objective"}
-            )
+            parts.append({"type": "optimization", "description": "Maximization objective"})
 
         if "without" in problem.lower() or "while" in problem.lower():
             parts.append({"type": "constraint", "description": "Trade-off management"})
 
         if "and" in problem.lower():
-            parts.append(
-                {"type": "multi_objective", "description": "Multiple requirements"}
-            )
+            parts.append({"type": "multi_objective", "description": "Multiple requirements"})
 
-        return (
-            parts if parts else [{"type": "general", "description": "Single objective"}]
-        )
+        return parts if parts else [{"type": "general", "description": "Single objective"}]
 
     def _identify_domain(self, problem: str) -> str:
         """Identify primary scientific domain."""
@@ -292,7 +282,7 @@ class ScientistAgent(BaseAgent):
         """Generate hypotheses using C4 operators."""
         from src.core.c4_state import C4Space
 
-        space = C4Space()
+        C4Space()
 
         # Common C4 paths for innovation
         paths = [
@@ -330,9 +320,7 @@ class ScientistAgent(BaseAgent):
         parts = [descriptions.get(p, p) for p in path]
         return " → ".join(parts)
 
-    async def _generate_triz_hypotheses(
-        self, problem: str, analysis: dict
-    ) -> list[dict]:
+    async def _generate_triz_hypotheses(self, problem: str, analysis: dict) -> list[dict]:
         """Generate hypotheses using TRIZ principles."""
         # Common TRIZ principles for innovation
         principles = [
@@ -342,7 +330,7 @@ class ScientistAgent(BaseAgent):
         ]
 
         hypotheses = []
-        for i, p in enumerate(principles[:2]):
+        for _i, p in enumerate(principles[:2]):
             h = {
                 "id": f"triz_{p['num']}",
                 "type": "triz",
@@ -355,9 +343,7 @@ class ScientistAgent(BaseAgent):
 
         return hypotheses
 
-    async def _generate_analogy_hypotheses(
-        self, problem: str, analysis: dict
-    ) -> list[dict]:
+    async def _generate_analogy_hypotheses(self, problem: str, analysis: dict) -> list[dict]:
         """Generate hypotheses using cross-domain analogies."""
         domains = analysis.get("analogous_domains", ["general"])
 
@@ -412,9 +398,7 @@ class CriticAgent(BaseAgent):
         critiques = []
         for h in all_hypotheses:
             critique = self._critique_hypothesis(h)
-            critiques.append(
-                {"hypothesis_id": h["id"], "hypothesis": h["hypothesis"], **critique}
-            )
+            critiques.append({"hypothesis_id": h["id"], "hypothesis": h["hypothesis"], **critique})
 
         return AgentOutput(
             agent_role=self.role.value,
@@ -458,8 +442,7 @@ class CriticAgent(BaseAgent):
             "falsifiability_score": falsifiability_score,
             "feasibility_score": feasibility_score,
             "novelty_score": novelty_score,
-            "overall_score": (falsifiability_score + feasibility_score + novelty_score)
-            / 3,
+            "overall_score": (falsifiability_score + feasibility_score + novelty_score) / 3,
             "verdict": self._generate_verdict(falsifiability_score, feasibility_score),
         }
 
@@ -518,7 +501,7 @@ class SynthesizerAgent(BaseAgent):
         # Gather all outputs from memory
         hypotheses_msgs = self.get_relevant_memory("hypotheses")
         critique_msgs = self.get_relevant_memory("critique")
-        analysis_msgs = self.get_relevant_memory("analysis")
+        self.get_relevant_memory("analysis")
 
         all_hypotheses = []
         all_critiques = []
@@ -552,17 +535,13 @@ class SynthesizerAgent(BaseAgent):
             reasoning=f"Synthesized {len(scored_hypotheses)} hypotheses with critiques",
         )
 
-    def _score_hypotheses(
-        self, hypotheses: list[dict], critiques: list[dict]
-    ) -> list[dict]:
+    def _score_hypotheses(self, hypotheses: list[dict], critiques: list[dict]) -> list[dict]:
         """Score hypotheses based on critiques."""
         scored = []
 
         for h in hypotheses:
             # Find corresponding critique
-            critique = next(
-                (c for c in critiques if c["hypothesis_id"] == h["id"]), None
-            )
+            critique = next((c for c in critiques if c["hypothesis_id"] == h["id"]), None)
 
             base_score = h.get("confidence", 0.5)
 
@@ -677,16 +656,12 @@ class MultiAgentSystem:
         ) as progress:
             # Phase 1: Analysis
             task1 = progress.add_task("[cyan]Analyst analyzing problem...", total=None)
-            analysis = await self.agents[AgentRole.ANALYST].process(
-                {"problem": problem}
-            )
+            analysis = await self.agents[AgentRole.ANALYST].process({"problem": problem})
             self._broadcast(analysis, AgentRole.ANALYST)
             progress.update(task1, completed=True)
 
             # Phase 2: Hypothesis Generation
-            task2 = progress.add_task(
-                "[cyan]Scientist generating hypotheses...", total=None
-            )
+            task2 = progress.add_task("[cyan]Scientist generating hypotheses...", total=None)
             hypotheses = await self.agents[AgentRole.SCIENTIST].process(
                 {"analysis": analysis.content}
             )
@@ -694,17 +669,13 @@ class MultiAgentSystem:
             progress.update(task2, completed=True)
 
             # Phase 3: Critique
-            task3 = progress.add_task(
-                "[cyan]Critic evaluating hypotheses...", total=None
-            )
+            task3 = progress.add_task("[cyan]Critic evaluating hypotheses...", total=None)
             critique = await self.agents[AgentRole.CRITIC].process({})
             self._broadcast(critique, AgentRole.CRITIC)
             progress.update(task3, completed=True)
 
             # Phase 4: Synthesis
-            task4 = progress.add_task(
-                "[cyan]Synthesizer creating recommendations...", total=None
-            )
+            task4 = progress.add_task("[cyan]Synthesizer creating recommendations...", total=None)
             synthesis = await self.agents[AgentRole.SYNTHESIZER].process({})
             progress.update(task4, completed=True)
 

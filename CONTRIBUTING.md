@@ -102,3 +102,35 @@ make format            # black + prettier
 ## License
 
 AGPL-3.0 (open-source) / Commercial license available. All contributions must be under AGPL-3.0.
+
+## Why `from src.X` Imports?
+
+The codebase uses `from src.X` (and `import src.X`) throughout (~1200 statements
+across ~400 files). This is intentional and tracked in `REWORK_PLAN.md → P3-4`.
+
+**Why not rename to `from c4reqber.X`?**
+1. **Mechanical blast radius**: 399 files / 1220 statements would all need to
+   be updated atomically, with import-graph verification, before the rename
+   can ship. A half-rename breaks the entire test suite.
+2. **Architectural debate**: `REWORK_PLAN.md → P3-4` notes the rename is
+   *conditional* on continuing to invest in Python. The owner has flagged
+   Python as "a tidy dead-end" pending the Agda-core rewrite.
+3. **pyproject.toml** declares `packages = ["src"]` and `[project.scripts] =
+   src.cli.blast_app:app` — this works for `pip install -e .` from source
+   (the only supported install path until TestPyPI publication lands via
+   `.github/workflows/pypi-publish.yml`).
+4. **Test discovery**: `pytest.ini` sets `pythonpath = src`. Combined with
+   `src/__init__.py`, all internal imports resolve consistently.
+
+**Until P3-4 ships, the rule is: all internal Python imports use `from src.X`.**
+External consumers (once published to PyPI) can use either `import c4reqber` or
+`import src` since both entry points will be exposed.
+
+**How to verify nothing accidentally drops the prefix:**
+```bash
+grep -rE "^(from|import) (?!src\.)[a-zA-Z]" src/ | grep -v __pycache__
+# Should only show legitimate third-party imports
+```
+
+**Tracking**: see `audit/MASTER_AUDIT_2026-06-22.md` → H-5 and
+`REWORK_PLAN.md` → P3-4.

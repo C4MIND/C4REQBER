@@ -342,7 +342,6 @@ class LatticeQFTPattern(SimulationPattern):
 
         # Thermalization and measurement
         # (Simplified - would use heatbath or overrelaxation for SU(2))
-        plaquettes: Any = []
 
         for sweep in range(config.n_thermalization + config.n_measurements):
             # Metropolis updates (simplified)

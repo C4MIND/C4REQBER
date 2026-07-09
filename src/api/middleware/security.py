@@ -1,6 +1,11 @@
 """
 C4REQBER API: Security Middleware (Hardened)
 CSP without unsafe-inline, CORS allowlist, rate limiting, API key headers.
+
+CORS is configured separately in `setup_cors()` (src/api/middleware/cors.py).
+Do NOT add CORSMiddleware here — audit 2026-06-22 found CORS being mounted
+twice (here + in cors.py), causing duplicate Access-Control-* headers that
+browsers reject. CORS registration is the sole responsibility of setup_cors().
 """
 from __future__ import annotations
 
@@ -9,12 +14,12 @@ import time
 from typing import Any
 
 from fastapi import FastAPI, Request
-from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from src.api.middleware.auth import JWTAuthMiddleware
 from src.api.middleware.csrf import CSRFProtectionMiddleware
+from src.api.routers.metrics import API_REQUESTS, RATE_LIMIT_HITS
 
 
 class SecurityHeadersMiddleware:
@@ -65,6 +70,19 @@ class SecurityHeadersMiddleware:
                         )
                     )
                 message["headers"] = headers
+                # Audit 2026-06-22: increment API_REQUESTS Prometheus counter
+                # here so every HTTP request contributes. Endpoint label uses
+                # the route template (scope["path"]) which the
+                # SecurityHeadersMiddleware captures before path params expand.
+                try:
+                    method = scope.get("method", "UNKNOWN")
+                    path = scope.get("path", "unknown")
+                    status_code = message.get("status", 0)
+                    API_REQUESTS.labels(
+                        method=method, endpoint=path, status_code=str(status_code)
+                    ).inc()
+                except Exception:
+                    pass  # observability must never crash the response
             await send(message)
 
         await self.app(scope, receive, send_with_headers)
@@ -136,6 +154,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             _, count, _, _ = await pipe.execute()
             if count >= limit:
                 retry_after = int(window)
+                RATE_LIMIT_HITS.labels(endpoint=path).inc()
                 return JSONResponse(
                     status_code=429,
                     content={"detail": "Rate limit exceeded. Try again later."},
@@ -151,6 +170,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         valid = [t for t in timestamps if now - t < window]
 
         if len(valid) >= limit:
+            RATE_LIMIT_HITS.labels(endpoint=path).inc()
             return JSONResponse(
                 status_code=429,
                 content={"detail": "Rate limit exceeded. Try again later."},
@@ -219,24 +239,8 @@ def setup_security_middleware(app: FastAPI) -> None:
     # CSRF protection for state-changing requests
     app.add_middleware(CSRFProtectionMiddleware)
 
-    # CORS with allowlist (no wildcard in production)
-    allowed_origins = os.getenv(
-        "ALLOWED_ORIGINS",
-        "http://localhost:3000,http://localhost:5173,http://localhost:8000",
-    ).split(",")
-    if os.getenv("ENV") == "production":
-        # No wildcard in production
-        allowed_origins = [o.strip() for o in allowed_origins if o.strip() and o.strip() != "*"]
-
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=allowed_origins,
-        allow_credentials=True,
-        allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        allow_headers=["Authorization", "Content-Type", "X-Request-ID", "X-Trace-ID", "X-API-Key"],
-        expose_headers=["X-Trace-ID", "X-RateLimit-Limit", "X-RateLimit-Remaining"],
-        max_age=600,
-    )
+    # CORS registration moved to setup_cors() (src/api/middleware/cors.py).
+    # Audit 2026-06-22 C-8: removed duplicate mount that produced double headers.
 
     # Rate limiting with configurable per-endpoint limits
     rpm = int(os.getenv("RATE_LIMIT_RPM", "60"))

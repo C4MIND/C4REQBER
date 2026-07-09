@@ -32,11 +32,11 @@ class ProviderRouter:
     PRESETS: dict[ProviderPreset, StageProviderMapping] = {
         ProviderPreset.QUALITY: StageProviderMapping(
             preset="quality",
-            default=ProviderConfig(LLMProvider.OPENROUTER, model="anthropic/claude-3.5-sonnet"),
+            default=ProviderConfig(LLMProvider.OPENROUTER, model="anthropic/claude-sonnet-4.6"),
             stages={
                 "synthesis": ProviderConfig(
                     LLMProvider.OPENROUTER,
-                    model="anthropic/claude-3.5-sonnet",
+                    model="anthropic/claude-sonnet-4.6",
                     temperature=0.6,
                     max_tokens=2000,
                 ),
@@ -99,7 +99,7 @@ class ProviderRouter:
             stages={
                 "synthesis": ProviderConfig(
                     LLMProvider.OPENROUTER,
-                    model="anthropic/claude-3.5-sonnet",
+                    model="anthropic/claude-sonnet-4.6",
                     temperature=0.6,
                     max_tokens=2000,
                 ),

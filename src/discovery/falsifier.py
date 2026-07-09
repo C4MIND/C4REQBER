@@ -1,4 +1,5 @@
 """Falsifier — empirical falsification with simulations, statistics, and structured critique."""
+
 from __future__ import annotations
 
 import copy
@@ -11,6 +12,8 @@ from typing import Any
 
 import numpy as np
 from scipy import stats
+
+from src.config import get_key
 
 
 logger = logging.getLogger("c44tcdi.discovery.falsifier")
@@ -182,7 +185,7 @@ class PhysicsSimulator:
             prev_v = v
         period = np.mean(np.diff(peak_times)) if len(peak_times) > 1 else 2 * np.pi / omega0
         energy_decay = (
-            (0.5 * k * peaks[0]**2 - 0.5 * k * peaks[-1]**2) / (0.5 * k * peaks[0]**2)
+            (0.5 * k * peaks[0] ** 2 - 0.5 * k * peaks[-1] ** 2) / (0.5 * k * peaks[0] ** 2)
             if peaks
             else 0.0
         )
@@ -219,8 +222,16 @@ class PhysicsSimulator:
 class Falsifier:
     """Empirical falsification engine with simulations, statistics, and structured critique."""
 
-    def __init__(self, rng_seed: int | None = None, llm_model: str = "deepseek/deepseek-chat", llm_temperature: float = 0.3, llm_max_tokens: int = 800) -> None:
-        self.rng = np.random.RandomState(rng_seed) if rng_seed is not None else np.random.RandomState()
+    def __init__(
+        self,
+        rng_seed: int | None = None,
+        llm_model: str = "deepseek/deepseek-chat",
+        llm_temperature: float = 0.3,
+        llm_max_tokens: int = 800,
+    ) -> None:
+        self.rng = (
+            np.random.RandomState(rng_seed) if rng_seed is not None else np.random.RandomState()
+        )
         self.simulator = PhysicsSimulator(self.rng)
         self.llm_model = llm_model
         self.llm_temperature = llm_temperature
@@ -240,7 +251,13 @@ class Falsifier:
         statistical_tests: list[dict[str, Any]] = []
 
         # 1. Simulation-based counterexamples (only for physics/engineering domains)
-        if domain.lower() in ("physics", "engineering", "mechanics", "fluid dynamics", "thermodynamics"):
+        if domain.lower() in (
+            "physics",
+            "engineering",
+            "mechanics",
+            "fluid dynamics",
+            "thermodynamics",
+        ):
             sim_cx = self._simulate_counterexamples(hypothesis, domain)
             counterexamples.extend(sim_cx)
 
@@ -259,11 +276,7 @@ class Falsifier:
         # Aggregate confidence
         n_cx = len(counterexamples)
         n_contra = len(contradictions)
-        p_values = [
-            t["p_value"]
-            for t in statistical_tests
-            if t.get("p_value") is not None
-        ]
+        p_values = [t["p_value"] for t in statistical_tests if t.get("p_value") is not None]
         sig_p = [p for p in p_values if p < 0.05]
         physical_impossibilities = len(critique.get("physical_impossibilities", []))
         logical_flaws = len(critique.get("logical_flaws", []))
@@ -271,6 +284,7 @@ class Falsifier:
         # Confidence that hypothesis is falsifiable increases with evidence
         # Use logarithmic saturation so that overwhelming evidence is reflected
         import math
+
         confidence = min(
             1.0,
             0.05
@@ -306,9 +320,7 @@ class Falsifier:
             recommendation=recommendation,
         )
 
-    def _simulate_counterexamples(
-        self, hypothesis: str, domain: str
-    ) -> list[Counterexample]:
+    def _simulate_counterexamples(self, hypothesis: str, domain: str) -> list[Counterexample]:
         """Run physics simulations with perturbed parameters to find violations."""
         counterexamples: list[Counterexample] = []
         h_lower = hypothesis.lower()
@@ -330,14 +342,16 @@ class Falsifier:
                 )
                 observed = result["max_range"]
                 if observed > expected * 1.05:
-                    counterexamples.append(Counterexample(
-                        description=f"Range at {angle}° exceeds 45° range",
-                        parameter_values={"angle": angle, "v0": round(shared_v0, 4)},
-                        observed_outcome=round(observed, 4),
-                        expected_outcome=round(expected, 4),
-                        violation_magnitude=round((observed - expected) / expected, 4),
-                        source="simulation",
-                    ))
+                    counterexamples.append(
+                        Counterexample(
+                            description=f"Range at {angle}° exceeds 45° range",
+                            parameter_values={"angle": angle, "v0": round(shared_v0, 4)},
+                            observed_outcome=round(observed, 4),
+                            expected_outcome=round(expected, 4),
+                            violation_magnitude=round((observed - expected) / expected, 4),
+                            source="simulation",
+                        )
+                    )
 
             # Test with drag: 45° is no longer optimal
             shared_v0_drag = 20.0 + self.rng.uniform(-1, 1)
@@ -355,16 +369,22 @@ class Falsifier:
                 )
                 observed_drag = result_drag["max_range"]
                 if observed_drag > expected_drag * 1.02:
-                    counterexamples.append(Counterexample(
-                        description=f"With drag, range at {angle}° exceeds 45° range",
-                        parameter_values={"angle": angle, "v0": round(shared_v0_drag, 4), "drag": 0.1},
-                        observed_outcome=round(observed_drag, 4),
-                        expected_outcome=round(expected_drag, 4),
-                        violation_magnitude=round(
-                            (observed_drag - expected_drag) / expected_drag, 4
-                        ),
-                        source="simulation",
-                    ))
+                    counterexamples.append(
+                        Counterexample(
+                            description=f"With drag, range at {angle}° exceeds 45° range",
+                            parameter_values={
+                                "angle": angle,
+                                "v0": round(shared_v0_drag, 4),
+                                "drag": 0.1,
+                            },
+                            observed_outcome=round(observed_drag, 4),
+                            expected_outcome=round(expected_drag, 4),
+                            violation_magnitude=round(
+                                (observed_drag - expected_drag) / expected_drag, 4
+                            ),
+                            source="simulation",
+                        )
+                    )
 
         # Oscillator hypothesis tests
         if any(w in h_lower for w in ("oscillator", "period", "harmonic", "resonance")):
@@ -377,35 +397,37 @@ class Falsifier:
             # For nonlinear restoring force (we used linear, but test anyway)
             period_std = np.std(periods)
             if period_std > 0.01:
-                counterexamples.append(Counterexample(
-                    description="Period varies with amplitude",
-                    parameter_values={"amplitudes": amplitudes},
-                    observed_outcome=float(round(period_std, 4)),
-                    expected_outcome=0.0,
-                    violation_magnitude=float(round(period_std / np.mean(periods), 4)),
-                    source="simulation",
-                ))
+                counterexamples.append(
+                    Counterexample(
+                        description="Period varies with amplitude",
+                        parameter_values={"amplitudes": amplitudes},
+                        observed_outcome=float(round(period_std, 4)),
+                        expected_outcome=0.0,
+                        violation_magnitude=float(round(period_std / np.mean(periods), 4)),
+                        source="simulation",
+                    )
+                )
 
             # Hypothesis: damping does not affect period (underdamped approx)
             damping_values = [0.0, 0.5, 1.0, 2.0]
             damped_periods: list[float] = []
             for gamma in damping_values:
-                res = self.simulator.run_oscillator(
-                    k=10.0, m=1.0, amplitude=1.0, damping=gamma
-                )
+                res = self.simulator.run_oscillator(k=10.0, m=1.0, amplitude=1.0, damping=gamma)
                 damped_periods.append(res["period"])
             # Damping increases effective period
             if np.std(damped_periods) > 0.01:
-                counterexamples.append(Counterexample(
-                    description="Damping changes oscillator period",
-                    parameter_values={"damping": damping_values},
-                    observed_outcome=float(round(np.std(damped_periods), 4)),
-                    expected_outcome=0.0,
-                    violation_magnitude=float(round(
-                        np.std(damped_periods) / np.mean(damped_periods), 4
-                    )),
-                    source="simulation",
-                ))
+                counterexamples.append(
+                    Counterexample(
+                        description="Damping changes oscillator period",
+                        parameter_values={"damping": damping_values},
+                        observed_outcome=float(round(np.std(damped_periods), 4)),
+                        expected_outcome=0.0,
+                        violation_magnitude=float(
+                            round(np.std(damped_periods) / np.mean(damped_periods), 4)
+                        ),
+                        source="simulation",
+                    )
+                )
 
         # Diffusion hypothesis tests
         if any(w in h_lower for w in ("diffusion", "spread", "concentration", "gradient")):
@@ -418,22 +440,22 @@ class Falsifier:
             # t ~ L²/D, so 1/D relationship
             # If someone claims linear in D, that's wrong
             if "linear" in h_lower and "diffusion" in h_lower:
-                counterexamples.append(Counterexample(
-                    description="Diffusion time scales as 1/D, not linear with D",
-                    parameter_values={"D_values": D_values},
-                    observed_outcome=float(round(times[0] / times[-1], 4)),
-                    expected_outcome=0.05,  # linear would give ~0.05 ratio
-                    violation_magnitude=float(round(
-                        abs(times[0] / times[-1] - 0.05) / 0.05, 4
-                    )),
-                    source="simulation",
-                ))
+                counterexamples.append(
+                    Counterexample(
+                        description="Diffusion time scales as 1/D, not linear with D",
+                        parameter_values={"D_values": D_values},
+                        observed_outcome=float(round(times[0] / times[-1], 4)),
+                        expected_outcome=0.05,  # linear would give ~0.05 ratio
+                        violation_magnitude=float(
+                            round(abs(times[0] / times[-1] - 0.05) / 0.05, 4)
+                        ),
+                        source="simulation",
+                    )
+                )
 
         return counterexamples
 
-    def _statistical_tests(
-        self, hypothesis: str, domain: str
-    ) -> dict[str, Any]:
+    def _statistical_tests(self, hypothesis: str, domain: str) -> dict[str, Any]:
         """Run statistical hypothesis tests against baselines."""
         tests: list[dict[str, Any]] = []
         counterexamples: list[Counterexample] = []
@@ -461,24 +483,28 @@ class Falsifier:
         if any(w in h_lower for w in ("effect", "increase", "decrease", "difference")):
             treatment = self.rng.normal(loc=0.3, scale=1.0, size=n_samples)
             t_stat, p_value = stats.ttest_ind(baseline, treatment)
-            tests.append({
-                "test": "independent_t_test",
-                "statistic": round(float(t_stat), 4),
-                "p_value": round(float(p_value), 4),
-                "significant": p_value < alpha,
-                "alpha": round(alpha, 4),
-                "n_samples": n_samples,
-                "description": "Test whether treatment differs from baseline",
-            })
+            tests.append(
+                {
+                    "test": "independent_t_test",
+                    "statistic": round(float(t_stat), 4),
+                    "p_value": round(float(p_value), 4),
+                    "significant": p_value < alpha,
+                    "alpha": round(alpha, 4),
+                    "n_samples": n_samples,
+                    "description": "Test whether treatment differs from baseline",
+                }
+            )
             if p_value >= alpha:
-                counterexamples.append(Counterexample(
-                    description="No statistically significant effect detected",
-                    parameter_values={"n_samples": n_samples, "effect_size": 0.3},
-                    observed_outcome=round(float(p_value), 4),
-                    expected_outcome=round(alpha, 4),
-                    violation_magnitude=round(p_value / max(alpha, 1e-10), 4),
-                    source="statistical",
-                ))
+                counterexamples.append(
+                    Counterexample(
+                        description="No statistically significant effect detected",
+                        parameter_values={"n_samples": n_samples, "effect_size": 0.3},
+                        observed_outcome=round(float(p_value), 4),
+                        expected_outcome=round(alpha, 4),
+                        violation_magnitude=round(p_value / max(alpha, 1e-10), 4),
+                        source="statistical",
+                    )
+                )
 
         # Test 2: ANOVA for multiple groups
         if any(w in h_lower for w in ("groups", "conditions", "levels", "categories")):
@@ -486,75 +512,85 @@ class Falsifier:
             group_b = self.rng.normal(loc=0.1, scale=1.0, size=n_samples)
             group_c = self.rng.normal(loc=0.2, scale=1.0, size=n_samples)
             f_stat, p_value = stats.f_oneway(group_a, group_b, group_c)
-            tests.append({
-                "test": "one_way_anova",
-                "statistic": round(float(f_stat), 4),
-                "p_value": round(float(p_value), 4),
-                "significant": p_value < alpha,
-                "alpha": round(alpha, 4),
-                "n_samples": n_samples * 3,
-                "description": "Test whether group means differ",
-            })
+            tests.append(
+                {
+                    "test": "one_way_anova",
+                    "statistic": round(float(f_stat), 4),
+                    "p_value": round(float(p_value), 4),
+                    "significant": p_value < alpha,
+                    "alpha": round(alpha, 4),
+                    "n_samples": n_samples * 3,
+                    "description": "Test whether group means differ",
+                }
+            )
             if p_value >= alpha:
-                counterexamples.append(Counterexample(
-                    description="ANOVA finds no significant group differences",
-                    parameter_values={"groups": 3, "n_per_group": n_samples},
-                    observed_outcome=round(float(p_value), 4),
-                    expected_outcome=round(alpha, 4),
-                    violation_magnitude=round(p_value / max(alpha, 1e-10), 4),
-                    source="statistical",
-                ))
+                counterexamples.append(
+                    Counterexample(
+                        description="ANOVA finds no significant group differences",
+                        parameter_values={"groups": 3, "n_per_group": n_samples},
+                        observed_outcome=round(float(p_value), 4),
+                        expected_outcome=round(alpha, 4),
+                        violation_magnitude=round(p_value / max(alpha, 1e-10), 4),
+                        source="statistical",
+                    )
+                )
 
         # Test 3: Normality test (many hypotheses assume normality)
         if "normal" in h_lower or "gaussian" in h_lower:
             skewed = self.rng.exponential(scale=1.0, size=n_samples)
             stat, p_value = stats.shapiro(skewed[: min(5000, n_samples)])
-            tests.append({
-                "test": "shapiro_wilk_normality",
-                "statistic": round(float(stat), 4),
-                "p_value": round(float(p_value), 4),
-                "significant": p_value < alpha,
-                "alpha": round(alpha, 4),
-                "description": "Test whether data is normally distributed",
-            })
+            tests.append(
+                {
+                    "test": "shapiro_wilk_normality",
+                    "statistic": round(float(stat), 4),
+                    "p_value": round(float(p_value), 4),
+                    "significant": p_value < alpha,
+                    "alpha": round(alpha, 4),
+                    "description": "Test whether data is normally distributed",
+                }
+            )
             if p_value < alpha:
-                counterexamples.append(Counterexample(
-                    description="Data significantly deviates from normal distribution",
-                    parameter_values={"n_samples": n_samples},
-                    observed_outcome=round(float(p_value), 4),
-                    expected_outcome=round(alpha, 4),
-                    violation_magnitude=round(alpha / max(p_value, 1e-10), 4),
-                    source="statistical",
-                ))
+                counterexamples.append(
+                    Counterexample(
+                        description="Data significantly deviates from normal distribution",
+                        parameter_values={"n_samples": n_samples},
+                        observed_outcome=round(float(p_value), 4),
+                        expected_outcome=round(alpha, 4),
+                        violation_magnitude=round(alpha / max(p_value, 1e-10), 4),
+                        source="statistical",
+                    )
+                )
 
         # Test 4: Correlation test
         if any(w in h_lower for w in ("correlate", "relationship", "association", "linked")):
             x = self.rng.uniform(0, 10, n_samples)
             y = 0.1 * x + self.rng.normal(0, 5, n_samples)  # weak correlation
             r, p_value = stats.pearsonr(x, y)
-            tests.append({
-                "test": "pearson_correlation",
-                "statistic": round(float(r), 4),
-                "p_value": round(float(p_value), 4),
-                "significant": p_value < alpha,
-                "alpha": round(alpha, 4),
-                "description": "Test linear correlation strength",
-            })
+            tests.append(
+                {
+                    "test": "pearson_correlation",
+                    "statistic": round(float(r), 4),
+                    "p_value": round(float(p_value), 4),
+                    "significant": p_value < alpha,
+                    "alpha": round(alpha, 4),
+                    "description": "Test linear correlation strength",
+                }
+            )
             if abs(r) < 0.3:
-                counterexamples.append(Counterexample(
-                    description="Correlation is weak or nonexistent",
-                    parameter_values={"n_samples": n_samples},
-                    observed_outcome=round(float(r), 4),
-                    expected_outcome=0.5,
-                    violation_magnitude=round(abs(0.5 - abs(r)) / 0.5, 4),
-                    source="statistical",
-                ))
+                counterexamples.append(
+                    Counterexample(
+                        description="Correlation is weak or nonexistent",
+                        parameter_values={"n_samples": n_samples},
+                        observed_outcome=round(float(r), 4),
+                        expected_outcome=0.5,
+                        violation_magnitude=round(abs(0.5 - abs(r)) / 0.5, 4),
+                        source="statistical",
+                    )
+                )
 
         return {"tests": tests, "counterexamples": counterexamples}
 
-    def _literature_contradictions(
-        self, hypothesis: str, domain: str
-    ) -> list[Contradiction]:
+    def _literature_contradictions(self, hypothesis: str, domain: str) -> list[Contradiction]:
         """Search for papers with claims opposite to the hypothesis."""
         contradictions: list[Contradiction] = []
         h_lower = hypothesis.lower()
@@ -587,7 +623,11 @@ class Falsifier:
                 "confidence": 0.97,
             },
             {
-                "patterns": ["lamarckian inheritance", "acquired traits inherited", "acquired characteristics"],
+                "patterns": [
+                    "lamarckian inheritance",
+                    "acquired traits inherited",
+                    "acquired characteristics",
+                ],
                 "opposing": "Weismann barrier prevents somatic-to-germline information transfer",
                 "source": "Weismann (1893); modern epigenetics is limited and reversible",
                 "confidence": 0.90,
@@ -611,7 +651,12 @@ class Falsifier:
                 "confidence": 0.98,
             },
             {
-                "patterns": ["earth is flat", "flat earth", "sun revolves around the earth", "geocentrism"],
+                "patterns": [
+                    "earth is flat",
+                    "flat earth",
+                    "sun revolves around the earth",
+                    "geocentrism",
+                ],
                 "opposing": "Earth is an oblate spheroid orbiting the Sun; heliocentrism confirmed by parallax, spaceflight, and geodesy",
                 "source": "Copernicus (1543); Galileo (1632); Apollo missions (1969-1972)",
                 "confidence": 0.99,
@@ -621,19 +666,26 @@ class Falsifier:
         for entry in contradiction_db:
             for pattern in entry["patterns"]:
                 if pattern in h_lower:
-                    contradictions.append(Contradiction(
-                        claim=hypothesis,
-                        opposing_evidence=entry["opposing"],
-                        source=entry["source"],
-                        confidence=entry["confidence"],
-                    ))
+                    contradictions.append(
+                        Contradiction(
+                            claim=hypothesis,
+                            opposing_evidence=entry["opposing"],
+                            source=entry["source"],
+                            confidence=entry["confidence"],
+                        )
+                    )
                     break
 
         # Domain-specific heuristics
         domain_contradictions: dict[str, list[dict[str, Any]]] = {
             "physics": [
                 {
-                    "patterns": ["faster than light", "faster than the speed of light", "superluminal", "tachyons"],
+                    "patterns": [
+                        "faster than light",
+                        "faster than the speed of light",
+                        "superluminal",
+                        "tachyons",
+                    ],
                     "opposing": "Special relativity forbids superluminal information transfer",
                     "source": "Einstein (1905)",
                     "confidence": 0.99,
@@ -664,12 +716,14 @@ class Falsifier:
                 for entry in entries:
                     for pattern in entry["patterns"]:
                         if pattern in h_lower:
-                            contradictions.append(Contradiction(
-                                claim=hypothesis,
-                                opposing_evidence=entry["opposing"],
-                                source=entry["source"],
-                                confidence=entry["confidence"],
-                            ))
+                            contradictions.append(
+                                Contradiction(
+                                    claim=hypothesis,
+                                    opposing_evidence=entry["opposing"],
+                                    source=entry["source"],
+                                    confidence=entry["confidence"],
+                                )
+                            )
                             break
 
         return contradictions
@@ -710,9 +764,7 @@ class Falsifier:
 
         # Missing controls
         if any(w in h_lower for w in ("effect", "causes", "increases", "decreases")):
-            critique["missing_controls"].append(
-                "No control group or baseline comparison specified"
-            )
+            critique["missing_controls"].append("No control group or baseline comparison specified")
             critique["missing_controls"].append(
                 "Confounding variables not addressed (e.g., selection bias, regression to mean)"
             )
@@ -761,64 +813,58 @@ class Falsifier:
 
         return critique
 
-    async def check_adversarial(
-        self, hypothesis: str, domain: str
-    ) -> dict[str, Any]:
+    async def check_adversarial(self, hypothesis: str, domain: str) -> dict[str, Any]:
         """Async wrapper that also attempts LLM-based critique if API key is present."""
         result = copy.deepcopy(self.check(hypothesis, domain))
-        or_key = os.getenv("OPENROUTER_API_KEY", "")
+        or_key = get_key("openrouter") or os.getenv(
+            "OPENROUTER_API_KEY", ""
+        )  # get_key from ~/.c4reqber preferred
         if or_key:
             try:
-                import httpx
+                # Audit 2026-06-22 H-8 Tier 1: migrate raw httpx call to
+                # guarded_chat_completion for prompt-injection scan + cost
+                # tracking + Prometheus metrics + credential redaction.
+                from src.llm.guarded_call import guarded_chat_completion
 
-                async with httpx.AsyncClient(timeout=60) as c:
-                    r = await c.post(
-                        "https://openrouter.ai/api/v1/chat/completions",
-                        headers={
-                            "Authorization": f"Bearer {or_key}",
-                            "Content-Type": "application/json",
+                response = await guarded_chat_completion(
+                    url="https://openrouter.ai/api/v1/chat/completions",
+                    api_key=or_key,
+                    model=self.llm_model,
+                    temperature=self.llm_temperature,
+                    max_tokens=self.llm_max_tokens,
+                    timeout=60.0,
+                    messages=[
+                        {
+                            "role": "system",
+                            "content": (
+                                "You are a rigorous scientific reviewer. Evaluate the hypothesis "
+                                "using these criteria:\n"
+                                "1. LOGICAL FLAWS: identify fallacies, circular reasoning, or contradictions\n"
+                                "2. MISSING CONTROLS: list control experiments, confounders, or baselines omitted\n"
+                                "3. UNSTATED ASSUMPTIONS: surface hidden premises or domain boundaries\n"
+                                "4. PHYSICAL IMPOSSIBILITIES: flag violations of known laws\n"
+                                "5. STATISTICAL VALIDITY: note sample size, power, p-hacking risks\n"
+                                "Output JSON: {"
+                                "logical_flaws: [...], missing_controls: [...], "
+                                "unstated_assumptions: [...], physical_impossibilities: [...], "
+                                "statistical_concerns: [...], verdict: 'PASS'|'REJECT'|'REVISE', "
+                                "confidence: float, severity_score: float}"
+                            ),
                         },
-                        json={
-                            "model": self.llm_model,
-                            "temperature": self.llm_temperature,
-                            "max_tokens": self.llm_max_tokens,
-                            "messages": [
-                                {
-                                    "role": "system",
-                                    "content": (
-                                        "You are a rigorous scientific reviewer. Evaluate the hypothesis "
-                                        "using these criteria:\n"
-                                        "1. LOGICAL FLAWS: identify fallacies, circular reasoning, or contradictions\n"
-                                        "2. MISSING CONTROLS: list control experiments, confounders, or baselines omitted\n"
-                                        "3. UNSTATED ASSUMPTIONS: surface hidden premises or domain boundaries\n"
-                                        "4. PHYSICAL IMPOSSIBILITIES: flag violations of known laws\n"
-                                        "5. STATISTICAL VALIDITY: note sample size, power, p-hacking risks\n"
-                                        "Output JSON: {"
-                                        "logical_flaws: [...], missing_controls: [...], "
-                                        "unstated_assumptions: [...], physical_impossibilities: [...], "
-                                        "statistical_concerns: [...], verdict: 'PASS'|'REJECT'|'REVISE', "
-                                        "confidence: float, severity_score: float}"
-                                    ),
-                                },
-                                {
-                                    "role": "user",
-                                    "content": f"Hypothesis: {hypothesis[:1000].replace('<', '[').replace('>', ']')}. Domain: {domain.replace('<', '[').replace('>', ']')}.",
-                                },
-                            ],
+                        {
+                            "role": "user",
+                            "content": f"Hypothesis: {hypothesis[:1000].replace('<', '[').replace('>', ']')}. Domain: {domain.replace('<', '[').replace('>', ']')}.",
                         },
-                    )
-                    llm_critique = _extract_json(
-                        r.json()["choices"][0]["message"]["content"]
-                    )
-                    result.critique["llm_critique"] = llm_critique
-                    # Blend confidence with LLM assessment
-                    llm_conf = llm_critique.get("confidence", 0.5)
-                    result.confidence = round(
-                        0.7 * result.confidence + 0.3 * llm_conf, 4
-                    )
-                    if llm_critique.get("verdict") == "REJECT":
-                        result.falsifiable = True
-                        result.recommendation = "Reject"
+                    ],
+                )
+                llm_critique = _extract_json(response["choices"][0]["message"]["content"])
+                result.critique["llm_critique"] = llm_critique
+                # Blend confidence with LLM assessment
+                llm_conf = llm_critique.get("confidence", 0.5)
+                result.confidence = round(0.7 * result.confidence + 0.3 * llm_conf, 4)
+                if llm_critique.get("verdict") == "REJECT":
+                    result.falsifiable = True
+                    result.recommendation = "Reject"
             except Exception as e:
                 logger.warning("LLM adversarial check failed: %s", e)
                 result.critique["adversarial_check_status"] = "failed"

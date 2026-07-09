@@ -245,7 +245,7 @@ class VastAIDelegate:
 
     async def _execute_simulation(self, instance: InstanceInfo, config: dict) -> dict[str, Any]:
         config_json = json.dumps(config)
-        sim_script = f"""
+        f"""
 import json
 import sys
 

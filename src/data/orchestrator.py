@@ -4,6 +4,7 @@ c4reqber: DataOrchestrator — automatic tabular data retrieval for causal disco
 Searches ALL relevant data sources (37+) before falling back to toy models.
 Domain-aware routing maps hypothesis domains to the best tabular data sources.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -13,21 +14,76 @@ from typing import Any
 
 import pandas as pd
 
+
 logger = logging.getLogger("c4reqber.data.orchestrator")
 
 # ---------------------------------------------------------------------------
 # Domain → preferred tabular-data sources (data-oriented subset of 37+)
 # ---------------------------------------------------------------------------
 DOMAIN_DATA_SOURCES: dict[str, list[str]] = {
-    "biomedical": ["chembl", "pubchem", "gtex", "drugbank", "string_db", "openfda", "clinicaltrials", "kaggle", "uci_ml", "harvard_dataverse"],
-    "medicine": ["chembl", "pubchem", "gtex", "drugbank", "string_db", "openfda", "clinicaltrials", "kaggle", "uci_ml", "harvard_dataverse"],
-    "neuroscience": ["gtex", "pubchem", "allen_brain", "string_db", "kaggle", "uci_ml", "harvard_dataverse"],
-    "biology": ["chembl", "pubchem", "gtex", "string_db", "gbif", "kaggle", "uci_ml", "harvard_dataverse"],
+    "biomedical": [
+        "chembl",
+        "pubchem",
+        "gtex",
+        "drugbank",
+        "string_db",
+        "openfda",
+        "clinicaltrials",
+        "kaggle",
+        "uci_ml",
+        "harvard_dataverse",
+    ],
+    "medicine": [
+        "chembl",
+        "pubchem",
+        "gtex",
+        "drugbank",
+        "string_db",
+        "openfda",
+        "clinicaltrials",
+        "kaggle",
+        "uci_ml",
+        "harvard_dataverse",
+    ],
+    "neuroscience": [
+        "gtex",
+        "pubchem",
+        "allen_brain",
+        "string_db",
+        "kaggle",
+        "uci_ml",
+        "harvard_dataverse",
+    ],
+    "biology": [
+        "chembl",
+        "pubchem",
+        "gtex",
+        "string_db",
+        "gbif",
+        "kaggle",
+        "uci_ml",
+        "harvard_dataverse",
+    ],
     "materials": ["materials_project", "aflow", "pubchem", "kaggle", "uci_ml", "uspto_patentsview"],
-    "physics": ["materials_project", "aflow", "pubchem", "cern_opendata", "kaggle", "uci_ml", "uspto_patentsview"],
+    "physics": [
+        "materials_project",
+        "aflow",
+        "pubchem",
+        "cern_opendata",
+        "kaggle",
+        "uci_ml",
+        "uspto_patentsview",
+    ],
     "chemistry": ["materials_project", "aflow", "pubchem", "chembl", "kaggle", "uci_ml"],
     "math": ["oeis", "mathnet_ru", "kaggle", "uci_ml"],
-    "cs": ["kaggle", "uci_ml", "harvard_dataverse", "huggingface_datasets", "openreview", "uspto_patentsview"],
+    "cs": [
+        "kaggle",
+        "uci_ml",
+        "harvard_dataverse",
+        "huggingface_datasets",
+        "openreview",
+        "uspto_patentsview",
+    ],
     "ml": ["kaggle", "uci_ml", "harvard_dataverse", "huggingface_datasets", "openreview"],
     "ai": ["kaggle", "uci_ml", "huggingface_datasets", "openreview", "conceptnet"],
     "software": ["kaggle", "uci_ml", "huggingface_datasets"],
@@ -35,21 +91,62 @@ DOMAIN_DATA_SOURCES: dict[str, list[str]] = {
     "economics": ["harvard_dataverse", "re3data", "cyberleninka", "kaggle", "uci_ml"],
     "psychology": ["harvard_dataverse", "kaggle", "uci_ml"],
     "geoscience": ["noaa", "usgs", "nasa_earthdata", "harvard_dataverse", "kaggle", "uci_ml"],
-    "environment": ["noaa", "usgs", "nasa_earthdata", "gbif", "harvard_dataverse", "kaggle", "uci_ml"],
+    "environment": [
+        "noaa",
+        "usgs",
+        "nasa_earthdata",
+        "gbif",
+        "harvard_dataverse",
+        "kaggle",
+        "uci_ml",
+    ],
     "ecology": ["gbif", "noaa", "usgs", "kaggle", "uci_ml"],
     "engineering": ["uspto_patentsview", "kaggle", "uci_ml", "harvard_dataverse"],
     "patents": ["uspto_patentsview", "kaggle", "uci_ml"],
     "astronomy": ["cern_opendata", "kaggle", "uci_ml"],
-    "general": ["kaggle", "uci_ml", "harvard_dataverse", "re3data", "pubchem", "conceptnet", "cyberleninka", "oeis"],
-    "science": ["kaggle", "uci_ml", "harvard_dataverse", "pubchem", "materials_project", "chembl", "cern_opendata", "cyberleninka", "mathnet_ru"],
+    "general": [
+        "kaggle",
+        "uci_ml",
+        "harvard_dataverse",
+        "re3data",
+        "pubchem",
+        "conceptnet",
+        "cyberleninka",
+        "oeis",
+    ],
+    "science": [
+        "kaggle",
+        "uci_ml",
+        "harvard_dataverse",
+        "pubchem",
+        "materials_project",
+        "chembl",
+        "cern_opendata",
+        "cyberleninka",
+        "mathnet_ru",
+    ],
 }
 
 # Sources that can yield structured records directly (no file download needed)
 STRUCTURED_SOURCES: set[str] = {
-    "materials_project", "aflow", "chembl", "pubchem", "gtex", "drugbank", "noaa",
-    "string_db", "clinicaltrials", "gbif", "allen_brain", "usgs",
-    "openfda", "nasa_earthdata", "oeis", "conceptnet",
-    "cyberleninka", "mathnet_ru",
+    "materials_project",
+    "aflow",
+    "chembl",
+    "pubchem",
+    "gtex",
+    "drugbank",
+    "noaa",
+    "string_db",
+    "clinicaltrials",
+    "gbif",
+    "allen_brain",
+    "usgs",
+    "openfda",
+    "nasa_earthdata",
+    "oeis",
+    "conceptnet",
+    "cyberleninka",
+    "mathnet_ru",
 }
 
 # Sources that require CSV/TSV download from dataset metadata
@@ -101,9 +198,27 @@ class DataOrchestrator:
         # Keyword boost: scan problem for domain-specific terms
         problem_lower = problem.lower()
         keyword_boost: dict[str, list[str]] = {
-            "materials_project": ["band gap", "fermi energy", "elastic modulus", "bulk modulus", "dielectric", "crystal", "lattice", "perovskite", "oxide"],
+            "materials_project": [
+                "band gap",
+                "fermi energy",
+                "elastic modulus",
+                "bulk modulus",
+                "dielectric",
+                "crystal",
+                "lattice",
+                "perovskite",
+                "oxide",
+            ],
             "aflow": ["aflow", "icsd", "space group", "wyckoff", "enthalpy"],
-            "chembl": ["ic50", "ec50", "bioactivity", "assay", "inhibitor", "agonist", "antagonist"],
+            "chembl": [
+                "ic50",
+                "ec50",
+                "bioactivity",
+                "assay",
+                "inhibitor",
+                "agonist",
+                "antagonist",
+            ],
             "pubchem": ["cid", "smiles", "molecular weight", "logp", "compound", "synthetic"],
             "gtex": ["gene expression", "tissue", "rna-seq", "transcriptome", "eqtl"],
             "drugbank": ["drug", "pharmacology", "therapeutic", "indication", "drug interaction"],
@@ -129,14 +244,12 @@ class DataOrchestrator:
     # ------------------------------------------------------------------
     # Parallel search
     # ------------------------------------------------------------------
-    async def _search_all_sources(
-        self, problem: str, sources: list[str]
-    ) -> list[dict[str, Any]]:
+    async def _search_all_sources(self, problem: str, sources: list[str]) -> list[dict[str, Any]]:
         """Fire parallel searches across all resolved sources."""
         coros = [self._search_one(problem, src) for src in sources]
         results = await asyncio.gather(*coros, return_exceptions=True)
         out: list[dict[str, Any]] = []
-        for src, res in zip(sources, results):
+        for src, res in zip(sources, results, strict=False):
             if isinstance(res, Exception):
                 logger.warning("Data search error for %s: %s", src, res)
                 out.append({"source": src, "items": [], "error": str(res)})
@@ -187,8 +300,14 @@ class DataOrchestrator:
         mapping: dict[str, tuple[str, str]] = {
             "kaggle": ("src.knowledge.sources.kaggle", "KaggleClient"),
             "uci_ml": ("src.knowledge.sources.uci_ml", "UciMlClient"),
-            "harvard_dataverse": ("src.knowledge.sources.harvard_dataverse", "HarvardDataverseClient"),
-            "materials_project": ("src.knowledge.sources.materials_project", "MaterialsProjectClient"),
+            "harvard_dataverse": (
+                "src.knowledge.sources.harvard_dataverse",
+                "HarvardDataverseClient",
+            ),
+            "materials_project": (
+                "src.knowledge.sources.materials_project",
+                "MaterialsProjectClient",
+            ),
             "aflow": ("src.knowledge.sources.aflow", "AflowClient"),
             "chembl": ("src.knowledge.sources.chembl", "ChEMBLClient"),
             "pubchem": ("src.knowledge.sources.pubchem", "PubChemClient"),
@@ -207,7 +326,10 @@ class DataOrchestrator:
             "conceptnet": ("src.knowledge.sources.conceptnet", "ConceptNetClient"),
             "cyberleninka": ("src.knowledge.sources.cyberleninka", "CyberLeninkaClient"),
             "mathnet_ru": ("src.knowledge.sources.mathnet_ru", "MathNetRuClient"),
-            "huggingface_datasets": ("src.knowledge.sources.huggingface_datasets", "HuggingFaceDatasetsClient"),
+            "huggingface_datasets": (
+                "src.knowledge.sources.huggingface_datasets",
+                "HuggingFaceDatasetsClient",
+            ),
         }
         mod_path, cls_name = mapping.get(source, ("", ""))
         if not mod_path:
@@ -279,14 +401,30 @@ class DataOrchestrator:
                 continue
 
             if df is None or len(df) < self.MIN_ROWS or len(df) > self.MAX_ROWS:
-                status = "too_small" if (df is not None and len(df) < self.MIN_ROWS) else (
-                    "too_large" if (df is not None and len(df) > self.MAX_ROWS) else "extraction_failed"
+                status = (
+                    "too_small"
+                    if (df is not None and len(df) < self.MIN_ROWS)
+                    else (
+                        "too_large"
+                        if (df is not None and len(df) > self.MAX_ROWS)
+                        else "extraction_failed"
+                    )
                 )
-                meta["attempts"].append({"source": source, "status": status, "rows": len(df) if df is not None else 0})
+                meta["attempts"].append(
+                    {"source": source, "status": status, "rows": len(df) if df is not None else 0}
+                )
                 continue
 
             score = self._score_dataframe(df, problem)
-            meta["attempts"].append({"source": source, "status": "success", "rows": len(df), "columns": list(df.columns), "score": round(score, 4)})
+            meta["attempts"].append(
+                {
+                    "source": source,
+                    "status": "success",
+                    "rows": len(df),
+                    "columns": list(df.columns),
+                    "score": round(score, 4),
+                }
+            )
             if score > best_score:
                 best_score = score
                 best_df = df
@@ -469,8 +607,9 @@ class DataOrchestrator:
 
     async def _string_db_to_dataframe(self, items: list[dict[str, Any]]) -> pd.DataFrame | None:
         client = self._get_client("string_db")
-        rows: list[dict[str, Any]] = []
-        identifiers = [item.get("string_id") or item.get("preferred_name") for item in items[:20] if item]
+        identifiers = [
+            item.get("string_id") or item.get("preferred_name") for item in items[:20] if item
+        ]
         identifiers = [i for i in identifiers if i]
         if not identifiers:
             return None
@@ -532,14 +671,19 @@ class DataOrchestrator:
                     if fname.endswith(".csv"):
                         url = await client.download_link(owner, dataset, fname)
                         if url:
-                            df = await self._download_csv(url, auth=client._client.auth if hasattr(client, "_client") else None)
+                            df = await self._download_csv(
+                                url,
+                                auth=client._client.auth if hasattr(client, "_client") else None,
+                            )
                             if df is not None and len(df) >= self.MIN_ROWS:
                                 return df
             except Exception:
                 continue
         return None
 
-    async def _harvard_dataverse_dataframe(self, items: list[dict[str, Any]]) -> pd.DataFrame | None:
+    async def _harvard_dataverse_dataframe(
+        self, items: list[dict[str, Any]]
+    ) -> pd.DataFrame | None:
         client = self._get_client("harvard_dataverse")
         for item in items[:3]:
             pid = item.get("global_id")
@@ -564,7 +708,9 @@ class DataOrchestrator:
                 continue
         return None
 
-    async def _huggingface_datasets_dataframe(self, items: list[dict[str, Any]]) -> pd.DataFrame | None:
+    async def _huggingface_datasets_dataframe(
+        self, items: list[dict[str, Any]]
+    ) -> pd.DataFrame | None:
         client = self._get_client("huggingface_datasets")
         for item in items[:3]:
             ds_id = item.get("id")
@@ -574,7 +720,7 @@ class DataOrchestrator:
                 info = await client.get_dataset_info(ds_id)
                 if not isinstance(info, dict):
                     continue
-                features = info.get("features", [])
+                info.get("features", [])
                 rows = info.get("rows", [])
                 if rows and len(rows) >= self.MIN_ROWS:
                     return pd.DataFrame(rows)
@@ -591,6 +737,7 @@ class DataOrchestrator:
         """Download a CSV/TSV from URL and return a DataFrame."""
         try:
             import httpx
+
             async with httpx.AsyncClient(timeout=self.TIMEOUT, follow_redirects=True) as client:
                 response = await client.get(url, auth=auth)
                 response.raise_for_status()
@@ -608,7 +755,7 @@ class DataOrchestrator:
 
     def _find_csv_url_in_dict(self, d: dict[str, Any]) -> str | None:
         """Recursively scan a dict for anything that looks like a CSV URL."""
-        for k, v in d.items():
+        for _k, v in d.items():
             if isinstance(v, str) and v.endswith(".csv") and v.startswith("http"):
                 return v
             if isinstance(v, dict):
@@ -630,7 +777,7 @@ class DataOrchestrator:
             key = f"{prefix}_{k}" if prefix else k
             if isinstance(v, dict):
                 out.update(self._flatten_dict(v, prefix=key))
-            elif not isinstance(v, (list, dict)):
+            elif not isinstance(v, list | dict):
                 out[key] = v
         return out
 
@@ -639,13 +786,14 @@ class DataOrchestrator:
 # Convenience sync wrapper for non-async callers
 # ---------------------------------------------------------------------------
 
+
 def get_dataframe_for_hypothesis(
     problem: str, domain: str
 ) -> tuple[pd.DataFrame | None, dict[str, Any]]:
     """Sync wrapper around DataOrchestrator."""
     orch = DataOrchestrator()
     try:
-        loop = asyncio.get_running_loop()
+        asyncio.get_running_loop()
         # If already in an async context, schedule it
         future = asyncio.ensure_future(orch.get_dataframe_for_hypothesis(problem, domain))
         # We can't block; return None with a note

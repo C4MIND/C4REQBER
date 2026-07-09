@@ -133,7 +133,7 @@ class Zettelkasten:
         vector_results = self._search_chroma(query, top_k=5)
 
         # Merge and deduplicate
-        seen = {r["id"] for r in text_results if "id" in r}
+        {r["id"] for r in text_results if "id" in r}
         combined = text_results[:]
         for vr in vector_results:
             # Try to match vector result back to note id via metadata

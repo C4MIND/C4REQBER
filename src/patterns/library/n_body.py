@@ -213,7 +213,7 @@ class NBodyGravity(BasePattern, GPUMixin):
         )
 
         # Velocity dispersion (approximate)
-        v_escape = np.sqrt(2) * (1 + radius**2) ** (-0.25)
+        np.sqrt(2) * (1 + radius**2) ** (-0.25)
         velocities = np.random.randn(n, 3) * 0.1
 
         return positions, velocities
@@ -307,7 +307,6 @@ class NBodyGravity(BasePattern, GPUMixin):
     def _integrate_rk4(self, forces: np.ndarray) -> None:
         """Runge-Kutta 4th order integration."""
         dt = self.config.dt
-        n = self.config.n_particles
 
         # Save initial state
         pos0 = self.positions.copy()  # type: ignore[union-attr]

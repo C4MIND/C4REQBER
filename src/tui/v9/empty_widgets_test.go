@@ -11,7 +11,7 @@ func TestEmptyWidgets_RendersAllCards(t *testing.T) {
 	m := NewAppFresh("http://test")
 	widgets := m.emptyWidgets()
 	if len(widgets) < 5 {
-		t.Errorf("expected at least 5 empty widgets, got %d", len(widgets))
+		t.Errorf("expected at least 5 base-layout widgets, got %d", len(widgets))
 	}
 	// First card should be the CardEmpty placeholder.
 	if widgets[0].Kind != CardEmpty {
@@ -34,11 +34,10 @@ func TestRenderEmptyWidgets_NonTrivialHeight(t *testing.T) {
 	if len(out) == 0 {
 		t.Fatal("renderEmptyWidgets returned empty string")
 	}
-	// Count newlines — should be at least 20 (we have 7 widgets
-	// each producing 3-5 lines of content).
+	// Count newlines — should be at least 20 (7 widgets × ~3-5 lines)
 	lines := strings.Count(out, "\n") + 1
 	if lines < 20 {
-		t.Errorf("empty widgets produce only %d lines, expected at least 20 to fill 45-line viewport", lines)
+		t.Errorf("base-layout widgets produce only %d lines, expected at least 20", lines)
 	}
 }
 

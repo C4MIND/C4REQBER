@@ -230,7 +230,7 @@ class ProjectileMotionPattern(SimulationPattern):
         # Find apogee
         apogee_idx = np.argmax(y_pos)
         apogee_height = y_pos[apogee_idx]
-        apogee_time = t[apogee_idx]
+        t[apogee_idx]
 
         # Range
         range_val = x[-1]
@@ -241,7 +241,7 @@ class ProjectileMotionPattern(SimulationPattern):
         # Vacuum comparison
         range_vacuum = cfg.v0**2 * np.sin(2 * theta0) / g
         apogee_vacuum = (cfg.v0 * np.sin(theta0))**2 / (2 * g)
-        tof_vacuum = 2 * cfg.v0 * np.sin(theta0) / g
+        2 * cfg.v0 * np.sin(theta0) / g
 
         # Impact velocity
         impact_speed = v[-1]

@@ -61,10 +61,11 @@ func TestSimBody(t *testing.T) {
 		{"skipped_with_hint", api.TypedEvent{Type: api.EventSimSkipped, Reason: "no_wheel", InstallHint: "conda install x"}, "conda install x"},
 		{"budget", api.TypedEvent{Type: api.EventSimBudgetExceeded, CostUSD: 10}, "budget"},
 	}
+	m := NewAppFresh("http://test")
 	for _, c := range cases {
-		got := simBody(c.te)
+		got := m.simBody(c.te)
 		if !contains(got, c.want) {
-			t.Errorf("%s: simBody() = %q, expected to contain %q", c.name, got, c.want)
+			t.Errorf("%s: m.simBody() = %q, expected to contain %q", c.name, got, c.want)
 		}
 	}
 }

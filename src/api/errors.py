@@ -6,10 +6,15 @@ for all v8 (and future) API routers.
 """
 from __future__ import annotations
 
+import os
 from typing import Any
 
 from fastapi import Request
 from fastapi.responses import JSONResponse
+
+
+def _is_dev_mode() -> bool:
+    return os.getenv("DEV_MODE", "").lower() in ("1", "true", "yes")
 
 
 class C4APIError(Exception):
@@ -66,14 +71,16 @@ async def c4_api_exception_handler(request: Request, exc: Exception) -> JSONResp
             status_code=exc.status_code,
             content=exc.to_dict(),
         )
-    # Fallback for unexpected exceptions
+    detail: dict[str, Any] = {}
+    if _is_dev_mode():
+        detail = {"exception_type": type(exc).__name__, "exception": str(exc)}
     return JSONResponse(
         status_code=500,
         content={
             "error": True,
             "error_code": "internal_error",
             "message": "An unexpected error occurred",
-            "detail": {"exception_type": type(exc).__name__, "exception": str(exc)},
+            "detail": detail,
             "status_code": 500,
         },
     )

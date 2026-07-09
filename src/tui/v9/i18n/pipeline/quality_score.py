@@ -12,6 +12,7 @@ Usage:
 """
 import argparse
 import json
+import os
 import re
 import sys
 from collections import Counter
@@ -49,7 +50,26 @@ def chrf_score(a: str, b: str) -> float:
     """chRF score (0-100). Per-language metric — works for both Latin and non-Latin."""
     if not a or not b:
         return 0.0
-    return sacrebleu.sentence_chrf(b, [a]).score
+    try:
+        import sacrebleu
+        return sacrebleu.sentence_chrf(b, [a]).score
+    except ImportError:
+        # Fallback: simple character n-gram overlap when sacrebleu unavailable
+        a_norm, b_norm = a.lower(), b.lower()
+        if not a_norm or not b_norm:
+            return 0.0
+        # Cheap F1 over 3-grams
+        def ngrams(s: str, n: int = 3) -> set[str]:
+            return {s[i:i + n] for i in range(len(s) - n + 1)}
+        a_n, b_n = ngrams(a_norm), ngrams(b_norm)
+        if not a_n or not b_n:
+            return 0.0
+        common = a_n & b_n
+        precision = len(common) / len(a_n)
+        recall = len(common) / len(b_n)
+        if precision + recall == 0:
+            return 0.0
+        return 2 * precision * recall / (precision + recall) * 100
 
 
 def word_overlap(a: str, b: str) -> float:
@@ -102,7 +122,7 @@ def main():
     p = argparse.ArgumentParser()
     p.add_argument("--i18n-dir", required=True)
     p.add_argument("--output", required=True)
-    p.add_argument("--model", default="/Users/figuramax/.c4reqber/models/nllb-200")
+    p.add_argument("--model", default=os.path.expanduser("~/.c4reqber/models/nllb-200"))
     p.add_argument("--threshold", type=float, default=0.55,
                    help="F1 threshold below which translations are flagged")
     args = p.parse_args()
@@ -180,7 +200,7 @@ def main():
         "flagged_details": flagged,
     }
     Path(args.output).write_text(json.dumps(summary, indent=2, ensure_ascii=False), encoding="utf-8")
-    print(f"\n=== Summary ===")
+    print("\n=== Summary ===")
     print(f"Total scored: {total}")
     print(f"Flagged: {flagged_count} ({100*flagged_count/max(1,total):.1f}%)")
     print(f"Report: {args.output}")

@@ -525,7 +525,7 @@ class NeuralMassPattern(SimulationPattern):
         """Calculate EEG metrics including spectral analysis"""
 
         dt = t[1] - t[0]
-        fs = 1.0 / dt  # Sampling frequency
+        1.0 / dt  # Sampling frequency
 
         # Basic statistics
         eeg_mean = float(np.mean(eeg))
@@ -565,11 +565,10 @@ class NeuralMassPattern(SimulationPattern):
         # Alpha peak characteristics
         alpha_mask = (pos_freqs >= 8) & (pos_freqs <= 13)
         alpha_peak_freq = 0.0
-        alpha_peak_power = 0.0
         if np.any(alpha_mask):
             alpha_peak_idx = np.argmax(pos_power[alpha_mask])
             alpha_peak_freq = float(pos_freqs[alpha_mask][alpha_peak_idx])
-            alpha_peak_power = float(pos_power[alpha_mask][alpha_peak_idx])
+            float(pos_power[alpha_mask][alpha_peak_idx])
 
         # Firing rate metrics
         firing_metrics = {}

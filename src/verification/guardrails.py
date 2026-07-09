@@ -177,6 +177,10 @@ def run_with_guardrails(cmd: list[str], backend: str, timeout_s: float = 60.0) -
             stderr=subprocess.PIPE,
             text=True,
             preexec_fn=lambda: set_memory_limit(memory_mb),
+            # Audit 2026-06-22 M-6: close_fds to avoid fd leaks; start_new_session
+            # so a stray child can't outlive the parent pipeline.
+            close_fds=True,
+            start_new_session=True,
         )
 
         stdout_lines: list[str] = []

@@ -369,7 +369,7 @@ class ContradictionDetector:
             return Sentiment.SUPPORTING
 
         # Check if from_claim references to_claim's findings negatively
-        combined = from_text + " " + to_text
+        from_text + " " + to_text
         if any(w in from_text for w in self.CONTRADICTION_MARKERS):
             # Check semantic similarity to see if they're about same topic
             try:

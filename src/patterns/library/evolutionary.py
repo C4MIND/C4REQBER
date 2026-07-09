@@ -262,7 +262,7 @@ class EvolutionaryPattern(SimulationPattern):
 
             # Selection probabilities
             p_A = freq_A * fitness_A / w_bar
-            p_B = freq_B * fitness_B / w_bar
+            freq_B * fitness_B / w_bar
 
             # Moran step: birth and death
             # Birth proportional to fitness
@@ -400,7 +400,7 @@ class EvolutionaryPattern(SimulationPattern):
         # Fixation statistics
         fixations_A = sum(1 for f in self.fixation_data if f["fixation_type"] == "A")
         fixations_B = sum(1 for f in self.fixation_data if f["fixation_type"] == "B")
-        fixations_neither = len(self.fixation_data) - fixations_A - fixations_B
+        len(self.fixation_data) - fixations_A - fixations_B
 
         fixation_prob_A = fixations_A / len(self.fixation_data)
         fixation_prob_B = fixations_B / len(self.fixation_data)

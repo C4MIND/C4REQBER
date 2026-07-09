@@ -94,7 +94,6 @@ class MantleConvectionPattern:
 
     def _initialize_reference_state(self) -> None:
         """Initialize hydrostatic reference state"""
-        cfg = self.config
 
         # Reference density (anelastic: varies with depth)
         # Exponentially stratified
@@ -338,7 +337,6 @@ class MantleConvectionPattern:
 
     def _pressure_projection(self) -> None:
         """Project velocity to satisfy anelastic continuity"""
-        cfg = self.config
 
         # Simplified pressure correction
         residual = self._continuity_residual()
@@ -383,7 +381,6 @@ class MantleConvectionPattern:
 
     def _calculate_viscous_dissipation(self) -> float:
         """Calculate viscous dissipation"""
-        cfg = self.config
 
         # Simplified dissipation
         diss = np.sum(

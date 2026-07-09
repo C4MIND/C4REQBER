@@ -171,8 +171,10 @@ python -m src.api.server
 blast serve --mcp
 # → 21 tools exposed for AI agents
 
-# TUI (Textual)
+# TUI v9 Cockpit (Go + Bubble Tea)
 blast tui
+blast tui --demo --story=crispr   # no backend required
+blast tui --packages              # scientific package installer
 
 # CLI (Typer + Rich)
 turbo --help

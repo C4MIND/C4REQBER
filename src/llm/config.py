@@ -48,7 +48,7 @@ _PROVIDER_BASE_URLS = {
     LLMProvider.NVIDIA: os.getenv("NVIDIA_API_URL", "https://integrate.api.nvidia.com/v1"),
     LLMProvider.YANDEX: os.getenv("YANDEX_API_URL", "https://llm.api.cloud.yandex.net/foundationModels/v1"),
     LLMProvider.LM_STUDIO: os.getenv("LM_STUDIO_URL", "http://localhost:1234/v1"),
-}
+}  # Note: base URLs kept on getenv for flexibility; keys are centralized via get_key()
 
 # API key env var names
 _PROVIDER_API_KEY_ENV = {

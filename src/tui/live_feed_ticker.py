@@ -10,7 +10,7 @@ from rich.text import Text
 from textual.widgets import Static
 
 from src.intel.live_feed import Hypothesis, get_live_feed
-from src.pipeline.hil_pipeline import HILDiscoveryPipeline, run_hil_pipeline
+from src.pipeline.hil_pipeline import run_hil_pipeline
 
 
 class LiveFeedTicker(Static):

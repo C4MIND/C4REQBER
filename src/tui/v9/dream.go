@@ -2,7 +2,6 @@ package tui
 
 import (
 	"fmt"
-	"math/rand"
 	"time"
 
 	"charm.land/lipgloss/v2"
@@ -174,4 +173,4 @@ func ArtForTest(i int) string {
 	return dreamArts[i%len(dreamArts)]
 }
 
-var _ = rand.Intn // keep math/rand imported for future use
+

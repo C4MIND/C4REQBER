@@ -3,9 +3,8 @@ c4reqber: Priority Scorer
 
 Scores research questions by multi-criteria priority.
 """
-from __future__ import annotations
 
-from typing import Any
+from __future__ import annotations
 
 from src.agenda.feasibility import FeasibilityResult
 from src.agenda.generator import ResearchQuestion
@@ -28,10 +27,10 @@ class PriorityScorer:
         - 20% user alignment
         """
         return (
-            0.30 * question.novelty_score +
-            0.30 * feasibility.tractability_score +
-            0.20 * question.impact_potential +
-            0.20 * question.user_alignment
+            0.30 * question.novelty_score
+            + 0.30 * feasibility.tractability_score
+            + 0.20 * question.impact_potential
+            + 0.20 * question.user_alignment
         )
 
     def rank_questions(
@@ -44,9 +43,6 @@ class PriorityScorer:
         Returns:
             List of (question, feasibility, score) sorted by score descending.
         """
-        scored = [
-            (q, f, self.score(q, f))
-            for q, f in zip(questions, feasibilities)
-        ]
+        scored = [(q, f, self.score(q, f)) for q, f in zip(questions, feasibilities, strict=False)]
         scored.sort(key=lambda x: x[2], reverse=True)
         return scored

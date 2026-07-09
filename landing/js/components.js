@@ -8,6 +8,7 @@ const SITE_NAV = [
   { label: 'Architecture',path: './architecture/index.html', id: 'nav-architecture' },
   { label: 'Docs',        path: './docs/index.html',    id: 'nav-docs' },
   { label: 'API',         path: './api/index.html',     id: 'nav-api' },
+  { label: 'Discoveries', path: './discoveries/index.html', id: 'nav-discoveries' },
   { label: 'Showcase',    path: './showcase/index.html',id: 'nav-showcase' },
 ];
 
@@ -115,11 +116,11 @@ function injectFooter() {
   <div class="container">
     <div style="display:flex;justify-content:center;gap:24px;margin-bottom:16px;flex-wrap:wrap">
       <a href="${base}docs/getting-started.html" class="footer-link" data-i18n="footer_quickstart">Quickstart</a>
-      <a href="https://github.com/c4reqber/c4reqber" class="footer-link" rel="noopener noreferrer" target="_blank">GitHub</a>
+      <a href="https://gitlab.com/cognitive-functors/turbo-cdi" class="footer-link" rel="noopener noreferrer" target="_blank">GitLab</a>
       <a href="${base}docs/setup/gpu.html" class="footer-link" data-i18n="footer_gpu">GPU Setup</a>
       <a href="${base}showcase/index.html" class="footer-link" data-i18n="footer_showcase">Showcase</a>
     </div>
-    <p>c4reqber v5.6.0 · <a href="https://github.com/c4reqber/c4reqber" rel="noopener noreferrer" target="_blank">GitHub</a> · <a href="${base}docs/index.html" rel="noopener noreferrer" data-i18n="footer_docs">Docs</a> · AGPL-3.0</p>
+    <p>c4reqber v5.6.0 + TUI v9.13.0 · <a href="https://gitlab.com/cognitive-functors/turbo-cdi" rel="noopener noreferrer" target="_blank">GitLab</a> · <a href="${base}docs/index.html" rel="noopener noreferrer" data-i18n="footer_docs">Docs</a> · AGPL-3.0</p>
     <p style="margin-top:8px" data-i18n="footer_slogan">Think. Simulate. Prove. Discover.</p>
   </div>
 </footer>`;

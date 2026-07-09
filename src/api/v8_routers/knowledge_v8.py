@@ -55,7 +55,7 @@ class FullTextRequest(BaseModel):
     query: str
 
 
-@router.post("/search")
+@router.post("/search", operation_id="knowledgeSearch")
 async def unified_search(req: UnifiedSearchRequest):
     """Unified search across 25+ knowledge sources."""
     searcher = _get_searcher()

@@ -36,7 +36,7 @@ class GapMiner(GapAnalyzer):
 
     async def analyze_papers(self, papers: list[Any]) -> dict[str, Any]:
         """Analyze papers."""
-        all_text = " ".join(
+        " ".join(
             (p.get("abstract") or "") + " " + (p.get("title") or "") + " " +
             (p.get("description") or "") + " " + (p.get("snippet") or "")
             for p in papers if isinstance(p, dict)

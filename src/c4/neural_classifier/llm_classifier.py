@@ -424,7 +424,7 @@ Return ONLY three numbers: T,D,I (e.g., 0,1,2)
     def test_connection(self) -> bool:
         """Проверить соединение с бэкендом"""
         try:
-            result = self.classify("Test message")
+            self.classify("Test message")
             return True
         except Exception as e:
             logger.error(f"Connection test failed: {e}")

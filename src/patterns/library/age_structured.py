@@ -276,7 +276,7 @@ class AgeStructuredPattern(SimulationPattern):
         """Generate age-specific fertility rates"""
         n_groups = self.config.age_groups  # type: ignore[union-attr]
         max_age = self.config.max_age  # type: ignore[union-attr]
-        ages = np.linspace(0, max_age, n_groups)
+        np.linspace(0, max_age, n_groups)
 
         # Human-like fertility curve
         fertility = np.zeros(n_groups)

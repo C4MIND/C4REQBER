@@ -1,5 +1,5 @@
 cff-version: 1.2.0
-message: "If you use c4-cdi-turbo in your research, please cite it as below."
+message: "If you use c4reqber in your research, please cite it as below."
 authors:
   - family-names: "Figurov"
     given-names: "Max"
@@ -7,12 +7,12 @@ authors:
   - family-names: "Ivanovich"
     given-names: "Nikolay K."
 title: "c4reqber: Cognitive Exoskeleton for AI Agents with C4-META Architecture"
-version: 5.4.1
-date-released: 2026-05-21
-url: "https://github.com/c4-meta/c4reqber"
-repository-code: "https://github.com/c4-meta/c4reqber"
+version: 5.6.0
+date-released: 2026-06-22
+url: "https://gitlab.com/cognitive-functors/turbo-cdi"
+repository-code: "https://gitlab.com/cognitive-functors/turbo-cdi"
 license: AGPL-3.0
-abstract: "c4-cdi-turbo is a cognitive exoskeleton for AI agents — combining C4-META cognitive architecture (Z₃³ state space, 27 cognitive states), 5 physics engines, formal verification (Lean 4, Agda, Coq), and 14 knowledge sources into an MCP-native scientific discovery platform."
+abstract: "c4reqber is a cognitive exoskeleton for AI agents — combining C4-META cognitive architecture (Z₃³ state space, 27 cognitive states), 21 MCP tools, 32 simulation engines, formal verification (Lean 4, Agda, Coq, Dafny, Z3, Hoare), and 33+ knowledge sources into an MCP-native scientific discovery platform."
 keywords:
   - artificial-intelligence
   - cognitive-architecture

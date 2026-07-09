@@ -55,7 +55,7 @@ def research_semantic(
     )
     console.print(panel)
     with ProgressIndicator.search_progress() as progress:
-        task = progress.add_task("Searching Semantic Scholar...")
+        progress.add_task("Searching Semantic Scholar...")
         import time
         time.sleep(0.5)
     table = StyledTable.search_results_table()

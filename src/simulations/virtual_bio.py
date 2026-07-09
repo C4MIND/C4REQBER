@@ -24,7 +24,7 @@ import logging
 from dataclasses import dataclass
 from typing import Any
 
-from .base_adapter import BaseSimulationAdapter, SimulationResult
+from .base_adapter import BaseSimulationAdapter
 from .pattern_engine_map import EngineType
 
 

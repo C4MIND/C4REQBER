@@ -19,8 +19,6 @@ from __future__ import annotations
 
 import importlib
 import inspect
-import json
-import os
 import re
 import time
 from dataclasses import dataclass, field
@@ -320,7 +318,7 @@ class LLMProver:
             else:
                 text = str(response)
             return self._extract_code(text, language)
-        except Exception as e:
+        except Exception:
             return ""
 
     @staticmethod

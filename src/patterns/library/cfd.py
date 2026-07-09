@@ -268,7 +268,7 @@ class CFDPattern(SimulationPattern):
     async def _stokes_flow(self, hypothesis: Hypothesis, config: dict[str, Any]) -> dict[str, Any]:
         """Stokes flow (creeping flow, Re << 1)"""
 
-        N = config.get("grid_size", 50)
+        config.get("grid_size", 50)
         U_inf = config.get("inlet_velocity", 0.01)  # Low velocity for Stokes
         mu = 1.0  # Viscosity
         L = config.get("domain_size", 1.0)
@@ -284,7 +284,7 @@ class CFDPattern(SimulationPattern):
         r = np.linspace(R, L, 50)
         THETA, R_grid = np.meshgrid(theta, r)
 
-        psi = U_inf * np.sin(THETA) * (R_grid - R**2 / R_grid)
+        U_inf * np.sin(THETA) * (R_grid - R**2 / R_grid)
 
         # Calculate drag force (Stokes law approximation)
         drag_force = 6 * np.pi * mu * R * U_inf
@@ -386,7 +386,7 @@ class CFDPattern(SimulationPattern):
         n = 7  # Typical for turbulent flow
         r = np.linspace(-D/2, D/2, 50)
         # u_max ≈ 1.2 * U_avg for turbulent
-        u_profile = 1.2 * U_avg * (1 - np.abs(2*r/D))**(1/n)
+        1.2 * U_avg * (1 - np.abs(2*r/D))**(1/n)
 
         # Wall shear stress
         tau_wall = friction_factor * rho * U_avg**2 / 8

@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "c4reqber": {
+      "command": "blast",
+      "args": ["serve", "--mcp"],
+      "env": {
+        "OPENROUTER_API_KEY": "<your-openrouter-key>"
+      }
+    }
+  }
+}

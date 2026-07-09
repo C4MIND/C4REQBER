@@ -205,7 +205,6 @@ example : True := by
 
     def _parse_goals(self, output: str) -> list[dict[str, Any]]:
         goals = []
-        in_goal = False
         current_goal = {"hypothesis": "", "target": ""}
 
         for line in output.split("\n"):
@@ -213,10 +212,8 @@ example : True := by
                 current_goal["target"] = line.split("⊢", 1)[1].strip()
                 goals.append(current_goal)
                 current_goal = {"hypothesis": "", "target": ""}
-                in_goal = False
             elif ":" in line and not line.startswith("-"):
                 current_goal["hypothesis"] += line + "\n"
-                in_goal = True
 
         return goals
 

@@ -548,9 +548,9 @@ class TestSurfaceWater(unittest.TestCase):
         config = SurfaceWaterConfig()
         pattern = SurfaceWaterPattern(config)
 
-        h_before = pattern.h.copy()
+        pattern.h.copy()
         pattern._step(0)
-        h_after = pattern.h.copy()
+        pattern.h.copy()
 
         # Depth should remain non-negative
         self.assertTrue(np.all(pattern.h >= 0))

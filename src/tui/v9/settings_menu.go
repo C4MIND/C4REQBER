@@ -61,7 +61,6 @@ func RenderSettingsMenu(cursor, width, height int) string {
 	// We can't easily access the calling model's settings here,
 	// so we re-fetch from a fresh model — but the user expects CURRENT values.
 	// For now we render with placeholder and let caller substitute if needed.
-	_ = m
 	// Use static rows for the demo render (caller passes live rows via the wrapper).
 	rows := []SettingsRow{
 		{Key: "settings.llm_tier", Value: "C2 (qwen-2.5-72b · ~$0.012)", Description: "settings.llm_tier.desc"},

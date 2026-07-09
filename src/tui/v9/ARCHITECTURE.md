@@ -4,7 +4,7 @@
 
 ```
 ┌─────────────┐     SSE/HTTP      ┌──────────────┐
-│  TUI v9.12.6 │ ←─────────────→ │   Backend    │
+│  TUI v9.13.0 │ ←─────────────→ │   Backend    │
 │  (Go+Bubble) │    :8000        │  (FastAPI)   │
 │              │                  │  :8000       │
 │  bin/c4tui-v9│                  │  uvicorn     │

@@ -175,7 +175,6 @@ class PIDTuningPattern:
         """
         Åström-Hägglund relay auto-tuning method.
         """
-        cfg = self.config
 
         # Similar to ZN but with more sophisticated analysis
         Kp, Ki, Kd = self._ziegler_nichols_tuning()

@@ -11,13 +11,10 @@ from pydantic import BaseModel
 from .bma import bayesian_model_averaging  # type: ignore[attr-defined]
 from .dst import (
     BasicBeliefAssignment,
-    EvidenceSensor,
     FrameOfDiscernment,
     combine_multiple,
     compute_dst_result,
-    dempster_combination,
 )
-from .fuzzy import FuzzyCognitiveMap, FuzzyRule, FuzzySet, FuzzyVariable
 from .mcmc import metropolis_hastings
 
 
@@ -165,7 +162,7 @@ async def run_pymc_mcmc(request: MCMCRequest) -> dict[str, Any]:
         import numpy as np
         import pymc as pm
 
-        with pm.Model() as model:
+        with pm.Model():
             mu = pm.Normal("mu", mu=request.mu, sigma=request.sigma)
             sigma = pm.HalfNormal("sigma", sigma=request.sigma)
             pm.Normal("y", mu=mu, sigma=sigma, observed=np.random.randn(min(request.n_samples, 100)))

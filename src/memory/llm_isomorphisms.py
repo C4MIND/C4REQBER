@@ -24,13 +24,14 @@ import httpx
 
 from src.c4.engine import C4Space, C4State
 from src.c4.routing import FRARouter, QualityPreset
+from src.config import get_key
 
 
 logger = logging.getLogger(__name__)
 
 _DEFAULT_MODEL = "deepseek/deepseek-chat"
 _FALLBACK_MODELS = [
-    "anthropic/claude-3.5-sonnet",
+    "anthropic/claude-sonnet-4.6",
     "openai/gpt-4o-mini",
 ]
 
@@ -118,7 +119,7 @@ async def discover_isomorphisms(
     Returns:
         Validated isomorphism list, sorted by confidence descending.
     """
-    or_key = os.getenv("OPENROUTER_API_KEY", "")
+    or_key = get_key("openrouter") or os.getenv("OPENROUTER_API_KEY", "")
     if not or_key:
         logger.warning("discover_isomorphisms: OPENROUTER_API_KEY not set")
         return []

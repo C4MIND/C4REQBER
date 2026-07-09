@@ -186,7 +186,6 @@ class SeaIcePattern:
         Calculate surface energy balance.
         Returns net heat flux and surface temperature.
         """
-        cfg = self.config
 
         albedo = self._calculate_albedo()
 
@@ -611,7 +610,7 @@ class TestSeaIce(unittest.TestCase):
         config = SeaIceConfig(nx=20, ny=20, dt=1000)
         pattern = SeaIcePattern(config)
 
-        h_before = pattern.h_ice.copy()
+        pattern.h_ice.copy()
         pattern._advect_ice()
         h_after = pattern.h_ice.copy()
 
@@ -624,9 +623,9 @@ class TestSeaIce(unittest.TestCase):
         config = SeaIceConfig(nx=20, ny=20, dt=1000)
         pattern = SeaIcePattern(config)
 
-        h_before = pattern.h_ice.copy()
+        pattern.h_ice.copy()
         pattern._step(0)
-        h_after = pattern.h_ice.copy()
+        pattern.h_ice.copy()
 
         # Should change or stay bounded
         self.assertTrue(np.all(pattern.h_ice >= 0))

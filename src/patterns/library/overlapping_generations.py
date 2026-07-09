@@ -62,7 +62,6 @@ class OverlappingGenerationsModel:
 
     def _compute_steady_state_k(self) -> float:
         """Compute steady state capital per worker."""
-        cfg = self.config
 
         # Steady state condition: k = s(w(k), r(k)) / (1 + n)
         # With Cobb-Douglas and log utility: s = beta/(1+beta) * w
@@ -89,7 +88,7 @@ class OverlappingGenerationsModel:
             return max(0.01, k_ss)  # type: ignore[no-any-return]
         except (ValueError, RuntimeError):
             # Analytical approximation for log utility
-            s_rate = self.beta / (1 + self.beta)
+            self.beta / (1 + self.beta)
             k_ss = (
                 (self.alpha * self.A)
                 / (

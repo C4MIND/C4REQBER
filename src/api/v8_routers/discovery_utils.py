@@ -377,9 +377,9 @@ async def run_cognitive_plugins(problem: str, hypothesis_text: str, domain: str)
     results = {}
     try:
         from llm.providers.unified import LLMProviderRouter
-        power_level = LLMProviderRouter.auto_route(problem).get("power_level", "medium") if True else "medium"
+        LLMProviderRouter.auto_route(problem).get("power_level", "medium") if True else "medium"
     except ImportError:
-        power_level = "medium"
+        pass
 
     plugins = [("swot", "SWOT"), ("red_team", "Red Team"), ("six_hats", "Six Hats"),
                ("five_whys", "5 Whys"), ("scamper", "SCAMPER"), ("pareto", "Pareto"),

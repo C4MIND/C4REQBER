@@ -1,0 +1,157 @@
+"""Desktop app entry — first-run wizard + always-seed models.json + TUI v9.
+Full settings out-of-the-box (config + models + keys for all providers).
+Robust: never crashes desktop on missing keys or partial config.
+
+Splash: Python rich banner (desktop port of terminal splash vibe) + full Go TUI v9 animated splash.
+"""
+from __future__ import annotations
+
+import os
+import sys
+import time
+from pathlib import Path
+
+from rich.console import Console
+from rich.panel import Panel
+from rich.text import Text
+
+from src.cli.config_init import config_exists, run_init_wizard
+from src.cli.tui_launcher import launch_tui_v9
+from src.config.paths import apply_config_to_env as central_apply
+from src.llm.model_assignment import ModelAssignment
+
+console = Console()
+
+
+# Desktop version is sourced from the bundled Go TUI v9 binary at
+# runtime via the central `tui_v9_version()` helper (see src/cli/tui_launcher.py)
+# — a static "v9" string here would drift from the actual release the
+# user is running.  Pass it in via the launch_tui_v9() call instead.
+
+def render_desktop_splash(first_run: bool, version: str = "v9") -> None:
+    """Upgraded desktop splash banner.
+    Port of the polished terminal splash animation feel (crystal bloom → aurora dissolve → living cube).
+    Root art idea / texts preserved. Go TUI v9 takes over with full animation.
+
+    `version` is passed in by main() so the banner reflects the actual
+    bundled TUI release (sourced from launch_tui_v9) rather than a
+    hardcoded string that drifts from the real version.
+    """
+    ver = version
+
+    # Upgraded mini art: evokes polished crystal bloom + aurora on final cube/C4R
+    # (colors chosen to mirror BioAurora palette: magenta crystal -> cyan/green aurora)
+    art = Text("    ▗▖  ▗▖  \n", style="magenta")
+    art.append("   ▐▌  ▐▌   \n", style="magenta")
+    art.append("  ▗▞▚▞▚▞▚▖  \n", style="bright_magenta")
+    art.append("  ▐", style="magenta")
+    art.append("  ░░  ", style="cyan")   # hint of bloom/aurora energy
+    art.append("▌  ", style="magenta")
+    art.append("C4\n", style="bold green")
+    art.append("   ▝▚▞▚▞▘   \n", style="bright_cyan")
+    art.append("    ▝▘  ▝▘  ", style="green")  # aurora settle green
+
+    # Title block
+    title = Text("C4REQBER", style="bold yellow")
+    title.append("  DESKTOP  ", style="bold cyan")
+    title.append(ver, style="dim")
+
+    # Subtitle (from terminal splash, EN base for desktop branding)
+    sub = Text("Creative & Destructive Insights", style="dim")
+    sub.append("  ·  ", style="dim")
+    sub.append("At Your Fingertips", style="dim")
+
+    # Motto with colored "Shift paradigms" (same as Go splash)
+    motto = Text("Discover.  ", style="dim")
+    motto.append("Invent.  ", style="cyan")
+    motto.append("Shift", style="bold green")
+    motto.append(" ", style="dim")
+    motto.append("paradigms.", style="bold red")
+
+    # Footer (GitLab primary, per global rule)
+    footer = Text("GitLab · c4reqber · Z₃³", style="dim")
+
+    # Compose content
+    content = Text.assemble(
+        art, "\n",
+        title, "\n",
+        sub, "\n",
+        motto, "\n\n",
+        footer,
+    )
+
+    if first_run:
+        content.append("\n\n", style="")
+        content.append("first run — full settings + keys via ~/.c4reqber (central)", style="green")
+    else:
+        # Micro port of "bloom/aurora" energy
+        content.append("\n", style="")
+        content.append("◆ awakening cube state ◆", style="dim cyan")
+
+    panel = Panel.fit(
+        content,
+        title="[bold]COGNITIVE EXOSKELETON[/bold]",
+        border_style="bright_blue",
+        padding=(1, 2),
+    )
+    console.print(panel)
+    # Tiny pause so banner is readable before TUI takes alt-screen (Go splash follows)
+    time.sleep(0.65)
+
+
+def main() -> int:
+    try:
+        central_apply()
+    except Exception:
+        pass  # never block desktop start
+
+    first_run = not config_exists()
+
+    # Ensure core config + wizard
+    if first_run:
+        try:
+            run_init_wizard(force=False)
+            central_apply()
+        except Exception:
+            pass
+
+    # Always ensure models.json (full settings even if user skipped wizard or deleted it)
+    from src.config.paths import MODELS_JSON
+    if not MODELS_JSON.exists():
+        try:
+            assignment = ModelAssignment.create_default("balanced")
+            assignment.save()
+        except Exception:
+            pass
+
+    central_apply()
+
+    # Desktop splash banner (ported + polished version of terminal splash text/art vibe)
+    no_splash = (
+        "--no-splash" in sys.argv
+        or os.environ.get("C4_NO_SPLASH", "") != ""
+        or os.environ.get("C4_SPLASH", "1") == "0"
+    )
+    if not no_splash:
+        # Source the actual TUI version from the central launcher so the
+        # banner reads e.g. "v9.13.0" instead of a hardcoded "v9" that
+        # drifts from the real release.
+        try:
+            from src.cli.tui_launcher import tui_v9_version
+            ver = tui_v9_version()
+        except Exception:
+            ver = "v9"
+        render_desktop_splash(first_run, version=ver)
+
+    # Forward args; launch Go TUI v9 (the animated splash + full cockpit)
+    extra = [a for a in sys.argv[1:] if a not in ("--no-splash",)]
+    if "--no-splash" in sys.argv:
+        extra.append("--no-splash")
+
+    # In bundled desktop, the TUI binary is next to us in Resources (mac) or alongside (win)
+    # launch_tui_v9 will find it or auto-build in dev.
+    return launch_tui_v9(extra, build_if_missing=True)
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -12,10 +12,10 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+# Default config location — unified via central paths
+from src.config.paths import CONFIG_DIR  # type: ignore[assignment]
+from src.config.paths import MODELS_JSON as CONFIG_FILE
 
-# Default config location
-CONFIG_DIR = Path(os.environ.get("C4REQBER_CONFIG", Path.home() / ".c4reqber"))
-CONFIG_FILE = CONFIG_DIR / "models.json"
 
 # Phase descriptions (shown in CLI)
 PHASE_DESCRIPTIONS = {

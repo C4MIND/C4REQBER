@@ -243,8 +243,8 @@ class HerdingModel:
         n_negative = np.sum(self.opinions < 0)
 
         # Largest connected component of each opinion
-        positive_agents = set(np.where(self.opinions > 0)[0])
-        negative_agents = set(np.where(self.opinions < 0)[0])
+        set(np.where(self.opinions > 0)[0])
+        set(np.where(self.opinions < 0)[0])
 
         return {
             "n_positive": int(n_positive),

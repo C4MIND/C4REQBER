@@ -94,7 +94,6 @@ class CogLoadDetector:
 
 def render_cognitive_load_gauge(load: CognitiveLoad, width: int = 12) -> str:
     """Render cognitive load gauge."""
-    blocks = ["▏", "▎", "▍", "▌", "▋", "▊", "▉", "█"]
     segments = 4
     active_segments = {
         "low": 0,

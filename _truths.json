@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "generated_at": "2026-07-09T21:44:46Z",
+  "version_backend": "5.6.0",
+  "version_tui": "v9.13.0",
+  "git_head": "a7c19ee",
+  "git_branch": "feat/production-upgrade",
+  "python": {
+    "loc": 225566,
+    "tests_collected": 9798
+  },
+  "go": {
+    "loc_tui_v9": 21147
+  },
+  "mcp": {
+    "tools": 21
+  },
+  "cli": {
+    "commands": 24
+  },
+  "knowledge": {
+    "sources": 51,
+    "footnote": "33 literature adapters + 10 data/biological = 43 total adapters in README"
+  },
+  "simulations": {
+    "engines": 38,
+    "footnote": "5 internal + 26 P1 bridges + 1 virtual bio = 32 (matching TUI v9 capabilities overlay)"
+  },
+  "llm": {
+    "providers": 6,
+    "footnote": "auto-detected at runtime: OpenRouter, XAI, Mistral, Moonshot, DeepSeek, Liquid, NVIDIA NIM, YandexGPT, Ollama, LM Studio, MLX"
+  },
+  "verifiers": {
+    "real": 14,
+    "stubs": 0
+  }
+}

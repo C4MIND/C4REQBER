@@ -1,6 +1,7 @@
 """
 C4REQBER API: Authentication Router
 """
+
 from __future__ import annotations
 
 import logging
@@ -41,12 +42,14 @@ def _mask_key(key: str) -> str:
 def get_runtime_api_key(provider: str) -> str | None:
     """Get API key from runtime store with TTL enforcement. Returns None if expired."""
     import time as _time
+
     now = _time.time()
     if now - _runtime_key_expiry.get(provider, 0) > _RUNTIME_KEY_TTL:
         _runtime_api_keys.pop(provider, None)
         _runtime_key_expiry.pop(provider, None)
         return None
     return _runtime_api_keys.get(provider)
+
 
 _login_attempts: dict[str, list[float]] = defaultdict(list)
 MAX_ATTEMPTS = 5
@@ -85,7 +88,7 @@ def _extract_token(request: Request) -> str | None:
     return None
 
 
-@router.post("/register", response_model=UserResponse)
+@router.post("/register", response_model=UserResponse, operation_id="authRegister")
 async def register(request: Request, user_data: UserCreate) -> UserResponse:
     """Register."""
     ip = request.client.host if request.client else "unknown"
@@ -114,10 +117,10 @@ async def register(request: Request, user_data: UserCreate) -> UserResponse:
                 name=existing.name or "",
                 created_at=existing.created_at or datetime.now(UTC),
             )
-        raise HTTPException(status_code=409, detail="User already exists")
+        raise HTTPException(status_code=409, detail="User already exists") from None
 
 
-@router.post("/login", response_model=TokenResponse)
+@router.post("/login", response_model=TokenResponse, operation_id="authLogin")
 async def login(request: Request, credentials: UserCreate) -> TokenResponse:
     """Login."""
     ip = request.client.host if request.client else "unknown"
@@ -131,9 +134,7 @@ async def login(request: Request, credentials: UserCreate) -> TokenResponse:
     token = await auth_manager.authenticate(credentials.email, credentials.password)
     if not token:
         await record_failed_attempt(ip)
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials"
-        )
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
     return TokenResponse(access_token=token, token_type="bearer")
 
 
@@ -149,6 +150,7 @@ async def update_api_keys(
 ) -> dict[str, Any]:
     """Update api keys."""
     import time as _time
+
     now = _time.time()
     # Auto-expire keys older than TTL
     for k in list(_runtime_api_keys):
@@ -165,9 +167,7 @@ async def update_api_keys(
             if hasattr(LLMClient, "_global_api_key"):
                 LLMClient._global_api_key = str(openrouter_key)
         except Exception as e:
-            logging.getLogger("c4_cdi_turbo").warning(
-                "Failed to update LLM client API key: %s", e
-            )
+            logging.getLogger("c4_cdi_turbo").warning("Failed to update LLM client API key: %s", e)
     return {
         "status": "ok",
         "keys_updated": ["openrouter_api_key"] if openrouter_key is not None else [],

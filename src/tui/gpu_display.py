@@ -100,7 +100,7 @@ def get_gpu_header_text() -> str:
     local = data.get("local")
     cloud = data.get("cloud_providers", [])
     vastai = data.get("vastai_gpus", [])
-    nim_status = data.get("nim_status", "unknown")
+    data.get("nim_status", "unknown")
     overall = data.get("overall", "red")
 
     status_icon = {"green": "🟢", "yellow": "🟡", "red": "🔴"}.get(overall, "⚙️")

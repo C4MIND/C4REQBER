@@ -12,6 +12,7 @@ import shutil
 import tempfile
 from typing import Any
 
+from src.config import get_key
 from src.mcp_server.server import HAS_TOOLS, server
 from src.verification.agda_bridge import AgdaBridge
 from src.verification.calibrator import VerificationCalibrator, VerificationContext
@@ -79,7 +80,7 @@ async def _generate_code_with_llm(
     try:
         import httpx
 
-        api_key = os.getenv("OPENROUTER_API_KEY")
+        api_key = get_key("openrouter") or os.getenv("OPENROUTER_API_KEY")
         if not api_key:
             raise RuntimeError("No LLM provider available")
 
@@ -118,7 +119,7 @@ def _strip_code_fences(content: str, language: str) -> str:
     fences = [f"```{language}", "```", "`"]
     for prefix in fences:
         if content.startswith(prefix):
-            content = content[len(prefix):].lstrip()
+            content = content[len(prefix) :].lstrip()
             break
     if content.endswith("```"):
         content = content[:-3].rstrip()
@@ -225,9 +226,7 @@ def _format_cpp(code: str, errors: list[str]) -> tuple[str, list[str]]:
     return code, errors
 
 
-def _generate_proof_harness(
-    code: str, language: str, backend: str, specification: str = ""
-) -> str:
+def _generate_proof_harness(code: str, language: str, backend: str, specification: str = "") -> str:
     """Generate a verification harness for *code* using *backend*."""
     spec_lower = specification.lower()
 
@@ -338,9 +337,7 @@ def _dafny_extrema_harness(language: str) -> str:
 def _lean4_harness(code: str, specification: str) -> str:
     spec = specification.replace('"', "'")
     return (
-        f"-- Lean 4 proof harness for: {spec}\n"
-        "theorem correctness : True := by\n"
-        "  trivial\n"
+        f"-- Lean 4 proof harness for: {spec}\n" "theorem correctness : True := by\n" "  trivial\n"
     )
 
 
@@ -381,16 +378,6 @@ async def _verify_code(code: str, backend: str) -> dict[str, Any]:
         if not lean_client.available:
             return {"verified": False, "error": "Lean4 not installed"}
         result = lean_client.check_proof(code)
-        return {
-            "verified": result.get("success", False),
-            "details": result,
-            "error": result["errors"][0]["message"] if result.get("errors") else None,
-        }
-    if backend == "coq":
-        coq_client = CoqClient()
-        if not coq_client.is_available():
-            return {"verified": False, "error": "Lean4 not installed"}
-        result = client.check_proof(code)
         return {
             "verified": result.get("success", False),
             "details": result,
@@ -459,9 +446,7 @@ async def c4_codegen(
 
     # 1. Generate code with LLM
     try:
-        code = await _generate_code_with_llm(
-            specification, language, optimization_target
-        )
+        code = await _generate_code_with_llm(specification, language, optimization_target)
         if not code.strip():
             errors.append("LLM returned empty code")
             code = ""
@@ -496,9 +481,7 @@ async def c4_codegen(
                 suggestions.append(
                     f"Consider adding {backend}-specific annotations or preconditions"
                 )
-                suggestions.append(
-                    "Review the generated proof harness for completeness"
-                )
+                suggestions.append("Review the generated proof harness for completeness")
         except Exception as e:
             # Failed verification must return meaningful error, never crash
             errors.append(f"Verification exception: {e}")
@@ -512,3 +495,39 @@ async def c4_codegen(
         "errors": errors,
         "suggestions": suggestions,
     }
+
+
+# JSON Schema attached to the tool for AI-agent discovery (audit C-6).
+# Must be set on the function object so _FallbackServer.run_stdio_fallback
+# (which reads tool_func.schema) can surface parameters to clients.
+c4_codegen.schema = {
+    "type": "object",
+    "title": "c4_codegen",
+    "description": "Generate code from a natural language specification, then optionally verify it.",
+    "properties": {
+        "specification": {
+            "type": "string",
+            "description": "Natural language description of the code to generate.",
+            "minLength": 1,
+        },
+        "language": {
+            "type": "string",
+            "enum": ["python", "rust", "cpp"],
+            "default": "python",
+            "description": "Target language.",
+        },
+        "verify": {
+            "type": "boolean",
+            "default": True,
+            "description": "Whether to verify generated code with formal methods.",
+        },
+        "optimization_target": {
+            "type": ["string", "null"],
+            "enum": ["speed", "memory", "readability", None],
+            "default": None,
+            "description": "Optimization focus (speed, memory, readability).",
+        },
+    },
+    "required": ["specification"],
+    "additionalProperties": False,
+}

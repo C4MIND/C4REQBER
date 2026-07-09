@@ -11,6 +11,8 @@ from typing import Any
 
 import httpx
 
+from src.config import get_key
+
 
 class GrokClient:
     """X.ai Grok API client (paid, token-based)."""
@@ -18,7 +20,9 @@ class GrokClient:
     BASE_URL = "https://api.x.ai/v1"
 
     def __init__(self, api_key: str | None = None) -> None:
-        self.api_key = api_key or os.getenv("XAI_API_KEY") or os.getenv("GROK_API_KEY")
+        self.api_key = (
+            api_key or get_key("xai") or os.getenv("XAI_API_KEY") or os.getenv("GROK_API_KEY")
+        )
         self.headers = {"Authorization": f"Bearer {self.api_key}"} if self.api_key else {}
 
     async def chat(self, message: str, model: str = "grok-beta") -> str:

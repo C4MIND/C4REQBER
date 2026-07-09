@@ -311,9 +311,9 @@ class RumorSpreadingPattern:
             # Counter-rumor introduction
             if cfg.counter_rumor_start and time >= cfg.counter_rumor_start:
                 # Reduce spreading rate
-                effective_rate = cfg.spreading_rate * (1 - cfg.counter_rumor_strength)
+                cfg.spreading_rate * (1 - cfg.counter_rumor_strength)
             else:
-                effective_rate = cfg.spreading_rate
+                pass
 
             # Model step
             if cfg.model == RumorModel.SIR:

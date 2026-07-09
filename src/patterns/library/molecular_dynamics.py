@@ -249,7 +249,6 @@ class MolecularDynamicsPattern:
     def _apply_nose_hoover(self) -> None:
         """Nose-Hoover thermostat"""
         cfg = self.config
-        mass = 39.948
 
         # Calculate current temperature
         temp = self._calculate_temperature()
@@ -402,7 +401,7 @@ class MolecularDynamicsPattern:
         dr = max_r / bins
 
         g_r = np.zeros(bins)
-        counts = np.zeros(bins)
+        np.zeros(bins)
 
         for i in range(cfg.n_atoms):
             for j in range(i + 1, cfg.n_atoms):

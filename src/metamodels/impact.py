@@ -181,7 +181,7 @@ class ImpactEngine:
         context: ImpactResult,
     ) -> dict[str, Any]:
         """Generate structured output for a phase using real keyword/heuristic analysis."""
-        analyzer = ImpactAnalyzer()
+        ImpactAnalyzer()
         domain = domain_hint or "general"
 
         # Build accumulated context for downstream phases
@@ -335,8 +335,8 @@ class ImpactEngine:
             "connects_to": ["connects", "links", "interfaces", "integrates"],
         }
         for i in range(len(entities) - 1):
-            e1 = entities[i].lower()
-            e2 = entities[i + 1].lower()
+            entities[i].lower()
+            entities[i + 1].lower()
             rel_type = "relates_to"
             for rel, indicators in relation_indicators.items():
                 if any(ind in problem_lower for ind in indicators):

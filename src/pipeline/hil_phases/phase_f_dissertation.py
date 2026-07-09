@@ -106,7 +106,7 @@ class PhaseF_DissertationGeneration:
 
     def _run_tote_validation(self, solution: str) -> dict[str, Any]:
         try:
-            result = self.tote.run()  # type: ignore[call-arg]
+            self.tote.run()  # type: ignore[call-arg]
             print("      TOTE Validation: completed")
             return {"status": "completed"}
         except Exception as e:

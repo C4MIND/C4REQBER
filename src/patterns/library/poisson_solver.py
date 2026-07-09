@@ -416,7 +416,7 @@ class PoissonSolverPattern(SimulationPattern):
         """Perform relaxation sweeps"""
         nx, ny = phi.shape
         dx2 = config.dx ** 2
-        dy2 = config.dy ** 2
+        config.dy ** 2
 
         for _ in range(n_sweeps):
             if config.relaxation_method == "jacobi":

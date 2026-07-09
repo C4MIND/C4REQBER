@@ -25,7 +25,11 @@ repos:
     hooks:
       - id: mypy
         args: [--ignore-missing-imports]
-        additional_dependencies: [types-all]
+        # Audit 2026-06-22: 'types-all' has unmet transitive deps
+        # (types-pkg-resources no longer published). Use targeted type
+        # stubs for what we actually use. Keep this list minimal —
+        # extend only when mypy errors on a specific stdlib module.
+        additional_dependencies: [types-requests, types-tabulate]
 
   - repo: https://github.com/Yelp/detect-secrets
     rev: v1.5.0

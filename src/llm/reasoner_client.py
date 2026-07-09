@@ -37,23 +37,23 @@ class ReasonerProvider:
 # Default provider chain — edit via config
 DEFAULT_PROVIDERS = [
     ReasonerProvider(
-        name="deepseek-direct",
-        base_url="https://api.deepseek.com/v1/chat/completions",
-        model="deepseek-reasoner",
-        api_key_env="DEEPSEEK_API_KEY",
+        name="openrouter-gemini-free",
+        base_url="https://openrouter.ai/api/v1/chat/completions",
+        model="google/gemini-2.0-flash-exp:free",
+        api_key_env="OPENROUTER_API_KEY",
         priority=1,
     ),
     ReasonerProvider(
-        name="openrouter-gemini",
+        name="openrouter-llama-free",
         base_url="https://openrouter.ai/api/v1/chat/completions",
-        model="google/gemini-2.5-pro-preview-03-25",
+        model="meta-llama/llama-3.3-70b-instruct:free",
         api_key_env="OPENROUTER_API_KEY",
         priority=2,
     ),
     ReasonerProvider(
-        name="openrouter-llama",
+        name="openrouter-qwen",
         base_url="https://openrouter.ai/api/v1/chat/completions",
-        model="meta-llama/llama-4-maverick",
+        model="qwen/qwen-2.5-72b-instruct",
         api_key_env="OPENROUTER_API_KEY",
         priority=3,
     ),
@@ -98,7 +98,9 @@ class MultiProviderReasonerClient:
             available.append(p)
 
         if not available:
-            logger.warning("No reasoner providers available! Set DEEPSEEK_API_KEY or OPENROUTER_API_KEY")
+            logger.warning(
+                "No reasoner providers available! Set DEEPSEEK_API_KEY or OPENROUTER_API_KEY"
+            )
         return sorted(available, key=lambda x: x.priority)
 
     def _check_local(self, url: str) -> bool:
@@ -106,7 +108,7 @@ class MultiProviderReasonerClient:
         try:
             httpx.get(url.replace("/chat/completions", "/models"), timeout=2.0)
             return True
-        except (ConnectionError, TimeoutError, RuntimeError):
+        except Exception:
             return False
 
     async def generate(
@@ -154,19 +156,25 @@ class MultiProviderReasonerClient:
             headers["HTTP-Referer"] = "https://c4reqber.ai"
             headers["X-Title"] = "c4reqber"
 
-        resp = await self._client.post(
-            provider.base_url,
-            headers=headers,
-            json={
-                "model": provider.model,
-                "messages": messages,
-                "temperature": temperature,
-                "max_tokens": max_tokens or provider.max_tokens,
-            },
+        # Audit 2026-06-22 H-8 Tier 1: wrap the per-provider POST in
+        # guarded_chat_completion for sanitization + cost tracking +
+        # Prometheus metrics. We don't track the fallback chain as a
+        # single metric — each provider attempt gets its own row, so
+        # you can see in /metrics which fallback step succeeded.
+        from src.llm.guarded_call import guarded_chat_completion
+
+        data = await guarded_chat_completion(
+            url=provider.base_url,
+            api_key=key,
+            model=provider.model,
+            temperature=temperature,
+            max_tokens=max_tokens or provider.max_tokens,
             timeout=provider.timeout,
+            extra_headers={
+                k: v for k, v in headers.items() if k not in ("Authorization", "Content-Type")
+            },
+            messages=messages,
         )
-        resp.raise_for_status()
-        data = resp.json()
         return data["choices"][0]["message"]["content"]
 
     def _strip_code_blocks(self, text: str) -> str:

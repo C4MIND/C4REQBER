@@ -254,7 +254,7 @@ class ThermalPattern(SimulationPattern):
         # Solve
         T = np.linalg.solve(A, b)
 
-        x = np.linspace(0, L, N)
+        np.linspace(0, L, N)
 
         # Heat flux: q = -k * dT/dx
         q = -k * np.gradient(T, dx)

@@ -69,7 +69,7 @@ def tui_config_screen() -> None:
         _console.print(table)
         _console.print()
 
-        jwt = os.getenv("JWT_SECRET", "")
+        os.getenv("JWT_SECRET", "")
         if selected < len(providers):
             sel_name, sel_env, _ = providers[selected]
             _console.print(f"[bold]Selected:[/] {sel_name}")

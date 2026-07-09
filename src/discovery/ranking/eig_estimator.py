@@ -35,7 +35,6 @@ class EIGEstimator:
         """
         try:
             # Try to find and run simulator
-            from src.patterns.core import Hypothesis
             from src.simulations.config import SimulationConfig
 
             config = SimulationConfig()

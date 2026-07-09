@@ -43,7 +43,6 @@ class OpenAlexAdapter(BaseSourceAdapter):
 
     async def _search_raw(self, query: str, limit: int) -> list[dict[str, Any]]:
         """Fallback raw API search (legacy behaviour)."""
-        from .base_p6_adapter import BaseP6SourceAdapter
 
         raw = _OpenAlexRawAdapter(api_key=self.api_key)
         return await raw.search(query, limit)

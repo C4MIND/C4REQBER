@@ -116,34 +116,6 @@ class DomainGraphExtractor:
             return graph
 
         # LLM-powered extraction
-        schema = {
-            "type": "object",
-            "properties": {
-                "entities": {
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "properties": {
-                            "id": {"type": "string"},
-                            "name": {"type": "string"},
-                            "type": {"type": "string"},
-                        },
-                    },
-                },
-                "relations": {
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "properties": {
-                            "source": {"type": "string"},
-                            "target": {"type": "string"},
-                            "relation": {"type": "string"},
-                        },
-                    },
-                },
-            },
-            "required": ["entities", "relations"],
-        }
 
         prompt = f"""Extract entities and relations from the following text about {domain}.
 

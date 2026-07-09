@@ -166,7 +166,7 @@ class GARCHPattern(SimulationPattern):
 
         # ARCH test (Ljung-Box on squared returns)
         squared_returns = returns**2
-        autocorr = np.corrcoef(squared_returns[:-1], squared_returns[1:])[0,1]
+        np.corrcoef(squared_returns[:-1], squared_returns[1:])[0,1]
 
         # VaR and CVaR
         var_threshold = np.percentile(returns, (1 - var_conf) * 100)

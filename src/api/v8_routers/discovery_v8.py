@@ -22,42 +22,12 @@ from src.api.v8_routers.discovery.pipeline import (
     FlashRequest,
     MultiHypothesisRequest,
     OneClickRequest,
-    _domain_improving_param,
-    _domain_worsening_param,
-    build_temporal_kg,
-    detect_paradigm_shift,
     dissertation_mode,
     flash_discovery,
-    generate_hypothesis,
-    generate_lean4_proof,
-    generate_paper,
-    mine_contradictions,
     multi_hypothesis_discovery,
     navigate_c4,
     one_click_discovery,
-    resolve_triz,
-    run_abduction,
-    run_autoscanner,
-    run_bayesian_conjugate_update,
-    run_bayesian_model_averaging,
-    run_c4_observer,
-    run_causal_do_calculus,
-    run_cognitive_plugins,
-    run_consensus_meter,
-    run_counterfactual,
-    run_dempster_shafer,
-    run_doe_design,
-    run_empirical_validation,
-    run_falsification_engine,
-    run_fra_routing,
-    run_matrix_dream,
-    run_power_analysis,
-    run_relevant_simulation,
-    run_reproducibility_check,
-    run_strong_inference,
-    search_isomorphisms,
 )
-from src.api.v8_routers.discovery.search import search_knowledge
 
 
 logger = logging.getLogger("c4_cdi_turbo.api.v8.discovery")
@@ -93,23 +63,44 @@ async def _run_flash_job(job_id: str, request: FlashRequest) -> None:
 # ---------------------------------------------------------------------------
 # Routes
 # ---------------------------------------------------------------------------
-@router.post("/one-click")
+@router.post("/one-click", operation_id="discoverOneClick")
 async def one_click_discovery_route(request: OneClickRequest) -> dict[str, Any]:
     store = get_job_store()
     job = await store.create("one-click", request.model_dump())
-    asyncio.create_task(_run_one_click_job(job.job_id, request))
+    # Audit 2026-06-22 M-5: fire-and-forget tasks can swallow exceptions
+    # after the 202 response is sent. Wrap in _supervised_task so any error
+    # is logged AND sets the job to 'failed' (not stuck in 'running' forever).
+    asyncio.create_task(
+        _supervised_task(_run_one_click_job(job.job_id, request), job_id=job.job_id, kind="one-click")
+    )
     return {"job_id": job.job_id, "status": job.status.value}
 
 
-@router.post("/flash")
+@router.post("/flash", operation_id="discoverFlash")
 async def flash_discovery_route(request: FlashRequest) -> dict[str, Any]:
     store = get_job_store()
     job = await store.create("flash", request.model_dump())
-    asyncio.create_task(_run_flash_job(job.job_id, request))
+    asyncio.create_task(
+        _supervised_task(_run_flash_job(job.job_id, request), job_id=job.job_id, kind="flash")
+    )
     return {"job_id": job.job_id, "status": job.status.value}
 
 
-@router.post("/multi")
+async def _supervised_task(coro, *, job_id: str, kind: str) -> None:
+    """Wrap a fire-and-forget coroutine so uncaught exceptions are logged
+    and the job is marked failed (instead of silently stuck in 'running')."""
+    try:
+        await coro
+    except Exception as exc:
+        logger.exception("fire-and-forget task failed: %s (job_id=%s)", kind, job_id)
+        try:
+            store = get_job_store()
+            await store.set_failed(job_id, [f"{type(exc).__name__}: {exc}"])
+        except Exception:
+            logger.exception("could not mark job %s as failed", job_id)
+
+
+@router.post("/multi", operation_id="discoverMulti")
 async def multi_hypothesis_discovery_route(request: MultiHypothesisRequest) -> dict[str, Any]:
     return await multi_hypothesis_discovery(request)
 
@@ -139,7 +130,7 @@ async def navigate_c4_route(request: C4NavigateRequest) -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 # Job status polling
 # ---------------------------------------------------------------------------
-@router.get("/status/{job_id}")
+@router.get("/status/{job_id}", operation_id="discoverJobStatus")
 async def job_status_route(job_id: str) -> dict[str, Any]:
     store = get_job_store()
     job = await store.get(job_id)
@@ -155,41 +146,43 @@ async def _sse_stream(job_id: str) -> Any:
     store = get_job_store()
     job = await store.get(job_id)
     if job is None:
-        yield "event: error\ndata: {\"detail\": \"Job not found\"}\n\n"
+        yield 'event: error\ndata: {"type": "error", "detail": "Job not found"}\n\n'
         return
 
-    last_status: str | None = None
+    last_event_seq = 0
+    terminal_sent = False
     while True:
         job = await store.get(job_id)
         if job is None:
-            yield "event: error\ndata: {\"detail\": \"Job disappeared\"}\n\n"
+            yield 'event: error\ndata: {"type": "error", "detail": "Job disappeared"}\n\n'
             return
 
-        if job.status.value != last_status:
-            last_status = job.status.value
+        for ev in await store.drain_events(job_id, last_event_seq):
+            last_event_seq = ev.seq
+            yield f"event: {ev.event_type}\ndata: {json.dumps(ev.data)}\n\n"
+            if ev.event_type in ("complete", "failed"):
+                terminal_sent = True
+                return
+
+        if not terminal_sent and job.status in (JobStatus.COMPLETE, JobStatus.FAILED):
+            # Back-compat: emit terminal frame if set_complete/set_failed raced the drain.
+            event_type = "complete" if job.status == JobStatus.COMPLETE else "failed"
             payload = {
+                "type": event_type,
                 "phase": job.phase,
                 "status": job.status.value,
                 "progress": job.progress,
                 "detail": job.phase_detail,
-            }
-            yield f"event: phase\ndata: {json.dumps(payload)}\n\n"
-
-        if job.status in (JobStatus.COMPLETE, JobStatus.FAILED):
-            result_payload = {
-                "phase": job.phase,
-                "status": job.status.value,
-                "progress": job.progress,
                 "result": job.result,
                 "errors": job.errors,
             }
-            yield f"event: complete\ndata: {json.dumps(result_payload)}\n\n"
+            yield f"event: {event_type}\ndata: {json.dumps(payload)}\n\n"
             return
 
         await asyncio.sleep(0.5)
 
 
-@router.get("/stream/{job_id}")
+@router.get("/stream/{job_id}", operation_id="discoverJobStream")
 async def job_stream_route(job_id: str) -> StreamingResponse:
     return StreamingResponse(
         _sse_stream(job_id),

@@ -2,6 +2,7 @@
 
 Tracks token usage and estimated cost per request / session.
 """
+
 from __future__ import annotations
 
 import threading
@@ -12,17 +13,26 @@ from typing import Any
 from src.di.container import get_container
 
 
-# USD per 1M tokens (input / output)
-_PROVIDER_PRICES: dict[str, dict[str, tuple[float, float]]] = {
-    "gpt-4o": {"input": 2.50, "output": 10.00},  # type: ignore[dict-item]
-    # Claude 4.x pricing (per the claude-api model catalog).
-    "claude-opus-4": {"input": 5.00, "output": 25.00},  # type: ignore[dict-item]
-    "claude-sonnet-4": {"input": 3.00, "output": 15.00},  # type: ignore[dict-item]
-    "claude-haiku-4": {"input": 1.00, "output": 5.00},  # type: ignore[dict-item]
-    "claude-3.5": {"input": 3.00, "output": 15.00},  # type: ignore[dict-item]
-    "gemini-1.5": {"input": 0.50, "output": 1.50},  # type: ignore[dict-item]
-    "local": {"input": 0.0, "output": 0.0},  # type: ignore[dict-item]
+# USD per 1M tokens (input / output) — updated for current models in balanced/premium
+_PROVIDER_PRICES: dict[str, dict[str, float]] = {
+    "gpt-4o": {"input": 2.50, "output": 10.00},
+    "gpt-4o-mini": {"input": 0.15, "output": 0.60},
+    "claude-3.5": {"input": 3.00, "output": 15.00},
+    "claude-sonnet-4": {"input": 3.00, "output": 15.00},
+    "claude-sonnet-4.6": {"input": 3.00, "output": 15.00},
+    "claude-haiku-4": {"input": 1.00, "output": 5.00},
+    "claude-opus-4": {"input": 5.00, "output": 25.00},
+    "claude-opus-4.6": {"input": 15.00, "output": 75.00},
+    "gemini-1.5": {"input": 0.50, "output": 1.50},
+    "deepseek": {"input": 0.14, "output": 0.28},
+    "qwen": {"input": 0.50, "output": 1.50},
+    "local": {"input": 0.0, "output": 0.0},
 }
+
+# Public alias for the price table (used by guarded_call + BaseLLMClient._record_cost
+# to look up rates directly). The internal name stays private; the alias is the
+# supported import path. Audit 2026-06-22 H-8 Tier 1 follow-up.
+COST_TABLE: dict[str, dict[str, float]] = _PROVIDER_PRICES
 
 
 def _normalize_model(model: str) -> str:
@@ -34,21 +44,33 @@ def _normalize_model(model: str) -> str:
     digit separator normalised, rather than on an exact id.
     """
     model_lower = model.lower().replace(".", "-")
+    if "gpt-4o-mini" in model_lower or "4o-mini" in model_lower:
+        return "gpt-4o-mini"
     if "gpt-4o" in model_lower:
         return "gpt-4o"
-    # Claude 4.x — check before the legacy claude-3.5 branch.
+    if "claude-sonnet-4-6" in model_lower or "claude-4-6" in model_lower:
+        return "claude-sonnet-4.6"
+    if "claude-opus-4-6" in model_lower:
+        return "claude-opus-4.6"
     if "claude-opus-4" in model_lower:
         return "claude-opus-4"
     if "claude-sonnet-4" in model_lower:
         return "claude-sonnet-4"
     if "claude-haiku-4" in model_lower:
         return "claude-haiku-4"
-    if "claude-3-5" in model_lower:
+    if "claude-3-5" in model_lower or "claude-3.5" in model_lower:
         return "claude-3.5"
-    if "gemini-1-5" in model_lower:
+    if "gemini-1-5" in model_lower or "gemini" in model_lower:
         return "gemini-1.5"
-    if any(local in model_lower for local in ("ollama", "lm_studio", "local", "qwen2-5")):
+    if "deepseek" in model_lower:
+        return "deepseek"
+    # Local providers first (Ollama, LM Studio, MLX). Audit 2026-06-22:
+    # "qwen2.5" was being caught by the "qwen" rule below and returned
+    # "qwen" pricing ($2/MTok) instead of free local pricing.
+    if any(local in model_lower for local in ("ollama", "lm_studio", "local", "qwen2-5", "qwen2.5", "qwen3")):
         return "local"
+    if "qwen" in model_lower:
+        return "qwen"
     return "gpt-4o"  # Default pricing
 
 
@@ -93,8 +115,8 @@ class CostTracker:
         """
         price_key = _normalize_model(model)
         prices = _PROVIDER_PRICES.get(price_key, _PROVIDER_PRICES["gpt-4o"])
-        input_cost = (input_tokens / 1_000_000) * prices["input"]  # type: ignore[operator]
-        output_cost = (output_tokens / 1_000_000) * prices["output"]  # type: ignore[operator]
+        input_cost = (input_tokens / 1_000_000) * prices["input"]
+        output_cost = (output_tokens / 1_000_000) * prices["output"]
         cost_usd = input_cost + output_cost
 
         entry = CostEntry(
@@ -109,7 +131,20 @@ class CostTracker:
         with self._lock:
             self._entries.append(entry)
 
-        return cost_usd  # type: ignore[no-any-return]
+        return cost_usd
+
+    @classmethod
+    def add(cls, entry: CostEntry) -> None:
+        """Append a pre-computed cost entry to the global singleton. Audit 2026-06-22 H-8 Tier 1.
+
+        Used by guarded_call / BaseLLMClient / AsyncLLMClient which call
+        `CostTracker.add(entry)` (not on an instance) because they don't
+        want to depend on DI / `get_cost_tracker()`. The entry lands in the
+        same singleton that `get_session_cost()` / `get_stats()` read.
+        """
+        tracker = get_cost_tracker()
+        with tracker._lock:
+            tracker._entries.append(entry)
 
     def get_stats(self) -> dict[str, Any]:
         """Return aggregate statistics for all tracked requests."""

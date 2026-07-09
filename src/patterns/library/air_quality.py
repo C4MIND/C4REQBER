@@ -373,7 +373,6 @@ class AirQualityPattern:
 
     def _calculate_aqi(self) -> float:
         """Calculate Air Quality Index (simplified US AQI)"""
-        cfg = self.config
 
         # Get surface concentrations
         o3_ppb = np.max(self.conc["O3"][:, :, :2]) if "O3" in self.conc else 0

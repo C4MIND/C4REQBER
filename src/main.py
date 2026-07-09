@@ -7,10 +7,7 @@ beautiful output across all commands.
 """
 
 import sys
-from datetime import datetime
-from enum import Enum
 from pathlib import Path
-from typing import List, Optional
 
 import typer
 from rich.console import Console
@@ -25,14 +22,12 @@ sys.path.insert(0, str(Path(__file__).parent))
 from src.design import (
     ICONS,
     DesignTokens,
-    ErrorDisplay,
     PanelType,
     ProgressIndicator,
     ResultDisplay,
     StatusIndicator,
     StyledPanel,
     StyledTable,
-    print_divider,
     print_section_header,
 )
 
@@ -66,12 +61,8 @@ app.add_typer(core_app, name="core")
 @app.command("solve")
 def solve_command(
     problem: str = typer.Argument(..., help="Problem statement to solve"),
-    full: bool = typer.Option(
-        False, "--full", "-f", help="Full analysis with all methods"
-    ),
-    max_hypotheses: int = typer.Option(
-        5, "--max", "-n", help="Maximum hypotheses to generate"
-    ),
+    full: bool = typer.Option(False, "--full", "-f", help="Full analysis with all methods"),
+    max_hypotheses: int = typer.Option(5, "--max", "-n", help="Maximum hypotheses to generate"),
     output: str | None = typer.Option(None, "--output", "-o", help="Export to file"),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Verbose output"),
 ):
@@ -124,15 +115,15 @@ def solve_command(
         ]
 
         total_work = 100
-        work_per_stage = total_work / len(stages)
+        total_work / len(stages)
 
-        for i, (stage_id, description) in enumerate(stages):
+        for _i, (_stage_id, description) in enumerate(stages):
             task = progress.add_task(description, total=100)
 
             # Simulate work (in real implementation, this would be actual work)
             import time
 
-            for j in range(10):
+            for _j in range(10):
                 time.sleep(0.05)  # Remove in production
                 progress.update(task, advance=10)
 
@@ -173,9 +164,7 @@ def solve_command(
     ResultDisplay.metrics_grid(metrics)
 
     if output:
-        console.print(
-            f"\n[green]{ICONS['success']} Results exported to: {output}[/green]"
-        )
+        console.print(f"\n[green]{ICONS['success']} Results exported to: {output}[/green]")
 
 
 @core_app.command("discover")
@@ -220,11 +209,11 @@ def discover_command(
             ("synthesizer", f"{ICONS['agent']} Synthesizer: Combining results..."),
         ]
 
-        for stage_id, description in agent_stages:
+        for _stage_id, description in agent_stages:
             task = progress.add_task(description, total=100)
             import time
 
-            for j in range(10):
+            for _j in range(10):
                 time.sleep(0.04)
                 progress.update(task, advance=10)
 
@@ -267,9 +256,7 @@ def explain_command(
     level: str = typer.Option(
         "technical", "--level", "-l", help="Explanation level (simple/technical/expert)"
     ),
-    focus: str | None = typer.Option(
-        None, "--focus", "-f", help="Focus on specific aspect"
-    ),
+    focus: str | None = typer.Option(None, "--focus", "-f", help="Focus on specific aspect"),
 ):
     """
     Explain C4 reasoning and discovery process.
@@ -329,9 +316,7 @@ def research_semantic(
     limit: int = typer.Option(10, "--limit", "-n", help="Number of results"),
     year_start: int | None = typer.Option(None, "--from", help="Start year"),
     year_end: int | None = typer.Option(None, "--to", help="End year"),
-    citations: bool = typer.Option(
-        False, "--citations", "-c", help="Sort by citations"
-    ),
+    citations: bool = typer.Option(False, "--citations", "-c", help="Sort by citations"),
 ):
     """
     Search Semantic Scholar (200M+ papers).
@@ -362,7 +347,7 @@ def research_semantic(
 
     # Progress
     with ProgressIndicator.search_progress() as progress:
-        task = progress.add_task("Searching Semantic Scholar...")
+        progress.add_task("Searching Semantic Scholar...")
         import time
 
         time.sleep(0.5)
@@ -413,23 +398,15 @@ def research_arxiv(
     )
     console.print(panel)
 
-    console.print(
-        f"\n[yellow]{ICONS['warning']} arXiv search results would appear here[/yellow]"
-    )
+    console.print(f"\n[yellow]{ICONS['warning']} arXiv search results would appear here[/yellow]")
 
 
 @research_app.command("patents")
 def research_patents(
     query: str = typer.Argument(..., help="Search query"),
-    white_space: bool = typer.Option(
-        False, "--white-space", "-w", help="White space analysis"
-    ),
-    assignee: str | None = typer.Option(
-        None, "--assignee", "-a", help="Filter by assignee"
-    ),
-    country: str | None = typer.Option(
-        None, "--country", "-c", help="Patent country (US, EP, WO)"
-    ),
+    white_space: bool = typer.Option(False, "--white-space", "-w", help="White space analysis"),
+    assignee: str | None = typer.Option(None, "--assignee", "-a", help="Filter by assignee"),
+    country: str | None = typer.Option(None, "--country", "-c", help="Patent country (US, EP, WO)"),
 ):
     """
     Search patents and perform white space analysis.
@@ -580,9 +557,7 @@ app.add_typer(triz_app, name="triz")
 
 @triz_app.command("list")
 def triz_list(
-    category: str | None = typer.Option(
-        None, "--category", "-c", help="Filter by category"
-    ),
+    category: str | None = typer.Option(None, "--category", "-c", help="Filter by category"),
 ):
     """
     List 40 TRIZ principles with descriptions.
@@ -707,9 +682,7 @@ app.add_typer(validate_app, name="validate")
 def validate_create(
     hypothesis_id: str = typer.Argument(..., help="Hypothesis to validate"),
     name: str | None = typer.Option(None, "--name", "-n", help="Experiment name"),
-    method: str = typer.Option(
-        "experimental", "--method", "-m", help="Validation method"
-    ),
+    method: str = typer.Option("experimental", "--method", "-m", help="Validation method"),
 ):
     """
     Create validation experiment for a hypothesis.
@@ -742,9 +715,7 @@ app.add_typer(graph_app, name="graph")
 
 @graph_app.command("stats")
 def graph_stats(
-    detailed: bool = typer.Option(
-        False, "--detailed", "-d", help="Show detailed statistics"
-    ),
+    detailed: bool = typer.Option(False, "--detailed", "-d", help="Show detailed statistics"),
 ):
     """
     Show knowledge graph statistics.

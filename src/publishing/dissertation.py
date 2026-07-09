@@ -11,7 +11,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-import httpx
+
 
 
 logger = logging.getLogger(__name__)
@@ -33,38 +33,49 @@ def _sanitize_filename(name: str, max_len: int = 100) -> str:
         name = re.sub(r"\.\.+", "__", name).lstrip(".")
     return name or "dissertation"
 
+
 DEEPSEEK_KEY = os.environ.get("DEEPSEEK_API_KEY", "")
 DEEPSEEK_URL = "https://api.deepseek.com/v1/chat/completions"
 
+MIN_SECTION_WORDS = 60
+
+
+class DissertationGenerationError(RuntimeError):
+    """Raised when dissertation prose cannot be generated after retries."""
+
+
+def _is_valid_llm_output(text: str, *, min_words: int = MIN_SECTION_WORDS) -> bool:
+    if not text or not str(text).strip():
+        return False
+    if "[LLM unavailable" in text:
+        return False
+    return len(str(text).split()) >= min_words
+
 
 def _llm_generate(prompt: str, max_tokens: int = 2000, temperature: float = 0.7) -> str:
-    """Generate text via OpenRouter API — model configurable via DISSERTATION_MODEL env var."""
-    key = os.environ.get("OPENROUTER_API_KEY", "")
-    if not key:
-        key = os.environ.get("DEEPSEEK_API_KEY", DEEPSEEK_KEY)
-    if not key:
-        return "[LLM generation disabled: no API key configured]"
-    model = os.environ.get("DISSERTATION_MODEL", "anthropic/claude-3.5-sonnet")
-    try:
-        resp = httpx.post(
-            "https://openrouter.ai/api/v1/chat/completions" if "sk-or-" in key else DEEPSEEK_URL,
-            headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json", "HTTP-Referer": "https://c4reqber.org", "X-Title": "C4Reqber"},
-            json={
-                "model": model if "sk-or-" in key else "deepseek-chat",
-                "max_tokens": max_tokens,
-                "temperature": temperature,
-                "messages": [
-                    {"role": "system", "content": "You are a rigorous cross-domain research scientist. Write in academic English. Be bold and ambitious in hypotheses — aim for paradigm-shifting claims that challenge existing assumptions."},
-                    {"role": "user", "content": prompt},
-                ],
-            },
-            timeout=90,
+    """Generate dissertation section — retries until valid or raises."""
+    from src.config.paths import load_kilo_env
+    from src.llm.sync_provider_chain import generate_with_fallback
+
+    load_kilo_env()
+    preferred = os.environ.get("DISSERTATION_MODEL", "deepseek-v4-flash-free")
+    last = ""
+    for attempt in range(5):
+        # After 2 failures, stop pinning preferred (often broken free-tier ids).
+        model_pref = preferred if attempt < 2 else None
+        last = generate_with_fallback(
+            prompt,
+            max_tokens=max_tokens,
+            temperature=temperature,
+            preferred_model=model_pref,
         )
-        resp.raise_for_status()
-        data = resp.json()
-        return data["choices"][0]["message"]["content"]
-    except Exception as e:
-        return f"[LLM unavailable: {type(e).__name__}]"
+        if _is_valid_llm_output(last):
+            return last
+        logger.warning("Dissertation section invalid (attempt %d/5): %s", attempt + 1, last[:80])
+
+    raise DissertationGenerationError(
+        f"Dissertation section failed after 5 provider attempts: {last[:200]}"
+    )
 
 
 class DissertationGenerator:
@@ -116,7 +127,9 @@ class DissertationGenerator:
 
     def _source_citations(self, sources: list[dict[str, Any]], max_cite: int = 8) -> str:
         """Build a compact citation list for LLM context."""
-        valid = [s for s in sources if s.get("title") and not s.get("title", "").startswith("Result ")]
+        valid = [
+            s for s in sources if s.get("title") and not s.get("title", "").startswith("Result ")
+        ]
         lines = []
         for i, s in enumerate(valid[:max_cite], 1):
             authors = s.get("authors", "Unknown")
@@ -148,18 +161,22 @@ class DissertationGenerator:
         citation_list = self._source_citations(sources, max_cite=8)
 
         # Build hypothesis summaries — ambitious, paradigm-shifting
-        hypo_text = "\n".join([
-            f"[HYPOTHESIS {i}] {_sanitize_prompt_input(h.get('title', ''), 200)}: {_sanitize_prompt_input(h.get('description', ''), 250)}"
-            for i, h in enumerate(hypotheses[:5], 1)
-        ])
+        hypo_text = "\n".join(
+            [
+                f"[HYPOTHESIS {i}] {_sanitize_prompt_input(h.get('title', ''), 200)}: {_sanitize_prompt_input(h.get('description', ''), 250)}"
+                for i, h in enumerate(hypotheses[:5], 1)
+            ]
+        )
 
         # Gap text
         gap_text = ""
         if gaps:
-            gap_text = "\n".join([
-                f"- Gap {i}: {_sanitize_prompt_input(g.get('area', ''), 200)}"
-                for i, g in enumerate(gaps[:3], 1)
-            ])
+            gap_text = "\n".join(
+                [
+                    f"- Gap {i}: {_sanitize_prompt_input(g.get('area', ''), 200)}"
+                    for i, g in enumerate(gaps[:3], 1)
+                ]
+            )
 
         # Simulation text
         sim_text = ""
@@ -320,8 +337,14 @@ Write the COMPLETE text. Ensure the final sentence is complete."""
         # Build author block
         author_block = ""
         if user_profile:
-            name = user_profile.formatted_name() if hasattr(user_profile, "formatted_name") else str(user_profile)
-            affil = user_profile.full_affiliation() if hasattr(user_profile, "full_affiliation") else ""
+            name = (
+                user_profile.formatted_name()
+                if hasattr(user_profile, "formatted_name")
+                else str(user_profile)
+            )
+            affil = (
+                user_profile.full_affiliation() if hasattr(user_profile, "full_affiliation") else ""
+            )
             orcid = getattr(user_profile, "orcid", "")
             author_block = f"**Author:** {name}"
             if affil:
@@ -331,12 +354,13 @@ Write the COMPLETE text. Ensure the final sentence is complete."""
             author_block += "\n"
 
         # Config-driven settings
-        max_refs = getattr(config, "max_references", 15) if config else 15
-        include_appendices = getattr(config, "include_appendices", True) if config else True
+        getattr(config, "max_references", 15) if config else 15
+        getattr(config, "include_appendices", True) if config else True
         include_epistemic = getattr(config, "include_epistemic_notice", True) if config else True
 
         # Assemble
-        epistemic_block = """
+        epistemic_block = (
+            """
 ---
 
 > **⚠️ EPISTEMIC STATUS NOTICE**
@@ -349,7 +373,10 @@ Write the COMPLETE text. Ensure the final sentence is complete."""
 >
 > This is NOT a completed dissertation. It is a starting point for human-led research.
 
----""" if include_epistemic else ""
+---"""
+            if include_epistemic
+            else ""
+        )
 
         dissertation = f"""# {topic}
 
@@ -390,13 +417,23 @@ Human review: REQUIRED before any publication or experimental work*
 """
 
         if len(dissertation.split()) < 800:
-            expansion_prompt = f"Expand the following research proposal to be more detailed and comprehensive. Add specific examples, elaborate on hypotheses, and discuss implications. Current proposal:\n\n{dissertation[:3000]}"
+            expansion_prompt = (
+                "Expand the following research proposal to be more detailed and comprehensive. "
+                "Add specific examples, elaborate on hypotheses, and discuss implications. "
+                f"Current proposal:\n\n{dissertation[:3000]}"
+            )
             expansion = _llm_generate(expansion_prompt, max_tokens=2000, temperature=0.8)
             dissertation = dissertation + "\n\n## Appendix: Expanded Discussion\n" + expansion
+
+        if not _is_valid_llm_output(dissertation, min_words=600):
+            raise DissertationGenerationError(
+                f"Dissertation too short or contains LLM failures ({len(dissertation.split())} words)"
+            )
 
         # Coverage check: verify dissertation actually covers its bibliography
         try:
             from src.llm.embeddings import coverage_check
+
             coverage = coverage_check(dissertation, sources)
             if coverage.get("coverage", 1.0) < 0.5:
                 uncovered = coverage.get("uncovered_indices", [])
@@ -421,7 +458,9 @@ Human review: REQUIRED before any publication or experimental work*
         gaps = result.get("gaps", [])
         user = result.get("user_profile")
         cfg = result.get("config")
-        return self.generate(topic, hypotheses, sources, c4_state, triz, gaps=gaps, user_profile=user, config=cfg)
+        return self.generate(
+            topic, hypotheses, sources, c4_state, triz, gaps=gaps, user_profile=user, config=cfg
+        )
 
     def save(self, dissertation: str, filename: str | None = None) -> str:
         """Save dissertation to file (path-traversal safe)."""

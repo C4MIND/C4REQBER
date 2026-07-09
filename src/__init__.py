@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 
-__all__ = ["__version__"]
+__all__ = ["__version__", "__tui_version__"]
 
 __version__ = "5.6.0"
+__tui_version__ = "v9.13.0"

@@ -5,6 +5,7 @@ Endpoints for self-directed research agenda generation and management.
 """
 from __future__ import annotations
 
+import logging
 from typing import Any, Literal
 
 import networkx as nx
@@ -16,6 +17,9 @@ from src.agenda.generator import AgendaGenerator
 from src.agenda.priority import PriorityScorer
 from src.agenda.progress import ProgressTracker
 from src.api.errors import C4APIError, ValidationError
+
+
+logger = logging.getLogger(__name__)
 
 
 router = APIRouter(prefix="/agenda", tags=["v8-agenda"])
@@ -97,6 +101,7 @@ async def generate_agenda(req: AgendaRequest) -> dict[str, Any]:
             "count": len(scored),
         }
     except Exception as e:
+        logger.exception("Agenda generation failed")
         raise C4APIError(
             message=f"Agenda generation failed: {e}",
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -146,6 +151,7 @@ async def get_progress() -> dict[str, Any]:
     try:
         return _tracker.to_dict()
     except Exception as e:
+        logger.exception("Failed to retrieve agenda progress")
         raise C4APIError(
             message=f"Failed to retrieve progress: {e}",
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

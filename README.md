@@ -2,13 +2,19 @@
 
 **Terminal-first. MCP-native. One command to discovery.**
 
-[![Tests](https://img.shields.io/badge/tests-485%2B%20passed-brightgreen)]()
-[![Lint](https://img.shields.io/badge/lint-0%20errors-brightgreen)]()
-[![Typecheck](https://img.shields.io/badge/typecheck-0%20mypy%20errors-brightgreen)]()
+[![Tests](https://img.shields.io/badge/tests-9794%20collected-yellowgreen)]()
+[![Lint](https://img.shields.io/badge/lint-41%20baseline%20%2B%20regression%20check-yellow)]()
+[![Typecheck](https://img.shields.io/badge/typecheck-61%20mypy%20baseline%20%2B%20regression%20check-yellow)]()
 [![Version](https://img.shields.io/badge/version-5.6.0-magenta)]()
+[![TUI](https://img.shields.io/badge/TUI-v9.13.0-blueviolet)]()
 [![Python](https://img.shields.io/badge/python-3.11%2B-blue)]()
 [![License](https://img.shields.io/badge/license-AGPL--3.0-green)]()
-[![Security](https://img.shields.io/badge/security-0%20CRITICAL-brightgreen)]()
+[![Security](https://img.shields.io/badge/security-round5%20audit%20passed-brightgreen)]()
+
+> **Truth source:** all counts (tests, tools, sources, engines, providers, verifiers)
+> are generated from `_truths.json` via `scripts/gen_truths.py --check`. Run the
+> script in CI to catch drift. See `audit/MASTER_AUDIT_2026-06-22.md` for the
+> audit that motivated single-source-of-truth.
 
 ## Quickstart
 
@@ -19,9 +25,27 @@ blast turbo "your topic"            # Paradigm-shifting research proposal + veri
 blast flash "your question"         # Quick answer
 blast auto "your query"             # Auto-routed to best mode (solve/turbo/flash)
 blast turbofactory "your domain"    # Parallel pipeline factory (mini/standard/mega/giga scale)
-blast tui                           # Interactive terminal with / slash commands
-blast serve --mcp                   # MCP server for AI agents (20 tools)
+blast tui                           # TUI v9 Cockpit (feed-driven discovery UI)
+blast tui --demo --story=crispr     # Demo without backend
+blast serve --mcp                   # MCP server for AI agents (21 tools)
 ```
+
+## Verified pipeline outputs (July 2026)
+
+Six **research proposals** from end-to-end `blast turbo` runs (400–500 literature sources, gap analysis, simulation, quality gates). Full index: [`discoveries/humanity_mission_2026-07-09/README.md`](discoveries/humanity_mission_2026-07-09/README.md).
+
+> **Epistemic status:** hypotheses + computational pre-screening only — **not peer-reviewed**. Each file includes an explicit disclaimer. Do not cite as established science without empirical validation.
+
+| Topic | Words | Proposal |
+|-------|------:|----------|
+| Marine cloud brightening | 5,083 | [`01_marine_cloud_brightening.md`](discoveries/humanity_mission_2026-07-09/01_marine_cloud_brightening.md) |
+| Compact fusion energy | 4,859 | [`02_compact_fusion.md`](discoveries/humanity_mission_2026-07-09/02_compact_fusion.md) |
+| Epigenetic aging reversal | 4,564 | [`04_epigenetic_aging.md`](discoveries/humanity_mission_2026-07-09/04_epigenetic_aging.md) |
+| AMR phage–CRISPR cocktail | 5,058 | [`05_amr_phage_crispr.md`](discoveries/humanity_mission_2026-07-09/05_amr_phage_crispr.md) |
+| Soil carbon / desertification | 5,102 | [`06_soil_carbon.md`](discoveries/humanity_mission_2026-07-09/06_soil_carbon.md) |
+| Ocean plastic bioremediation | 5,395 | [`08_ocean_plastic_v2.md`](discoveries/humanity_mission_2026-07-09/08_ocean_plastic_v2.md) |
+
+**Demo:** [TUI screenshots](docs/screenshots/) · [30s video](docs/demo/c4reqber_mission_demo_30s.mp4) · [Web gallery](https://c4reqber.org/discoveries/)
 
 ## What is this?
 
@@ -39,9 +63,9 @@ A cognitive exoskeleton for AI agents and humans.
 - **Embedding pipeline acceleration**: semantic dedup, smart evidence matching, coverage analysis
 - **Multi-LLM Council**: 3-model consensus with cheap/balanced/premium budgets
 - **Kuhn Paradigm Shift Assessment**: 4-stage model, 5 values, iterative refinement
-- **11 TUI slash commands**: /models, /council, /connect, /api, /test, /profile, /plugins, /debug, /config, /sim, /help
+- **TUI v9 command palette** (`:` key): fuzzy-match 35+ commands (settings, capabilities, history, language, debug)
 - **11 LLM providers**: OpenRouter, XAI, Mistral, Moonshot, DeepSeek, Liquid AI, NVIDIA NIM, YandexGPT, Ollama, LM Studio, MLX — auto-detected with depth-based routing
-- **43 active knowledge source adapters** (MultiSourceSearcher with circuit breaker, semantic dedup, domain-aware routing) — arXiv, PubMed, Crossref, Europe PMC, Semantic Scholar, OpenAlex, Zenodo, Figshare, NCBI E-utilities, PubChem, ChEMBL, Materials Project, AFLOW, Kaggle, UCI ML, Harvard Dataverse, re3data, STRING, ClinicalTrials.gov, GBIF, Allen Brain, USGS, CERN, USPTO, OpenReview, HuggingFace, OpenFDA, NASA Earthdata, CyberLeninka, Math-Net.Ru, DBLP, Datacite, DOAJ, Inspire-HEP, Europe PMC, and more + 40 TRIZ principles + **101+ simulation patterns + 38 simulation engines** (5 internal GPU engines + 33 P1 open-source bridges: FEniCSx, OpenFOAM, GROMACS, LAMMPS, MDAnalysis, PySCF, Psi4, Quantum ESPRESSO, Tellurium, NEURON, Brian2, Jaxley, COPASI, xarray, WRF, Mesa, SimPy, Rebound, AMUSE, MuJoCo, PyBullet, diffeqpy, Taichi, JAX MD, JAX-LaB, ModelingToolkit.jl, OpenMM, Vina, BoolNet, COBRApy, SLiM, BoolNet, SLiM)
+- **43 active knowledge source adapters** = **33 literature** + **10 data/biological** (MultiSourceSearcher with circuit breaker, semantic dedup, domain-aware routing) — arXiv, PubMed, Crossref, Europe PMC, Semantic Scholar, OpenAlex, Zenodo, Figshare, NCBI E-utilities, PubChem, ChEMBL, Materials Project, AFLOW, Kaggle, UCI ML, Harvard Dataverse, re3data, STRING, ClinicalTrials.gov, GBIF, Allen Brain, USGS, CERN, USPTO, OpenReview, HuggingFace, OpenFDA, NASA Earthdata, CyberLeninka, Math-Net.Ru, DBLP, Datacite, DOAJ, Inspire-HEP, Europe PMC, and more + 40 TRIZ principles + **101+ simulation patterns + 32 simulation engines** (5 internal GPU engines + 26 P1 open-source bridges + 1 virtual bio: FEniCSx, OpenFOAM, GROMACS, LAMMPS, MDAnalysis, PySCF, Psi4, Quantum ESPRESSO, Tellurium, NEURON, Brian2, Jaxley, COPASI, xarray, WRF, Mesa, SimPy, Rebound, AMUSE, MuJoCo, PyBullet, diffeqpy, Taichi, JAX MD, JAX-LaB, ModelingToolkit.jl)
 
 **v5.4.0:** "Agent System + Git Hygiene + Code Audit" — main AI agent with Pydantic AI, skills, MCP bridge, persistent memory, sub-agents; 3 critical eval() sandboxes fixed; git secrets removed
 
@@ -72,30 +96,36 @@ Lean4 → Coq → Dafny → Agda → Z3 → CVC5 → Hoare → Haskell → TLA+ 
                     Auto-fallback to Z3    Proof export to .lean/.v/.smt2
 ```
 
-## TUI Slash Commands (`/` key)
+## TUI v9 — Command Palette (`:` key)
+
+Press `:` to open fuzzy-search command palette. Examples:
 
 | Command | Action |
 |---------|--------|
-| `/models` | Per-phase LLM picker (A-G) |
-| `/council` | Council model composition (cheap/balanced/premium) |
-| `/connect` | Register LLM provider (15 known providers, auto-fetch models) |
-| `/api` | Local LLM endpoints + API keys |
-| `/test` | Connection health check |
-| `/profile` | Save/load config profiles |
-| `/plugins` | Toggle 28 cognitive plugins |
-| `/debug` | Toggle logging level |
-| `/config` | Show full configuration |
-| `/sim` | Simulation config (mode, GPU, cost limit) |
-| `/help` | Full keyboard shortcuts + CLI reference |
+| Settings | `Ctrl+,` — LLM tier, language, color profile, history |
+| Capabilities | `Ctrl+Shift+C` — 32 sim engines + 27 verifiers status |
+| Help | `?` — keyboard shortcuts overlay |
+| Debug | `Ctrl+Shift+D` — SSE/job debug snapshot |
+| Language | `L` — cycle EN/RU/ZH/JA/DE/AR/HI |
 
-## Quick Config
+Legacy Python TUI slash commands (`/models`, `/council`, …) apply to **v8 only**. Use `blast config` for LLM/council setup with v9.
+
+## Quick Config & First Run (Polished Desktop Experience)
 
 ```bash
-blast config --show                    # View current setup
-blast config --set F=claude-sonnet-4  # Phase F → Claude
-blast config council --show            # Council model lists
-blast config council --set premium=claude-sonnet-4,gpt-4.5,deepseek-r1 --save
+# First run — beautiful wizard that sets everything
+blast init
+
+# Full settings view
+blast config user --show          # ~/.c4reqber/config.toml + keys
+blast config keys                 # Quick key status
+blast config --show               # Model assignments per phase
+
+# Set models
+blast config --set D=anthropic/claude-sonnet-4.6 --save
 ```
+
+All keys (OpenRouter, DeepSeek, Brave, Tavily, Exa, XAI, Lean4...) are managed in `~/.c4reqber/config.toml` + `models.json`. The desktop app, CLI and TUI all read from the same place.
 
 ## Install from source
 
@@ -218,7 +248,7 @@ Copy these into your `.env` file. Keys marked **Required** will disable the sour
 - **Python TUI** (blast tui) — Textual interface with real-time progress, chat, history, slash commands
 - **Go TUI v9** (src/tui/v9) — Bubble Tea v2 interface with 7-phase pipeline, C4 grid, sim surface (CardSimulation kind + capabilities overlay Ctrl+Shift+C), command palette `:`, debug overlay Ctrl+Shift+D, status bar Ctrl+B, 7-language i18n (100% parity), 7 color profiles (incl. solarized-dark), adaptive layout (T0/T1/T2/T3), 132 golden snapshots
 - **Falsification** — Domain-aware simulation + statistical tests with Bonferroni correction
-- **MCP server** — 20 tools verified working for AI agent integration
+- **MCP server** — 21 tools verified working for AI agent integration
 
 ### Known limitations ⚠️
 
@@ -268,5 +298,5 @@ All documentation lives in the repo — no separate docs site needed.
 | `docs/current/C4_META_SEMANTIC_ISOMORPHISMS.md` | Semantic isomorphism theory |
 | `docs/current/UCOS_ARCHITECTURE.md` | UCOS meta-model architecture |
 | `formal-proofs/` | Lean4, Coq, Dafny, Agda, Hoare, TLA+ formal verification proofs |
-| `docs/MCP_REGISTRY.md` | MCP tool registry (20 tools) |
+| `docs/MCP_REGISTRY.md` | MCP tool registry (21 tools, regenerated by `scripts/gen_mcp_registry.py`) |
 | `LICENSE` | AGPL-3.0 (open source) / Commercial License available |

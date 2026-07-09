@@ -14,10 +14,34 @@ applying cross-cutting concerns (guardian/cost/cache) to all of them is a
   * generate_for_stage(...) → ProviderRouter (stage→PRESETS, retry, stats)
   * generate(...)           → AsyncLLMClient (DEFAULT_MODEL, response cache)
   * chat(...)               → LLMProviderRouter (guardian + provider fallback)
+
+Prometheus metrics: every gateway call increments c4_llm_calls_total
+(provider, model, status). Status is "success" | "error". This fixes audit
+finding C-2 (all Prometheus counters were zero — the gateway is the most-used
+entry point and now flows real metrics).
 """
 from __future__ import annotations
 
+import logging
+import time
 from typing import Any, Protocol, runtime_checkable
+
+
+logger = logging.getLogger(__name__)
+
+
+def _record_llm_call(provider: str, model: str, status: str, duration: float) -> None:
+    """Best-effort Prometheus increment. Never raises (observability must not crash callers)."""
+    try:
+        from src.api.routers.metrics import (
+            LLM_CALLS,
+            LLM_LATENCY,
+        )
+
+        LLM_CALLS.labels(provider=provider or "unknown", model=model or "unknown", status=status).inc()
+        LLM_LATENCY.labels(provider=provider or "unknown", model=model or "unknown").observe(duration)
+    except Exception as exc:  # pragma: no cover - metrics are best-effort
+        logger.debug("metrics increment failed: %s", exc)
 
 
 @runtime_checkable
@@ -93,9 +117,18 @@ class DefaultGateway:
         system_prompt: str | None = None,
         use_retry: bool = True,
     ) -> Any:
-        return await self._router().generate(
-            stage, prompt, system_prompt=system_prompt, use_retry=use_retry
-        )
+        t0 = time.monotonic()
+        provider = "stage_router"
+        model = stage
+        try:
+            result = await self._router().generate(
+                stage, prompt, system_prompt=system_prompt, use_retry=use_retry
+            )
+            _record_llm_call(provider, model, "success", time.monotonic() - t0)
+            return result
+        except Exception:
+            _record_llm_call(provider, model, "error", time.monotonic() - t0)
+            raise
 
     async def generate(
         self,
@@ -106,14 +139,22 @@ class DefaultGateway:
         system_prompt: str | None = None,
         response_format: str | None = None,
     ) -> Any:
-        return await self._client().generate(
-            prompt,
-            model=model,
-            temperature=temperature,
-            max_tokens=max_tokens,
-            system_prompt=system_prompt,
-            response_format=response_format,
-        )
+        t0 = time.monotonic()
+        provider = "async_client"
+        try:
+            result = await self._client().generate(
+                prompt,
+                model=model,
+                temperature=temperature,
+                max_tokens=max_tokens,
+                system_prompt=system_prompt,
+                response_format=response_format,
+            )
+            _record_llm_call(provider, model or "default", "success", time.monotonic() - t0)
+            return result
+        except Exception:
+            _record_llm_call(provider, model or "default", "error", time.monotonic() - t0)
+            raise
 
     async def chat(
         self,
@@ -125,13 +166,21 @@ class DefaultGateway:
     ) -> str:
         from src.llm.providers.unified import LLMProviderRouter
 
-        return await LLMProviderRouter.chat(
-            messages,
-            system_prompt=system_prompt,
-            temperature=temperature,
-            max_tokens=max_tokens,
-            json_mode=json_mode,
-        )
+        t0 = time.monotonic()
+        provider = "provider_router"
+        try:
+            result = await LLMProviderRouter.chat(
+                messages,
+                system_prompt=system_prompt,
+                temperature=temperature,
+                max_tokens=max_tokens,
+                json_mode=json_mode,
+            )
+            _record_llm_call(provider, "chat", "success", time.monotonic() - t0)
+            return result
+        except Exception:
+            _record_llm_call(provider, "chat", "error", time.monotonic() - t0)
+            raise
 
     async def chat_json(
         self,
@@ -142,12 +191,20 @@ class DefaultGateway:
     ) -> dict[str, Any]:
         from src.llm.providers.unified import LLMProviderRouter
 
-        return await LLMProviderRouter.chat_json(
-            messages,
-            system_prompt=system_prompt,
-            temperature=temperature,
-            max_tokens=max_tokens,
-        )
+        t0 = time.monotonic()
+        provider = "provider_router"
+        try:
+            result = await LLMProviderRouter.chat_json(
+                messages,
+                system_prompt=system_prompt,
+                temperature=temperature,
+                max_tokens=max_tokens,
+            )
+            _record_llm_call(provider, "chat_json", "success", time.monotonic() - t0)
+            return result
+        except Exception:
+            _record_llm_call(provider, "chat_json", "error", time.monotonic() - t0)
+            raise
 
     async def close(self) -> None:
         """Best-effort cleanup of any constructed strategies."""

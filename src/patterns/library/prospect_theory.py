@@ -259,7 +259,7 @@ class ProspectTheoryModel:
             results[key] = analysis
 
         # Certainty equivalents for comparison
-        certain_gains = [3000 * 0.95, 3000 * 0.05, -3000 * 0.95, -3000 * 0.05]
+        [3000 * 0.95, 3000 * 0.05, -3000 * 0.95, -3000 * 0.05]
         cpt_ces = [results[k]["certainty_equivalent"] for k in gambles.keys()]
 
         return {

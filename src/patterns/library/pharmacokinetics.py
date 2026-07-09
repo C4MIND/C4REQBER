@@ -356,7 +356,7 @@ class PKPattern(SimulationPattern):
             # Compare last two intervals
             last_interval_mask = times > (times[-1] - 2 * interval)
             if np.any(last_interval_mask):
-                recent_conc = concentrations[last_interval_mask]
+                concentrations[last_interval_mask]
                 # Check if fluctuation is stable
                 steady_state_reached = True  # Simplified
 

@@ -274,7 +274,7 @@ class FEMPattern(SimulationPattern):
         b = params.get("width", 0.1)  # m
         h = params.get("height", 0.2)  # m
         I = b * h**3 / 12
-        A = b * h
+        b * h
 
         load = config.get("load", 1000.0)
         L_total = params.get("length", 10.0)
@@ -351,7 +351,7 @@ class FEMPattern(SimulationPattern):
         # For now, return analytical approximation
 
         load = config.get("load", 1000.0)
-        E = config.get("youngs_modulus", 200e9)
+        config.get("youngs_modulus", 200e9)
 
         # Simplified plate with hole approximation
         sigma_nominal = load / 0.01  # Simplified

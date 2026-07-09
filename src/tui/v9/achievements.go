@@ -4,12 +4,13 @@ import (
 	"fmt"
 	"sort"
 	"strconv"
-
+	"sync"
 	"time"
 
 	"charm.land/lipgloss/v2"
 
 	"github.com/figuramax/c4reqber-tui-v9/i18n"
+	"github.com/figuramax/c4reqber-tui-v9/persist"
 	"github.com/figuramax/c4reqber-tui-v9/telemetry"
 )
 
@@ -41,6 +42,7 @@ type Achievement struct {
 
 // AchievementSystem tracks user achievements.
 type AchievementSystem struct {
+	mu         sync.Mutex
 	Items      []Achievement
 	Unlocked   int
 	Total      int
@@ -71,12 +73,43 @@ func NewAchievements() *AchievementSystem {
 	}
 }
 
+// LoadFromStore hydrates the AchievementSystem with already-unlocked
+// achievements from a persistent store. This prevents the same
+// achievement from being re-unlocked on every TUI restart (which
+// used to create duplicate cards in the feed across sessions).
+// v9.13.x fix: was missing — every restart was re-unlocking everything.
+func (a *AchievementSystem) LoadFromStore(store *persist.Store) {
+	if store == nil {
+		return
+	}
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	unlockedCount := 0
+	for i := range a.Items {
+		if store.HasAchievement(int(a.Items[i].Kind)) {
+			a.Items[i].Unlocked = true
+			unlockedCount++
+		}
+	}
+	a.Unlocked = unlockedCount
+}
+
 // ShowOverlay triggers a 2s fullscreen achievement overlay.
 // Called by Update when a new achievement is unlocked.
 func (a *AchievementSystem) ShowOverlay(message string, duration time.Duration) {
 	a.overlayActive = true
 	a.overlayUntil = time.Now().Add(duration)
 	a.overlayMessage = message
+}
+
+// OverlayMessage returns the i18n-rendered name of the most recent
+// unlock shown on the overlay (or "" if no overlay is active).
+// Exposed for tests; renderAchievementOverlay uses it indirectly
+// via the same Items[] walk.
+func (a *AchievementSystem) OverlayMessage() string {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	return a.overlayMessage
 }
 
 // HideOverlay clears the overlay (called from Update tick).
@@ -99,24 +132,45 @@ func (a *AchievementSystem) OverlayActive() bool {
 
 // renderAchievementOverlay returns a fullscreen overlay (centered) for
 // the most recent unlock. Auto-dismisses after the configured duration.
-func renderAchievementOverlay(a AchievementSystem, width, height int) string {
+func renderAchievementOverlay(a *AchievementSystem, width, height int) string {
 	// Build big centered card
 	title := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("3")).Render(
-		"🏆  " + i18n.T("achievement.unlocked"))
+		"🏆  " + i18n.T("achievement.unlocked"),
+	)
 
+	// Find the most-recently-unlocked achievement to feature. The
+	// previous code picked the FIRST unlocked item in registry order,
+	// which was always AchFirstDiscovery — so even after unlocking
+	// QualityS or MultiPaper the overlay still said "First Discovery".
+	// Fall back to any unlocked item if for some reason none have a
+	// timestamp (e.g. hydrated by LoadFromStore which doesn't set
+	// UnlockedAt — only sets Unlocked=true).
 	var nameAch Achievement
+	haveName := false
 	for i := range a.Items {
-		if a.Items[i].Unlocked {
+		if !a.Items[i].Unlocked {
+			continue
+		}
+		if !haveName || a.Items[i].UnlockedAt.After(nameAch.UnlockedAt) {
 			nameAch = a.Items[i]
-			break
+			haveName = true
 		}
 	}
+	// If we still have no item (e.g. zero unlocked yet — shouldn't
+	// happen since the overlay only fires when len(unlocked) > 0, but
+	// be defensive), fall back to the first item rather than panic.
+	if !haveName && len(a.Items) > 0 {
+		nameAch = a.Items[0]
+	}
 	name := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("11")).Render(
-		i18n.T(nameAch.Name))
+		i18n.T(nameAch.Name),
+	)
 	desc := lipgloss.NewStyle().Foreground(lipgloss.Color("7")).Render(
-		i18n.T(nameAch.Description))
+		i18n.T(nameAch.Description),
+	)
 	progress := lipgloss.NewStyle().Foreground(lipgloss.Color("6")).Render(
-		fmt.Sprintf("%d / %d", a.Unlocked, a.Total))
+		fmt.Sprintf("%d / %d", a.Unlocked, a.Total),
+	)
 
 	body := lipgloss.JoinVertical(lipgloss.Center,
 		title,
@@ -128,7 +182,8 @@ func renderAchievementOverlay(a AchievementSystem, width, height int) string {
 		progress,
 		"",
 		lipgloss.NewStyle().Foreground(lipgloss.Color("8")).Render(
-			fmt.Sprintf("progress: %d/%d unlocked", a.Unlocked, a.Total)))
+			fmt.Sprintf("progress: %d/%d unlocked", a.Unlocked, a.Total),
+		))
 
 	boxStyle := lipgloss.NewStyle().
 		Border(lipgloss.DoubleBorder()).
@@ -156,6 +211,8 @@ func min(a, b int) int {
 //   - secondsTaken float
 //   - langsUsed []string (distinct lang codes user has seen)
 func (a *AchievementSystem) Check(discoveries int, lastQuality float64, papersCount int, secondsTaken float64, langsUsed []string) []Achievement {
+	a.mu.Lock()
+	defer a.mu.Unlock()
 	justUnlocked := []Achievement{}
 	for i := range a.Items {
 		ach := &a.Items[i]
@@ -178,8 +235,8 @@ func (a *AchievementSystem) Check(discoveries int, lastQuality float64, papersCo
 			unlock = len(langsUsed) >= 3
 		case AchStreak:
 			unlock = discoveries >= 5 // simplified: 5 in session
-		// Sim achievements (TI-SIM-08) are checked by CheckSimAchievements,
-		// not by this function (they need the feed, not aggregate counters).
+			// Sim achievements (TI-SIM-08) are checked by CheckSimAchievements,
+			// not by this function (they need the feed, not aggregate counters).
 		}
 		if unlock {
 			ach.Unlocked = true
@@ -197,12 +254,15 @@ func (a *AchievementSystem) Check(discoveries int, lastQuality float64, papersCo
 // achievements (same shape as Check).
 //
 // Rules:
-//   AchSimExplorer — 5+ different sim engines ran successfully in this session
-//   AchSimSaver    — at least one CardSimulation with verdict "refutes_hypothesis"
-//   AchSimChef     — 3+ CardSimulation with EngineStatus == "skipped" or "unavailable"
-//                    (i.e. fallback chain was invoked)
-//   AchSimDelegate — at least one CardSimulation with EngineStatus == "delegated"
+//
+//	AchSimExplorer — 5+ different sim engines ran successfully in this session
+//	AchSimSaver    — at least one CardSimulation with verdict "refutes_hypothesis"
+//	AchSimChef     — 3+ CardSimulation with EngineStatus == "skipped" or "unavailable"
+//	                 (i.e. fallback chain was invoked)
+//	AchSimDelegate — at least one CardSimulation with EngineStatus == "delegated"
 func (a *AchievementSystem) CheckSimAchievements(feed []Card) []Achievement {
+	a.mu.Lock()
+	defer a.mu.Unlock()
 	engines := map[string]bool{}
 	hasRefutes := false
 	skippedCount := 0
@@ -312,9 +372,4 @@ func cycleLangName(current i18n.Lang) i18n.Lang {
 		}
 	}
 	return i18n.LangEN
-}
-
-// fmtDiscoveryMeta is a helper for the discovery complete card.
-func fmtDiscoveryMeta(quality float64, paperCount int) string {
-	return fmt.Sprintf("quality=%.0f%% · papers=%d", quality*100, paperCount)
 }

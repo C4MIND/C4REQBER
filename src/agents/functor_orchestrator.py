@@ -9,6 +9,7 @@ Spawns up to agent_count agents, cycling through base + composite functors.
 Results are synthesized by vector type (discover/invent/transform).
 """
 import asyncio
+import logging
 import time
 from typing import Any, Optional
 
@@ -26,6 +27,9 @@ from src.agents.functors import (
     generate_all_composites,
 )
 from src.llm.async_client import AsyncLLMClient
+
+
+logger = logging.getLogger(__name__)
 
 
 class FunctorOrchestrator:
@@ -125,6 +129,10 @@ class FunctorOrchestrator:
                 context={"vector": vector, "index": index},
             )
         except Exception as e:
+            logger.warning(
+                "functor %s failed for problem=%r vector=%s index=%d: %s",
+                functor.symbol, problem, vector, index, e,
+            )
             return {
                 "agent": functor.symbol,
                 "problem": problem,

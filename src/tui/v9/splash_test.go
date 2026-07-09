@@ -113,7 +113,8 @@ func TestSplash_View_ContainsTagline(t *testing.T) {
 	if !strings.Contains(content, "COGNITIVE EXOSKELETON") {
 		t.Errorf("missing tagline in:\n%s", content)
 	}
-	if !strings.Contains(content, "v9.9.0") {
+	// v9 polish: version line blinks "." with "·" — accept either form.
+	if !strings.Contains(content, "v9") {
 		t.Errorf("missing version in:\n%s", content)
 	}
 }

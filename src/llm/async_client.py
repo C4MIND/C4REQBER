@@ -11,6 +11,7 @@ import os
 from dataclasses import dataclass
 from typing import Any
 
+from src.config import get_key
 from src.llm.cache import AsyncLLMCache, hash_prompt
 
 
@@ -47,9 +48,9 @@ class AsyncLLMClient:
 
     # Models optimized for different tasks
     MODELS = {
-        "hypothesis": "anthropic/claude-3.5-sonnet",
+        "hypothesis": "anthropic/claude-sonnet-4.6",
         "falsifiability": "openai/gpt-4o",
-        "synthesis": "anthropic/claude-3.5-sonnet",
+        "synthesis": "anthropic/claude-sonnet-4.6",
         "cheap": "openai/gpt-4o-mini",
     }
 
@@ -62,7 +63,8 @@ class AsyncLLMClient:
         if not HAS_HTTPX:
             raise ImportError("httpx required for async LLM client. Install: pip install httpx")
 
-        self.api_key = api_key or os.getenv("OPENROUTER_API_KEY") or os.getenv("OPENAI_API_KEY", "")
+        # Prefer central ~/.c4reqber (get_key) + env override
+        self.api_key = api_key or get_key("openrouter") or os.getenv("OPENAI_API_KEY", "")
         custom_base = os.getenv("OPENAI_BASE_URL", "")
         self.base_url = custom_base if custom_base else "https://openrouter.ai/api/v1"
         self.referer = "https://c4reqber.org"
@@ -98,6 +100,47 @@ class AsyncLLMClient:
         if self._client:
             await self._client.aclose()
             self._client = None
+
+    def _record_metric(self, model: str, status: str, duration: float) -> None:
+        """Audit 2026-06-22 H-8 Tier 1: best-effort Prometheus increment.
+
+        AsyncLLMClient is itself a router (used by LLMGateway facade), so
+        we instrument at this layer rather than the per-call layer.
+        """
+        try:
+            from src.api.routers.metrics import LLM_CALLS, LLM_LATENCY
+            LLM_CALLS.labels(
+                provider="async_client", model=model or "unknown", status=status
+            ).inc()
+            LLM_LATENCY.labels(
+                provider="async_client", model=model or "unknown"
+            ).observe(duration)
+        except Exception:
+            pass  # observability must never crash callers
+
+    def _record_cost(self, model: str, input_tokens: int, output_tokens: int) -> None:
+        try:
+            from src.llm.cost_tracker import (
+                COST_TABLE,
+                CostEntry,
+                CostTracker,
+                _normalize_model,
+            )
+            price_key = _normalize_model(model)
+            if price_key not in COST_TABLE:
+                return
+            rates = COST_TABLE[price_key]
+            cost = (input_tokens / 1_000_000) * rates["input"] + (output_tokens / 1_000_000) * rates["output"]
+            CostTracker.add(CostEntry(
+                provider="async_client",
+                model=model,
+                input_tokens=input_tokens,
+                output_tokens=output_tokens,
+                duration_ms=0.0,
+                cost_usd=cost,
+            ))
+        except Exception:
+            pass
 
     async def generate(
         self,
@@ -191,6 +234,10 @@ class AsyncLLMClient:
                 response.raise_for_status()
                 break  # success — exit retry loop
             except httpx.HTTPStatusError as e:
+                # Audit 2026-06-22 H-8 Tier 1: record retry error metric
+                self._record_metric(model, "error_retry", time.time() - start_time)
+                last_error = e
+                status = e.response.status_code
                 last_error = e
                 status = e.response.status_code
                 await self.close()
@@ -198,6 +245,7 @@ class AsyncLLMClient:
                     raise RuntimeError(f"LLM API error: {e}") from e
                 await asyncio.sleep(0.5 * (attempt + 1))
             except httpx.HTTPError as e:
+                self._record_metric(model, "error_retry", time.time() - start_time)
                 last_error = e
                 await self.close()
                 if attempt == max_retries - 1:
@@ -206,6 +254,7 @@ class AsyncLLMClient:
             except RuntimeError:
                 raise
             except Exception as e:
+                self._record_metric(model, "error_retry", time.time() - start_time)
                 last_error = e
                 await self.close()
                 if attempt == max_retries - 1:
@@ -214,10 +263,22 @@ class AsyncLLMClient:
         else:
             raise RuntimeError(f"LLM API error after {max_retries} retries: {last_error}") from last_error
 
+        # Audit 2026-06-22 H-8 Tier 1: instrument at this layer (the
+        # router itself). The actual httpx call has already happened
+        # inside the retry loop above.
+        self._record_metric(data.get("model", model), "success", time.time() - start_time)
+
         try:
             result = response.json()
         except json.JSONDecodeError as e:
             raise RuntimeError(f"LLM API returned invalid JSON: {e}") from e
+
+        # Cost tracking (audit H-8 Tier 1)
+        usage = result.get("usage") or {}
+        in_tok = int(usage.get("prompt_tokens", 0) or 0)
+        out_tok = int(usage.get("completion_tokens", 0) or 0)
+        if in_tok or out_tok:
+            self._record_cost(data.get("model", model), in_tok, out_tok)
 
         latency_ms = (time.time() - start_time) * 1000
 

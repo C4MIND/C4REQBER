@@ -39,9 +39,22 @@ class CSRFProtectionMiddleware(BaseHTTPMiddleware):
 
     def __init__(self, app: Any) -> None:
         super().__init__(app)
-        self._secret = os.getenv("CSRF_SECRET", "")
-        if not self._secret or len(self._secret) < 32:
-            raise RuntimeError("CSRF_SECRET must be set and at least 32 characters")
+        env_secret = os.getenv("CSRF_SECRET", "")
+        if env_secret and len(env_secret) >= 32:
+            self._secret = env_secret
+            self._generated = False
+        else:
+            # Dev / first-boot fallback: generate a runtime secret so the app
+            # can start. CSRF tokens remain valid for the lifetime of this
+            # process, so set CSRF_SECRET explicitly in any multi-instance or
+            # restart-sensitive deployment.
+            self._secret = secrets.token_urlsafe(32)
+            self._generated = True
+            logger.warning(
+                "CSRF_SECRET not set or <32 chars; generated a runtime secret "
+                "(valid for this process only). Set CSRF_SECRET in production "
+                "deployments to keep tokens stable across restarts."
+            )
 
     def _generate_token(self, request: Request) -> str:
         """Generate a CSRF token for the request.

@@ -37,7 +37,6 @@ class InputOutputModel:
     def _setup_data(self) -> None:
         """Initialize model data with realistic sector relationships."""
         np.random.seed(self.config.random_seed)
-        n = self.config.n_sectors
 
         if self.config.total_output is None:
             # Realistic sector outputs (in billions)

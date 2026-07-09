@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>c4reqber — Cognitive Exoskeleton for AI Agents</title>
-<meta name="description" content="The missing cognitive layer for the agentic era. 36 simulation engines, 6 formal verifiers, 43 knowledge sources, 20 MCP tools with JSON Schema. O₀→O₁→O₂ meta-cognitive observer. 23 core metaprograms. Think. Simulate. Prove. Discover.">
+<meta name="description" content="The missing cognitive layer for the agentic era. 32 simulation engines, 6 formal verifiers, 43 knowledge sources, 21 MCP tools, TUI v9 Cockpit. O₀→O₁→O₂ meta-cognitive observer. Think. Simulate. Prove. Discover.">
 <meta property="og:title" content="c4reqber — Cognitive Exoskeleton for AI Agents">
 <meta property="og:description" content="Think. Simulate. Prove. Discover.">
 <meta property="og:type" content="website">
@@ -36,7 +36,7 @@
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
   "name": "c4reqber",
-  "description": "Cognitive Exoskeleton for Humans and AI Agents. 27 states, 36 engines, 6 verifiers, 162+ patterns.",
+  "description": "Cognitive Exoskeleton for Humans and AI Agents. 27 states, 32 engines, 6 verifiers, 101+ patterns.",
   "applicationCategory": "ScientificApplication",
   "operatingSystem": "macOS, Linux",
   "softwareVersion": "5.6.0",
@@ -58,9 +58,9 @@
   "@context": "https://schema.org",
   "@type": "FAQPage",
   "mainEntity": [
-    {"@type": "Question", "name": "What is c4reqber?", "acceptedAnswer": {"@type": "Answer", "text": "c4reqber is a cognitive exoskeleton for AI agents and human researchers. It combines 36 simulation engines, 43 knowledge sources, formal verification (Lean4, Coq, Dafny), a Z₃³ cognitive topology, O₀→O₁→O₂ meta-cognitive observer, and 23 core metaprograms to transform research questions into paradigm-shifting dissertations."}},
+    {"@type": "Question", "name": "What is c4reqber?", "acceptedAnswer": {"@type": "Answer", "text": "c4reqber is a cognitive exoskeleton for AI agents and human researchers. It combines 32 simulation engines, 43 knowledge sources, formal verification (Lean4, Coq, Dafny), a Z₃³ cognitive topology, O₀→O₁→O₂ meta-cognitive observer, and 23 core metaprograms to transform research questions into paradigm-shifting dissertations."}},
     {"@type": "Question", "name": "How much does c4reqber cost?", "acceptedAnswer": {"@type": "Answer", "text": "c4reqber is free and open-source (AGPL-3.0). You only pay for the LLM API calls you use. A full pipeline run costs between $0.002 (Budget tier, DeepSeek) and $0.11 (Premium tier, Claude Opus). The recommended balanced tier costs approximately $0.35 per run."}},
-    {"@type": "Question", "name": "Is c4reqber open source?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. c4reqber is licensed under AGPL-3.0. The entire codebase, including 20 MCP tools, 36 simulation engine bridges, and 6 formal verification backends, is publicly available on GitHub."}},
+    {"@type": "Question", "name": "Is c4reqber open source?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. c4reqber is licensed under AGPL-3.0. The entire codebase, including 21 MCP tools, 32 simulation engine bridges, and 6 formal verification backends, is publicly available on GitHub."}},
     {"@type": "Question", "name": "What operating systems are supported?", "acceptedAnswer": {"@type": "Answer", "text": "macOS and Linux are fully tested and supported. Windows is not tested but may work under WSL2. External simulation engines (GROMACS, OpenFOAM, etc.) require separate installation per engine."}},
     {"@type": "Question", "name": "Do I need a GPU to use c4reqber?", "acceptedAnswer": {"@type": "Answer", "text": "No. GPU is optional. Apple Silicon (MLX) and NVIDIA CUDA are supported for accelerated simulation, but the core pipeline runs entirely on CPU. Minimum requirements: 4 GB RAM (8 GB recommended), 2 CPU cores (4+ for simulation workloads)."}}
   ]
@@ -89,8 +89,6 @@
 <main id="main">
 
 <!-- ═══════ HERO ═══════ -->
-<main>
-
 <section class="hero">
   <div class="hero-bg"></div>
   <div class="orb orb-1"></div>
@@ -98,7 +96,7 @@
   <div class="orb orb-3"></div>
   <div class="hero-content">
     <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:32px;flex-wrap:wrap">
-       <div class="badge" style="margin-bottom:0"><span class="dot"></span> <span data-i18n="hero_badge">v9.13.0 · PRODUCTION · TUI v9 simulation surface · 132 goldens</span></div>
+       <div class="badge" style="margin-bottom:0"><span class="dot"></span> <span data-i18n="hero_badge">v5.6.0 · PRODUCTION · TUI v9 · 21 MCP tools</span></div>
       <a id="github-badge" class="github-badge" href="https://github.com/c4reqber/c4reqber" rel="noopener noreferrer" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:100px;padding:6px 16px;font-size:13px;color:var(--fg-2);text-decoration:none">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
         <span data-i18n="github_stars">Be the first star!</span>
@@ -109,7 +107,8 @@
     <p class="hero-sub" style="margin-top:4px;font-size:clamp(14px,1.8vw,20px);letter-spacing:6px;text-transform:uppercase;color:var(--primary);animation:glitchSkew 4s infinite;text-shadow:0 0 10px rgba(0,255,65,.5),0 0 40px rgba(0,255,65,.2),-1px 0 #ff006e,1px 0 #00d4ff" data-i18n="hero_shift">SHIFT PARADIGMS</p>
     <div class="hero-btns">
       <a href="#quickstart" class="btn btn-primary" data-i18n="hero_cta_primary">pip install c4reqber</a>
-      <a href="https://github.com/c4reqber/c4reqber" class="btn btn-secondary" rel="noopener noreferrer" target="_blank" data-i18n="hero_cta_secondary">GitHub</a>
+      <a href="discoveries/index.html" class="btn btn-secondary">6 verified proposals →</a>
+      <a href="https://gitlab.com/cognitive-functors/turbo-cdi" class="btn btn-secondary" rel="noopener noreferrer" target="_blank" data-i18n="hero_cta_secondary">GitLab</a>
     </div>
     <p class="hero-meta" style="margin-top:20px" data-i18n="hero_tags">Z₃³ COGNITIVE EXOSKELETON · 27 STATES · 6 OPERATORS · 43+ SOURCES · 36 ENGINES · 20 MCP TOOLS · O₀→O₁→O₂ OBSERVER · 23 MPs</p>
     <p class="hero-meta" style="margin-top:8px;font-size:11px;opacity:.7" data-i18n="hero_meta">AGPL-3.0 · BYOK · Multi-Prompt Router · Terminal-First · OpenRouter · XAI · Mistral · Moonshot · DeepSeek · Liquid · NVIDIA · YandexGPT · Ollama · LM Studio · MLX</p>
@@ -144,7 +143,7 @@
       <div class="feature-card"><div class="feature-icon">&#10060;</div><h3 data-i18n="fp_no_cog">No Blind-Spot Detection</h3><p data-i18n="fp_no_cog_desc">Agents cannot recognize their own observational biases or identify gaps in their reasoning. c4reqber uses O₀→O₁ observer shifts to surface blind spots automatically.</p></div>
       <div class="feature-card"><div class="feature-icon">&#10060;</div><h3 data-i18n="fp_no_rigor">No Scientific Rigor</h3><p data-i18n="fp_no_rigor_desc">Falsifiability, real citations, reproducibility — the foundation of science. Absent from most agent frameworks.</p></div>
     </div>
-    <p style="text-align:center;margin-top:40px;color:var(--fg-3);font-size:14px" data-i18n="fp_conclusion">c4reqber solves all four. Formal verification + 36 simulation engines + Z₃³ cognitive topology + real citations + O₀→O₁→O₂ meta-cognitive observer.</p>
+    <p style="text-align:center;margin-top:40px;color:var(--fg-3);font-size:14px" data-i18n="fp_conclusion">c4reqber solves all four. Formal verification + 32 simulation engines + Z₃³ cognitive topology + real citations + O₀→O₁→O₂ meta-cognitive observer.</p>
   </div>
 </section>
 
@@ -178,7 +177,7 @@
       <p class="section-desc" data-i18n="usecases_desc">From hard science to social sciences — c4reqber adapts to your domain.</p>
     </div>
     <div class="feature-grid">
-      <div class="feature-card" style="border-color:rgba(59,130,246,.2)"><div class="feature-icon" style="color:#60a5fa">&#9670;</div><h3 data-i18n="uc_hard">Hard Science</h3><p data-i18n="uc_hard_desc">Physics, chemistry, biology, materials. TRIZ + 36 simulation engines + formal verification.</p><div class="feature-tags"><span class="tag">GROMACS</span><span class="tag">OpenFOAM</span><span class="tag">PySCF</span><span class="tag">Lean4</span></div></div>
+      <div class="feature-card" style="border-color:rgba(59,130,246,.2)"><div class="feature-icon" style="color:#60a5fa">&#9670;</div><h3 data-i18n="uc_hard">Hard Science</h3><p data-i18n="uc_hard_desc">Physics, chemistry, biology, materials. TRIZ + 32 simulation engines + formal verification.</p><div class="feature-tags"><span class="tag">GROMACS</span><span class="tag">OpenFOAM</span><span class="tag">PySCF</span><span class="tag">Lean4</span></div></div>
       <div class="feature-card" style="border-color:rgba(236,72,153,.2)"><div class="feature-icon" style="color:#f472b6">&#9829;</div><h3 data-i18n="uc_psych">Psychology & Social Sciences</h3><p data-i18n="uc_psych_desc">CBT meta-analysis, organizational behavior, political psychology. Causal inference + agent models.</p><div class="feature-tags"><span class="tag">RCT</span><span class="tag">SEM</span><span class="tag">Agent-based</span></div></div>
       <div class="feature-card" style="border-color:rgba(16,185,129,.2)"><div class="feature-icon" style="color:#34d399">&#10010;</div><h3 data-i18n="uc_clinical">Clinical Research</h3><p data-i18n="uc_clinical_desc">RCT design, biomarkers, drug-drug interactions. PubMed + ClinicalTrials.gov + STRING.</p><div class="feature-tags"><span class="tag">PubMed</span><span class="tag">STRING</span><span class="tag">Trials</span></div></div>
       <div class="feature-card" style="border-color:rgba(6,214,160,.2)"><div class="feature-icon" style="color:#06d6a0">&#127758;</div><h3 data-i18n="uc_eco">Climate & Ecology</h3><p data-i18n="uc_eco_desc">Biodiversity, climate modeling, ocean dynamics. GBIF + NASA Earthdata + WRF.</p><div class="feature-tags"><span class="tag">GBIF</span><span class="tag">NASA</span><span class="tag">WRF</span></div></div>
@@ -300,7 +299,7 @@
       <div class="flow-step" style="text-align:center;padding:24px 16px;background:var(--bg-3);border-radius:var(--radius);border:1px solid rgba(255,255,255,.06);position:relative">
         <div style="font-size:28px;margin-bottom:8px">&#9881;</div>
         <h4 style="font-size:14px;margin-bottom:4px">Sim + Verify</h4>
-        <p style="font-size:12px;color:var(--fg-3)">36 engines + Lean4/Coq/Dafny</p>
+        <p style="font-size:12px;color:var(--fg-3)">32 engines + Lean4/Coq/Dafny</p>
       </div>
       <div class="flow-step" style="text-align:center;padding:24px 16px;background:var(--bg-3);border-radius:var(--radius);border:1px solid rgba(255,255,255,.06);position:relative">
         <div style="font-size:28px;margin-bottom:8px">&#9989;</div>
@@ -637,8 +636,10 @@
 <span class="comment"># 2. Set your key</span>
 <span class="cmd">export</span> <span class="str">OPENROUTER_API_KEY</span>=sk-or-...
 
-<span class="comment"># 3. Run</span>
-<span class="cmd">c4reqber</span> <span class="str">"quantum biology in photosynthesis"</span>
+<span class="comment"># 3. Run (CLI or TUI v9 Cockpit)</span>
+<span class="cmd">blast solve</span> <span class="str">"quantum biology in photosynthesis"</span>
+<span class="cmd">blast tui</span> <span class="dim"># feed-driven discovery UI</span>
+<span class="cmd">blast tui --demo --story=crispr</span> <span class="dim"># no backend required</span>
 <span class="dim"># → paradigm-shifting hypothesis + dissertation + citations</span>
 
 <span class="comment"># Model-per-stage config</span>
@@ -872,9 +873,9 @@
     <div class="term-block" style="border-left:3px solid var(--green)">
       <div class="term-header"><span class="term-dot red"></span><span class="term-dot yellow"></span><span class="term-dot green"></span><span class="term-title" data-i18n="roadmap_v55">v5.5 — Now</span></div>
       <div class="term-body" data-i18n="roadmap_v55_body">✓ Type safety zero (0 mypy errors)
-✓ MCP 20 tools with JSON Schema
+✓ MCP 21 tools with JSON Schema
 ✓ Virtual Bio + GPU auto-detect
-✓ 36 simulation engines integrated
+✓ 32 simulation engines integrated
 ✓ 9908+ tests passing</div>
     </div>
     <div class="term-block" style="border-left:3px solid var(--amber)">
@@ -927,13 +928,11 @@
     <p style="color:var(--fg-2);font-size:17px;max-width:500px;margin:0 auto 32px" data-i18n="cta_sub">One command. One dissertation. One paradigm shift.</p>
     <div class="hero-btns" style="margin-bottom:24px">
       <a href="#quickstart" class="btn btn-primary" data-i18n="hero_install">pip install c4reqber</a>
-      <a href="https://github.com/c4reqber/c4reqber" class="btn btn-secondary" rel="noopener noreferrer" target="_blank">GitHub</a>
+      <a href="https://gitlab.com/cognitive-functors/turbo-cdi" class="btn btn-secondary" rel="noopener noreferrer" target="_blank" data-i18n="hero_cta_secondary">GitLab</a>
     </div>
     <p style="font-size:12px;color:var(--fg-3)" data-i18n="cta_license">AGPL-3.0 · BYOK · No data retention · Self-hostable</p>
   </div>
 </section>
-
-</main>
 
 <!-- Reading progress -->
 <div id="read-progress" style="position:fixed;top:0;left:0;height:2px;background:linear-gradient(90deg,var(--primary),var(--accent));z-index:1002;width:0%;transition:width .1s"></div>
@@ -952,5 +951,22 @@
     navigator.serviceWorker.register('sw.js').catch(()=>{});
   }
   </script>
+<!-- Audit 2026-06-22: stats panel pulled from _truths.json -->
+<div class="stats-panel" style="background:rgba(15,17,23,.6);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:24px;margin:32px auto;max-width:880px;font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.7">
+  <div style="color:var(--fg-3);font-size:11px;letter-spacing:.1em;margin-bottom:12px">VERIFIED STATS · _truths.json · 2026-06-22T05:20:49Z</div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:16px">
+    <div><div style="color:var(--fg-3);font-size:10px">PYTHON LOC</div><div style="color:var(--fg-1);font-weight:600">222,970</div></div>
+    <div><div style="color:var(--fg-3);font-size:10px">TESTS</div><div style="color:var(--fg-1);font-weight:600">9,756</div></div>
+    <div><div style="color:var(--fg-3);font-size:10px">TUI v9 LOC</div><div style="color:var(--fg-1);font-weight:600">21,124</div></div>
+    <div><div style="color:var(--fg-3);font-size:10px">MCP TOOLS</div><div style="color:var(--fg-1);font-weight:600">21</div></div>
+    <div><div style="color:var(--fg-3);font-size:10px">CLI COMMANDS</div><div style="color:var(--fg-1);font-weight:600">24</div></div>
+    <div><div style="color:var(--fg-3);font-size:10px">SIM ENGINES</div><div style="color:var(--fg-1);font-weight:600">38</div></div>
+    <div><div style="color:var(--fg-3);font-size:10px">KNOWLEDGE</div><div style="color:var(--fg-1);font-weight:600">51</div></div>
+    <div><div style="color:var(--fg-3);font-size:10px">LLM PROVIDERS</div><div style="color:var(--fg-1);font-weight:600">6</div></div>
+    <div><div style="color:var(--fg-3);font-size:10px">VERIFIERS</div><div style="color:var(--fg-1);font-weight:600">14 real</div></div>
+  </div>
+  <div style="margin-top:12px;color:var(--fg-3);font-size:11px">Backend 5.6.0 · TUI v9.13.0 · git 3ceffdd</div>
+</div>
+<!-- /stats panel -->
 </body>
 </html>

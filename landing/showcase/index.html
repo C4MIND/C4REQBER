@@ -80,31 +80,20 @@
         <h3>Open the Dashboard</h3>
         <p>Launch the TUI and see your research landscape at a glance. Active problems, engine status, and recent discoveries.</p>
         <div class="demo-frame">
-<span class="prompt">$</span> c4reqber tui<br>
+<span class="prompt">$</span> blast tui<br>
 <span class="output">Active Problems: 3 | Engines: 36 | Sources: 33</span><br>
 <span class="output">Last discovery: 2 min ago</span>
     </div>
   </div>
 
-  <!-- SCREENSHOT PLACEHOLDERS — TUI v9 screenshots go here (replace with real captures) -->
+  <!-- TUI v9 screenshots (July 2026 mission) -->
   <div style="margin-top:60px;padding-top:40px;border-top:1px solid rgba(255,255,255,.06)" class="container">
-    <h2 style="font-size:24px;font-weight:800;margin-bottom:32px;text-align:center">TUI v9 <span style="font-weight:400;color:var(--fg-3)">— The Cockpit</span></h2>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:24px">
-      <div style="background:var(--bg-3);border-radius:12px;border:1px dashed rgba(0,255,65,.3);overflow:hidden;text-align:center;padding:40px 24px">
-        <div style="font-size:32px;margin-bottom:12px;opacity:.3">🖥</div>
-        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--tui-green,#00FF41);opacity:.5;letter-spacing:1px">SCREENSHOT: SPLASH</div>
-        <div style="font-size:11px;color:var(--fg-3);margin-top:8px">BioAurora cube · C4R · glitch SHIFT PARADIGMS</div>
-      </div>
-      <div style="background:var(--bg-3);border-radius:12px;border:1px dashed rgba(255,0,110,.3);overflow:hidden;text-align:center;padding:40px 24px">
-        <div style="font-size:32px;margin-bottom:12px;opacity:.3">📊</div>
-        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--tui-magenta,#FF006E);opacity:.5;letter-spacing:1px">SCREENSHOT: DASHBOARD</div>
-        <div style="font-size:11px;color:var(--fg-3);margin-top:8px">7 widgets · header/footer · keymap</div>
-      </div>
-      <div style="background:var(--bg-3);border-radius:12px;border:1px dashed rgba(0,212,255,.3);overflow:hidden;text-align:center;padding:40px 24px">
-        <div style="font-size:32px;margin-bottom:12px;opacity:.3">⚡</div>
-        <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--tui-cyan,#00D4FF);opacity:.5;letter-spacing:1px">SCREENSHOT: PIPELINE</div>
-        <div style="font-size:11px;color:var(--fg-3);margin-top:8px">Phase cards · progress bars · SSE streaming</div>
-      </div>
+    <h2 style="font-size:24px;font-weight:800;margin-bottom:12px;text-align:center">TUI v9 <span style="font-weight:400;color:var(--fg-3)">— The Cockpit</span></h2>
+    <p style="text-align:center;color:var(--fg-3);font-size:14px;margin-bottom:32px">Golden snapshots from <code>src/tui/v9/tests/golden</code> · <a href="../discoveries/index.html" style="color:var(--primary)">Full mission gallery →</a></p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px">
+      <a href="../assets/mission/02_tui_v9_hypothesis_card.png" style="border-radius:12px;overflow:hidden;border:1px solid rgba(0,255,65,.2)"><img src="../assets/mission/02_tui_v9_hypothesis_card.png" alt="Hypothesis card" loading="lazy" style="width:100%;display:block"></a>
+      <a href="../assets/mission/03_tui_v9_simulation_card.png" style="border-radius:12px;overflow:hidden;border:1px solid rgba(255,0,110,.2)"><img src="../assets/mission/03_tui_v9_simulation_card.png" alt="Simulation card" loading="lazy" style="width:100%;display:block"></a>
+      <a href="../assets/mission/04_tui_v9_capabilities_overlay.png" style="border-radius:12px;overflow:hidden;border:1px solid rgba(0,212,255,.2)"><img src="../assets/mission/04_tui_v9_capabilities_overlay.png" alt="Capabilities overlay" loading="lazy" style="width:100%;display:block"></a>
     </div>
   </div>
 </section>
@@ -112,47 +101,48 @@
 <section class="section section-dark">
   <div class="container">
     <div class="section-header">
-      <span class="section-label">Real Results</span>
-      <h2 class="section-title">Discovery Stories</h2>
-      <p class="section-desc">Problems solved by researchers using c4reqber.</p>
+      <span class="section-label">July 2026</span>
+      <h2 class="section-title">Verified pipeline outputs</h2>
+      <p class="section-desc">Six <code>blast turbo</code> research proposals — literature, gaps, simulation, quality gates. <a href="../discoveries/index.html" style="color:var(--primary)">Full gallery with video →</a></p>
+      <p class="section-desc" style="font-size:13px;color:#fcd34d;margin-top:8px">Hypotheses only — not peer-reviewed. Each file carries an epistemic disclaimer.</p>
     </div>
 
     <div class="showcase-grid">
       <div class="showcase-card">
-        <span class="tag">Cosmology</span>
-        <h3>Fine-tuning for Life</h3>
-        <p>Multi-source analysis across arXiv, NASA ADS, and OpenAlex synthesized the multiverse hypothesis, cosmological natural selection, and string theory landscape into a unified framework for understanding why physical constants permit life.</p>
-        <div class="meta"><span>10 citations</span><span>88 s</span><span>95% confidence</span></div>
+        <span class="tag">Climate · 5,083 w</span>
+        <h3>Marine cloud brightening</h3>
+        <p>MCB geoengineering proposal: field experiments, polar efficacy, cryosphere tipping-point hypotheses from 447 sources.</p>
+        <div class="meta"><span>A+ 98</span><span><a href="../discoveries/files/01_marine_cloud_brightening.md" style="color:var(--primary)">Read →</a></span></div>
       </div>
       <div class="showcase-card">
-        <span class="tag">Condensed Matter</span>
-        <h3>Room-Temperature Superconductivity</h3>
-        <p>Cross-domain synthesis of hydrides, topological materials, and AI-designed crystal structures identified 4 promising material classes with predicted critical temperatures above 273 K, including novel clathrate hydrides.</p>
-        <div class="meta"><span>10 citations</span><span>81 s</span><span>95% confidence</span></div>
+        <span class="tag">Energy · 4,859 w</span>
+        <h3>Compact fusion reactors</h3>
+        <p>Distributed clean energy: breakthrough physics pathway hypotheses for grid decarbonization by 2040.</p>
+        <div class="meta"><span>A+ 98</span><span><a href="../discoveries/files/02_compact_fusion.md" style="color:var(--primary)">Read →</a></span></div>
       </div>
       <div class="showcase-card">
-        <span class="tag">Neuroscience</span>
-        <h3>Neural Basis of Consciousness</h3>
-        <p>Integrated Global Neuronal Workspace, Predictive Processing, and Integrated Information Theory through formal C4-state mapping. Revealed testable predictions distinguishing conscious from unconscious neural computation.</p>
-        <div class="meta"><span>10 citations</span><span>86 s</span><span>95% confidence</span></div>
+        <span class="tag">Biology · 4,564 w</span>
+        <h3>Epigenetic aging reversal</h3>
+        <p>Metabolic reprogramming hypotheses with gap-mined falsifiers and simulation-backed framing.</p>
+        <div class="meta"><span>A+ 98</span><span><a href="../discoveries/files/04_epigenetic_aging.md" style="color:var(--primary)">Read →</a></span></div>
       </div>
       <div class="showcase-card">
-        <span class="tag">Origin of Life</span>
-        <h3>Abiogenesis from Chemistry</h3>
-        <p>Synthesized hydrothermal vent theory, RNA-world hypothesis, and protocell models into a unified chemical pathway. Identified 3 experimentally testable transition stages from non-living chemistry to self-replication.</p>
-        <div class="meta"><span>10 citations</span><span>88 s</span><span>95% confidence</span></div>
+        <span class="tag">Medicine · 5,058 w</span>
+        <h3>AMR phage–CRISPR cocktail</h3>
+        <p>499-source literature pass; engineered phage + CRISPR hypotheses to restore antibiotic efficacy.</p>
+        <div class="meta"><span>A+ 98</span><span><a href="../discoveries/files/05_amr_phage_crispr.md" style="color:var(--primary)">Read →</a></span></div>
       </div>
       <div class="showcase-card">
-        <span class="tag">Philosophy of Mind</span>
-        <h3>The Hard Problem of Qualia</h3>
-        <p>Applied meta-program rotation (analytic, phenomenological, computational perspectives) to decompose the explanatory gap. Produced a falsifiable multi-level model linking neural dynamics to subjective experience.</p>
-        <div class="meta"><span>10 citations</span><span>83 s</span><span>95% confidence</span></div>
+        <span class="tag">Agriculture · 5,102 w</span>
+        <h3>Soil carbon sequestration</h3>
+        <p>Regenerative agriculture hypotheses for desertification reversal and durable soil carbon pools.</p>
+        <div class="meta"><span>A+ 98</span><span><a href="../discoveries/files/06_soil_carbon.md" style="color:var(--primary)">Read →</a></span></div>
       </div>
       <div class="showcase-card">
-        <span class="tag">Theoretical Physics</span>
-        <h3>Quantum Gravity Unification</h3>
-        <p>Compared loop quantum gravity, string theory, and emergent gravity approaches through formal verification criteria. Identified 2 convergent predictions (holographic entropy, Planck-scale Lorentz invariance) testable by next-gen interferometers.</p>
-        <div class="meta"><span>10 citations</span><span>79 s</span><span>95% confidence</span></div>
+        <span class="tag">Environment · 5,395 w</span>
+        <h3>Ocean plastic bioremediation</h3>
+        <p>Topic-routed biogeochemistry sim (9s); microbial/enzyme remediation hypotheses v2.</p>
+        <div class="meta"><span>A+ 98</span><span><a href="../discoveries/files/08_ocean_plastic_v2.md" style="color:var(--primary)">Read →</a></span></div>
       </div>
     </div>
   </div>

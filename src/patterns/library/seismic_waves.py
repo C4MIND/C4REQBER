@@ -225,7 +225,6 @@ class SeismicWavesPattern:
 
     def _source_time_function(self, t: float) -> float:
         """Source time function (Ricker wavelet)"""
-        cfg = self.config
 
         f0 = 2.0  # Dominant frequency (Hz)
         t0 = 1.0 / f0  # Time shift
@@ -317,12 +316,12 @@ class SeismicWavesPattern:
                 for k in range(1, self.config.nz - 1):
                     # x-component
                     dux_dx = (self.ux[i, j, k] - self.ux[i - 1, j, k]) / dx
-                    dux_dy = (
+                    (
                         (self.ux[i, j + 1, k] - self.ux[i, j - 1, k]) / (2 * dy)
                         if 0 < j < self.config.ny - 1
                         else 0
                     )
-                    dux_dz = (
+                    (
                         (self.ux[i, j, k + 1] - self.ux[i, j, k - 1]) / (2 * dz)
                         if 0 < k < self.config.nz - 1
                         else 0

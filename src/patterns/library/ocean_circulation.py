@@ -386,7 +386,6 @@ class OceanCirculationPattern:
 
     def _apply_boundary_conditions(self) -> None:
         """Apply boundary conditions"""
-        cfg = self.config
 
         # No-slip walls
         self.u[0, :, :] = 0  # Western boundary

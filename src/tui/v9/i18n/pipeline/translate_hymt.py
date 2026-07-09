@@ -6,8 +6,9 @@ using HY-MT1.5-1.8B via mlx-lm with glossary intervention.
 
 Usage:
     python3 translate_hymt.py --src en.toml --glossary c4_science_terms.json
-                              --out-dir /Users/figuramax/LocalProjects/c4reqber/src/tui/v9/i18n/
+                              --out-dir ./src/tui/v9/i18n/   # or $HOME/.../c4reqber/...
 """
+
 import argparse
 import json
 import os
@@ -15,7 +16,8 @@ import sys
 import time
 from pathlib import Path
 
-from mlx_lm import load, generate
+from mlx_lm import generate, load
+
 
 LANG_MAP = {
     "ru": "Russian",
@@ -26,6 +28,7 @@ LANG_MAP = {
     "hi": "Hindi",
 }
 
+
 # HY-MT1.5-1.8B chat template format
 # Tencent HY-MT expects: <|start|>role: system\n...role: user\n...role: assistant\n<|end|>
 def build_prompt(src_text: str, target_lang: str, glossary: dict) -> list:
@@ -33,7 +36,9 @@ def build_prompt(src_text: str, target_lang: str, glossary: dict) -> list:
     relevant_glossary = {}
     src_lower = src_text.lower()
     for term, translations in glossary.items():
-        if term.lower() in src_lower or any(t.lower() in src_lower for t in translations.values() if t):
+        if term.lower() in src_lower or any(
+            t.lower() in src_lower for t in translations.values() if t
+        ):
             relevant_glossary[term] = translations.get(target_lang, "")
 
     # Glossary in system prompt
@@ -85,7 +90,7 @@ def parse_toml(filepath: Path) -> dict:
 def write_toml(out_path: Path, sections: dict):
     """Write flat TOML preserving dotted keys."""
     lines = []
-    for section, kv in sections.items():
+    for _section, kv in sections.items():
         for k, v in kv.items():
             v_esc = v.replace("\\", "\\\\").replace('"', '\\"')
             lines.append(f'{k} = "{v_esc}"')
@@ -98,8 +103,8 @@ def main():
     p.add_argument("--src", required=True, help="Path to en.toml")
     p.add_argument("--out-dir", required=True, help="Output dir for ru/zh/ja/de/ar/hi.toml")
     p.add_argument("--glossary", required=True, help="c4_science_terms.json")
-    p.add_argument("--model", default="/Users/figuramax/.c4reqber/models/hy-mt",
-                   help="HY-MT1.5-1.8B MLX path")
+    default_model = os.path.expanduser("~/.c4reqber/models/hy-mt")
+    p.add_argument("--model", default=default_model, help="HY-MT1.5-1.8B MLX path")
     p.add_argument("--max-tokens", type=int, default=512)
     args = p.parse_args()
 
@@ -149,10 +154,18 @@ def main():
                     if "\n" in out_clean:
                         out_clean = out_clean.split("\n")[0].strip()
                     # Strip "Translation:" / "Übersetzung:" / etc. prefixes
-                    for prefix in ["Translation:", "Übersetzung:", "Перевод:", "翻訳:",
-                                   "翻译:", "ترجمة:", "अनुवाद:", "번역:"]:
+                    for prefix in [
+                        "Translation:",
+                        "Übersetzung:",
+                        "Перевод:",
+                        "翻訳:",
+                        "翻译:",
+                        "ترجمة:",
+                        "अनुवाद:",
+                        "번역:",
+                    ]:
                         if out_clean.startswith(prefix):
-                            out_clean = out_clean[len(prefix):].strip()
+                            out_clean = out_clean[len(prefix) :].strip()
                     # If the source is a lang code (2 uppercase letters) — keep verbatim
                     if val.upper() in ("EN", "RU", "ZH", "JA", "DE", "AR", "HI") and len(val) <= 3:
                         out_clean = val
@@ -160,11 +173,17 @@ def main():
                     elif "DeepSeek" in val or "C4REQBER" in val:
                         out_clean = val
                     # Reject garbage (echoed prompt, "NEVER" rules, etc.)
-                    elif (out_clean.startswith("NEVER ") or out_clean.startswith("الإنجليزية")
-                          or "Translation:" in out_clean or "Перевод:" in out_clean
-                          or "。" in out_clean[:8] or "します" in out_clean[:8]
-                          or "应当" in out_clean[:8] or "应" in out_clean[:5]
-                          or len(out_clean) > 200):
+                    elif (
+                        out_clean.startswith("NEVER ")
+                        or out_clean.startswith("الإنجليزية")
+                        or "Translation:" in out_clean
+                        or "Перевод:" in out_clean
+                        or "。" in out_clean[:8]
+                        or "します" in out_clean[:8]
+                        or "应当" in out_clean[:8]
+                        or "应" in out_clean[:5]
+                        or len(out_clean) > 200
+                    ):
                         out_clean = val
                     if not out_clean:
                         out_clean = val

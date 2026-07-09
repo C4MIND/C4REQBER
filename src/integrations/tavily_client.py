@@ -6,6 +6,7 @@ from typing import Any
 
 import httpx
 
+from src.config import get_key
 from src.integrations.tavily_budget import TavilyBudgetTracker
 
 
@@ -16,7 +17,7 @@ class TavilyClient:
     """Tavily search client — 1000 credits/month with budget enforcement."""
 
     def __init__(self, api_key: str | None = None) -> None:
-        self.api_key = api_key or os.environ.get("TAVILY_API_KEY")
+        self.api_key = api_key or get_key("tavily") or os.environ.get("TAVILY_API_KEY")
         self.enabled = bool(self.api_key)
         self.budget = TavilyBudgetTracker()
 

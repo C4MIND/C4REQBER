@@ -15,6 +15,9 @@ from src.api.rate_limiter import WebSocketRateLimiter
 from src.api.websocket import ConnectionManager
 
 
+logger = logging.getLogger(__name__)
+
+
 router = APIRouter(prefix="/api/v1", tags=["websocket"])
 
 ws_manager = ConnectionManager()
@@ -227,6 +230,6 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str) -> None:
     except WebSocketDisconnect:
         pass
     except (RuntimeError, OSError) as e:
-        print(f"WebSocket error for {client_id}: {e}")
+        logger.warning("WebSocket error for client_id=%s: %s", client_id, e)
     finally:
         ws_manager.disconnect(client_id)

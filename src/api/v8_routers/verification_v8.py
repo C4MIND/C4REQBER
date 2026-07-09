@@ -1,6 +1,7 @@
 """v8 verification router — formal, statistical, and SMT verification."""
 from __future__ import annotations
 
+import logging
 import time
 from typing import Any
 from uuid import uuid4
@@ -9,6 +10,9 @@ from fastapi import APIRouter
 from pydantic import BaseModel, Field
 
 from src.api.errors import C4APIError, ValidationError
+
+
+logger = logging.getLogger(__name__)
 from src.verification.unified_score import (
     BackendResult,
     compute_unified_score,
@@ -99,6 +103,7 @@ async def verify_hypothesis(req: HypothesisVerifyRequest) -> dict[str, Any]:
                 metadata=stat_result.get("metadata", {}),
             ))
         except Exception as exc:
+            logger.warning("statistical verifier failed: %s", exc)
             backend_results.append(BackendResult(
                 backend="statistical",
                 status="failed",
@@ -139,6 +144,7 @@ async def verify_hypothesis(req: HypothesisVerifyRequest) -> dict[str, Any]:
                 proof_text=assessment.get("category_label", ""),
             ))
     except Exception as exc:
+        logger.warning("hybrid verifier failed: %s", exc)
         backend_results.append(BackendResult(
             backend="hybrid_verifier",
             status="failed",
@@ -148,6 +154,23 @@ async def verify_hypothesis(req: HypothesisVerifyRequest) -> dict[str, Any]:
 
     # 3. Compute unified score
     unified = compute_unified_score(req.hypothesis, backend_results)
+
+    # Audit 2026-06-22: increment VERIFICATION_RUNS per backend result so
+    # /metrics reflects per-backend run volume (the 5th Prometheus counter
+    # left at zero after the v9.14.0 master audit C-2 fix). Best-effort —
+    # observability must never crash callers.
+    try:
+        from src.api.routers.metrics import VERIFICATION_RUNS
+
+        for r in backend_results:
+            # Normalize: hybrid_verifier's per-backend label (e.g. "lean4",
+            # "z3") flows through; "statistical"/"math_detector" map to
+            # themselves. Status is whatever BackendResult reports.
+            backend_label = r.backend or "unknown"
+            status_label = r.status or "unknown"
+            VERIFICATION_RUNS.labels(backend=backend_label, status=status_label).inc()
+    except Exception:
+        pass
 
     payload = {
         "verify_id": verify_id,
@@ -241,6 +264,7 @@ async def verify_code(req: VerifyRequest) -> dict[str, Any]:
     except C4APIError:
         raise
     except Exception as exc:
+        logger.exception("Verification failed")
         raise C4APIError(f"Verification failed: {exc}", status_code=500, error_code="verification_failed") from exc
 
     _set_verify_cache(verify_id, {"status": "completed", **payload})

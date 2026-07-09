@@ -3,18 +3,18 @@ package tui
 import (
 	"context"
 	"fmt"
-	"strings"
-	"time"
-
 	"os/exec"
 	"runtime"
+	"strconv"
+	"strings"
+	"time"
 
 	tea "charm.land/bubbletea/v2"
 	zone "github.com/lrstanley/bubblezone/v2"
 
 	"github.com/figuramax/c4reqber-tui-v9/api"
-	"github.com/figuramax/c4reqber-tui-v9/cards"
 	"github.com/figuramax/c4reqber-tui-v9/capsim"
+	"github.com/figuramax/c4reqber-tui-v9/cards"
 	"github.com/figuramax/c4reqber-tui-v9/i18n"
 	"github.com/figuramax/c4reqber-tui-v9/persist"
 )
@@ -129,17 +129,46 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 
 	case sseErrorMsg:
-		// SSE failed; cancel its context before falling back to polling.
+		// SSE failed; audit 2026-06-22 H-18: increment the reconnect counter
+		// (ReconnectPolicy wired here, consumed by reauthCmd below).
 		m.teardownStream()
+		m.sseRetryCount++
+		if m.running && m.jobID != "" && m.sseRetryCount <= sseMaxRetries {
+			// Schedule a retry with exponential backoff (handled by
+			// sseRetryTick below)
+			delay := sseRetryDelay(m.sseRetryCount)
+			return m, tea.Tick(delay, func(time.Time) tea.Msg {
+				return sseReconnectMsg{}
+			})
+		}
 		if m.running && m.jobID != "" {
+			// Retries exhausted — fall back to polling for the final result
 			return m, pollCmd(m.api, m.jobID)
 		}
 		return m, nil
 
+	case sseReconnectMsg:
+		// Audit 2026-06-22 H-18: re-attempt the SSE stream after backoff.
+		// The actual re-stream happens via the existing sseContinueCmd path.
+		if m.running && m.jobID != "" && m.sseRetryCount <= sseMaxRetries {
+			return m, sseContinueCmd(m.sseEvents, m.sseCancel)
+		}
+		return m, nil
+
 	case tea.KeyPressMsg:
-		var cmd tea.Cmd
-		m.ta, cmd = m.ta.Update(msg)
-		cmds = append(cmds, cmd)
+		// v9.13.x AUDIT: the previous code did `m.ta, cmd = m.ta.Update(msg)`
+		// HERE, before any key handling. Combined with the fallthrough
+		// `m.ta, cmd = m.ta.Update(msg)` at the bottom of Update(), this
+		// meant every keystroke (including regular characters) was
+		// processed by the textarea TWICE — once here (and then the cmd
+		// was silently dropped by the early-return cases), once again
+		// at the fallthrough (where the cmd was actually returned).
+		// Net effect: typed characters appeared doubled in the input.
+		// The correct fix is to handle the textarea ONCE, at the
+		// fallthrough, so special keys (Esc/Enter/arrows/Tab) skip
+		// the textarea entirely (they're TUI-level, not input-level).
+		// regular characters reach the fallthrough and are processed
+		// exactly once.
 
 		// v9.13 (§16.2): when palette is open, route keystrokes to it
 		// BEFORE the main switch.
@@ -183,6 +212,31 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		keyStr := msg.String()
 		km := m.keymap
+
+		// Wizard 'd'/'r'/'?' shortcuts (always active when wizard is on screen,
+		// even on the welcome/help steps). Each closes the wizard and gives
+		// the user the relevant hint.
+		if m.wizard != nil && m.wizard.Active() {
+			switch keyStr {
+			case "d", "D":
+				m.wizard.Done()
+				m.MarkFirstRunDone()
+				m.setToast("💡 demo mode: relaunch with --demo  (e.g. blast tui --demo --story=crispr)")
+				return m, nil
+			case "r", "R":
+				m.wizard.Done()
+				m.MarkFirstRunDone()
+				m.setToast("✨ ready · type your query and press Enter")
+				return m, nil
+			case "?":
+				m.wizard.Done()
+				m.MarkFirstRunDone()
+				m.showHelp = true
+				m.setToast(i18n.T("help.shown"))
+				return m, nil
+			}
+		}
+
 		switch {
 
 		case km.Matches(ActQuit, keyStr):
@@ -216,8 +270,8 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				_ = m.inputHistory.Add(val, string(m.mode))
 			}
 			m.ta.Reset()
-			cmd = m.startDiscovery(val)
-			return m, cmd
+			startCmd := m.startDiscovery(val)
+			return m, startCmd
 		case km.Matches(ActCancel, keyStr), km.Matches(ActEscape, keyStr):
 			// v9.13 (F-12): first, collapse any expanded card
 			if c := m.focusedCard(); c != nil && c.State == cards.StateExpanded {
@@ -468,7 +522,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.setToast("focused: last (follow on)")
 			}
 			return m, nil
-		case keyStr == "enter" && !m.ta.Focused() && m.paletteActive == false:
+		case keyStr == "enter" && !m.ta.Focused() && !m.paletteActive:
 			// v9.13 (F-12): toggle expand on focused card.
 			// Only fires when Enter is NOT consumed by the textarea
 			// (i.e. user is not in the input box) and not by the
@@ -526,7 +580,12 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.PersistSettings()
 			return m, nil
 		}
-
+		// Unmatched key (a/b/c/x/etc. — not bound to any TUI action):
+		// fall through to the bottom of Update() so the textarea
+		// receives the keystroke exactly once. Special keys (Esc/Enter/
+		// arrows/Tab) that ARE bound to actions return early above,
+		// so they never reach this fallthrough — that's intentional
+		// (TUI-level keys should not be inserted into the input).
 	case tea.MouseClickMsg:
 		// Mouse click on a card → find the card whose zone contains the click
 		if msg.Button != tea.MouseLeft {
@@ -540,9 +599,16 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		for _, zid := range m.zoneIDs[start:] {
 			z := zone.Get(zid)
 			if z != nil && z.InBounds(msg) {
-				// Find the corresponding card and show its title
+				// Find the corresponding card and show its title.
+				// Zone IDs are 'card-{c.ID}' (see appendCard + renderCard)
+				// — was 'card-{c.Time.UnixNano()}' before, but two cards
+				// added in the same nanosecond (e.g. loading 100 papers
+				// at once) would share an ID and the click would route
+				// to the wrong one. c.ID is a monotonic uint64 from
+				// cards.NextID() so it's collision-free.
+				idStr := strings.TrimPrefix(zid, "card-")
 				for _, c := range m.feed {
-					if fmt.Sprintf("card-%d", c.Time.UnixNano()) == zid {
+					if strconv.FormatUint(uint64(c.ID), 10) == idStr {
 						m.setToast("selected: " + c.Title)
 						if len(m.toast) > 60 {
 							m.toast = m.toast[:60] + "…"
@@ -743,8 +809,11 @@ func (m *model) appendCard(c Card) {
 	if m.follow {
 		m.vp.GotoBottom()
 	}
-	// Track zone ID for mouse click routing
-	zoneID := fmt.Sprintf("card-%d", c.Time.UnixNano())
+	// Track zone ID for mouse click routing. Uses c.ID (not c.Time
+	// .UnixNano()) so two cards added in the same nanosecond don't
+	// share a zoneID and route clicks to the wrong card. The
+	// matching ID-keyed lookup is in the MouseClickMsg handler.
+	zoneID := fmt.Sprintf("card-%d", c.ID)
 	m.zoneIDs = append(m.zoneIDs, zoneID)
 	// v9.13: persist to feed.jsonl (best-effort, never blocks UI)
 	if m.feedStore != nil {
@@ -776,6 +845,12 @@ func (m *model) checkAchievements() {
 	unlocked := m.achievements.Check(m.completedDisc, m.lastQuality, m.lastPapersCount, seconds, langs)
 	// v9.13: also check sim-specific achievements (TI-SIM-08).
 	unlocked = append(unlocked, m.achievements.CheckSimAchievements(m.feed)...)
+	// Per-achievement side effects: append a feed card + record on the
+	// in-memory store. Persistence + telemetry are batched below the
+	// loop because they describe the *discovery*, not the unlock:
+	// previously they ran N times per check (one per unlocked ach),
+	// which inflated the discovery counter and rewrote the state file
+	// N times — a real bug caught by review of state_machine_test.
 	for _, a := range unlocked {
 		m.appendCard(Card{
 			Kind:   CardPhase,
@@ -784,10 +859,16 @@ func (m *model) checkAchievements() {
 			Time:   a.UnlockedAt,
 			Status: "done",
 		})
-		// Persist to disk + telemetry
 		if m.store != nil {
 			m.store.AddAchievement(int(a.Kind))
 			m.store.AddLangSeen(string(i18n.GetLang()))
+		}
+	}
+	// Batched: one Save, one IncrementDiscovery, one telemetry event
+	// per check (i.e. per discovery completion), regardless of how many
+	// achievements fired in this batch.
+	if len(unlocked) > 0 {
+		if m.store != nil {
 			m.store.IncrementDiscovery()
 			if err := m.store.Save(); err != nil {
 				m.setToast("⚠ save: " + err.Error())
@@ -796,11 +877,13 @@ func (m *model) checkAchievements() {
 		if m.tel != nil {
 			m.tel.IncDiscoveryResult(true, seconds)
 		}
-		// Trigger fullscreen achievement overlay (v9.10)
-		if len(unlocked) > 0 {
-			m.showAchievementOverlay = true
-			m.achievements.ShowOverlay(i18n.T(a.Name), 2*time.Second)
-		}
+		// Show overlay for the *most recent* unlock (last in the slice),
+		// not the first — if a single discovery triggers 3 achievements
+		// (e.g. FirstDiscovery + QualityS + MultiPaper), the user sees
+		// the headline achievement they actually earned, not whatever
+		// happened to be first in the registry.
+		m.showAchievementOverlay = true
+		m.achievements.ShowOverlay(i18n.T(unlocked[len(unlocked)-1].Name), 2*time.Second)
 	}
 }
 
@@ -810,24 +893,24 @@ func (m *model) updateLangSeen() {
 }
 
 func (m *model) rebuildFeedContent() {
+	// Pre-size the builder. Cards render to ~width*2 bytes on
+	// average (border + body + meta); sizing avoids 3-4 growSlice
+	// reallocations as the feed grows.
 	var b strings.Builder
-	// v9.11.7: when the feed is empty OR contains only CardEmpty
-	// placeholders, render the dashboard widgets instead. Without
-	// this, the viewport is 45 lines tall but content is just 2-3
-	// lines, producing a black void below the placeholder.
-	if m.feedIsEmpty() {
-		b.WriteString(m.renderEmptyWidgets())
-	} else {
-		for idx, card := range m.feed {
-			chips := ""
-			if card.Kind == CardHypothesis {
-				chips = m.verdictChipsForCard(card)
-			}
-			focused := idx == m.focusedCardIdx
-			expanded := focused && card.State == cards.StateExpanded
-			b.WriteString(renderCard(card, m.width, chips, focused, expanded))
-			b.WriteString("\n")
+	b.Grow(len(m.feed) * m.width * 2)
+	// v9.13.x: empty widgets no longer rendered into the scrollable
+	// feed viewport — they live in the ALWAYS-VISIBLE base panel above.
+	// The feed now only renders real discovery cards, so the empty
+	// feed just shows a blank scrollable area below the base panel.
+	for idx, card := range m.feed {
+		chips := ""
+		if card.Kind == CardHypothesis {
+			chips = m.verdictChipsForCard(card)
 		}
+		focused := idx == m.focusedCardIdx
+		expanded := focused && card.State == cards.StateExpanded
+		b.WriteString(renderCard(card, m.width, chips, focused, expanded))
+		b.WriteString("\n")
 	}
 	m.vp.SetContent(b.String())
 }
@@ -885,4 +968,26 @@ func abs(x float64) float64 {
 		return -x
 	}
 	return x
+}
+
+// sseReconnectMsg is emitted by the retry timer to trigger a re-attempt
+// of the SSE stream (audit 2026-06-22 H-18).
+type sseReconnectMsg struct{}
+
+// sseMaxRetries caps exponential-backoff retries before falling back to polling.
+const sseMaxRetries = 5
+
+// sseRetryDelay returns the backoff for the n-th retry (exponential, capped at 30s).
+func sseRetryDelay(attempt int) time.Duration {
+	if attempt < 1 {
+		attempt = 1
+	}
+	d := 500 * time.Millisecond
+	for i := 1; i < attempt; i++ {
+		d *= 2
+		if d > 30*time.Second {
+			return 30 * time.Second
+		}
+	}
+	return d
 }

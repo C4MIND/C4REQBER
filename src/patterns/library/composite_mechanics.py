@@ -142,7 +142,6 @@ class CompositeMechanicsPattern:
         cfg = self.config
 
         # Simplified Eshelby tensor for prolate spheroid (fiber)
-        alpha = cfg.aspect_ratio
         nu = cfg.nu_matrix
 
         # For long fibers (alpha >> 1)
@@ -209,10 +208,9 @@ class CompositeMechanicsPattern:
 
         C_m = self.C_matrix
         C_i = self.C_inclusion
-        S = self.S_eshelby
 
         # Strain concentration tensor: A = [I + S:C_m^(-1):(C_i - C_m)]^(-1)
-        C_diff = C_i - C_m
+        C_i - C_m
 
         # Simplified: Assume dilute + interaction correction
         # For aligned fibers, we get transversely isotropic effective properties
@@ -261,7 +259,7 @@ class CompositeMechanicsPattern:
         G_f = E_f / (2 * (1 + cfg.nu_inclusion))
         G_m = E_m / (2 * (1 + cfg.nu_matrix))
         eta_s = (G_f / G_m - 1) / (G_f / G_m + 1)
-        G_eff = G_m * (1 + eta_s * vf) / (1 - eta_s * vf)
+        G_m * (1 + eta_s * vf) / (1 - eta_s * vf)
 
         # Approximate isotropic Young's modulus
         E_eff = (E_long + 2 * E_trans) / 3
@@ -354,8 +352,6 @@ class CompositeMechanicsPattern:
         fiber_fi = abs(stress[0]) / cfg.sigma_ult_inclusion
 
         # Hashin failure criteria (simplified)
-        hashin_matrix = matrix_fi
-        hashin_fiber = fiber_fi
 
         return {
             "matrix_von_mises": float(matrix_fi),

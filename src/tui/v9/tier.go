@@ -39,7 +39,7 @@ func (t LLMTier) ModelFor() string {
 	case TierC2:
 		return "qwen-2.5-72b-instruct"
 	case TierC3:
-		return "claude-3.5-sonnet"
+		return "claude-sonnet-4.6"
 	}
 	return "unknown"
 }

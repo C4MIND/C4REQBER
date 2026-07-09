@@ -634,7 +634,7 @@ class AgentBasedPattern(SimulationPattern):
 
             recent_mean = np.mean(recent_vals)
             prev_mean = np.mean(prev_vals)
-            recent_std = np.std(recent_vals)
+            np.std(recent_vals)
             prev_std = np.std(prev_vals)
 
             # Detect significant shift
@@ -659,7 +659,7 @@ class AgentBasedPattern(SimulationPattern):
 
         # Time series analysis
         wealth_series = [m.get("mean_wealth", 0) for m in self.metrics_history]
-        gini_series = [m.get("gini_coefficient", 0) for m in self.metrics_history]
+        [m.get("gini_coefficient", 0) for m in self.metrics_history]
 
         # Trend analysis
         wealth_trend = np.polyfit(range(len(wealth_series)), wealth_series, 1)[0]

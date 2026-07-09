@@ -142,8 +142,9 @@ class PatternRunner:
         pattern_id: str,
         hypothesis: dict[str, Any] | None = None,
         params: dict[str, Any] | None = None,
+        timeout_seconds: float | None = None,
     ) -> dict[str, Any]:
-        """Execute a pattern with optional hypothesis and parameters."""
+        """Execute a pattern with optional hypothesis, parameters, and time budget."""
         instance = self._patterns.get(pattern_id)
         if instance is None:
             raise ValueError(f"Pattern '{pattern_id}' not found or failed to load")
@@ -166,10 +167,12 @@ class PatternRunner:
                 "timestamp": datetime.now().isoformat(),
             }
 
+        params = params or {}
+        fast_mode = bool(params.get("fast_mode", False))
+
         start_time = datetime.now()
 
-        try:
-            # Some patterns expect a Hypothesis dataclass, others accept dict
+        async def _execute() -> Any:
             run_method = instance.run
             sig = inspect.signature(run_method)
 
@@ -193,18 +196,22 @@ class PatternRunner:
                 else:
                     kwargs["hypothesis"] = hypothesis or {}
             if "params" in sig.parameters:
-                kwargs["params"] = params or {}
+                kwargs["params"] = params
             if "config" in sig.parameters:
-                # Try to find and instantiate a Config class from the same module
-                config = self._build_config(instance, params or {})
+                config = self._build_config(instance, params)
+                config = self._apply_fast_config(pattern_id, config, fast_mode)
                 kwargs["config"] = config
 
             if inspect.iscoroutinefunction(run_method):
-                result = await run_method(**kwargs)
+                return await run_method(**kwargs)
+            loop = asyncio.get_event_loop()
+            return await loop.run_in_executor(None, lambda: run_method(**kwargs))
+
+        try:
+            if timeout_seconds and timeout_seconds > 0:
+                result = await asyncio.wait_for(_execute(), timeout=timeout_seconds)
             else:
-                # Run synchronous run() in thread pool to avoid blocking
-                loop = asyncio.get_event_loop()
-                result = await loop.run_in_executor(None, lambda: run_method(**kwargs))
+                result = await _execute()
 
             execution_time = (datetime.now() - start_time).total_seconds()
 
@@ -224,6 +231,23 @@ class PatternRunner:
                 "timestamp": datetime.now().isoformat(),
             }
 
+        except TimeoutError:
+            execution_time = (datetime.now() - start_time).total_seconds()
+            budget = timeout_seconds or 0.0
+            logger.warning(
+                "Pattern %s exceeded time budget (%.1fs > %.1fs)",
+                pattern_id,
+                execution_time,
+                budget,
+            )
+            return {
+                "pattern_id": pattern_id,
+                "status": "timeout",
+                "error": f"Exceeded time budget of {budget:.0f}s",
+                "execution_time_seconds": execution_time,
+                "timestamp": datetime.now().isoformat(),
+            }
+
         except (ImportError, AttributeError, TypeError) as e:
             execution_time = (datetime.now() - start_time).total_seconds()
             logger.exception(f"Pattern {pattern_id} execution failed: {e}")
@@ -234,6 +258,29 @@ class PatternRunner:
                 "execution_time_seconds": execution_time,
                 "timestamp": datetime.now().isoformat(),
             }
+
+    def _apply_fast_config(self, pattern_id: str, config: Any, fast_mode: bool) -> Any:
+        """Shrink heavy simulation configs for pipeline turbo/solve runs."""
+        if not fast_mode or config is None:
+            return config
+        overrides: dict[str, dict[str, Any]] = {
+            "ocean_circulation": {"days": 1, "nx": 32, "ny": 16, "nz": 8, "output_interval": 6},
+            "climate_gcm": {"days": 3, "nx": 32, "ny": 16},
+            "cloud_microphysics": {"duration_minutes": 30, "dt": 60.0},
+            "gene_regulatory": {"t_max": 10.0, "num_genes": 5, "dt": 0.05},
+            "biogeochemistry": {"days": 7, "dt_hours": 6.0},
+            "population_genetics": {"generations": 50, "population_size": 200},
+            "reaction_diffusion": {"steps": 200, "nx": 64},
+        }
+        patch = overrides.get(pattern_id)
+        if not patch:
+            return config
+        if isinstance(config, dict):
+            return {**config, **patch}
+        for key, val in patch.items():
+            if hasattr(config, key):
+                setattr(config, key, val)
+        return config
 
     def _build_config(self, instance: Any, params: dict[str, Any]) -> Any:
         """Build a config object for patterns that require one."""
@@ -283,7 +330,6 @@ class PatternRunner:
         except (TypeError, AttributeError):
             return config_class()
 
-
     def estimate_resources(self, pattern_id: str) -> dict[str, Any]:
         """Estimate resources for a pattern."""
         instance = self._patterns.get(pattern_id)
@@ -303,4 +349,5 @@ class PatternRunner:
 def get_runner() -> PatternRunner:
     """Get singleton pattern runner (backed by DI container)."""
     from src.di.container import get_container
+
     return get_container().get_or_register("pattern_runner", PatternRunner)

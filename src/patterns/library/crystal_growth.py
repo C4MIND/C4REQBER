@@ -313,7 +313,7 @@ class CrystalGrowthPattern:
 
         # Latent heat release at interface
         # H = L * ∂φ/∂t (approximate)
-        phi_old = self.phi.copy()  # type: ignore[union-attr]
+        self.phi.copy()  # type: ignore[union-attr]
         phi_rhs = self._phase_field_rhs()
         latent_heat = cfg.latent_heat * phi_rhs * cfg.tau
 

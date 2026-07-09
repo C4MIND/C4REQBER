@@ -13,10 +13,13 @@ import (
 // known height (3-5 lines) so the viewport doesn't show a huge
 // black void below the empty placeholder.
 //
-// v9.11.7: replaces the "render a single empty placeholder card" with
-// 4 information-dense widgets that tell the user what to do and show
-// useful status info. Closes the "чернота" (black void) bug where the
-// feed was 45 lines tall but content was only 2.
+// v9.13.x polish: 7 base-layout widgets form the ALWAYS-VISIBLE base
+// panel between header and feed (per user design intent: "базовый
+// layout-интерфейса, который должен отображаться ВСЕГДА"). The 3
+// placeholder widgets (empty/title/tip/examples) only show when feed
+// is empty; the 4 dashboard widgets (status/shortcuts/modes/achievements)
+// stay visible across discoveries so the user always has a live
+// cockpit dashboard.
 func (m *model) emptyWidgets() []Card {
 	now := m.startedAt
 	if now.IsZero() {
@@ -43,27 +46,37 @@ func (m *model) emptyWidgets() []Card {
 	lang := string(i18n.GetLang())
 	discoveries := m.completedDisc
 	langs := len(m.langsSeen)
-	return []Card{
-		{
-			Kind:  CardEmpty,
-			Title: i18n.T("empty.title"),
-			Body:  i18n.T("empty.hint"),
-			Time:  now,
-		},
-		{
-			Kind:  CardPhase,
-			Title: i18n.T("widget.tip.title"),
-			Body:  i18n.T("widget.tip.body"),
-			Time:  now.Add(timeSecond(1)),
-		},
-		{
-			Kind:  CardPhase,
-			Title: i18n.T("widget.examples.title"),
-			Body:  m.tipExample(),
-			Time:  now.Add(timeSecond(2)),
-		},
-		{
-			Kind:  CardPhase,
+
+	cards := []Card{}
+
+	// Placeholder widgets: only when no discoveries yet
+	if m.feedIsEmpty() {
+		cards = append(cards,
+			Card{
+				Kind:  CardEmpty,
+				Title: i18n.T("empty.title"),
+				Body:  i18n.T("empty.hint"),
+				Time:  now,
+			},
+			Card{
+				Kind:  CardPhase,
+				Title: i18n.T("widget.tip.title"),
+				Body:  i18n.T("widget.tip.body"),
+				Time:  now.Add(timeSecond(1)),
+			},
+			Card{
+				Kind:  CardPhase,
+				Title: i18n.T("widget.examples.title"),
+				Body:  m.tipExample(),
+				Time:  now.Add(timeSecond(2)),
+			},
+		)
+	}
+
+	// Dashboard widgets: always visible (status, shortcuts, modes, achievements)
+	cards = append(cards,
+		Card{
+			Kind: CardPhase,
 			Title: i18n.T("widget.status.title"),
 			Body: fmt.Sprintf(
 				"%s  •  %s  •  %s  •  %s  •  %d %s  •  %d %s",
@@ -73,25 +86,27 @@ func (m *model) emptyWidgets() []Card {
 			) + "\n" + stats,
 			Time: now.Add(timeSecond(3)),
 		},
-		{
+		Card{
 			Kind:  CardPhase,
 			Title: i18n.T("widget.shortcuts.title"),
 			Body:  m.tipShortcuts(),
 			Time:  now.Add(timeSecond(4)),
 		},
-		{
+		Card{
 			Kind:  CardPhase,
 			Title: i18n.T("widget.modes.title"),
 			Body:  m.tipModes(),
 			Time:  now.Add(timeSecond(5)),
 		},
-		{
+		Card{
 			Kind:  CardPhase,
 			Title: i18n.T("widget.achievements.title"),
 			Body:  i18n.T("widget.achievements.body"),
 			Time:  now.Add(timeSecond(6)),
 		},
-	}
+	)
+
+	return cards
 }
 
 // tipExample returns a rotating example query to inspire the user.

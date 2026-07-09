@@ -43,14 +43,19 @@ type FeedStore struct {
 	maxLen int
 }
 
-// NewFeedStore opens the feed at ~/.config/c4reqber/tui-v9-feed.jsonl
-// with the given cap (max lines retained).
+// NewFeedStore opens the feed at ~/.c4reqber/tui-v9-feed.jsonl (preferred)
+// falling back to ~/.config/c4reqber (XDG migration only), with the given cap.
 func NewFeedStore(maxLen int) (*FeedStore, error) {
 	if maxLen <= 0 {
 		maxLen = 50
 	}
 	home, _ := os.UserHomeDir()
-	p := filepath.Join(home, ".config", "c4reqber", "tui-v9-feed.jsonl")
+	// Align with Python + persist.DefaultPath for unified desktop config dir
+	dir := filepath.Join(home, ".c4reqber")
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		dir = filepath.Join(home, ".config", "c4reqber")
+	}
+	p := filepath.Join(dir, "tui-v9-feed.jsonl")
 	return &FeedStore{path: p, maxLen: maxLen}, nil
 }
 
@@ -61,10 +66,10 @@ func (f *FeedStore) Path() string { return f.path }
 func (f *FeedStore) Append(e FeedEntry) error {
 	f.mu.Lock()
 	defer f.mu.Unlock()
-	if err := os.MkdirAll(filepath.Dir(f.path), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(f.path), 0o755); err != nil {
 		return err
 	}
-	file, err := os.OpenFile(f.path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	file, err := os.OpenFile(f.path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
 	if err != nil {
 		return err
 	}
@@ -80,6 +85,10 @@ func (f *FeedStore) Append(e FeedEntry) error {
 }
 
 // LoadRecent reads the last N entries (most recent first).
+// v9.13.x: deduplicates entries with the same (Kind, Title) — historically
+// achievement cards were re-appended on every TUI restart, leaving
+// multiple "First Discovery" / "Quality S" rows in the feed. We keep
+// only the most recent entry per (Kind, Title) pair.
 func (f *FeedStore) LoadRecent(n int) ([]FeedEntry, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
@@ -104,16 +113,34 @@ func (f *FeedStore) LoadRecent(n int) ([]FeedEntry, error) {
 	if err := scanner.Err(); err != nil {
 		return nil, err
 	}
-	// Take last n
-	if n > 0 && len(lines) > n {
-		lines = lines[len(lines)-n:]
+	// Take last n (over-read for dedup window)
+	if n > 0 && len(lines) > n*2 {
+		lines = lines[len(lines)-n*2:]
 	}
 	out := make([]FeedEntry, 0, len(lines))
+	// Track seen (Kind, Title) pairs — keep only the first (most recent
+	// after the upcoming reverse).
+	seen := map[string]bool{}
 	for _, raw := range lines {
 		var e FeedEntry
-		if err := json.Unmarshal(raw, &e); err == nil {
-			out = append(out, e)
+		if err := json.Unmarshal(raw, &e); err != nil {
+			continue
 		}
+		// Bookmark entries are never deduped (they're user-pinned).
+		if e.Bookmark {
+			out = append(out, e)
+			continue
+		}
+		key := feedDedupKey(e)
+		if seen[key] {
+			continue
+		}
+		seen[key] = true
+		out = append(out, e)
+	}
+	// Cap to n
+	if n > 0 && len(out) > n {
+		out = out[:n]
 	}
 	// Reverse to most-recent-first
 	for i, j := 0, len(out)-1; i < j; i, j = i+1, j-1 {
@@ -122,10 +149,18 @@ func (f *FeedStore) LoadRecent(n int) ([]FeedEntry, error) {
 	return out, nil
 }
 
+// feedDedupKey returns a stable identity for an entry so duplicates
+// can be collapsed. Title alone is usually enough (achievements are
+// titled by name), but we also include Kind to avoid collapsing
+// different cards that happen to share a title.
+func feedDedupKey(e FeedEntry) string {
+	return fmt.Sprintf("%d|%s", e.Kind, e.Title)
+}
+
 // Prune keeps the most recent maxLen entries (bookmarked always kept).
 // On a 50-cap file this is sub-millisecond.
 func (f *FeedStore) Prune() error {
-	entries, err := f.LoadRecent(f.maxLen * 4) // over-read
+	entries, err := f.LoadRecent(f.maxLen * 2) // over-read 2x for headroom (audit M-11)
 	if err != nil {
 		return err
 	}
@@ -172,10 +207,10 @@ func (f *FeedStore) Prune() error {
 
 // InputHistory persists the last N queries, deduped MRU.
 type InputHistory struct {
-	mu     sync.Mutex
-	path   string
-	limit  int
-	items  []HistoryItem
+	mu    sync.Mutex
+	path  string
+	limit int
+	items []HistoryItem
 }
 
 type HistoryItem struct {
@@ -184,14 +219,18 @@ type HistoryItem struct {
 	LastUsed time.Time `json:"last_used"`
 }
 
-// NewInputHistory creates a store at ~/.config/c4reqber/tui-v9-input-history.json
-// with the given cap (default 200).
+// NewInputHistory creates a store at ~/.c4reqber/tui-v9-input-history.json (unified)
+// or ~/.config fallback, with the given cap (default 200).
 func NewInputHistory(limit int) (*InputHistory, error) {
 	if limit <= 0 {
 		limit = 200
 	}
 	home, _ := os.UserHomeDir()
-	p := filepath.Join(home, ".config", "c4reqber", "tui-v9-input-history.json")
+	dir := filepath.Join(home, ".c4reqber")
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		dir = filepath.Join(home, ".config", "c4reqber")
+	}
+	p := filepath.Join(dir, "tui-v9-input-history.json")
 	h := &InputHistory{path: p, limit: limit}
 	h.load()
 	return h, nil
@@ -211,10 +250,10 @@ func (h *InputHistory) save() error {
 	if err != nil {
 		return err
 	}
-	if err := os.MkdirAll(filepath.Dir(h.path), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(h.path), 0o755); err != nil {
 		return err
 	}
-	return os.WriteFile(h.path, data, 0644)
+	return os.WriteFile(h.path, data, 0o644)
 }
 
 // Add inserts a query at the head (MRU). Dedupes against existing
@@ -254,6 +293,3 @@ func (h *InputHistory) Recent(n int) []HistoryItem {
 	copy(out, h.items[:n])
 	return out
 }
-
-// ensure import is used
-var _ = fmt.Sprintf

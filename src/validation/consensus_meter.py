@@ -355,7 +355,7 @@ class ConsensusMeter:
             # Simple heuristic: if hypothesis keywords in abstract, count as supporting
             # In production, use LLM for actual classification
             abstract = getattr(paper, "abstract", "") or ""
-            title = getattr(paper, "title", "") or ""
+            getattr(paper, "title", "") or ""
 
             # Classify using term frequency analysis
             classification = self._classify_consensus(hypothesis, abstract)

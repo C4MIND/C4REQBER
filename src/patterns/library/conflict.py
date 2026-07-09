@@ -300,13 +300,10 @@ class ConflictPattern:
         # Determine winner
         if self.force_a > self.force_b:
             winner = "A"
-            winner_prob = 1.0
         elif self.force_b > self.force_a:
             winner = "B"
-            winner_prob = 0.0
         else:
             winner = "draw"
-            winner_prob = 0.5
 
         # Casualty rates
         casualty_rate_a = (

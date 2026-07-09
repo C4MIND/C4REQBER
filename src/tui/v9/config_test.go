@@ -210,7 +210,8 @@ func TestHistory_SaveTelemetryHistory_CreatesFile(t *testing.T) {
 	// Wait briefly for write
 	time.Sleep(50 * time.Millisecond)
 	// New format: timestamped files (one per run)
-	dir := filepath.Join(tmp, ".config", "c4reqber")
+	// v9.13.x: unified to ~/.c4reqber
+	dir := filepath.Join(tmp, ".c4reqber")
 	entries, err := os.ReadDir(dir)
 	if err != nil {
 		t.Fatalf("history dir not created: %v", err)

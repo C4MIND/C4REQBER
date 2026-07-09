@@ -128,7 +128,7 @@ class WASMPluginRuntime:
                     break
                 shift += 7
             if section_id == 7:  # export section
-                end = pos + size
+                pos + size
                 num_exports, shift = 0, 0
                 while True:
                     byte = wasm_bytes[pos]

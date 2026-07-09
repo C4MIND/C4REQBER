@@ -234,7 +234,7 @@ def randomized_block_design(config: DoEConfig) -> DoEResult:
     if config.blocks is None or config.blocks < 2:
         raise ValueError("blocks must be >= 2 for randomized block design")
     names, lows, highs, levels = _validate_and_encode(config.factors)
-    n_treatments = int(np.prod([lv for lv in levels]))
+    int(np.prod([lv for lv in levels]))
     n_blocks = config.blocks
     design = []
     block_assign = []

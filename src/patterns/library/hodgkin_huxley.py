@@ -282,7 +282,7 @@ class HodgkinHuxleyPattern(SimulationPattern):
         # Calculate ionic currents
         I_Na = cfg.g_Na * m**3 * h * (V - cfg.E_Na)
         I_K = cfg.g_K * n**4 * (V - cfg.E_K)
-        I_L = cfg.g_L * (V - cfg.E_L)
+        cfg.g_L * (V - cfg.E_L)
 
         # Find action potentials (spikes)
         spike_threshold = -20.0  # mV

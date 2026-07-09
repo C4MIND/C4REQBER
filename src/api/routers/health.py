@@ -66,7 +66,7 @@ async def _check_llm_providers() -> tuple[str, str | None]:
         return "error", str(e)
 
 
-@router.get("/health")
+@router.get("/health", operation_id="healthCheck")
 async def health_check() -> Any:
     """General health status. Returns 200 if process is alive."""
     uptime_seconds = int(time.time() - START_TIME)

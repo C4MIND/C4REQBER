@@ -60,31 +60,35 @@
     <pre><code>pip install c4reqber</code></pre>
     <p>Requires Python 3.11+.</p>
     <p>Verify the installation:</p>
-    <pre><code>c4reqber --version  # should print 5.6.0</code></pre>
+    <pre><code>blast --help  # c4reqber v5.6.0</code></pre>
     <p>Run the interactive configuration wizard:</p>
-    <pre><code>c4reqber init</code></pre>
+    <pre><code>blast setup</code></pre>
 
     <h2>2. Quick Commands</h2>
     <table>
       <tr><th>Command</th><th>What it does</th></tr>
-      <tr><td><code>c4reqber solve "problem"</code></td><td>One-shot discovery pipeline → article/blueprint/whitepaper</td></tr>
-      <tr><td><code>c4reqber turbo "topic"</code></td><td>Paradigm-shifting research proposal + verification</td></tr>
-      <tr><td><code>c4reqber flash "question"</code></td><td>Quick answer (2–10s)</td></tr>
-      <tr><td><code>c4reqber auto "query"</code></td><td>Auto-routed to best mode</td></tr>
-      <tr><td><code>c4reqber turbofactory "domain"</code></td><td>Parallel pipeline factory (mini/standard/mega/giga)</td></tr>
-      <tr><td><code>c4reqber tui</code></td><td>Interactive terminal with / slash commands</td></tr>
-      <tr><td><code>c4reqber serve --mcp</code></td><td>MCP server for AI agents (20 tools)</td></tr>
+      <tr><td><code>blast solve "problem"</code></td><td>One-shot discovery pipeline → article/blueprint/whitepaper</td></tr>
+      <tr><td><code>blast turbo "topic"</code></td><td>Paradigm-shifting research proposal + verification</td></tr>
+      <tr><td><code>blast flash "question"</code></td><td>Quick answer (2–10s)</td></tr>
+      <tr><td><code>blast auto "query"</code></td><td>Auto-routed to best mode</td></tr>
+      <tr><td><code>blast turbofactory "domain"</code></td><td>Parallel pipeline factory (mini/standard/mega/giga)</td></tr>
+      <tr><td><code>blast tui</code></td><td>TUI v9 Cockpit — feed-driven discovery UI</td></tr>
+      <tr><td><code>blast tui --demo --story=crispr</code></td><td>Demo mode without backend</td></tr>
+      <tr><td><code>blast serve --mcp</code></td><td>MCP server for AI agents (21 tools)</td></tr>
     </table>
 
     <h2>3. Your First Discovery</h2>
     <pre><code># One-shot discovery → strategic artifact
-c4reqber solve "quantum effects in photosynthesis"
+blast solve "quantum effects in photosynthesis"
 
 # Paradigm-shifting dissertation
-c4reqber turbo "language evolution through horizontal gene transfer"
+blast turbo "language evolution through horizontal gene transfer"
 
 # Quick answer with sources
-c4reqber flash "What is the TRIZ principle of segmentation?" --sources</code></pre>
+blast flash "What is the TRIZ principle of segmentation?" --sources
+
+# TUI v9 Cockpit
+blast tui</code></pre>
 
     <h2>4. MCP Server Setup</h2>
     <p>c4reqber can be used as an MCP tool for AI agents (Claude, Cursor, Cline, Continue.dev). Add it to your MCP configuration:</p>
@@ -92,8 +96,8 @@ c4reqber flash "What is the TRIZ principle of segmentation?" --sources</code></p
 {
   "mcpServers": {
     "c4reqber": {
-      "command": "python3",
-      "args": ["-m", "c4reqber", "serve", "--mcp"]
+      "command": "blast",
+      "args": ["serve", "--mcp"]
     }
   }
 }</code></pre>

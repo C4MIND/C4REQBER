@@ -1,11 +1,8 @@
 package tui
 
 import (
-	"context"
 	"sync"
 	"time"
-
-	"github.com/figuramax/c4reqber-tui-v9/api"
 )
 
 // ReconnectPolicy controls SSE auto-reconnect with exponential backoff.
@@ -81,65 +78,4 @@ func (s *sseState) Attempts() int {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	return s.attempts
-}
-
-// SSEStreamResult is the message returned by sseStreamWithReconnect.
-type SSEStreamResult struct {
-	JobID    string
-	Event    api.SSEEvent
-	Err      error
-	Attempt  int
-	Reopened bool // true if this event came from a reconnect
-}
-
-func sseStreamWithReconnect(ctx context.Context, c *api.Client, jobID string, state *sseState) <-chan SSEStreamResult {
-	out := make(chan SSEStreamResult, 16)
-	go func() {
-		defer close(out)
-		for {
-			if state.Cancelled() {
-				return
-			}
-			attempt := state.Attempts()
-			events, cancelFn, err := c.Stream(ctx, jobID)
-			if err != nil {
-				state.mu.Lock()
-				_ = err // ensure used
-				state.mu.Unlock()
-				if state.streamErrCb != nil {
-					state.streamErrCb(err, attempt)
-				}
-				delay := state.NextDelay()
-				if delay == 0 {
-					out <- SSEStreamResult{JobID: jobID, Err: err, Attempt: attempt}
-					return
-				}
-				time.Sleep(delay)
-				continue
-			}
-			// Stream opened — drain events
-			opened := attempt > 0
-			streamDone := false
-			for ev := range events {
-				if state.Cancelled() {
-					cancelFn()
-					return
-				}
-				out <- SSEStreamResult{JobID: jobID, Event: ev, Attempt: attempt, Reopened: opened}
-			}
-			cancelFn()
-			// If we got here without an explicit "complete" event, reconnect
-			// (this is the reconnect path: server closed connection early)
-			_ = streamDone
-			if state.Cancelled() {
-				return
-			}
-			delay := state.NextDelay()
-			if delay == 0 {
-				return
-			}
-			time.Sleep(delay)
-		}
-	}()
-	return out
 }

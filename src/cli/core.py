@@ -6,6 +6,7 @@ import os
 import sys
 from typing import Any
 
+from src.config import get_key
 from src.llm.client import LLMClient
 
 
@@ -16,7 +17,7 @@ sys.path.insert(0, _SRC_DIR)
 
 def get_llm_client() -> Any:
     """Get LLM client based on environment."""
-    api_key = os.getenv("OPENROUTER_API_KEY")
+    api_key = get_key("openrouter") or os.getenv("OPENROUTER_API_KEY")  # ~/.c4reqber central
     if not api_key:
         raise RuntimeError(
             "No LLM provider available. Set OPENROUTER_API_KEY in .env\n"

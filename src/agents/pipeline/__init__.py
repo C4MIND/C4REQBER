@@ -17,6 +17,7 @@ from src.agents.solve_pipeline import (
     UniversalSolvePipeline,
 )
 
+
 __all__ = [
     "PipelineStage",
     "PipelineStep",

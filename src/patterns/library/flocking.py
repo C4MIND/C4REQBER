@@ -107,7 +107,6 @@ class FlockingPattern:
     def _distance_matrix(self) -> np.ndarray:
         """Calculate pairwise distances with boundary conditions"""
         cfg = self.config
-        n = cfg.n_agents
 
         if cfg.boundary_mode == "periodic":
             # Minimum image convention

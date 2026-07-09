@@ -17,19 +17,22 @@ import (
 // init registers bubblezone for the package.
 func init() { zone.NewGlobal() }
 
-// View composes the 4 regions.
+// View composes the regions.
 func (m *model) View() tea.View {
 	if m.width == 0 {
 		v := tea.NewView("loading…")
 		v.AltScreen = true
 		return v
 	}
-	regions := []string{
-		m.renderHeader(),
-		m.renderFeed(),
-		m.renderInput(),
-		m.renderFooter(),
+	// v9.13.x: ALWAYS-VISIBLE base-layout panel between header and feed
+	// (per user design intent). The 7 widgets form a fixed dashboard
+	// that doesn't scroll away when discoveries are added.
+	parts := []string{m.renderHeader()}
+	if bp := m.renderBasePanel(); bp != "" {
+		parts = append(parts, bp)
 	}
+	parts = append(parts, m.renderFeed(), m.renderInput(), m.renderFooter())
+	regions := parts
 	// v9.13 (§3.3): status bar (1 line, between footer and input).
 	// Renders empty string at T0/T1 or when toggled off.
 	if bar := m.renderStatusBar(); bar != "" {
@@ -56,7 +59,7 @@ func (m *model) View() tea.View {
 	}
 	// v9.10: achievement fullscreen overlay
 	if m.showAchievementOverlay && !m.showHelp && (m.wizard == nil || !m.wizard.Active()) {
-		body = renderAchievementOverlay(*m.achievements, m.width, m.height)
+		body = renderAchievementOverlay(m.achievements, m.width, m.height)
 	}
 	if m.burst.Active() {
 		body = overlayRegion(body, m.burst.Render(), 0, 0, m.width)
@@ -130,6 +133,29 @@ func (m *model) renderFeed() string {
 	return m.vp.View()
 }
 
+// renderBasePanel renders the ALWAYS-VISIBLE base-layout widget panel
+// (7 dashboard widgets: empty placeholder, tip, examples, status,
+// shortcuts, modes, achievements). Truncated to basePanelH rows so
+// the layout stays fixed regardless of terminal size.
+func (m *model) renderBasePanel() string {
+	if m.basePanelH <= 0 {
+		return ""
+	}
+	raw := m.renderEmptyWidgets()
+	lines := strings.Split(raw, "\n")
+	// Truncate to allocated height (or pad with blanks to fill the region).
+	if len(lines) > m.basePanelH {
+		lines = lines[:m.basePanelH]
+	} else if len(lines) < m.basePanelH {
+		pad := make([]string, m.basePanelH-len(lines))
+		for i := range pad {
+			pad[i] = strings.Repeat(" ", m.width)
+		}
+		lines = append(lines, pad...)
+	}
+	return strings.Join(lines, "\n")
+}
+
 func (m *model) renderInput() string {
 	return m.ta.View()
 }
@@ -155,24 +181,56 @@ func (m *model) renderFooter() string {
 	if m.toast != "" {
 		right = m.toast + "  " + right
 	}
-	// v9.12.3: simple padding to width — lipgloss.Width() miscalculates
-	// Unicode characters (▶⏵ etc.) causing overflow and terminal wrap.
-	line := left + strings.Repeat(" ", max(1, m.width-len([]rune(left))-len([]rune(right)))) + right
-	if len([]rune(line)) < m.width {
-		line += strings.Repeat(" ", m.width-len([]rune(line)))
+	// v9.12.3 + v9.13.x: pad by RUNE counts and slice by runes, never bytes.
+	// Mixing `len(line)` (bytes) with `m.width` (rune columns) used to slice
+	// mid-UTF-8 when `left` contained multi-byte glyphs (▶⏵), cutting the
+	// right portion of the footer (e.g. "letter t missing" on the right edge).
+	leftRunes := len([]rune(left))
+	rightRunes := len([]rune(right))
+	gap := m.width - leftRunes - rightRunes
+	if gap < 1 {
+		gap = 1
 	}
-	return line[:min(len(line), m.width)]
+	line := left + strings.Repeat(" ", gap) + right
+	runes := []rune(line)
+	if len(runes) < m.width {
+		runes = append(runes, []rune(strings.Repeat(" ", m.width-len(runes)))...)
+	} else if len(runes) > m.width {
+		runes = runes[:m.width]
+	}
+	return string(runes)
 }
 
 func (m *model) layout() {
-	// v9.13: use the new ComputeLayout engine (§4 of the unified plan).
-	l := ComputeLayout(m.width, m.height, m.showStatusBar)
+	// v9.13.x: use the new ComputeLayout engine with the always-visible
+	// base-layout panel between header and feed (per user design intent).
+	baseH := m.computeBasePanelHeight()
+	l := ComputeLayout(m.width, m.height, m.showStatusBar, baseH)
 	m.vp.SetWidth(l.Feed.W)
 	m.vp.SetHeight(l.Feed.H)
 	m.ta.SetWidth(l.Input.W)
 	m.ta.SetHeight(l.Input.H)
 	m.rain.SetSize(l.Feed.W, l.Feed.H)
 	m.sparks.SetSize(l.Input.W, l.Input.H)
+	m.basePanelH = baseH
+}
+
+// computeBasePanelHeight returns the desired height (in rows) of the
+// always-visible base-layout widget panel. Adapts to terminal tier:
+// small terminals hide the panel to keep the feed usable; large
+// terminals show the full 7-widget dashboard.
+func (m *model) computeBasePanelHeight() int {
+	tierW := m.width
+	if tierW < 100 {
+		return 0 // T0: hide panel, keep feed
+	}
+	if tierW < 140 {
+		return 16 // T1: compact panel
+	}
+	if tierW < 200 {
+		return 22 // T2: standard panel
+	}
+	return 28 // T3: full panel
 }
 
 // overlayRegion paints overlay over base starting at line fromY.
@@ -220,7 +278,7 @@ func renderCard(c Card, width int, verdictChips string, focused, expanded bool) 
 	if expanded {
 		border = "║" // yet another border on expand
 	}
-	zoneID := fmt.Sprintf("card-%d", c.Time.UnixNano())
+	zoneID := fmt.Sprintf("card-%d", c.ID)
 	var inner string
 	switch c.Kind {
 	case CardPhase:
@@ -249,7 +307,7 @@ func renderCard(c Card, width int, verdictChips string, focused, expanded bool) 
 		if verdictChips != "" {
 			meta = "\n" + border + "  " + verdictChips + meta
 		}
-		inner = border+" "+title+"\n"+border+"  "+body+meta; break
+		inner = border + " " + title + "\n" + border + "  " + body + meta
 	case CardPaper:
 		title := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("4")).Render("📚 " + c.Title)
 		body := lipgloss.NewStyle().Foreground(lipgloss.Color("7")).Render(c.Body)
@@ -257,11 +315,11 @@ func renderCard(c Card, width int, verdictChips string, focused, expanded bool) 
 		for _, m := range c.Meta {
 			meta += "\n" + border + "  " + lipgloss.NewStyle().Foreground(lipgloss.Color("8")).Render(m.Key+": "+m.Value)
 		}
-		inner = border+" "+title+"\n"+border+"  "+body+meta; break
+		inner = border + " " + title + "\n" + border + "  " + body + meta
 	case CardCode:
 		title := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("5")).Render("⚙ " + c.Title)
 		body := lipgloss.NewStyle().Foreground(lipgloss.Color("7")).Render(c.Body)
-		inner = border+" "+title+"\n"+border+"  "+body; break
+		inner = border + " " + title + "\n" + border + "  " + body
 	case CardSimulation:
 		// NEW in v9.13 (TI-SIM-01). Status icon + engine + pattern + domain.
 		icon := cards.StatusIcon(c.Sim.EngineStatus)
@@ -313,15 +371,15 @@ func renderCard(c Card, width int, verdictChips string, focused, expanded bool) 
 		if actStr != "" {
 			meta += "\n" + border + "  " + lipgloss.NewStyle().Foreground(lipgloss.Color("8")).Render("↳ "+actStr)
 		}
-		inner = border+" "+title+"\n"+border+"  "+bodyRendered+meta; break
+		inner = border + " " + title + "\n" + border + "  " + bodyRendered + meta
 	case CardError:
 		title := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("1")).Render("✗ " + c.Title)
 		body := lipgloss.NewStyle().Foreground(lipgloss.Color("9")).Render(c.Body)
-		inner = border+" "+title+"\n"+border+"  "+body; break
+		inner = border + " " + title + "\n" + border + "  " + body
 	default:
 		title := lipgloss.NewStyle().Foreground(lipgloss.Color("8")).Render(c.Title)
 		body := lipgloss.NewStyle().Foreground(lipgloss.Color("7")).Render(c.Body)
-		inner = border+" "+title+"\n"+border+"  "+body; break
+		inner = border + " " + title + "\n" + border + "  " + body
 	}
 	// v9.13 (F-12): if expanded and FullBody is set, append it as
 	// additional body lines. Wrap to width. If no FullBody, show a

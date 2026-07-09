@@ -7,8 +7,6 @@ import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
-from datetime import datetime
-from typing import Dict, List, Optional
 
 
 @dataclass

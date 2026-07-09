@@ -8,6 +8,8 @@ import time
 from collections import Counter
 from typing import Any, cast
 
+from src.config import get_key
+
 from .cache import SearchCache
 from .config import DOMAIN_KEYWORDS, SOURCE_REGISTRY, _norm_title
 from .sources.arxiv import ArxivAdapter
@@ -139,7 +141,6 @@ class MultiSourceSearcher:
             # adding circuit-breaker with longer cooldown.
             # "semantic_scholar": SemanticScholarAdapter,
             "openalex": OpenAlexAdapter,
-            "openalex": OpenAlexAdapter,
             "crossref": CrossrefAdapter,
             "arxiv": ArxivAdapter,
             "pubmed": PubmedAdapter,
@@ -202,9 +203,15 @@ class MultiSourceSearcher:
             key: str | None = None
             if cfg.get("needs_key"):
                 api_key_env = cfg.get("api_key_env", f"{src_id.upper()}_API_KEY")
-                key = os.environ.get(api_key_env) or os.environ.get(api_key_env.upper()) or self._api_keys.get(api_key_env, "")
-                if not key:
-                    key = self._api_keys.get(api_key_env.upper(), "")
+                # Central config first (from ~/.c4reqber), then passed dict, then env
+                key = (
+                    get_key(src_id)
+                    or get_key(api_key_env)
+                    or self._api_keys.get(api_key_env, "")
+                    or self._api_keys.get(api_key_env.upper(), "")
+                    or os.environ.get(api_key_env)
+                    or os.environ.get(api_key_env.upper())
+                )
                 if not key:
                     logger.debug("Skipping %s: API key required (%s)", src_id, api_key_env)
                     continue

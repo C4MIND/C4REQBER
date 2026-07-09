@@ -12,6 +12,7 @@ All P1 adapters must inherit from BaseSimulationAdapter and implement
 is_available() + run().  If the underlying engine is not installed,
 the adapter returns status="unavailable" with an install_hint.
 """
+
 from __future__ import annotations
 
 import abc
@@ -19,14 +20,14 @@ import logging
 import time
 import traceback
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 
 logger = logging.getLogger(__name__)
 
 
-class SimStatus(str, Enum):
+class SimStatus(StrEnum):
     """Simulation execution status."""
 
     READY = "ready"
@@ -139,9 +140,7 @@ class BaseSimulationAdapter(abc.ABC):
             metadata={"engine": self._engine_name},
         )
 
-    def _run_wrapped(
-        self, fn: callable, input_data: dict[str, Any] | None
-    ) -> SimulationResult:
+    def _run_wrapped(self, fn: callable, input_data: dict[str, Any] | None) -> SimulationResult:
         """Wrap a concrete run with timing, logging and exception handling."""
         if not self.is_available():
             return self._make_unavailable()

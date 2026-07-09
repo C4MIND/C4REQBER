@@ -211,8 +211,8 @@ class GeomagneticPattern:
 
         for j in range(1, cfg.ntheta - 1):
             for k in range(cfg.nphi):
-                kp1 = (k + 1) % cfg.nphi
-                km1 = (k - 1) % cfg.nphi
+                (k + 1) % cfg.nphi
+                (k - 1) % cfg.nphi
 
                 j_r[:, j, k] = (
                     (
@@ -302,7 +302,6 @@ class GeomagneticPattern:
 
     def _apply_boundary_conditions(self) -> None:
         """Apply boundary conditions"""
-        cfg = self.config
 
         # Velocity: no-slip at boundaries
         self.v_r[0, :, :] = 0

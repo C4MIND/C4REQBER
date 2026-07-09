@@ -16,19 +16,15 @@ The agent:
 
 import asyncio
 import json
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
 
 from rich.console import Console
-from rich.panel import Panel
 from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
-from rich.table import Table
 
 from src.analogy import AnalogyResult, get_analogy_engine
 from src.graph.knowledge_graph import get_knowledge_graph
-from src.models.pydantic_models import C4StateModel, DiscoveryModel
 from src.triz import get_c4_triz_bridge_obj
 from src.validation import FalsifiabilityCriterion, get_validation_tracker
 

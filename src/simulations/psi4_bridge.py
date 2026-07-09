@@ -37,7 +37,7 @@ class Psi4Bridge(BaseSimulationAdapter):
             method = self._params.get("method", "scf")
             mol_str = data.get("molecule", "H 0 0 0\nH 0 0 0.74\nsymmetry c1")
 
-            mol = psi4.geometry(mol_str)
+            psi4.geometry(mol_str)
             energy = psi4.energy(f"{method}/{basis}")
 
             return {

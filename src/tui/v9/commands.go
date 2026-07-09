@@ -2,7 +2,6 @@ package tui
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	tea "charm.land/bubbletea/v2"
@@ -18,14 +17,8 @@ func submitCmd(c *api.Client, query, domain, tier string) tea.Cmd {
 	return func() tea.Msg {
 		ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 		defer cancel()
-		if err := c.Health(ctx); err != nil {
-			return apiSubmitMsg{err: fmt.Errorf("health check failed: %w", err)}
-		}
-		if err := c.Register(ctx, "kilo-v9@test.com", "test12345", "Kilo v9"); err != nil {
-			return apiSubmitMsg{err: fmt.Errorf("register failed: %w", err)}
-		}
-		if err := c.Login(ctx, "kilo-v9@test.com", "test12345"); err != nil {
-			return apiSubmitMsg{err: fmt.Errorf("login failed: %w", err)}
+		if err := ensureAPIAuth(ctx, c); err != nil {
+			return apiSubmitMsg{err: err}
 		}
 		id, err := c.OneClickWithTier(ctx, query, domain, tier, "human")
 		return apiSubmitMsg{jobID: id, err: err}
@@ -92,54 +85,16 @@ func sseContinueCmd(events <-chan api.SSEEvent, cancel func()) tea.Cmd {
 	}
 }
 
-// papersCmd for /v8/knowledge/search.
-func papersCmd(c *api.Client, query string) tea.Cmd {
-	return func() tea.Msg {
-		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-		defer cancel()
-		papers, err := c.KnowledgeSearch(ctx, query, 3)
-		if err != nil {
-			return apiPapersMsg{err: err}
-		}
-		return apiPapersMsg{papers: papers}
-	}
-}
-
 // flashCmd runs /v8/discover/flash (sync, ~5-10s).
 func flashCmd(c *api.Client, query string) tea.Cmd {
 	return func() tea.Msg {
 		ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 		defer cancel()
-		if err := c.Health(ctx); err != nil {
-			return flashResultMsg{err: fmt.Errorf("health check failed: %w", err)}
+		if err := ensureAPIAuth(ctx, c); err != nil {
+			return flashResultMsg{err: err}
 		}
-		if err := c.Register(ctx, "kilo-v9@test.com", "test12345", "Kilo v9"); err != nil {
-			return flashResultMsg{err: fmt.Errorf("register failed: %w", err)}
-		}
-		if err := c.Login(ctx, "kilo-v9@test.com", "test12345"); err != nil {
-			return flashResultMsg{err: fmt.Errorf("login failed: %w", err)}
-		}
-		result, err := c.Flash(ctx, query, "science")
+		result, err := c.FlashAndWait(ctx, query, "science")
 		return flashResultMsg{result: result, err: err}
-	}
-}
-
-// multiCmd runs /v8/discover/multi (sync, multi-hypothesis).
-func multiCmd(c *api.Client, query string) tea.Cmd {
-	return func() tea.Msg {
-		ctx, cancel := context.WithTimeout(context.Background(), 90*time.Second)
-		defer cancel()
-		if err := c.Health(ctx); err != nil {
-			return multiResultMsg{err: fmt.Errorf("health check failed: %w", err)}
-		}
-		if err := c.Register(ctx, "kilo-v9@test.com", "test12345", "Kilo v9"); err != nil {
-			return multiResultMsg{err: fmt.Errorf("register failed: %w", err)}
-		}
-		if err := c.Login(ctx, "kilo-v9@test.com", "test12345"); err != nil {
-			return multiResultMsg{err: fmt.Errorf("login failed: %w", err)}
-		}
-		result, err := c.Multi(ctx, query, "science", 3)
-		return multiResultMsg{result: result, err: err}
 	}
 }
 

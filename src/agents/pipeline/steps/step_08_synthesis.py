@@ -1,6 +1,7 @@
 """
 C4REQBER: Pipeline Step 08 — Synthesis
 """
+
 from __future__ import annotations
 
 import logging
@@ -15,18 +16,20 @@ def _count_tokens(text: str) -> int:
     """Count tokens using tiktoken if available, otherwise approximate."""
     try:
         import tiktoken
+
         enc = tiktoken.get_encoding("cl100k_base")
         return len(enc.encode(text))
     except Exception:
         return len(text) // 4
+
 
 from src.agents.pipeline.steps.base import (
     PipelineStage,
     PipelineStep,
     PipelineStepResult,
 )
-from src.discovery.pipeline_logic import _sanitize_for_prompt
 from src.c4.state import C4State
+from src.discovery.pipeline_logic import _sanitize_for_prompt
 from src.knowledge.citation_verifier import CitationVerifier
 from src.knowledge.novelty_scorer import NoveltyScorer
 from src.metamodels.mp.profiles import AgentPerspective
@@ -92,7 +95,10 @@ class SynthesisStep(PipelineStep):
                         entry += f"\n    DOI: {doi}"
                     source_entries.append(entry)
             if source_entries:
-                rag_section = "\n\nRELEVANT RESEARCH (ground your claims in these sources):\n" + "\n\n".join(source_entries)
+                rag_section = (
+                    "\n\nRELEVANT RESEARCH (ground your claims in these sources):\n"
+                    + "\n\n".join(source_entries)
+                )
             else:
                 rag_section = "\n\nRELEVANT RESEARCH: No external sources retrieved. Mark all factual claims as (proposed)."
 
@@ -207,14 +213,33 @@ class SynthesisStep(PipelineStep):
             if not provider_router:
                 raise RuntimeError("LLM provider required for synthesis")
 
-            # Use provider_router directly (LLMCouncil disabled — OpenRouter has negative balance)
-            response = await provider_router.generate(
-                "synthesis",
-                prompt,
-                system_prompt="You are an expert research synthesizer. Write comprehensive academic dissertations that integrate multiple analytical perspectives. You MUST cite provided sources using [N] format and include a complete References section. Mark unsupported claims as (proposed).",
+            system = (
+                "You are an expert research synthesizer. Write comprehensive academic "
+                "dissertations that integrate multiple analytical perspectives. You MUST cite "
+                "provided sources using [N] format and include a complete References section. "
+                "Mark unsupported claims as (proposed)."
             )
-            solution = getattr(response, "content", str(response))
-            usage = getattr(response, "usage", {}) or {}
+            solution = ""
+            usage: dict[str, Any] = {}
+            try:
+                response = await provider_router.generate("synthesis", prompt, system_prompt=system)
+                solution = getattr(response, "content", str(response))
+                usage = getattr(response, "usage", {}) or {}
+            except Exception as exc:
+                logger.warning("ProviderRouter synthesis failed (%s) — sync chain fallback", exc)
+                from src.llm.sync_provider_chain import generate_with_fallback
+
+                solution = generate_with_fallback(
+                    prompt,
+                    system_prompt=system,
+                    max_tokens=max(max_tokens, 4000),
+                    temperature=0.7,
+                )
+
+            if not solution or len(solution.split()) < 400 or "[LLM unavailable" in solution:
+                raise RuntimeError(
+                    f"Synthesis produced insufficient content ({len(solution.split())} words)"
+                )
 
             # Append References section if missing
             if sources and "## 11. References" not in solution and "## References" not in solution:
@@ -287,7 +312,7 @@ class SynthesisStep(PipelineStep):
             # 2. Perspective diversity: count unique C4 biases, not just count
             unique_c4_coords = set()
             for p in perspectives:
-                if hasattr(p, 'c4_state'):
+                if hasattr(p, "c4_state"):
                     unique_c4_coords.add(p.c4_state.to_tuple())
             diversity_ratio = len(unique_c4_coords) / max(len(perspectives), 1)
             perspective_boost = min(len(perspectives) * 0.05 * (1 + diversity_ratio), 0.22)
@@ -303,25 +328,29 @@ class SynthesisStep(PipelineStep):
             gap_boost = (sum(gap_scores) / max(len(gap_scores), 1) * 0.10) if gap_scores else 0.0
 
             # 5. Quality gates
-            quality_boost = 0.10 if quality_gate_results and quality_gate_results.get("all_passed") else 0.05
+            quality_boost = (
+                0.10 if quality_gate_results and quality_gate_results.get("all_passed") else 0.05
+            )
 
             # 6. Solution quality metrics
             solution_len = len(solution)
-            section_count = len(re.findall(r'#{1,3}\s+\w+', solution))
-            citation_count = len(re.findall(r'\[\d+\]|\[Insight \d+\]', solution))
-            has_risks = bool(re.search(r'(?i)risk|mitigation|blind.?spot', solution))
-            has_concrete = bool(re.search(r'(?i)specifically|concrete|step \d|phase \d', solution))
+            section_count = len(re.findall(r"#{1,3}\s+\w+", solution))
+            citation_count = len(re.findall(r"\[\d+\]|\[Insight \d+\]", solution))
+            has_risks = bool(re.search(r"(?i)risk|mitigation|blind.?spot", solution))
+            has_concrete = bool(re.search(r"(?i)specifically|concrete|step \d|phase \d", solution))
 
             structure_score = min(section_count / 5, 1.0) * 0.06  # 5+ sections = full score
-            depth_score = min(solution_len / 8000, 1.0) * 0.08    # 8000+ chars = full score
-            citation_score = min(citation_count / 5, 1.0) * 0.05   # 5+ citations = full score
+            depth_score = min(solution_len / 8000, 1.0) * 0.08  # 8000+ chars = full score
+            citation_score = min(citation_count / 5, 1.0) * 0.05  # 5+ citations = full score
             completeness_score = (0.03 if has_risks else 0.0) + (0.03 if has_concrete else 0.0)
             solution_boost = structure_score + depth_score + citation_score + completeness_score
 
             # 7. Observer penalty / bonus
             observer_insights: list[str] = context.get("observer_insights", [])
             has_blind_spots = any("blind_spots_detected" in i.lower() for i in observer_insights)
-            observer_penalty = -0.03 if has_blind_spots else 0.02  # penalty if blind spots, small bonus if clean
+            observer_penalty = (
+                -0.03 if has_blind_spots else 0.02
+            )  # penalty if blind spots, small bonus if clean
 
             # 8. Claim verification (downstream)
             claim_coverage = context.get("claim_verification", {}).get("overall_coverage", 0.0)
@@ -337,8 +366,16 @@ class SynthesisStep(PipelineStep):
             citation_penalty = (1 - verified_ratio) * 0.10  # up to -0.10 for all hallucinated
 
             confidence = min(
-                base_confidence + perspective_boost + prior_boost + gap_boost +
-                quality_boost + solution_boost + observer_penalty + claim_boost + novelty_boost - citation_penalty,
+                base_confidence
+                + perspective_boost
+                + prior_boost
+                + gap_boost
+                + quality_boost
+                + solution_boost
+                + observer_penalty
+                + claim_boost
+                + novelty_boost
+                - citation_penalty,
                 0.95,
             )
             confidence = max(confidence, 0.35)  # floor
@@ -370,7 +407,9 @@ class SynthesisStep(PipelineStep):
                 },
                 "citation_verification": {
                     "verdicts": citation_verdicts,
-                    "verified_count": sum(1 for v in citation_verdicts if v.get("verdict") == "VERIFIED"),
+                    "verified_count": sum(
+                        1 for v in citation_verdicts if v.get("verdict") == "VERIFIED"
+                    ),
                     "total_checked": len(citation_verdicts),
                 },
                 "prompt_tokens": _count_tokens(prompt),

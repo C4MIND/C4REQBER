@@ -4,10 +4,14 @@ from __future__ import annotations
 """Autonomous Discovery Agent — continuous loop mode."""
 import asyncio
 import json
+import logging
 import os
 import time
 from datetime import datetime
 from typing import Any
+
+
+logger = logging.getLogger(__name__)
 
 
 class DiscoveryAgent:
@@ -44,6 +48,7 @@ class DiscoveryAgent:
                     json={"problem": problem, "domain": "science"})
                 return r.json()# type: ignore[no-any-return]
         except (TimeoutError, ImportError, TypeError, httpx.HTTPError, json.JSONDecodeError) as e:
+            logger.warning("discovery request failed for problem=%r: %s", problem, e)
             return {"status": "error", "problem": problem}
 
     async def run_forever(self, max_cycles: int = 10) -> list[Any]:

@@ -149,7 +149,7 @@ class RRTPlanner:
         """Plan."""
         low, high = self.config.bounds
         self.nodes = [Node(self.config.start.copy())]
-        goal_node = Node(self.config.goal.copy())
+        Node(self.config.goal.copy())
 
         for iteration in range(self.config.max_iterations):
             if self.rng.random() < 0.1:
@@ -230,7 +230,6 @@ class AStarPlanner:
         start_grid = self._world_to_grid(self.config.start)
         goal_grid = self._world_to_grid(self.config.goal)
 
-        dims = self.config.dimensions
         grid_size = tuple(int((h - l) / self.config.grid_resolution) + 1 for h, l in zip(high, low, strict=False))
 
         open_set: dict[tuple, float] = {start_grid: 0.0}

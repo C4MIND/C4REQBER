@@ -1,6 +1,8 @@
 package i18n
 
 import (
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -144,4 +146,91 @@ func containsRune(s string, r rune) bool {
 		}
 	}
 	return false
+}
+
+// TestLoadLangFromToml guards the TOML file loader that powers the
+// regen_i18n.py translation pipeline. Asserts that:
+//
+//   1. A well-formed TOML with N entries loads as N keys
+//   2. The "key = \"value\"" format (with quotes) is the only one
+//      accepted — unquoted values are silently dropped (matches
+//      what regen_i18n.py emits)
+//   3. The keys= value separator can have any whitespace
+//   4. Re-loading a file overwrites (not merges with) previous
+func TestLoadLangFromToml(t *testing.T) {
+	dir := t.TempDir()
+	// Custom language to avoid mutating the package-level
+	// translations map for one of the 7 production languages.
+	custom := Lang("xx")
+
+	t.Run("well_formed", func(t *testing.T) {
+		path := filepath.Join(dir, "good.toml")
+		if err := os.WriteFile(path, []byte(`
+# test translation file
+greeting.name = "Hello"
+greeting.desc = "A standard greeting"
+farewell = "Bye"
+`), 0644); err != nil {
+			t.Fatal(err)
+		}
+		if err := LoadLangFromToml(path, custom); err != nil {
+			t.Fatal(err)
+		}
+		if got := TFor("greeting.name", custom); got != "Hello" {
+			t.Errorf("greeting.name = %q, want %q", got, "Hello")
+		}
+		if got := TFor("farewell", custom); got != "Bye" {
+			t.Errorf("farewell = %q, want %q", got, "Bye")
+		}
+	})
+
+	t.Run("unquoted_values_silently_dropped", func(t *testing.T) {
+		path := filepath.Join(dir, "unquoted.toml")
+		// unquoted_name has no quotes → regex won't match → dropped.
+		// quoted_name does have quotes → kept.
+		if err := os.WriteFile(path, []byte(`
+quoted_name = "OK"
+unquoted_name = NO_QUOTES
+`), 0644); err != nil {
+			t.Fatal(err)
+		}
+		if err := LoadLangFromToml(path, custom); err != nil {
+			t.Fatal(err)
+		}
+		if got := TFor("quoted_name", custom); got != "OK" {
+			t.Errorf("quoted_name = %q, want %q", got, "OK")
+		}
+		if got := TFor("unquoted_name", custom); got != "unquoted_name" {
+			t.Errorf("unquoted_name should fall back to key, got %q (loader accepted an unquoted value!)", got)
+		}
+	})
+
+	t.Run("reload_overwrites_not_merges", func(t *testing.T) {
+		path1 := filepath.Join(dir, "v1.toml")
+		path2 := filepath.Join(dir, "v2.toml")
+		if err := os.WriteFile(path1, []byte(`k = "v1"`), 0644); err != nil {
+			t.Fatal(err)
+		}
+		if err := LoadLangFromToml(path1, custom); err != nil {
+			t.Fatal(err)
+		}
+		if got := TFor("k", custom); got != "v1" {
+			t.Errorf("after v1 load: k = %q, want %q", got, "v1")
+		}
+		if err := os.WriteFile(path2, []byte(`k = "v2"`), 0644); err != nil {
+			t.Fatal(err)
+		}
+		if err := LoadLangFromToml(path2, custom); err != nil {
+			t.Fatal(err)
+		}
+		if got := TFor("k", custom); got != "v2" {
+			t.Errorf("after v2 reload: k = %q, want %q (reload should overwrite, not merge)", got, "v2")
+		}
+	})
+
+	t.Run("missing_file_is_error", func(t *testing.T) {
+		if err := LoadLangFromToml(filepath.Join(dir, "does-not-exist.toml"), custom); err == nil {
+			t.Error("expected error for missing file, got nil")
+		}
+	})
 }

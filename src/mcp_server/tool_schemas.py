@@ -56,6 +56,7 @@ INPUT_SCHEMAS = {
     "blast_flash": {"type": "object", "properties": {"question": _p("Question for quick answer", typ="string"), "with_sources": _p("Include source citations", typ="boolean", default=False), "deep": _p("Run USP cognitive components", typ="boolean", default=False)}, "required": ["question"]},
     "blast_turbofactory": {"type": "object", "properties": {"domain": _p("Domain for paradigm factory", typ="string"), "scale": _p("Scale: mini, standard, mega, giga", typ="string", default="standard"), "max_concurrent": _p("Max concurrent pipelines", typ="integer", default=5), "pipeline_mode": _p("Pipeline: solve, turbo, mixed", typ="string", default="mixed")}, "required": ["domain"]},
     "blast_auto": {"type": "object", "properties": {"query": _p("Query to auto-route to best BLAST mode", typ="string")}, "required": ["query"]},
+    "c4_codegen": {"type": "object", "properties": {"specification": _p("Natural language description of the code to generate", typ="string"), "language": _p("Target language: python, rust, cpp", typ="string", enum=["python", "rust", "cpp"], default="python"), "verify": _p("Whether to verify generated code with formal methods", typ="boolean", default=True), "optimization_target": _p("Optimization focus: speed, memory, readability", typ="string", enum=["speed", "memory", "readability"], default="readability")}, "required": ["specification"]},
 }
 
 OUTPUT_SCHEMAS = {
@@ -79,4 +80,5 @@ OUTPUT_SCHEMAS = {
     "blast_flash": _ot({"type": "object", "properties": {"mode": _STR, "answer": _STR, "sources": _ARR_OBJ, "usp_context": _OBJ}}, "BLAST flash mode quick answer result"),
     "blast_turbofactory": _ot({"type": "object", "properties": {"mode": _STR, "domain": _STR, "scale": _STR, "pipeline_mode": _STR, "pipelines": _INT, "successful": _INT, "failed": _INT, "total_hypotheses": _INT, "avg_quality_score": _NUM, "results": _ARR}}, "BLAST turbofactory parallel pipeline result"),
     "blast_auto": _ot({"type": "object", "properties": {"auto_routed": _BOOL, "selected_mode": _STR, "mode_description": _STR}}, "Auto-routed BLAST mode result"),
+    "c4_codegen": _ot({"type": "object", "properties": {"code": _STR, "verified": _BOOL, "backend_used": _STR, "proof_code": _STR, "errors": _ARR_STR, "suggestions": _ARR_STR}}, "Code generation with optional formal verification"),
 }

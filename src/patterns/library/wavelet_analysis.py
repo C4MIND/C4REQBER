@@ -592,7 +592,7 @@ def test_energy_conservation() -> None:
     np.random.seed(42)
 
     signal = np.random.randn(2048)
-    signal_energy = np.sum(signal**2)
+    np.sum(signal**2)
 
     config = WaveletAnalysisConfig(
         wavelet_family=WaveletFamily.HAAR, max_level=5, compute_energy=True

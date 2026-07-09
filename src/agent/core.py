@@ -6,7 +6,6 @@ import json
 import os
 import subprocess
 import time
-import uuid
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -14,8 +13,9 @@ from typing import Any
 from rich.markdown import Markdown
 
 from src import __version__
-from src.agent.config import AGENT_CONFIG_DIR, AgentConfig, MCPServerConfig
+from src.agent.config import AgentConfig, MCPServerConfig
 from src.agent.skills import SkillRegistry, ToolCall
+from src.config import get_key
 
 
 @dataclass
@@ -113,8 +113,7 @@ class AgentCore:
     def _append_history(self, msg: Message) -> None:
         self.history.append(msg)
         try:
-            import asyncio
-            lock = self._get_history_lock()
+            self._get_history_lock()
             path = self._history_path()
             path.parent.mkdir(parents=True, exist_ok=True)
             with path.open("a", encoding="utf-8") as f:
@@ -182,12 +181,19 @@ You are an AI research and engineering assistant with deep access to the c4reqbe
             if mcp_cfg.name in self._mcp_processes:
                 continue
             try:
+                # Audit 2026-06-22 M-6: close_fds=True prevents fd leaks across
+                # forks; start_new_session=True makes the child its own process
+                # group so we can kill it cleanly on shutdown without affecting
+                # the parent (avoids orphaned MCP server processes surviving
+                # agent stop, as observed in audit finding).
                 proc = subprocess.Popen(
                     [mcp_cfg.command] + mcp_cfg.args,
                     stdin=subprocess.PIPE,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
                     env={**os.environ, **mcp_cfg.env} if mcp_cfg.env else None,
+                    close_fds=True,
+                    start_new_session=True,
                 )
                 self._mcp_processes[mcp_cfg.name] = proc
             except Exception:
@@ -261,7 +267,7 @@ You are an AI research and engineering assistant with deep access to the c4reqbe
             model = OpenAIModel(
                 model_name=provider.model,
                 base_url=provider.api_base,
-                api_key=os.environ.get("OPENROUTER_API_KEY", ""),
+                api_key=get_key("openrouter") or os.environ.get("OPENROUTER_API_KEY", ""),  # central first
             )
 
             # Build system prompt from first message

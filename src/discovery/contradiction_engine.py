@@ -75,7 +75,7 @@ class ContradictionEngine:
 
     def _extract_claims(self, text: str) -> dict[str, list[str]]:
         """Extract axioms and predictions from theory text."""
-        text_lower = text.lower()
+        text.lower()
         axioms: list[str] = []
         predictions: list[str] = []
 

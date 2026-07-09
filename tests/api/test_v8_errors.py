@@ -1,6 +1,13 @@
 """Tests for centralized API error handling."""
 from __future__ import annotations
 
+import os
+
+# Audit 2026-06-22 (Chunk 5 fix-up): the dev-mode detail leak requires DEV_MODE=1
+# to be set. Without this, the handler returns detail={} in production-like
+# default, and the assertion on detail.exception_type fails.
+os.environ.setdefault("DEV_MODE", "1")
+
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 

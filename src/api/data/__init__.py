@@ -3,4 +3,5 @@
 """api/data — c4reqber module."""
 from __future__ import annotations
 
+
 __all__ = []  # api.data

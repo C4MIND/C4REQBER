@@ -735,12 +735,11 @@ class AutoresearchOperator:
         # Git setup
         git = GitHelper(file_path.parent)
         if self.config.git_enabled and git.is_repo():
-            original_branch = git.current_branch()
+            git.current_branch()
             branch_name = f"autoresearch/{self.config.metric_name}/{int(start_time)}"
             git.create_branch(branch_name)
             logger.info("Created branch: %s", branch_name)
         else:
-            original_branch = None
             git = None  # type: ignore[assignment]
 
         # File watcher

@@ -332,7 +332,7 @@ class DiscreteEventPattern(SimulationPattern):
     def _erlang_c_approx(self, arrival_rate: float, service_rate: float, c: int) -> float:
         """Simplified Erlang C formula"""
         rho = arrival_rate / (c * service_rate)
-        service_time = 1.0 / service_rate
+        1.0 / service_rate
 
         # Simplified approximation
         if c == 1:

@@ -9,6 +9,7 @@ Modes:
 
 Auto-routing: blast "query" → auto-selects best mode
 """
+
 from __future__ import annotations
 
 import json
@@ -48,6 +49,7 @@ console = Console()
 # Auto-dispatch (no subcommand)
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 @app.command("auto", hidden=True)
 def blast_auto(
     query: str = typer.Argument(..., help="Query to process (auto-routed to best mode)"),
@@ -60,11 +62,16 @@ def blast_auto(
 # Mode A: blast solve
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 @app.command("solve")
 def blast_solve(
     problem: str = typer.Argument(..., help="Problem statement to solve"),
-    mode: str = typer.Option("autopilot", "--mode", "-m", help="Pipeline mode: autopilot|turbo|deep-work"),
-    output_format: str = typer.Option("auto", "--format", "-f", help="Output: auto|prd|code|plan|blueprint|protocol"),
+    mode: str = typer.Option(
+        "autopilot", "--mode", "-m", help="Pipeline mode: autopilot|turbo|deep-work"
+    ),
+    output_format: str = typer.Option(
+        "auto", "--format", "-f", help="Output: auto|prd|code|plan|blueprint|protocol"
+    ),
     domain: str | None = typer.Option(None, "--domain", "-d", help="Domain hint"),
     output: str | None = typer.Option(None, "--output", "-o", help="Output file path"),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Show detailed output"),
@@ -73,20 +80,34 @@ def blast_solve(
     if not problem.strip():
         console.print("[red]Error: problem statement cannot be empty[/]")
         raise typer.Exit(1)
-    cmd_solve(problem=problem, mode=mode, output_format=output_format, domain=domain, output=output, verbose=verbose)
+    cmd_solve(
+        problem=problem,
+        mode=mode,
+        output_format=output_format,
+        domain=domain,
+        output=output,
+        verbose=verbose,
+    )
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Mode B: blast turbo
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 @app.command("turbo")
 def blast_turbo(
     topic: str = typer.Argument(..., help="Research topic to discover"),
     output: str | None = typer.Option(None, "--output", "-o", help="Output file path"),
-    verify_backend: str = typer.Option("hybrid", "--verify-backend", help="Verification: hybrid|z3|lean4|coq|dafny|agda|hoare"),
-    functors: bool = typer.Option(True, "--functors/--no-functors", help="Enable 9 cognitive functor agents"),
-    plugins: str | None = typer.Option(None, "--plugins", "-p", help="Plugins: swot,six_hats,first_principles..."),
+    verify_backend: str = typer.Option(
+        "hybrid", "--verify-backend", help="Verification: hybrid|z3|lean4|coq|dafny|agda|hoare"
+    ),
+    functors: bool = typer.Option(
+        True, "--functors/--no-functors", help="Enable 9 cognitive functor agents"
+    ),
+    plugins: str | None = typer.Option(
+        None, "--plugins", "-p", help="Plugins: swot,six_hats,first_principles..."
+    ),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Show quality report"),
     competing: int = typer.Option(2, "--competing", help="Number of competing hypotheses"),
     no_iterative: bool = typer.Option(False, "--no-iterative", help="Skip iterative refinement"),
@@ -95,19 +116,34 @@ def blast_turbo(
     if not topic.strip():
         console.print("[red]Error: topic cannot be empty[/]")
         raise typer.Exit(1)
-    cmd_turbo(topic=topic, output=output, verify_backend=verify_backend, functors=functors, plugins=plugins, verbose=verbose, competing=competing, no_iterative=no_iterative)
+    cmd_turbo(
+        topic=topic,
+        output=output,
+        verify_backend=verify_backend,
+        functors=functors,
+        plugins=plugins,
+        verbose=verbose,
+        competing=competing,
+        no_iterative=no_iterative,
+        dry_run=False,
+    )
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Mode C: blast flash
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 @app.command("flash")
 def blast_flash(
     question: str = typer.Argument(..., help="Question to answer quickly"),
     with_sources: bool = typer.Option(False, "--sources", "-s", help="Include source citations"),
-    deep: bool = typer.Option(False, "--deep", "-d", help="Deep mode: USP cognitive components + multi-source search"),
-    format: str = typer.Option("concise", "--format", "-f", help="Output format: concise|detailed|bullet|code"),
+    deep: bool = typer.Option(
+        False, "--deep", "-d", help="Deep mode: USP cognitive components + multi-source search"
+    ),
+    format: str = typer.Option(
+        "concise", "--format", "-f", help="Output format: concise|detailed|bullet|code"
+    ),
 ) -> None:
     """Get a quick answer — no pipeline, just fast LLM + optional web search."""
     if not question.strip():
@@ -120,21 +156,33 @@ def blast_flash(
 # Mode D: blast turbofactory
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 @app.command("turbofactory")
 def blast_turbofactory(
     domain: str = typer.Argument(..., help="Domain or problem to research in depth"),
     scale: str = typer.Option("standard", "--scale", "-s", help="Scale: mini|standard|mega|giga"),
     output: str | None = typer.Option(None, "--output", "-o", help="Output file path"),
-    max_concurrent: int = typer.Option(5, "--max-concurrent", "-c", help="Max concurrent pipelines"),
-    pipeline_mode: str = typer.Option("mixed", "--pipeline", "-p", help="Pipeline: solve|turbo|mixed"),
+    max_concurrent: int = typer.Option(
+        5, "--max-concurrent", "-c", help="Max concurrent pipelines"
+    ),
+    pipeline_mode: str = typer.Option(
+        "mixed", "--pipeline", "-p", help="Pipeline: solve|turbo|mixed"
+    ),
 ) -> None:
     """Run parallel paradigm factory (10-100 pipelines) for ultimate domain reports."""
-    cmd_turbofactory(domain=domain, scale=scale, output=output, max_concurrent=max_concurrent, pipeline_mode=pipeline_mode)
+    cmd_turbofactory(
+        domain=domain,
+        scale=scale,
+        output=output,
+        max_concurrent=max_concurrent,
+        pipeline_mode=pipeline_mode,
+    )
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Info commands
 # ═══════════════════════════════════════════════════════════════════════════════
+
 
 @app.command("modes")
 def blast_modes() -> None:
@@ -142,13 +190,14 @@ def blast_modes() -> None:
     console.print("[bold]BLAST Modes[/bold]\n")
     for mode in ["solve", "turbo", "flash", "turbofactory"]:
         console.print(f"  [bold]{mode}[/bold] — {get_mode_description(mode)}")
-    console.print("\n[dim]Usage: blast [mode] \"your query\"[/dim]")
-    console.print("[dim]Or: blast \"your query\" (auto-routed)[/dim]")
+    console.print('\n[dim]Usage: blast [mode] "your query"[/dim]')
+    console.print('[dim]Or: blast "your query" (auto-routed)[/dim]')
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # WASM Plugin Commands
 # ═══════════════════════════════════════════════════════════════════════════════
+
 
 @app.command("wasm-load")
 def wasm_load(
@@ -168,14 +217,20 @@ def wasm_load(
     console.print(f"[green]Loaded:[/] {wasm_file.name}")
 
     # Parse exports to understand what functions are available
-    exports = _wasm_runtime._parse_exports(wasm_bytes) if not _wasm_runtime._has_wasmtime else \
-        [(n, 0) for n in funcs]
-    console.print(f"  Exports: {[(n, 'func' if k==0 else 'mem' if k==2 else f'kind{k}') for n,k in exports]}")
-    console.print(f"  Runtime: {'wasmtime' if _wasm_runtime._has_wasmtime else 'stub (pip install wasmtime for execution)'}")
+    exports = (
+        _wasm_runtime._parse_exports(wasm_bytes)
+        if not _wasm_runtime._has_wasmtime
+        else [(n, 0) for n in funcs]
+    )
+    console.print(
+        f"  Exports: {[(n, 'func' if k==0 else 'mem' if k==2 else f'kind{k}') for n,k in exports]}"
+    )
+    console.print(
+        f"  Runtime: {'wasmtime' if _wasm_runtime._has_wasmtime else 'stub (pip install wasmtime for execution)'}"
+    )
 
     # Register with plugin registry → appears in pipeline
-    from src.plugins.unified_registry import ToolMetadata
-    from src.plugins.unified_registry import PLUGIN_REGISTRY, PluginInfo
+    from src.plugins.unified_registry import PLUGIN_REGISTRY, PluginInfo, ToolMetadata
     from src.wasm.runtime import WASMToolPlugin
 
     wasm_meta = ToolMetadata(
@@ -196,7 +251,9 @@ def wasm_load(
         execute_fn=wasm_plugin.execute,
         icon="package",
     )
-    console.print(f"  [cyan]Pipeline:[/] registered as [bold]wasm_{plugin_name}[/] — active in next run")
+    console.print(
+        f"  [cyan]Pipeline:[/] registered as [bold]wasm_{plugin_name}[/] — active in next run"
+    )
     console.print(f"  [dim]Total plugins in pipeline: {len(PLUGIN_REGISTRY)}[/]")
 
 
@@ -221,7 +278,9 @@ def wasm_list() -> None:
         console.print("[bold]To load:[/]")
         console.print("  [green]blast wasm-load wasm_plugins/hello.wasm[/]")
         console.print()
-        console.print("[dim]Requires: pip install wasmtime  (optional — stub mode works without it)[/]")
+        console.print(
+            "[dim]Requires: pip install wasmtime  (optional — stub mode works without it)[/]"
+        )
         return
     for key, mod in runtime._modules.items():
         funcs = runtime.list_functions(mod)
@@ -240,8 +299,8 @@ def wasm_execute(
         console.print(f"[red]Plugin not found: {plugin_name}[/]")
         console.print("[dim]Available plugins:[/]")
         for pid, pi in PLUGIN_REGISTRY.items():
-            cat = pi.category if hasattr(pi, 'category') else 'unknown'
-            if cat == 'wasm':
+            cat = pi.category if hasattr(pi, "category") else "unknown"
+            if cat == "wasm":
                 console.print(f"  [cyan]{pid}[/] — {pi.description}")
         raise typer.Exit(1)
 
@@ -255,7 +314,9 @@ def wasm_execute(
 
 @app.command("models")
 def blast_models(
-    tier: str = typer.Option("", "--tier", "-t", help="Filter: frontier|premium|balanced|budget|ultra_budget|free|local"),
+    tier: str = typer.Option(
+        "", "--tier", "-t", help="Filter: frontier|premium|balanced|budget|ultra_budget|free|local"
+    ),
 ) -> None:
     """Browse available LLM models with benchmarks and pricing."""
     from src.llm.model_catalog import CATALOG, estimate_pipeline_cost, list_models
@@ -272,34 +333,40 @@ def blast_models(
 
     console.print()
     for m in models:
-        price = f"in=${m['cost_in']:.2f} out=${m['cost_out']:.2f}" if m['cost_in'] > 0 else "FREE"
+        price = f"in=${m['cost_in']:.2f} out=${m['cost_out']:.2f}" if m["cost_in"] > 0 else "FREE"
         console.print(f"  [cyan]{m['key']}[/cyan] ({m['provider']})")
         console.print(f"    {price} | {m['context']//1000}K ctx | tier={m['tier']}")
-        if m['strengths']:
+        if m["strengths"]:
             console.print(f"    {', '.join(m['strengths'][:5])}")
-        if m.get('open_weight'):
+        if m.get("open_weight"):
             console.print(f"    open-weight ({m.get('license','')})")
 
     console.print()
     cost = estimate_pipeline_cost(1000)
-    console.print(f"[bold]Pipeline cost estimate:[/bold] ${cost['total']:.4f} (balanced tier, 7 phases)")
+    console.print(
+        f"[bold]Pipeline cost estimate:[/bold] ${cost['total']:.4f} (balanced tier, 7 phases)"
+    )
 
 
 @app.command("config")
 def blast_config(
-    section: str = typer.Argument("models", help="Config section: models"),
-    cost_tier: str = typer.Option("", "--tier", "-t", help="Cost tier: budget|balanced|premium|local|ultra_budget"),
-    set_phase: str = typer.Option("", "--set", "-s", help="Set model for phase: e.g. 'D=claude-sonnet-4.6'"),
+    section: str = typer.Argument("models", help="Config section: models | user | keys"),
+    cost_tier: str = typer.Option(
+        "", "--tier", "-t", help="Cost tier: budget|balanced|premium|local|ultra_budget"
+    ),
+    set_phase: str = typer.Option(
+        "", "--set", "-s", help="Set model for phase: e.g. 'D=claude-sonnet-4.6'"
+    ),
     show: bool = typer.Option(False, "--show", help="Show current model assignments"),
     save: bool = typer.Option(False, "--save", help="Save config to ~/.c4reqber/models.json"),
 ) -> None:
-    """Configure model assignments per pipeline phase.
+    """Configure model assignments per pipeline phase (or full user config).
 
     Examples:
         blast config --show                    # View current assignments
+        blast config user --show               # Show full ~/.c4reqber/config.toml + keys
         blast config --tier budget             # Switch to budget tier
         blast config --set D=claude-sonnet-4.6 --save  # Phase D → Claude Sonnet
-        blast config --set B=gemma4:26b       # Phase B → local Gemma 4
     """
     from src.llm.model_assignment import (
         CONFIG_FILE,
@@ -311,10 +378,42 @@ def blast_config(
     # Load existing or create default
     assignment = ModelAssignment.load()
 
+    if section.lower() in ("user", "full"):
+        from src.cli.config_init import show_current_config
+
+        show_current_config()
+        if show or section:
+            return
+        # fallthrough only for other ops
+
+    if section.lower() == "keys":
+        from src.config import get_user_keys
+
+        keys = get_user_keys()
+        console.print("\n[bold]Current API keys (from ~/.c4reqber + env)[/bold]\n")
+        important = [
+            "openrouter_api_key",
+            "deepseek_api_key",
+            "brave_api_key",
+            "tavily_api_key",
+            "exa_api_key",
+            "xai_api_key",
+        ]
+        for k in important:
+            val = keys.get(k, "")
+            masked = "****" + val[-4:] if len(val) > 8 else "(not set)"
+            console.print(f"  {k}: {masked}")
+        console.print(
+            "\n[dim]Use 'blast init' to set keys interactively, or edit ~/.c4reqber/config.toml[/]"
+        )
+        return
+
     # Apply cost tier
     if cost_tier:
         if cost_tier not in DEFAULT_ASSIGNMENTS:
-            console.print(f"[red]Unknown tier: {cost_tier}. Options: {list(DEFAULT_ASSIGNMENTS.keys())}[/]")
+            console.print(
+                f"[red]Unknown tier: {cost_tier}. Options: {list(DEFAULT_ASSIGNMENTS.keys())}[/]"
+            )
             raise typer.Exit(1)
         assignment = ModelAssignment.create_default(cost_tier)
         console.print(f"[green]Switched to {cost_tier} tier[/]")
@@ -330,10 +429,13 @@ def blast_config(
             console.print("[red]Phase must be A-G[/]")
             raise typer.Exit(1)
         from src.llm.model_assignment import PhaseAssignment, _detect_provider
+
         temp = 0.7 if phase == "D" else 0.5 if phase == "F" else 0.3
         max_tok = 2000 if phase == "F" else 800 if phase == "D" else 500
         assignment.phases[phase] = PhaseAssignment(
-            model=model.strip(), temperature=temp, max_tokens=max_tok,
+            model=model.strip(),
+            temperature=temp,
+            max_tokens=max_tok,
             provider=_detect_provider(model.strip()),
         )
         console.print(f"[green]Phase {phase}: set to {model.strip()}[/]")
@@ -354,7 +456,9 @@ def blast_config(
                 # Don't double-display provider prefix if model ID already has it
                 display = model
                 temp = assignment.get_temperature(phase)
-                console.print(f"  [cyan]Phase {phase}[/cyan]: {display}  [dim]T={temp}[/]  — {desc[:50]}...")
+                console.print(
+                    f"  [cyan]Phase {phase}[/cyan]: {display}  [dim]T={temp}[/]  — {desc[:50]}..."
+                )
 
         cost = assignment.estimate_cost(1000)
         console.print()
@@ -372,6 +476,7 @@ def blast_config(
 # ═══════════════════════════════════════════════════════════════════════════════
 # Agent Commands — Soul, Policy, QA, Guardian
 # ═══════════════════════════════════════════════════════════════════════════════
+
 
 @app.command("soul")
 def blast_soul(
@@ -438,7 +543,9 @@ def blast_policy(
                 f"  {e.timestamp:.0f} {status} [{e.risk_tier}] {e.action_name} — {e.reason[:50]}"
             )
         stats = engine.audit.stats()
-        console.print(f"\n[dim]Total: {stats['total']}, Allowed: {stats['allowed']}, Denied: {stats['denied']}[/]")
+        console.print(
+            f"\n[dim]Total: {stats['total']}, Allowed: {stats['allowed']}, Denied: {stats['denied']}[/]"
+        )
         return
 
     if evaluate:
@@ -467,7 +574,12 @@ def blast_policy(
 @app.command("qa")
 def blast_qa(
     full: bool = typer.Option(False, "--full", "-f", help="Run all QA checks"),
-    check: str = typer.Option("", "--check", "-c", help="Single check: ruff|mypy|pytest|version_sync|secrets|circular_imports"),
+    check: str = typer.Option(
+        "",
+        "--check",
+        "-c",
+        help="Single check: ruff|mypy|pytest|version_sync|secrets|circular_imports",
+    ),
     json_out: bool = typer.Option(False, "--json", "-j", help="Output as JSON"),
 ) -> None:
     """Quality assurance — lint, typecheck, tests, version sync, secrets."""
@@ -490,7 +602,9 @@ def blast_qa(
             raise typer.Exit(1)
         result = fn()
         color = "green" if result.passed else "red"
-        console.print(f"[{color}]{check}: {'PASS' if result.passed else 'FAIL'}[/] ({result.duration_ms:.0f}ms)")
+        console.print(
+            f"[{color}]{check}: {'PASS' if result.passed else 'FAIL'}[/] ({result.duration_ms:.0f}ms)"
+        )
         for err in result.errors:
             console.print(f"  [red]  {err}[/]")
         return
@@ -506,12 +620,22 @@ def blast_qa(
     for name, _chk in qa_result.checks.items():
         color = "green" if _chk.passed else "red"
         icon = "✓" if _chk.passed else "✗"
-        console.print(f"  [{color}]{icon} {name:<20} {'PASS' if _chk.passed else 'FAIL'}[/] ({_chk.duration_ms:.0f}ms)")
+        console.print(
+            f"  [{color}]{icon} {name:<20} {'PASS' if _chk.passed else 'FAIL'}[/] ({_chk.duration_ms:.0f}ms)"
+        )
         for err in _chk.errors[:3]:
             console.print(f"    [red]  {err}[/]")
 
-    rate_color = "green" if qa_result.success_rate >= 0.8 else "yellow" if qa_result.success_rate >= 0.5 else "red"
-    console.print(f"\n[bold]Result:[/] [{rate_color}]{qa_result.passed}/{qa_result.total} passed ({qa_result.success_rate*100:.0f}%)[/] in {qa_result.duration_sec:.1f}s")
+    rate_color = (
+        "green"
+        if qa_result.success_rate >= 0.8
+        else "yellow"
+        if qa_result.success_rate >= 0.5
+        else "red"
+    )
+    console.print(
+        f"\n[bold]Result:[/] [{rate_color}]{qa_result.passed}/{qa_result.total} passed ({qa_result.success_rate*100:.0f}%)[/] in {qa_result.duration_sec:.1f}s"
+    )
 
 
 @app.command("guardian")
@@ -546,7 +670,12 @@ def blast_guardian(
     if result.clean:
         console.print("[green]✓ Clean — no threats detected[/]")
     else:
-        severity_color = {"low": "yellow", "medium": "orange3", "high": "red", "critical": "red"}.get(result.severity, "red")
+        severity_color = {
+            "low": "yellow",
+            "medium": "orange3",
+            "high": "red",
+            "critical": "red",
+        }.get(result.severity, "red")
         console.print(f"[{severity_color}]✗ Threats detected (severity: {result.severity})[/]")
         for threat in result.threats:
             console.print(f"  [red]  • {threat}[/]")
@@ -556,9 +685,12 @@ def blast_guardian(
 # Social — Preprint Publishing + Messengers
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 @app.command("social")
 def blast_social(
-    action: str = typer.Argument("status", help="Action: status, health, publish, preview, drafts, clean, setup"),
+    action: str = typer.Argument(
+        "status", help="Action: status, health, publish, preview, drafts, clean, setup"
+    ),
     draft_id: str = typer.Option("", "--id", help="Draft ID"),
     dry_run: bool = typer.Option(False, "--dry-run", help="Simulate without API calls"),
     confirm: bool = typer.Option(False, "--confirm", help="Confirm publish"),
@@ -579,29 +711,39 @@ def blast_social(
     import asyncio
 
     if action == "health":
+
         async def _health():
             from src.social.health_checker import check_all
+
             result = await check_all(dry_run)
             for name, status in sorted(result.items()):
                 icon = "●" if status.get("healthy") else "○"
                 reason = status.get("reason", status.get("note", ""))
                 console.print(f"  {icon} {name:<12} {reason}")
+
         asyncio.run(_health())
         return
 
     if action == "status":
         from src.social.profile_manager import UserProfile
+
         p = UserProfile.load()
         console.print("[bold]Social Module Status[/bold]")
         console.print(f"  Profile: {p.primary_author.name or '(not set)'}")
         console.print("  Drafts directory: ~/.c4reqber/drafts/")
-        drafts = list((Path.home() / ".c4reqber" / "drafts").glob("*")) if (Path.home() / ".c4reqber" / "drafts").exists() else []
+        drafts = (
+            list((Path.home() / ".c4reqber" / "drafts").glob("*"))
+            if (Path.home() / ".c4reqber" / "drafts").exists()
+            else []
+        )
         console.print(f"  Drafts: {len([d for d in drafts if d.is_dir()])} pending")
         return
 
     if action == "publish" and draft_id:
+
         async def _pub():
             from src.social.publisher import Publisher
+
             pub = Publisher(dry_run=dry_run)
             result = await pub.publish(draft_id)
             if result.get("error"):
@@ -611,6 +753,7 @@ def blast_social(
                 for step, val in result.get("steps", {}).items():
                     doi = val.get("doi", "") if isinstance(val, dict) else ""
                     console.print(f"  {step}: {doi or val}")
+
         asyncio.run(_pub())
         return
 
@@ -619,6 +762,7 @@ def blast_social(
         md = draft_dir / "dissertation.md"
         if md.exists():
             from rich.markdown import Markdown
+
             console.print(Markdown(md.read_text()[:3000]))
         else:
             console.print(f"[yellow]Draft {draft_id} not found or no dissertation.md[/]")
@@ -633,6 +777,7 @@ def blast_social(
                     status = "?"
                     if state_file.exists():
                         import json
+
                         state = json.loads(state_file.read_text())
                         status = state.get("status", "?")
                     console.print(f"  [{status}] {draft.name}")
@@ -650,6 +795,7 @@ def blast_social(
         for draft in d.iterdir():
             if draft.is_dir() and draft.stat().st_mtime < cutoff:
                 import shutil
+
                 shutil.rmtree(draft)
                 removed += 1
         console.print(f"[green]Removed {removed} drafts older than {older_than_days} days[/]")
@@ -660,7 +806,9 @@ def blast_social(
         console.print("  Telegram: Set TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID in .env")
         console.print("  Slack:    Set SLACK_WEBHOOK_URL in .env")
         console.print("  Discord:  Set DISCORD_WEBHOOK_URL in .env")
-        console.print("  Reddit:   Set REDDIT_CLIENT_ID + REDDIT_CLIENT_SECRET + REDDIT_USERNAME + REDDIT_PASSWORD in .env")
+        console.print(
+            "  Reddit:   Set REDDIT_CLIENT_ID + REDDIT_CLIENT_SECRET + REDDIT_USERNAME + REDDIT_PASSWORD in .env"
+        )
         console.print("  Zenodo:   Set ZENODO_ACCESS_TOKEN in .env")
         console.print("  Twitter:  Set TWITTER_API_KEY + TWITTER_ACCESS_TOKEN in .env")
         console.print("  ORCID:    Set ORCID_CLIENT_ID + ORCID_CLIENT_SECRET in .env")
@@ -671,8 +819,80 @@ def blast_social(
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# Init — first-run configuration
+# ═══════════════════════════════════════════════════════════════════════════════
+
+
+@app.command("init")
+def blast_init(
+    force: bool = typer.Option(
+        False, "--force", "-f", help="Overwrite existing ~/.c4reqber/config.toml"
+    ),
+) -> None:
+    """Interactive setup wizard — writes ~/.c4reqber/config.toml for desktop and TUI."""
+    from src.cli.config_init import run_init_wizard
+
+    run_init_wizard(force=force)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# TUI — Interactive Cockpit (Go TUI v9)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+
+@app.command("tui")
+def blast_tui(
+    packages: bool = typer.Option(
+        False, "--packages", help="Arrow-key scientific package installer"
+    ),
+    demo: bool = typer.Option(False, "--demo", help="Scripted demo without backend"),
+    story: str = typer.Option("", "--story", help="Demo story: crispr|sleep|lang"),
+    no_splash: bool = typer.Option(False, "--no-splash", help="Skip splash screen on launch"),
+    no_build: bool = typer.Option(
+        False, "--no-build", help="Do not auto-build c4tui-v9 if missing"
+    ),
+) -> None:
+    """Launch TUI v9 Cockpit — feed-driven discovery UI.
+
+    \b
+        blast tui                          # Interactive discovery cockpit
+        blast tui --demo --story=crispr    # Demo without backend
+        blast tui --packages               # Package installer (Rich UI)
+        blast tui --no-splash              # Skip boot animation
+    """
+    if packages:
+        from src.cli.tui_launcher import launch_package_installer
+
+        raise typer.Exit(launch_package_installer())
+
+    extra: list[str] = []
+    if demo:
+        extra.append("--demo")
+    if story:
+        extra.extend(["--story", story])
+    if no_splash:
+        extra.append("--no-splash")
+
+    from src.cli.config_init import apply_config_to_env
+    from src.cli.tui_launcher import launch_tui_v9
+    from src.config.paths import apply_config_to_env as central_apply
+
+    try:
+        central_apply()
+    except Exception:
+        apply_config_to_env()  # fallback
+    if demo:
+        import os
+
+        os.environ.setdefault("C4_DEMO_AUTH", "1")
+    code = launch_tui_v9(extra, build_if_missing=not no_build)
+    raise typer.Exit(code)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # Serve — MCP Server
 # ═══════════════════════════════════════════════════════════════════════════════
+
 
 @app.command("serve")
 def blast_serve(
@@ -692,6 +912,7 @@ def blast_serve(
         import asyncio
 
         from src.mcp_server.server import main as mcp_main
+
         asyncio.run(mcp_main())
     except ImportError as e:
         console.print(f"[red]MCP SDK not installed: {e}[/]")
@@ -704,6 +925,7 @@ def blast_serve(
 # ═══════════════════════════════════════════════════════════════════════════════
 # Agent — AI Agent REPL
 # ═══════════════════════════════════════════════════════════════════════════════
+
 
 @app.command("agent")
 def blast_agent(
@@ -720,6 +942,7 @@ def blast_agent(
     """
     if config:
         from src.agent.config import AgentConfig
+
         cfg = AgentConfig.load()
         console.print("[bold]Agent Configuration[/bold]")
         console.print(f"  History path: {cfg.history_path}")
@@ -733,9 +956,55 @@ def blast_agent(
         return
 
     if daemon:
-        console.print("[bold]Starting C4REQBER Agent in daemon mode...[/]")
-        console.print("[dim]Agent MCP server — stdio JSON-RPC transport[/]")
-        console.print("[dim]7 tools: process, search, verify, codegen, transfer, fingerprint, solve[/]")
+        # Audit 2026-06-22 H-3: the inline 7-tool daemon here was a parallel MCP
+        # server with different contract (no timeouts, no input sanitization, no
+        # credential redaction, response envelope != main server). Production
+        # callers should use `blast serve --mcp` (21 tools, hardened).
+        # We keep a thin compatibility wrapper that proxies through the main
+        # server so existing clients don't break, but the canonical entry point
+        # is now `blast serve --mcp`.
+        console.print(
+            "[yellow]DEPRECATION:[/] [dim]blast agent --daemon is a compatibility "
+            "shim. Use [bold]blast serve --mcp[/] for the full hardened 21-tool "
+            "MCP server (timeouts, sanitization, credential redaction).[/]"
+        )
+        from src.mcp_server.fallback_protocol import _FallbackServer
+
+        fallback = _FallbackServer(name="c4reqber-agent-daemon-shim")
+        # Register the 7 legacy tools (same names + shim bodies). They will
+        # still work for backwards-compat clients, but they emit a deprecation
+        # warning via the daemon banner above. New integrations should use
+        # `blast serve --mcp` which exposes 21 tools.
+        import asyncio as _asyncio
+
+        from src.agent.core import AgentCore
+
+        agent = AgentCore()
+
+        @fallback.tool("agent_process")
+        async def agent_process(query: str) -> str:
+            resp = agent.process(query)
+            return resp.content
+
+        @fallback.tool("agent_solve")
+        async def agent_solve(problem: str) -> str:
+            resp = agent.process(problem)
+            return resp.content
+
+        @fallback.tool("agent_search")
+        async def agent_search(query: str, max_results: int = 10) -> str:
+            return f"Search for: {query} (max_results={max_results})"
+
+        @fallback.tool("agent_fingerprint")
+        async def agent_fingerprint(problem: str) -> str:
+            from src.c4_analysis.llm_classifier import get_c4_classifier
+
+            classifier = get_c4_classifier()
+            state, confidence, _ = classifier.classify(problem)
+            return f"C4 State: {state} (confidence: {confidence:.2f})"
+
+        _asyncio.run(fallback.run_stdio_fallback())
+        return
 
         try:
             from src.agent.core import AgentCore
@@ -744,6 +1013,7 @@ def blast_agent(
 
             async def agent_daemon_main():
                 import json as _json
+
                 reader = sys.stdin
                 writer = sys.stdout
 
@@ -759,15 +1029,88 @@ def blast_agent(
 
                         if method == "tools/list":
                             tools = [
-                                {"name": "agent_process", "description": "Process a query through the AI agent", "inputSchema": {"type": "object", "properties": {"query": {"type": "string"}}, "required": ["query"]}},
-                                {"name": "agent_search", "description": "Search knowledge sources", "inputSchema": {"type": "object", "properties": {"query": {"type": "string"}, "max_results": {"type": "integer"}}, "required": ["query"]}},
-                                {"name": "agent_verify", "description": "Verify code with formal methods", "inputSchema": {"type": "object", "properties": {"code": {"type": "string"}, "backend": {"type": "string"}}, "required": ["code"]}},
-                                {"name": "agent_codegen", "description": "Generate code from specification", "inputSchema": {"type": "object", "properties": {"spec": {"type": "string"}, "language": {"type": "string"}}, "required": ["spec"]}},
-                                {"name": "agent_fingerprint", "description": "Classify problem into C4 state", "inputSchema": {"type": "object", "properties": {"problem": {"type": "string"}}, "required": ["problem"]}},
-                                {"name": "agent_transfer", "description": "Cross-domain isomorphism transfer", "inputSchema": {"type": "object", "properties": {"problem": {"type": "string"}, "source_domain": {"type": "string"}, "target_domain": {"type": "string"}}, "required": ["problem"]}},
-                                {"name": "agent_solve", "description": "Solve problem via discovery pipeline", "inputSchema": {"type": "object", "properties": {"problem": {"type": "string"}}, "required": ["problem"]}},
+                                {
+                                    "name": "agent_process",
+                                    "description": "Process a query through the AI agent",
+                                    "inputSchema": {
+                                        "type": "object",
+                                        "properties": {"query": {"type": "string"}},
+                                        "required": ["query"],
+                                    },
+                                },
+                                {
+                                    "name": "agent_search",
+                                    "description": "Search knowledge sources",
+                                    "inputSchema": {
+                                        "type": "object",
+                                        "properties": {
+                                            "query": {"type": "string"},
+                                            "max_results": {"type": "integer"},
+                                        },
+                                        "required": ["query"],
+                                    },
+                                },
+                                {
+                                    "name": "agent_verify",
+                                    "description": "Verify code with formal methods",
+                                    "inputSchema": {
+                                        "type": "object",
+                                        "properties": {
+                                            "code": {"type": "string"},
+                                            "backend": {"type": "string"},
+                                        },
+                                        "required": ["code"],
+                                    },
+                                },
+                                {
+                                    "name": "agent_codegen",
+                                    "description": "Generate code from specification",
+                                    "inputSchema": {
+                                        "type": "object",
+                                        "properties": {
+                                            "spec": {"type": "string"},
+                                            "language": {"type": "string"},
+                                        },
+                                        "required": ["spec"],
+                                    },
+                                },
+                                {
+                                    "name": "agent_fingerprint",
+                                    "description": "Classify problem into C4 state",
+                                    "inputSchema": {
+                                        "type": "object",
+                                        "properties": {"problem": {"type": "string"}},
+                                        "required": ["problem"],
+                                    },
+                                },
+                                {
+                                    "name": "agent_transfer",
+                                    "description": "Cross-domain isomorphism transfer",
+                                    "inputSchema": {
+                                        "type": "object",
+                                        "properties": {
+                                            "problem": {"type": "string"},
+                                            "source_domain": {"type": "string"},
+                                            "target_domain": {"type": "string"},
+                                        },
+                                        "required": ["problem"],
+                                    },
+                                },
+                                {
+                                    "name": "agent_solve",
+                                    "description": "Solve problem via discovery pipeline",
+                                    "inputSchema": {
+                                        "type": "object",
+                                        "properties": {"problem": {"type": "string"}},
+                                        "required": ["problem"],
+                                    },
+                                },
                             ]
-                            response = {"jsonrpc": "2.0", "id": request_id, "result": {"tools": tools}}
+                            response = {
+                                "jsonrpc": "2.0",
+                                "id": request_id,
+                                "result": {"tools": tools},
+                            }
                         elif method == "tools/call":
                             tool_name = params.get("name", "")
                             arguments = params.get("arguments", {})
@@ -780,20 +1123,45 @@ def blast_agent(
                                 resp = agent.process(arguments.get("problem", ""))
                                 result = {"content": [{"type": "text", "text": resp.content}]}
                             elif tool_name == "agent_search":
-                                result = {"content": [{"type": "text", "text": f"Search for: {arguments.get('query', '')}"}]}
+                                result = {
+                                    "content": [
+                                        {
+                                            "type": "text",
+                                            "text": f"Search for: {arguments.get('query', '')}",
+                                        }
+                                    ]
+                                }
                             elif tool_name == "agent_fingerprint":
                                 from src.c4_analysis.llm_classifier import get_c4_classifier
+
                                 classifier = get_c4_classifier()
-                                state, confidence, _ = classifier.classify(arguments.get("problem", ""))
-                                result = {"content": [{"type": "text", "text": f"C4 State: {state} (confidence: {confidence:.2f})"}]}
+                                state, confidence, _ = classifier.classify(
+                                    arguments.get("problem", "")
+                                )
+                                result = {
+                                    "content": [
+                                        {
+                                            "type": "text",
+                                            "text": f"C4 State: {state} (confidence: {confidence:.2f})",
+                                        }
+                                    ]
+                                }
                             else:
-                                result = {"content": [{"type": "text", "text": f"Tool {tool_name} executed"}]}
+                                result = {
+                                    "content": [
+                                        {"type": "text", "text": f"Tool {tool_name} executed"}
+                                    ]
+                                }
 
                             response = {"jsonrpc": "2.0", "id": request_id, "result": result}
                         elif method == "notifications/initialized":
                             response = None
                         else:
-                            response = {"jsonrpc": "2.0", "id": request_id, "error": {"code": -32601, "message": f"Method not found: {method}"}}
+                            response = {
+                                "jsonrpc": "2.0",
+                                "id": request_id,
+                                "error": {"code": -32601, "message": f"Method not found: {method}"},
+                            }
 
                         if response:
                             writer.write(_json.dumps(response) + "\n")
@@ -803,6 +1171,7 @@ def blast_agent(
 
             import asyncio as _asyncio
             import sys as _sys
+
             _asyncio.run(agent_daemon_main())
         except ImportError as e:
             console.print(f"[red]Agent daemon failed: {e}[/]")
@@ -814,6 +1183,7 @@ def blast_agent(
     if cmd:
         console.print(f"[bold]Agent query:[/bold] {cmd}")
         from src.agent.core import AgentCore
+
         agent = AgentCore()
         response = agent.process(cmd)
         console.print(f"\n[green]{response.content}[/]")
@@ -824,6 +1194,7 @@ def blast_agent(
 
     # Interactive REPL
     from src.agent.core import AgentCore
+
     agent = AgentCore()
     console.print("[bold cyan]C4REQBER Agent v5.4.0[/]")
     console.print("[dim]Interactive REPL — type /help for commands, /quit to exit[/]")
@@ -833,6 +1204,7 @@ def blast_agent(
 # ═══════════════════════════════════════════════════════════════════════════════
 # Analyze — Systemicity Analysis
 # ═══════════════════════════════════════════════════════════════════════════════
+
 
 @app.command("analyze")
 def blast_analyze(
@@ -900,6 +1272,7 @@ def blast_analyze(
 # Integrations — External services & tools
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 @app.command("integrations")
 def blast_integrations(
     service: str = typer.Argument("status", help="Service: status, test, search, skills, tools"),
@@ -919,6 +1292,7 @@ def blast_integrations(
     import asyncio
 
     if service == "status":
+
         async def _status():
             from src.integrations import (
                 EigentDesktop,
@@ -927,6 +1301,7 @@ def blast_integrations(
                 OpenFangClient,
                 YandexGPTClient,
             )
+
             results = {}
             for name, client_cls in [
                 ("Liquid AI", LiquidAIClient),
@@ -936,7 +1311,11 @@ def blast_integrations(
             ]:
                 try:
                     client = client_cls()
-                    test = await client.test_connection() if hasattr(client, 'test_connection') else {"healthy": False}
+                    test = (
+                        await client.test_connection()
+                        if hasattr(client, "test_connection")
+                        else {"healthy": False}
+                    )
                     results[name] = test
                 except Exception as e:
                     results[name] = {"healthy": False, "error": str(e)}
@@ -949,13 +1328,21 @@ def blast_integrations(
             for name, status in sorted(results.items()):
                 healthy = status.get("healthy", False)
                 icon = "●" if healthy else "○"
-                extra = status.get("models_found", status.get("skills_found", status.get("categories_found", "")))
-                detail = f" — {extra} found" if extra else f" — {status.get('error', status.get('port', ''))}"
+                extra = status.get(
+                    "models_found", status.get("skills_found", status.get("categories_found", ""))
+                )
+                detail = (
+                    f" — {extra} found"
+                    if extra
+                    else f" — {status.get('error', status.get('port', ''))}"
+                )
                 console.print(f"  {icon} {name:<14}{detail}")
+
         asyncio.run(_status())
         return
 
     if service == "test":
+
         async def _test():
             from src.integrations import (
                 LiquidAIClient,
@@ -963,6 +1350,7 @@ def blast_integrations(
                 OpenFangClient,
                 YandexGPTClient,
             )
+
             all_ok = True
             for name, client_cls in [
                 ("Liquid AI", LiquidAIClient),
@@ -972,7 +1360,11 @@ def blast_integrations(
             ]:
                 try:
                     client = client_cls()
-                    test = await client.test_connection() if hasattr(client, 'test_connection') else {"healthy": False}
+                    test = (
+                        await client.test_connection()
+                        if hasattr(client, "test_connection")
+                        else {"healthy": False}
+                    )
                     healthy = test.get("healthy", False)
                     icon = "✓" if healthy else "✗"
                     err = test.get("error", "")
@@ -984,12 +1376,15 @@ def blast_integrations(
                     all_ok = False
             if all_ok:
                 console.print("\n[green]All integrations healthy[/]")
+
         asyncio.run(_test())
         return
 
     if service == "search" and query:
+
         async def _search():
             from src.integrations import OpenFangClient
+
             registry = OpenFangClient()
             results = await registry.search(query)
             if json_out:
@@ -1000,12 +1395,15 @@ def blast_integrations(
                 name = r.get("name", r.get("title", r.get("id", "?")))
                 desc = (r.get("description", "") or "")[:100]
                 console.print(f"  [cyan]{name}[/] — {desc}")
+
         asyncio.run(_search())
         return
 
     if service == "skills":
+
         async def _skills():
             from src.integrations import OpenFangClient
+
             fang = OpenFangClient()
             results = await fang.search_skills(query) if query else await fang.list_skills()
             if json_out:
@@ -1026,12 +1424,15 @@ def blast_integrations(
                 name = r.get("name", r.get("title", r.get("id", "?")))
                 desc = (r.get("description", "") or "")[:100]
                 console.print(f"  [cyan]{name}[/] — {desc}")
+
         asyncio.run(_skills())
         return
 
     if service == "tools":
+
         async def _tools():
             from src.integrations import OpenFangClient
+
             registry = OpenFangClient()
             cats = await registry.list_categories()
             if json_out:
@@ -1040,6 +1441,7 @@ def blast_integrations(
             console.print(f"[bold]OpenFang: {len(cats)} categories[/]")
             for cat in cats[:20]:
                 console.print(f"  • {cat}")
+
         asyncio.run(_tools())
         return
 
@@ -1050,6 +1452,7 @@ def blast_integrations(
 # ═══════════════════════════════════════════════════════════════════════════════
 # Packages — Scientific Package Manager
 # ═══════════════════════════════════════════════════════════════════════════════
+
 
 @app.command("packages")
 def blast_packages(
@@ -1093,10 +1496,13 @@ def blast_packages(
     # List / status
     statuses = detect_all()
     console.print("[bold]C4REQBER Scientific Package Manager[/bold]")
-    console.print(f"[dim]Python {sys.version_info.major}.{sys.version_info.minor} | {len(PACKAGES)} packages[/dim]")
+    console.print(
+        f"[dim]Python {sys.version_info.major}.{sys.version_info.minor} | {len(PACKAGES)} packages[/dim]"
+    )
     console.print()
 
     from rich.table import Table
+
     table = Table(show_header=True, header_style="bold cyan")
     table.add_column("ID", width=14)
     table.add_column("Name", width=26)
@@ -1106,16 +1512,30 @@ def blast_packages(
 
     for pkg in PACKAGES:
         st = statuses.get(pkg.id, PackageStatus.UNKNOWN)
-        icon = {"installed": "[green]●[/]", "available": "[dim]○[/]", "incompatible": "[red]✗[/]"}.get(st.value, "[dim]?[/]")
-        status_text = {"installed": "[green]installed[/]", "available": "[dim]available[/]", "incompatible": "[red]py incompat[/]"}.get(st.value, "unknown")
+        icon = {
+            "installed": "[green]●[/]",
+            "available": "[dim]○[/]",
+            "incompatible": "[red]✗[/]",
+        }.get(st.value, "[dim]?[/]")
+        status_text = {
+            "installed": "[green]installed[/]",
+            "available": "[dim]available[/]",
+            "incompatible": "[red]py incompat[/]",
+        }.get(st.value, "unknown")
         weight = f"{pkg.weight_mb}MB" if pkg.weight_mb > 0 else "-"
         table.add_row(
-            f"{icon} {pkg.id}", pkg.name, status_text, pkg.category, weight,
+            f"{icon} {pkg.id}",
+            pkg.name,
+            status_text,
+            pkg.category,
+            weight,
         )
 
     console.print(table)
     console.print()
-    console.print("[dim]● installed  ○ available  ✗ incompatible — use 'blast packages install --id <id>'[/]")
+    console.print(
+        "[dim]● installed  ○ available  ✗ incompatible — use 'blast packages install --id <id>'[/]"
+    )
     console.print()
     console.print("[bold]TUI:[/] blast tui --packages    # Interactive arrow-key installer[/]")
 
@@ -1124,9 +1544,12 @@ def blast_packages(
 # Setup — First-Run Wizard
 # ═══════════════════════════════════════════════════════════════════════════════
 
+
 @app.command("setup")
 def blast_setup(
-    auto: bool = typer.Option(False, "--auto", "-y", help="Auto-install everything without prompts"),
+    auto: bool = typer.Option(
+        False, "--auto", "-y", help="Auto-install everything without prompts"
+    ),
 ) -> None:
     """First-run setup wizard — interactive checkbox menu.
 
@@ -1176,7 +1599,9 @@ def blast_setup(
         return
 
     console.print(f"\n[bold]Available to install ({len(installable)}):[/]")
-    console.print("[dim]Use ↑↓ to navigate, Space to toggle, Enter to install selected, Q to quit[/]\n")
+    console.print(
+        "[dim]Use ↑↓ to navigate, Space to toggle, Enter to install selected, Q to quit[/]\n"
+    )
 
     for i, pkg in enumerate(installable):
         st = statuses[pkg.id]
@@ -1184,10 +1609,14 @@ def blast_setup(
         st_icon = "[yellow]○[/]" if st == PackageStatus.AVAILABLE else "[red]✗[/]"
         env_tag = " [dim](needs isolated 3.12 env)[/]" if st == PackageStatus.INCOMPATIBLE else ""
         weight = f" [dim]({pkg.weight_mb}MB)[/]" if pkg.weight_mb > 0 else ""
-        console.print(f"  {prefix} {st_icon} {pkg.id:<18} [dim]{pkg.description[:55]}[/]{env_tag}{weight}")
+        console.print(
+            f"  {prefix} {st_icon} {pkg.id:<18} [dim]{pkg.description[:55]}[/]{env_tag}{weight}"
+        )
 
     console.print()
-    console.print("[dim]Type numbers to select (e.g., '1,3,5') or 'all' to select all, then Enter:[/]")
+    console.print(
+        "[dim]Type numbers to select (e.g., '1,3,5') or 'all' to select all, then Enter:[/]"
+    )
     selection = input("> ").strip().lower()
 
     if selection == "q":

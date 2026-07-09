@@ -64,10 +64,11 @@ class UCOSAnalyzer:
             results[layer] = self._analyze_layer(layer, discovery, hypothesis)
 
         results["total_layers"] = len(self.LAYERS)
-        results["status"] = "complete" if all(
-            v.get("status") == "analyzed" for v in results.values()
-            if isinstance(v, dict)
-        ) else "partial"
+        results["status"] = (
+            "complete"
+            if all(v.get("status") == "analyzed" for v in results.values() if isinstance(v, dict))
+            else "partial"
+        )
 
         return results
 
@@ -94,8 +95,7 @@ class UCOSAnalyzer:
 
     # ── Layer 1: Conceptual Mapping ────────────────────────────────────────
 
-    def _layer1_conceptual_mapping(
-        self, problem: str, c4_path: dict[str, Any]    ) -> dict[str, Any]:
+    def _layer1_conceptual_mapping(self, problem: str, c4_path: dict[str, Any]) -> dict[str, Any]:
         """Map problem into C4 cognitive space."""
         states = c4_path.get("states", 0)
         steps = c4_path.get("steps", 0)
@@ -123,7 +123,8 @@ class UCOSAnalyzer:
     # ── Layer 2: Operational Translation ───────────────────────────────────
 
     def _layer2_operational_translation(
-        self, problem: str, triz: dict[str, Any], c4_path: dict[str, Any]    ) -> dict[str, Any]:
+        self, problem: str, triz: dict[str, Any], c4_path: dict[str, Any]
+    ) -> dict[str, Any]:
         """Translate problem into TRIZ principles and QZRF operators."""
         principles = triz.get("principles", [])
         improving_param = triz.get("improving_param", "")
@@ -131,8 +132,7 @@ class UCOSAnalyzer:
 
         triz_count = len(principles) if isinstance(principles, list) else 0
         triz_names = (
-            [p.get("name", f"P{p.get('id','?')}") for p in principles[:5]]
-            if triz_count > 0 else []
+            [p.get("name", f"P{p.get('id','?')}") for p in principles[:5]] if triz_count > 0 else []
         )
 
         return {
@@ -147,7 +147,8 @@ class UCOSAnalyzer:
     # ── Layer 3: Structural Integration ────────────────────────────────────
 
     def _layer3_structural_integration(
-        self, problem: str, isomorphisms: dict[str, Any], papers: list[Any]    ) -> dict[str, Any]:
+        self, problem: str, isomorphisms: dict[str, Any], papers: list[Any]
+    ) -> dict[str, Any]:
         """Integrate Matrix Dream patterns and isomorphisms."""
         iso_count = isomorphisms.get("found", 0) if isinstance(isomorphisms, dict) else 0
         papers_count = len(papers) if isinstance(papers, list) else 0
@@ -173,12 +174,9 @@ class UCOSAnalyzer:
 
     # ── Layer 4: Meta-Cognitive Reflection ─────────────────────────────────
 
-    def _layer4_meta_reflection(
-        self, problem: str, hypothesis: str
-    ) -> dict[str, Any]:
+    def _layer4_meta_reflection(self, problem: str, hypothesis: str) -> dict[str, Any]:
         """Evaluate solution quality through meta-cognitive reflection."""
         hypothesis_text = hypothesis if isinstance(hypothesis, str) else str(hypothesis)
-        has_hypothesis = len(hypothesis_text) > 50
         sections = {
             "has_hypothesis_statement": "Hypothesis" in hypothesis_text,
             "has_mechanism": "Mechanism" in hypothesis_text,
@@ -208,10 +206,20 @@ class QZRFAnalyzer:
     """
 
     OPERATORS = [
-        "Decomposition", "Abstraction", "Analogy", "Reversal",
-        "Combination", "Extrapolation", "Recontextualization",
-        "Falsification", "Isomorphism", "Emergence",
-        "Recursion", "Superposition", "Entanglement", "Measurement",
+        "Decomposition",
+        "Abstraction",
+        "Analogy",
+        "Reversal",
+        "Combination",
+        "Extrapolation",
+        "Recontextualization",
+        "Falsification",
+        "Isomorphism",
+        "Emergence",
+        "Recursion",
+        "Superposition",
+        "Entanglement",
+        "Measurement",
     ]
 
     def __init__(self) -> None:
@@ -241,9 +249,7 @@ class QZRFAnalyzer:
             results[op] = {
                 "applied": True,
                 "impact": f"Operator '{op}' applied to problem analysis",
-                "problem_relevance": self._op_relevance_score(
-                    op, problem, triz_names
-                ),
+                "problem_relevance": self._op_relevance_score(op, problem, triz_names),
             }
 
         return {
@@ -253,9 +259,7 @@ class QZRFAnalyzer:
             "library_integration": self._enrich_with_library(problem, triz_names),
         }
 
-    def _op_relevance_score(
-        self, op: str, problem: str, triz_names: list[str]
-    ) -> float:
+    def _op_relevance_score(self, op: str, problem: str, triz_names: list[str]) -> float:
         """Calculate a rough relevance score for an operator (0.0-1.0)."""
         problem_lower = problem.lower()
         relevance_keywords: dict[str, list[str]] = {
@@ -281,9 +285,7 @@ class QZRFAnalyzer:
         score = (matches * 0.6 + triz_matches * 0.4) / max(len(keywords), 1)
         return round(min(score * 3.0, 1.0), 2)
 
-    def _enrich_with_library(
-        self, problem: str, triz_names: list[str]
-    ) -> dict[str, Any]:
+    def _enrich_with_library(self, problem: str, triz_names: list[str]) -> dict[str, Any]:
         """Enrich analysis using the existing QzrfLibrary for C4-aware results."""
         enrichment: dict[str, Any] = {
             "available_library": False,
@@ -293,7 +295,7 @@ class QZRFAnalyzer:
 
         try:
             qzrf_lib = QzrfLibrary()
-            space = C4Space()
+            C4Space()
             start = C4State(T=0, S=0, A=0)
             end = C4State(T=2, S=2, A=2)
 
@@ -304,11 +306,13 @@ class QZRFAnalyzer:
             enrichment["operator_details"] = []
             for op_id in recommended:
                 op = qzrf_lib.get(op_id)
-                enrichment["operator_details"].append({
-                    "id": op_id,
-                    "name": op.name if op else op_id,
-                    "phase": op.phase.value if op else "unknown",
-                })
+                enrichment["operator_details"].append(
+                    {
+                        "id": op_id,
+                        "name": op.name if op else op_id,
+                        "phase": op.phase.value if op else "unknown",
+                    }
+                )
         except (ImportError, Exception):
             pass
 
@@ -336,8 +340,7 @@ class QZRFAnalyzer:
                 "c4_target": c4_target,
                 "recommended_sequence": recommended,
                 "applicable_operators": [
-                    {"id": op.id, "name": op.name, "phase": op.phase.value}
-                    for op in applicable
+                    {"id": op.id, "name": op.name, "phase": op.phase.value} for op in applicable
                 ],
                 "optimal_path_length": space.shortest_path(start, end).length,
             }

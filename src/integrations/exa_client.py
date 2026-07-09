@@ -6,6 +6,8 @@ from typing import Any
 
 import httpx
 
+from src.config import get_key
+
 
 EXA_API_URL = "https://api.exa.ai"
 
@@ -14,7 +16,7 @@ class ExaClient:
     """Exa.ai search client — $9.91 balance."""
 
     def __init__(self, api_key: str | None = None) -> None:
-        self.api_key = api_key or os.environ.get("EXA_API_KEY")
+        self.api_key = api_key or get_key("exa") or os.environ.get("EXA_API_KEY")
         self.enabled = bool(self.api_key)
 
     async def search(

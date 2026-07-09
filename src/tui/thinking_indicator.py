@@ -28,7 +28,7 @@ def render_thinking_bar(frame: int, width: int = 30, phase: str = "idle", intens
         "verifying": ["#e040fb", "#06d6a0"],         # magenta → cyan
         "complete":  ["#FFD93D", "#FFD93D"],         # gold
     }
-    colors = phase_colors.get(phase, phase_colors["idle"])
+    phase_colors.get(phase, phase_colors["idle"])
 
     chars = " ▏▎▍▌▋▊▉█"
     bar = []

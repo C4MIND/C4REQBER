@@ -102,6 +102,14 @@ DISCOVERIES_GENERATED = Counter(
     labelnames=["output_format"],
 )
 
+# ── Rate-limit metrics ───────────────────────────────────────────────────────
+
+RATE_LIMIT_HITS = Counter(
+    "c4_rate_limit_hits_total",
+    "Total 429 responses emitted by RateLimitMiddleware",
+    labelnames=["endpoint"],
+)
+
 
 @router.get("/metrics", include_in_schema=False)
 async def metrics_endpoint(_: object = Depends(get_current_user)) -> bytes:

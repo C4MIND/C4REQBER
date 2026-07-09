@@ -27,7 +27,7 @@ class Brian2Bridge(BaseSimulationAdapter):
 
     def run(self, input_data: dict[str, Any] | None = None) -> SimulationResult:
         def _run(data: dict[str, Any]) -> dict[str, Any]:
-            from brian2 import NeuronGroup, SpikeMonitor, StateMonitor, defaultclock, ms, mV, run
+            from brian2 import NeuronGroup, SpikeMonitor, StateMonitor, defaultclock, ms, run
 
             duration = self._params.get("duration_ms", 100) * ms
             defaultclock.dt = self._params.get("dt_ms", 0.1) * ms
@@ -43,7 +43,7 @@ class Brian2Bridge(BaseSimulationAdapter):
             group.tau = "(10 + rand()*10)*ms"
 
             spike_mon = SpikeMonitor(group)
-            state_mon = StateMonitor(group, "v", record=True)
+            StateMonitor(group, "v", record=True)
             run(duration)
 
             return {

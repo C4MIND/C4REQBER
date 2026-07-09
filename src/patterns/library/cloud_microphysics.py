@@ -289,7 +289,6 @@ class CloudMicrophysicsPattern:
 
     def _tendencies(self) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         """Calculate tendencies for all variables"""
-        cfg = self.config
 
         # Saturation adjustment
         dqc_sat, dT_sat = self._saturation_adjustment()

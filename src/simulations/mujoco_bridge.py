@@ -28,7 +28,6 @@ class MuJoCoBridge(BaseSimulationAdapter):
     def run(self, input_data: dict[str, Any] | None = None) -> SimulationResult:
         def _run(data: dict[str, Any]) -> dict[str, Any]:
             import mujoco
-            import numpy as np
 
             xml = data.get(
                 "xml_model",

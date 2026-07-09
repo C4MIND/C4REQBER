@@ -40,12 +40,12 @@ COUNCIL_MODELS = {
         "openai/gpt-4o-mini",
     ],
     "balanced": [
-        "anthropic/claude-sonnet-4-20250514",
+        "anthropic/claude-sonnet-4.6",
         "deepseek/deepseek-r1",
         "qwen/qwen-2.5-72b-instruct",
     ],
     "premium": [
-        "anthropic/claude-sonnet-4-20250514",
+        "anthropic/claude-sonnet-4.6",
         "openai/gpt-4.5-preview",
         "deepseek/deepseek-r1",
     ],
@@ -183,38 +183,38 @@ class LLMCouncil:
             url = DEEPSEEK_URL
             effective_model = "deepseek-chat"
 
-        headers = {
-            "Authorization": f"Bearer {self._api_key}",
-            "Content-Type": "application/json",
-            "HTTP-Referer": "https://c4reqber.org",
-            "X-Title": "C4Reqber",
-        }
-
         try:
-            async with httpx.AsyncClient(timeout=90.0) as client:
-                resp = await client.post(
-                    url,
-                    headers=headers,
-                    json={
-                        "model": effective_model,
-                        "max_tokens": max_tokens,
-                        "temperature": temperature,
-                        "messages": [
-                            {
-                                "role": "system",
-                                "content": "You are a rigorous cross-domain research scientist. Be bold, specific, and precise. Return structured output when requested.",
-                            },
-                            {"role": "user", "content": prompt},
-                        ],
+            # Audit 2026-06-22 H-8 Tier 1: guard the raw httpx call with
+            # src.llm.guarded_call for metrics + sanitization + cost tracking.
+            from src.llm.guarded_call import guarded_chat_completion
+            data = await guarded_chat_completion(
+                url=url,
+                api_key=self._api_key,
+                model=effective_model,
+                temperature=temperature,
+                max_tokens=max_tokens,
+                timeout=90.0,
+                extra_body={
+                    "headers": {
+                        # OpenRouter attribution headers — guarded_call
+                        # passes Authorization + Content-Type automatically.
+                        "HTTP-Referer": "https://c4reqber.org",
+                        "X-Title": "C4Reqber",
                     },
-                )
-                resp.raise_for_status()
-                data = resp.json()
-                content = data["choices"][0]["message"]["content"]
-                logger.debug(
-                    "Model %s responded with %d chars", model, len(content)
-                )
-                return content
+                } if "openrouter" in url else None,
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "You are a rigorous cross-domain research scientist. Be bold, specific, and precise. Return structured output when requested.",
+                    },
+                    {"role": "user", "content": prompt},
+                ],
+            )
+            content = data["choices"][0]["message"]["content"]
+            logger.debug(
+                "Model %s responded with %d chars", model, len(content)
+            )
+            return content
         except Exception as e:
             logger.debug("Model %s API failed: %s", model, e)
             raise RuntimeError(f"Council model failed: {e}") from e

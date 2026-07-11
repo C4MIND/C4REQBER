@@ -2,90 +2,61 @@
 
 **Updated:** 2026-07-11
 
-This document explains how GitLab CI builds the API image, deploys Pages, and how to configure the self-hosted Mac runner (Colima).
+## Failure modes we hit (and fixes)
+
+| # | Symptom | Root cause | Fix in repo / GitLab |
+|---|---------|------------|---------------------|
+| 1 | `tcp://docker:2375` | DinD on Mac Colima runner | Kaniko executor (no DinD) |
+| 2 | Pipeline 0 jobs | YAML colon in `deploy-production` echo | Quote script lines |
+| 3 | `bash: not found` | Kaniko image is busybox | `sh scripts/ci/...` |
+| 4 | Job killed at **1h** (`exit 143`) | **Project** `build_timeout=3600` caps job timeout | GitLab Settings → CI/CD → **3h** (`10800`); job `timeout: 3h` |
+| 5 | pip >1h on huggingface | Full `requirements.txt` in Docker | `requirements-docker.txt` (filtered) |
+| 6 | `resolution-too-deep` | pip on `pydantic-ai` graph | `uv pip install` in Dockerfile |
+| 7 | MR won't merge | Flaky `tui-v9-test` fails pipeline | `allow_failure: true` + test sleep fix |
+| 8 | Red pipeline, green Pages | Unrelated job failure | `pages` has `needs: []`; TUI advisory only |
+
+**Critical:** GitLab project **maximum job timeout** overrides per-job `timeout:` when project limit is lower. Verify: Settings → CI/CD → General pipelines → **Timeout** = **3 hours**.
 
 ## Pipeline overview (`main`)
 
-| Job | Stage | Purpose |
-|-----|-------|---------|
-| `test-backend` | test | Ruff, truths, MCP registry, pytest |
-| `tui-v9-test` | test | Go vet/build/test for TUI v9 |
-| `build-api` | build | Build + **push** API image to GitLab Container Registry |
-| `pages` | deploy | Publish `landing/` to GitLab Pages |
-| `deploy-production` | deploy | Manual production deploy (depends on `build-api`) |
+| Job | Stage | Blocks pipeline? | Purpose |
+|-----|-------|------------------|---------|
+| `test-backend` | test | **yes** | Ruff, checks, pytest |
+| `tui-v9-test` | test | no (`allow_failure`) | Go TUI advisory |
+| `build-api` | build | **yes** | Kaniko → registry (`timeout: 3h`, retry ×2) |
+| `pages` | deploy | no (`needs: []`) | Landing / GitLab Pages |
+| `deploy-production` | deploy | no (`manual`, `allow_failure`) | Prod deploy hint |
 
-`pages` does **not** depend on `build-api` — a landing deploy succeeds even if the API image build is skipped on a feature branch.
+## `build-api` stack
 
-## `build-api` — why Kaniko (not Docker-in-Docker)
+1. **Kaniko** — no Docker daemon (Mac runner safe)
+2. **`requirements-docker.txt`** — committed, checked in `test-backend` via `check_docker_requirements.sh`
+3. **`uv pip install`** — same resolver strategy as `scripts/ci/setup_python.sh`
+4. **`timeout: 3h`** + project `build_timeout=10800` + runner `maximum_timeout=10800`
 
-The previous job used `docker:24-dind`. That fails on macOS self-hosted runners because:
+Regenerate docker requirements:
 
-- `privileged = false` (required on Mac)
-- DinD needs Linux cgroups/namespaces Colima does not expose to service containers
-- Error: `Cannot connect to the Docker daemon at tcp://docker:2375`
-
-**Fix:** `build-api` uses [Kaniko](https://github.com/GoogleContainerTools/kaniko) — builds and pushes images **without** a Docker daemon. Job timeout is **3 hours** (`timeout: 3h`). `Dockerfile.backend` installs a **filtered** requirements set (same exclusions as `scripts/ci/setup_python.sh`) so pip does not pull `sentence-transformers` / `huggingface-hub` into the API image.
-
-Fallback: if Kaniko is unavailable but host Docker works (Colima socket configured on the runner), `scripts/ci/build_api_image.sh` uses `docker build` + `docker push`.
+```bash
+sh scripts/ci/filter_requirements.sh requirements.txt requirements-docker.txt
+sh scripts/ci/check_docker_requirements.sh
+```
 
 ## Self-hosted runner — Mac + Colima
 
-Runner tag: `docker`, `c4reqber` (see `.gitlab-ci.yml` `default.tags`).
+See `scripts/ci/gitlab-runner.colima.example.toml`:
 
-### Recommended `config.toml` snippet
+- `host = unix:///Users/<you>/.colima/default/docker.sock`
+- `maximum_timeout = 10800`
+- **No** `docker:dind` CI service
 
-Copy from `scripts/ci/gitlab-runner.colima.example.toml`. Key settings:
+## Pages
 
-```toml
-[[runners]]
-  executor = "docker"
-  tag_list = ["docker", "c4reqber"]
-  [runners.docker]
-    host = "unix:///Users/<you>/.colima/default/docker.sock"
-    privileged = false
-    pull_policy = ["if-not-present"]
-    volumes = ["/cache"]
-```
+Public URL: https://turbo-cdi-86c583.gitlab.io/
 
-**Do not** add `docker:24-dind` as a CI service when `host` points to Colima — they conflict.
+If login redirect: Settings → General → Pages → **Everyone**.
 
-### Verify locally
-
-```bash
-colima status          # should be Running
-docker info            # should succeed
-bash scripts/ci/build_api_image.sh   # only works inside CI with env vars set
-```
-
-## GitLab Pages — public access
-
-If `https://cognitive-functors.gitlab.io/turbo-cdi/` redirects to GitLab login, Pages are set to **private**.
-
-**Fix (project maintainer):**
-
-1. GitLab → **Settings → General → Visibility, project features, permissions**
-2. **Pages** → **Everyone** (public)
-3. Or API: `pages_access_level=public` (project can stay private)
-
-After change, allow ~2 minutes for CDN propagation.
-
-## Container Registry image
-
-After a green `build-api` on `main`:
+## Registry
 
 ```
 registry.gitlab.com/cognitive-functors/turbo-cdi/api:latest
-registry.gitlab.com/cognitive-functors/turbo-cdi/api:<commit-sha>
 ```
-
-Use in `docker-compose.prod.yml` or Kubernetes instead of local `build:` when deploying production.
-
-## Troubleshooting
-
-| Symptom | Cause | Fix |
-|---------|-------|-----|
-| `tcp://docker:2375` connection refused | DinD service enabled | Remove dind; use Kaniko job (current `.gitlab-ci.yml`) |
-| Kaniko push 401 | Registry auth | GitLab provides `CI_REGISTRY_*` on project runners automatically |
-| `pages` OK but site asks login | `pages_access_level: private` | Set Pages to Everyone (above) |
-| Pipeline red, landing live | `build-api` failed | Check job log; Pages is independent |
-| Job killed at 1h (`exit 143`) | Default GitLab job timeout | `build-api` has `timeout: 3h`; Docker uses filtered requirements |

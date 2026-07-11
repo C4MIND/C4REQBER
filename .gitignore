@@ -232,6 +232,7 @@ assets/
 bin/
 *.txt
 !requirements.txt
+!requirements-docker.txt
 !README.txt
 # TUI v9 golden-snapshot fixtures are committed test data, not temp .txt files.
 # Without this exception the blanket *.txt rule silently dropped 102 of the 132

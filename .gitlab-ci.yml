@@ -67,6 +67,8 @@ tui-v9-test:
 
 build-api:
   stage: build
+  timeout: 3h
+  interruptible: false
   image:
     name: ${KANIKO_IMAGE}
     entrypoint: [""]

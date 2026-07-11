@@ -13,6 +13,8 @@ check_interval = 10
   token = "REPLACE_WITH_RUNNER_TOKEN"
   executor = "docker"
   tag_list = ["docker", "c4reqber"]
+  # Allow long Kaniko builds (first image push can exceed 1h on Mac ARM)
+  maximum_timeout = 10800
   [runners.docker]
     # Colima default socket — adjust username/path if needed
     host = "unix:///Users/YOUR_USER/.colima/default/docker.sock"

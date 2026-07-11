@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>c4reqber — Cognitive Exoskeleton for AI Agents</title>
-<meta name="description" content="The missing cognitive layer for the agentic era. 32 simulation engines, 6 formal verifiers, 43 knowledge sources, 21 MCP tools, TUI v9 Cockpit. O₀→O₁→O₂ meta-cognitive observer. Think. Simulate. Prove. Discover.">
+<meta name="description" content="Cognitive exoskeleton for AI agents and researchers. 38 simulation engines, 14 verifiers, 51 knowledge sources, 21 MCP tools, TUI v9. Think. Simulate. Prove. Discover.">
 <meta property="og:title" content="c4reqber — Cognitive Exoskeleton for AI Agents">
 <meta property="og:description" content="Think. Simulate. Prove. Discover.">
 <meta property="og:type" content="website">
@@ -36,7 +36,7 @@
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
   "name": "c4reqber",
-  "description": "Cognitive Exoskeleton for Humans and AI Agents. 27 states, 32 engines, 6 verifiers, 101+ patterns.",
+  "description": "Cognitive exoskeleton for humans and AI agents. 27 states, 38 engines, 14 verifiers, 51 knowledge sources, 21 MCP tools.",
   "applicationCategory": "ScientificApplication",
   "operatingSystem": "macOS, Linux",
   "softwareVersion": "5.6.0",
@@ -58,9 +58,9 @@
   "@context": "https://schema.org",
   "@type": "FAQPage",
   "mainEntity": [
-    {"@type": "Question", "name": "What is c4reqber?", "acceptedAnswer": {"@type": "Answer", "text": "c4reqber is a cognitive exoskeleton for AI agents and human researchers. It combines 32 simulation engines, 43 knowledge sources, formal verification (Lean4, Coq, Dafny), a Z₃³ cognitive topology, O₀→O₁→O₂ meta-cognitive observer, and 23 core metaprograms to transform research questions into paradigm-shifting dissertations."}},
+    {"@type": "Question", "name": "What is c4reqber?", "acceptedAnswer": {"@type": "Answer", "text": "c4reqber is a cognitive exoskeleton for AI agents and human researchers. It combines 38 simulation engines, 51 knowledge sources, formal verification (Lean4, Coq, Dafny, Agda, Z3), a Z₃³ cognitive topology, O₀→O₁→O₂ meta-cognitive observer, and 23 core metaprograms to transform research questions into gated research proposals."}},
     {"@type": "Question", "name": "How much does c4reqber cost?", "acceptedAnswer": {"@type": "Answer", "text": "c4reqber is free and open-source (AGPL-3.0). You only pay for the LLM API calls you use. A full pipeline run costs between $0.002 (Budget tier, DeepSeek) and $0.11 (Premium tier, Claude Opus). The recommended balanced tier costs approximately $0.35 per run."}},
-    {"@type": "Question", "name": "Is c4reqber open source?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. c4reqber is licensed under AGPL-3.0. The entire codebase, including 21 MCP tools, 32 simulation engine bridges, and 6 formal verification backends, is publicly available on GitHub."}},
+    {"@type": "Question", "name": "Is c4reqber open source?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. c4reqber is licensed under AGPL-3.0. The entire codebase, including 21 MCP tools, 38 simulation engine bridges, and 14 formal verification backends, is publicly available on GitLab."}},
     {"@type": "Question", "name": "What operating systems are supported?", "acceptedAnswer": {"@type": "Answer", "text": "macOS and Linux are fully tested and supported. Windows is not tested but may work under WSL2. External simulation engines (GROMACS, OpenFOAM, etc.) require separate installation per engine."}},
     {"@type": "Question", "name": "Do I need a GPU to use c4reqber?", "acceptedAnswer": {"@type": "Answer", "text": "No. GPU is optional. Apple Silicon (MLX) and NVIDIA CUDA are supported for accelerated simulation, but the core pipeline runs entirely on CPU. Minimum requirements: 4 GB RAM (8 GB recommended), 2 CPU cores (4+ for simulation workloads)."}}
   ]
@@ -78,10 +78,10 @@
 </script>
   <link rel="stylesheet" href="css/main.css">
 </head>
-<body>
+<body data-page-title="page_title_home" data-meta-desc="meta_desc_home">
 
 <!-- Skip link -->
-<a href="#main" class="skip-link">Skip to content</a>
+<a href="#main" class="skip-link" data-i18n="a11y_skip">Skip to content</a>
 
 <div id="site-header"></div>
 
@@ -97,9 +97,9 @@
   <div class="hero-content">
     <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:32px;flex-wrap:wrap">
        <div class="badge" style="margin-bottom:0"><span class="dot"></span> <span data-i18n="hero_badge">v5.6.0 · PRODUCTION · TUI v9 · 21 MCP tools</span></div>
-      <a id="github-badge" class="github-badge" href="https://github.com/c4reqber/c4reqber" rel="noopener noreferrer" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:100px;padding:6px 16px;font-size:13px;color:var(--fg-2);text-decoration:none">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
-        <span data-i18n="github_stars">Be the first star!</span>
+      <a id="gitlab-badge" class="github-badge" href="https://gitlab.com/cognitive-functors/turbo-cdi" rel="noopener noreferrer" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:100px;padding:6px 16px;font-size:13px;color:var(--fg-2);text-decoration:none">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        <span data-i18n="github_stars">GitLab</span>
       </a>
     </div>
     <h1><span class="gradient-text">c4reqber</span></h1>
@@ -107,7 +107,7 @@
     <p class="hero-sub" style="margin-top:4px;font-size:clamp(14px,1.8vw,20px);letter-spacing:6px;text-transform:uppercase;color:var(--primary);animation:glitchSkew 4s infinite;text-shadow:0 0 10px rgba(0,255,65,.5),0 0 40px rgba(0,255,65,.2),-1px 0 #ff006e,1px 0 #00d4ff" data-i18n="hero_shift">SHIFT PARADIGMS</p>
     <div class="hero-btns">
       <a href="#quickstart" class="btn btn-primary" data-i18n="hero_cta_primary">pip install c4reqber</a>
-      <a href="discoveries/index.html" class="btn btn-secondary">6 verified proposals →</a>
+      <a href="discoveries/index.html" class="btn btn-secondary" data-i18n="hero_cta_discoveries">6 verified proposals →</a>
       <a href="https://gitlab.com/cognitive-functors/turbo-cdi" class="btn btn-secondary" rel="noopener noreferrer" target="_blank" data-i18n="hero_cta_secondary">GitLab</a>
     </div>
     <p class="hero-meta" style="margin-top:20px" data-i18n="hero_tags">Z₃³ COGNITIVE EXOSKELETON · 27 STATES · 6 OPERATORS · 43+ SOURCES · 36 ENGINES · 20 MCP TOOLS · O₀→O₁→O₂ OBSERVER · 23 MPs</p>
@@ -122,10 +122,39 @@
       <div class="stat-card accent"><div class="stat-value accent">27</div><div class="stat-label" data-i18n="stat_states">Cognitive States</div></div>
       <div class="stat-card green"><div class="stat-value green">6</div><div class="stat-label" data-i18n="stat_operators">C4 Operators</div></div>
       <div class="stat-card blue"><div class="stat-value blue">51+</div><div class="stat-label" data-i18n="stat_sources">Knowledge Sources</div></div>
-      <div class="stat-card pink"><div class="stat-value pink">36</div><div class="stat-label" data-i18n="stat_engines">Simulation Engines</div></div>
-      <div class="stat-card amber"><div class="stat-value amber">20</div><div class="stat-label" data-i18n="stat_mcp">MCP Tools</div></div>
-      <div class="stat-card accent"><div class="stat-value accent">9908+</div><div class="stat-label" data-i18n="stat_tests">Tests Passing</div></div>
+      <div class="stat-card pink"><div class="stat-value pink">38</div><div class="stat-label" data-i18n="stat_engines">Simulation Engines</div></div>
+      <div class="stat-card amber"><div class="stat-value amber">21</div><div class="stat-label" data-i18n="stat_mcp">MCP Tools</div></div>
+      <div class="stat-card accent"><div class="stat-value accent">9798+</div><div class="stat-label" data-i18n="stat_tests">Tests Collected</div></div>
     </div>
+  </div>
+</section>
+
+<!-- ═══════ CLARITY — What / Install / Use ═══════ -->
+<section id="about" class="section">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label" data-i18n="cl_label">Start Here</span>
+      <h2 class="section-title" data-i18n="cl_title">What is c4reqber?</h2>
+      <p class="section-desc" data-i18n="cl_sub">In plain language — no jargon required.</p>
+    </div>
+    <div class="clarity-grid">
+      <div class="clarity-card">
+        <div class="cl-num">1</div>
+        <h3 data-i18n="cl_what_title">What</h3>
+        <p data-i18n="cl_what_desc">A terminal-first research assistant. You ask a scientific question — c4reqber searches 51 literature sources, runs simulations, checks proofs, and writes a gated research proposal. Not a chatbot. A pipeline.</p>
+      </div>
+      <div class="clarity-card">
+        <div class="cl-num">2</div>
+        <h3 data-i18n="cl_install_title">Install</h3>
+        <p data-i18n="cl_install_desc">One command. Python 3.11+. Bring your own API key (OpenRouter, Mistral, etc.). Optional GPU for heavy sims.</p>
+      </div>
+      <div class="clarity-card">
+        <div class="cl-num">3</div>
+        <h3 data-i18n="cl_use_title">Use</h3>
+        <p data-i18n="cl_use_desc" data-i18n-html="true"><code>blast solve "your question"</code> for a one-shot run. <code>blast turbo</code> for paradigm proposals. <code>blast tui</code> for the visual cockpit. <code>blast serve --mcp</code> for AI agents.</p>
+      </div>
+    </div>
+    <p style="text-align:center"><a href="docs/getting-started.html" class="clarity-cta" data-i18n="cl_cta_docs">Full guide →</a></p>
   </div>
 </section>
 
@@ -271,45 +300,45 @@
 <section id="dataflow" class="section section-dark">
   <div class="container">
     <div class="section-header">
-      <span class="section-label">Data Flow</span>
-      <h2 class="section-title">From Question to Discovery</h2>
-      <p class="section-desc">7 stages. Each transforms, validates, and enriches. No black boxes.</p>
+      <span class="section-label" data-i18n="df_label">Data Flow</span>
+      <h2 class="section-title" data-i18n="df_title">From Question to Discovery</h2>
+      <p class="section-desc" data-i18n="df_desc">7 stages. Each transforms, validates, and enriches. No black boxes.</p>
     </div>
     <div class="flow-section" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:16px;margin-top:32px">
       <div class="flow-step" style="text-align:center;padding:24px 16px;background:var(--bg-3);border-radius:var(--radius);border:1px solid rgba(255,255,255,.06);position:relative">
         <div style="font-size:28px;margin-bottom:8px">&#128274;</div>
-        <h4 style="font-size:14px;margin-bottom:4px">Sanitize</h4>
-        <p style="font-size:12px;color:var(--fg-3)">Strip HTML, normalize unicode, block injection</p>
+        <h4 style="font-size:14px;margin-bottom:4px" data-i18n="df_s1_title">Sanitize</h4>
+        <p style="font-size:12px;color:var(--fg-3)" data-i18n="df_s1_desc">Strip HTML, normalize unicode, block injection</p>
       </div>
       <div class="flow-step" style="text-align:center;padding:24px 16px;background:var(--bg-3);border-radius:var(--radius);border:1px solid rgba(255,255,255,.06);position:relative">
         <div style="font-size:28px;margin-bottom:8px">&#9670;</div>
-        <h4 style="font-size:14px;margin-bottom:4px">C4 Space</h4>
-        <p style="font-size:12px;color:var(--fg-3)">Fingerprint into Z₃³ cognitive coordinate</p>
+        <h4 style="font-size:14px;margin-bottom:4px" data-i18n="df_s2_title">C4 Space</h4>
+        <p style="font-size:12px;color:var(--fg-3)" data-i18n="df_s2_desc">Fingerprint into Z₃³ cognitive coordinate</p>
       </div>
       <div class="flow-step" style="text-align:center;padding:24px 16px;background:var(--bg-3);border-radius:var(--radius);border:1px solid rgba(255,255,255,.06);position:relative">
         <div style="font-size:28px;margin-bottom:8px">&#128214;</div>
-        <h4 style="font-size:14px;margin-bottom:4px">Knowledge</h4>
-        <p style="font-size:12px;color:var(--fg-3)">51 sources + QZRF/CDI analysis</p>
+        <h4 style="font-size:14px;margin-bottom:4px" data-i18n="df_s3_title">Knowledge</h4>
+        <p style="font-size:12px;color:var(--fg-3)" data-i18n="df_s3_desc">51 sources + QZRF/CDI analysis</p>
       </div>
       <div class="flow-step" style="text-align:center;padding:24px 16px;background:var(--bg-3);border-radius:var(--radius);border:1px solid rgba(255,255,255,.06);position:relative">
         <div style="font-size:28px;margin-bottom:8px">&#128161;</div>
-        <h4 style="font-size:14px;margin-bottom:4px">Hypothesis</h4>
-        <p style="font-size:12px;color:var(--fg-3)">Multi-agent debate + TRIZ templates</p>
+        <h4 style="font-size:14px;margin-bottom:4px" data-i18n="df_s4_title">Hypothesis</h4>
+        <p style="font-size:12px;color:var(--fg-3)" data-i18n="df_s4_desc">Multi-agent debate + TRIZ templates</p>
       </div>
       <div class="flow-step" style="text-align:center;padding:24px 16px;background:var(--bg-3);border-radius:var(--radius);border:1px solid rgba(255,255,255,.06);position:relative">
         <div style="font-size:28px;margin-bottom:8px">&#9881;</div>
-        <h4 style="font-size:14px;margin-bottom:4px">Sim + Verify</h4>
-        <p style="font-size:12px;color:var(--fg-3)">32 engines + Lean4/Coq/Dafny</p>
+        <h4 style="font-size:14px;margin-bottom:4px" data-i18n="df_s5_title">Sim + Verify</h4>
+        <p style="font-size:12px;color:var(--fg-3)" data-i18n="df_s5_desc">38 engines + Lean4/Coq/Dafny</p>
       </div>
       <div class="flow-step" style="text-align:center;padding:24px 16px;background:var(--bg-3);border-radius:var(--radius);border:1px solid rgba(255,255,255,.06);position:relative">
         <div style="font-size:28px;margin-bottom:8px">&#9989;</div>
-        <h4 style="font-size:14px;margin-bottom:4px">Quality Gates</h4>
-        <p style="font-size:12px;color:var(--fg-3)">8-gate scoring + self-critique</p>
+        <h4 style="font-size:14px;margin-bottom:4px" data-i18n="df_s6_title">Quality Gates</h4>
+        <p style="font-size:12px;color:var(--fg-3)" data-i18n="df_s6_desc">8-gate scoring + self-critique</p>
       </div>
       <div class="flow-step" style="text-align:center;padding:24px 16px;background:var(--bg-3);border-radius:var(--radius);border:1px solid rgba(255,255,255,.06);position:relative">
         <div style="font-size:28px;margin-bottom:8px">&#128221;</div>
-        <h4 style="font-size:14px;margin-bottom:4px">Output</h4>
-        <p style="font-size:12px;color:var(--fg-3)">Dissertation, article, code, report</p>
+        <h4 style="font-size:14px;margin-bottom:4px" data-i18n="df_s7_title">Output</h4>
+        <p style="font-size:12px;color:var(--fg-3)" data-i18n="df_s7_desc">Dissertation, article, code, report</p>
       </div>
     </div>
   </div>
@@ -319,17 +348,17 @@
 <section id="gallery" class="section">
   <div class="container">
     <div class="section-header">
-      <span class="section-label">What You Get</span>
-      <h2 class="section-title">Real Export Formats</h2>
-      <p class="section-desc">Production-ready outputs generated by the actual pipeline.</p>
+      <span class="section-label" data-i18n="gal_label">What You Get</span>
+      <h2 class="section-title" data-i18n="gal_title">Real Export Formats</h2>
+      <p class="section-desc" data-i18n="gal_desc">Production-ready outputs generated by the actual pipeline.</p>
     </div>
-    <p style="text-align:center;margin-bottom:12px;font-size:13px;color:var(--fg-3)">Check examples</p>
+    <p style="text-align:center;margin-bottom:12px;font-size:13px;color:var(--fg-3)" data-i18n="gal_hint">Check examples</p>
     <div class="gallery-tabs" role="tablist" style="display:flex;gap:8px;justify-content:center;margin-bottom:24px;flex-wrap:wrap">
-      <button type="button" id="tab-dissertation" class="gallery-tab active" role="tab" aria-selected="true" aria-controls="panel-dissertation">Dissertation</button>
-      <button type="button" id="tab-markdown" class="gallery-tab" role="tab" aria-selected="false" aria-controls="panel-markdown">Markdown</button>
-      <button type="button" id="tab-json" class="gallery-tab" role="tab" aria-selected="false" aria-controls="panel-json">JSON</button>
-      <button type="button" id="tab-html" class="gallery-tab" role="tab" aria-selected="false" aria-controls="panel-html">HTML Dashboard</button>
-      <button type="button" id="tab-verify" class="gallery-tab" role="tab" aria-selected="false" aria-controls="panel-verify">Verification</button>
+      <button type="button" id="tab-dissertation" class="gallery-tab active" role="tab" aria-selected="true" aria-controls="panel-dissertation" data-i18n="gal_tab_dissertation">Dissertation</button>
+      <button type="button" id="tab-markdown" class="gallery-tab" role="tab" aria-selected="false" aria-controls="panel-markdown" data-i18n="gal_tab_markdown">Markdown</button>
+      <button type="button" id="tab-json" class="gallery-tab" role="tab" aria-selected="false" aria-controls="panel-json" data-i18n="gal_tab_json">JSON</button>
+      <button type="button" id="tab-html" class="gallery-tab" role="tab" aria-selected="false" aria-controls="panel-html" data-i18n="gal_tab_html">HTML Dashboard</button>
+      <button type="button" id="tab-verify" class="gallery-tab" role="tab" aria-selected="false" aria-controls="panel-verify" data-i18n="gal_tab_verify">Verification</button>
     </div>
     <div id="panel-dissertation" class="gallery-panel active" role="tabpanel" aria-labelledby="tab-dissertation">
       <div style="color:var(--fg-3)">\documentclass[11pt,a4paper]{article}</div>
@@ -438,49 +467,37 @@
 <section id="paradigm" class="section section-dark">
   <div class="container">
     <div class="section-header">
-      <span class="section-label">Proof of Work</span>
-      <h2 class="section-title">Paradigm Shifts Detected</h2>
-      <p class="section-desc">Real results. Real citations. Real verification.</p>
+      <span class="section-label" data-i18n="home_paradigm_label">Proof of Work</span>
+      <h2 class="section-title" data-i18n="home_paradigm_title">Paradigm Shifts Detected</h2>
+      <p class="section-desc" data-i18n="home_paradigm_desc">Real results. Real citations. Real verification.</p>
     </div>
     <div class="feature-grid">
       <div class="result-card feature-card" style="border-left:3px solid var(--green)">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
-          <span style="background:rgba(74,222,128,.15);color:var(--green);padding:4px 12px;border-radius:100px;font-size:12px;font-weight:600">ALREADY_SHIFTED</span>
-          <span style="font-size:12px;color:var(--fg-3)">100% confidence</span>
+          <span style="background:rgba(74,222,128,.15);color:var(--green);padding:4px 12px;border-radius:100px;font-size:12px;font-weight:600" data-i18n="home_paradigm_badge_shifted">ALREADY_SHIFTED</span>
+          <span style="font-size:12px;color:var(--fg-3)" data-i18n="home_paradigm_conf_100">100% confidence</span>
         </div>
-        <h3>Sleep as Active Maintenance</h3>
-        <p style="color:var(--fg-2);font-size:14px;line-height:1.7;margin-bottom:12px">Detected that the hypothesis "sleep is active maintenance" has already been shifted by existing research. Consensus meter: 93.3%.</p>
-        <div style="font-family:var(--mono);font-size:12px;color:var(--fg-3);background:var(--bg-4);padding:12px;border-radius:6px">
-          Lean4: proof_skeleton.generated<br>
-          Sources: 10 verified citations<br>
-          Verdict: ALREADY_SHIFTED
-        </div>
+        <h3 data-i18n="home_paradigm_card1_title">Sleep as Active Maintenance</h3>
+        <p style="color:var(--fg-2);font-size:14px;line-height:1.7;margin-bottom:12px" data-i18n="home_paradigm_card1_desc">Detected that the hypothesis "sleep is active maintenance" has already been shifted by existing research. Consensus meter: 93.3%.</p>
+        <div style="font-family:var(--mono);font-size:12px;color:var(--fg-3);background:var(--bg-4);padding:12px;border-radius:6px" data-i18n="home_paradigm_card1_meta" data-i18n-html="true">Lean4: proof_skeleton.generated<br>Sources: 10 verified citations<br>Verdict: ALREADY_SHIFTED</div>
       </div>
       <div class="result-card feature-card" style="border-left:3px solid var(--accent)">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
-          <span style="background:rgba(255,217,61,.15);color:var(--accent);padding:4px 12px;border-radius:100px;font-size:12px;font-weight:600">SHIFTED</span>
-          <span style="font-size:12px;color:var(--fg-3)">66.67% confidence</span>
+          <span style="background:rgba(255,217,61,.15);color:var(--accent);padding:4px 12px;border-radius:100px;font-size:12px;font-weight:600" data-i18n="home_paradigm_badge_shift">SHIFTED</span>
+          <span style="font-size:12px;color:var(--fg-3)" data-i18n="home_paradigm_conf_67">66.67% confidence</span>
         </div>
-        <h3>Language Horizontal Gene Transfer</h3>
-        <p style="color:var(--fg-2);font-size:14px;line-height:1.7;margin-bottom:12px">Full article (4,985 chars). 10 sources. Bayesian AUC: 0.32. Uncertainty: 0.34. Passed ALL gates.</p>
-        <div style="font-family:var(--mono);font-size:12px;color:var(--fg-3);background:var(--bg-4);padding:12px;border-radius:6px">
-          Article: LANG_EVOLUTION_DISSERTATION.md<br>
-          Sources: 10 · Bayesian AUC: 0.32<br>
-          Verdict: SHIFTED
-        </div>
+        <h3 data-i18n="home_paradigm_card2_title">Language Horizontal Gene Transfer</h3>
+        <p style="color:var(--fg-2);font-size:14px;line-height:1.7;margin-bottom:12px" data-i18n="home_paradigm_card2_desc">Full article (4,985 chars). 10 sources. Bayesian AUC: 0.32. Uncertainty: 0.34. Passed ALL gates.</p>
+        <div style="font-family:var(--mono);font-size:12px;color:var(--fg-3);background:var(--bg-4);padding:12px;border-radius:6px" data-i18n="home_paradigm_card2_meta" data-i18n-html="true">Article: LANG_EVOLUTION_DISSERTATION.md<br>Sources: 10 · Bayesian AUC: 0.32<br>Verdict: SHIFTED</div>
       </div>
       <div class="result-card feature-card" style="border-left:3px solid var(--blue)">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
-          <span style="background:rgba(59,130,246,.15);color:var(--blue);padding:4px 12px;border-radius:100px;font-size:12px;font-weight:600">NOT_SHIFTED</span>
-          <span style="font-size:12px;color:var(--fg-3)">10,000× speedup</span>
+          <span style="background:rgba(59,130,246,.15);color:var(--blue);padding:4px 12px;border-radius:100px;font-size:12px;font-weight:600" data-i18n="home_paradigm_badge_not_shifted">NOT_SHIFTED</span>
+          <span style="font-size:12px;color:var(--fg-3)" data-i18n="home_paradigm_conf_speedup">10,000× speedup</span>
         </div>
-        <h3>Consciousness Modeling: C4-IIT Bridge</h3>
-        <p style="color:var(--fg-2);font-size:14px;line-height:1.7;margin-bottom:12px">Full dissertation (11,200 chars). 15 sources. Closed-form Φ approximation via C4 graph metrics. 10,000× speedup vs exact IIT 3.0. Pearson r = 0.94. 3 testable predictions validated against fMRI/EEG.</p>
-        <div style="font-family:var(--mono);font-size:12px;color:var(--fg-3);background:var(--bg-4);padding:12px;border-radius:6px">
-          Dissertation: dissertation_09_consciousness.md<br>
-          Sources: 15 · Pearson r: 0.94 · Speedup: 10,000×<br>
-          Verdict: NOT_SHIFTED
-        </div>
+        <h3 data-i18n="home_paradigm_card3_title">Consciousness Modeling: C4-IIT Bridge</h3>
+        <p style="color:var(--fg-2);font-size:14px;line-height:1.7;margin-bottom:12px" data-i18n="home_paradigm_card3_desc">Full dissertation (11,200 chars). 15 sources. Closed-form Φ approximation via C4 graph metrics. 10,000× speedup vs exact IIT 3.0. Pearson r = 0.94.</p>
+        <div style="font-family:var(--mono);font-size:12px;color:var(--fg-3);background:var(--bg-4);padding:12px;border-radius:6px" data-i18n="home_paradigm_card3_meta" data-i18n-html="true">Dissertation: dissertation_09_consciousness.md<br>Sources: 15 · Pearson r: 0.94 · Speedup: 10,000×<br>Verdict: NOT_SHIFTED</div>
       </div>
     </div>
   </div>
@@ -490,30 +507,30 @@
 <section id="debate" class="section">
   <div class="container">
     <div class="section-header">
-      <span class="section-label">4 Minds, 1 Discovery</span>
-      <h2 class="section-title">Multi-Agent Debate</h2>
-      <p class="section-desc">Analyst, Scientist, Critic, Synthesizer. Each with a distinct cognitive role.</p>
+      <span class="section-label" data-i18n="home_debate_label">4 Minds, 1 Discovery</span>
+      <h2 class="section-title" data-i18n="home_debate_title">Multi-Agent Debate</h2>
+      <p class="section-desc" data-i18n="home_debate_desc">Analyst, Scientist, Critic, Synthesizer. Each with a distinct cognitive role.</p>
     </div>
     <div class="debate-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px">
       <div class="feature-card" style="border-top:3px solid #60a5fa">
         <div style="font-size:32px;margin-bottom:12px">&#128300;</div>
-        <h3 style="color:#60a5fa">Analyst</h3>
-        <p style="color:var(--fg-2);font-size:14px;line-height:1.7">Breaks problem into entities, maps dependencies, ranks by centrality. SystemAnalyzer extracts the structure.</p>
+        <h3 style="color:#60a5fa" data-i18n="home_debate_analyst">Analyst</h3>
+        <p style="color:var(--fg-2);font-size:14px;line-height:1.7" data-i18n="home_debate_analyst_desc">Breaks problem into entities, maps dependencies, ranks by centrality. SystemAnalyzer extracts the structure.</p>
       </div>
       <div class="feature-card" style="border-top:3px solid var(--primary)">
         <div style="font-size:32px;margin-bottom:12px">&#128161;</div>
-        <h3 style="color:var(--primary)">Scientist</h3>
-        <p style="color:var(--fg-2);font-size:14px;line-height:1.7">Generates hypotheses via TRIZ, C4 navigation, literature gaps. Explores the unknown systematically.</p>
+        <h3 style="color:var(--primary)" data-i18n="home_debate_scientist">Scientist</h3>
+        <p style="color:var(--fg-2);font-size:14px;line-height:1.7" data-i18n="home_debate_scientist_desc">Generates hypotheses via TRIZ, C4 navigation, literature gaps. Explores the unknown systematically.</p>
       </div>
       <div class="feature-card" style="border-top:3px solid var(--secondary)">
         <div style="font-size:32px;margin-bottom:12px">&#128221;</div>
-        <h3 style="color:var(--secondary)">Critic</h3>
-        <p style="color:var(--fg-2);font-size:14px;line-height:1.7">Nature reviewer persona. Falsification engine. Platt's Strong Inference. Finds the holes before publication.</p>
+        <h3 style="color:var(--secondary)" data-i18n="home_debate_critic">Critic</h3>
+        <p style="color:var(--fg-2);font-size:14px;line-height:1.7" data-i18n="home_debate_critic_desc">Nature reviewer persona. Falsification engine. Platt's Strong Inference. Finds the holes before publication.</p>
       </div>
       <div class="feature-card" style="border-top:3px solid var(--accent)">
         <div style="font-size:32px;margin-bottom:12px">&#9851;</div>
-        <h3 style="color:var(--accent)">Synthesizer</h3>
-        <p style="color:var(--fg-2);font-size:14px;line-height:1.7">Resolves contradictions (CDI), builds consensus, writes dissertation. Consensus meter: 93.3% typical.</p>
+        <h3 style="color:var(--accent)" data-i18n="home_debate_synth">Synthesizer</h3>
+        <p style="color:var(--fg-2);font-size:14px;line-height:1.7" data-i18n="home_debate_synth_desc">Resolves contradictions (CDI), builds consensus, writes dissertation. Consensus meter: 93.3% typical.</p>
       </div>
     </div>
   </div>
@@ -523,34 +540,34 @@
 <section id="mcp" class="section section-dark">
   <div class="container">
     <div class="section-header">
-      <span class="section-label">Built for AI Agents</span>
-      <h2 class="section-title">MCP Native — 20 Tools</h2>
-      <p class="section-desc">JSON Schema compliant. stdio JSON-RPC. Any MCP host — Claude, Cursor, Cline, Continue.dev, and beyond.</p>
+      <span class="section-label" data-i18n="home_mcp_label">Built for AI Agents</span>
+      <h2 class="section-title" data-i18n="home_mcp_title">MCP Native — 21 Tools</h2>
+      <p class="section-desc" data-i18n="home_mcp_desc">JSON Schema compliant. stdio JSON-RPC. Any MCP host — Claude, Cursor, Cline, Continue.dev, and beyond.</p>
     </div>
     <div class="mcp-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:24px">
-      <div class="feature-card" style="padding:20px"><h4 style="font-size:14px;margin-bottom:4px">c4_solve</h4><p style="font-size:12px;color:var(--fg-3)">12-stage discovery pipeline</p></div>
-      <div class="feature-card" style="padding:20px"><h4 style="font-size:14px;margin-bottom:4px">c4_search</h4><p style="font-size:12px;color:var(--fg-3)">51+ knowledge sources</p></div>
-      <div class="feature-card" style="padding:20px"><h4 style="font-size:14px;margin-bottom:4px">c4_triz</h4><p style="font-size:12px;color:var(--fg-3)">Contradiction resolution</p></div>
-      <div class="feature-card" style="padding:20px"><h4 style="font-size:14px;margin-bottom:4px">c4_fingerprint</h4><p style="font-size:12px;color:var(--fg-3)">Z₃³ state classification</p></div>
-      <div class="feature-card" style="padding:20px"><h4 style="font-size:14px;margin-bottom:4px">c4_verify</h4><p style="font-size:12px;color:var(--fg-3)">Lean4/Coq/Dafny check</p></div>
-      <div class="feature-card" style="padding:20px"><h4 style="font-size:14px;margin-bottom:4px">c4_prove</h4><p style="font-size:12px;color:var(--fg-3)">LLM-based proof gen</p></div>
-      <div class="feature-card" style="padding:20px"><h4 style="font-size:14px;margin-bottom:4px">c4_transfer</h4><p style="font-size:12px;color:var(--fg-3)">Cross-domain isomorphism</p></div>
-      <div class="feature-card" style="padding:20px"><h4 style="font-size:14px;margin-bottom:4px">c4_simulate</h4><p style="font-size:12px;color:var(--fg-3)">36 engine adapters</p></div>
-      <div class="feature-card" style="padding:20px"><h4 style="font-size:14px;margin-bottom:4px">c4_bayesian</h4><p style="font-size:12px;color:var(--fg-3)">MCMC / BMA inference</p></div>
-      <div class="feature-card" style="padding:20px"><h4 style="font-size:14px;margin-bottom:4px">c4_causal</h4><p style="font-size:12px;color:var(--fg-3)">Do-calculus discovery</p></div>
-      <div class="feature-card" style="padding:20px"><h4 style="font-size:14px;margin-bottom:4px">c4_export</h4><p style="font-size:12px;color:var(--fg-3)">MD/JSON/BibTeX/LaTeX</p></div>
-      <div class="feature-card" style="padding:20px"><h4 style="font-size:14px;margin-bottom:4px">c4_social</h4><p style="font-size:12px;color:var(--fg-3)">Multi-platform publish</p></div>
-      <div class="feature-card" style="padding:20px"><h4 style="font-size:14px;margin-bottom:4px">c4_chain</h4><p style="font-size:12px;color:var(--fg-3)">C4 discovery chain</p></div>
-      <div class="feature-card" style="padding:20px"><h4 style="font-size:14px;margin-bottom:4px">c4_meta</h4><p style="font-size:12px;color:var(--fg-3)">Meta-cognitive reflection</p></div>
-      <div class="feature-card" style="padding:20px"><h4 style="font-size:14px;margin-bottom:4px">blast_solve</h4><p style="font-size:12px;color:var(--fg-3)">UniversalSolvePipeline</p></div>
-      <div class="feature-card" style="padding:20px"><h4 style="font-size:14px;margin-bottom:4px">blast_turbo</h4><p style="font-size:12px;color:var(--fg-3)">Paradigm dissertations</p></div>
-      <div class="feature-card" style="padding:20px"><h4 style="font-size:14px;margin-bottom:4px">blast_flash</h4><p style="font-size:12px;color:var(--fg-3)">Quick LLM + USP analysis</p></div>
-      <div class="feature-card" style="padding:20px"><h4 style="font-size:14px;margin-bottom:4px">blast_turbofactory</h4><p style="font-size:12px;color:var(--fg-3)">Parallel pipeline factory</p></div>
-      <div class="feature-card" style="padding:20px"><h4 style="font-size:14px;margin-bottom:4px">c4_autoresearch</h4><p style="font-size:12px;color:var(--fg-3)">Karpathy-style ML loop</p></div>
-      <div class="feature-card" style="padding:20px"><h4 style="font-size:14px;margin-bottom:4px">blast_auto</h4><p style="font-size:12px;color:var(--fg-3)">Auto-router dispatch</p></div>
+      <div class="feature-card" style="padding:20px"><h4 style="font-size:14px;margin-bottom:4px">c4_solve</h4><p style="font-size:12px;color:var(--fg-3)" data-i18n="home_mcp_c4_solve_desc">12-stage discovery pipeline</p></div>
+      <div class="feature-card" style="padding:20px"><h4 style="font-size:14px;margin-bottom:4px">c4_search</h4><p style="font-size:12px;color:var(--fg-3)" data-i18n="home_mcp_c4_search_desc">51+ knowledge sources</p></div>
+      <div class="feature-card" style="padding:20px"><h4 style="font-size:14px;margin-bottom:4px">c4_triz</h4><p style="font-size:12px;color:var(--fg-3)" data-i18n="home_mcp_c4_triz_desc">Contradiction resolution</p></div>
+      <div class="feature-card" style="padding:20px"><h4 style="font-size:14px;margin-bottom:4px">c4_fingerprint</h4><p style="font-size:12px;color:var(--fg-3)" data-i18n="home_mcp_c4_fingerprint_desc">Z₃³ state classification</p></div>
+      <div class="feature-card" style="padding:20px"><h4 style="font-size:14px;margin-bottom:4px">c4_verify</h4><p style="font-size:12px;color:var(--fg-3)" data-i18n="home_mcp_c4_verify_desc">Lean4/Coq/Dafny check</p></div>
+      <div class="feature-card" style="padding:20px"><h4 style="font-size:14px;margin-bottom:4px">c4_prove</h4><p style="font-size:12px;color:var(--fg-3)" data-i18n="home_mcp_c4_prove_desc">LLM-based proof gen</p></div>
+      <div class="feature-card" style="padding:20px"><h4 style="font-size:14px;margin-bottom:4px">c4_transfer</h4><p style="font-size:12px;color:var(--fg-3)" data-i18n="home_mcp_c4_transfer_desc">Cross-domain isomorphism</p></div>
+      <div class="feature-card" style="padding:20px"><h4 style="font-size:14px;margin-bottom:4px">c4_simulate</h4><p style="font-size:12px;color:var(--fg-3)" data-i18n="home_mcp_c4_simulate_desc">38 engine adapters</p></div>
+      <div class="feature-card" style="padding:20px"><h4 style="font-size:14px;margin-bottom:4px">c4_bayesian</h4><p style="font-size:12px;color:var(--fg-3)" data-i18n="home_mcp_c4_bayesian_desc">MCMC / BMA inference</p></div>
+      <div class="feature-card" style="padding:20px"><h4 style="font-size:14px;margin-bottom:4px">c4_causal</h4><p style="font-size:12px;color:var(--fg-3)" data-i18n="home_mcp_c4_causal_desc">Do-calculus discovery</p></div>
+      <div class="feature-card" style="padding:20px"><h4 style="font-size:14px;margin-bottom:4px">c4_export</h4><p style="font-size:12px;color:var(--fg-3)" data-i18n="home_mcp_c4_export_desc">MD/JSON/BibTeX/LaTeX</p></div>
+      <div class="feature-card" style="padding:20px"><h4 style="font-size:14px;margin-bottom:4px">c4_social</h4><p style="font-size:12px;color:var(--fg-3)" data-i18n="home_mcp_c4_social_desc">Multi-platform publish</p></div>
+      <div class="feature-card" style="padding:20px"><h4 style="font-size:14px;margin-bottom:4px">c4_chain</h4><p style="font-size:12px;color:var(--fg-3)" data-i18n="home_mcp_c4_chain_desc">C4 discovery chain</p></div>
+      <div class="feature-card" style="padding:20px"><h4 style="font-size:14px;margin-bottom:4px">c4_meta</h4><p style="font-size:12px;color:var(--fg-3)" data-i18n="home_mcp_c4_meta_desc">Meta-cognitive reflection</p></div>
+      <div class="feature-card" style="padding:20px"><h4 style="font-size:14px;margin-bottom:4px">blast_solve</h4><p style="font-size:12px;color:var(--fg-3)" data-i18n="home_mcp_blast_solve_desc">UniversalSolvePipeline</p></div>
+      <div class="feature-card" style="padding:20px"><h4 style="font-size:14px;margin-bottom:4px">blast_turbo</h4><p style="font-size:12px;color:var(--fg-3)" data-i18n="home_mcp_blast_turbo_desc">Paradigm dissertations</p></div>
+      <div class="feature-card" style="padding:20px"><h4 style="font-size:14px;margin-bottom:4px">blast_flash</h4><p style="font-size:12px;color:var(--fg-3)" data-i18n="home_mcp_blast_flash_desc">Quick LLM + USP analysis</p></div>
+      <div class="feature-card" style="padding:20px"><h4 style="font-size:14px;margin-bottom:4px">blast_turbofactory</h4><p style="font-size:12px;color:var(--fg-3)" data-i18n="home_mcp_blast_turbofactory_desc">Parallel pipeline factory</p></div>
+      <div class="feature-card" style="padding:20px"><h4 style="font-size:14px;margin-bottom:4px">c4_autoresearch</h4><p style="font-size:12px;color:var(--fg-3)" data-i18n="home_mcp_c4_autoresearch_desc">Karpathy-style ML loop</p></div>
+      <div class="feature-card" style="padding:20px"><h4 style="font-size:14px;margin-bottom:4px">blast_auto</h4><p style="font-size:12px;color:var(--fg-3)" data-i18n="home_mcp_blast_auto_desc">Auto-router dispatch</p></div>
     </div>
     <div class="code-block" style="max-width:600px;margin:0 auto">
-      <button class="copy-btn" data-copy-btn>copy</button>
+      <button class="copy-btn" data-copy-btn data-i18n="btn_copy">copy</button>
       <code><span class="comment"># Start MCP server</span>
 <span class="cmd">blast serve --mcp</span>
 
@@ -564,14 +581,14 @@
 <section id="tui" class="section">
   <div class="container">
     <div class="section-header">
-      <span class="section-label">The Terminal is the Interface</span>
-      <h2 class="section-title">TUI v9 Experience</h2>
-      <p class="section-desc">32 sim engines, 27 verifiers, capabilities overlay, command palette. The simulation/verification cockpit is in the terminal — not a fallback, the primary interface.</p>
+      <span class="section-label" data-i18n="home_tui_label">The Terminal is the Interface</span>
+      <h2 class="section-title" data-i18n="home_tui_title">TUI v9 Experience</h2>
+      <p class="section-desc" data-i18n="home_tui_desc">32 sim engines, 27 verifiers, capabilities overlay, command palette. The simulation/verification cockpit is in the terminal — not a fallback, the primary interface.</p>
     </div>
     <div class="tui-window" style="max-width:700px;margin:0 auto;background:var(--bg-4);border-radius:var(--radius);border:1px solid rgba(255,255,255,.06);overflow:hidden">
-      <div class="term-header"><span class="term-dot red"></span><span class="term-dot yellow"></span><span class="term-dot green"></span><span class="term-title">c4reqber — TUI v9 (capabilities overlay)</span></div>
+      <div class="term-header"><span class="term-dot red"></span><span class="term-dot yellow"></span><span class="term-dot green"></span><span class="term-title" data-i18n="home_tui_term_title">c4reqber — TUI v9 (capabilities overlay)</span></div>
       <div class="term-body" style="font-family:var(--mono);font-size:13px;line-height:1.8;color:var(--fg-2);padding:20px">
-        <div style="color:var(--tui-primary)">⏚ Simulation Capabilities (Darwin arm64)</div>
+        <div style="color:var(--tui-primary)" data-i18n="home_tui_cap_header">⏚ Simulation Capabilities (Darwin arm64)</div>
         <div style="color:var(--fg-3)">  ● newton       Apple M3 Pro · 18 GB unified (49 patterns)</div>
         <div style="color:var(--fg-3)">  ● jaxsim       MPS (12 patterns)</div>
         <div style="color:var(--fg-3)">  ● torchsim     MPS (9 patterns)</div>
@@ -580,19 +597,19 @@
         <div style="color:var(--fg-3)">  ● mesa         CPU</div>
         <div style="color:var(--fg-3)">  ○ fenicsx      (no arm64 wheel)</div>
         <div style="color:var(--fg-3)">      ⓘ conda install -c conda-forge fenics-dolfinx</div>
-        <div style="color:var(--green)">  ✓ 22/32 engines available across 6 domains</div>
+        <div style="color:var(--green)" data-i18n="home_tui_cap_summary">  ✓ 22/32 engines available across 6 domains</div>
         <div style="margin-top:12px;color:var(--tui-primary);animation:blink 1s step-end infinite">_</div>
       </div>
     </div>
     <div style="display:flex;gap:12px;justify-content:center;margin-top:24px;flex-wrap:wrap">
-      <span class="tag" style="font-size:12px">: Command palette</span>
-      <span class="tag" style="font-size:12px">Ctrl+Shift+C: Capabilities</span>
-      <span class="tag" style="font-size:12px">Ctrl+Shift+D: Debug</span>
-      <span class="tag" style="font-size:12px">Ctrl+B: Status bar</span>
-      <span class="tag" style="font-size:12px">j/k: Focus card</span>
-      <span class="tag" style="font-size:12px">Enter: Expand</span>
-      <span class="tag" style="font-size:12px">i: Install hint</span>
-      <span class="tag" style="font-size:12px">f: Fallback chain</span>
+      <span class="tag" style="font-size:12px" data-i18n="home_tui_tag_palette">: Command palette</span>
+      <span class="tag" style="font-size:12px" data-i18n="home_tui_tag_cap">Ctrl+Shift+C: Capabilities</span>
+      <span class="tag" style="font-size:12px" data-i18n="home_tui_tag_debug">Ctrl+Shift+D: Debug</span>
+      <span class="tag" style="font-size:12px" data-i18n="home_tui_tag_status">Ctrl+B: Status bar</span>
+      <span class="tag" style="font-size:12px" data-i18n="home_tui_tag_focus">j/k: Focus card</span>
+      <span class="tag" style="font-size:12px" data-i18n="home_tui_tag_expand">Enter: Expand</span>
+      <span class="tag" style="font-size:12px" data-i18n="home_tui_tag_install">i: Install hint</span>
+      <span class="tag" style="font-size:12px" data-i18n="home_tui_tag_fallback">f: Fallback chain</span>
     </div>
   </div>
 </section>
@@ -601,9 +618,9 @@
 <section id="social" class="section section-dark">
   <div class="container">
     <div class="section-header">
-      <span class="section-label">Publish Everywhere</span>
-      <h2 class="section-title">Social Publishing — 9 Platforms</h2>
-      <p class="section-desc">Dissertation → LaTeX + BibTeX → Auto-upload → ORCID → Social blast.</p>
+      <span class="section-label" data-i18n="home_social_label">Publish Everywhere</span>
+      <h2 class="section-title" data-i18n="home_social_title">Social Publishing — 9 Platforms</h2>
+      <p class="section-desc" data-i18n="home_social_desc">Dissertation → LaTeX + BibTeX → Auto-upload → ORCID → Social blast.</p>
     </div>
     <div class="platform-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:16px;max-width:800px;margin:0 auto">
       <div style="text-align:center;padding:20px 12px;background:var(--bg-3);border-radius:var(--radius);border:1px solid rgba(255,255,255,.06)"><div style="font-size:24px;margin-bottom:8px">&#128240;</div><div style="font-size:13px">arXiv</div></div>
@@ -616,7 +633,7 @@
       <div style="text-align:center;padding:20px 12px;background:var(--bg-3);border-radius:var(--radius);border:1px solid rgba(255,255,255,.06)"><div style="font-size:24px;margin-bottom:8px">&#128038;</div><div style="font-size:13px">Twitter/X</div></div>
       <div style="text-align:center;padding:20px 12px;background:var(--bg-3);border-radius:var(--radius);border:1px solid rgba(255,255,255,.06)"><div style="font-size:24px;margin-bottom:8px">&#127756;</div><div style="font-size:13px">Bluesky</div></div>
     </div>
-    <p style="text-align:center;margin-top:24px;font-size:13px;color:var(--fg-3)">Workflow: Dissertation → LaTeX + BibTeX → Auto-upload → ORCID registration → Social blast</p>
+    <p style="text-align:center;margin-top:24px;font-size:13px;color:var(--fg-3)" data-i18n="home_social_workflow">Workflow: Dissertation → LaTeX + BibTeX → Auto-upload → ORCID registration → Social blast</p>
   </div>
 </section>
 
@@ -626,9 +643,10 @@
     <div class="section-header">
       <span class="section-label" data-i18n="qs_label">Quickstart</span>
       <h2 class="section-title" data-i18n="qs_title">3 Commands to Discovery</h2>
+      <p class="section-desc" data-i18n="qs_sub">Three commands. Five minutes. Your first discovery.</p>
     </div>
     <div class="code-block">
-      <button class="copy-btn" data-copy-btn>copy</button>
+      <button class="copy-btn" data-copy-btn data-i18n="btn_copy">copy</button>
 <code>
 <span class="comment"># 1. Install</span>
 <span class="cmd">pip install c4reqber</span>
@@ -792,20 +810,20 @@
 </section>
 
 <!-- ═══════ VERIFICATION ═══════ -->
-<section class="section section-dark">
+<section id="verify" class="section section-dark">
   <div class="container">
     <div class="section-header">
-      <span class="section-label">Verification</span>
-      <h2 class="section-title">6 Formal Verification Backends</h2>
-      <p class="section-desc">Your hypotheses don't just claim — they prove. Auto-selected by domain.</p>
+      <span class="section-label" data-i18n="home_verify_label">Verification</span>
+      <h2 class="section-title" data-i18n="home_verify_title">6 Formal Verification Backends</h2>
+      <p class="section-desc" data-i18n="home_verify_desc">Your hypotheses don't just claim — they prove. Auto-selected by domain.</p>
     </div>
     <div class="feature-grid">
-      <div class="feature-card" style="text-align:center;border-color:rgba(59,130,246,.2)"><div class="feature-icon" style="color:#60a5fa;font-size:40px">λ</div><h3>Lean4</h3><p>Dependent type theory for mathematics</p></div>
-      <div class="feature-card" style="text-align:center;border-color:rgba(236,72,153,.2)"><div class="feature-icon" style="color:#f472b6;font-size:40px">π</div><h3>Coq</h3><p>Inductive proofs for hardware verification</p></div>
-      <div class="feature-card" style="text-align:center;border-color:rgba(16,185,129,.2)"><div class="feature-icon" style="color:#34d399;font-size:40px">∃</div><h3>Dafny</h3><p>Imperative programs with pre/post-conditions</p></div>
-      <div class="feature-card" style="text-align:center;border-color:rgba(245,158,11,.2)"><div class="feature-icon" style="color:#fbbf24;font-size:40px">⊢</div><h3>Agda</h3><p>Intuitionistic type theory</p></div>
-      <div class="feature-card" style="text-align:center;border-color:rgba(239,68,68,.2)"><div class="feature-icon" style="color:#ef4444;font-size:40px">⊨</div><h3>Z3</h3><p>SMT solver for constraint satisfaction</p></div>
-      <div class="feature-card" style="text-align:center;border-color:rgba(124,58,237,.2)"><div class="feature-icon" style="color:#a78bfa;font-size:40px">{}</div><h3>Hoare</h3><p>Logic for imperative program correctness</p></div>
+      <div class="feature-card" style="text-align:center;border-color:rgba(59,130,246,.2)"><div class="feature-icon" style="color:#60a5fa;font-size:40px">λ</div><h3>Lean4</h3><p data-i18n="home_verify_lean4_desc">Dependent type theory for mathematics</p></div>
+      <div class="feature-card" style="text-align:center;border-color:rgba(236,72,153,.2)"><div class="feature-icon" style="color:#f472b6;font-size:40px">π</div><h3>Coq</h3><p data-i18n="home_verify_coq_desc">Inductive proofs for hardware verification</p></div>
+      <div class="feature-card" style="text-align:center;border-color:rgba(16,185,129,.2)"><div class="feature-icon" style="color:#34d399;font-size:40px">∃</div><h3>Dafny</h3><p data-i18n="home_verify_dafny_desc">Imperative programs with pre/post-conditions</p></div>
+      <div class="feature-card" style="text-align:center;border-color:rgba(245,158,11,.2)"><div class="feature-icon" style="color:#fbbf24;font-size:40px">⊢</div><h3>Agda</h3><p data-i18n="home_verify_agda_desc">Intuitionistic type theory</p></div>
+      <div class="feature-card" style="text-align:center;border-color:rgba(239,68,68,.2)"><div class="feature-icon" style="color:#ef4444;font-size:40px">⊨</div><h3>Z3</h3><p data-i18n="home_verify_z3_desc">SMT solver for constraint satisfaction</p></div>
+      <div class="feature-card" style="text-align:center;border-color:rgba(124,58,237,.2)"><div class="feature-icon" style="color:#a78bfa;font-size:40px">{}</div><h3>Hoare</h3><p data-i18n="home_verify_hoare_desc">Logic for imperative program correctness</p></div>
     </div>
   </div>
 </section>
@@ -938,7 +956,7 @@
 <div id="read-progress" style="position:fixed;top:0;left:0;height:2px;background:linear-gradient(90deg,var(--primary),var(--accent));z-index:1002;width:0%;transition:width .1s"></div>
 
 <!-- Back to top -->
-<button id="back-to-top" aria-label="Back to top" style="position:fixed;bottom:20px;right:20px;z-index:998;width:40px;height:40px;border-radius:50%;background:var(--bg-3);border:1px solid rgba(255,255,255,.1);color:var(--fg-2);cursor:pointer;opacity:0;pointer-events:none;transition:opacity .3s,transform .2s;display:flex;align-items:center;justify-content:center;font-size:18px">&#8593;</button>
+<button id="back-to-top" data-i18n-aria="a11y_back_top" aria-label="Back to top" style="position:fixed;bottom:20px;right:20px;z-index:998;width:40px;height:40px;border-radius:50%;background:var(--bg-3);border:1px solid rgba(255,255,255,.1);color:var(--fg-2);cursor:pointer;opacity:0;pointer-events:none;transition:opacity .3s,transform .2s;display:flex;align-items:center;justify-content:center;font-size:18px">&#8593;</button>
 
 </main>
 
@@ -946,27 +964,11 @@
 
   <script src="js/components.js"></script>
   <script src="js/main.js"></script>
+  <script src="js/splash.js"></script>
   <script>
   if('serviceWorker' in navigator){
     navigator.serviceWorker.register('sw.js').catch(()=>{});
   }
   </script>
-<!-- Audit 2026-06-22: stats panel pulled from _truths.json -->
-<div class="stats-panel" style="background:rgba(15,17,23,.6);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:24px;margin:32px auto;max-width:880px;font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.7">
-  <div style="color:var(--fg-3);font-size:11px;letter-spacing:.1em;margin-bottom:12px">VERIFIED STATS · _truths.json · 2026-06-22T05:20:49Z</div>
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:16px">
-    <div><div style="color:var(--fg-3);font-size:10px">PYTHON LOC</div><div style="color:var(--fg-1);font-weight:600">222,970</div></div>
-    <div><div style="color:var(--fg-3);font-size:10px">TESTS</div><div style="color:var(--fg-1);font-weight:600">9,756</div></div>
-    <div><div style="color:var(--fg-3);font-size:10px">TUI v9 LOC</div><div style="color:var(--fg-1);font-weight:600">21,124</div></div>
-    <div><div style="color:var(--fg-3);font-size:10px">MCP TOOLS</div><div style="color:var(--fg-1);font-weight:600">21</div></div>
-    <div><div style="color:var(--fg-3);font-size:10px">CLI COMMANDS</div><div style="color:var(--fg-1);font-weight:600">24</div></div>
-    <div><div style="color:var(--fg-3);font-size:10px">SIM ENGINES</div><div style="color:var(--fg-1);font-weight:600">38</div></div>
-    <div><div style="color:var(--fg-3);font-size:10px">KNOWLEDGE</div><div style="color:var(--fg-1);font-weight:600">51</div></div>
-    <div><div style="color:var(--fg-3);font-size:10px">LLM PROVIDERS</div><div style="color:var(--fg-1);font-weight:600">6</div></div>
-    <div><div style="color:var(--fg-3);font-size:10px">VERIFIERS</div><div style="color:var(--fg-1);font-weight:600">14 real</div></div>
-  </div>
-  <div style="margin-top:12px;color:var(--fg-3);font-size:11px">Backend 5.6.0 · TUI v9.13.0 · git 3ceffdd</div>
-</div>
-<!-- /stats panel -->
 </body>
 </html>

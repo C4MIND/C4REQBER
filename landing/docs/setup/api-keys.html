@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>API Keys — c4reqber Docs</title>
+<meta name="description" content="Register API keys for OpenRouter, NCBI, CORE, Tavily, and scientific knowledge sources. BYOK guide for c4reqber.">
+<meta property="og:title" content="API Keys — c4reqber Docs">
+<meta property="og:type" content="website">
+<link rel="canonical" href="https://c4reqber.org/docs/setup/api-keys.html">
+<meta name="theme-color" content="#0F1117">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' https: data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800,900&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#9670;</text></svg>">
+<link rel="manifest" href="../../manifest.json">
+<link rel="stylesheet" href="../../css/main.css">
+<style>
+.doc-content{max-width:860px;margin:0 auto;padding:0 24px 80px}
+.doc-content h2{font-size:26px;font-weight:800;margin:48px 0 16px;color:var(--accent)}
+.doc-content p{color:var(--fg-2);line-height:1.8;margin-bottom:16px}
+.doc-content table{width:100%;border-collapse:collapse;margin:16px 0 24px;font-size:13px}
+.doc-content th{background:var(--bg-3);padding:10px 12px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--fg-3);border-bottom:1px solid rgba(255,255,255,.08)}
+.doc-content td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.04);color:var(--fg-2);vertical-align:top}
+.doc-content code{background:var(--bg-3);padding:2px 6px;border-radius:4px;font-family:var(--mono);font-size:12px;color:var(--primary)}
+.doc-content pre{background:var(--bg-4);border-radius:var(--radius);padding:20px;overflow-x:auto;border:1px solid rgba(255,255,255,.06);margin:16px 0}
+.doc-content pre code{background:none;padding:0;color:var(--fg-2)}
+.doc-content ul{margin:12px 0;padding-left:24px;color:var(--fg-2)}
+.doc-content li{margin-bottom:8px;line-height:1.7}
+.doc-content a{color:var(--primary)}
+.breadcrumb{display:flex;gap:8px;align-items:center;font-size:13px;color:var(--fg-3);margin-bottom:24px;flex-wrap:wrap}
+.breadcrumb a{color:var(--fg-3);text-decoration:none}
+.breadcrumb a:hover{color:var(--primary)}
+.keys-meta{font-size:12px;color:var(--fg-3);margin-top:8px}
+</style>
+</head>
+<body data-page-title="page_title_keys" data-meta-desc="meta_desc_keys">
+
+<div id="site-header"></div>
+
+<main>
+
+<section class="hero" style="min-height:32vh;padding-top:100px">
+  <div class="hero-bg"></div>
+  <div class="container" style="text-align:center;position:relative;z-index:2">
+    <div class="badge"><span class="dot"></span> <span data-i18n="badge_setup">Setup</span></div>
+    <h1 style="font-size:clamp(32px,5vw,52px);margin-bottom:16px"><span class="gradient-text" data-i18n="keys_hero_title">API Keys & Registration</span></h1>
+    <p class="hero-sub" style="max-width:640px;margin:0 auto" data-i18n="keys_hero_sub">BYOK setup for LLM providers and 51 knowledge sources. Verified July 2026.</p>
+    <p class="keys-meta" data-i18n="keys_updated">Last verified: 11 July 2026</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="doc-content">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a href="../../" data-i18n="breadcrumb_home">Home</a> <span>/</span>
+      <a href="../" data-i18n="breadcrumb_docs">Docs</a> <span>/</span>
+      <span data-i18n="keys_breadcrumb">API Keys</span>
+    </nav>
+
+    <p data-i18n="keys_intro">c4reqber is free (AGPL-3.0) — you only pay upstream APIs. Minimum: one OpenRouter key. Add science keys to unlock full MultiSourceSearcher throughput.</p>
+
+    <h2 data-i18n="keys_h2_required">Required</h2>
+    <div data-i18n="keys_required_html" data-i18n-html="true"></div>
+
+    <h2 data-i18n="keys_h2_llm">LLM providers (optional)</h2>
+    <div data-i18n="keys_llm_html" data-i18n-html="true"></div>
+
+    <h2 data-i18n="keys_h2_search">Search APIs</h2>
+    <div data-i18n="keys_search_html" data-i18n-html="true"></div>
+
+    <h2 data-i18n="keys_h2_science">Scientific sources (recommended)</h2>
+    <div data-i18n="keys_science_html" data-i18n-html="true"></div>
+
+    <h2 data-i18n="keys_h2_pending">Manual approval</h2>
+    <div data-i18n="keys_pending_html" data-i18n-html="true"></div>
+
+    <h2 data-i18n="keys_h2_nokey">No registration needed</h2>
+    <div data-i18n="keys_nokey_html" data-i18n-html="true"></div>
+
+    <h2 data-i18n="keys_h2_setup">Add to .env</h2>
+    <pre><code>cp .env.example .env
+
+# Minimum
+export OPENROUTER_API_KEY="<paste-from-openrouter-settings>"
+
+# Recommended for literature at scale
+export NCBI_API_KEY="<your-ncbi-key>"
+export NCBI_EMAIL="you@institution.edu"
+export CORE_API_KEY="<your-core-key>"
+export TAVILY_API_KEY="<your-tavily-key>"</code></pre>
+    <p data-i18n="keys_setup_note" data-i18n-html="true">Copy <code>.env.example</code> → <code>.env</code>. Never commit secrets. Verify: <code>python3 tools/check_keys.py</code></p>
+
+    <h2 data-i18n="keys_h2_full">Full guide</h2>
+    <div data-i18n="keys_full_html" data-i18n-html="true"></div>
+  </div>
+</section>
+
+</main>
+
+<div id="site-footer"></div>
+
+<script src="../../js/components.js"></script>
+<script src="../../js/main.js"></script>
+<script>
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('../../sw.js').catch(()=>{});
+}
+</script>
+
+</body>
+</html>

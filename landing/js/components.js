@@ -42,8 +42,8 @@ function injectHeader() {
   <div class="navbar">
     <div class="navbar-inner">
       <a href="${base}" class="navbar-brand">c4<span>reqber</span></a>
-      <button class="hamburger" aria-label="Toggle menu" aria-expanded="false"><span></span><span></span><span></span></button>
-      <nav class="navbar-links" aria-label="Main navigation">
+      <button class="hamburger" data-i18n-aria="a11y_menu" aria-label="Toggle menu" aria-expanded="false"><span></span><span></span><span></span></button>
+      <nav class="navbar-links" data-i18n-aria="a11y_nav" aria-label="Main navigation">
         ${navItems}
       </nav>
       <div style="display:flex;align-items:center;gap:8px">
@@ -56,7 +56,7 @@ function injectHeader() {
           <button class="lang-btn" data-lang="ar" aria-label="العربية">AR</button>
           <button class="lang-btn" data-lang="hi" aria-label="हिन्दी">HI</button>
         </div>
-        <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark/light">&#127769;</button>
+        <button class="theme-toggle" id="theme-toggle" data-i18n-aria="a11y_theme" data-i18n-title="a11y_theme" aria-label="Toggle dark mode" title="Toggle dark/light">&#127769;</button>
       </div>
     </div>
   </div>
@@ -100,6 +100,7 @@ function injectMascot() {
   if (document.getElementById('mascot')) return;
   const div = document.createElement('div');
   div.id = 'mascot';
+  div.setAttribute('aria-hidden', 'true');
   div.innerHTML = `<pre id="mascot-art" style="margin:0;line-height:1.2;font-size:10px;letter-spacing:1px">   ┌─────────┐
   ╱         ╱│
  ┌─────────┐ │
@@ -116,6 +117,7 @@ function injectFooter() {
   <div class="container">
     <div style="display:flex;justify-content:center;gap:24px;margin-bottom:16px;flex-wrap:wrap">
       <a href="${base}docs/getting-started.html" class="footer-link" data-i18n="footer_quickstart">Quickstart</a>
+      <a href="${base}docs/setup/api-keys.html" class="footer-link" data-i18n="footer_keys">API Keys</a>
       <a href="https://gitlab.com/cognitive-functors/turbo-cdi" class="footer-link" rel="noopener noreferrer" target="_blank">GitLab</a>
       <a href="${base}docs/setup/gpu.html" class="footer-link" data-i18n="footer_gpu">GPU Setup</a>
       <a href="${base}showcase/index.html" class="footer-link" data-i18n="footer_showcase">Showcase</a>
@@ -133,6 +135,12 @@ function injectShared() {
   injectHeader();
   injectFooter();
   injectMascot();
+  if (typeof window.applyLanguage === 'function') {
+    window.applyLanguage(window.c4rCurrentLang || 'en');
+  }
+  if (typeof initThemeToggle === 'function') {
+    initThemeToggle();
+  }
 }
 
 // Auto-inject on DOM ready

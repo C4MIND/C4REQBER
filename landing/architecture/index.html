@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Architecture — c4reqber</title>
-<meta name="description" content="C4REQBER system architecture: 43 knowledge sources, 36 simulation engines, 32 adapters, Z₃³ topology, O₀→O₁→O₂ observer, 23 core metaprograms.">
+<meta name="description" content="C4REQBER system architecture: 51 knowledge sources, 38 simulation engines, 32 adapters, Z₃³ topology, O₀→O₁→O₂ observer, 23 core metaprograms.">
 <meta property="og:title" content="Architecture — c4reqber">
 <meta property="og:type" content="website">
 <link rel="canonical" href="https://c4reqber.org/architecture/">
@@ -55,7 +55,7 @@
 [data-theme="light"] .layer-row{background:rgba(0,0,0,.02)}
 </style>
 </head>
-<body>
+<body data-page-title="page_title_arch" data-meta-desc="meta_desc_arch">
 
 <div id="site-header"></div>
 
@@ -65,124 +65,124 @@
   <div class="hero-bg"></div>
   <div class="container" style="text-align:center;position:relative;z-index:2">
     <div class="badge"><span class="dot"></span> <span data-i18n="badge_system_design">System Design</span></div>
-    <h1 style="font-size:clamp(36px,6vw,64px);margin-bottom:16px"><span class="gradient-text">Architecture</span></h1>
-    <p class="hero-sub" style="max-width:700px;margin:0 auto 32px">43 knowledge sources. 36 simulation engines. 32 adapters. One Z₃³ topology. O₀→O₁→O₂ observer. 23 core metaprograms.</p>
+    <h1 style="font-size:clamp(36px,6vw,64px);margin-bottom:16px"><span class="gradient-text" data-i18n="arch_hero_title">Architecture</span></h1>
+    <p class="hero-sub" style="max-width:700px;margin:0 auto 32px" data-i18n="arch_hero_sub">51 knowledge sources. 38 simulation engines. 32 adapters. One Z₃³ topology. O₀→O₁→O₂ observer. 23 core metaprograms.</p>
   </div>
 </section>
 
 <section class="section">
   <div class="arch-content">
     <nav class="breadcrumb">
-      <a href="../" data-i18n="breadcrumb_home">Home</a> <span>/</span> <span>Architecture</span>
+      <a href="../" data-i18n="breadcrumb_home">Home</a> <span>/</span> <span data-i18n="breadcrumb_architecture">Architecture</span>
     </nav>
 
-    <h2>High-Level Layers</h2>
+    <h2 data-i18n="arch_layers_title">High-Level Layers</h2>
     <div class="layer-diagram">
       <div class="layer-row" style="border-left-color:#4ECDC4">
         <h4>TUI</h4>
-        <p>Terminal User Interface — Rich interactive dashboard for researchers. Built with Textual.</p>
+        <p data-i18n="arch_layer_tui_desc">Terminal User Interface — Rich interactive dashboard for researchers. Built with Textual.</p>
         <span class="tag">Python</span>
       </div>
       <div class="layer-row" style="border-left-color:#45B7D1">
         <h4>CLI</h4>
-        <p>Command-line interface — blast commands, batch processing, CI/CD integration.</p>
+        <p data-i18n="arch_layer_cli_desc">Command-line interface — blast commands, batch processing, CI/CD integration.</p>
         <span class="tag">Click</span>
       </div>
       <div class="layer-row" style="border-left-color:#96CEB4">
         <h4>API</h4>
-        <p>REST + Python API — Programmatic access to all cognitive operations.</p>
+        <p data-i18n="arch_layer_api_desc">REST + Python API — Programmatic access to all cognitive operations.</p>
         <span class="tag">FastAPI</span>
       </div>
       <div class="layer-row" style="border-left-color:#FFEAA7">
-        <h4>Simulation</h4>
-        <p>36 engines × 32 adapters — From thermodynamics to neural networks to game theory.</p>
-        <span class="tag">36 Engines</span>
+        <h4 data-i18n="arch_layer_sim_title">Simulation</h4>
+        <p data-i18n="arch_layer_sim_desc">38 engines × 32 adapters — From thermodynamics to neural networks to game theory.</p>
+        <span class="tag" data-i18n="arch_layer_sim_tag">38 Engines</span>
       </div>
       <div class="layer-row" style="border-left-color:#DDA0DD">
-        <h4>Knowledge</h4>
-        <p>43 sources — arXiv, PubMed, Semantic Scholar, OpenAlex, Crossref, Zenodo, ClinicalTrials.gov, GBIF, NASA Earthdata, Materials Project, Kaggle, OpenFDA, ORCID, and 30 more.</p>
-        <span class="tag">43 Sources</span>
+        <h4 data-i18n="arch_layer_knowledge_title">Knowledge</h4>
+        <p data-i18n="arch_layer_knowledge_desc">51 sources — arXiv, PubMed, Semantic Scholar, OpenAlex, Crossref, Zenodo, ClinicalTrials.gov, GBIF, NASA Earthdata, Materials Project, Kaggle, OpenFDA, ORCID, and 30 more.</p>
+        <span class="tag" data-i18n="arch_layer_knowledge_tag">51 Sources</span>
       </div>
       <div class="layer-row" style="border-left-color:#FF6B6B">
-        <h4>Cognitive</h4>
-        <p>UCOS 4-layer cognitive pipeline — C4/ℤ₃³ topology engine, QZRF operators, CDI contradiction resolution, Theorem 9/11 validation.</p>
+        <h4 data-i18n="arch_layer_cognitive_title">Cognitive</h4>
+        <p data-i18n="arch_layer_cognitive_desc">UCOS 4-layer cognitive pipeline — C4/ℤ₃³ topology engine, QZRF operators, CDI contradiction resolution, Theorem 9/11 validation.</p>
         <span class="tag">C4-META</span>
       </div>
     </div>
 
-    <h2>Cognitive Pipeline</h2>
-    <p>The <a href="../theory/">C4-META theory</a> is not just mathematics — it is the engine that drives every discovery. The cognitive layer runs the <strong>UCOS 4-layer pipeline</strong>:</p>
+    <h2 data-i18n="arch_pipeline_title">Cognitive Pipeline</h2>
+    <p data-i18n="arch_pipeline_intro" data-i18n-html="true">The <a href="../theory/">C4-META theory</a> is not just mathematics — it is the engine that drives every discovery. The cognitive layer runs the <strong>UCOS 4-layer pipeline</strong>:</p>
     <div class="layer-diagram">
       <div class="layer-row" style="border-left-color:#34d399">
-        <h4>Layer 1 — Process</h4>
-        <p>IMPACT / COMPASS / TOTE execution loops. When thinking happens.</p>
-        <span class="tag">Process</span>
+        <h4 data-i18n="arch_ucos_l1_title">Layer 1 — Process</h4>
+        <p data-i18n="arch_ucos_l1_desc">IMPACT / COMPASS / TOTE execution loops. When thinking happens.</p>
+        <span class="tag" data-i18n="arch_ucos_l1_tag">Process</span>
       </div>
       <div class="layer-row" style="border-left-color:#a78bfa">
-        <h4>Layer 2 — Statics</h4>
-        <p>23 core metaprograms profiled into 3 agent perspectives. Perceptual filters that shape cognition.</p>
-        <span class="tag">23 MPs</span>
+        <h4 data-i18n="arch_ucos_l2_title">Layer 2 — Statics</h4>
+        <p data-i18n="arch_ucos_l2_desc">23 core metaprograms profiled into 3 agent perspectives. Perceptual filters that shape cognition.</p>
+        <span class="tag" data-i18n="arch_ucos_l2_tag">23 MPs</span>
       </div>
       <div class="layer-row" style="border-left-color:#60a5fa">
-        <h4>Layer 3 — Dynamics</h4>
-        <p>14 QZRF operators transform states across the 27-state cognitive space.</p>
-        <span class="tag">14 Operators</span>
+        <h4 data-i18n="arch_ucos_l3_title">Layer 3 — Dynamics</h4>
+        <p data-i18n="arch_ucos_l3_desc">14 QZRF operators transform states across the 27-state cognitive space.</p>
+        <span class="tag" data-i18n="arch_ucos_l3_tag">14 Operators</span>
       </div>
       <div class="layer-row" style="border-left-color:#fbbf24">
-        <h4>Layer 4 — Topology</h4>
-        <p>C4 = ℤ₃³ — 27 states. Coordinate system for navigation, pathfinding, and Theorem 9/11 validation.</p>
+        <h4 data-i18n="arch_ucos_l4_title">Layer 4 — Topology</h4>
+        <p data-i18n="arch_ucos_l4_desc">C4 = ℤ₃³ — 27 states. Coordinate system for navigation, pathfinding, and Theorem 9/11 validation.</p>
         <span class="tag">ℤ₃³</span>
       </div>
     </div>
-    <p>CDI (Creative &amp; Destructive Insights) operates across all 4 layers to resolve contradictions and drive paradigm shifts. See the <a href="../theory/">Theory page</a> for mathematical details, formal proofs, and the 6 C4-META theorems.</p>
+    <p data-i18n="arch_pipeline_cdi" data-i18n-html="true">CDI (Creative &amp; Destructive Insights) operates across all 4 layers to resolve contradictions and drive paradigm shifts. See the <a href="../theory/">Theory page</a> for mathematical details, formal proofs, and the 6 C4-META theorems.</p>
 
-    <h2>Knowledge Layer — 43 Sources</h2>
-    <p>The Knowledge Layer aggregates information from 33 diverse sources, categorized into scientific, technical, commercial, and creative domains.</p>
+    <h2 data-i18n="arch_knowledge_title">Knowledge Layer — 51 Sources</h2>
+    <p data-i18n="arch_knowledge_intro">The Knowledge Layer aggregates information from 51 diverse sources, categorized into scientific, technical, commercial, and creative domains.</p>
 
     <div class="arch-grid">
       <div class="arch-card">
         <span class="count">12</span>
-        <h3>Scientific</h3>
+        <h3 data-i18n="arch_card_scientific_title">Scientific</h3>
         <p>arXiv, PubMed, Nature, Science, IEEE, ACM, Springer, Elsevier, JSTOR, PLOS, bioRxiv, medRxiv</p>
       </div>
       <div class="arch-card">
         <span class="count">8</span>
-        <h3>Technical</h3>
+        <h3 data-i18n="arch_card_technical_title">Technical</h3>
         <p>GitHub, Stack Overflow, GitLab, Bitbucket, PyPI, npm, crates.io, Maven Central</p>
       </div>
       <div class="arch-card">
         <span class="count">6</span>
-        <h3>Commercial</h3>
+        <h3 data-i18n="arch_card_commercial_title">Commercial</h3>
         <p>Google Patents, USPTO, EPO, Crunchbase, PitchBook, MarketWatch</p>
       </div>
       <div class="arch-card">
         <span class="count">7</span>
-        <h3>Creative &amp; General</h3>
+        <h3 data-i18n="arch_card_creative_title">Creative &amp; General</h3>
         <p>Wikipedia, Wolfram Alpha, Semantic Scholar, Crossref, OpenAlex, Internet Archive, Library of Congress</p>
       </div>
     </div>
 
-    <h2>Simulation Layer — 36 Engines</h2>
-    <p>Each engine models a different physical, mathematical, or social system. Problems are dispatched to the most appropriate engine based on their Z₃³ classification.</p>
+    <h2 data-i18n="arch_sim_title">Simulation Layer — 38 Engines</h2>
+    <p data-i18n="arch_sim_intro">Each engine models a different physical, mathematical, or social system. Problems are dispatched to the most appropriate engine based on their Z₃³ classification.</p>
 
     <table>
-      <tr><th>Category</th><th>Engines</th><th>Use Case</th></tr>
-      <tr><td><strong>Physics</strong></td><td>Thermodynamics, Electromagnetism, Quantum, Relativity, Fluid Dynamics</td><td>Physical system modeling</td></tr>
-      <tr><td><strong>Biology</strong></td><td>Evolution, Epidemiology, Ecology, Neuroscience, Genetics</td><td>Life science simulation</td></tr>
-      <tr><td><strong>Economics</strong></td><td>Game Theory, Market Dynamics, Auction Theory, Behavioral Econ</td><td>Strategic interaction modeling</td></tr>
-      <tr><td><strong>Computing</strong></td><td>Graph Theory, Optimization, Cryptography, Distributed Systems</td><td>Algorithmic problem solving</td></tr>
-      <tr><td><strong>Social</strong></td><td>Network Analysis, Opinion Dynamics, Crowd Behavior, Linguistics</td><td>Human system modeling</td></tr>
-      <tr><td><strong>Creative</strong></td><td>Music Theory, Visual Arts, Narrative Structure, Design Patterns</td><td>Creative domain exploration</td></tr>
+      <tr><th data-i18n="arch_table_category">Category</th><th data-i18n="arch_table_engines">Engines</th><th data-i18n="arch_table_usecase">Use Case</th></tr>
+      <tr><td><strong data-i18n="arch_cat_physics">Physics</strong></td><td data-i18n="arch_cat_physics_engines">Thermodynamics, Electromagnetism, Quantum, Relativity, Fluid Dynamics</td><td data-i18n="arch_cat_physics_use">Physical system modeling</td></tr>
+      <tr><td><strong data-i18n="arch_cat_biology">Biology</strong></td><td data-i18n="arch_cat_biology_engines">Evolution, Epidemiology, Ecology, Neuroscience, Genetics</td><td data-i18n="arch_cat_biology_use">Life science simulation</td></tr>
+      <tr><td><strong data-i18n="arch_cat_economics">Economics</strong></td><td data-i18n="arch_cat_economics_engines">Game Theory, Market Dynamics, Auction Theory, Behavioral Econ</td><td data-i18n="arch_cat_economics_use">Strategic interaction modeling</td></tr>
+      <tr><td><strong data-i18n="arch_cat_computing">Computing</strong></td><td data-i18n="arch_cat_computing_engines">Graph Theory, Optimization, Cryptography, Distributed Systems</td><td data-i18n="arch_cat_computing_use">Algorithmic problem solving</td></tr>
+      <tr><td><strong data-i18n="arch_cat_social">Social</strong></td><td data-i18n="arch_cat_social_engines">Network Analysis, Opinion Dynamics, Crowd Behavior, Linguistics</td><td data-i18n="arch_cat_social_use">Human system modeling</td></tr>
+      <tr><td><strong data-i18n="arch_cat_creative">Creative</strong></td><td data-i18n="arch_cat_creative_engines">Music Theory, Visual Arts, Narrative Structure, Design Patterns</td><td data-i18n="arch_cat_creative_use">Creative domain exploration</td></tr>
     </table>
 
-    <h2>Data Flow</h2>
+    <h2 data-i18n="arch_dataflow_title">Data Flow</h2>
     <pre><code>User Query
     &darr;
 Z₃³ Classification (Cognitive Layer)
     &darr;
-Knowledge Retrieval (33 Sources &times; Relevance Score)
+Knowledge Retrieval (51 Sources &times; Relevance Score)
     &darr;
-Engine Selection (36 Engines &times; 32 Adapters)
+Engine Selection (38 Engines &times; 32 Adapters)
     &darr;
 Simulation Execution
     &darr;
@@ -190,37 +190,37 @@ Result Synthesis &amp; Verification
     &darr;
 Output (TUI / CLI / API / MCP)</code></pre>
 
-    <h2>Extension Points</h2>
+    <h2 data-i18n="arch_ext_title">Extension Points</h2>
     <ul>
-      <li><strong>New Engine</strong>: Implement <code>BaseEngine</code> interface, register in <code>engine_registry.yaml</code></li>
-      <li><strong>New Source</strong>: Add adapter in <code>sources/</code>, implement <code>search()</code> and <code>fetch()</code></li>
-      <li><strong>New Operator</strong>: Extend QZRF in <code>cognitive/operators.py</code></li>
-      <li><strong>Custom TUI Theme</strong>: Override CSS variables in <code>~/.c4reqber/theme.css</code></li>
+      <li data-i18n="arch_ext_engine" data-i18n-html="true"><strong>New Engine</strong>: Implement <code>BaseEngine</code> interface, register in <code>engine_registry.yaml</code></li>
+      <li data-i18n="arch_ext_source" data-i18n-html="true"><strong>New Source</strong>: Add adapter in <code>sources/</code>, implement <code>search()</code> and <code>fetch()</code></li>
+      <li data-i18n="arch_ext_operator" data-i18n-html="true"><strong>New Operator</strong>: Extend QZRF in <code>cognitive/operators.py</code></li>
+      <li data-i18n="arch_ext_theme" data-i18n-html="true"><strong>Custom TUI Theme</strong>: Override CSS variables in <code>~/.c4reqber/theme.css</code></li>
     </ul>
 
-    <h2>Security &amp; Resilience</h2>
+    <h2 data-i18n="arch_security_title">Security &amp; Resilience</h2>
     <ul>
-      <li>Sandboxed engine execution (restricted filesystem + network)</li>
-      <li>Input validation at every layer (Pydantic v2)</li>
-      <li>Rate limiting per API key</li>
-      <li>Audit logging for all cognitive transitions</li>
-      <li>Graceful degradation: if source fails, continue with remaining 32</li>
+      <li data-i18n="arch_sec_sandbox">Sandboxed engine execution (restricted filesystem + network)</li>
+      <li data-i18n="arch_sec_validation">Input validation at every layer (Pydantic v2)</li>
+      <li data-i18n="arch_sec_rate">Rate limiting per API key</li>
+      <li data-i18n="arch_sec_audit">Audit logging for all cognitive transitions</li>
+      <li data-i18n="arch_sec_degrade">Graceful degradation: if source fails, continue with remaining 50</li>
     </ul>
 
-    <h2>Performance</h2>
+    <h2 data-i18n="arch_perf_title">Performance</h2>
     <table>
-      <tr><th>Metric</th><th>Value</th></tr>
-      <tr><td>Median query latency</td><td>&lt; 2s (cached) / &lt; 8s (cold)</td></tr>
-      <tr><td>Throughput</td><td>120 requests/minute</td></tr>
-      <tr><td>Memory footprint</td><td>~400 MB base + ~150 MB per engine</td></tr>
-      <tr><td>Cold start</td><td>&lt; 3s</td></tr>
+      <tr><th data-i18n="arch_perf_metric">Metric</th><th data-i18n="arch_perf_value">Value</th></tr>
+      <tr><td data-i18n="arch_perf_latency">Median query latency</td><td data-i18n="arch_perf_latency_val">&lt; 2s (cached) / &lt; 8s (cold)</td></tr>
+      <tr><td data-i18n="arch_perf_throughput">Throughput</td><td data-i18n="arch_perf_throughput_val">120 requests/minute</td></tr>
+      <tr><td data-i18n="arch_perf_memory">Memory footprint</td><td data-i18n="arch_perf_memory_val">~400 MB base + ~150 MB per engine</td></tr>
+      <tr><td data-i18n="arch_perf_coldstart">Cold start</td><td data-i18n="arch_perf_coldstart_val">&lt; 3s</td></tr>
     </table>
 
-    <h2>Further Reading</h2>
+    <h2 data-i18n="arch_reading_title">Further Reading</h2>
     <ul>
-      <li><a href="../theory/">C4-META Theory</a> — The mathematics behind the cognitive topology</li>
-      <li><a href="../docs/">Documentation</a> — Install and run your first discovery</li>
-      <li><a href="../api/">API Reference</a> — Programmatic access to all operations</li>
+      <li data-i18n="arch_reading_theory" data-i18n-html="true"><a href="../theory/">C4-META Theory</a> — The mathematics behind the cognitive topology</li>
+      <li data-i18n="arch_reading_docs" data-i18n-html="true"><a href="../docs/">Documentation</a> — Install and run your first discovery</li>
+      <li data-i18n="arch_reading_api" data-i18n-html="true"><a href="../api/">API Reference</a> — Programmatic access to all operations</li>
     </ul>
   </div>
 </section>

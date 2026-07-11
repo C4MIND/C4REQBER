@@ -17,20 +17,20 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#9670;</text></svg>">
 <link rel="stylesheet" href="css/main.css">
 </head>
-<body>
+<body data-page-title="page_title_404">
 
 <div id="site-header"></div>
 
 <main id="main" style="min-height:80vh;display:flex;align-items:center;justify-content:center;padding:100px 24px">
   <div style="text-align:center;max-width:600px">
     <h1 style="font-size:clamp(72px,15vw,128px);font-weight:900;letter-spacing:-6px;line-height:1;margin-bottom:8px;background:linear-gradient(135deg,var(--tui-green,#00FF41),var(--tui-magenta,#FF006E),var(--tui-cyan,#00D4FF));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;background-size:200% 200%;animation:gradientShift 4s ease infinite">404</h1>
-    <p style="color:var(--fg-2,#6C7086);font-family:'JetBrains Mono',monospace;font-size:14px;margin-bottom:8px;letter-spacing:2px">Z₃³ STATE NOT FOUND</p>
-    <p style="color:var(--fg-3,#6C7086);font-size:16px;margin-bottom:32px;line-height:1.6">This coordinate doesn't exist in cognitive space.<br>Try returning to a known state.</p>
-    <a href="/" style="display:inline-flex;align-items:center;gap:8px;padding:14px 32px;border-radius:10px;font-weight:600;font-size:15px;text-decoration:none;background:var(--accent,#FFD93D);color:#0a0a0a;transition:all .2s">← Return to base reality</a>
+    <p style="color:var(--fg-2,#6C7086);font-family:'JetBrains Mono',monospace;font-size:14px;margin-bottom:8px;letter-spacing:2px" data-i18n="err_tagline">Z₃³ STATE NOT FOUND</p>
+    <p style="color:var(--fg-3,#6C7086);font-size:16px;margin-bottom:32px;line-height:1.6" data-i18n="err_desc" data-i18n-html="true">This coordinate doesn't exist in cognitive space.<br>Try returning to a known state.</p>
+    <a href="/" style="display:inline-flex;align-items:center;gap:8px;padding:14px 32px;border-radius:10px;font-weight:600;font-size:15px;text-decoration:none;background:var(--accent,#FFD93D);color:#0a0a0a;transition:all .2s" data-i18n="err_cta">← Return to base reality</a>
     <div style="margin-top:48px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--tui-green,#00FF41);opacity:.7;line-height:1.5">
-      VACANT ←???→??CONCRETE?<br>
-      │ State 0,0,2 not occupied │<br>
-      │ No operator maps here    │<br>
+      <span data-i18n="err_ascii_l1">VACANT ←???→??CONCRETE?</span><br>
+      <span data-i18n="err_ascii_l2">│ State 0,0,2 not occupied │</span><br>
+      <span data-i18n="err_ascii_l3">│ No operator maps here    │</span><br>
       └─────────────────────────┘
     </div>
   </div>

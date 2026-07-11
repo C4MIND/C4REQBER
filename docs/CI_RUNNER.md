@@ -24,7 +24,7 @@ The previous job used `docker:24-dind`. That fails on macOS self-hosted runners 
 - DinD needs Linux cgroups/namespaces Colima does not expose to service containers
 - Error: `Cannot connect to the Docker daemon at tcp://docker:2375`
 
-**Fix:** `build-api` now uses [Kaniko](https://github.com/GoogleContainerTools/kaniko) — builds and pushes images **without** a Docker daemon. Works on shared GitLab runners and self-hosted Docker executors alike.
+**Fix:** `build-api` uses [Kaniko](https://github.com/GoogleContainerTools/kaniko) — builds and pushes images **without** a Docker daemon. Job timeout is **3 hours** (`timeout: 3h`). `Dockerfile.backend` installs a **filtered** requirements set (same exclusions as `scripts/ci/setup_python.sh`) so pip does not pull `sentence-transformers` / `huggingface-hub` into the API image.
 
 Fallback: if Kaniko is unavailable but host Docker works (Colima socket configured on the runner), `scripts/ci/build_api_image.sh` uses `docker build` + `docker push`.
 
@@ -88,3 +88,4 @@ Use in `docker-compose.prod.yml` or Kubernetes instead of local `build:` when de
 | Kaniko push 401 | Registry auth | GitLab provides `CI_REGISTRY_*` on project runners automatically |
 | `pages` OK but site asks login | `pages_access_level: private` | Set Pages to Everyone (above) |
 | Pipeline red, landing live | `build-api` failed | Check job log; Pages is independent |
+| Job killed at 1h (`exit 143`) | Default GitLab job timeout | `build-api` has `timeout: 3h`; Docker uses filtered requirements |

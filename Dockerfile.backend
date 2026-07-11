@@ -13,10 +13,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-# Copy requirements first (leverage cache)
+# Copy requirements first (leverage cache) — slim set matches CI (no heavy optional ML/sim)
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-RUN pip install --no-cache-dir structlog>=23.0.0
+COPY scripts/ci/filter_requirements.sh ./scripts/ci/filter_requirements.sh
+RUN chmod +x ./scripts/ci/filter_requirements.sh \
+    && ./scripts/ci/filter_requirements.sh requirements.txt requirements.docker.txt \
+    && pip install --upgrade pip \
+    && pip install --no-cache-dir --prefer-binary -r requirements.docker.txt
 
 # Copy source
 COPY src/ ./src/

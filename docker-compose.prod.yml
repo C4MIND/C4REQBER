@@ -30,6 +30,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.backend
+    ports:
+      - "8000:8000"
     environment:
       - ENV=production
       - JWT_SECRET=${JWT_SECRET:?JWT_SECRET required}
@@ -69,7 +71,7 @@ services:
       - "traefik.http.routers.api.rule=Host(`api.turbo-cdi.org`)"
       - "traefik.http.routers.api.tls.certresolver=letsencrypt"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -81,6 +83,7 @@ services:
       dockerfile: Dockerfile
       args:
         - VITE_API_URL=https://api.turbo-cdi.org
+    profiles: ["full"]
     depends_on:
       - api
     restart: unless-stopped
@@ -94,12 +97,13 @@ services:
   # Traefik Reverse Proxy (SSL termination)
   traefik:
     image: traefik:v3.0
+    profiles: ["full"]
     command:
       - "--api.insecure=true"
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
       - "--entrypoints.web.address=:80"
-      - "entrypoints.websecure.address=:443"
+      - "--entrypoints.websecure.address=:443"
       - "--certificatesresolvers.letsencrypt.acme.tlschallenge=true"
       - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL:-admin@turbo-cdi.org}"
       - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
@@ -116,11 +120,12 @@ services:
   # Database backups (daily cron)
   backup:
     image: postgres:16-alpine
+    profiles: ["full"]
     command: |
       /bin/sh -c "
       while true; do
         sleep 86400
-        pg_dump -h db -U turbo_cdi turbo_cdi -Fc > /backups/turbo_cdi_\$(date +%Y%m%d).dump
+        pg_dump -h postgres -U turbo_cdi turbo_cdi -Fc > /backups/turbo_cdi_\$(date +%Y%m%d).dump
         find /backups -mtime +30 -delete
       done
       "
@@ -129,7 +134,8 @@ services:
     environment:
       PGPASSWORD: ${DB_PASSWORD}
     depends_on:
-      - db
+      postgres:
+        condition: service_healthy
 
 volumes:
   postgres_data:

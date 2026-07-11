@@ -19,7 +19,11 @@ stages:
 default:
   tags: [docker, c4reqber]
   interruptible: true
-  # One job at a time on the Mac Colima runner — prevents cross-pipeline OOM.
+
+# Hidden anchor — resource_group is NOT valid in default: (GitLab rejects it).
+.mac-colima:
+  tags: [docker, c4reqber]
+  interruptible: true
   resource_group: mac-colima
 
 variables:
@@ -34,6 +38,7 @@ variables:
 # ═══════════════════════════════════════════════════════════════
 
 .test-backend-base:
+  extends: .mac-colima
   stage: test
   image: python:3.11-slim
   cache:
@@ -77,6 +82,7 @@ test-backend-suite:
       - report.xml
 
 tui-v9-test:
+  extends: .mac-colima
   stage: test
   image: golang:1.26
   allow_failure: true
@@ -97,6 +103,7 @@ tui-v9-test:
 # ═══════════════════════════════════════════════════════════════
 
 build-api:
+  extends: .mac-colima
   stage: build
   timeout: 3h
   interruptible: false
@@ -128,6 +135,7 @@ build-api:
 # ═══════════════════════════════════════════════════════════════
 
 deploy-staging:
+  extends: .mac-colima
   stage: deploy
   image: alpine:latest
   needs:
@@ -142,6 +150,7 @@ deploy-staging:
     - develop
 
 deploy-production:
+  extends: .mac-colima
   stage: deploy
   image: alpine:latest
   needs:
@@ -162,6 +171,7 @@ deploy-production:
 # ═══════════════════════════════════════════════════════════════
 
 tui-v9:test:
+  extends: .mac-colima
   stage: test
   image: golang:1.26
   allow_failure: true
@@ -175,6 +185,7 @@ tui-v9:test:
         - src/tui/v9/**/*
 
 tui-v9:build:
+  extends: .mac-colima
   stage: build
   image: golang:1.26
   allow_failure: true
@@ -202,6 +213,7 @@ tui-v9:build:
 # ═══════════════════════════════════════════════════════════════
 
 tui-v9:release:
+  extends: .mac-colima
   stage: deploy
   image: golang:1.26
   before_script:
@@ -224,6 +236,7 @@ tui-v9:release:
 # ═══════════════════════════════════════════════════════════════
 
 web-v2:build:
+  extends: .mac-colima
   stage: build
   image: node:${NODE_VERSION}-alpine
   before_script:
@@ -240,6 +253,7 @@ web-v2:build:
         - web-v2/**/*
 
 pages:
+  extends: .mac-colima
   stage: deploy
   image: alpine:latest
   script:
@@ -259,6 +273,7 @@ pages:
 # ═══════════════════════════════════════════════════════════════
 
 pypi-publish-test:
+  extends: .mac-colima
   stage: deploy
   image: python:3.11-slim
   before_script:
@@ -283,6 +298,7 @@ pypi-publish-test:
       - dist/
 
 pypi-publish-prod:
+  extends: .mac-colima
   stage: deploy
   image: python:3.11-slim
   before_script:

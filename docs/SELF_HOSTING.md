@@ -14,7 +14,7 @@ git clone https://github.com/c4reqber/turbo-cdi.git
 cd turbo-cdi
 cp .env.example .env
 # Edit .env with your settings
-docker-compose -f docker-compose.prod.yml up -d
+docker-compose -f examples/hosting/docker-compose.vps-traefik.yml up -d
 ```
 
 ### Method 2: Manual

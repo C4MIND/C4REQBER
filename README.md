@@ -20,15 +20,18 @@
 
 ```bash
 pip install c4reqber
+blast setup                         # wizard: packages + API keys
+cp .env.example .env                # add OPENROUTER_API_KEY — see docs/API_KEYS.md
 blast solve "your problem"          # One-shot discovery → article/blueprint/whitepaper
 blast turbo "your topic"            # Paradigm-shifting research proposal + verification
 blast flash "your question"         # Quick answer
 blast auto "your query"             # Auto-routed to best mode (solve/turbo/flash)
 blast turbofactory "your domain"    # Parallel pipeline factory (mini/standard/mega/giga scale)
 blast tui                           # TUI v9 Cockpit (feed-driven discovery UI)
-blast tui --demo --story=crispr     # Demo without backend
 blast serve --mcp                   # MCP server for AI agents (21 tools)
 ```
+
+**Docker (optional API only):** [docs/INSTALL.md](docs/INSTALL.md) · `docker compose -f docker-compose.release.yml up -d`
 
 ## Verified pipeline outputs (July 2026)
 

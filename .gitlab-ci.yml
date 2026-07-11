@@ -155,21 +155,22 @@ deploy-production:
   tags: [shell, deploy]
   stage: deploy
   interruptible: false
-  resource_group: mac-colima-v2
   needs:
     - job: build-api
   variables:
     CI_REGISTRY_IMAGE: registry.gitlab.com/cognitive-functors/turbo-cdi
     API_IMAGE_TAG: latest
+  before_script:
+    - chmod +x scripts/ci/verify_release.sh
   script:
-    - bash scripts/ci/deploy_production.sh
+    - bash scripts/ci/verify_release.sh
   environment:
     name: production
-    url: https://turbo-cdi.org
+    url: https://gitlab.com/cognitive-functors/turbo-cdi/container_registry
     deployment_tier: production
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
-      when: manual
+      when: on_success
 
 # ═══════════════════════════════════════════════════════════════
 # TUI v9 — optional path-filtered jobs (advisory)

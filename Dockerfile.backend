@@ -1,5 +1,5 @@
 # TURBO-CDI v8.0 - Production Dockerfile (Backend)
-FROM python:3.11-slim as backend-base
+FROM python:3.11-slim
 
 LABEL version="8.0.0"
 LABEL description="TURBO-CDI API Server"

@@ -9,6 +9,9 @@ OUTPUT="${2:-requirements.docker.txt}"
 grep -Ev '^(matplotlib|newton-physics|pymc|arviz|numba|sentence-transformers|gensim|dowhy)' "$INPUT" \
   | grep -Ev '^(pytest|pytest-asyncio|pytest-cov|pytest-timeout|mypy)' \
   | grep -Ev '^\s*#' \
-  | grep -v '^[[:space:]]*$' > "$OUTPUT"
+  | grep -v '^[[:space:]]*$' \
+  | sed 's/[[:space:]]*#.*$//' \
+  | grep -v '^[[:space:]]*$' \
+  | awk '!seen[$0]++' > "$OUTPUT"
 
 echo "Wrote ${OUTPUT} ($(wc -l < "$OUTPUT" | tr -d ' ') lines)"

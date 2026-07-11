@@ -182,8 +182,8 @@ func TestHistory_LoadAllHistoryFiles_ReadsAll(t *testing.T) {
 	cfg := Config{APIURL: "http://test"}
 	// Save 3 history files
 	for i := 0; i < 3; i++ {
-		// Wait a tiny bit so timestamps differ
-		time.Sleep(1100 * time.Millisecond) // filename uses seconds
+		// Second-resolution filenames — wait 2s so CI runners never collide.
+		time.Sleep(2 * time.Second)
 		if _, err := SaveHistoryFile(tel, cfg); err != nil {
 			t.Fatal(err)
 		}

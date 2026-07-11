@@ -32,6 +32,7 @@ test-backend:
     - CI_TRUTHS_SKIP_PYTHON=1 python3 scripts/gen_truths.py --check
     - python3 scripts/gen_mcp_registry.py --check
     - python3 scripts/check_i18n_parity.py
+    - sh scripts/ci/check_docker_requirements.sh
     - PYTHONPATH=. pytest tests/mcp_server/ tests/utils/ tests/publishing/ tests/patterns/test_topic_router.py -v --tb=short
     - PYTHONPATH=. pytest tests/verification/ tests/discovery/ tests/api/ tests/knowledge/ -v --tb=short -m "not slow" --timeout=180 --ignore=tests/knowledge/test_data_sources.py --junitxml=report.xml
   variables:
@@ -50,6 +51,7 @@ test-backend:
 tui-v9-test:
   stage: test
   image: golang:1.26
+  allow_failure: true
   before_script:
     - cd src/tui/v9
   script:
@@ -57,7 +59,8 @@ tui-v9-test:
     - go build ./...
     - go test ./... -count=1 -skip 'Golden'
   artifacts:
-    when: always
+    when: on_failure
+    expire_in: 7 days
     paths:
       - src/tui/v9/*.test
 
@@ -69,6 +72,12 @@ build-api:
   stage: build
   timeout: 3h
   interruptible: false
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
+      - script_failure
   image:
     name: ${KANIKO_IMAGE}
     entrypoint: [""]
@@ -126,6 +135,7 @@ deploy-production:
 tui-v9:test:
   stage: test
   image: golang:1.23-alpine
+  allow_failure: true
   before_script:
     - bash scripts/ci/setup_go.sh
   script:

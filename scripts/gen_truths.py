@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import subprocess
 import sys
@@ -202,8 +203,11 @@ def main() -> int:
             return 1
         existing = json.loads(TRUTHS_FILE.read_text())
         # Compare key metric fields (ignore generated_at, git_head)
-        for key in ["python", "go", "mcp", "cli", "knowledge", "simulations", "llm", "verifiers",
-                    "version_backend", "version_tui"]:
+        keys = ["python", "go", "mcp", "cli", "knowledge", "simulations", "llm", "verifiers",
+                "version_backend", "version_tui"]
+        if os.environ.get("CI_TRUTHS_SKIP_PYTHON") == "1":
+            keys.remove("python")
+        for key in keys:
             if existing.get(key) != truths.get(key):
                 print(f"FAIL: {key} differs:")
                 print(f"  existing: {existing.get(key)}")

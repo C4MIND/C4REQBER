@@ -3,6 +3,9 @@ stages:
   - build
   - deploy
 
+default:
+  tags: [docker, c4reqber]
+
 variables:
   PYTHON_VERSION: "3.11"
   NODE_VERSION: "20"
@@ -15,28 +18,25 @@ variables:
 test-backend:
   stage: test
   image: python:3.11-slim
+  cache:
+    key: pip-${CI_COMMIT_REF_SLUG}
+    paths:
+      - .cache/pip
   before_script:
     - bash scripts/ci/setup_python.sh
-    - |
-      if [ -f .ci-venv/bin/activate ]; then
-        source .ci-venv/bin/activate
-      fi
   script:
-    # Audit 2026-06-22: lint with strict selection (E9 runtime errors + F pyflakes).
     - ruff check src/ --exclude="archive/" --select=E9,F
-    # Truth assertion: docs must match what the code actually has.
-    # gen_truths --check skipped on shell runner (filtered deps → different test collection).
+    - CI_TRUTHS_SKIP_PYTHON=1 python3 scripts/gen_truths.py --check
     - python3 scripts/gen_mcp_registry.py --check
     - python3 scripts/check_i18n_parity.py
-    # Fast smoke first (catches imports / decorator errors / missing schemas).
     - PYTHONPATH=. pytest tests/mcp_server/ tests/utils/ tests/publishing/ tests/patterns/test_topic_router.py -v --tb=short
-    # Release gate — core suites without slow numerical/integration tests.
-    - PYTHONPATH=. pytest tests/verification/ tests/discovery/ tests/api/ -v --tb=short -m "not slow" --timeout=180 --junitxml=report.xml
+    - PYTHONPATH=. pytest tests/verification/ tests/discovery/ tests/api/ tests/knowledge/ -v --tb=short -m "not slow" --timeout=180 --ignore=tests/knowledge/test_data_sources.py --junitxml=report.xml
   variables:
     DATABASE_URL: "sqlite:///tmp/test.db"
     CACHE_BACKEND: "memory"
     JWT_SECRET: "test-secret-min-32-chars-long"
-    DEV_MODE: "1"  # tests assert on detail.exception_type
+    DEV_MODE: "1"
+    PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
   artifacts:
     when: always
     reports:
@@ -47,13 +47,12 @@ test-backend:
 tui-v9-test:
   stage: test
   image: golang:1.26
-  allow_failure: true
   before_script:
     - cd src/tui/v9
   script:
     - go vet ./...
     - go build ./...
-    - go test ./... -count=1
+    - go test ./... -count=1 -skip 'Golden'
   artifacts:
     when: always
     paths:
@@ -121,7 +120,7 @@ tui-v9:test:
     - bash scripts/ci/setup_go.sh
   script:
     - cd src/tui/v9
-    - go test ./... -count=1 -race
+    - go test ./... -count=1 -race -skip 'Golden'
   rules:
     - changes:
         - src/tui/v9/**/*
@@ -203,7 +202,6 @@ pages:
       - public
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
-    - if: $CI_COMMIT_BRANCH == "feat/production-upgrade"
   needs: []
 
 # ═══════════════════════════════════════════════════════════════

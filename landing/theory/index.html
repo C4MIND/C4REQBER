@@ -73,7 +73,7 @@
 }
 </style>
 </head>
-<body>
+<body data-page-title="page_title_theory" data-meta-desc="meta_desc_theory">
 
 <div id="site-header"></div>
 
@@ -84,8 +84,8 @@
   <div class="hero-bg"></div>
   <div class="container" style="text-align:center;position:relative;z-index:2">
     <div class="badge"><span class="dot"></span> <span data-i18n="badge_formal_theory">Formal Theory Behind the Cognitive Engine</span></div>
-    <h1 style="font-size:clamp(36px,6vw,64px);margin-bottom:16px"><span class="gradient-text">C4-META Theory</span></h1>
-    <p class="hero-sub" style="max-width:700px;margin:0 auto 32px">Discrete group-theoretic cognitive space.<br>27 states across 3 axes — Time, Scale, Agency.<br>Mathematical topology with Agda-verified proofs.<br>Not neural networks. Not symbolic rules.<br>A coordinate system for general intelligence.</p>
+    <h1 style="font-size:clamp(36px,6vw,64px);margin-bottom:16px"><span class="gradient-text" data-i18n="th_hero_title">C4-META Theory</span></h1>
+    <p class="hero-sub" style="max-width:700px;margin:0 auto 32px" data-i18n="th_hero_sub" data-i18n-html="true">Discrete group-theoretic cognitive space.<br>27 states across 3 axes — Time, Scale, Agency.<br>Mathematical topology with Agda-verified proofs.<br>Not neural networks. Not symbolic rules.<br>A coordinate system for general intelligence.</p>
   </div>
 </section>
 
@@ -93,9 +93,9 @@
 <section class="section section-dark">
   <div class="container">
     <div class="section-header">
-      <span class="section-label">Interactive</span>
-      <h2 class="section-title">Z₃³ Cognitive Cube</h2>
-      <p class="section-desc">27 discrete states across Time, Scale, and Agency. Click any state to explore. Drag to rotate.</p>
+      <span class="section-label" data-i18n="th_cube_label">Interactive</span>
+      <h2 class="section-title" data-i18n="th_cube_title">Z₃³ Cognitive Cube</h2>
+      <p class="section-desc" data-i18n="th_cube_desc">27 discrete states across Time, Scale, and Agency. Click any state to explore. Drag to rotate.</p>
     </div>
 
     <div style="display:flex;justify-content:center;align-items:center;min-height:500px;position:relative">
@@ -109,18 +109,18 @@
     </div>
 
     <div class="cube-controls">
-      <button class="cube-btn active" data-action="axis" data-arg="all" id="btn-all">All States</button>
-      <button class="cube-btn" data-action="axis" data-arg="time" id="btn-time">Time Axis</button>
-      <button class="cube-btn" data-action="axis" data-arg="scale" id="btn-scale">Scale Axis</button>
-      <button class="cube-btn" data-action="axis" data-arg="agency" id="btn-agency">Agency Axis</button>
-      <button class="cube-btn" data-action="path" id="btn-path">Theorem 11 Path</button>
-      <button class="cube-btn" data-action="reset">Reset</button>
+      <button class="cube-btn active" data-action="axis" data-arg="all" id="btn-all" data-i18n="th_btn_all">All States</button>
+      <button class="cube-btn" data-action="axis" data-arg="time" id="btn-time" data-i18n="th_btn_time">Time Axis</button>
+      <button class="cube-btn" data-action="axis" data-arg="scale" id="btn-scale" data-i18n="th_btn_scale">Scale Axis</button>
+      <button class="cube-btn" data-action="axis" data-arg="agency" id="btn-agency" data-i18n="th_btn_agency">Agency Axis</button>
+      <button class="cube-btn" data-action="path" id="btn-path" data-i18n="th_btn_path">Theorem 11 Path</button>
+      <button class="cube-btn" data-action="reset" data-i18n="th_btn_reset">Reset</button>
     </div>
 
     <div style="display:flex;justify-content:center;gap:24px;margin-top:32px;flex-wrap:wrap;font-size:13px;color:var(--fg-3)">
-      <span><span style="display:inline-block;width:12px;height:12px;background:linear-gradient(135deg,#3b82f6,#1d4ed8);border-radius:3px;margin-right:6px"></span>Self</span>
-      <span><span style="display:inline-block;width:12px;height:12px;background:linear-gradient(135deg,#10b981,#047857);border-radius:3px;margin-right:6px"></span>Other</span>
-      <span><span style="display:inline-block;width:12px;height:12px;background:linear-gradient(135deg,#f59e0b,#b45309);border-radius:3px;margin-right:6px"></span>System</span>
+      <span><span style="display:inline-block;width:12px;height:12px;background:linear-gradient(135deg,#3b82f6,#1d4ed8);border-radius:3px;margin-right:6px"></span><span data-i18n="th_legend_self">Self</span></span>
+      <span><span style="display:inline-block;width:12px;height:12px;background:linear-gradient(135deg,#10b981,#047857);border-radius:3px;margin-right:6px"></span><span data-i18n="th_legend_other">Other</span></span>
+      <span><span style="display:inline-block;width:12px;height:12px;background:linear-gradient(135deg,#f59e0b,#b45309);border-radius:3px;margin-right:6px"></span><span data-i18n="th_legend_system">System</span></span>
     </div>
   </div>
 </section>
@@ -129,7 +129,7 @@
 <section class="section">
   <div class="theory-content">
     <nav class="breadcrumb">
-      <a href="../" data-i18n="breadcrumb_home">Home</a> <span>/</span> <span>Theory</span>
+      <a href="../" data-i18n="breadcrumb_home">Home</a> <span>/</span> <span data-i18n="breadcrumb_theory">Theory</span>
     </nav>
 
     <h2 data-i18n="theory_why_title">What Is This Theory For?</h2>
@@ -298,12 +298,17 @@ Unreachable zone:  {s ∈ ℤ₃³ | d_H(s, Φ) ≥ 3}  →  9 states</code></pr
 // ═══════════════════════════════════════════════════════
 
 const STATES = [];
-const LABELS = {
+const LABEL_FALLBACK = {
   time: ['Past', 'Present', 'Future'],
   scale: ['Concrete', 'Abstract', 'Meta'],
   agency: ['Self', 'Other', 'System']
 };
-const DESCRIPTIONS = {
+const LABEL_KEYS = {
+  time: ['th_js_label_past', 'th_js_label_present', 'th_js_label_future'],
+  scale: ['th_js_label_concrete', 'th_js_label_abstract', 'th_js_label_meta'],
+  agency: ['th_js_label_self', 'th_js_label_other', 'th_js_label_system']
+};
+const DESC_FALLBACK = {
   '000': 'Personal concrete memories. Historical experiments you ran.',
   '001': 'Concrete memories of others. Historical data you observed.',
   '002': 'Concrete system history. Raw experimental logs.',
@@ -332,6 +337,20 @@ const DESCRIPTIONS = {
   '221': 'Future meta other. Predicting scientific revolutions.',
   '222': 'Future meta system. Paradigm-shifting vision. The Einstein state.'
 };
+
+function cubeT(key, fb) {
+  const lang = window.c4rCurrentLang || 'en';
+  const t = (window.i18n && window.i18n[lang]) || (window.i18n && window.i18n.en) || {};
+  return t[key] || fb;
+}
+
+function cubeLabel(axis, idx) {
+  return cubeT(LABEL_KEYS[axis][idx], LABEL_FALLBACK[axis][idx]);
+}
+
+function cubeDesc(key) {
+  return cubeT('th_js_desc_' + key, DESC_FALLBACK[key] || '');
+}
 
 // Generate 27 states
 for (let t = 0; t < 3; t++) {
@@ -370,8 +389,8 @@ STATES.forEach(state => {
 
   cell.addEventListener('mouseenter', (e) => {
     cell.style.transform = baseTransform + ' scale(1.2)';
-    ttTitle.textContent = `F⟨${state.t},${state.s},${state.a}⟩ — ${LABELS.time[state.t]}, ${LABELS.scale[state.s]}, ${LABELS.agency[state.a]}`;
-    ttDesc.textContent = DESCRIPTIONS[state.key] || '';
+    ttTitle.textContent = `F⟨${state.t},${state.s},${state.a}⟩ — ${cubeLabel('time', state.t)}, ${cubeLabel('scale', state.s)}, ${cubeLabel('agency', state.a)}`;
+    ttDesc.textContent = cubeDesc(state.key);
     tooltip.classList.add('visible');
     positionTooltip(e, cell);
   });

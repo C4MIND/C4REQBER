@@ -22,6 +22,7 @@ config/secrets/
 
 # API Keys & Tokens
 *api_key*
+!docs/API_KEYS.md
 *apikey*
 # Removed: *token* was too broad, use specific rules
 *secret*

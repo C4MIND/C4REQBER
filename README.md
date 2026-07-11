@@ -143,6 +143,9 @@ C4REQBER integrates with **33+ scientific data and literature sources** across a
 
 ### Environment Variables for API Keys
 
+> **Full registration guide (EN/RU):** [`docs/API_KEYS.md`](docs/API_KEYS.md) — step-by-step signup for every service.
+> **Quick reference on GitLab Pages:** [API Keys setup](https://cognitive-functors.gitlab.io/turbo-cdi/docs/setup/api-keys.html) (links to the full doc).
+
 Copy these into your `.env` file. Keys marked **Required** will disable the source if missing. **Optional** keys increase rate limits but the source works without them.
 
 | Variable | Source | Status | How to obtain |

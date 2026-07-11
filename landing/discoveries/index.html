@@ -5,14 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Discoveries — c4reqber</title>
 <meta name="description" content="Verified blast turbo outputs: six research proposals with literature search, simulation, and quality gates. Hypotheses only — not peer-reviewed.">
-<meta property="og:title" content="Discoveries — c4reqber">
-<meta property="og:type" content="website">
 <link rel="canonical" href="https://c4reqber.org/discoveries/">
 <meta name="theme-color" content="#0F1117">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#9670;</text></svg>">
 <link rel="stylesheet" href="../css/main.css">
 <style>
 .disc-hero{text-align:center;padding:120px 24px 48px}
@@ -26,7 +20,6 @@
 .disc-card p{font-size:13px;color:var(--fg-2);line-height:1.6;margin:0 0 14px}
 .disc-card .meta{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:var(--fg-3);margin-bottom:14px}
 .disc-card a.btn-sm{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--primary);text-decoration:none}
-.disc-card a.btn-sm:hover{text-decoration:underline}
 .media-section{max-width:1100px;margin:0 auto;padding:0 24px 80px}
 .media-section h2{font-size:24px;font-weight:800;margin-bottom:24px;color:var(--accent)}
 .video-wrap{border-radius:var(--radius);overflow:hidden;border:1px solid rgba(255,255,255,.08);background:#000;margin-bottom:32px}
@@ -41,88 +34,45 @@
 .stat .lbl{font-size:12px;color:var(--fg-3);margin-top:4px}
 </style>
 </head>
-<body>
+<body data-page-title="page_title_discoveries" data-meta-desc="meta_desc_discoveries">
 <div id="site-header"></div>
 <main>
 <section class="disc-hero">
-  <div class="badge"><span class="dot"></span> July 2026 · HIL pipeline · Quality A+ 98</div>
-  <h1><span class="gradient-text">Verified outputs</span></h1>
-  <p style="max-width:640px;margin:0 auto;color:var(--fg-2);line-height:1.7">Six full <code>blast turbo</code> runs — literature search, gap mining, simulation, and gated dissertation prose. Real pipeline artifacts, not marketing copy.</p>
-  <div class="epistemic">
-    <strong>Epistemic status:</strong> These are <em>research proposals</em> (untested hypotheses + computational pre-screening). They are <strong>not peer-reviewed dissertations</strong>. Every file includes an explicit disclaimer. Validate citations and claims before any use.
-  </div>
+  <div class="badge"><span class="dot"></span> <span data-i18n="disc_badge">July 2026 · HIL pipeline · Quality A+ 98</span></div>
+  <h1><span class="gradient-text" data-i18n="disc_title">Verified outputs</span></h1>
+  <p style="max-width:640px;margin:0 auto;color:var(--fg-2);line-height:1.7" data-i18n="disc_sub">Six full blast turbo runs — literature search, gap mining, simulation, and gated dissertation prose.</p>
+  <div class="epistemic" data-i18n="disc_epistemic"><strong>Epistemic status:</strong> research proposals, not peer-reviewed dissertations.</div>
 </section>
-
 <section class="stats">
-  <div class="stat"><div class="num">6</div><div class="lbl">proposals</div></div>
-  <div class="stat"><div class="num">4.5k–5.4k</div><div class="lbl">words each</div></div>
-  <div class="stat"><div class="num">400+</div><div class="lbl">sources / run</div></div>
-  <div class="stat"><div class="num">0</div><div class="lbl">LLM placeholders</div></div>
+  <div class="stat"><div class="num">6</div><div class="lbl" data-i18n="disc_stat_proposals">proposals</div></div>
+  <div class="stat"><div class="num">4.5k–5.4k</div><div class="lbl" data-i18n="disc_stat_words">words each</div></div>
+  <div class="stat"><div class="num">400+</div><div class="lbl" data-i18n="disc_stat_sources">sources / run</div></div>
+  <div class="stat"><div class="num">0</div><div class="lbl" data-i18n="disc_stat_placeholders">LLM placeholders</div></div>
 </section>
-
 <section class="section">
   <div class="disc-grid">
-    <article class="disc-card">
-      <span class="tag">Climate</span>
-      <h3>Marine cloud brightening</h3>
-      <p>Geoengineering research proposal: MCB parameter space, field experiments, polar efficacy hypotheses.</p>
-      <div class="meta"><span>5,083 words</span><span>A+ 98</span><span>447 sources</span></div>
-      <a class="btn-sm" href="files/01_marine_cloud_brightening.md">Read proposal →</a>
-    </article>
-    <article class="disc-card">
-      <span class="tag">Energy</span>
-      <h3>Compact fusion reactors</h3>
-      <p>Distributed clean energy pathway: breakthrough physics hypotheses for grid decarbonization by 2040.</p>
-      <div class="meta"><span>4,859 words</span><span>A+ 98</span></div>
-      <a class="btn-sm" href="files/02_compact_fusion.md">Read proposal →</a>
-    </article>
-    <article class="disc-card">
-      <span class="tag">Biology</span>
-      <h3>Epigenetic aging reversal</h3>
-      <p>Metabolic reprogramming hypotheses for cellular aging — gaps, falsifiers, simulation-backed framing.</p>
-      <div class="meta"><span>4,564 words</span><span>A+ 98</span></div>
-      <a class="btn-sm" href="files/04_epigenetic_aging.md">Read proposal →</a>
-    </article>
-    <article class="disc-card">
-      <span class="tag">Medicine</span>
-      <h3>AMR phage–CRISPR cocktail</h3>
-      <p>Antimicrobial resistance: engineered phage + CRISPR hypotheses to restore antibiotic efficacy.</p>
-      <div class="meta"><span>5,058 words</span><span>A+ 98</span><span>499 sources</span></div>
-      <a class="btn-sm" href="files/05_amr_phage_crispr.md">Read proposal →</a>
-    </article>
-    <article class="disc-card">
-      <span class="tag">Agriculture</span>
-      <h3>Soil carbon sequestration</h3>
-      <p>Regenerative agriculture hypotheses for desertification reversal and durable soil carbon.</p>
-      <div class="meta"><span>5,102 words</span><span>A+ 98</span></div>
-      <a class="btn-sm" href="files/06_soil_carbon.md">Read proposal →</a>
-    </article>
-    <article class="disc-card">
-      <span class="tag">Environment</span>
-      <h3>Ocean plastic bioremediation</h3>
-      <p>Microbial/enzyme remediation v2 — topic-routed biogeochemistry sim (9s, not 38min GCM timeout).</p>
-      <div class="meta"><span>5,395 words</span><span>A+ 98</span></div>
-      <a class="btn-sm" href="files/08_ocean_plastic_v2.md">Read proposal →</a>
-    </article>
+    <article class="disc-card"><span class="tag" data-i18n="disc_tag_climate">Climate</span><h3 data-i18n="disc_card_climate">Marine cloud brightening</h3><p data-i18n="disc_card_climate_desc">Geoengineering research proposal.</p><div class="meta"><span>5,083 <span data-i18n="disc_words">words</span></span><span>A+ 98</span></div><a class="btn-sm" href="files/01_marine_cloud_brightening.md" data-i18n="disc_read">Read proposal →</a></article>
+    <article class="disc-card"><span class="tag" data-i18n="disc_tag_energy">Energy</span><h3 data-i18n="disc_card_fusion">Compact fusion reactors</h3><p data-i18n="disc_card_fusion_desc">Distributed clean energy pathway.</p><div class="meta"><span>4,859 <span data-i18n="disc_words">words</span></span><span>A+ 98</span></div><a class="btn-sm" href="files/02_compact_fusion.md" data-i18n="disc_read">Read proposal →</a></article>
+    <article class="disc-card"><span class="tag" data-i18n="disc_tag_biology">Biology</span><h3 data-i18n="disc_card_aging">Epigenetic aging reversal</h3><p data-i18n="disc_card_aging_desc">Metabolic reprogramming hypotheses.</p><div class="meta"><span>4,564 <span data-i18n="disc_words">words</span></span><span>A+ 98</span></div><a class="btn-sm" href="files/04_epigenetic_aging.md" data-i18n="disc_read">Read proposal →</a></article>
+    <article class="disc-card"><span class="tag" data-i18n="disc_tag_medicine">Medicine</span><h3 data-i18n="disc_card_amr">AMR phage–CRISPR cocktail</h3><p data-i18n="disc_card_amr_desc">Engineered phage + CRISPR hypotheses.</p><div class="meta"><span>5,058 <span data-i18n="disc_words">words</span></span><span>A+ 98</span></div><a class="btn-sm" href="files/05_amr_phage_crispr.md" data-i18n="disc_read">Read proposal →</a></article>
+    <article class="disc-card"><span class="tag" data-i18n="disc_tag_agriculture">Agriculture</span><h3 data-i18n="disc_card_soil">Soil carbon sequestration</h3><p data-i18n="disc_card_soil_desc">Regenerative agriculture hypotheses.</p><div class="meta"><span>5,102 <span data-i18n="disc_words">words</span></span><span>A+ 98</span></div><a class="btn-sm" href="files/06_soil_carbon.md" data-i18n="disc_read">Read proposal →</a></article>
+    <article class="disc-card"><span class="tag" data-i18n="disc_tag_environment">Environment</span><h3 data-i18n="disc_card_plastic">Ocean plastic bioremediation</h3><p data-i18n="disc_card_plastic_desc">Microbial/enzyme remediation v2.</p><div class="meta"><span>5,395 <span data-i18n="disc_words">words</span></span><span>A+ 98</span></div><a class="btn-sm" href="files/08_ocean_plastic_v2.md" data-i18n="disc_read">Read proposal →</a></article>
   </div>
 </section>
-
 <section class="media-section">
-  <h2>TUI v9 · Demo</h2>
+  <h2 data-i18n="disc_video_title">Mission demo (30s)</h2>
   <div class="video-wrap">
     <video controls preload="metadata" poster="../assets/mission/02_tui_v9_hypothesis_card.png">
       <source src="../assets/demo/c4reqber_mission_demo_30s.mp4" type="video/mp4">
     </video>
   </div>
+  <h2 data-i18n="disc_gallery_title">TUI v9 mission snapshots</h2>
   <div class="gallery">
-    <figure><img src="../assets/mission/02_tui_v9_hypothesis_card.png" alt="TUI hypothesis card" loading="lazy"><figcaption>Hypothesis card</figcaption></figure>
-    <figure><img src="../assets/mission/03_tui_v9_simulation_card.png" alt="TUI simulation card" loading="lazy"><figcaption>Simulation surface</figcaption></figure>
-    <figure><img src="../assets/mission/04_tui_v9_capabilities_overlay.png" alt="Capabilities overlay" loading="lazy"><figcaption>32 engines + 27 verifiers</figcaption></figure>
-    <figure><img src="../assets/mission/06_tui_v9_command_palette.png" alt="Command palette" loading="lazy"><figcaption>Command palette</figcaption></figure>
-    <figure><img src="../assets/mission/09_tui_v9_multi_paper_feed.png" alt="Multi-paper feed" loading="lazy"><figcaption>Multi-paper feed</figcaption></figure>
-    <figure><img src="../assets/mission/07_blast_flash_demo.png" alt="blast flash output" loading="lazy"><figcaption>blast flash</figcaption></figure>
+    <figure><img src="../assets/mission/02_tui_v9_hypothesis_card.png" alt="Hypothesis card" loading="lazy" width="800" height="450"><figcaption data-i18n="disc_cap_hypothesis">Hypothesis card</figcaption></figure>
+    <figure><img src="../assets/mission/03_tui_v9_simulation_card.png" alt="Simulation card" loading="lazy" width="800" height="450"><figcaption data-i18n="disc_cap_simulation">Simulation surface</figcaption></figure>
+    <figure><img src="../assets/mission/04_tui_v9_capabilities_overlay.png" alt="Capabilities" loading="lazy" width="800" height="450"><figcaption data-i18n="disc_cap_capabilities">38 engines + 14 verifiers</figcaption></figure>
+    <figure><img src="../assets/mission/06_tui_v9_command_palette.png" alt="Command palette" loading="lazy" width="800" height="450"><figcaption data-i18n="disc_cap_palette">Command palette</figcaption></figure>
   </div>
-  <p style="margin-top:32px;font-size:14px;color:var(--fg-3)">Repo index: <a href="https://gitlab.com/cognitive-functors/turbo-cdi/-/tree/feat/production-upgrade/discoveries/humanity_mission_2026-07-09" style="color:var(--primary)">discoveries/humanity_mission_2026-07-09</a> · Reproduce: <code>./scripts/run_humanity_mission.sh turbo "topic" --output out.md</code></p>
 </section>
 </main>
 <div id="site-footer"></div>

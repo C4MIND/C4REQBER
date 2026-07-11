@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>API Reference — c4reqber</title>
-<meta name="description" content="c4reqber API reference: blast commands, REST endpoints, Python SDK, MCP tools.">
+<meta name="description" content="c4reqber API reference: blast commands, REST endpoints, Python SDK, 21 MCP tools.">
 <meta property="og:title" content="API Reference — c4reqber">
 <meta property="og:type" content="website">
 <link rel="canonical" href="https://c4reqber.org/api/">
@@ -52,7 +52,7 @@
 [data-theme="light"] .method.post{background:rgba(59,130,246,.1);color:#2563eb}
 </style>
 </head>
-<body>
+<body data-page-title="page_title_api" data-meta-desc="meta_desc_api">
 
 <div id="site-header"></div>
 
@@ -62,78 +62,78 @@
   <div class="hero-bg"></div>
   <div class="container" style="text-align:center;position:relative;z-index:2">
     <div class="badge"><span class="dot"></span> <span data-i18n="badge_reference">Reference</span></div>
-    <h1 style="font-size:clamp(36px,6vw,64px);margin-bottom:16px"><span class="gradient-text">API Reference</span></h1>
-    <p class="hero-sub" style="max-width:700px;margin:0 auto 32px">Blast commands, REST endpoints, Python SDK, and MCP tools. Everything you need to integrate.</p>
+    <h1 style="font-size:clamp(36px,6vw,64px);margin-bottom:16px"><span class="gradient-text" data-i18n="api_hero_title">API Reference</span></h1>
+    <p class="hero-sub" style="max-width:700px;margin:0 auto 32px" data-i18n="api_hero_sub">Blast commands, REST endpoints, Python SDK, and 21 MCP tools. Everything you need to integrate.</p>
   </div>
 </section>
 
 <section class="section">
   <div class="api-content">
     <nav class="breadcrumb">
-      <a href="../" data-i18n="breadcrumb_home">Home</a> <span>/</span> <span>API</span>
+      <a href="../" data-i18n="breadcrumb_home">Home</a> <span>/</span> <span data-i18n="breadcrumb_api">API</span>
     </nav>
 
-    <h2>Blast Commands</h2>
-    <p>The fastest way to use c4reqber from the command line. All commands support <code>--help</code> for detailed options.</p>
+    <h2 data-i18n="api_blast_title">Blast Commands</h2>
+    <p data-i18n="api_blast_intro" data-i18n-html="true">The fastest way to use c4reqber from the command line. All commands support <code>--help</code> for detailed options.</p>
 
     <pre><code>$ blast solve "your research question"
 $ blast turbo "complex multi-step problem"
 $ blast flash "quick check"</code></pre>
 
     <table>
-      <tr><th>Command</th><th>Description</th><th>Latency</th></tr>
-      <tr><td><code>blast solve</code></td><td>Standard discovery pipeline — full Z₃³ traversal</td><td>~5s</td></tr>
-      <tr><td><code>blast turbo</code></td><td>Accelerated path — skips low-relevance states</td><td>~2s</td></tr>
-      <tr><td><code>blast flash</code></td><td>Instant answer — single best engine</td><td>&lt;1s</td></tr>
-      <tr><td><code>blast turbofactory</code></td><td>Batch processing from file</td><td>~1s/query</td></tr>
+      <tr><th data-i18n="api_th_command">Command</th><th data-i18n="api_th_description">Description</th><th data-i18n="api_th_latency">Latency</th></tr>
+      <tr><td><code>blast solve</code></td><td data-i18n="api_cmd_solve">Standard discovery pipeline — full Z₃³ traversal</td><td>~5s</td></tr>
+      <tr><td><code>blast turbo</code></td><td data-i18n="api_cmd_turbo">Accelerated path — skips low-relevance states</td><td>~2s</td></tr>
+      <tr><td><code>blast flash</code></td><td data-i18n="api_cmd_flash">Instant answer — single best engine</td><td>&lt;1s</td></tr>
+      <tr><td><code>blast turbofactory</code></td><td data-i18n="api_cmd_turbofactory">Batch processing from file</td><td>~1s/query</td></tr>
     </table>
 
-    <h2>REST API Endpoints (v5.6.0)</h2>
-    <p>Base URL: <code>/api/v1</code></p>
+    <h2 data-i18n="api_rest_title">REST API Endpoints (v5.6.0)</h2>
+    <p data-i18n="api_rest_base" data-i18n-html="true">Base URL: <code>/api/v1</code></p>
 
     <div class="endpoint">
       <span class="method get">GET</span>
       <span class="path">/health</span>
-      <span class="desc">Service health check</span>
+      <span class="desc" data-i18n="api_ep_health">Service health check</span>
     </div>
     <div class="endpoint">
       <span class="method post">POST</span>
       <span class="path">/solve</span>
-      <span class="desc">Submit a problem for discovery</span>
+      <span class="desc" data-i18n="api_ep_solve">Submit a problem for discovery</span>
     </div>
     <div class="endpoint">
       <span class="method get">GET</span>
       <span class="path">/solve/{job_id}</span>
-      <span class="desc">Get discovery results</span>
+      <span class="desc" data-i18n="api_ep_solve_get">Get discovery results</span>
     </div>
     <div class="endpoint">
       <span class="method post">POST</span>
       <span class="path">/agenda</span>
-      <span class="desc">Create a research agenda</span>
+      <span class="desc" data-i18n="api_ep_agenda">Create a research agenda</span>
     </div>
     <div class="endpoint">
       <span class="method get">GET</span>
       <span class="path">/agenda/{agenda_id}</span>
-      <span class="desc">Get agenda status and results</span>
+      <span class="desc" data-i18n="api_ep_agenda_get">Get agenda status and results</span>
     </div>
     <div class="endpoint">
       <span class="method post">POST</span>
       <span class="path">/verify</span>
-      <span class="desc">Verify a hypothesis against knowledge sources</span>
+      <span class="desc" data-i18n="api_ep_verify">Verify a hypothesis against knowledge sources</span>
     </div>
     <div class="endpoint">
       <span class="method get">GET</span>
       <span class="path">/engines</span>
-      <span class="desc">List available simulation engines</span>
+      <span class="desc" data-i18n="api_ep_engines">List available simulation engines</span>
     </div>
     <div class="endpoint">
       <span class="method get">GET</span>
       <span class="path">/sources</span>
-      <span class="desc">List configured knowledge sources</span>
+      <span class="desc" data-i18n="api_ep_sources">List configured knowledge sources</span>
     </div>
 
-    <h3>Example: Solve a Problem</h3>
-    <pre><button class="copy-btn" data-copy>copy</button><code>curl -X POST https://api.c4reqber.org/v1/solve \\
+    <h3 data-i18n="api_example_solve_title">Example: Solve a Problem</h3>
+    <pre><button class="copy-btn" data-copy-btn>copy</button><code>curl -X POST https://api.c4reqber.org/v1/solve \\
   -H "Authorization: Bearer $TOKEN" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -142,8 +142,8 @@ $ blast flash "quick check"</code></pre>
     "max_depth": 3
   }'</code></pre>
 
-    <h3>Example: Create Agenda</h3>
-    <pre><button class="copy-btn" data-copy>copy</button><code>curl -X POST https://api.c4reqber.org/v1/agenda \\
+    <h3 data-i18n="api_example_agenda_title">Example: Create Agenda</h3>
+    <pre><button class="copy-btn" data-copy-btn>copy</button><code>curl -X POST https://api.c4reqber.org/v1/agenda \\
   -H "Authorization: Bearer $TOKEN" \\
   -d '{
     "topic": "Quantum computing applications in drug discovery",
@@ -151,8 +151,8 @@ $ blast flash "quick check"</code></pre>
     "milestones": 5
   }'</code></pre>
 
-    <h2>Python SDK</h2>
-    <pre><button class="copy-btn" data-copy>copy</button><code>from c4reqber import Client
+    <h2 data-i18n="api_sdk_title">Python SDK</h2>
+    <pre><button class="copy-btn" data-copy-btn>copy</button><code>from c4reqber import Client
 
 client = Client(api_key="your-key")
 
@@ -172,35 +172,51 @@ verification = client.verify(
     sources=["pubmed", "nature", "arxiv"]
 )</code></pre>
 
-    <h2>MCP Tools</h2>
-    <p>c4reqber exposes Model Context Protocol tools for integration with Claude, Cursor, and other MCP-compatible agents.</p>
+    <h2 data-i18n="api_mcp_title">MCP Tools</h2>
+    <p data-i18n="api_mcp_intro">c4reqber exposes 21 Model Context Protocol tools for integration with Claude, Cursor, and other MCP-compatible agents.</p>
 
     <table>
-      <tr><th>Tool</th><th>Description</th></tr>
-      <tr><td><code>c4reqber_solve</code></td><td>Submit a problem and get discoveries</td></tr>
-      <tr><td><code>c4reqber_agenda</code></td><td>Create and manage research agendas</td></tr>
-      <tr><td><code>c4reqber_verify</code></td><td>Verify hypotheses against sources</td></tr>
-      <tr><td><code>c4reqber_search</code></td><td>Search knowledge sources</td></tr>
-      <tr><td><code>c4reqber_visualize</code></td><td>Generate C4-META state diagrams</td></tr>
+      <tr><th data-i18n="api_th_tool">Tool</th><th data-i18n="api_th_desc">Description</th></tr>
+      <tr><td><code>c4_solve</code></td><td data-i18n="api_mcp_solve">12-stage discovery pipeline</td></tr>
+      <tr><td><code>c4_search</code></td><td data-i18n="api_mcp_search">Search 51 knowledge sources</td></tr>
+      <tr><td><code>c4_triz</code></td><td data-i18n="api_mcp_triz">TRIZ contradiction resolution</td></tr>
+      <tr><td><code>c4_verify</code></td><td data-i18n="api_mcp_verify">Formal proof verification (Lean4/Coq/Dafny/Agda/Z3/Hoare)</td></tr>
+      <tr><td><code>c4_prove</code></td><td data-i18n="api_mcp_prove">LLM-based hypothesis proving with iterative error correction</td></tr>
+      <tr><td><code>c4_simulate</code></td><td data-i18n="api_mcp_simulate">Physics simulation via 38 engine adapters</td></tr>
+      <tr><td><code>c4_bayesian</code></td><td data-i18n="api_mcp_bayesian">Bayesian inference (MCMC/BMA)</td></tr>
+      <tr><td><code>c4_causal</code></td><td data-i18n="api_mcp_causal">Causal discovery (do-calculus)</td></tr>
+      <tr><td><code>c4_export</code></td><td data-i18n="api_mcp_export">Export to Markdown/JSON/BibTeX/LaTeX</td></tr>
+      <tr><td><code>c4_social</code></td><td data-i18n="api_mcp_social">Social publishing — preprint upload, ORCID, multi-platform posting</td></tr>
+      <tr><td><code>c4_fingerprint</code></td><td data-i18n="api_mcp_fingerprint">C4 Z₃³ state classification</td></tr>
+      <tr><td><code>c4_transfer</code></td><td data-i18n="api_mcp_transfer">Cross-domain isomorphism transfer</td></tr>
+      <tr><td><code>c4_meta</code></td><td data-i18n="api_mcp_meta">Meta-cognitive reflection</td></tr>
+      <tr><td><code>c4_chain</code></td><td data-i18n="api_mcp_chain">C4 discovery chain (Theorem 11)</td></tr>
+      <tr><td><code>c4_codegen</code></td><td data-i18n="api_mcp_codegen">Code generation via MCP tool</td></tr>
+      <tr><td><code>c4_autoresearch</code></td><td data-i18n="api_mcp_autoresearch">Karpathy-style ML training loop</td></tr>
+      <tr><td><code>blast_solve</code></td><td data-i18n="api_mcp_blast_solve">UniversalSolvePipeline strategic artifacts</td></tr>
+      <tr><td><code>blast_turbo</code></td><td data-i18n="api_mcp_blast_turbo">HILDiscoveryPipeline paradigm dissertations</td></tr>
+      <tr><td><code>blast_flash</code></td><td data-i18n="api_mcp_blast_flash">Quick LLM + USP cognitive analysis</td></tr>
+      <tr><td><code>blast_turbofactory</code></td><td data-i18n="api_mcp_blast_turbofactory">Parallel pipeline factory</td></tr>
+      <tr><td><code>blast_auto</code></td><td data-i18n="api_mcp_blast_auto">Auto-router dispatch</td></tr>
     </table>
 
-    <h2>Authentication</h2>
-    <p>All API requests require a Bearer token in the <code>Authorization</code> header. Obtain your token from the <a href="https://github.com/c4reqber/c4reqber" rel="noopener noreferrer" target="_blank">GitHub repository</a> or self-host.</p>
+    <h2 data-i18n="api_auth_title">Authentication</h2>
+    <p data-i18n="api_auth_intro" data-i18n-html="true">All API requests require a Bearer token in the <code>Authorization</code> header. Obtain your token from the <a href="https://gitlab.com/cognitive-functors/turbo-cdi" rel="noopener noreferrer" target="_blank">GitLab repository</a> or self-host.</p>
     <pre><code>Authorization: Bearer sk_c4r_xxxxxxxxxxxxxxxx</code></pre>
 
-    <h2>Rate Limits</h2>
+    <h2 data-i18n="api_rate_title">Rate Limits</h2>
     <table>
-      <tr><th>Tier</th><th>Requests/min</th><th>Concurrent</th></tr>
-      <tr><td>Free</td><td>10</td><td>1</td></tr>
-      <tr><td>Pro</td><td>120</td><td>5</td></tr>
-      <tr><td>Enterprise</td><td>Unlimited</td><td>50</td></tr>
+      <tr><th data-i18n="api_th_tier">Tier</th><th data-i18n="api_th_requests">Requests/min</th><th data-i18n="api_th_concurrent">Concurrent</th></tr>
+      <tr><td data-i18n="api_tier_free">Free</td><td>10</td><td>1</td></tr>
+      <tr><td data-i18n="api_tier_pro">Pro</td><td>120</td><td>5</td></tr>
+      <tr><td data-i18n="api_tier_enterprise">Enterprise</td><td data-i18n="api_tier_unlimited">Unlimited</td><td>50</td></tr>
     </table>
 
-    <h2>Further Reading</h2>
+    <h2 data-i18n="api_reading_title">Further Reading</h2>
     <ul>
-      <li><a href="../docs/getting-started.html">Getting Started</a> — Install and configure c4reqber</li>
-      <li><a href="../docs/setup/mcp.html">MCP Setup</a> — Configure MCP in Claude / Cursor</li>
-      <li><a href="../architecture/">Architecture</a> — Understand the system design</li>
+      <li data-i18n="api_reading_gs" data-i18n-html="true"><a href="../docs/getting-started.html">Getting Started</a> — Install and configure c4reqber</li>
+      <li data-i18n="api_reading_mcp" data-i18n-html="true"><a href="../docs/setup/mcp.html">MCP Setup</a> — Configure 21 MCP tools in Claude / Cursor</li>
+      <li data-i18n="api_reading_arch" data-i18n-html="true"><a href="../architecture/">Architecture</a> — Understand the system design</li>
     </ul>
   </div>
 </section>
@@ -212,17 +228,6 @@ verification = client.verify(
 <script src="../js/components.js"></script>
 <script src="../js/main.js"></script>
 <script>
-// Copy buttons
-document.querySelectorAll('.copy-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const code = btn.nextElementSibling.textContent;
-    navigator.clipboard.writeText(code).then(() => {
-      const orig = btn.textContent;
-      btn.textContent = 'copied!';
-      setTimeout(() => btn.textContent = orig, 1200);
-    });
-  });
-});
 if('serviceWorker' in navigator){
   navigator.serviceWorker.register('../sw.js').catch(()=>{});
 }

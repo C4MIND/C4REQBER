@@ -4,20 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Getting Started — c4reqber</title>
-<meta name="description" content="Install c4reqber, run your first discovery pipeline, and configure MCP tools. Complete getting started guide.">
-<meta property="og:title" content="Getting Started — c4reqber">
-<meta property="og:type" content="website">
+<meta name="description" content="Install c4reqber, run your first discovery pipeline, and configure MCP tools.">
 <link rel="canonical" href="https://c4reqber.org/docs/getting-started.html">
 <meta name="theme-color" content="#0F1117">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' https: data:; connect-src 'self' https://api.github.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800,900&family=JetBrains+Mono:wght@400;500;600&display=swap">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#9670;</text></svg>">
-<link rel="manifest" href="../manifest.json">
 <link rel="stylesheet" href="../css/main.css">
 <style>
-.doc-content{max-width:800px;margin:0 auto;padding:0 24px}
+.doc-content{max-width:800px;margin:0 auto;padding:0 24px 80px}
 .doc-content h1{font-size:clamp(32px,5vw,48px);font-weight:900;margin-bottom:24px}
 .doc-content h2{font-size:24px;font-weight:700;margin:48px 0 16px;color:var(--primary)}
 .doc-content h3{font-size:18px;font-weight:600;margin:32px 0 12px}
@@ -30,58 +22,50 @@
 .doc-content table{width:100%;border-collapse:collapse;margin:20px 0;font-size:14px}
 .doc-content th{background:var(--bg-3);padding:10px 12px;text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--fg-3);border-bottom:1px solid rgba(255,255,255,.08)}
 .doc-content td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.04);color:var(--fg-2)}
-.doc-content tr:nth-child(even) td{background:rgba(255,255,255,.015)}
-.doc-content blockquote{border-left:3px solid var(--primary);padding-left:16px;margin:24px 0;color:var(--fg-3);font-style:italic}
-.breadcrumb{display:flex;gap:8px;align-items:center;font-size:13px;color:var(--fg-3);margin-bottom:24px}
+.breadcrumb{display:flex;gap:8px;align-items:center;font-size:13px;color:var(--fg-3);margin-bottom:24px;flex-wrap:wrap}
 .breadcrumb a{color:var(--fg-3);text-decoration:none}
 .breadcrumb a:hover{color:var(--primary)}
-[data-theme="light"] .doc-content code{background:#F1F3F5}
-[data-theme="light"] .doc-content pre{background:#F8F9FA;border-color:rgba(0,0,0,.06)}
-[data-theme="light"] .doc-content th{background:#F1F3F5}
-[data-theme="light"] .doc-content td{border-bottom-color:rgba(0,0,0,.04)}
-[data-theme="light"] .doc-content tr:nth-child(even) td{background:rgba(0,0,0,.02)}
 </style>
 </head>
-<body>
-
+<body data-page-title="page_title_gs" data-meta-desc="meta_desc_gs">
 <div id="site-header"></div>
-
 <main>
 <section class="section" style="padding-top:100px">
   <div class="doc-content">
-    <nav class="breadcrumb">
-      <a href="../" data-i18n="breadcrumb_home">Home</a> <span>/</span> <a href="./">Docs</a> <span>/</span> <span>Getting Started</span>
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a href="../" data-i18n="breadcrumb_home">Home</a> <span>/</span>
+      <a href="./" data-i18n="breadcrumb_docs">Docs</a> <span>/</span>
+      <span data-i18n="breadcrumb_getting_started">Getting Started</span>
     </nav>
+    <h1 data-i18n="gs_title">Getting Started</h1>
+    <p data-i18n="gs_intro">Install c4reqber, run your first discovery pipeline, and configure MCP tools. From zero to paradigm shift in 5 minutes.</p>
 
-    <h1>Getting Started</h1>
-    <p>Install c4reqber, run your first discovery pipeline, and configure MCP tools. From zero to paradigm shift in 5 minutes.</p>
-
-    <h2>1. Installation</h2>
+    <h2 data-i18n="gs_h2_install">1. Installation</h2>
     <pre><code>pip install c4reqber</code></pre>
-    <p>Requires Python 3.11+.</p>
-    <p>Verify the installation:</p>
+    <p data-i18n="gs_requires">Requires Python 3.11+.</p>
+    <p data-i18n="gs_verify">Verify the installation:</p>
     <pre><code>blast --help  # c4reqber v5.6.0</code></pre>
-    <p>Run the interactive configuration wizard:</p>
+    <p data-i18n="gs_setup">Run the interactive configuration wizard:</p>
     <pre><code>blast setup</code></pre>
 
-    <h2>2. Quick Commands</h2>
+    <h2 data-i18n="gs_h2_commands">2. Quick Commands</h2>
     <table>
-      <tr><th>Command</th><th>What it does</th></tr>
-      <tr><td><code>blast solve "problem"</code></td><td>One-shot discovery pipeline → article/blueprint/whitepaper</td></tr>
-      <tr><td><code>blast turbo "topic"</code></td><td>Paradigm-shifting research proposal + verification</td></tr>
-      <tr><td><code>blast flash "question"</code></td><td>Quick answer (2–10s)</td></tr>
-      <tr><td><code>blast auto "query"</code></td><td>Auto-routed to best mode</td></tr>
-      <tr><td><code>blast turbofactory "domain"</code></td><td>Parallel pipeline factory (mini/standard/mega/giga)</td></tr>
-      <tr><td><code>blast tui</code></td><td>TUI v9 Cockpit — feed-driven discovery UI</td></tr>
-      <tr><td><code>blast tui --demo --story=crispr</code></td><td>Demo mode without backend</td></tr>
-      <tr><td><code>blast serve --mcp</code></td><td>MCP server for AI agents (21 tools)</td></tr>
+      <tr><th data-i18n="gs_th_command">Command</th><th data-i18n="gs_th_does">What it does</th></tr>
+      <tr><td><code>blast solve "problem"</code></td><td data-i18n="gs_cmd_solve">One-shot discovery pipeline → article/blueprint/whitepaper</td></tr>
+      <tr><td><code>blast turbo "topic"</code></td><td data-i18n="gs_cmd_turbo">Paradigm-shifting research proposal + verification</td></tr>
+      <tr><td><code>blast flash "question"</code></td><td data-i18n="gs_cmd_flash">Quick answer (2–10s)</td></tr>
+      <tr><td><code>blast auto "query"</code></td><td data-i18n="gs_cmd_auto">Auto-routed to best mode</td></tr>
+      <tr><td><code>blast turbofactory "domain"</code></td><td data-i18n="gs_cmd_factory">Parallel pipeline factory (mini/standard/mega/giga)</td></tr>
+      <tr><td><code>blast tui</code></td><td data-i18n="gs_cmd_tui">TUI v9 Cockpit — feed-driven discovery UI</td></tr>
+      <tr><td><code>blast tui --demo --story=crispr</code></td><td data-i18n="gs_cmd_tui_demo">Demo mode without backend</td></tr>
+      <tr><td><code>blast serve --mcp</code></td><td data-i18n="gs_cmd_mcp">MCP server for AI agents (21 tools)</td></tr>
     </table>
 
-    <h2>3. Your First Discovery</h2>
+    <h2 data-i18n="gs_h2_first">3. Your First Discovery</h2>
     <pre><code># One-shot discovery → strategic artifact
 blast solve "quantum effects in photosynthesis"
 
-# Paradigm-shifting dissertation
+# Paradigm-shifting research proposal
 blast turbo "language evolution through horizontal gene transfer"
 
 # Quick answer with sources
@@ -90,8 +74,8 @@ blast flash "What is the TRIZ principle of segmentation?" --sources
 # TUI v9 Cockpit
 blast tui</code></pre>
 
-    <h2>4. MCP Server Setup</h2>
-    <p>c4reqber can be used as an MCP tool for AI agents (Claude, Cursor, Cline, Continue.dev). Add it to your MCP configuration:</p>
+    <h2 data-i18n="gs_h2_mcp">4. MCP Server Setup</h2>
+    <p data-i18n="gs_mcp_intro">c4reqber can be used as an MCP tool for AI agents (Claude, Cursor, Cline, Continue.dev). Add it to your MCP configuration:</p>
     <pre><code>// mcp-config.json
 {
   "mcpServers": {
@@ -102,24 +86,24 @@ blast tui</code></pre>
   }
 }</code></pre>
 
-    <h3>Available MCP Tools</h3>
+    <h3 data-i18n="gs_h3_mcp_tools">Available MCP Tools</h3>
     <table>
-      <tr><th>Tool</th><th>Description</th></tr>
-      <tr><td><code>c4_solve</code></td><td>12-stage discovery pipeline</td></tr>
-      <tr><td><code>c4_search</code></td><td>33+ knowledge sources</td></tr>
-      <tr><td><code>c4_triz</code></td><td>40 TRIZ principles + CDI resolution</td></tr>
-      <tr><td><code>c4_verify</code></td><td>Lean4/Coq/Dafny/Agda/Hoare/Z3</td></tr>
-      <tr><td><code>c4_simulate</code></td><td>36 engine adapters</td></tr>
-      <tr><td><code>c4_bayesian</code></td><td>MCMC / BMA inference</td></tr>
-      <tr><td><code>c4_causal</code></td><td>Do-calculus discovery</td></tr>
-      <tr><td><code>c4_fingerprint</code></td><td>Z₃³ state classification</td></tr>
-      <tr><td><code>c4_export</code></td><td>LaTeX / Markdown / BibTeX</td></tr>
-      <tr><td><code>c4_transfer</code></td><td>Cross-domain isomorphism</td></tr>
-      <tr><td><code>c4_autoresearch</code></td><td>Karpathy-style ML loop</td></tr>
-      <tr><td><code>c4_meta</code></td><td>Meta-cognitive reflection</td></tr>
+      <tr><th data-i18n="gs_th_tool">Tool</th><th data-i18n="gs_th_desc">Description</th></tr>
+      <tr><td><code>c4_solve</code></td><td data-i18n="gs_mcp_solve">12-stage discovery pipeline</td></tr>
+      <tr><td><code>c4_search</code></td><td data-i18n="gs_mcp_search">51 knowledge sources</td></tr>
+      <tr><td><code>c4_triz</code></td><td data-i18n="gs_mcp_triz">40 TRIZ principles + CDI resolution</td></tr>
+      <tr><td><code>c4_verify</code></td><td data-i18n="gs_mcp_verify">Lean4/Coq/Dafny/Agda/Hoare/Z3</td></tr>
+      <tr><td><code>c4_simulate</code></td><td data-i18n="gs_mcp_simulate">38 engine adapters</td></tr>
+      <tr><td><code>c4_bayesian</code></td><td data-i18n="gs_mcp_bayesian">MCMC / BMA inference</td></tr>
+      <tr><td><code>c4_causal</code></td><td data-i18n="gs_mcp_causal">Do-calculus discovery</td></tr>
+      <tr><td><code>c4_fingerprint</code></td><td data-i18n="gs_mcp_fingerprint">Z₃³ state classification</td></tr>
+      <tr><td><code>c4_export</code></td><td data-i18n="gs_mcp_export">LaTeX / Markdown / BibTeX</td></tr>
+      <tr><td><code>c4_transfer</code></td><td data-i18n="gs_mcp_transfer">Cross-domain isomorphism</td></tr>
+      <tr><td><code>c4_autoresearch</code></td><td data-i18n="gs_mcp_autoresearch">Karpathy-style ML loop</td></tr>
+      <tr><td><code>c4_meta</code></td><td data-i18n="gs_mcp_meta">Meta-cognitive reflection</td></tr>
     </table>
 
-    <h2>5. Configuration</h2>
+    <h2 data-i18n="gs_h2_config">5. Configuration</h2>
     <pre><code># View current setup
 c4reqber config --show
 
@@ -130,25 +114,19 @@ c4reqber config --set F=claude-sonnet-4.6
 c4reqber config --tier balanced --save  # $0.35/run
 c4reqber config --tier budget --save     # $0.002/run</code></pre>
 
-    <h2>6. Next Steps</h2>
+    <h2 data-i18n="gs_h2_next">6. Next Steps</h2>
     <ul>
-      <li><a href="setup/gpu.html">Configure GPU acceleration</a> — Apple Silicon or NVIDIA CUDA</li>
-      <li><a href="../architecture/">Read the Architecture guide</a> — understand 7-layer system design</li>
-      <li><a href="../api/">Explore the API reference</a> — CLI, Python, REST, MCP</li>
-      <li><a href="../showcase/">See dissertation examples</a> — real outputs from the pipeline</li>
+      <li data-i18n="gs_next_keys" data-i18n-html="true"><a href="setup/api-keys.html">Register API keys</a> — OpenRouter + scientific knowledge sources</li>
+      <li data-i18n="gs_next_gpu" data-i18n-html="true"><a href="setup/gpu.html">Configure GPU acceleration</a> — Apple Silicon or NVIDIA CUDA</li>
+      <li data-i18n="gs_next_arch" data-i18n-html="true"><a href="../architecture/">Read the Architecture guide</a> — understand 7-layer system design</li>
+      <li data-i18n="gs_next_api" data-i18n-html="true"><a href="../api/">Explore the API reference</a> — CLI, Python, REST, MCP</li>
+      <li data-i18n="gs_next_showcase" data-i18n-html="true"><a href="../showcase/">See verified proposals</a> — real outputs from the pipeline</li>
     </ul>
   </div>
 </section>
 </main>
-
 <div id="site-footer"></div>
-
 <script src="../js/components.js"></script>
 <script src="../js/main.js"></script>
-<script>
-if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('../sw.js').catch(()=>{});
-}
-</script>
 </body>
 </html>

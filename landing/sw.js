@@ -1,29 +1,21 @@
-const CACHE_NAME = 'c4reqber-v2';
+const CACHE_NAME = 'c4reqber-v3';
 const CORE_ASSETS = [
   './',
   './index.html',
   './css/main.css',
   './js/main.js',
   './js/components.js',
+  './js/splash.js',
   './404.html',
   './manifest.json',
-  './theory/',
-  './theory/index.html',
-  './architecture/',
-  './architecture/index.html',
-  './docs/',
-  './docs/index.html',
-  './api/',
-  './api/index.html',
+  './discoveries/',
+  './discoveries/index.html',
   './showcase/',
   './showcase/index.html',
-
 ];
 
 self.addEventListener('install', (e) => {
-  e.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(CORE_ASSETS))
-  );
+  e.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(CORE_ASSETS)));
   self.skipWaiting();
 });
 
@@ -37,12 +29,37 @@ self.addEventListener('activate', (e) => {
 });
 
 self.addEventListener('fetch', (e) => {
+  const url = new URL(e.request.url);
+  const isNavigate = e.request.mode === 'navigate';
+  const isHtml = e.request.destination === 'document' || isNavigate;
+  const isI18n = url.pathname.includes('/i18n/');
+
+  if (isHtml || isI18n) {
+    // Network-first for HTML and translations — fresh deploys visible immediately
+    e.respondWith(
+      fetch(e.request)
+        .then((res) => {
+          const clone = res.clone();
+          caches.open(CACHE_NAME).then((c) => c.put(e.request, clone));
+          return res;
+        })
+        .catch(() => caches.match(e.request).then((r) => r || caches.match('./404.html')))
+    );
+    return;
+  }
+
+  // Cache-first for static assets (css, js, images)
   e.respondWith(
-    caches.match(e.request).then((cached) => {
-      if (cached) return cached;
-      return fetch(e.request).catch(() => {
-        if (e.request.mode === 'navigate') return caches.match('./404.html');
-      });
-    })
+    caches.match(e.request).then(
+      (cached) =>
+        cached ||
+        fetch(e.request).then((res) => {
+          if (res.ok && e.request.method === 'GET') {
+            const clone = res.clone();
+            caches.open(CACHE_NAME).then((c) => c.put(e.request, clone));
+          }
+          return res;
+        })
+    )
   );
 });

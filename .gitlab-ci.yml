@@ -152,18 +152,20 @@ deploy-staging:
     - develop
 
 deploy-production:
-  tags: [shell, deploy]
+  extends: .mac-colima
   stage: deploy
   interruptible: false
+  image: alpine:3.20
   needs:
     - job: build-api
   variables:
     CI_REGISTRY_IMAGE: registry.gitlab.com/cognitive-functors/turbo-cdi
     API_IMAGE_TAG: latest
   before_script:
+    - apk add --no-cache curl
     - chmod +x scripts/ci/verify_release.sh
   script:
-    - bash scripts/ci/verify_release.sh
+    - sh scripts/ci/verify_release.sh
   environment:
     name: production
     url: https://gitlab.com/cognitive-functors/turbo-cdi/container_registry

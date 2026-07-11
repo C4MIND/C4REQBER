@@ -152,21 +152,24 @@ deploy-staging:
     - develop
 
 deploy-production:
-  extends: .mac-colima
+  tags: [shell, deploy]
   stage: deploy
-  image: alpine:latest
+  interruptible: false
+  resource_group: mac-colima-v2
   needs:
     - job: build-api
+  variables:
+    CI_REGISTRY_IMAGE: registry.gitlab.com/cognitive-functors/turbo-cdi
+    API_IMAGE_TAG: latest
   script:
-    - 'echo "Production API image pushed to ${CI_REGISTRY_IMAGE}/api:${CI_COMMIT_SHA}"'
-    - 'echo "Deploy on host: docker pull ${CI_REGISTRY_IMAGE}/api:latest && docker compose -f docker-compose.prod.yml up -d api"'
+    - bash scripts/ci/deploy_production.sh
   environment:
     name: production
     url: https://turbo-cdi.org
+    deployment_tier: production
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
       when: manual
-  allow_failure: true
 
 # ═══════════════════════════════════════════════════════════════
 # TUI v9 — optional path-filtered jobs (advisory)

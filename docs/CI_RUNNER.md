@@ -23,7 +23,7 @@
 
 Professional pattern for one self-hosted runner with limited RAM:
 
-1. **`resource_group: mac-colima`** on all jobs — GitLab semaphore, one job at a time across all pipelines.
+1. **`resource_group: mac-colima-v2`** on all Mac runner jobs — GitLab semaphore, one job at a time across all pipelines.
 2. **`workflow.auto_cancel.on_new_commit: interruptible`** — new push cancels stale pipelines.
 3. **Project `auto_cancel_pending_pipelines=enabled`** — redundant pipelines cancelled.
 4. **Runner `limit = 1`** on `c4reqber MacBook docker` — runner never picks up a second job.
@@ -33,7 +33,7 @@ Professional pattern for one self-hosted runner with limited RAM:
 # One-time project settings (already applied on turbo-cdi):
 glab api --method PUT projects/cognitive-functors%2Fturbo-cdi \
   -f auto_cancel_pending_pipelines=enabled
-glab api --method PUT projects/cognitive-functors%2Fturbo-cdi/resource_groups/mac-colima \
+glab api --method PUT projects/cognitive-functors%2Fturbo-cdi/resource_groups/mac-colima-v2 \
   -f process_mode=oldest_first
 ```
 

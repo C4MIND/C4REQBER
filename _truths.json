@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "generated_at": "2026-07-09T21:44:46Z",
+  "generated_at": "2026-07-11T20:31:45Z",
   "version_backend": "5.6.0",
   "version_tui": "v9.13.0",
   "git_head": "a7c19ee",
@@ -10,7 +10,7 @@
     "tests_collected": 9798
   },
   "go": {
-    "loc_tui_v9": 21147
+    "loc_tui_v9": 21148
   },
   "mcp": {
     "tools": 21

@@ -110,7 +110,8 @@ func TestSplash_View_ContainsTagline(t *testing.T) {
 	v := m.View()
 	content := v.Content
 	// v.Content is wrapped (lipgloss centering may add spaces)
-	if !strings.Contains(content, "COGNITIVE EXOSKELETON") {
+	// Tagline may use middle-dot (·) instead of space during animation polish.
+	if !strings.Contains(content, "COGNITIVE EXOSKELETON") && !strings.Contains(content, "COGNITIVE·EXOSKELETON") {
 		t.Errorf("missing tagline in:\n%s", content)
 	}
 	// v9 polish: version line blinks "." with "·" — accept either form.

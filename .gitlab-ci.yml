@@ -78,7 +78,7 @@ build-api:
   before_script:
     - chmod +x scripts/ci/build_api_image.sh
   script:
-    - bash scripts/ci/build_api_image.sh
+    - sh scripts/ci/build_api_image.sh
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
     - if: $CI_COMMIT_BRANCH == "develop"

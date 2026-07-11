@@ -1,7 +1,7 @@
-#!/usr/bin/env bash
+#!/bin/sh
 # Build and push the c4reqber API image to GitLab Container Registry.
 # Used by .gitlab-ci.yml job build-api (Kaniko executor).
-set -euo pipefail
+set -eu
 
 : "${CI_PROJECT_DIR:?CI_PROJECT_DIR is required}"
 : "${CI_REGISTRY_IMAGE:?CI_REGISTRY_IMAGE is required}"
@@ -19,11 +19,11 @@ echo "    dest:       ${DEST_SHA}"
 echo "    dest:       ${DEST_LATEST}"
 
 if command -v /kaniko/executor >/dev/null 2>&1; then
-  : "${DOCKER_CONFIG:=/kaniko/.docker}"
+  DOCKER_CONFIG="${DOCKER_CONFIG:-/kaniko/.docker}"
   export DOCKER_CONFIG
   mkdir -p "${DOCKER_CONFIG}"
 
-  if [[ -n "${CI_REGISTRY:-}" && -n "${CI_REGISTRY_USER:-}" && -n "${CI_REGISTRY_PASSWORD:-}" ]]; then
+  if [ -n "${CI_REGISTRY:-}" ] && [ -n "${CI_REGISTRY_USER:-}" ] && [ -n "${CI_REGISTRY_PASSWORD:-}" ]; then
     cat > "${DOCKER_CONFIG}/config.json" <<EOF
 {
   "auths": {
@@ -55,7 +55,7 @@ if ! docker info >/dev/null 2>&1; then
   exit 1
 fi
 
-if [[ -n "${CI_REGISTRY:-}" && -n "${CI_REGISTRY_USER:-}" && -n "${CI_REGISTRY_PASSWORD:-}" ]]; then
+if [ -n "${CI_REGISTRY:-}" ] && [ -n "${CI_REGISTRY_USER:-}" ] && [ -n "${CI_REGISTRY_PASSWORD:-}" ]; then
   echo "${CI_REGISTRY_PASSWORD}" | docker login -u "${CI_REGISTRY_USER}" --password-stdin "${CI_REGISTRY}"
 fi
 

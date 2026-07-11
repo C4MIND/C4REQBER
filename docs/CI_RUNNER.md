@@ -45,8 +45,8 @@ glab api --method PUT projects/cognitive-functors%2Fturbo-cdi/resource_groups/ma
 | `test-backend-suite` | test | **yes** | Heavy pytest (verification/discovery/api/knowledge) |
 | `tui-v9-test` | test | no (`allow_failure`) | Go TUI advisory |
 | `build-api` | build | **yes** | Kaniko → registry (`timeout: 3h`, retry ×2) |
+| `deploy-production` | deploy | **yes** | Verify registry image pull + import smoke (end-user release) |
 | `pages` | deploy | no (`needs: []`) | Landing / GitLab Pages |
-| `deploy-production` | deploy | no (`manual`, `allow_failure`) | Prod deploy hint |
 
 ## `build-api` stack
 

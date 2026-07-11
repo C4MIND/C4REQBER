@@ -1,0 +1,31 @@
+# c4reqber — end-user Docker install (API only, SQLite, no VPS/traefik).
+# Prerequisites: Docker, copy .env.example → .env (at least OPENROUTER_API_KEY + JWT_SECRET).
+#
+#   docker login registry.gitlab.com   # if registry is private
+#   docker compose -f docker-compose.release.yml up -d
+#   curl http://localhost:8000/api/v1/health
+
+services:
+  api:
+    image: registry.gitlab.com/cognitive-functors/turbo-cdi/api:${C4REQBER_IMAGE_TAG:-latest}
+    ports:
+      - "${API_PORT:-8000}:8000"
+    env_file:
+      - .env
+    environment:
+      ENV: production
+      DATABASE_URL: ${DATABASE_URL:-sqlite:///app/data/c4reqber.db}
+      CACHE_BACKEND: ${CACHE_BACKEND:-memory}
+      API_RELOAD: "false"
+    volumes:
+      - c4reqber_data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+volumes:
+  c4reqber_data:

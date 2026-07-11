@@ -107,8 +107,8 @@ deploy-production:
   needs:
     - job: build-api
   script:
-    - echo "Production API image pushed to ${CI_REGISTRY_IMAGE}/api:${CI_COMMIT_SHA}"
-    - echo "Deploy on host: docker pull ${CI_REGISTRY_IMAGE}/api:latest && docker compose -f docker-compose.prod.yml up -d api"
+    - 'echo "Production API image pushed to ${CI_REGISTRY_IMAGE}/api:${CI_COMMIT_SHA}"'
+    - 'echo "Deploy on host: docker pull ${CI_REGISTRY_IMAGE}/api:latest && docker compose -f docker-compose.prod.yml up -d api"'
   environment:
     name: production
     url: https://turbo-cdi.org

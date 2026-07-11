@@ -6,17 +6,25 @@ export PATH="/opt/homebrew/bin:/usr/local/bin:${PATH:-}"
 
 install_requirements() {
   local req_file="$1"
-  pip install -r "$req_file" --prefer-binary
+  if command -v uv >/dev/null 2>&1; then
+    uv pip install --system -r "$req_file"
+  else
+    pip install -r "$req_file" --prefer-binary
+  fi
 }
 
 if command -v apt-get >/dev/null 2>&1; then
-  apt-get update && apt-get install -y curl git
-  pip install --upgrade pip
-  install_requirements requirements.txt
+  apt-get update && apt-get install -y curl git build-essential
+  pip install --upgrade pip uv
+  grep -Ev '^(matplotlib|newton-physics|pymc|arviz|numba|sentence-transformers|gensim|dowhy)' requirements.txt \
+    | grep -Ev '^\s*#' | grep -v '^[[:space:]]*$' > /tmp/requirements-ci.txt
+  install_requirements /tmp/requirements-ci.txt
 elif command -v apk >/dev/null 2>&1; then
   apk add --no-cache curl git
-  pip install --upgrade pip
-  install_requirements requirements.txt
+  pip install --upgrade pip uv
+  grep -Ev '^(matplotlib|newton-physics|pymc|arviz|numba|sentence-transformers|gensim|dowhy)' requirements.txt \
+    | grep -Ev '^\s*#' | grep -v '^[[:space:]]*$' > /tmp/requirements-ci.txt
+  install_requirements /tmp/requirements-ci.txt
 else
   # macOS Homebrew Python (PEP 668) — venv with system packages for prebuilt wheels.
   VENV_DIR="${CI_PROJECT_DIR:-.}/.ci-venv"
@@ -30,4 +38,9 @@ else
   install_requirements /tmp/requirements-ci.filtered.txt
 fi
 
-pip install pytest pytest-asyncio pytest-timeout ruff mypy
+pip install uv 2>/dev/null || true
+if command -v uv >/dev/null 2>&1; then
+  uv pip install --system pytest pytest-asyncio pytest-timeout ruff mypy
+else
+  pip install pytest pytest-asyncio pytest-timeout ruff mypy
+fi

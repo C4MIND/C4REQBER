@@ -1,0 +1,29 @@
+# Example GitLab Runner config for c4reqber CI on macOS + Colima.
+# Install: https://docs.gitlab.com/runner/install/osx.html
+# Register with tags: docker,c4reqber
+#
+# NEVER commit real runner tokens. Copy to ~/.gitlab-runner/config.toml locally.
+
+concurrent = 4
+check_interval = 10
+
+[[runners]]
+  name = "c4reqber MacBook docker"
+  url = "https://gitlab.com"
+  token = "REPLACE_WITH_RUNNER_TOKEN"
+  executor = "docker"
+  tag_list = ["docker", "c4reqber"]
+  [runners.docker]
+    # Colima default socket — adjust username/path if needed
+    host = "unix:///Users/YOUR_USER/.colima/default/docker.sock"
+    tls_verify = false
+    image = "python:3.11-slim"
+    privileged = false
+    pull_policy = ["if-not-present"]
+    volumes = ["/cache"]
+    shm_size = 268435456
+
+# Notes:
+# - Do NOT use services: docker:dind in .gitlab-ci.yml when host is set above.
+# - build-api uses Kaniko and does not require host Docker, but other jobs may.
+# - Start Colima before running jobs: colima start

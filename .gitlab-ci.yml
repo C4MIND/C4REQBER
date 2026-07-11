@@ -10,6 +10,9 @@ variables:
   PYTHON_VERSION: "3.11"
   NODE_VERSION: "20"
   DOCKER_DRIVER: overlay2
+  # Kaniko — no DinD; works on macOS Colima runners (privileged=false)
+  KANIKO_IMAGE: "gcr.io/kaniko-project/executor:v1.23.2-debug"
+  API_DOCKERFILE: "Dockerfile.backend"
 
 # ═══════════════════════════════════════════════════════════════
 # TEST JOBS
@@ -64,17 +67,21 @@ tui-v9-test:
 
 build-api:
   stage: build
-  image: docker:24
-  services:
-    - docker:24-dind
+  image:
+    name: ${KANIKO_IMAGE}
+    entrypoint: [""]
+  variables:
+    DOCKER_CONFIG: /kaniko/.docker
+    DOCKERFILE: ${API_DOCKERFILE}
   needs:
-    - test-backend
+    - job: test-backend
+  before_script:
+    - chmod +x scripts/ci/build_api_image.sh
   script:
-    - docker build -t $CI_REGISTRY_IMAGE/api:$CI_COMMIT_SHA .
-    - docker build -t $CI_REGISTRY_IMAGE/api:latest .
-  only:
-    - main
-    - develop
+    - bash scripts/ci/build_api_image.sh
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_COMMIT_BRANCH == "develop"
 
 # ═══════════════════════════════════════════════════════════════
 # DEPLOY JOBS
@@ -98,16 +105,17 @@ deploy-production:
   stage: deploy
   image: alpine:latest
   needs:
-    - build-api
+    - job: build-api
   script:
-    - echo "Deploy to production environment"
-    - echo "docker-compose -f docker-compose.prod.yml up -d"
+    - echo "Production API image pushed to ${CI_REGISTRY_IMAGE}/api:${CI_COMMIT_SHA}"
+    - echo "Deploy on host: docker pull ${CI_REGISTRY_IMAGE}/api:latest && docker compose -f docker-compose.prod.yml up -d api"
   environment:
     name: production
     url: https://turbo-cdi.org
-  only:
-    - main
-  when: manual
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: manual
+  allow_failure: true
 
 # ═══════════════════════════════════════════════════════════════
 # TUI v9 — "The Cockpit" (Go bubbletea v2)

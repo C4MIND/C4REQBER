@@ -26,9 +26,10 @@ services:
 
   # c4-cdi-turbo API Server
   api:
+    image: ${CI_REGISTRY_IMAGE:-registry.gitlab.com/cognitive-functors/turbo-cdi}/api:${API_IMAGE_TAG:-latest}
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.backend
     environment:
       - ENV=production
       - JWT_SECRET=${JWT_SECRET:?JWT_SECRET required}

@@ -14,14 +14,35 @@
 | 6 | `resolution-too-deep` | pip on `pydantic-ai` graph | `uv pip install` in Dockerfile |
 | 7 | MR won't merge | Flaky `tui-v9-test` fails pipeline | `allow_failure: true` + test sleep fix |
 | 8 | Red pipeline, green Pages | Unrelated job failure | `pages` has `needs: []`; TUI advisory only |
+| 9 | pytest **Killed** at ~80% | Two pipelines on one Mac runner (`concurrent=4`) | `resource_group: mac-colima` + runner `limit=1` + auto-cancel |
+| 10 | `bash: not found` in TUI job | `golang:*-alpine` has no bash | Use `golang:1.26` (debian) or POSIX `sh` scripts |
 
 **Critical:** GitLab project **maximum job timeout** overrides per-job `timeout:` when project limit is lower. Verify: Settings → CI/CD → General pipelines → **Timeout** = **3 hours**.
+
+## Concurrency model (single Mac runner)
+
+Professional pattern for one self-hosted runner with limited RAM:
+
+1. **`resource_group: mac-colima`** on all jobs — GitLab semaphore, one job at a time across all pipelines.
+2. **`workflow.auto_cancel.on_new_commit: interruptible`** — new push cancels stale pipelines.
+3. **Project `auto_cancel_pending_pipelines=enabled`** — redundant pipelines cancelled.
+4. **Runner `limit = 1`** on `c4reqber MacBook docker` — runner never picks up a second job.
+5. **Resource group `process_mode=oldest_first`** — FIFO queue (API one-time setup).
+
+```bash
+# One-time project settings (already applied on turbo-cdi):
+glab api --method PUT projects/cognitive-functors%2Fturbo-cdi \
+  -f auto_cancel_pending_pipelines=enabled
+glab api --method PUT projects/cognitive-functors%2Fturbo-cdi/resource_groups/mac-colima \
+  -f process_mode=oldest_first
+```
 
 ## Pipeline overview (`main`)
 
 | Job | Stage | Blocks pipeline? | Purpose |
 |-----|-------|------------------|---------|
-| `test-backend` | test | **yes** | Ruff, checks, pytest |
+| `test-backend-checks` | test | **yes** | Ruff, scripts, fast pytest |
+| `test-backend-suite` | test | **yes** | Heavy pytest (verification/discovery/api/knowledge) |
 | `tui-v9-test` | test | no (`allow_failure`) | Go TUI advisory |
 | `build-api` | build | **yes** | Kaniko → registry (`timeout: 3h`, retry ×2) |
 | `pages` | deploy | no (`needs: []`) | Landing / GitLab Pages |
@@ -30,7 +51,7 @@
 ## `build-api` stack
 
 1. **Kaniko** — no Docker daemon (Mac runner safe)
-2. **`requirements-docker.txt`** — committed, checked in `test-backend` via `check_docker_requirements.sh`
+2. **`requirements-docker.txt`** — committed, checked in `test-backend-checks` via `check_docker_requirements.sh`
 3. **`uv pip install`** — same resolver strategy as `scripts/ci/setup_python.sh`
 4. **`timeout: 3h`** + project `build_timeout=10800` + runner `maximum_timeout=10800`
 

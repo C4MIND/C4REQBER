@@ -1,3 +1,16 @@
+# c4reqber CI — Mac Colima self-hosted runner
+# Concurrency: resource_group serializes jobs across pipelines (prevents OOM).
+# See docs/CI_RUNNER.md for failure-mode matrix.
+
+workflow:
+  auto_cancel:
+    on_new_commit: interruptible
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_COMMIT_BRANCH == "develop"
+    - if: $CI_COMMIT_TAG
+
 stages:
   - test
   - build
@@ -5,12 +18,14 @@ stages:
 
 default:
   tags: [docker, c4reqber]
+  interruptible: true
+  # One job at a time on the Mac Colima runner — prevents cross-pipeline OOM.
+  resource_group: mac-colima
 
 variables:
   PYTHON_VERSION: "3.11"
   NODE_VERSION: "20"
   DOCKER_DRIVER: overlay2
-  # Kaniko — no DinD; works on macOS Colima runners (privileged=false)
   KANIKO_IMAGE: "gcr.io/kaniko-project/executor:v1.23.2-debug"
   API_DOCKERFILE: "Dockerfile.backend"
 
@@ -18,7 +33,7 @@ variables:
 # TEST JOBS
 # ═══════════════════════════════════════════════════════════════
 
-test-backend:
+.test-backend-base:
   stage: test
   image: python:3.11-slim
   cache:
@@ -27,6 +42,15 @@ test-backend:
       - .cache/pip
   before_script:
     - bash scripts/ci/setup_python.sh
+  variables:
+    DATABASE_URL: "sqlite:///tmp/test.db"
+    CACHE_BACKEND: "memory"
+    JWT_SECRET: "ci-fake-jwt-for-pytest-only-not-production"  # pragma: allowlist secret
+    DEV_MODE: "1"
+    PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+
+test-backend-checks:
+  extends: .test-backend-base
   script:
     - ruff check src/ --exclude="archive/" --select=E9,F
     - CI_TRUTHS_SKIP_PYTHON=1 python3 scripts/gen_truths.py --check
@@ -34,13 +58,17 @@ test-backend:
     - python3 scripts/check_i18n_parity.py
     - sh scripts/ci/check_docker_requirements.sh
     - PYTHONPATH=. pytest tests/mcp_server/ tests/utils/ tests/publishing/ tests/patterns/test_topic_router.py -v --tb=short
+
+test-backend-suite:
+  extends: .test-backend-base
+  needs: [test-backend-checks]
+  retry:
+    max: 2
+    when:
+      - script_failure
+      - runner_system_failure
+  script:
     - PYTHONPATH=. pytest tests/verification/ tests/discovery/ tests/api/ tests/knowledge/ -v --tb=short -m "not slow" --timeout=180 --ignore=tests/knowledge/test_data_sources.py --junitxml=report.xml
-  variables:
-    DATABASE_URL: "sqlite:///tmp/test.db"
-    CACHE_BACKEND: "memory"
-    JWT_SECRET: "test-secret-min-32-chars-long"
-    DEV_MODE: "1"
-    PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
   artifacts:
     when: always
     reports:
@@ -85,7 +113,8 @@ build-api:
     DOCKER_CONFIG: /kaniko/.docker
     DOCKERFILE: ${API_DOCKERFILE}
   needs:
-    - job: test-backend
+    - job: test-backend-checks
+    - job: test-backend-suite
   before_script:
     - chmod +x scripts/ci/build_api_image.sh
   script:
@@ -129,17 +158,17 @@ deploy-production:
   allow_failure: true
 
 # ═══════════════════════════════════════════════════════════════
-# TUI v9 — "The Cockpit" (Go bubbletea v2)
+# TUI v9 — optional path-filtered jobs (advisory)
 # ═══════════════════════════════════════════════════════════════
 
 tui-v9:test:
   stage: test
-  image: golang:1.23-alpine
+  image: golang:1.26
   allow_failure: true
   before_script:
-    - bash scripts/ci/setup_go.sh
-  script:
     - cd src/tui/v9
+    - go mod download
+  script:
     - go test ./... -count=1 -race -skip 'Golden'
   rules:
     - changes:
@@ -147,11 +176,12 @@ tui-v9:test:
 
 tui-v9:build:
   stage: build
-  image: golang:1.23-alpine
+  image: golang:1.26
+  allow_failure: true
   before_script:
-    - bash scripts/ci/setup_go.sh
-  script:
     - cd src/tui/v9
+    - go mod download
+  script:
     - go build -ldflags="-s -w" -o ../../bin/c4tui-v9-${CI_COMMIT_REF_SLUG} ./cmd/c4tui-v9
     - go build -ldflags="-s -w" -o ../../bin/c4tui-v9 ./cmd/c4tui-v9
   artifacts:
@@ -161,7 +191,8 @@ tui-v9:build:
       - bin/c4tui-v9-${CI_COMMIT_REF_SLUG}
     expire_in: 30 days
   needs:
-    - tui-v9:test
+    - job: tui-v9:test
+      optional: true
   rules:
     - changes:
         - src/tui/v9/**/*
@@ -172,11 +203,11 @@ tui-v9:build:
 
 tui-v9:release:
   stage: deploy
-  image: golang:1.23-alpine
+  image: golang:1.26
   before_script:
-    - bash scripts/ci/setup_go.sh
-  script:
     - cd src/tui/v9
+    - go mod download
+  script:
     - go build -ldflags="-s -w" -o /tmp/c4tui-v9-${CI_COMMIT_REF_NAME}-linux-amd64 ./cmd/c4tui-v9
     - GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w" -o /tmp/c4tui-v9-${CI_COMMIT_REF_NAME}-darwin-arm64 ./cmd/c4tui-v9
     - GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o /tmp/c4tui-v9-${CI_COMMIT_REF_NAME}-windows-amd64.exe ./cmd/c4tui-v9
@@ -214,7 +245,6 @@ pages:
   script:
     - mkdir -p public
     - cp -r landing/. public/
-    # Sync repo-root discoveries into Pages (served alongside landing copies)
     - mkdir -p public/repo-discoveries
     - cp -r discoveries/humanity_mission_2026-07-09/. public/repo-discoveries/ 2>/dev/null || true
   artifacts:
@@ -227,14 +257,6 @@ pages:
 # ═══════════════════════════════════════════════════════════════
 # PyPI PUBLISH (GitLab-native)
 # ═══════════════════════════════════════════════════════════════
-# Owner action: add CI/CD variables in GitLab UI (Settings → CI/CD → Variables):
-#   - PYPI_API_TOKEN       (Protected, Masked) — production PyPI token
-#   - TEST_PYPI_API_TOKEN  (Protected, Masked) — TestPyPI token
-# Before tagging the first release. Audit 2026-06-22 H-1 (full resolution).
-#
-# - workflow_dispatch with PYPI_REPO=testpypi → TestPyPI dry-run
-# - Tag push v*.*.* → production PyPI
-# - Both require the matching CI variable to be present
 
 pypi-publish-test:
   stage: deploy
@@ -253,7 +275,9 @@ pypi-publish-test:
     - if: $CI_PIPELINE_SOURCE == "web"
       when: manual
       allow_failure: true
-  needs: ["test-backend"]
+  needs:
+    - test-backend-checks
+    - test-backend-suite
   artifacts:
     paths:
       - dist/
@@ -273,7 +297,9 @@ pypi-publish-prod:
     TWINE_PASSWORD: $PYPI_API_TOKEN
   rules:
     - if: $CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/
-  needs: ["test-backend"]
+  needs:
+    - test-backend-checks
+    - test-backend-suite
   artifacts:
     paths:
       - dist/

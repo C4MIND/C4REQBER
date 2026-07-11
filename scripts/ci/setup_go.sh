@@ -1,6 +1,6 @@
-#!/usr/bin/env bash
-# CI Go deps — works on Docker Alpine and macOS shell runners.
-set -euo pipefail
+#!/bin/sh
+# CI Go deps — POSIX sh (Alpine golang images have no bash).
+set -eu
 
 export PATH="/opt/homebrew/bin:/usr/local/bin:${PATH:-}"
 

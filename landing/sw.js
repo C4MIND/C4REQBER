@@ -1,4 +1,4 @@
-const CACHE_NAME = 'c4reqber-v8';
+const CACHE_NAME = 'c4reqber-v20';
 const CORE_ASSETS = [
   './',
   './index.html',

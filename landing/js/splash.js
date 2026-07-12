@@ -4,9 +4,11 @@
 (function () {
   const SEEN_KEY = "c4r_splash_seen";
   const VERSION = "v5.6.0";
+  const ART_H = 42;
   const effects = () => window.C4SplashEffects;
   const BLOOM_FRAMES = () => effects().BLOOM_FRAMES;
   const PULSE_MS = () => effects().PULSE_MS;
+  const SCANLINE_MS = 525;
 
   function hasSeenBefore() {
     try {
@@ -25,6 +27,10 @@
   function shouldShow() {
     const path = window.location.pathname.replace(/\/$/, "") || "/";
     return path === "" || path === "/" || path === "/index.html";
+  }
+
+  function clearSplashPending() {
+    document.documentElement.classList.remove("splash-pending");
   }
 
   function t(key, fallback) {
@@ -70,11 +76,11 @@
 
     let motto = "";
     if (phase !== "crystal") {
-      const d = phaseElapsed > 0 ? "Discover.  " : "";
-      const inv = phaseElapsed > 0.6 ? "Invent.  " : "";
-      const sh = phaseElapsed > 1.2 ? "Shift" : "";
+      const d = phaseElapsed > 0 ? t("splash_motto_discover", "Discover.") + "  " : "";
+      const inv = phaseElapsed > 0.6 ? t("splash_motto_invent", "Invent.") + "  " : "";
+      const sh = phaseElapsed > 1.2 ? t("splash_motto_shift", "Shift") : "";
       const sp = phaseElapsed > 1.2 ? " " : "";
-      const par = phaseElapsed > 1.2 ? "paradigms." : "";
+      const par = phaseElapsed > 1.2 ? t("splash_motto_paradigms", "paradigms.") : "";
       motto = { d, inv, sh, sp, par };
     }
 
@@ -112,28 +118,39 @@
   }
 
   function init() {
-    if (!shouldShow() || !window.C4_SPLASH_ART || !window.C4SplashEngine || !window.C4SplashEffects) return;
+    if (!shouldShow() || !window.C4_SPLASH_ART || !window.C4SplashEngine || !window.C4SplashEffects) {
+      clearSplashPending();
+      return;
+    }
 
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const returning = hasSeenBefore();
 
     const overlay = document.createElement("div");
     overlay.id = "splash-overlay";
+    overlay.className = "splash-phase-crystal splash-crystal-hold";
     overlay.setAttribute("role", "dialog");
     overlay.setAttribute("aria-modal", "true");
     overlay.setAttribute("aria-label", "c4reqber splash");
     overlay.innerHTML = `
       <canvas id="splash-canvas" aria-hidden="true"></canvas>
-      <div class="splash-stage">
-        <pre id="splash-art" aria-hidden="true"></pre>
+      <div class="splash-column" id="splash-column">
+        <div class="splash-stage">
+          <pre id="splash-art" aria-hidden="true"></pre>
+        </div>
+        <div class="splash-text" id="splash-text"></div>
       </div>
-      <div class="splash-text" id="splash-text"></div>
+      <div class="splash-crystal-hud" id="splash-crystal-hud" aria-hidden="true"></div>
       <button type="button" class="splash-skip" id="splash-skip" data-i18n="splash_skip">Skip →</button>
     `;
     document.body.appendChild(overlay);
     document.body.classList.add("splash-active");
+    clearSplashPending();
 
     const artEl = overlay.querySelector("#splash-art");
     const textEl = overlay.querySelector("#splash-text");
+    const columnEl = overlay.querySelector("#splash-column");
+    const crystalHud = overlay.querySelector("#splash-crystal-hud");
     const skipBtn = overlay.querySelector("#splash-skip");
     const canvas = overlay.querySelector("#splash-canvas");
     const ctx = canvas.getContext("2d");
@@ -145,13 +162,72 @@
     let bloomFrameIdx = 0;
     let shockProgress = 0;
     let scanY = 0;
+    let lastScanAt = 0;
     let done = false;
     let engine = null;
     let aurora = null;
     let readyToLaunch = false;
     let rafId = 0;
     let c4rStartRow = 9999;
-    let fitPending = false;
+    let baseArtScale = 0;
+    let compactAnim = 1;
+    const ART_VIEWPORT_H = 0.68;
+    const ART_COMPACT_MUL = 0.86;
+
+    function artCompactMul() {
+      return phase === "crystal" ? 1 : compactAnim;
+    }
+
+    function animateCompactScale() {
+      if (phase === "crystal") {
+        compactAnim = 1;
+        fitArt();
+        return;
+      }
+      const start = performance.now();
+      const from = 1;
+      const to = ART_COMPACT_MUL;
+      const dur = 750;
+      function step(now) {
+        const t = Math.min(1, (now - start) / dur);
+        const eased = 1 - (1 - t) ** 3;
+        compactAnim = from + (to - from) * eased;
+        fitArt();
+        if (t < 1) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    }
+
+    function isCrystalHold() {
+      return phase === "crystal" && performance.now() - crystalStart < (window.C4_SPLASH_CRYSTAL_HOLD_MS || 3000);
+    }
+
+    function setPhaseClass(p) {
+      overlay.classList.remove("splash-phase-crystal", "splash-phase-dissolve", "splash-phase-waiting", "splash-crystal-hold");
+      overlay.classList.add(`splash-phase-${p}`);
+      if (p === "crystal" && isCrystalHold()) overlay.classList.add("splash-crystal-hold");
+    }
+
+    function updateCrystalHud(now) {
+      if (phase !== "crystal") {
+        crystalHud.innerHTML = "";
+        crystalHud.setAttribute("aria-hidden", "true");
+        return;
+      }
+      overlay.classList.toggle("splash-crystal-hold", isCrystalHold());
+      const crystalElapsed = (now - crystalStart) / 1000;
+      const holdSec = (window.C4_SPLASH_CRYSTAL_HOLD_MS || 3000) / 1000;
+      const sepBlink = Math.sin(crystalElapsed * ((2 * Math.PI) / 3.3)) > 0.5 ? "·" : " ";
+      let status = "";
+      if (isCrystalHold()) {
+        status = `${t("splash_status_boot", "booting")} ${holdSec.toFixed(0)}s ${sepBlink} ${t("splash_status_skip_hint", "click to skip to final")}`;
+      } else {
+        const prog = bootingProgress(crystalElapsed / (window.C4_SPLASH_CRYSTAL_MS / 1000));
+        status = `${t("splash_status_awakening", "◆ awakening cube state ◆")} ${sepBlink} ${prog}`;
+      }
+      crystalHud.innerHTML = `<p class="splash-crystal-hud-line">${effects().esc(status)}</p>`;
+      crystalHud.setAttribute("aria-hidden", "false");
+    }
 
     function isLaunchReady() {
       return phase === "waiting" && bloomFrameIdx >= BLOOM_FRAMES() && readyToLaunch;
@@ -171,25 +247,45 @@
       }
     }
 
+    function anchorCenterX() {
+      const el = columnEl || textEl;
+      const r = el.getBoundingClientRect();
+      return r.left + r.width / 2;
+    }
+
+    function artVisualCenterX() {
+      const spans = artEl.querySelectorAll("span");
+      let minX = Infinity;
+      let maxX = -Infinity;
+      let found = false;
+      spans.forEach((el) => {
+        const r = el.getBoundingClientRect();
+        if (r.width <= 0) return;
+        found = true;
+        minX = Math.min(minX, r.left);
+        maxX = Math.max(maxX, r.right);
+      });
+      if (!found) {
+        const r = artEl.getBoundingClientRect();
+        return r.left + r.width / 2;
+      }
+      return (minX + maxX) / 2;
+    }
+
     function fitArt() {
-      fitPending = false;
       artEl.style.transform = "";
       const rect = artEl.getBoundingClientRect();
       if (!rect.width || !rect.height) return;
-      const maxW = window.innerWidth * 0.96;
-      const maxH = window.innerHeight * 0.55;
-      const scale = Math.min(maxW / rect.width, maxH / rect.height, 2.5);
-      if (scale < 0.98 || scale > 1.02) {
-        artEl.style.transform = `scale(${scale})`;
-      }
-    }
-
-    function scheduleFitArt() {
-      if (fitPending) return;
-      fitPending = true;
-      requestAnimationFrame(() => {
-        requestAnimationFrame(fitArt);
-      });
+      const maxW = (columnEl ? columnEl.clientWidth : window.innerWidth * 0.94) * 0.98;
+      const maxH = window.innerHeight * ART_VIEWPORT_H;
+      const raw = Math.min(maxW / rect.width, maxH / rect.height, 2.4);
+      if (!baseArtScale) baseArtScale = raw;
+      const s = Math.min(baseArtScale * artCompactMul(), 2.4);
+      artEl.style.transform = `translateX(0px) scale(${s})`;
+      void artEl.offsetWidth;
+      const dx = anchorCenterX() - artVisualCenterX();
+      artEl.style.transform = `translateX(${dx.toFixed(2)}px) scale(${s})`;
+      artEl.classList.add("splash-art-fitted");
     }
 
     function paintCanvas(now) {
@@ -200,8 +296,13 @@
 
       if (phase === "crystal") {
         fx.drawStars(ctx, w, h, elapsed, 120);
-        scanY = (scanY + 1) % Math.max(h, 1);
-        fx.drawScanline(ctx, w, h, scanY);
+        const holding = isCrystalHold();
+        fx.drawCrystalGlow(ctx, w, h, elapsed, holding);
+        if (!holding && now - lastScanAt >= SCANLINE_MS) {
+          scanY = (scanY + 1) % Math.max(h, 1);
+          lastScanAt = now;
+        }
+        if (!holding) fx.drawScanline(ctx, w, h, scanY);
       } else {
         ctx.fillStyle = "#0F1117";
         ctx.fillRect(0, 0, w, h);
@@ -225,36 +326,14 @@
       if (!done) rafId = requestAnimationFrame(paintCanvas);
     }
 
-    function useAuroraHtml() {
-      return phase === "waiting" && bloomFrameIdx >= BLOOM_FRAMES();
-    }
-
-    function colorizeLineHtml(line, rowIdx, phaseColor) {
-      const esc = effects().esc;
-      if (phase === "crystal") {
-        return `<span class="splash-ch-crystal" style="color:${phaseColor}">${esc(line)}</span>`;
-      }
-      if (phase === "dissolve") {
-        return `<span class="splash-ch-dissolve" style="color:${phaseColor}">${esc(line)}</span>`;
-      }
-      if (useAuroraHtml() && aurora) {
-        return aurora.renderLine(line, rowIdx);
-      }
-      if (line.includes("111")) {
-        return `<span class="splash-ch-c4r">${esc(line)}</span>`;
-      }
-      if (line.trim()) {
-        return `<span class="splash-ch-cube">${esc(line)}</span>`;
-      }
-      return esc(line);
-    }
-
     function renderArt(lines) {
       let src = lines || (engine ? engine.artLines() : null);
       if (!src || !src.length) {
-        const seed = (window.C4_SPLASH_ART.crystalSeed || "").replace(/\n$/, "").split("\n");
-        if (!seed.length) return;
-        src = seed;
+        if (window.C4_SPLASH_FINAL) {
+          src = window.C4_SPLASH_FINAL(ART_H);
+        } else {
+          return;
+        }
       }
 
       c4rStartRow = effects().findC4RStart(src);
@@ -264,22 +343,30 @@
 
       let display = src;
       if (phase === "waiting" && bloomFrameIdx < BLOOM_FRAMES()) {
-        display = effects().bloomFrame(src, bloomFrameIdx, BLOOM_FRAMES());
+        const cells = engine && engine.c4rCells ? engine.c4rCells : [];
+        const baseRevealed = engine && engine.c4rAssemblyComplete ? cells.length : 0;
+        display = effects().bloomFrame(src, bloomFrameIdx, BLOOM_FRAMES(), c4rStartRow, cells, {
+          baseRevealed,
+        });
       }
 
       const phaseColor = engine ? engine.colorForPhase() : "#8b7cf8";
-      artEl.style.setProperty("--splash-phase-color", phaseColor);
-
-      if (useAuroraHtml()) {
-        artEl.className = "splash-art-waiting";
-        artEl.innerHTML = display.map((l, i) => colorizeLineHtml(l, i, phaseColor)).join("<br>");
-      } else {
-        artEl.textContent = display.join("\n");
-        artEl.className = phase === "crystal" ? "splash-art-crystal" : phase === "dissolve" ? "splash-art-dissolve" : "splash-art-waiting";
-        artEl.style.color = phaseColor;
+      const useAurora = phase === "waiting" && bloomFrameIdx >= BLOOM_FRAMES();
+      const crystalHold = isCrystalHold();
+      if (useAurora) {
+        aurora.tick((performance.now() - crystalStart) / 1000);
       }
 
-      scheduleFitArt();
+      artEl.innerHTML = effects().renderColoredLines(display, {
+        phase,
+        phaseColor,
+        c4rStartRow,
+        aurora,
+        useAurora,
+        crystalHold,
+      });
+
+      requestAnimationFrame(() => requestAnimationFrame(fitArt));
     }
 
     function renderText(now) {
@@ -299,15 +386,25 @@
         <p class="splash-line splash-easter">${effects().esc(tx.easter)}</p>
       `;
       updateActionButton();
+      updateCrystalHud(now);
+      requestAnimationFrame(() => requestAnimationFrame(fitArt));
     }
 
     function onPhase(p) {
       phase = p;
       phaseStart = performance.now();
+      setPhaseClass(p);
       if (p === "waiting") {
         bloomFrameIdx = 0;
         readyToLaunch = false;
         shockProgress = 0.05;
+      }
+      if (p === "dissolve" || p === "waiting") {
+        artEl.classList.add("splash-art-compact");
+        animateCompactScale();
+      } else {
+        artEl.classList.remove("splash-art-compact");
+        compactAnim = 1;
       }
       renderArt();
       renderText(performance.now());
@@ -324,7 +421,6 @@
             readyToLaunch = true;
             shockProgress = 0.12;
           }
-          if (aurora) aurora.tick((now - crystalStart) / 1000);
           renderArt();
         }
       }
@@ -349,6 +445,27 @@
       document.removeEventListener("keydown", onKey);
     }
 
+    function showFinalState() {
+      engine = new window.C4SplashEngine({
+        artHeight: ART_H,
+        onFrame: () => renderArt(),
+        onPhase: (p) => onPhase(p),
+      });
+      engine._prepareForms();
+      engine.phase = "waiting";
+      engine.morphLines = [...engine.finalForm];
+      phase = "waiting";
+      bloomFrameIdx = BLOOM_FRAMES();
+      readyToLaunch = true;
+      shockProgress = 0.12;
+      phaseStart = performance.now() - 3000;
+      setPhaseClass("waiting");
+      artEl.classList.add("splash-art-compact");
+      compactAnim = ART_COMPACT_MUL;
+      renderArt(engine.finalForm);
+      renderText(performance.now());
+    }
+
     function jumpToFinal() {
       if (!engine) return;
       engine.jumpToFinal();
@@ -356,7 +473,6 @@
       readyToLaunch = true;
       shockProgress = 0.15;
       phaseStart = performance.now() - 2500;
-      if (aurora) aurora.tick((performance.now() - crystalStart) / 1000);
       renderArt();
       renderText(performance.now());
     }
@@ -379,9 +495,10 @@
     }
 
     function resize() {
+      baseArtScale = 0;
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
-      scheduleFitArt();
+      fitArt();
     }
 
     skipBtn.addEventListener("click", (e) => {
@@ -399,35 +516,40 @@
     rafId = requestAnimationFrame(paintCanvas);
 
     timers.push(setInterval(onPulse, PULSE_MS()));
-    timers.push(setInterval(() => renderText(performance.now()), 50));
+    timers.push(setInterval(() => {
+      const now = performance.now();
+      renderText(now);
+      updateCrystalHud(now);
+    }, 50));
 
     if (reduced) {
-      const finalLines = window.C4_SPLASH_FINAL(40);
-      c4rStartRow = effects().findC4RStart(finalLines);
-      aurora = new (effects().BioAurora)(c4rStartRow);
-      bloomFrameIdx = BLOOM_FRAMES();
-      phase = "waiting";
-      phaseStart = performance.now() - 2500;
-      readyToLaunch = true;
-      renderArt(finalLines);
-      renderText(performance.now());
+      showFinalState();
       if (typeof applyLanguage === "function") applyLanguage(window.c4rCurrentLang || "en");
+      updateActionButton();
+      return;
+    }
+
+    if (returning) {
+      showFinalState();
+      if (typeof applyLanguage === "function") applyLanguage(window.c4rCurrentLang || "en");
+      updateActionButton();
       return;
     }
 
     engine = new window.C4SplashEngine({
-      artHeight: 40,
+      artHeight: ART_H,
       onFrame: () => renderArt(),
       onPhase: (p) => onPhase(p),
     });
     crystalStart = performance.now();
     engine.start();
     phase = engine.phase;
+    setPhaseClass(phase);
+    renderArt();
     renderText(performance.now());
 
-    if (hasSeenBefore()) jumpToFinal();
-
     if (typeof applyLanguage === "function") applyLanguage(window.c4rCurrentLang || "en");
+    updateActionButton();
   }
 
   if (document.readyState === "loading") {

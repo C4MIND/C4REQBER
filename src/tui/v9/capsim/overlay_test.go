@@ -4,6 +4,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/figuramax/c4reqber-tui-v9/i18n"
 )
 
 func TestRenderOverlayFallback(t *testing.T) {
@@ -37,6 +39,8 @@ func TestRenderOverlayWithData(t *testing.T) {
 }
 
 func TestShortSummary(t *testing.T) {
+	defer i18n.SetLang(i18n.LangEN)
+	i18n.SetLang(i18n.LangEN)
 	r := &Report{
 		Engines: []Engine{
 			{Status: StatusAvailable},

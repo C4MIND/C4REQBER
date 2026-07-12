@@ -1,12 +1,13 @@
 /**
- * c4reqber web splash — TUI v9 port (crystal → dissolve → waiting + bottom captions).
+ * c4reqber web splash — full TUI v9 port with bio-aurora, bloom, Enter to launch.
  */
 (function () {
   const SEEN_KEY = "c4r_splash_seen";
   const VERSION = "v5.6.0";
-  const BLOOM_FRAMES = 12;
-  const PULSE_MS = 600;
   const TEXT_MS = 50;
+  const FX = () => window.C4SplashEffects;
+  const BLOOM_FRAMES = () => FX().BLOOM_FRAMES;
+  const PULSE_MS = () => FX().PULSE_MS;
 
   function hasSeenBefore() {
     try {
@@ -50,45 +51,7 @@
     return bar + "]";
   }
 
-  function bloomFrame(artLines, frame, total) {
-    if (total <= 0 || frame >= total) return artLines;
-    const t = 1 - Math.pow(1 - frame / total, 3);
-    const fringe = ["░", "▒", "░", "░", "▒"];
-    const centerLine = Math.floor(artLines.length / 2);
-    return artLines.map((line, i) => {
-      const plain = [...line];
-      const plainLen = plain.length;
-      if (!plainLen) return line;
-      const center = Math.floor(plainLen / 2);
-      const dist = Math.abs(i - centerLine);
-      const revealLines = Math.floor(t * (artLines.length + 1));
-      if (dist > revealLines) return " ".repeat(plainLen);
-      let maxR = Math.floor(t * (plainLen + 1));
-      if (frame > total - 3) maxR += 2;
-      return plain
-        .map((ch, j) => {
-          const dc = Math.abs(j - center);
-          if (dc <= maxR) return ch;
-          if (dc <= maxR + 3 && (j + i + frame) % 4 !== 0) return fringe[(j + i + frame) % fringe.length];
-          return " ";
-        })
-        .join("");
-    });
-  }
-
-  function colorizeLine(line, phase) {
-    if (phase === "crystal") return `<span class="splash-ch-crystal">${esc(line)}</span>`;
-    const isC4R = line.includes("111");
-    if (isC4R) return `<span class="splash-ch-c4r">${esc(line)}</span>`;
-    if (line.trim()) return `<span class="splash-ch-cube">${esc(line)}</span>`;
-    return esc(line);
-  }
-
-  function esc(s) {
-    return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  }
-
-  function buildTextLines(phase, phaseStart, crystalStart, now) {
+  function buildTextLines(phase, phaseStart, crystalStart, now, readyToLaunch) {
     const sub1 = t("splash_subtitle_1", "Creative & Destructive Insights");
     const sub2 = t("splash_subtitle_2", "At Your Fingertips");
     const fullSub = `${sub1}  ·  ${sub2}`;
@@ -96,14 +59,12 @@
     const crystalElapsed = (now - crystalStart) / 1000;
 
     let subtitle = "";
-    if (phase === "crystal") subtitle = "";
-    else {
+    if (phase !== "crystal") {
       const cut = Math.floor(phaseElapsed / 0.003);
       subtitle = cut < fullSub.length ? fullSub.slice(0, cut) : fullSub;
     }
 
-    const showTagline =
-      phase === "waiting" || (phase === "dissolve" && phaseElapsed > 0.25);
+    const showTagline = phase === "waiting" || (phase === "dissolve" && phaseElapsed > 0.25);
     const tagline = showTagline
       ? t("splash_tagline_caps", "COGNITIVE EXOSKELETON FOR AI-AGENTS AND HUMANS")
       : "";
@@ -118,8 +79,7 @@
       motto = { d, inv, sh, sp, par };
     }
 
-    const showVersion =
-      phase === "waiting" || (phase === "dissolve" && phaseElapsed > 0.5);
+    const showVersion = phase === "waiting" || (phase === "dissolve" && phaseElapsed > 0.5);
     let version = "";
     if (showVersion) {
       version = `C4REQBER ${VERSION}`;
@@ -134,7 +94,9 @@
     } else if (phase === "dissolve") {
       status = `${t("splash_status_awakening", "◆ awakening cube state ◆")} ${sepBlink} ${t("splash_status_skip_hint", "click to skip to final")}`;
     } else if (phase === "waiting") {
-      status = `${t("splash_status_ready", "✨ ready")} ${sepBlink} ${t("splash_status_launch", "press any key to launch")}`;
+      status = readyToLaunch
+        ? t("splash_status_launch", "press Enter to launch")
+        : `${t("splash_status_ready", "✨ ready")} ${sepBlink} …`;
     }
 
     let footerSuffix = "Z";
@@ -150,9 +112,10 @@
     return { subtitle, tagline, motto, version, status, footer, easter };
   }
 
-  function dismiss(overlay, engine, timers) {
+  function dismiss(overlay, engine, timers, rafId) {
     if (engine) engine.stop();
     timers.forEach(clearInterval);
+    if (rafId) cancelAnimationFrame(rafId);
     overlay.classList.add("splash-out");
     document.body.classList.remove("splash-active");
     markSeen();
@@ -160,7 +123,7 @@
   }
 
   function init() {
-    if (!shouldShow() || !window.C4_SPLASH_ART || !window.C4SplashEngine) return;
+    if (!shouldShow() || !window.C4_SPLASH_ART || !window.C4SplashEngine || !window.C4SplashEffects) return;
 
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -191,122 +154,245 @@
     let phaseStart = performance.now();
     let crystalStart = phaseStart;
     let bloomFrameIdx = 0;
+    let shockProgress = 0;
+    let scanY = 0;
     let done = false;
     let engine = null;
+    let aurora = null;
+    let readyToLaunch = false;
+    let rafId = 0;
+    let c4rStartRow = 9999;
+    let auroraLoopRunning = false;
+    let bloomPulseId = null;
+    let cachedLines = null;
 
-    function resize() {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-      const w = artEl.scrollWidth;
-      const vw = window.innerWidth * 0.96;
-      if (w > vw && w > 0) {
-        const s = vw / w;
-        artEl.style.transform = `scale(${s})`;
+    function isLaunchReady() {
+      return phase === "waiting" && bloomFrameIdx >= BLOOM_FRAMES() && readyToLaunch;
+    }
+
+    function updateActionButton() {
+      if (isLaunchReady()) {
+        skipBtn.textContent = t("splash_enter", "Enter ↵");
+        skipBtn.classList.add("splash-enter-ready");
+        skipBtn.setAttribute("aria-label", t("splash_enter", "Enter"));
+        overlay.classList.add("splash-await-enter");
       } else {
-        artEl.style.transform = "";
+        skipBtn.textContent = t("splash_skip", "Skip →");
+        skipBtn.classList.remove("splash-enter-ready");
+        skipBtn.setAttribute("aria-label", t("splash_skip", "Skip"));
+        overlay.classList.remove("splash-await-enter");
       }
     }
 
-    function aurora(now) {
+    function fitArt() {
+      artEl.style.transform = "";
+      const naturalW = artEl.scrollWidth;
+      const naturalH = artEl.scrollHeight;
+      if (!naturalW || !naturalH) return;
+      const maxW = window.innerWidth * 0.98;
+      const maxH = window.innerHeight * 0.58;
+      const scale = Math.min(maxW / naturalW, maxH / naturalH, 2.2);
+      if (Math.abs(scale - 1) > 0.02) {
+        artEl.style.transform = `scale(${scale})`;
+      }
+    }
+
+    function paintCanvas(now) {
       const t = (now - crystalStart) / 1000;
       const w = canvas.width;
       const h = canvas.height;
-      ctx.fillStyle = "#0F1117";
-      ctx.fillRect(0, 0, w, h);
-      if (phase === "waiting" && bloomFrameIdx >= BLOOM_FRAMES) {
-        const g = ctx.createRadialGradient(w * 0.5, h * 0.35, 0, w * 0.5, h * 0.35, w * 0.7);
-        g.addColorStop(0, `rgba(74,222,128,${0.06 + 0.03 * Math.sin(t * 0.7)})`);
-        g.addColorStop(0.45, `rgba(95,175,255,${0.04 + 0.02 * Math.cos(t)})`);
-        g.addColorStop(1, `rgba(15,17,23,0)`);
-        ctx.fillStyle = g;
+      const fx = FX();
+
+      if (phase === "crystal") {
+        fx.drawStars(ctx, w, h, t, 120);
+        scanY = (scanY + 1) % Math.max(h, 1);
+        fx.drawScanline(ctx, w, h, scanY);
+      } else {
+        ctx.fillStyle = "#0F1117";
         ctx.fillRect(0, 0, w, h);
+        if (phase === "dissolve") {
+          const g = ctx.createRadialGradient(w * 0.5, h * 0.34, 0, w * 0.5, h * 0.34, w * 0.65);
+          g.addColorStop(0, `rgba(95,95,255,${0.04 + 0.02 * Math.sin(t * 1.1)})`);
+          g.addColorStop(1, "rgba(15,17,23,0)");
+          ctx.fillStyle = g;
+          ctx.fillRect(0, 0, w, h);
+        }
       }
-      if (!done) requestAnimationFrame(aurora);
+
+      if (phase === "waiting") {
+        if (bloomFrameIdx >= BLOOM_FRAMES()) {
+          fx.drawAuroraGlow(ctx, w, h, t);
+        }
+        if (shockProgress > 0 && shockProgress < 1) {
+          fx.drawShockwave(ctx, w, h, shockProgress);
+          shockProgress += 0.018;
+        }
+      }
+
+      if (!done) rafId = requestAnimationFrame(paintCanvas);
     }
-    requestAnimationFrame(aurora);
-    window.addEventListener("resize", resize);
+
+    function colorizeLine(line, rowIdx, phaseColor) {
+      const esc = FX().esc;
+      if (phase === "crystal") {
+        return `<span class="splash-ch-crystal" style="color:${phaseColor}">${esc(line)}</span>`;
+      }
+      if (phase === "dissolve") {
+        return `<span class="splash-ch-dissolve" style="color:${phaseColor}">${esc(line)}</span>`;
+      }
+      if (phase === "waiting" && bloomFrameIdx >= BLOOM_FRAMES() && aurora) {
+        return aurora.renderLine(line, rowIdx);
+      }
+      if (line.includes("111")) {
+        return `<span class="splash-ch-c4r">${esc(line)}</span>`;
+      }
+      if (line.trim()) {
+        return `<span class="splash-ch-cube">${esc(line)}</span>`;
+      }
+      return esc(line);
+    }
 
     function renderArt(lines) {
-      const display =
-        phase === "waiting" && bloomFrameIdx < BLOOM_FRAMES
-          ? bloomFrame(lines, bloomFrameIdx, BLOOM_FRAMES)
-          : lines;
-      artEl.innerHTML = display.map((l) => colorizeLine(l, phase)).join("\n");
-      artEl.style.setProperty("--splash-phase-color", engine ? engine.colorForPhase() : "#5f5fff");
-      requestAnimationFrame(resize);
+      const src = lines || (engine ? engine.artLines() : cachedLines);
+      if (!src || !src.length) return;
+      c4rStartRow = FX().findC4RStart(src);
+      if (!aurora || aurora.c4rStartRow !== c4rStartRow) {
+        aurora = new FX().BioAurora(c4rStartRow);
+      }
+
+      let display = src;
+      if (phase === "waiting" && bloomFrameIdx < BLOOM_FRAMES()) {
+        display = FX().bloomFrame(src, bloomFrameIdx, BLOOM_FRAMES());
+      }
+
+      const phaseColor = engine ? engine.colorForPhase() : "#4ade80";
+      artEl.innerHTML = display.map((l, i) => colorizeLine(l, i, phaseColor)).join("\n");
+      artEl.style.setProperty("--splash-phase-color", phaseColor);
+      requestAnimationFrame(fitArt);
     }
 
     function renderText(now) {
-      const tx = buildTextLines(phase, phaseStart, crystalStart, now);
+      const tx = buildTextLines(phase, phaseStart, crystalStart, now, isLaunchReady());
       let mottoHtml = "";
       if (tx.motto && typeof tx.motto === "object") {
-        mottoHtml = `<span class="splash-motto-muted">${esc(tx.motto.d)}</span><span class="splash-motto-accent">${esc(tx.motto.inv)}</span><span class="splash-motto-shift">${esc(tx.motto.sh)}</span><span class="splash-motto-muted">${esc(tx.motto.sp)}</span><span class="splash-motto-paradigm">${esc(tx.motto.par)}</span>`;
+        mottoHtml = `<span class="splash-motto-muted">${FX().esc(tx.motto.d)}</span><span class="splash-motto-accent">${FX().esc(tx.motto.inv)}</span><span class="splash-motto-shift">${FX().esc(tx.motto.sh)}</span><span class="splash-motto-muted">${FX().esc(tx.motto.sp)}</span><span class="splash-motto-paradigm">${FX().esc(tx.motto.par)}</span>`;
       }
       textEl.innerHTML = `
-        <p class="splash-line splash-subtitle">${esc(tx.subtitle)}</p>
-        <p class="splash-line splash-tagline-caps">${esc(tx.tagline)}</p>
+        <p class="splash-line splash-subtitle">${FX().esc(tx.subtitle)}</p>
+        <p class="splash-line splash-tagline-caps">${FX().esc(tx.tagline)}</p>
         <p class="splash-line splash-motto">${mottoHtml}</p>
-        <p class="splash-line splash-version">${esc(tx.version)}</p>
+        <p class="splash-line splash-version">${FX().esc(tx.version)}</p>
         <p class="splash-line splash-spacer"></p>
-        <p class="splash-line splash-status">${esc(tx.status)}</p>
-        <p class="splash-line splash-footer">${esc(tx.footer)}</p>
-        <p class="splash-line splash-easter">${esc(tx.easter)}</p>
+        <p class="splash-line splash-status">${FX().esc(tx.status)}</p>
+        <p class="splash-line splash-footer">${FX().esc(tx.footer)}</p>
+        <p class="splash-line splash-easter">${FX().esc(tx.easter)}</p>
       `;
+      updateActionButton();
+    }
+
+    function startAuroraLoop() {
+      if (auroraLoopRunning) return;
+      auroraLoopRunning = true;
+      const tick = () => {
+        if (done || phase !== "waiting" || bloomFrameIdx < BLOOM_FRAMES()) {
+          auroraLoopRunning = false;
+          return;
+        }
+        const elapsed = (performance.now() - crystalStart) / 1000;
+        if (aurora) aurora.tick(elapsed);
+        renderArt();
+        requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
     }
 
     function onPhase(p) {
       phase = p;
       phaseStart = performance.now();
-      if (engine) renderArt(engine.artLines());
-      if (p === "waiting" && bloomFrameIdx < BLOOM_FRAMES) {
-        bloomFrameIdx = 0;
-        const pulse = setInterval(() => {
-          if (bloomFrameIdx < BLOOM_FRAMES) {
-            bloomFrameIdx++;
-            renderArt(engine.artLines());
-          }
-        }, PULSE_MS);
-        timers.push(pulse);
+      if (engine) renderArt();
+      if (p !== "waiting" || bloomPulseId !== null) {
+        if (p === "waiting" && bloomFrameIdx >= BLOOM_FRAMES()) {
+          readyToLaunch = true;
+          renderText(performance.now());
+          startAuroraLoop();
+        }
+        return;
       }
+      if (bloomFrameIdx >= BLOOM_FRAMES()) {
+        readyToLaunch = true;
+        renderText(performance.now());
+        startAuroraLoop();
+        return;
+      }
+      bloomFrameIdx = 0;
+      readyToLaunch = false;
+      shockProgress = 0.05;
+      bloomPulseId = setInterval(() => {
+        if (bloomFrameIdx < BLOOM_FRAMES()) {
+          bloomFrameIdx++;
+          renderArt();
+          renderText(performance.now());
+        } else {
+          readyToLaunch = true;
+          shockProgress = 0.12;
+          renderArt();
+          renderText(performance.now());
+          startAuroraLoop();
+        }
+      }, PULSE_MS());
+      timers.push(bloomPulseId);
     }
 
     function end() {
       if (done) return;
       done = true;
-      dismiss(overlay, engine, timers);
+      dismiss(overlay, engine, timers, rafId);
       window.removeEventListener("resize", resize);
       document.removeEventListener("keydown", onKey);
     }
 
     function jumpToFinal() {
       if (!engine) return;
-      bloomFrameIdx = BLOOM_FRAMES;
+      bloomFrameIdx = BLOOM_FRAMES();
       engine.jumpToFinal();
-      phase = "waiting";
       phaseStart = performance.now() - 2500;
-      renderArt(engine.artLines());
+      shockProgress = 0.15;
       renderText(performance.now());
     }
 
     function onAdvance() {
-      if (phase !== "waiting") {
-        jumpToFinal();
+      if (isLaunchReady()) {
+        end();
         return;
       }
-      end();
+      if (phase !== "waiting") {
+        jumpToFinal();
+      }
     }
 
     function onSkipButton() {
-      if (phase !== "waiting") {
-        jumpToFinal();
+      if (isLaunchReady()) {
+        end();
         return;
       }
-      end();
+      if (phase !== "waiting") {
+        jumpToFinal();
+      }
     }
 
     function onKey(e) {
       if (done) return;
-      onAdvance();
+      if (isLaunchReady()) {
+        if (e.key === "Enter") end();
+        return;
+      }
+      if (phase !== "waiting") onAdvance();
+    }
+
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      fitArt();
     }
 
     skipBtn.addEventListener("click", (e) => {
@@ -315,17 +401,27 @@
     });
     overlay.addEventListener("click", (e) => {
       if (e.target === skipBtn) return;
-      onAdvance();
+      if (isLaunchReady()) return;
+      if (phase !== "waiting") onAdvance();
     });
     document.addEventListener("keydown", onKey);
+    window.addEventListener("resize", resize);
+    resize();
+    rafId = requestAnimationFrame(paintCanvas);
 
     if (reduced) {
       const finalLines = window.C4_SPLASH_FINAL(40);
-      artEl.innerHTML = finalLines.map((l) => colorizeLine(l, "waiting")).join("\n");
+      cachedLines = finalLines;
+      c4rStartRow = FX().findC4RStart(finalLines);
+      aurora = new FX().BioAurora(c4rStartRow);
+      bloomFrameIdx = BLOOM_FRAMES();
       phase = "waiting";
-      phaseStart = performance.now();
+      phaseStart = performance.now() - 2500;
+      readyToLaunch = true;
+      renderArt(finalLines);
       renderText(performance.now());
-      resize();
+      fitArt();
+      startAuroraLoop();
       const textLoop = setInterval(() => renderText(performance.now()), TEXT_MS);
       timers.push(textLoop);
       return;
@@ -333,7 +429,7 @@
 
     engine = new window.C4SplashEngine({
       artHeight: 40,
-      onFrame: (lines) => renderArt(lines),
+      onFrame: () => renderArt(),
       onPhase: (p) => onPhase(p),
     });
     engine.start();
@@ -348,9 +444,8 @@
     timers.push(textLoop);
 
     const watchWaiting = setInterval(() => {
-      if (engine.phase === "waiting") {
-        phase = "waiting";
-        renderArt(engine.artLines());
+      if (engine.phase === "waiting" && phase !== "waiting") {
+        onPhase("waiting");
       }
     }, 200);
     timers.push(watchWaiting);

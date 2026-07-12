@@ -1,5 +1,5 @@
 /**
- * TUI v9 splash morph engine — port of src/tui/v9/splash.go (crystal → dissolve → waiting).
+ * TUI v9 splash morph engine — crystal → dissolve → waiting.
  */
 (function (global) {
   const FORM_DURATION = 10;
@@ -31,8 +31,7 @@
   function padToHeight(lines, h) {
     if (h <= 0) return [];
     if (lines.length >= h) return lines.slice(lines.length - h);
-    const padTop = h - lines.length;
-    return [...Array(padTop).fill(""), ...lines];
+    return [...Array(h - lines.length).fill(""), ...lines];
   }
 
   function findFirstNonBlank(s) {
@@ -53,8 +52,7 @@
       const last = findLastNonBlank(l);
       if (first < 0 || last < 0) continue;
       const width = last - first + 1;
-      const center = (first + last) / 2;
-      sum += center * width;
+      sum += ((first + last) / 2) * width;
       count += width;
     }
     return count === 0 ? 0 : sum / count;
@@ -69,7 +67,6 @@
   function alignFormsCenterX(forms, target) {
     if (!forms.length) return forms;
     const shifts = forms.map((f) => Math.max(0, Math.floor(target - visualCenterColumn(f))));
-    const maxShift = Math.max(...shifts, 0);
     forms = forms.map((f, i) => (shifts[i] > 0 ? shiftLines(f, shifts[i]) : f));
     let maxW = 0;
     for (const f of forms) {
@@ -173,14 +170,10 @@
         const plain = [...seedLines[row]];
         const center = Math.floor(plain.length / 2);
         const radius = (f - 4) * Math.floor(plain.length / 4);
-        forms[f][row] = plain
-          .map((ch, i) => (Math.abs(i - center) <= radius ? ch : " "))
-          .join("");
+        forms[f][row] = plain.map((ch, i) => (Math.abs(i - center) <= radius ? ch : " ")).join("");
       }
     }
-    for (let f = 7; f <= 8; f++) {
-      forms[f] = seedLines.map((l) => dimFlickerRow(l, rng));
-    }
+    for (let f = 7; f <= 8; f++) forms[f] = seedLines.map((l) => dimFlickerRow(l, rng));
     forms[9] = [...seedLines];
     forms[10] = seedLines.map((_, row) => scrambleRow(seedLines, row, rng));
     forms[11] = [...seedLines];
@@ -210,12 +203,12 @@
 
   function finalFormTargetCenter(h) {
     const final = buildFinalForm(h);
-    let c4rStart = -1;
     for (let i = 0; i < final.length; i++) {
-      if (c4rStart < 0 && final[i].includes("111111111111111111")) c4rStart = i;
+      if (final[i].includes("111111111111111111")) {
+        return visualCenterColumn(final.slice(i));
+      }
     }
-    if (c4rStart < 0) return 0;
-    return visualCenterColumn(final.slice(c4rStart));
+    return 0;
   }
 
   function mulberry32(a) {
@@ -234,24 +227,21 @@
     };
     const [r1, g1, b1] = parse(a);
     const [r2, g2, b2] = parse(b);
-    const r = Math.round(r1 + (r2 - r1) * t);
-    const g = Math.round(g1 + (g2 - g1) * t);
-    const bl = Math.round(b1 + (b2 - b1) * t);
-    return `rgb(${r},${g},${bl})`;
+    return `rgb(${Math.round(r1 + (r2 - r1) * t)},${Math.round(g1 + (g2 - g1) * t)},${Math.round(b1 + (b2 - b1) * t)})`;
   }
 
   class C4SplashEngine {
     constructor(opts = {}) {
       this.artH = opts.artHeight || 40;
-      this.rng = mulberry32(Date.now() & 0xffffffff);
+      this.rng = mulberry32((Date.now() ^ 0x5a5a5a5a) >>> 0);
       this.phase = "crystal";
       this.crystalFrame = 0;
       this.morphTick = 0;
       this.morphLines = [];
       this.forms = [];
+      this.crystalForms = [];
       this.seedArt = global.C4_SPLASH_ART.crystalSeed;
-      this.phaseStart = performance.now();
-      this.crystalStart = this.phaseStart;
+      this.crystalStart = performance.now();
       this._timer = null;
       this._tick = 0;
       this.onFrame = opts.onFrame || (() => {});
@@ -269,8 +259,7 @@
       }
       if (this.phase === "dissolve") {
         const total = Math.max(1, (this.forms.length - 1) * FORM_DURATION);
-        const t = Math.min(1, this.morphTick / total);
-        const eased = 1 - (1 - t) * (1 - t);
+        const eased = 1 - (1 - Math.min(1, this.morphTick / total)) ** 2;
         let c = lerpColor("#5f5fff", "#5fffaf", eased * 0.6);
         if (eased > 0.55) c = lerpColor(c, "#5fff5f", (eased - 0.55) / 0.45);
         return c;
@@ -278,11 +267,17 @@
       return "#4ade80";
     }
 
-    start() {
+    _prepareForms() {
       const target = finalFormTargetCenter(this.artH);
-      const crystalForms = buildCrystalFrames(this.seedArt, this.artH, this.rng, target);
-      this.forms = crystalForms;
-      this.morphLines = [...crystalForms[0]];
+      this.crystalForms = buildCrystalFrames(this.seedArt, this.artH, this.rng, target);
+      this.dissolveForms = buildSplashForms(this.artH, this.seedArt, this.rng, target);
+      this.finalForm = this.dissolveForms[this.dissolveForms.length - 1];
+    }
+
+    start() {
+      this._prepareForms();
+      this.forms = this.crystalForms;
+      this.morphLines = [...this.crystalForms[0]];
       this.onFrame(this.morphLines, this.colorForPhase());
       this._timer = setInterval(() => this._step(), TICK_MS);
     }
@@ -292,22 +287,12 @@
       this._timer = null;
     }
 
-    skip() {
-      return this.phase === "waiting";
-    }
-
     jumpToFinal() {
       this.stop();
-      const target = finalFormTargetCenter(this.artH);
-      const crystalForms = buildCrystalFrames(this.seedArt, this.artH, this.rng, target);
-      const dissolveForms = buildSplashForms(this.artH, this.seedArt, this.rng, target);
-      this.forms = crystalForms.concat(dissolveForms);
+      if (!this.finalForm) this._prepareForms();
       this.phase = "waiting";
-      this.phaseStart = performance.now();
-      this.morphTick = this.totalMorphTicks();
-      const last = this.forms[this.forms.length - 1];
-      this.morphLines = [...last];
-      this.onPhase(this.phase, this.phaseStart);
+      this.morphLines = [...this.finalForm];
+      this.onPhase(this.phase);
       this.onFrame(this.morphLines, this.colorForPhase());
     }
 
@@ -317,33 +302,28 @@
 
     _startDissolve() {
       this.phase = "dissolve";
-      this.phaseStart = performance.now();
-      this.onPhase(this.phase, this.phaseStart);
-      const target = finalFormTargetCenter(this.artH);
-      const crystalForms = buildCrystalFrames(this.seedArt, this.artH, this.rng, target);
-      const dissolveForms = buildSplashForms(this.artH, this.seedArt, this.rng, target);
-      this.forms = crystalForms.concat(dissolveForms);
-      this.morphLines = [...this.forms[0]];
+      const hold = this.morphLines.length
+        ? [...this.morphLines]
+        : [...this.crystalForms[Math.min(this.crystalFrame, this.crystalForms.length - 1)]];
+      this.forms = [hold, ...this.dissolveForms];
+      this.morphLines = [...hold];
       this.morphTick = 0;
-      this._tick = 0;
+      this.onPhase(this.phase);
     }
 
     _enterWaiting() {
       this.phase = "waiting";
-      this.phaseStart = performance.now();
-      this.onPhase(this.phase, this.phaseStart);
-      const last = this.forms[this.forms.length - 1];
-      this.morphLines = [...last];
+      this.morphLines = [...this.finalForm];
+      this.onPhase(this.phase);
       this.onFrame(this.morphLines, this.colorForPhase());
     }
 
     _advanceMorphWave() {
-      if (!this.forms.length || !this.morphLines.length) return;
+      if (this.forms.length < 2) return;
       let formIdx = Math.floor(this.morphTick / FORM_DURATION);
       if (formIdx >= this.forms.length - 1) formIdx = this.forms.length - 2;
-      const currIdx = formIdx + 1;
       const prev = this.forms[formIdx];
-      const curr = this.forms[currIdx];
+      const curr = this.forms[formIdx + 1];
       const tickInForm = this.morphTick % FORM_DURATION;
       const center = Math.floor(this.morphLines.length / 2);
       const waveReach = tickInForm;
@@ -360,22 +340,21 @@
     _step() {
       this._tick++;
       if (this.phase === "crystal") {
-        if (this.crystalFrame < 11) {
+        const frameInterval = Math.max(1, Math.floor(CRYSTAL_DELAY_MS / TICK_MS / 12));
+        if (this._tick % frameInterval === 0 && this.crystalFrame < this.crystalForms.length - 1) {
           this.crystalFrame++;
-          const target = finalFormTargetCenter(this.artH);
-          const forms = buildCrystalFrames(this.seedArt, this.artH, this.rng, target);
-          this.forms = forms;
-          if (this.crystalFrame < forms.length) {
-            this.morphLines = [...forms[this.crystalFrame]];
-          }
+          this.morphLines = [...this.crystalForms[this.crystalFrame]];
         }
         const elapsed = this._tick * TICK_MS;
-        if (elapsed >= CRYSTAL_DELAY_MS) this._startDissolve();
-        else this.onFrame(this.morphLines, this.colorForPhase());
+        if (elapsed >= CRYSTAL_DELAY_MS) {
+          this._startDissolve();
+          return;
+        }
+        this.onFrame(this.morphLines, this.colorForPhase());
         return;
       }
       if (this.phase === "dissolve") {
-        const total = (this.forms.length - 1) * FORM_DURATION;
+        const total = this.totalMorphTicks();
         if (this.morphTick < total) {
           this._advanceMorphWave();
           this.morphTick++;
@@ -393,16 +372,7 @@
 
   global.C4_SPLASH_FINAL = function (artHeight) {
     const eng = new C4SplashEngine({ artHeight: artHeight || 40 });
-    eng._startDissolve();
-    while (eng.phase === "dissolve") {
-      const total = (eng.forms.length - 1) * FORM_DURATION;
-      if (eng.morphTick >= total) {
-        eng._enterWaiting();
-        break;
-      }
-      eng._advanceMorphWave();
-      eng.morphTick++;
-    }
-    return eng.morphLines;
+    eng._prepareForms();
+    return [...eng.finalForm];
   };
 })(window);

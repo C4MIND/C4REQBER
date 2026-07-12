@@ -1,10 +1,9 @@
 /**
- * c4reqber web splash — full TUI v9 port with bio-aurora, bloom, Enter to launch.
+ * c4reqber web splash — TUI v9 port: morph engine + 600ms bio-aurora pulse.
  */
 (function () {
   const SEEN_KEY = "c4r_splash_seen";
   const VERSION = "v5.6.0";
-  const TEXT_MS = 50;
   const FX = () => window.C4SplashEffects;
   const BLOOM_FRAMES = () => FX().BLOOM_FRAMES;
   const PULSE_MS = () => FX().PULSE_MS;
@@ -112,16 +111,6 @@
     return { subtitle, tagline, motto, version, status, footer, easter };
   }
 
-  function dismiss(overlay, engine, timers, rafId) {
-    if (engine) engine.stop();
-    timers.forEach(clearInterval);
-    if (rafId) cancelAnimationFrame(rafId);
-    overlay.classList.add("splash-out");
-    document.body.classList.remove("splash-active");
-    markSeen();
-    setTimeout(() => overlay.remove(), 500);
-  }
-
   function init() {
     if (!shouldShow() || !window.C4_SPLASH_ART || !window.C4SplashEngine || !window.C4SplashEffects) return;
 
@@ -162,9 +151,7 @@
     let readyToLaunch = false;
     let rafId = 0;
     let c4rStartRow = 9999;
-    let auroraLoopRunning = false;
-    let bloomPulseId = null;
-    let cachedLines = null;
+    let artSized = false;
 
     function isLaunchReady() {
       return phase === "waiting" && bloomFrameIdx >= BLOOM_FRAMES() && readyToLaunch;
@@ -195,16 +182,17 @@
       if (Math.abs(scale - 1) > 0.02) {
         artEl.style.transform = `scale(${scale})`;
       }
+      artSized = true;
     }
 
     function paintCanvas(now) {
-      const t = (now - crystalStart) / 1000;
+      const elapsed = (now - crystalStart) / 1000;
       const w = canvas.width;
       const h = canvas.height;
       const fx = FX();
 
       if (phase === "crystal") {
-        fx.drawStars(ctx, w, h, t, 120);
+        fx.drawStars(ctx, w, h, elapsed, 120);
         scanY = (scanY + 1) % Math.max(h, 1);
         fx.drawScanline(ctx, w, h, scanY);
       } else {
@@ -212,17 +200,15 @@
         ctx.fillRect(0, 0, w, h);
         if (phase === "dissolve") {
           const g = ctx.createRadialGradient(w * 0.5, h * 0.34, 0, w * 0.5, h * 0.34, w * 0.65);
-          g.addColorStop(0, `rgba(95,95,255,${0.04 + 0.02 * Math.sin(t * 1.1)})`);
+          g.addColorStop(0, `rgba(95,95,255,${0.04 + 0.02 * Math.sin(elapsed * 1.1)})`);
           g.addColorStop(1, "rgba(15,17,23,0)");
           ctx.fillStyle = g;
           ctx.fillRect(0, 0, w, h);
         }
       }
 
-      if (phase === "waiting") {
-        if (bloomFrameIdx >= BLOOM_FRAMES()) {
-          fx.drawAuroraGlow(ctx, w, h, t);
-        }
+      if (phase === "waiting" && bloomFrameIdx >= BLOOM_FRAMES()) {
+        fx.drawAuroraGlow(ctx, w, h, elapsed);
         if (shockProgress > 0 && shockProgress < 1) {
           fx.drawShockwave(ctx, w, h, shockProgress);
           shockProgress += 0.018;
@@ -253,8 +239,9 @@
     }
 
     function renderArt(lines) {
-      const src = lines || (engine ? engine.artLines() : cachedLines);
+      const src = lines || (engine ? engine.artLines() : null);
       if (!src || !src.length) return;
+
       c4rStartRow = FX().findC4RStart(src);
       if (!aurora || aurora.c4rStartRow !== c4rStartRow) {
         aurora = new FX().BioAurora(c4rStartRow);
@@ -268,7 +255,7 @@
       const phaseColor = engine ? engine.colorForPhase() : "#4ade80";
       artEl.innerHTML = display.map((l, i) => colorizeLine(l, i, phaseColor)).join("\n");
       artEl.style.setProperty("--splash-phase-color", phaseColor);
-      requestAnimationFrame(fitArt);
+      if (!artSized) fitArt();
     }
 
     function renderText(now) {
@@ -290,73 +277,68 @@
       updateActionButton();
     }
 
-    function startAuroraLoop() {
-      if (auroraLoopRunning) return;
-      auroraLoopRunning = true;
-      const tick = () => {
-        if (done || phase !== "waiting" || bloomFrameIdx < BLOOM_FRAMES()) {
-          auroraLoopRunning = false;
-          return;
-        }
-        const elapsed = (performance.now() - crystalStart) / 1000;
-        if (aurora) aurora.tick(elapsed);
-        renderArt();
-        requestAnimationFrame(tick);
-      };
-      requestAnimationFrame(tick);
-    }
-
     function onPhase(p) {
       phase = p;
       phaseStart = performance.now();
-      if (engine) renderArt();
-      if (p !== "waiting" || bloomPulseId !== null) {
-        if (p === "waiting" && bloomFrameIdx >= BLOOM_FRAMES()) {
-          readyToLaunch = true;
-          renderText(performance.now());
-          startAuroraLoop();
-        }
-        return;
+      artSized = false;
+
+      if (p === "waiting") {
+        bloomFrameIdx = 0;
+        readyToLaunch = false;
+        shockProgress = 0.05;
       }
-      if (bloomFrameIdx >= BLOOM_FRAMES()) {
-        readyToLaunch = true;
-        renderText(performance.now());
-        startAuroraLoop();
-        return;
-      }
-      bloomFrameIdx = 0;
-      readyToLaunch = false;
-      shockProgress = 0.05;
-      bloomPulseId = setInterval(() => {
+
+      renderArt();
+      fitArt();
+      renderText(performance.now());
+    }
+
+    function onPulse() {
+      const now = performance.now();
+      if (phase === "waiting") {
         if (bloomFrameIdx < BLOOM_FRAMES()) {
           bloomFrameIdx++;
           renderArt();
-          renderText(performance.now());
         } else {
-          readyToLaunch = true;
-          shockProgress = 0.12;
+          if (!readyToLaunch) {
+            readyToLaunch = true;
+            shockProgress = 0.12;
+          }
+          if (aurora) aurora.tick((now - crystalStart) / 1000);
           renderArt();
-          renderText(performance.now());
-          startAuroraLoop();
         }
-      }, PULSE_MS());
-      timers.push(bloomPulseId);
+      }
+      renderText(now);
+    }
+
+    function dismiss() {
+      if (engine) engine.stop();
+      timers.forEach(clearInterval);
+      if (rafId) cancelAnimationFrame(rafId);
+      overlay.classList.add("splash-out");
+      document.body.classList.remove("splash-active");
+      markSeen();
+      setTimeout(() => overlay.remove(), 500);
     }
 
     function end() {
       if (done) return;
       done = true;
-      dismiss(overlay, engine, timers, rafId);
+      dismiss();
       window.removeEventListener("resize", resize);
       document.removeEventListener("keydown", onKey);
     }
 
     function jumpToFinal() {
       if (!engine) return;
-      bloomFrameIdx = BLOOM_FRAMES();
       engine.jumpToFinal();
-      phaseStart = performance.now() - 2500;
+      bloomFrameIdx = BLOOM_FRAMES();
+      readyToLaunch = true;
       shockProgress = 0.15;
+      phaseStart = performance.now() - 2500;
+      if (aurora) aurora.tick((performance.now() - crystalStart) / 1000);
+      renderArt();
+      fitArt();
       renderText(performance.now());
     }
 
@@ -365,19 +347,7 @@
         end();
         return;
       }
-      if (phase !== "waiting") {
-        jumpToFinal();
-      }
-    }
-
-    function onSkipButton() {
-      if (isLaunchReady()) {
-        end();
-        return;
-      }
-      if (phase !== "waiting") {
-        jumpToFinal();
-      }
+      if (phase !== "waiting") jumpToFinal();
     }
 
     function onKey(e) {
@@ -392,12 +362,13 @@
     function resize() {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
+      artSized = false;
       fitArt();
     }
 
     skipBtn.addEventListener("click", (e) => {
       e.stopPropagation();
-      onSkipButton();
+      onAdvance();
     });
     overlay.addEventListener("click", (e) => {
       if (e.target === skipBtn) return;
@@ -409,9 +380,11 @@
     resize();
     rafId = requestAnimationFrame(paintCanvas);
 
+    timers.push(setInterval(() => onPulse(), PULSE_MS()));
+    timers.push(setInterval(() => renderText(performance.now()), 50));
+
     if (reduced) {
       const finalLines = window.C4_SPLASH_FINAL(40);
-      cachedLines = finalLines;
       c4rStartRow = FX().findC4RStart(finalLines);
       aurora = new FX().BioAurora(c4rStartRow);
       bloomFrameIdx = BLOOM_FRAMES();
@@ -419,11 +392,9 @@
       phaseStart = performance.now() - 2500;
       readyToLaunch = true;
       renderArt(finalLines);
-      renderText(performance.now());
       fitArt();
-      startAuroraLoop();
-      const textLoop = setInterval(() => renderText(performance.now()), TEXT_MS);
-      timers.push(textLoop);
+      renderText(performance.now());
+      if (typeof applyLanguage === "function") applyLanguage(window.c4rCurrentLang || "en");
       return;
     }
 
@@ -432,27 +403,13 @@
       onFrame: () => renderArt(),
       onPhase: (p) => onPhase(p),
     });
+    crystalStart = performance.now();
     engine.start();
     phase = engine.phase;
-    crystalStart = performance.now();
 
-    if (hasSeenBefore()) {
-      jumpToFinal();
-    }
+    if (hasSeenBefore()) jumpToFinal();
 
-    const textLoop = setInterval(() => renderText(performance.now()), TEXT_MS);
-    timers.push(textLoop);
-
-    const watchWaiting = setInterval(() => {
-      if (engine.phase === "waiting" && phase !== "waiting") {
-        onPhase("waiting");
-      }
-    }, 200);
-    timers.push(watchWaiting);
-
-    if (typeof applyLanguage === "function") {
-      applyLanguage(window.c4rCurrentLang || "en");
-    }
+    if (typeof applyLanguage === "function") applyLanguage(window.c4rCurrentLang || "en");
   }
 
   if (document.readyState === "loading") {

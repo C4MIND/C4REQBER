@@ -138,8 +138,8 @@ settings.telemetry.desc = "قم بإجراء إحصاءات (إعادة تعيي
 achievement.unlocked = "الإنجاز تم فتحه!"
 subtitle.line1 = "إبداعي ودموي في الرؤى"
 subtitle.line2 = "في أصابعك"
-easter.line1 = "ow's me ol'skool Russian science"
-easter.line2 = "♭ Garmon doloy — bito usee ♭"
+easter.line1 = "♭ Garmon doloy — bito usee ♭"
+easter.line2 = "old school russian-style science mafia"
 
 # v9.11.7: empty-state dashboard widgets
 widget.tip.title = "نصيحة"

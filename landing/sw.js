@@ -1,10 +1,12 @@
-const CACHE_NAME = 'c4reqber-v3';
+const CACHE_NAME = 'c4reqber-v4';
 const CORE_ASSETS = [
   './',
   './index.html',
   './css/main.css',
   './js/main.js',
   './js/components.js',
+  './js/splash-art.js',
+  './js/splash-engine.js',
   './js/splash.js',
   './404.html',
   './manifest.json',

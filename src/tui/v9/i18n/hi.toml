@@ -138,8 +138,8 @@ settings.telemetry.desc = "सांख्यिकीय आँकन करे
 achievement.unlocked = "उपलब्धि अनलॉक हो गई!"
 subtitle.line1 = "रचनात्मक एवं विनाशकारी अंतर्दृष्टियाँ"
 subtitle.line2 = "आपके पहलू पर"
-easter.line1 = "ow's me ol'skool Russian science"
-easter.line2 = "♭ Garmon doloy — bito usee ♭"
+easter.line1 = "♭ Garmon doloy — bito usee ♭"
+easter.line2 = "old school russian-style science mafia"
 
 # v9.11.7: empty-state dashboard widgets
 widget.tip.title = "सुझाव"

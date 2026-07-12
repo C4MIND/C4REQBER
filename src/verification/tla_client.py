@@ -1,7 +1,6 @@
 """TLA+ model checker client (TLC via tla2tools.jar)."""
 from __future__ import annotations
 
-import os
 import re
 import shutil
 import subprocess

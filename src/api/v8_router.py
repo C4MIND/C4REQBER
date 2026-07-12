@@ -6,6 +6,7 @@ from fastapi import APIRouter
 from src.api.v8_routers import (
     agenda_router,
     arxiv_router,
+    capabilities_router,
     discovery_router,
     exploration_router,
     knowledge_router,
@@ -23,6 +24,7 @@ router = APIRouter(prefix="/v8", tags=["v8"])
 
 router.include_router(knowledge_router)
 router.include_router(discovery_router)
+router.include_router(capabilities_router)
 router.include_router(newton_router)
 router.include_router(social_router)
 router.include_router(verification_router)

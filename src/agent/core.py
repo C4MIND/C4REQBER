@@ -264,7 +264,7 @@ You are an AI research and engineering assistant with deep access to the c4reqbe
             from pydantic_ai import Agent
             from pydantic_ai.models.openai import OpenAIModel
 
-            model = OpenAIModel(
+            model = OpenAIModel(  # type: ignore[call-overload]
                 model_name=provider.model,
                 base_url=provider.api_base,
                 api_key=get_key("openrouter") or os.environ.get("OPENROUTER_API_KEY", ""),  # central first
@@ -280,7 +280,7 @@ You are an AI research and engineering assistant with deep access to the c4reqbe
                 if msg.get("role") in ("user", "assistant")
             )
             result = pydantic_agent.run_sync(full_conversation)
-            return result.data or ""
+            return str(getattr(result, "output", None) or getattr(result, "data", "") or "")
         except Exception as e:
             return f"LLM Error: {e}"
 

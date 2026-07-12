@@ -2,19 +2,19 @@
 
 **Terminal-first. MCP-native. One command to discovery.**
 
-[![Tests](https://img.shields.io/badge/tests-9794%20collected-yellowgreen)]()
+[![Tests](https://img.shields.io/badge/tests-9887%20collected-yellowgreen)]()
 [![Lint](https://img.shields.io/badge/lint-41%20baseline%20%2B%20regression%20check-yellow)]()
-[![Typecheck](https://img.shields.io/badge/typecheck-61%20mypy%20baseline%20%2B%20regression%20check-yellow)]()
+[![Typecheck](https://img.shields.io/badge/typecheck-0%20mypy%20errors-brightgreen)]()
 [![Version](https://img.shields.io/badge/version-5.6.0-magenta)]()
 [![TUI](https://img.shields.io/badge/TUI-v9.13.0-blueviolet)]()
 [![Python](https://img.shields.io/badge/python-3.11%2B-blue)]()
 [![License](https://img.shields.io/badge/license-AGPL--3.0-green)]()
+[![PyPI](https://img.shields.io/pypi/v/c4reqber)](https://pypi.org/project/c4reqber/)
 [![Security](https://img.shields.io/badge/security-round5%20audit%20passed-brightgreen)]()
 
 > **Truth source:** all counts (tests, tools, sources, engines, providers, verifiers)
 > are generated from `_truths.json` via `scripts/gen_truths.py --check`. Run the
-> script in CI to catch drift. See `audit/MASTER_AUDIT_2026-06-22.md` for the
-> audit that motivated single-source-of-truth.
+> script in CI to catch drift. See `CHANGELOG.md` for release history.
 
 ## Quickstart
 
@@ -54,7 +54,7 @@ Six **research proposals** from end-to-end `blast turbo` runs (400–500 literat
 
 A cognitive exoskeleton for AI agents and humans.
 - **C4-META**: 27 cognitive states, Z₃³ topology, 6 operators, Theorem 11 (undirected Ø=3)
-- **6 real verification backends + guard-stubs**: Lean4, Coq, Dafny, Agda, Hoare, Z3 — with complexity pre-flight and auto-fallback
+- **9 real verification backends** (Lean4, Coq, Dafny, Agda, Z3/Hoare, Haskell, CVC5, TLA+, Alloy)
 - **251 few-shot proof examples**: 56 Lean4 + 48 Coq + 52 Dafny + 50 Z3 + 45 Agda, with TF-IDF RAG retrieval
 - **Causal inference adult**: DoWhy + EconML + gCastle (PC, FCI, NOTEARS, ANM) with data-driven / toy fallback tagging
 - **Hypothesis ranking**: PriorScorer × EIGEstimator × CostModel × MCDMRanker (weighted MCDM) integrated into discovery pipeline
@@ -68,7 +68,7 @@ A cognitive exoskeleton for AI agents and humans.
 - **Kuhn Paradigm Shift Assessment**: 4-stage model, 5 values, iterative refinement
 - **TUI v9 command palette** (`:` key): fuzzy-match 35+ commands (settings, capabilities, history, language, debug)
 - **11 LLM providers**: OpenRouter, XAI, Mistral, Moonshot, DeepSeek, Liquid AI, NVIDIA NIM, YandexGPT, Ollama, LM Studio, MLX — auto-detected with depth-based routing
-- **43 active knowledge source adapters** = **33 literature** + **10 data/biological** (MultiSourceSearcher with circuit breaker, semantic dedup, domain-aware routing) — arXiv, PubMed, Crossref, Europe PMC, Semantic Scholar, OpenAlex, Zenodo, Figshare, NCBI E-utilities, PubChem, ChEMBL, Materials Project, AFLOW, Kaggle, UCI ML, Harvard Dataverse, re3data, STRING, ClinicalTrials.gov, GBIF, Allen Brain, USGS, CERN, USPTO, OpenReview, HuggingFace, OpenFDA, NASA Earthdata, CyberLeninka, Math-Net.Ru, DBLP, Datacite, DOAJ, Inspire-HEP, Europe PMC, and more + 40 TRIZ principles + **101+ simulation patterns + 32 simulation engines** (5 internal GPU engines + 26 P1 open-source bridges + 1 virtual bio: FEniCSx, OpenFOAM, GROMACS, LAMMPS, MDAnalysis, PySCF, Psi4, Quantum ESPRESSO, Tellurium, NEURON, Brian2, Jaxley, COPASI, xarray, WRF, Mesa, SimPy, Rebound, AMUSE, MuJoCo, PyBullet, diffeqpy, Taichi, JAX MD, JAX-LaB, ModelingToolkit.jl)
+- **43 active knowledge source adapters** = **33 literature** + **10 data/biological** (MultiSourceSearcher with circuit breaker, semantic dedup, domain-aware routing) — arXiv, PubMed, Crossref, Europe PMC, Semantic Scholar, OpenAlex, Zenodo, Figshare, NCBI E-utilities, PubChem, ChEMBL, Materials Project, AFLOW, Kaggle, UCI ML, Harvard Dataverse, re3data, STRING, ClinicalTrials.gov, GBIF, Allen Brain, USGS, CERN, USPTO, OpenReview, HuggingFace, OpenFDA, NASA Earthdata, CyberLeninka, Math-Net.Ru, DBLP, Datacite, DOAJ, Inspire-HEP, Europe PMC, and more + 40 TRIZ principles + **101+ simulation patterns + 38 simulation engine bridges** (5 internal GPU + 26 P1 open-source bridges + cloud delegates: FEniCSx, OpenFOAM, GROMACS, LAMMPS, MDAnalysis, PySCF, Psi4, Quantum ESPRESSO, Tellurium, NEURON, Brian2, Jaxley, COPASI, xarray, WRF, Mesa, SimPy, Rebound, AMUSE, MuJoCo, PyBullet, diffeqpy, Taichi, JAX MD, JAX-LaB, ModelingToolkit.jl, vast.ai, NVIDIA Brev)
 
 **v5.4.0:** "Agent System + Git Hygiene + Code Audit" — main AI agent with Pydantic AI, skills, MCP bridge, persistent memory, sub-agents; 3 critical eval() sandboxes fixed; git secrets removed
 
@@ -76,7 +76,7 @@ A cognitive exoskeleton for AI agents and humans.
 
 **v5.6.0:** "Dead Code Cleanup + API Integration + Pydantic V2 + TUI v8 Polish" — removed 6 dead modules (r1/, skills/, arxiv_adapter, prior_art, dependencies_v6, v6_schemas); integrated 14 API keys into MultiSourceSearcher; Pydantic V1→V2 migration complete; citation verifier hardened against hallucinated theory names; TUI v8 mascot rewritten (Quantum→Cube) with theme-aware colors and S-rank jump animation; Go audit: go vet clean, staticcheck 0 warnings; 9908+ tests collected.
 
-**v9.13.0:** "TUI v9 Simulation Surface" — TUI v9 now has a full simulation/verification cockpit surface. New: capabilities overlay (`Ctrl+Shift+C`) listing 32 engine + 27 verifier availability with per-platform status and install hints; `CardSimulation` kind rendered in the feed with engine/verdict/fallback-chain/install-hint; typed SSE decoder ready for backend's new `sim_started/sim_finished/sim_skipped` events; 4 new sim-specific achievements (Sim Explorer, Devil's Advocate, Fallback Chef, Cloud Native); command palette (`:`) fuzzy-matches 35+ commands; per-card expansion (Enter to see FullBody, Esc to collapse); adaptive layout (T0/T1/T2/T3); status bar (Ctrl+B); debug overlay (Ctrl+Shift+D); solarized-dark color profile; feed.jsonl persistence + resume on launch; 132 golden snapshots, 100% i18n parity across 7 languages via `regen_i18n.py`. 27 commits, +7302 lines, 0 critical bugs. Branch `friendely-merge-tui-upgrade` ready to merge.
+**v9.13.0:** "TUI v9 Simulation Surface" — capabilities overlay (`Ctrl+Shift+C`) listing 38 engine bridges + 9 verifiers with per-platform status and install hints; `CardSimulation` kind rendered in the feed with engine/verdict/fallback-chain/install-hint; typed SSE decoder ready for backend's new `sim_started/sim_finished/sim_skipped` events; 4 new sim-specific achievements (Sim Explorer, Devil's Advocate, Fallback Chef, Cloud Native); command palette (`:`) fuzzy-matches 35+ commands; per-card expansion (Enter to see FullBody, Esc to collapse); adaptive layout (T0/T1/T2/T3); status bar (Ctrl+B); debug overlay (Ctrl+Shift+D); solarized-dark color profile; feed.jsonl persistence + resume on launch; 132 golden snapshots, 100% i18n parity across 7 languages via `regen_i18n.py`. 27 commits, +7302 lines, 0 critical bugs. TUI v9 merged on `main`; see `ARCHITECTURE_TUI_V9.md`.
 
 ## Output Formats (6, auto-detected)
 
@@ -89,14 +89,16 @@ A cognitive exoskeleton for AI agents and humans.
 | **Code** | 100-500 LOC | "code", "implement", "algorithm" |
 | **Verification Report** | 1-5 | "verify", "prove", "theorem" |
 
-## Verification Backends (10 + MathDetector Categories A/B/C)
+## Verification Backends (9 real + MathDetector)
+
+**Real (machine-checked when tool installed):** Lean4, Coq, Dafny, Agda, Z3/Hoare, Haskell, CVC5, TLA+, Alloy.  
+**TLA+:** bounded models only — see [docs/VERIFICATION_BACKENDS.md](docs/VERIFICATION_BACKENDS.md).
 
 ```
-Lean4 → Coq → Dafny → Agda → Z3 → CVC5 → Hoare → Haskell → TLA+ → Alloy
-                        │                      │
-                    Complexity pre-flight   Memory limit + hang detection
-                        │                      │
-                    Auto-fallback to Z3    Proof export to .lean/.v/.smt2
+Lean4 → Coq → Dafny → Agda → Z3/CVC5 → Hoare → TLA+ → Alloy → Haskell
+   │                              │
+   Complexity pre-flight      Auto-fallback chain
+   Memory + hang detection    Proof export .lean / .v / .smt2 / .tla / .als
 ```
 
 ## TUI v9 — Command Palette (`:` key)
@@ -106,7 +108,7 @@ Press `:` to open fuzzy-search command palette. Examples:
 | Command | Action |
 |---------|--------|
 | Settings | `Ctrl+,` — LLM tier, language, color profile, history |
-| Capabilities | `Ctrl+Shift+C` — 32 sim engines + 27 verifiers status |
+| Capabilities | `Ctrl+Shift+C` — 38 sim engine bridges + 9 verifiers |
 | Help | `?` — keyboard shortcuts overlay |
 | Debug | `Ctrl+Shift+D` — SSE/job debug snapshot |
 | Language | `L` — cycle EN/RU/ZH/JA/DE/AR/HI |
@@ -264,7 +266,6 @@ Copy these into your `.env` file. Keys marked **Required** will disable the sour
 | **Closed-loop simulation** | Uses surrogate simulator (not actual physics simulators) for Bayesian update | Full integration requires per-simulator likelihood models | Use domain-specific simulators via `run_relevant_simulation()` for real validation |
 | **Self-directed agenda** | Questions are generated heuristically, not via LLM by default | LLM generation is expensive for every discovery | Use `/agenda/generate` API endpoint for LLM-enhanced generation when needed |
 | **Sentence tokenization** | Regex-based splitting; abbreviations ("Dr.", "e.g.") handled heuristically | NLTK/spaCy adds +500MB dependencies; regex is "good enough" for claim extraction | Output is "best effort"; review extracted claims manually |
-| **Sentence tokenization** | Regex-based splitting; abbreviations ("Dr.", "e.g.") handled heuristically | NLTK/spaCy adds +500MB dependencies; regex is "good enough" for claim extraction | Output is "best effort"; review extracted claims manually |
 | **Token counting** | Uses `tiktoken` when available; falls back to `len(text) // 4` | `tiktoken` is optional dependency; fallback is approximate | Install `tiktoken` for precise counts: `pip install tiktoken` |
 | **ChromaDB** | Local, single-instance, sync operations | ChromaDB has no official async API | Sufficient for single-user local RAG; for concurrent multi-user → migrate to pgvector |
 | **Hoare verifier** | Handles assignment, sequence, conditional, while (95% of real use) | Complex nested expressions may parse incorrectly | Simplify invariants; avoid deep nesting in Hoare triples |
@@ -285,6 +286,9 @@ All documentation lives in the repo — no separate docs site needed.
 
 | Document | Description |
 |----------|-------------|
+| **[WHITEPAPER.md](WHITEPAPER.md)** | **Technical whitepaper (EN)** — architecture, verification, simulation, metrics |
+| **[WHITEPAPER.ru.md](WHITEPAPER.ru.md)** | **Технический whitepaper (RU)** — билингвальная пара к EN |
+| `docs/VERIFICATION_BACKENDS.md` | 9 backends + TLA+ bounded-model guide |
 | `AGENTS.md` | Master AI agent context — commands, architecture, code rules, competitive intel |
 | `CHANGELOG.md` | Full version history |
 | `TECHNICAL_DEBT_ROADMAP.md` | Deferred architectural fixes — when and why each debt item becomes payable |

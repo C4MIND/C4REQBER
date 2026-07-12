@@ -1,7 +1,7 @@
 """
 c4reqber: Consensus Engine
 
-Aggregates proof results across multiple formal backends (Lean4, Coq, Dafny).
+Aggregates proof results across multiple formal backends (Lean4, Coq, Dafny, CVC5, TLA+, Alloy).
 Provides multi-language consensus with uncertainty quantification.
 """
 from __future__ import annotations
@@ -59,14 +59,14 @@ class ConsensusEngine:
 
         Args:
             theorem_statement: Formalizable theorem statement string.
-            languages: List of languages to try (default: ["lean4", "coq", "dafny"]).
+            languages: List of languages to try (default: lean4/coq/dafny + cvc5/tla/alloy).
             min_agreement: Minimum number of languages that must agree for "verified".
 
         Returns:
             ConsensusResult with status, confidence, per-language details.
         """
         if languages is None:
-            languages = ["lean4", "coq", "dafny"]
+            languages = ["lean4", "coq", "dafny", "cvc5", "tla", "alloy"]
 
         if not theorem_statement or len(theorem_statement) < 10:
             return ConsensusResult(

@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"charm.land/lipgloss/v2"
+	"github.com/figuramax/c4reqber-tui-v9/i18n"
 )
 
 // statusColor returns the lipgloss color name for a status icon.
@@ -59,32 +60,27 @@ func RenderCapabilitiesOverlay(width, height int, report *Report) string {
 	}
 
 	var b strings.Builder
-	// Title bar
-	title := "⏚ Simulation Capabilities (this Mac)"
+	title := "⏚ " + i18n.T("sim.overlay.title")
 	if report.Platform.System != "" {
-		title = "⏚ Simulation Capabilities (" + report.Platform.System + " " + report.Platform.Arch + ")"
+		title = "⏚ " + fmt.Sprintf(i18n.T("sim.overlay.title_platform"), report.Platform.System, report.Platform.Arch)
 	}
 	titleStyled := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("6")).Render(title)
 	b.WriteString(titleStyled)
 	b.WriteString("\n")
-	// Hardware summary
 	hwLine := fmt.Sprintf("GPU: %s · %.1f GB · %d CPUs · %.0f GB RAM",
 		report.Hardware.GPUName, report.Hardware.GPUMemoryGB, report.Hardware.CPUCount, report.Hardware.RAMGB)
 	b.WriteString(lipgloss.NewStyle().Foreground(lipgloss.Color("8")).Render(hwLine))
 	b.WriteString("\n\n")
 
-	// Group by domain
 	groups := report.GroupByDomain()
 	if len(groups) == 0 {
-		b.WriteString(lipgloss.NewStyle().Foreground(lipgloss.Color("3")).Render("  No capabilities report — backend may be unreachable."))
+		b.WriteString(lipgloss.NewStyle().Foreground(lipgloss.Color("3")).Render("  " + i18n.T("sim.overlay.no_report")))
 		b.WriteString("\n")
 	} else {
 		for _, g := range groups {
-			// Domain header
 			domainHeader := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("4")).Render("  " + string(g.Domain))
 			b.WriteString(domainHeader)
 			b.WriteString("\n")
-			// One row per engine
 			for _, eid := range g.Engines {
 				eng := report.ByID(eid)
 				if eng == nil {
@@ -93,7 +89,6 @@ func RenderCapabilitiesOverlay(width, height int, report *Report) string {
 				row := formatEngineRow(*eng, width)
 				b.WriteString(row)
 				b.WriteString("\n")
-				// Install hint on the next line if unavailable
 				if eng.Status == StatusUnavailable && eng.InstallHint != "" {
 					hint := "      ⓘ " + eng.InstallHint
 					b.WriteString(lipgloss.NewStyle().Foreground(lipgloss.Color("8")).Render(hint))
@@ -104,32 +99,33 @@ func RenderCapabilitiesOverlay(width, height int, report *Report) string {
 		}
 	}
 
-	// Verifiers section
 	if len(report.Verifiers) > 0 {
-		b.WriteString(lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("4")).Render("  ── Verification ──"))
+		b.WriteString(lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("4")).Render("  " + i18n.T("sim.overlay.section.verification")))
 		b.WriteString("\n")
 		for _, v := range report.Verifiers {
 			icon := "○"
 			if v.Available {
 				icon = "●"
 			}
+			name := v.Name
+			if name == "" {
+				name = v.ID
+			}
 			ver := v.Version
 			if ver != "" {
 				ver = " (" + ver + ")"
 			}
-			row := fmt.Sprintf("  %s %s%s", icon, v.ID, ver)
+			row := fmt.Sprintf("  %s %s%s", icon, name, ver)
 			b.WriteString(row)
 			b.WriteString("\n")
 		}
 		b.WriteString("\n")
 	}
 
-	// Footer
-	probeLine := fmt.Sprintf("  Last probe: %s (%dms) · Ctrl+R to refresh · Esc to close",
+	probeLine := fmt.Sprintf("  "+i18n.T("sim.overlay.footer"),
 		report.ProbeTimestamp.Format("15:04:05"), report.ProbeLatencyMS)
 	b.WriteString(lipgloss.NewStyle().Foreground(lipgloss.Color("8")).Render(probeLine))
 
-	// Pad to fill the screen
 	rendered := b.String()
 	lines := strings.Split(rendered, "\n")
 	for len(lines) < height {
@@ -150,22 +146,22 @@ func formatEngineRow(e Engine, width int) string {
 	tier := ""
 	switch e.Tier {
 	case "fast":
-		tier = " (fast)"
+		tier = " " + i18n.T("sim.overlay.tier.fast")
 	case "slow":
-		tier = " (CPU)"
+		tier = " " + i18n.T("sim.overlay.tier.slow")
 	case "linux_only":
-		tier = " (linux only)"
+		tier = " " + i18n.T("sim.overlay.tier.linux")
 	case "cloud":
-		tier = " (cloud)"
+		tier = " " + i18n.T("sim.overlay.tier.cloud")
 	}
 	row := indent + iconStyled + " " + name + tier
 	if e.Status == StatusUnavailable {
-		row = indent + iconStyled + " " + name + lipgloss.NewStyle().Foreground(lipgloss.Color("1")).Render(" (unavailable)")
+		row = indent + iconStyled + " " + name + lipgloss.NewStyle().Foreground(lipgloss.Color("1")).Render(" "+i18n.T("sim.overlay.unavailable"))
 	}
 	return row
 }
 
-// ShortSummary returns a 1-line summary for the status bar (e.g. "23/32 engines OK").
+// ShortSummary returns a 1-line summary for the status bar.
 func ShortSummary(r *Report) string {
 	if r == nil {
 		return ""
@@ -176,5 +172,15 @@ func ShortSummary(r *Report) string {
 			ok++
 		}
 	}
-	return fmt.Sprintf("⏚ %d/%d engines", ok, len(r.Engines))
+	line := fmt.Sprintf("⏚ %d/%d %s", ok, len(r.Engines), i18n.T("sim.summary.engines"))
+	if len(r.Verifiers) > 0 {
+		vok := 0
+		for _, v := range r.Verifiers {
+			if v.Available {
+				vok++
+			}
+		}
+		line += fmt.Sprintf(" · %d/%d %s", vok, len(r.Verifiers), i18n.T("sim.summary.verifiers"))
+	}
+	return line
 }

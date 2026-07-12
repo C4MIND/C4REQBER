@@ -15,6 +15,7 @@ import os
 import sys
 import time
 from pathlib import Path
+from typing import Any
 
 from mlx_lm import generate, load
 
@@ -62,9 +63,9 @@ def build_prompt(src_text: str, target_lang: str, glossary: dict) -> list:
     ]
 
 
-def parse_toml(filepath: Path) -> dict:
+def parse_toml(filepath: Path) -> dict[str, Any]:
     """Parse flat or sectioned TOML. Flat keys (with dots) go in '_root' section."""
-    result = {}
+    result: dict[str, Any] = {}
     current = "_root"
     result[current] = {}
     for line in filepath.read_text(encoding="utf-8").splitlines():

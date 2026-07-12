@@ -4,6 +4,7 @@ Extracts step execution logic from UniversalSolvePipeline.
 """
 from __future__ import annotations
 
+from collections.abc import AsyncGenerator
 import logging
 import time
 from typing import Any
@@ -259,13 +260,13 @@ class PipelineExecutor:
         self._observer_frame: Any = None
         self._observer_insights: list[str] = []
 
-    async def execute(  # type: ignore[misc]
+    async def execute(
         self,
         problem: str,
         mode: str = "autopilot",
         domain_hint: str | None = None,
         max_depth: int = 6,
-    ) -> None:
+    ) -> AsyncGenerator[dict[str, Any], None]:
         """Execute all pipeline steps, yielding events."""
         start_time = time.time()
         config = MODE_CONFIG.get(mode, MODE_CONFIG["autopilot"])

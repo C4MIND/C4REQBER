@@ -57,7 +57,7 @@ Auto-route query to best mode based on query characteristics.
 
 ## Backends
 
-6 formal verification backends: Z3 (numerical/fast), Lean4, Coq, Dafny, Agda, Hoare.
+9 formal verification backends: Lean4, Coq, Dafny, Agda, Z3/Hoare, Haskell, CVC5, TLA+, Alloy.
 
 ### Agenda API
 
@@ -95,31 +95,31 @@ record = await hil.discover("your topic")
 
 | Endpoint | Method | Description |
 |---------|--------|-------------|
-| `/api/v8/discover/dissertation` | POST | Paradigm shift detection (12-step pipeline, 20 wired modules) |
-| `/api/v8/discover/export` | POST | Export results (LaTeX, MD, JSON, HTML, PDF, BibTeX) |
-| `/api/v8/discover/gaps` | POST | Gap analysis via GapAnalyzer (ABC) |
-| `/api/v8/discover/novelty` | POST | Novelty validation (HARD gate) |
-| `/api/v8/discover/already_shifted` | POST | Check if paradigm already shifted (iterative, subtractive confidence) |
-| `/api/v8/discover/falsify` | POST | Falsification engine (Popper) |
+| `/v8/discover/dissertation` | POST | Paradigm shift detection (12-step pipeline, 20 wired modules) |
+| `/v8/discover/export` | POST | Export results (LaTeX, MD, JSON, HTML, PDF, BibTeX) |
+| `/v8/discover/gaps` | POST | Gap analysis via GapAnalyzer (ABC) |
+| `/v8/discover/novelty` | POST | Novelty validation (HARD gate) |
+| `/v8/discover/already_shifted` | POST | Check if paradigm already shifted (iterative, subtractive confidence) |
+| `/v8/discover/falsify` | POST | Falsification engine (Popper) |
 
 ### Pipeline v5.3.0
 
 | Endpoint | Method | Description |
 |---------|--------|-------------|
-| `/api/v8/pipeline/start` | POST | Start pipeline with BasePipeline |
-| `/api/v8/pipeline/status` | GET | Pipeline status + step progress |
-| `/api/v8/pipeline/competing_hypotheses` | POST | Generate competing hypotheses |
-| `/api/v8/pipeline/redundant_gates` | POST | N-version redundant gates validation |
-| `/api/v8/pipeline/discovery_memory` | GET | Query discovery memory cache |
-| `/api/v8/pipeline/auto_fix` | POST | Self-healing import resolution |
+| `/v8/pipeline/start` | POST | Start pipeline with BasePipeline |
+| `/v8/pipeline/status` | GET | Pipeline status + step progress |
+| `/v8/pipeline/competing_hypotheses` | POST | Generate competing hypotheses |
+| `/v8/pipeline/redundant_gates` | POST | N-version redundant gates validation |
+| `/v8/pipeline/discovery_memory` | GET | Query discovery memory cache |
+| `/v8/pipeline/auto_fix` | POST | Self-healing import resolution |
 
 ### Knowledge
 
 | Endpoint | Method | Description |
 |---------|--------|-------------|
-| `/api/v8/knowledge/search` | POST | Multi-source search (28 sources via orchestrator) |
-| `/api/v8/knowledge/temporal` | POST | Temporal knowledge graph query |
-| `/api/v8/knowledge/contradictions` | POST | Contradiction mining across sources |
+| `/v8/knowledge/search` | POST | Multi-source search (51 sources via orchestrator) |
+| `/v8/knowledge/temporal` | POST | Temporal knowledge graph query |
+| `/v8/knowledge/contradictions` | POST | Contradiction mining across sources |
 
 ## MCP Tools
 

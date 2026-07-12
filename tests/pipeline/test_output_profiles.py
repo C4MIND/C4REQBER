@@ -66,7 +66,15 @@ class TestOutputProfilesRegistry:
         profile = OUTPUT_PROFILES[OutputFormat.DISSERTATION]
         assert len(profile.verification_backends) > 0
         assert "lean4" in profile.verification_backends
+        assert "cvc5" in profile.verification_backends
+        assert "tla" in profile.verification_backends
         assert profile.require_formal_proof is True
+
+    def test_whitepaper_profile_prefers_smt_and_alloy(self) -> None:
+        profile = OUTPUT_PROFILES[OutputFormat.WHITEPAPER]
+        assert "cvc5" in profile.verification_backends
+        assert "alloy" in profile.verification_backends
+        assert "tla" in profile.verification_backends
 
     def test_article_profile_requires_empirical_validation(self) -> None:
         profile = OUTPUT_PROFILES[OutputFormat.ARTICLE]

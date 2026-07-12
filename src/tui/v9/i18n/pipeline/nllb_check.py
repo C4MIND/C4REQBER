@@ -15,6 +15,7 @@ import re
 import sys
 from collections import defaultdict
 from pathlib import Path
+from typing import Any
 
 
 # NLLB-200 lang codes
@@ -61,9 +62,9 @@ def detect_script(s: str) -> set:
                     break
     return found
 
-def parse_toml(filepath: Path) -> dict:
+def parse_toml(filepath: Path) -> dict[str, Any]:
     """Parse flat or sectioned TOML into dict[section][key]=value."""
-    result = {}
+    result: dict[str, Any] = {}
     current = "_root"  # default section for flat TOML
     result[current] = {}
     for line in filepath.read_text(encoding="utf-8").splitlines():

@@ -63,12 +63,16 @@ def _llm_generate(prompt: str, max_tokens: int = 2000, temperature: float = 0.7)
     for attempt in range(5):
         # After 2 failures, stop pinning preferred (often broken free-tier ids).
         model_pref = preferred if attempt < 2 else None
-        last = generate_with_fallback(
-            prompt,
-            max_tokens=max_tokens,
-            temperature=temperature,
-            preferred_model=model_pref,
-        )
+        try:
+            last = generate_with_fallback(
+                prompt,
+                max_tokens=max_tokens,
+                temperature=temperature,
+                preferred_model=model_pref,
+            )
+        except RuntimeError as exc:
+            last = str(exc)
+            logger.warning("Provider chain attempt %d failed: %s", attempt + 1, exc)
         if _is_valid_llm_output(last):
             return last
         logger.warning("Dissertation section invalid (attempt %d/5): %s", attempt + 1, last[:80])

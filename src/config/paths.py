@@ -56,8 +56,26 @@ OPENCODE_ZEN_FREE_MODELS: tuple[str, ...] = (
 )
 
 
+def load_verifiers_env() -> None:
+    """Load verifier tool paths (Java, TLA_TOOLS_JAR, CVC5) from ~/.c4reqber/verifiers.env."""
+    env_file = CONFIG_DIR / "verifiers.env"
+    if not env_file.is_file():
+        return
+    for line in env_file.read_text().splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#") or not stripped.startswith("export "):
+            continue
+        key_val = stripped.removeprefix("export ").split("=", 1)
+        if len(key_val) != 2:
+            continue
+        key, raw_val = key_val[0].strip(), key_val[1].strip().strip('"').strip("'")
+        if key and key not in os.environ:
+            os.environ[key] = raw_val
+
+
 def load_kilo_env(*, override: bool = False) -> None:
     """Load API keys from ~/.kilo (canonical vault). Idempotent."""
+    load_verifiers_env()
     global _KILO_ENV_LOADED
     if _KILO_ENV_LOADED and not override:
         return
@@ -94,7 +112,7 @@ def load_config_toml() -> dict[str, dict[str, str]]:
     if not CONFIG_TOML.is_file():
         return {}
     try:
-        import toml
+        import toml  # type: ignore[import-untyped]
 
         raw = toml.load(CONFIG_TOML)
         if not isinstance(raw, dict):

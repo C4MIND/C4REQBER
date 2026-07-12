@@ -229,14 +229,18 @@ class SynthesisStep(PipelineStep):
                 logger.warning("ProviderRouter synthesis failed (%s) — sync chain fallback", exc)
                 from src.llm.sync_provider_chain import generate_with_fallback
 
-                solution = generate_with_fallback(
-                    prompt,
-                    system_prompt=system,
-                    max_tokens=max(max_tokens, 4000),
-                    temperature=0.7,
-                )
+                try:
+                    solution = generate_with_fallback(
+                        prompt,
+                        system_prompt=system,
+                        max_tokens=max(max_tokens, 4000),
+                        temperature=0.7,
+                    )
+                except RuntimeError as chain_exc:
+                    logger.warning("Sync provider chain failed: %s", chain_exc)
+                    solution = ""
 
-            if not solution or len(solution.split()) < 400 or "[LLM unavailable" in solution:
+            if not solution or len(solution.split()) < 400:
                 raise RuntimeError(
                     f"Synthesis produced insufficient content ({len(solution.split())} words)"
                 )

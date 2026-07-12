@@ -8,18 +8,20 @@ from __future__ import annotations
 __all__ = [
     "PipelineStage",
     "PipelineStep",
+    "PipelineStepResult",
     "PipelineEvent",
     "SolvePipelineResult",
     "UniversalSolvePipeline",
 ]
 
+from collections.abc import AsyncGenerator
 import asyncio
 import logging
 from dataclasses import dataclass, field
 from typing import Any, Literal, TypedDict
 
 from src.agents.mp_llm_generator import MPLLMDynamicGenerator
-from src.agents.pipeline.steps.base import PipelineStage, PipelineStep
+from src.agents.pipeline.steps.base import PipelineStage, PipelineStep, PipelineStepResult
 from src.c4.engine import C4Space
 from src.c4.observer import ObserverController
 from src.c4.transformer import DomainTransformer
@@ -54,7 +56,7 @@ class SolvePipelineResult:
     """SolvePipelineResult."""
     problem: str
     mode: str
-    steps: list[PipelineStep] = field(default_factory=list)
+    steps: list[PipelineStepResult] = field(default_factory=list)
     final_solution: str = ""
     confidence: float = 0.0
     c4_path: list[str] = field(default_factory=list)
@@ -130,7 +132,7 @@ class UniversalSolvePipeline(BasePipeline):
         self._llm_lock = asyncio.Lock()
         self._selected_plugins: list[str] = []
         self._selected_pattern: str | None = None
-        self._cost_tracker = None
+        self._cost_tracker: Any = None
         self._prior_art_confidence = 0.0
         self.multi_searcher = None
 
@@ -210,10 +212,10 @@ class UniversalSolvePipeline(BasePipeline):
         mode: str = "autopilot",
         domain_hint: str | None = None,
         max_depth: int = 6,
-    ) -> None:
+    ) -> AsyncGenerator[PipelineEvent, None]:
         """Solve streaming."""
         from src.agents.pipeline.executor import PipelineExecutor
 
         executor = PipelineExecutor(self)
         async for event in executor.execute(problem, mode, domain_hint, max_depth):
-            yield event
+            yield event  # type: ignore[misc]

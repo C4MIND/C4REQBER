@@ -571,12 +571,12 @@ class GapMiner(GapAnalyzer):
         Logs errors instead of silently swallowing exceptions. Returns partial
         results even if some papers fail processing.
         """
-        llm_gaps = []
+        llm_gaps: list[Any] = []
 
         try:
             from src.llm.gateway import get_gateway
             paper_titles = "; ".join(p.get("title", "")[:80] for p in papers[:10])
-            result = await get_gateway().chat_json(
+            result: Any = await get_gateway().chat_json(
                 messages=[{
                     "role": "user",
                     "content": (
@@ -589,10 +589,12 @@ class GapMiner(GapAnalyzer):
                 system_prompt="You analyze scientific literature for research gaps.",
                 max_tokens=800,
             )
-            if isinstance(result, dict) and result.get("gaps"):
-                llm_gaps = result["gaps"]
+            if isinstance(result, dict):
+                raw_gaps = result.get("gaps")
+                if isinstance(raw_gaps, list):
+                    llm_gaps = raw_gaps
             elif isinstance(result, list):
-                llm_gaps = result
+                llm_gaps = list(result)
         except Exception as e:
             logger.warning("LLM gap mining failed for problem %r: %s", problem, e)
 

@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 # Hypothesis validation
 # ---------------------------------------------------------------------------
 
-def validate_hypothesis(hypothesis: dict[str, Any]) -> dict[str, Any]:
+def validate_hypothesis(hypothesis: Any) -> dict[str, Any]:
     """Validate a hypothesis dictionary.
 
     Checks:
@@ -89,7 +89,7 @@ def validate_hypothesis(hypothesis: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def validate_hypothesis_text(text: str) -> dict[str, Any]:
+def validate_hypothesis_text(text: Any) -> dict[str, Any]:
     """Validate hypothesis text directly.
 
     Args:
@@ -134,7 +134,7 @@ def validate_hypothesis_text(text: str) -> dict[str, Any]:
 # Proof validation
 # ---------------------------------------------------------------------------
 
-def validate_proof(proof: dict[str, Any]) -> dict[str, Any]:
+def validate_proof(proof: Any) -> dict[str, Any]:
     """Validate a proof dictionary.
 
     Checks:
@@ -230,7 +230,7 @@ def _validate_dafny_basic(code: str) -> bool:
 # Simulation config validation
 # ---------------------------------------------------------------------------
 
-def validate_simulation_config(config: dict[str, Any]) -> dict[str, Any]:
+def validate_simulation_config(config: Any) -> dict[str, Any]:
     """Validate a simulation configuration dictionary.
 
     Checks:
@@ -305,7 +305,7 @@ def validate_simulation_config(config: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def validate_simulation_result(result: dict[str, Any]) -> dict[str, Any]:
+def validate_simulation_result(result: Any) -> dict[str, Any]:
     """Validate a simulation result dictionary.
 
     Args:

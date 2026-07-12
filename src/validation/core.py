@@ -190,7 +190,7 @@ class CalibrationTracker:
         # Default is env-overridable so tests can redirect persistent state to
         # a tmp path instead of mutating the tracked repo file (see conftest).
         self.storage_path = Path(
-            storage_path or os.getenv("CALIBRATION_STORE", "data/calibration.json")
+            storage_path or os.getenv("CALIBRATION_STORE") or "data/calibration.json"
         )
         self.predictions: list[tuple] = []  # type: ignore[type-arg]
         self._load()

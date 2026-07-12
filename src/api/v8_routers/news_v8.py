@@ -5,15 +5,15 @@ from typing import Any
 
 """
 Reqber v8 — News API Router
-GET /api/v8/news/ticker — live ticker feed
-GET /api/v8/news/{id} — single news item
+GET /v8/news/ticker — live ticker feed
+GET /v8/news/{id} — single news item
 """
 import logging
 
 from fastapi import APIRouter, HTTPException, Query
 
-from news.aggregator import NewsAggregator
-from news.storage import NewsStorage
+from src.news.aggregator import NewsAggregator
+from src.news.storage import NewsStorage
 
 
 logger = logging.getLogger("reqber.api.v8.news")

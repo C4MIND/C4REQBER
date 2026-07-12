@@ -117,10 +117,26 @@ class PhaseE_SimulationVerification:
             }
 
     async def run_verification(
-        self, topic: str, hypotheses: list[dict[str, Any]], query_type: str
+        self,
+        topic: str,
+        hypotheses: list[dict[str, Any]],
+        query_type: str,
+        mode: str = "turbo",
     ) -> dict[str, Any]:
-        """Run hybrid verification (6 backends with smart model routing)."""
-        print("\n[E2/7] Running hybrid verification (Z3 + Lean4/Coq/Dafny/Agda/Hoare)...")
+        """Run hybrid verification (9 backends with smart model routing)."""
+        from src.pipeline.output_profiles import detect_format, get_profile
+
+        output_fmt = detect_format(topic, mode=mode)
+        profile = get_profile(output_fmt)
+        verify_ctx: dict[str, Any] = {
+            "topic": topic,
+            "preferred_backends": profile.verification_backends,
+            "output_format": output_fmt.value,
+        }
+        print(
+            f"\n[E2/7] Running hybrid verification "
+            f"({output_fmt.value}: {', '.join(profile.verification_backends)})..."
+        )
         if query_type == "practical":
             print("      SKIPPING formal verification for practical query")
             return {
@@ -144,7 +160,7 @@ class PhaseE_SimulationVerification:
             best_result = None
             for hypothesis in hypotheses:
                 checked += 1
-                result = await self.hybrid_verifier.verify(hypothesis, context={"topic": topic})
+                result = await self.hybrid_verifier.verify(hypothesis, context=verify_ctx)
                 if result.status in ("verified", "sat", "consistent"):
                     best_result = result
                     break
@@ -154,7 +170,7 @@ class PhaseE_SimulationVerification:
 
             if best_result is None and hypotheses:
                 best_result = await self.hybrid_verifier.verify(
-                    hypotheses[0], context={"topic": topic}
+                    hypotheses[0], context=verify_ctx
                 )
         except Exception as e:
             logger.warning("Hybrid verification failed: %s", e)

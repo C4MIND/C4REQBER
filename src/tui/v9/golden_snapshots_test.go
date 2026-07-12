@@ -297,7 +297,12 @@ func populateCapsim(m *model) {
 			{ID: "fenicsx", Name: "FEniCSx", Domain: capsim.DomainPhysics, Status: capsim.StatusUnavailable, InstallHint: "conda install -c conda-forge fenics-dolfinx"},
 			{ID: "gromacs", Name: "GROMACS", Domain: capsim.DomainChemistry, Status: capsim.StatusUnavailable},
 		},
-		Verifiers:      []capsim.Verifier{{ID: "lean4", Available: true, Version: "4.0.0"}},
+		Verifiers: []capsim.Verifier{
+			{ID: "lean4", Name: "Lean 4", Available: true, Version: "4.0.0"},
+			{ID: "cvc5", Name: "CVC5", Available: true, Version: "1.2.0"},
+			{ID: "tla", Name: "TLA+", Available: false},
+			{ID: "alloy", Name: "Alloy", Available: true, Version: "6.1.0"},
+		},
 		ProbeLatencyMS: 1200,
 	}
 	m.capsimReport.ProbeTimestamp = time.Now()

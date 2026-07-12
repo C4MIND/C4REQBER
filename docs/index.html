@@ -59,7 +59,7 @@
   "mainEntity": [
     {"@type": "Question", "name": "What is c4reqber?", "acceptedAnswer": {"@type": "Answer", "text": "c4reqber is a cognitive exoskeleton for AI agents and human researchers. It combines 36 simulation engines, 33 knowledge sources, formal verification (Lean4, Coq, Dafny), and a Z₃³ cognitive topology to transform research questions into paradigm-shifting dissertations."}},
     {"@type": "Question", "name": "How much does c4reqber cost?", "acceptedAnswer": {"@type": "Answer", "text": "c4reqber is free and open-source (AGPL-3.0). You only pay for the LLM API calls you use. A full pipeline run costs between $0.002 (Budget tier, DeepSeek) and $0.11 (Premium tier, Claude Opus). The recommended balanced tier costs approximately $0.35 per run."}},
-    {"@type": "Question", "name": "Is c4reqber open source?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. c4reqber is licensed under AGPL-3.0. The entire codebase, including 20 MCP tools, 36 simulation engine bridges, and 6 formal verification backends, is publicly available on GitHub."}},
+    {"@type": "Question", "name": "Is c4reqber open source?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. c4reqber is licensed under AGPL-3.0. The entire codebase, including 20 MCP tools, 36 simulation engine bridges, and 6 formal verification backends, is publicly available on GitLab."}},
     {"@type": "Question", "name": "What operating systems are supported?", "acceptedAnswer": {"@type": "Answer", "text": "macOS and Linux are fully tested and supported. Windows is not tested but may work under WSL2. External simulation engines (GROMACS, OpenFOAM, etc.) require separate installation per engine."}},
     {"@type": "Question", "name": "Do I need a GPU to use c4reqber?", "acceptedAnswer": {"@type": "Answer", "text": "No. GPU is optional. Apple Silicon (MLX) and NVIDIA CUDA are supported for accelerated simulation, but the core pipeline runs entirely on CPU. Minimum requirements: 4 GB RAM (8 GB recommended), 2 CPU cores (4+ for simulation workloads)."}}
   ]
@@ -229,7 +229,7 @@ body{overflow-x:hidden}
 .footer-link{transition:color .2s}
 .footer-link:hover{color:var(--accent)!important}
 
-/* GitHub badge hover */
+/* GitLab badge hover */
 .github-badge{transition:background .2s}
 .github-badge:hover{background:rgba(255,255,255,.1)!important}
 
@@ -355,7 +355,7 @@ body{overflow-x:hidden}
       <a href="#tui">TUI</a>
       <a href="#engines">Engines</a>
       <a href="#quickstart">Quickstart</a>
-      <a href="https://github.com/c4reqber/c4reqber" rel="noopener noreferrer" target="_blank">GitHub</a>
+      <a href="https://gitlab.com/cognitive-functors/turbo-cdi" rel="noopener noreferrer" target="_blank">GitLab</a>
     </div>
   </div>
 </nav>
@@ -372,7 +372,7 @@ body{overflow-x:hidden}
   <div class="hero-content">
     <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:32px;flex-wrap:wrap">
       <div class="badge"><span class="dot"></span> <span data-i18n="hero_badge">v5.5.0 · PRODUCTION · 0 mypy errors</span></div>
-      <a id="github-badge" class="github-badge" href="https://github.com/c4reqber/c4reqber" rel="noopener noreferrer" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:100px;padding:6px 16px;font-size:13px;color:var(--fg-2);text-decoration:none">
+      <a id="github-badge" class="github-badge" href="https://gitlab.com/cognitive-functors/turbo-cdi" rel="noopener noreferrer" target="_blank" style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:100px;padding:6px 16px;font-size:13px;color:var(--fg-2);text-decoration:none">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
         <span data-i18n="github_stars">Be the first star!</span>
       </a>
@@ -382,7 +382,7 @@ body{overflow-x:hidden}
     <p class="hero-meta" data-i18n="hero_tags">Z₃³ COGNITIVE EXOSKELETON · 27 STATES · 6 OPERATORS · 33+ SOURCES · 36 ENGINES · 20 MCP TOOLS</p>
     <div class="hero-btns">
       <a href="#quickstart" class="btn btn-primary" data-i18n="hero_cta_primary">pip install c4reqber</a>
-      <a href="https://github.com/c4reqber/c4reqber" class="btn btn-secondary" rel="noopener noreferrer" target="_blank" data-i18n="hero_cta_secondary">GitHub</a>
+      <a href="https://gitlab.com/cognitive-functors/turbo-cdi" class="btn btn-secondary" rel="noopener noreferrer" target="_blank" data-i18n="hero_cta_secondary">GitLab</a>
     </div>
     <p class="hero-meta" style="margin-top:16px;font-size:11px;opacity:.7" data-i18n="hero_meta">AGPL-3.0 · BYOK · Multi-Prompt Router · Terminal-First · OpenRouter · XAI · Mistral · Moonshot · DeepSeek · Liquid · NVIDIA · YandexGPT · Ollama · LM Studio · MLX</p>
   </div>
@@ -618,7 +618,7 @@ body{overflow-x:hidden}
       <div>[1] Engel et al. (2007) Nature 446, 782</div>
     </div>
     <div id="panel-blueprint" class="gallery-panel" role="tabpanel" aria-labelledby="tab-blueprint" style="display:none;background:var(--bg-3);border-radius:var(--radius);padding:24px;font-family:var(--mono);font-size:13px;line-height:1.8;border:1px solid rgba(255,255,255,.06)">
-      <div style="color:var(--primary)">GET /api/v8/discover</div>
+      <div style="color:var(--primary)">GET /v8/discover</div>
       <div style="color:var(--fg-3)"># Returns: C4Result</div>
       <div>{</div>
       <div>  "state": "F⟨Present,Abstract,Other⟩",</div>
@@ -1011,7 +1011,7 @@ body{overflow-x:hidden}
   <div class="container">
     <div class="section-header">
       <span class="section-label">Verification</span>
-      <h2 class="section-title">6 Formal Verification Backends</h2>
+      <h2 class="section-title">9 Formal Verification Backends</h2>
       <p class="section-desc">Your hypotheses don't just claim — they prove. Auto-selected by domain.</p>
     </div>
     <div class="feature-grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">
@@ -1085,7 +1085,7 @@ body{overflow-x:hidden}
     <p style="color:var(--fg-2);font-size:17px;max-width:500px;margin:0 auto 32px" data-i18n="cta_sub">One command. One dissertation. One paradigm shift.</p>
     <div class="hero-btns" style="margin-bottom:24px">
       <a href="#quickstart" class="btn btn-primary" data-i18n="hero_install">pip install c4reqber</a>
-      <a href="https://github.com/c4reqber/c4reqber" class="btn btn-secondary" rel="noopener noreferrer" target="_blank">GitHub</a>
+      <a href="https://gitlab.com/cognitive-functors/turbo-cdi" class="btn btn-secondary" rel="noopener noreferrer" target="_blank">GitLab</a>
     </div>
     <p style="font-size:12px;color:var(--fg-3)" data-i18n="cta_license">AGPL-3.0 · BYOK · No data retention · Self-hostable</p>
   </div>
@@ -1104,11 +1104,11 @@ body{overflow-x:hidden}
   <div class="container">
     <div style="display:flex;justify-content:center;gap:24px;margin-bottom:16px;flex-wrap:wrap">
       <a href="#quickstart" class="footer-link" style="color:var(--fg-2);text-decoration:none;font-size:13px">Quickstart</a>
-      <a href="https://github.com/c4reqber/c4reqber" class="footer-link" rel="noopener noreferrer" target="_blank" style="color:var(--fg-2);text-decoration:none;font-size:13px">GitHub</a>
+      <a href="https://gitlab.com/cognitive-functors/turbo-cdi" class="footer-link" rel="noopener noreferrer" target="_blank" style="color:var(--fg-2);text-decoration:none;font-size:13px">GitLab</a>
       <a href="GPU_SETUP.md" class="footer-link" style="color:var(--fg-2);text-decoration:none;font-size:13px">GPU Setup</a>
       <a href="simulation_engines_report.md" class="footer-link" style="color:var(--fg-2);text-decoration:none;font-size:13px">Engines</a>
     </div>
-    <p><span data-i18n="foot_product">c4reqber v5.5.0</span> · <a href="https://github.com/c4reqber/c4reqber" rel="noopener noreferrer" target="_blank">GitHub</a> · <a href="https://c4reqber.org/docs" rel="noopener noreferrer" target="_blank">Docs</a> · AGPL-3.0 · <span data-i18n="foot_tests">10,023 tests · 0 mypy errors</span></p>
+    <p><span data-i18n="foot_product">c4reqber v5.5.0</span> · <a href="https://gitlab.com/cognitive-functors/turbo-cdi" rel="noopener noreferrer" target="_blank">GitLab</a> · <a href="https://c4reqber.org/docs" rel="noopener noreferrer" target="_blank">Docs</a> · AGPL-3.0 · <span data-i18n="foot_tests">10,023 tests · 0 mypy errors</span></p>
     <p style="margin-top:8px" data-i18n="foot_slogan">Think. Simulate. Prove. Discover.</p>
   </div>
 </footer>
@@ -1134,7 +1134,7 @@ const i18n = {
     hero_subtitle: "The cognitive exoskeleton for <strong>humans and AI agents</strong>.<br>Think. Simulate. Prove. Discover.",
     hero_tags: "Z₃³ COGNITIVE EXOSKELETON · 27 STATES · 6 OPERATORS · 33+ SOURCES · 36 ENGINES · 20 MCP TOOLS · HUMANS + AI AGENTS",
     hero_cta_primary: "pip install c4reqber",
-    hero_cta_secondary: "GitHub",
+    hero_cta_secondary: "GitLab",
     hero_meta: "AGPL-3.0 · BYOK · Multi-Prompt Router · Terminal-First · OpenRouter · XAI · Mistral · Moonshot · DeepSeek · Liquid · NVIDIA · YandexGPT · Ollama · LM Studio · MLX",
     github_stars: "Be the first star!",
     stat_states: "Cognitive States",
@@ -1289,7 +1289,7 @@ const i18n = {
     hero_subtitle: "Когнитивный экзоскелет для <strong>людей и AI-агентов</strong>.<br>Думай. Симулируй. Докажи. Открой.",
     hero_tags: "Z₃³ КОГНИТИВНЫЙ ЭКЗОСКЕЛЕТ · 27 СОСТОЯНИЙ · 6 ОПЕРАТОРОВ · 33+ ИСТОЧНИКА · 36 ДВИЖКОВ · 20 MCP-ИНСТРУМЕНТОВ",
     hero_cta_primary: "pip install c4reqber",
-    hero_cta_secondary: "GitHub",
+    hero_cta_secondary: "GitLab",
     hero_meta: "AGPL-3.0 · BYOK · Multi-Prompt Router · Terminal-First · OpenRouter · XAI · Mistral · Moonshot · DeepSeek · Liquid · NVIDIA · YandexGPT · Ollama · LM Studio · MLX",
     github_stars: "Стань первой звездой!",
     stat_states: "Когнитивных состояний",
@@ -1444,7 +1444,7 @@ const i18n = {
     hero_subtitle: "为<strong>人类和 AI 代理</strong>打造的认知外骨骼。<br>思考。模拟。证明。发现。",
     hero_tags: "Z₃³ 认知外骨骼 · 27 状态 · 6 算子 · 33+ 知识源 · 36 引擎 · 20 MCP 工具",
     hero_cta_primary: "pip install c4reqber",
-    hero_cta_secondary: "GitHub",
+    hero_cta_secondary: "GitLab",
     github_stars: "成为第一颗星！",
     stat_states: "认知状态",
     stat_operators: "C4 算子",
@@ -1590,7 +1590,7 @@ const i18n = {
     hero_tags: "Z₃³ 認知エクソスケルトン · 27 状態 · 6 オペレータ · 33+ 知識源 · 36 エンジン · 20 MCP ツール · 人間+AIエージェント",
     hero_tags: "Z₃³ 認知エクソスケルトン · 27 状態 · 6 オペレータ · 33+ 知識源 · 36 エンジン · 20 MCP ツール",
     hero_cta_primary: "pip install c4reqber",
-    hero_cta_secondary: "GitHub",
+    hero_cta_secondary: "GitLab",
     github_stars: "最初のスターになろう！",
     stat_states: "認知状態",
     stat_operators: "C4 オペレータ",
@@ -1735,7 +1735,7 @@ const i18n = {
     hero_subtitle: "Kognitives Exoskelett für <strong>Menschen und KI-Agenten</strong>.<br>Denke. Simuliere. Beweise. Entdecke.",
     hero_tags: "Z₃³ KOGNITIVE EXOSKELETT · 27 ZUSTÄNDE · 6 OPERATOREN · 33+ QUELLEN · 36 ENGINES · 20 MCP-TOOLS",
     hero_cta_primary: "pip install c4reqber",
-    hero_cta_secondary: "GitHub",
+    hero_cta_secondary: "GitLab",
     github_stars: "Sei der erste Stern!",
     stat_states: "Kognitive Zustände",
     stat_operators: "C4-Operatoren",
@@ -1880,7 +1880,7 @@ const i18n = {
     hero_subtitle: "الهيكل المعرفي لـ <strong>البشر ووكلاء الذكاء الاصطناعي</strong>.<br>فكّر. حاكِ. أثبِت. اكتشف.",
     hero_tags: "Z₃³ الهيكل المعرفي · 27 حالة · 6 مشغلات · 33+ مصدر · 36 محرك · 20 أداة MCP",
     hero_cta_primary: "pip install c4reqber",
-    hero_cta_secondary: "GitHub",
+    hero_cta_secondary: "GitLab",
     github_stars: "كن النجمة الأولى!",
     stat_states: "الحالات المعرفية",
     stat_operators: "مشغلات C4",
@@ -2025,7 +2025,7 @@ const i18n = {
     hero_subtitle: "<strong>मनुष्यों और AI एजेंटों</strong> के लिए संज्ञानात्मक एक्जोस्केलेटन।<br>सोचो। अनुकरण करो। साबित करो। खोजो।",
     hero_tags: "Z₃³ संज्ञानात्मक एक्जोस्केलेटन · 27 स्थितियाँ · 6 ऑपरेटर · 33+ स्रोत · 36 इंजन · 20 MCP टूल्स",
     hero_cta_primary: "pip install c4reqber",
-    hero_cta_secondary: "GitHub",
+    hero_cta_secondary: "GitLab",
     github_stars: "पहला तारा बनें!",
     stat_states: "संज्ञानात्मक स्थितियाँ",
     stat_operators: "C4 ऑपरेटर",
@@ -2200,15 +2200,7 @@ document.querySelectorAll('.lang-btn').forEach(btn => {
   btn.addEventListener('click', () => applyLanguage(btn.dataset.lang));
 });
 
-// Adaptive GitLab/GitHub link strategy
-(function(){
-  const hostname = window.location.hostname;
-  const isGitLab = hostname.includes('gitlab') || hostname.includes('git.') || document.referrer.includes('gitlab');
-  const repoBase = isGitLab ? 'https://gitlab.com/c4reqber/c4reqber' : 'https://github.com/c4reqber/c4reqber';
-  document.querySelectorAll('a[href*="github.com/c4reqber"]').forEach(a => {
-    a.href = a.href.replace('https://github.com/c4reqber/c4reqber', repoBase);
-  });
-})();
+// Primary repo: GitLab (GitHub mirror is promotion-only, not linked here)
 
 // Scroll reveal animation with stagger
 const revealObserver=new IntersectionObserver((entries)=>{entries.forEach(e=>{if(e.isIntersecting){let delay=0;if(!e.target.classList.contains('section-header')){delay=Array.from(e.target.parentElement.children).indexOf(e.target)*80}e.target.style.transitionDelay=delay+'ms';e.target.style.opacity='1';e.target.style.transform='translateY(0)';revealObserver.unobserve(e.target)}})},{threshold:.1});
@@ -2225,22 +2217,6 @@ window.addEventListener('scroll',()=>{
   if(backTop){backTop.style.opacity=window.scrollY>500?'1':'0';backTop.style.pointerEvents=window.scrollY>500?'auto':'none'}
 });
 if(backTop)backTop.addEventListener('click',()=>window.scrollTo({top:0,behavior:'smooth'}));
-
-// GitHub star counter
-(function(){
-  const hostname=window.location.hostname;
-  const isGitLab=hostname.includes('gitlab')||hostname.includes('git.')||document.referrer.includes('gitlab');
-  if(isGitLab)return;
-  const repo='c4reqber/c4reqber';
-  fetch('https://api.github.com/repos/'+repo)
-    .then(r=>r.ok?r.json():null)
-    .then(d=>{
-      if(!d||typeof d.stargazers_count!=='number')return;
-      const el=document.querySelector('[data-i18n="github_stars"]');
-      if(el)el.textContent='⭐ '+d.stargazers_count.toLocaleString();
-    })
-    .catch(()=>{});
-})();
 
 // Theme toggle
 (function(){

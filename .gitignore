@@ -11,7 +11,18 @@ archive/*.rtf
 !archive/harness/
 !archive/tests/
 
-# Environment & Secrets — NEVER commit
+# Internal probe artefacts (never publish)
+MiniM-M3-Artefacts/
+
+# Maintainer-only docs (not for end users / public GitLab)
+docs/PYPI_PUBLISH.md
+PRODUCTION_UPGRADE_PLAN.md
+REWORK_PLAN.md
+plan.md
+WHITEPAPER.md
+.cursor/
+
+
 .env
 .env.*
 !.env.example
@@ -127,7 +138,9 @@ redis_data/
 
 # Temporary files
 tmp/
+tmp*/
 temp/
+smoke2/
 *.tmp
 
 # Model files (large) — but keep tracked config/source under models/
@@ -196,6 +209,24 @@ docs/drafts/
 docs/launch/
 docs/check-this-out/
 docs/planning/
+docs/OVERNIGHT_RELEASE_PLAN.md
+docs/SPEED_SWARM_PRO_DEV_PLAN.md
+docs/report.md
+docs/design-system/*_PLAN*.md
+
+# Root internal plans / reports (never publish)
+ARCHITECTURE_AUDIT.md
+MERGE_PLAN.md
+REORG_ANALYSIS.md
+OBSERVER_POSITION_ROADMAP.md
+README_HUMANIITY_SAVING_DISCOVERIES.md
+report.md
+test_upload.md
+test_upload.txt
+research/
+
+# Archive harness (internal guides + screenshots)
+archive/harness/
 
 # Kilo CLI workspace
 .kilo/

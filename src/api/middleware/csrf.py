@@ -106,8 +106,20 @@ class CSRFProtectionMiddleware(BaseHTTPMiddleware):
         except (ValueError, IndexError):
             return False
 
+    def _csrf_error(self, status_code: int, detail: str) -> Response:
+        """Return a JSON error without raising through BaseHTTPMiddleware."""
+        from starlette.responses import JSONResponse
+
+        return JSONResponse(status_code=status_code, content={"detail": detail})
+
     async def dispatch(self, request: Request, call_next) -> Response:
         """Process the request, validating CSRF tokens as needed."""
+        # Machine clients (TUI after login, MCP, curl with JWT) use Bearer auth —
+        # double-submit CSRF is a browser-cookie concern only.
+        auth = request.headers.get("Authorization", "")
+        if auth.startswith("Bearer ") and len(auth) > len("Bearer "):
+            return await call_next(request)
+
         # Skip CSRF for safe methods
         if request.method in ("GET", "HEAD", "OPTIONS"):
             response = await call_next(request)
@@ -133,20 +145,14 @@ class CSRFProtectionMiddleware(BaseHTTPMiddleware):
 
         if not csrf_cookie or not csrf_header:
             logger.warning("Missing CSRF token (cookie=%s, header=%s)", csrf_cookie, csrf_header)
-            from fastapi import HTTPException
-
-            raise HTTPException(status_code=403, detail="CSRF token missing")
+            return self._csrf_error(403, "CSRF token missing")
 
         if csrf_cookie != csrf_header:
             logger.warning("CSRF token mismatch")
-            from fastapi import HTTPException
-
-            raise HTTPException(status_code=403, detail="CSRF token mismatch")
+            return self._csrf_error(403, "CSRF token mismatch")
 
         if not self._validate_token(csrf_cookie):
             logger.warning("Invalid or expired CSRF token")
-            from fastapi import HTTPException
-
-            raise HTTPException(status_code=403, detail="Invalid CSRF token")
+            return self._csrf_error(403, "Invalid CSRF token")
 
         return await call_next(request)

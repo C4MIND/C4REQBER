@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 
-"""Hybrid Verifier — 6-backend formal verification with smart model routing.
+"""Hybrid Verifier — 9-backend formal verification with smart model routing.
 
-Backends: Z3 (numerical) + Lean4 + Coq + Dafny + Agda + Hoare
+Backends: Z3 + CVC5 + Lean4 + Coq + Dafny + Agda + Hoare + TLA+ + Alloy
 Model: MultiProviderReasonerClient (deepseek-reasoner → OR/gemini → OR/llama → local)
 Strategy: Auto-select backend → generate proof → compile → error-driven retry → Z3 fallback
 """
@@ -76,6 +76,26 @@ class HybridVerifier:
             "patterns": [r"theorem\b", r"lemma\b", r"forall", r"exists", r"proof\b"],
             "keywords": ["theorem", "lemma", "proof", "mathematics", "number theory", "algebra"],
         },
+        "cvc5": {
+            "patterns": [r"\(declare-", r"\(assert", r"\(check-sat\)", r"set-logic"],
+            "keywords": ["smt-lib", "smt2", "declare-const", "check-sat", "cvc5"],
+        },
+        "tla": {
+            "patterns": [r"----\s*MODULE", r"EXTENDS", r"Init\s*==", r"Next\s*==", r"\[\]<>"],
+            "keywords": ["tla+", "tlc", "liveness", "fairness", "temporal", "module"],
+        },
+        "alloy": {
+            "patterns": [r"\bsig\b", r"\bfun\b", r"\bassert\b", r"\brun\b", r"\bcheck\b"],
+            "keywords": ["alloy", "relational", "signature", "fact", "predicate"],
+        },
+        "haskell-typecheck": {
+            "patterns": [r"^module\s+[A-Z]", r"::\s*", r"\bdata\s+\w+", r"\bwhere\b"],
+            "keywords": ["haskell", "ghc", "typeclass", "datatype"],
+        },
+        "haskell-quickcheck": {
+            "patterns": [r"prop_\w+", r"QuickCheck", r"quickCheck"],
+            "keywords": ["quickcheck", "property", "arbitrary", "gen"],
+        },
     }
 
     def __init__(self) -> None:
@@ -125,8 +145,12 @@ class HybridVerifier:
             self._cache[cache_key] = vr
             return vr
 
-        # Step 1: Auto-select backend
-        backend = self._select_backend(claim)
+        # Step 1: Auto-select backend (optionally constrained by output profile)
+        preferred = ctx.get("preferred_backends")
+        if preferred and isinstance(preferred, list):
+            backend = self._select_backend(claim, preferred=[str(b) for b in preferred])
+        else:
+            backend = self._select_backend(claim)
         logger.info("Selected backend: %s for claim: %s...", backend, claim[:60])
 
         # Emit verification start event
@@ -140,13 +164,20 @@ class HybridVerifier:
         except (ImportError, RuntimeError, ValueError):
             pass
 
-        # Step 2: Fast path — Z3 for numerical claims (no LLM, instant)
+        # Step 2: Fast path — Z3/CVC5 for numerical/SMT claims (no LLM)
         if backend == "z3":
             result = self.z3.formulate(hypothesis, backend="z3")
             elapsed_ms = (time.perf_counter() - t0) * 1000
+            z3_raw = result.get("status", "unknown")
+            if z3_raw == "sat":
+                norm_status = "verified"
+            elif z3_raw == "unsat":
+                norm_status = "rejected"
+            else:
+                norm_status = "uncertain"
             vr = VerificationResult(
                 backend="z3",
-                status=result.get("status", "unknown"),
+                status=norm_status,
                 claim=claim[:200],
                 proof_code=result.get("theorem_statement", ""),
                 proof_text=result.get("proof_strategy", ""),
@@ -156,6 +187,76 @@ class HybridVerifier:
             )
             self._cache[cache_key] = vr
             return vr
+
+        if backend == "cvc5":
+            from src.verification.cvc5_client import CVC5Client
+
+            client = CVC5Client()
+            if client.is_available():
+                code = self._extract_embedded_code(claim, "cvc5")
+                if not code.strip():
+                    smt = self.z3.formulate(hypothesis, backend="z3")
+                    code = smt.get("theorem_statement", "") or smt.get("smt_code", "")
+                if not self._looks_like_smt(code):
+                    code = "(set-logic ALL)\n(declare-const x Real)\n(check-sat)\n"
+                result = client.verify(code)
+                elapsed_ms = (time.perf_counter() - t0) * 1000
+                vr = VerificationResult(
+                    backend="cvc5",
+                    status="verified" if result.get("valid") else "failed",
+                    claim=claim[:200],
+                    proof_code=code[:500],
+                    proof_text=result.get("output", "")[:200],
+                    error_message=result.get("error") or "",
+                    iterations=1,
+                    execution_time_ms=elapsed_ms,
+                )
+                self._cache[cache_key] = vr
+                return vr
+
+        if backend == "tla":
+            from src.verification.tla_client import TLAClient
+
+            client = TLAClient()
+            if client.is_available():
+                code = self._extract_embedded_code(claim, "tla")
+                if code:
+                    result = client.verify(code)
+                    elapsed_ms = (time.perf_counter() - t0) * 1000
+                    vr = VerificationResult(
+                        backend="tla",
+                        status="verified" if result.get("valid") else "failed",
+                        claim=claim[:200],
+                        proof_code=code[:500],
+                        proof_text=result.get("output", "")[:200],
+                        error_message=result.get("error") or "",
+                        iterations=1,
+                        execution_time_ms=elapsed_ms,
+                    )
+                    self._cache[cache_key] = vr
+                    return vr
+
+        if backend == "alloy":
+            from src.verification.alloy_client import AlloyClient
+
+            client = AlloyClient()
+            if client.is_available():
+                code = self._extract_embedded_code(claim, "alloy")
+                if code:
+                    result = client.verify(code)
+                    elapsed_ms = (time.perf_counter() - t0) * 1000
+                    vr = VerificationResult(
+                        backend="alloy",
+                        status="verified" if result.get("valid") else "failed",
+                        claim=claim[:200],
+                        proof_code=code[:500],
+                        proof_text=result.get("output", "")[:200],
+                        error_message=result.get("error") or "",
+                        iterations=1,
+                        execution_time_ms=elapsed_ms,
+                    )
+                    self._cache[cache_key] = vr
+                    return vr
 
         # Step 3: Generate formal proof with reasoner model (with timeout)
         timer = VerificationTimer(backend)
@@ -252,32 +353,59 @@ class HybridVerifier:
         vr.execution_time_ms = total_ms
         return vr
 
-    def _select_backend(self, claim: str) -> str:
-        """Auto-select best backend based on claim content."""
+    @staticmethod
+    def _looks_like_smt(code: str) -> bool:
+        return bool(re.search(r"\(declare-|\(assert|\(check-sat\)|\(set-logic", code, re.I))
+
+    def _extract_embedded_code(self, claim: str, backend: str) -> str:
+        """Return raw verifier source embedded in a claim, if present."""
+        if backend == "cvc5":
+            if re.search(r"\(declare-|\(assert|\(check-sat\)|set-logic", claim, re.I):
+                return claim.split(". ", 1)[-1].strip()
+        if backend == "tla":
+            match = re.search(r"----\s*MODULE[\s\S]+?====", claim)
+            if match:
+                return match.group(0)
+        if backend == "alloy":
+            if re.search(r"\bsig\b", claim, re.I) and re.search(r"\brun\b|\bcheck\b", claim, re.I):
+                return claim.split(". ", 1)[-1].strip()
+        return ""
+
+    def _backend_score(self, claim_lower: str, backend: str) -> int:
+        rules = self.BACKEND_RULES.get(backend, {})
+        score = sum(1 for kw in rules.get("keywords", []) if kw in claim_lower)
+        score += sum(2 for p in rules.get("patterns", []) if re.search(p, claim_lower, re.IGNORECASE))
+        return score
+
+    def _select_backend(self, claim: str, preferred: list[str] | None = None) -> str:
+        """Auto-select best backend based on claim content and optional profile preference."""
         claim_lower = claim.lower()
 
         # Priority 1: Numerical bounds → Z3 (fastest, no LLM)
-        z3_score = sum(1 for kw in self.BACKEND_RULES["z3"]["keywords"] if kw in claim_lower)
-        z3_score += sum(1 for p in self.BACKEND_RULES["z3"]["patterns"] if re.search(p, claim_lower))
-        if z3_score >= 1:
-            return "z3"
+        if self._backend_score(claim_lower, "z3") >= 1:
+            auto = "z3"
+        else:
+            scores = {
+                backend: self._backend_score(claim_lower, backend)
+                for backend in self.BACKEND_RULES
+                if backend != "z3"
+            }
+            best = max(scores, key=lambda k: scores[k]) if scores else "lean4"
+            auto = best if scores.get(best, 0) >= 1 else "lean4"
 
-        # Score other backends
-        scores = {}
-        for backend, rules in self.BACKEND_RULES.items():
-            if backend == "z3":
-                continue
-            score = sum(1 for kw in rules["keywords"] if kw in claim_lower)
-            score += sum(2 for p in rules["patterns"] if re.search(p, claim_lower))
-            scores[backend] = score
+        if not preferred:
+            return auto
+        return self._align_backend_to_profile(claim_lower, auto, preferred)
 
-        if scores:
-            best = max(scores, key=lambda k: scores[k])
-            if scores[best] >= 1:
-                return best
-
-        # Default: Lean4 for pure math
-        return "lean4"
+    def _align_backend_to_profile(self, claim_lower: str, auto: str, preferred: list[str]) -> str:
+        """Prefer backends from the active output profile when claim signal is weak."""
+        if auto in preferred:
+            return auto
+        pref_scores = {b: self._backend_score(claim_lower, b) for b in preferred}
+        best_pref = max(pref_scores, key=lambda k: pref_scores[k])
+        if pref_scores[best_pref] >= 1:
+            return best_pref
+        return preferred[0]
 
     def _detect_domain(self, claim: str) -> str:
         """Detect scientific domain for better prompt engineering."""
@@ -307,6 +435,16 @@ class HybridVerifier:
                 return self._compile_agda(code)
             elif backend == "hoare":
                 return self._compile_hoare(code)
+            elif backend == "cvc5":
+                return self._compile_cvc5(code)
+            elif backend == "tla":
+                return self._compile_tla(code)
+            elif backend == "alloy":
+                return self._compile_alloy(code)
+            elif backend == "haskell-typecheck":
+                return self._compile_haskell_typecheck(code)
+            elif backend == "haskell-quickcheck":
+                return self._compile_haskell_quickcheck(code)
             else:
                 return {"status": "unknown_backend", "error": f"Unknown backend: {backend}"}
         except (subprocess.TimeoutExpired, FileNotFoundError, OSError) as e:
@@ -422,17 +560,73 @@ class HybridVerifier:
             os.unlink(path)
             os.rmdir(temp_dir)
 
+    def _compile_cvc5(self, code: str) -> dict[str, Any]:
+        """Verify SMT-LIB2 via CVC5."""
+        from src.verification.cvc5_client import CVC5Client
+
+        client = CVC5Client()
+        if not client.available:
+            return {"status": "not_installed", "error": "cvc5 not found"}
+        result = client.verify(code)
+        if result.get("valid"):
+            return {"status": "success", "error": ""}
+        return {"status": "error", "error": result.get("error", "CVC5 verification failed")}
+
+    def _compile_tla(self, code: str) -> dict[str, Any]:
+        """Model-check TLA+ via TLC."""
+        from src.verification.tla_client import TLAClient
+
+        client = TLAClient()
+        if not client.available:
+            return {"status": "not_installed", "error": "TLA+ TLC not found"}
+        result = client.verify(code)
+        if result.get("valid"):
+            return {"status": "success", "error": ""}
+        return {"status": "error", "error": result.get("error", "TLC model checking failed")}
+
+    def _compile_alloy(self, code: str) -> dict[str, Any]:
+        """Execute Alloy model."""
+        from src.verification.alloy_client import AlloyClient
+
+        client = AlloyClient()
+        if not client.available:
+            return {"status": "not_installed", "error": "Alloy not found"}
+        result = client.verify(code)
+        if result.get("valid"):
+            return {"status": "success", "error": ""}
+        return {"status": "error", "error": result.get("error", "Alloy verification failed")}
+
     def _compile_hoare(self, code: str) -> dict[str, Any]:
         """Verify Hoare triple via Z3-based weakest-precondition calculus."""
         from src.verification.hoare_verifier import HoareVerifier
         hv = HoareVerifier()
         result = hv.verify(code)
-        return {
-            "status": "verified" if result.valid else "failed",
-            "success": result.valid,
-            "valid": result.valid,
-            "details": result.counterexample if result.counterexample else str(result.wp)[:200],
-        }
+        if result.valid:
+            return {"status": "success", "error": ""}
+        err = result.error or str(result.counterexample) or "Hoare verification failed"
+        return {"status": "error", "error": err}
+
+    def _compile_haskell_typecheck(self, code: str) -> dict[str, Any]:
+        from src.verification.haskell_bridge import verify_haskell_typecheck
+        result = verify_haskell_typecheck(code)
+        if result.get("status") == "passed":
+            return {"status": "success", "error": ""}
+        if result.get("status") == "unavailable":
+            return {"status": "not_installed", "error": result.get("error", "GHC not found")}
+        err = result.get("error") or result.get("message") or "Haskell typecheck failed"
+        return {"status": "error", "error": str(err)}
+
+    def _compile_haskell_quickcheck(self, code: str) -> dict[str, Any]:
+        from src.verification.haskell_bridge import verify_haskell_quickcheck
+        result = verify_haskell_quickcheck(code)
+        if result.get("status") == "passed":
+            return {"status": "success", "error": ""}
+        if result.get("status") == "unavailable":
+            return {"status": "not_installed", "error": result.get("error", "GHC not found")}
+        if result.get("status") == "skipped":
+            return {"status": "incomplete", "error": result.get("message", "No QuickCheck properties")}
+        err = result.get("error") or result.get("message") or "Haskell QuickCheck failed"
+        return {"status": "error", "error": str(err)}
 
     def _categorize_error(self, error: str, backend: str) -> str:
         """Categorize compiler error for targeted fixing."""

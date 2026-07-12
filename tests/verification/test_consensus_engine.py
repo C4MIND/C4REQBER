@@ -128,7 +128,7 @@ class TestConsensusEngine:
         ) as mock_prove:
             result = await engine.verify_with_consensus("forall x, x = x")
 
-        assert mock_prove.call_count == 3  # default languages
+        assert mock_prove.call_count == 6  # default languages incl. cvc5/tla/alloy
         assert result.status == "verified"
 
     @pytest.mark.anyio(backend="asyncio")

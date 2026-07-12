@@ -311,14 +311,26 @@ async def _run_simulation_verify(results: dict, problem: str, domain: str, paper
 
 async def _run_formal_verification(results: dict, papers: list, errors: list) -> None:
     """Run Lean4, Coq, Dafny verification via auto-formalization pipeline."""
+    import importlib
+
     hyp_text = results.get("hypothesis", {}).get("text", "")
     verification_results = {}
-    for prover, module in [("lean4", "verification.lean4_client"), ("coq", "verification.coq_client"), ("dafny", "verification.dafny_client")]:
+    prover_clients = {
+        "lean4": ("src.verification.lean4_client", "Lean4Client"),
+        "coq": ("src.verification.coq_client", "CoqClient"),
+        "dafny": ("src.verification.dafny_client", "DafnyClient"),
+    }
+    evidence = [p.get("title", "")[:100] for p in papers[:5]]
+    for prover, (module_path, class_name) in prover_clients.items():
         try:
-            import importlib
-            client_cls = getattr(importlib.import_module(module), module.split('.')[-1].title() + "Client")
-            r = await client_cls().verify_discovery(hyp_text[:500], [p.get("title", "")[:100] for p in papers[:5]])
-            verification_results[prover] = {"verified": r.get("success", False), "output": str(r.get("output", ""))[:200]}
+            mod = importlib.import_module(module_path)
+            client_cls = getattr(mod, class_name)
+            client = client_cls()
+            r = await client.verify_discovery(hyp_text[:500], evidence)
+            verification_results[prover] = {
+                "verified": r.get("success", r.get("valid", False)),
+                "output": str(r.get("output", ""))[:200],
+            }
         except (ImportError, AttributeError, RuntimeError) as e:
             verification_results[prover] = {"verified": False, "error": str(e)[:100]}
     results["verification"] = verification_results

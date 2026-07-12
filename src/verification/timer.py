@@ -31,6 +31,11 @@ BACKEND_TIMEOUTS = {
     "coq":       (60.0,  180.0),    # 1min soft, 3min hard (Coq can hang forever!)
     "agda":      (60.0,  1200.0),   # 1min soft, 20min hard (Agda is VERY SLOW)
     "hoare":     (1.0,   5.0),      # Instant
+    "cvc5":      (1.0,   30.0),     # SMT — usually fast
+    "tla":       (30.0,  180.0),    # TLC model checking
+    "alloy":     (15.0,  120.0),    # Relational model execution
+    "haskell-typecheck": (15.0, 60.0),
+    "haskell-quickcheck": (30.0, 120.0),
 }
 
 

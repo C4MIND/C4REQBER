@@ -16,13 +16,24 @@ from typing import Any
 from src.tui.pipeline_stories import PIPELINE_STORIES
 
 
+def _run_coro_sync(coro: Any) -> Any:
+    """Run async coroutine from sync code (safe inside or outside a running loop)."""
+    try:
+        asyncio.get_running_loop()
+    except RuntimeError:
+        return asyncio.run(coro)
+    import concurrent.futures
+    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+        return pool.submit(asyncio.run, coro).result()
+
+
 def _run_pipeline_modules(problem: str, papers_raw: list, hypothesis_text: str, domain: str) -> dict:
     """Run all 10 discovery modules in background (preparation only)."""
     results = {}
 
     # 1. GPU Providers — detect hardware
     try:
-        from compute.gpu_providers import detect_local_gpu
+        from src.compute.gpu_providers import detect_local_gpu
         detect_local_gpu()
     except ImportError:
         pass
@@ -31,7 +42,7 @@ def _run_pipeline_modules(problem: str, papers_raw: list, hypothesis_text: str, 
     try:
         from src.discovery.gap_miner import GapMiner
         gm = GapMiner()
-        gap_result = asyncio.run(gm.mine_for_discovery(problem, papers_raw))
+        gap_result = _run_coro_sync(gm.mine_for_discovery(problem, papers_raw))
         results["gap_miner"] = gap_result.get("gaps_found", 0)
     except (ImportError, KeyError):
         logger.debug("GapMiner unavailable in pipeline runner")
@@ -51,14 +62,14 @@ def _run_pipeline_modules(problem: str, papers_raw: list, hypothesis_text: str, 
             nv = NoveltyValidator()
             async with nv as validator:
                 return await validator.check(hypothesis_text, domain)
-        novelty = asyncio.run(_check_novelty())
+        novelty = _run_coro_sync(_check_novelty())
         results["novelty"] = novelty.get("novelty_score", 0)
     except (TimeoutError, ImportError, KeyError, TypeError):
         pass
 
     # 5. Monte Carlo — statistical validation
     try:
-        from bayesian.monte_carlo import MonteCarloValidator
+        from src.validation.monte_carlo import MonteCarloValidator
         mc = MonteCarloValidator(trials=100)
         mc_result = mc.validate(
             {"mean": 0.78},
@@ -79,7 +90,7 @@ def _run_pipeline_modules(problem: str, papers_raw: list, hypothesis_text: str, 
 
     # 7. Auto Poster — share discovery (if keys configured)
     try:
-        from social.auto_poster import SocialAutoPoster
+        from src.social.auto_poster import SocialAutoPoster
         poster = SocialAutoPoster()
         teaser = f"C4 Discovery: {problem[:120]} — {hypothesis_text[:150]}"
         for plat in ["mastodon", "x_twitter"]:
@@ -93,7 +104,7 @@ def _run_pipeline_modules(problem: str, papers_raw: list, hypothesis_text: str, 
     # 8. Blueprint Generator — for physical/engineering domains
     try:
         if domain in ("engineering", "materials", "physics"):
-            from publishing.blueprint import BlueprintGenerator
+            from src.publishing.blueprint import BlueprintGenerator
             bp = BlueprintGenerator()
             bp.generate_ascii_schematic(
                 problem, [{"name": "Component", "material": "Unknown"}]
@@ -107,7 +118,7 @@ def _run_pipeline_modules(problem: str, papers_raw: list, hypothesis_text: str, 
             from src.discovery.auto_scanner import AutoScanner
             scanner = AutoScanner()
             return await scanner.scan_unsolved_problems([domain])
-        next_problems = asyncio.run(_scan())
+        next_problems = _run_coro_sync(_scan())
         results["next_problems"] = next_problems[:5]
     except (TimeoutError, ImportError, IndexError, KeyError, TypeError):
         pass
@@ -141,7 +152,7 @@ def run_discovery_pipeline_sync(problem: str, live, _update_render, _advance_pip
 
     try:
         import httpx
-        api_url = "http://127.0.0.1:8000/api/v8/discover/one-click"
+        api_url = "http://127.0.0.1:8000/v8/discover/one-click"
         with httpx.Client(timeout=300) as client:
             response = client.post(api_url, json={"problem": problem, "domain": domain})
             results = response.json()

@@ -903,6 +903,11 @@ def blast_serve(
         console.print("[dim]Use --mcp to start the MCP server[/]")
         return
 
+    from src.config.paths import load_kilo_env, load_verifiers_env
+
+    load_kilo_env()
+    load_verifiers_env()
+
     console.print("[bold cyan]Starting C4REQBER MCP Server...[/]")
     console.print("[dim]MCP stdio JSON-RPC transport[/]")
     console.print("[dim]21 tools available for connected AI agents[/]")
@@ -1000,184 +1005,10 @@ def blast_agent(
             from src.c4_analysis.llm_classifier import get_c4_classifier
 
             classifier = get_c4_classifier()
-            state, confidence, _ = classifier.classify(problem)
+            state, confidence, _ = await classifier.classify(problem)
             return f"C4 State: {state} (confidence: {confidence:.2f})"
 
         _asyncio.run(fallback.run_stdio_fallback())
-        return
-
-        try:
-            from src.agent.core import AgentCore
-
-            agent = AgentCore()
-
-            async def agent_daemon_main():
-                import json as _json
-
-                reader = sys.stdin
-                writer = sys.stdout
-
-                while True:
-                    line = reader.readline()
-                    if not line:
-                        break
-                    try:
-                        request = _json.loads(line.strip())
-                        method = request.get("method", "")
-                        params = request.get("params", {})
-                        request_id = request.get("id")
-
-                        if method == "tools/list":
-                            tools = [
-                                {
-                                    "name": "agent_process",
-                                    "description": "Process a query through the AI agent",
-                                    "inputSchema": {
-                                        "type": "object",
-                                        "properties": {"query": {"type": "string"}},
-                                        "required": ["query"],
-                                    },
-                                },
-                                {
-                                    "name": "agent_search",
-                                    "description": "Search knowledge sources",
-                                    "inputSchema": {
-                                        "type": "object",
-                                        "properties": {
-                                            "query": {"type": "string"},
-                                            "max_results": {"type": "integer"},
-                                        },
-                                        "required": ["query"],
-                                    },
-                                },
-                                {
-                                    "name": "agent_verify",
-                                    "description": "Verify code with formal methods",
-                                    "inputSchema": {
-                                        "type": "object",
-                                        "properties": {
-                                            "code": {"type": "string"},
-                                            "backend": {"type": "string"},
-                                        },
-                                        "required": ["code"],
-                                    },
-                                },
-                                {
-                                    "name": "agent_codegen",
-                                    "description": "Generate code from specification",
-                                    "inputSchema": {
-                                        "type": "object",
-                                        "properties": {
-                                            "spec": {"type": "string"},
-                                            "language": {"type": "string"},
-                                        },
-                                        "required": ["spec"],
-                                    },
-                                },
-                                {
-                                    "name": "agent_fingerprint",
-                                    "description": "Classify problem into C4 state",
-                                    "inputSchema": {
-                                        "type": "object",
-                                        "properties": {"problem": {"type": "string"}},
-                                        "required": ["problem"],
-                                    },
-                                },
-                                {
-                                    "name": "agent_transfer",
-                                    "description": "Cross-domain isomorphism transfer",
-                                    "inputSchema": {
-                                        "type": "object",
-                                        "properties": {
-                                            "problem": {"type": "string"},
-                                            "source_domain": {"type": "string"},
-                                            "target_domain": {"type": "string"},
-                                        },
-                                        "required": ["problem"],
-                                    },
-                                },
-                                {
-                                    "name": "agent_solve",
-                                    "description": "Solve problem via discovery pipeline",
-                                    "inputSchema": {
-                                        "type": "object",
-                                        "properties": {"problem": {"type": "string"}},
-                                        "required": ["problem"],
-                                    },
-                                },
-                            ]
-                            response = {
-                                "jsonrpc": "2.0",
-                                "id": request_id,
-                                "result": {"tools": tools},
-                            }
-                        elif method == "tools/call":
-                            tool_name = params.get("name", "")
-                            arguments = params.get("arguments", {})
-                            result = {}
-
-                            if tool_name == "agent_process":
-                                resp = agent.process(arguments.get("query", ""))
-                                result = {"content": [{"type": "text", "text": resp.content}]}
-                            elif tool_name == "agent_solve":
-                                resp = agent.process(arguments.get("problem", ""))
-                                result = {"content": [{"type": "text", "text": resp.content}]}
-                            elif tool_name == "agent_search":
-                                result = {
-                                    "content": [
-                                        {
-                                            "type": "text",
-                                            "text": f"Search for: {arguments.get('query', '')}",
-                                        }
-                                    ]
-                                }
-                            elif tool_name == "agent_fingerprint":
-                                from src.c4_analysis.llm_classifier import get_c4_classifier
-
-                                classifier = get_c4_classifier()
-                                state, confidence, _ = classifier.classify(
-                                    arguments.get("problem", "")
-                                )
-                                result = {
-                                    "content": [
-                                        {
-                                            "type": "text",
-                                            "text": f"C4 State: {state} (confidence: {confidence:.2f})",
-                                        }
-                                    ]
-                                }
-                            else:
-                                result = {
-                                    "content": [
-                                        {"type": "text", "text": f"Tool {tool_name} executed"}
-                                    ]
-                                }
-
-                            response = {"jsonrpc": "2.0", "id": request_id, "result": result}
-                        elif method == "notifications/initialized":
-                            response = None
-                        else:
-                            response = {
-                                "jsonrpc": "2.0",
-                                "id": request_id,
-                                "error": {"code": -32601, "message": f"Method not found: {method}"},
-                            }
-
-                        if response:
-                            writer.write(_json.dumps(response) + "\n")
-                            writer.flush()
-                    except _json.JSONDecodeError:
-                        pass
-
-            import asyncio as _asyncio
-            import sys as _sys
-
-            _asyncio.run(agent_daemon_main())
-        except ImportError as e:
-            console.print(f"[red]Agent daemon failed: {e}[/]")
-            raise typer.Exit(1) from e
-        except KeyboardInterrupt:
-            console.print("\n[yellow]Agent daemon stopped.[/]")
         return
 
     if cmd:
@@ -1545,6 +1376,23 @@ def blast_packages(
 # ═══════════════════════════════════════════════════════════════════════════════
 
 
+def _install_verifiers(console: Console) -> None:
+    """Install CVC5/TLA+/Alloy via tools/install-verifiers.sh (idempotent)."""
+    import subprocess
+    from pathlib import Path
+
+    script = Path(__file__).resolve().parents[2] / "tools" / "install-verifiers.sh"
+    if not script.is_file():
+        console.print("[yellow]Verifier installer not found — skip CVC5/TLA+/Alloy setup[/]")
+        return
+    console.print("\n[bold]Installing formal verifiers (CVC5, TLA+, Alloy)...[/]")
+    result = subprocess.run(["bash", str(script)], check=False)
+    if result.returncode == 0:
+        console.print("[green]Verifiers installed (see ~/.c4reqber/verifiers.env)[/]")
+    else:
+        console.print("[yellow]Verifier install finished with warnings — run: bash tools/install-verifiers.sh[/]")
+
+
 @app.command("setup")
 def blast_setup(
     auto: bool = typer.Option(
@@ -1582,6 +1430,7 @@ def blast_setup(
         for pkg in to_install:
             ok, msg = install_package(pkg.id)
             console.print(f"  {'✓' if ok else '✗'} {pkg.id:<18} {msg[:60]}")
+        _install_verifiers(console)
         console.print("[green]Setup complete![/]")
         return
 
@@ -1650,6 +1499,7 @@ def blast_setup(
     statuses = detect_all()
     final_installed = sum(1 for v in statuses.values() if v == PackageStatus.INSTALLED)
     console.print(f"\n[green]Setup complete! {final_installed}/15 packages installed.[/]")
+    _install_verifiers(console)
     console.print("[dim]Run 'blast packages' to see full status.[/]")
 
 

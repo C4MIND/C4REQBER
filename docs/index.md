@@ -39,7 +39,7 @@ description: "The missing cognitive layer for the agentic era. 115 simulations, 
     <p class="hero-tagline">The missing cognitive layer for the agentic era. Think. Simulate. Prove. Discover.</p>
     <div class="hero-buttons">
       <a href="#quickstart" class="btn btn-primary">pip install c4reqber</a>
-      <a href="https://github.com/c4-meta-labs/c4reqber" class="btn btn-secondary">GitHub</a>
+      <a href="https://gitlab.com/cognitive-functors/turbo-cdi" class="btn btn-secondary">GitLab</a>
       <a href="GETTING_STARTED.html" class="btn btn-ghost">Documentation</a>
     </div>
     <p class="hero-meta">MCP-native &bull; 21 Tools + JSON Schema &bull; 101+ Simulations &bull; 10 Verifiers &bull; 28 Plugins &bull; WASM Runtime &bull; Zero PII &bull; AGPL-3.0</p>
@@ -144,7 +144,7 @@ description: "The missing cognitive layer for the agentic era. 115 simulations, 
       </div>
       <div class="feature-card">
         <div class="feature-icon" style="color: var(--secondary);">&#9632;</div>
-        <h3>6 Formal Verification Backends</h3>
+        <h3>9 Formal Verification Backends</h3>
         <p>Lean4 for math. Coq for hardware. Dafny for software. Agda for type theory. Hoare for imperative systems. Auto-selected by domain.</p>
         <div class="feature-tags">
           <span class="feature-tag">Lean4</span>
@@ -497,7 +497,7 @@ description: "The missing cognitive layer for the agentic era. 115 simulations, 
 <footer class="site-footer">
   <div class="wrapper">
     <div class="footer-links">
-      <a href="https://github.com/c4-meta-labs/c4reqber">GitHub</a>
+      <a href="https://gitlab.com/cognitive-functors/turbo-cdi">GitLab</a>
       <a href="LICENSE">AGPL-3.0</a>
       <a href="#">v5.4.1</a>
       <a href="GETTING_STARTED.html">Docs</a>

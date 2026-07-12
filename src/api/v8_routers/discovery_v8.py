@@ -1,6 +1,6 @@
 """
 C4REQBER v8.0: One-Click Discovery API Router
-POST /api/v8/discover/one-click — runs the full discovery pipeline:
+POST /v8/discover/one-click — runs the full discovery pipeline:
 C4 → TRIZ → UCOS (4-Layer) → QZRF (14 Operators) →
 Knowledge Search → Isomorphism → Hypothesis → Simulation → Verification → Paper Generation.
 """
@@ -28,6 +28,7 @@ from src.api.v8_routers.discovery.pipeline import (
     navigate_c4,
     one_click_discovery,
 )
+from src.api.v8_routers.turbo_v8 import TurboRequest, turbo_discovery
 
 
 logger = logging.getLogger("c4_cdi_turbo.api.v8.discovery")
@@ -105,14 +106,20 @@ async def multi_hypothesis_discovery_route(request: MultiHypothesisRequest) -> d
     return await multi_hypothesis_discovery(request)
 
 
+@router.post("/turbo")
+async def discover_turbo_alias(request: TurboRequest) -> dict[str, Any]:
+    """Alias for POST /v8/turbo (legacy clients used /v8/discover/turbo)."""
+    return await turbo_discovery(request)
+
+
 @router.post("/dissertation")
 async def dissertation_mode_route(request: DissertationRequest) -> dict[str, Any]:
     return await dissertation_mode(request)
 
 
 @router.post("/export")
-def export_discovery_route(req: ExportRequest) -> ExportResponse:
-    return export_discovery(req)
+async def export_discovery_route(req: ExportRequest) -> ExportResponse:
+    return await asyncio.to_thread(export_discovery, req)
 
 
 # ---------------------------------------------------------------------------

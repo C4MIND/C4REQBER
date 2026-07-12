@@ -123,11 +123,11 @@ class ArxivAdapter:
                 if entry.find("atom:title", ns) is None:
                     continue
 
-                title = entry.find("atom:title", ns).text or ""
-                title = title.replace("\n", " ").strip()
+                title_elem = entry.find("atom:title", ns)
+                title = (title_elem.text or "").replace("\n", " ").strip() if title_elem is not None else ""
 
-                abstract = entry.find("atom:summary", ns).text or ""
-                abstract = abstract.replace("\n", " ").strip()
+                summary_elem = entry.find("atom:summary", ns)
+                abstract = (summary_elem.text or "").replace("\n", " ").strip() if summary_elem is not None else ""
 
                 # Get authors
                 authors = []
@@ -166,12 +166,12 @@ class ArxivAdapter:
 
                 papers.append(
                     ArxivPaper(
-                        id=paper_id,
+                        id=paper_id or "",
                         title=title,
                         abstract=abstract,
                         authors=authors,
-                        published=published_str,
-                        updated=updated_str,
+                        published=published_str or "",
+                        updated=updated_str or "",
                         categories=categories,
                         pdf_url=pdf_url,
                         primary_category=primary_category,

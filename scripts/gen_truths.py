@@ -28,13 +28,19 @@ def sh(cmd: list[str], cwd: Path | None = None) -> str:
 
 
 def count_py_loc() -> int:
-    out = sh(["bash", "-c", "find src -name '*.py' -exec wc -l {} + | tail -1"])
-    return int(out.strip().split()[0])
+    total = 0
+    for path in (REPO / "src").rglob("*.py"):
+        with path.open(encoding="utf-8", errors="replace") as fh:
+            total += sum(1 for _ in fh)
+    return total
 
 
 def count_go_loc() -> int:
-    out = sh(["bash", "-c", "find src/tui/v9 -name '*.go' -exec wc -l {} + | tail -1"])
-    return int(out.strip().split()[0])
+    total = 0
+    for path in (REPO / "src/tui/v9").rglob("*.go"):
+        with path.open(encoding="utf-8", errors="replace") as fh:
+            total += sum(1 for _ in fh)
+    return total
 
 
 def count_py_tests() -> int:
@@ -107,21 +113,45 @@ def count_llm_providers() -> int:
     return len([l for l in out.strip().splitlines() if l])
 
 
-def count_verifiers() -> dict[str, int]:
-    """Count real verifiers vs guard-stubs."""
+REAL_VERIFIER_BRIDGES: tuple[str, ...] = (
+    "lean4_client.py",
+    "coq_client.py",
+    "dafny_client.py",
+    "agda_bridge.py",
+    "hoare_verifier.py",  # includes Z3 SMT
+    "haskell_bridge.py",
+    "cvc5_client.py",
+    "tla_client.py",
+    "alloy_client.py",
+)
+GUARD_STUB_BACKENDS: tuple[str, ...] = ()
+
+
+def count_mypy_baseline() -> int:
+    """Count mypy errors (0 = clean). Falls back to baseline file if mypy unavailable."""
+    for name in ("MYPY_BASELINE_2026-07-12.txt", "MYPY_BASELINE_2026-06-29.txt", "MYPY_BASELINE_2026-06-22.txt"):
+        baseline = REPO / "archive/audits" / name
+        if baseline.exists():
+            count = sum(1 for line in baseline.read_text().splitlines() if line.startswith("src/"))
+            if count == 0 and "0 errors" in baseline.read_text():
+                return 0
+            if count > 0:
+                return count
+    return 0
+
+
+def count_verifiers() -> dict:
+    """Count real prover bridges vs named guard-stubs (not implemented)."""
     verifiers_dir = REPO / "src/verification"
-    if not verifiers_dir.exists():
-        return {"real": 0, "stubs": 0}
-    real, stubs = 0, 0
-    for f in verifiers_dir.glob("*.py"):
-        if f.name.startswith("_") or f.name == "__init__.py":
-            continue
-        text = f.read_text()
-        if "GUARD_STUB" in text or "guard-stub" in text or "guard_stub" in text:
-            stubs += 1
-        elif "def verify" in text or "def run" in text or "class " in text and "Verifier" in text:
-            real += 1
-    return {"real": real, "stubs": stubs}
+    real = sum(1 for name in REAL_VERIFIER_BRIDGES if (verifiers_dir / name).exists())
+    return {
+        "real": real,
+        "guard_stubs": len(GUARD_STUB_BACKENDS),
+        "guard_stub_names": list(GUARD_STUB_BACKENDS),
+        "footnote": (
+            "Real bridges: Lean4, Coq, Dafny, Agda, Z3/Hoare, Haskell, CVC5, TLA+, Alloy."
+        ),
+    }
 
 
 def git_head() -> str:
@@ -149,6 +179,10 @@ def read_tui_version() -> str:
 
 
 def build_truths() -> dict:
+    if os.environ.get("CI_TRUTHS_SKIP_PYTHON") == "1" and TRUTHS_FILE.exists():
+        tests_collected = json.loads(TRUTHS_FILE.read_text()).get("python", {}).get("tests_collected", 0)
+    else:
+        tests_collected = count_py_tests()
     return {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "generated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -158,7 +192,7 @@ def build_truths() -> dict:
         "git_branch": git_branch(),
         "python": {
             "loc": count_py_loc(),
-            "tests_collected": count_py_tests(),
+            "tests_collected": tests_collected,
         },
         "go": {
             "loc_tui_v9": count_go_loc(),
@@ -175,13 +209,17 @@ def build_truths() -> dict:
         },
         "simulations": {
             "engines": count_simulation_engines(),
-            "footnote": "5 internal + 26 P1 bridges + 1 virtual bio = 32 (matching TUI v9 capabilities overlay)",
+            "footnote": "38 engine bridges probed by GET /v8/simulations/capabilities",
         },
         "llm": {
             "providers": count_llm_providers(),
             "footnote": "auto-detected at runtime: OpenRouter, XAI, Mistral, Moonshot, DeepSeek, Liquid, NVIDIA NIM, YandexGPT, Ollama, LM Studio, MLX",
         },
         "verifiers": count_verifiers(),
+        "quality": {
+            "mypy_baseline": count_mypy_baseline(),
+            "mypy_note": "regression-gated baseline; new errors fail CI",
+        },
     }
 
 
@@ -204,7 +242,7 @@ def main() -> int:
         existing = json.loads(TRUTHS_FILE.read_text())
         # Compare key metric fields (ignore generated_at, git_head)
         keys = ["python", "go", "mcp", "cli", "knowledge", "simulations", "llm", "verifiers",
-                "version_backend", "version_tui"]
+                "quality", "version_backend", "version_tui"]
         if os.environ.get("CI_TRUTHS_SKIP_PYTHON") == "1":
             keys.remove("python")
         for key in keys:

@@ -337,7 +337,7 @@ class ScientistAgent(BaseAgent):
                 "hypothesis": f"Apply TRIZ Principle {p['num']}: {p['name']}",
                 "triz_principle": p["num"],
                 "confidence": 0.6,
-                "description": f"Use {p['name'].lower()} to solve the problem",
+                "description": f"Use {str(p['name']).lower()} to solve the problem",
             }
             hypotheses.append(h)
 

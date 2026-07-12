@@ -370,12 +370,12 @@ class ContradictionMatrix:
 
         # Get best matches
         best_improve = (
-            max(improve_scores, key=improve_scores.get)
+            max(improve_scores, key=lambda k: improve_scores[k])
             if max(improve_scores.values()) > 0
             else None
         )
         best_worsen = (
-            max(worsen_scores, key=worsen_scores.get)
+            max(worsen_scores, key=lambda k: worsen_scores[k])
             if max(worsen_scores.values()) > 0
             else None
         )

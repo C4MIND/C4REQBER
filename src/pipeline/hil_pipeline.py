@@ -185,7 +185,9 @@ class HILDiscoveryPipeline(BasePipeline):
                 f"      {'✓' if gate.passed else '⚠'} Simulation gate: {gate.message} (score: {gate.score:.2f})"
             )
 
-            verif_result = await phase_e.run_verification(topic, record.hypotheses, query_type)
+            verif_result = await phase_e.run_verification(
+                topic, record.hypotheses, query_type, mode="turbo"
+            )
             record.verification = verif_result
         else:
             record.simulation = {"status": "skipped", "raw_output": "No hypotheses to simulate"}

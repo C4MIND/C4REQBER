@@ -224,4 +224,4 @@ def generate_with_fallback(
                 errors.append(err)
                 logger.warning("LLM provider failed: %s", err)
 
-    return f"[LLM unavailable: all providers failed — {'; '.join(errors[:4])}]"
+    raise RuntimeError(f"All LLM providers failed: {'; '.join(errors[:4])}")

@@ -2,9 +2,9 @@
 c4reqber: LLM-Based Formal Proof Generator
 
 Takes a natural-language hypothesis and iteratively generates,
-compiles, and fixes formal proofs across all 6 verification backends:
+compiles, and fixes formal proofs across 9 verification backends:
 
-  - Lean4, Coq, Dafny, Agda, Z3, Hoare
+  - Lean4, Coq, Dafny, Agda, Z3, Hoare, CVC5, TLA+, Alloy
 
 Workflow per language:
   1. LLM generates a proof in the target language
@@ -44,7 +44,7 @@ def _sanitize_for_prompt(text: str, max_len: int = 2000) -> str:
     return text[:max_len]
 
 
-LANGUAGES = ("lean4", "coq", "dafny", "agda", "z3", "hoare")
+LANGUAGES = ("lean4", "coq", "dafny", "agda", "z3", "hoare", "cvc5", "tla", "alloy", "haskell-typecheck", "haskell-quickcheck")
 
 PROOF_PROMPT_TEMPLATE = """You are a formal verification engineer. Translate the following scientific hypothesis into a {language} formal proof.
 
@@ -68,6 +68,9 @@ LANGUAGE_HINTS: dict[str, str] = {
     "agda": "Use Agda syntax. Postulate what cannot be proved.",
     "z3": "Use SMT-LIB2 format. Submit as (assert ...) (check-sat).",
     "hoare": "Use format: {precondition} command {postcondition}",
+    "cvc5": "Use SMT-LIB2 for CVC5. Include (set-logic ...) (declare-const ...) (assert ...) (check-sat).",
+    "tla": "Use TLA+ MODULE syntax with Init, Next, optional Spec. Bounded state spaces preferred.",
+    "alloy": "Use Alloy sig/fun/fact/run {} for N or check assertions.",
 }
 
 FIX_PROMPT_TEMPLATE = """The {language} proof you generated FAILED with this error:
@@ -327,7 +330,8 @@ class LLMProver:
         import re
 
         lang_variants = [language, {"lean4": "lean", "coq": "coq", "dafny": "dafny",
-                                      "agda": "agda", "z3": "z3", "hoare": "hoare"}.get(language, language)]
+                                      "agda": "agda", "z3": "z3", "hoare": "hoare",
+                                      "cvc5": "smt2", "tla": "tla", "alloy": "alloy"}.get(language, language)]
         for variant in lang_variants:
             # Find the outermost fenced block for this language
             pattern = rf"```{re.escape(variant)}\s*\n(.*?)```"
@@ -360,6 +364,9 @@ class LLMProver:
             "coq": ("src.verification.coq_client", "CoqClient", "check_proof"),
             "dafny": ("src.verification.dafny_client", "DafnyClient", "verify"),
             "agda": ("src.verification.agda_bridge", "AgdaBridge", "type_check"),
+            "cvc5": ("src.verification.cvc5_client", "CVC5Client", "verify"),
+            "tla": ("src.verification.tla_client", "TLAClient", "verify"),
+            "alloy": ("src.verification.alloy_client", "AlloyClient", "verify"),
         }
 
         config = dispatch.get(language)

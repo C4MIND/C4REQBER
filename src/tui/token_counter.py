@@ -3,13 +3,15 @@
 from __future__ import annotations
 
 
+from typing import Any
+
+_TOKEN_ENC: Any = None
 try:
     import tiktoken
 
     _TOKEN_ENC = tiktoken.get_encoding("cl100k_base")
     HAS_TIKTOKEN = True
 except ImportError:
-    _TOKEN_ENC = None
     HAS_TIKTOKEN = False
 
 

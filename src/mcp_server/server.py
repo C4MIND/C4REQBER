@@ -14,6 +14,10 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
+from src.config.paths import load_kilo_env, load_verifiers_env
+
+load_kilo_env()
+load_verifiers_env()
 
 # Optional MCP SDK — falls back to stdio JSON-RPC if not installed
 try:
@@ -266,7 +270,7 @@ async def c4_fingerprint(problem: str) -> dict[str, Any]:
 @server.tool("c4_verify")
 
 async def c4_verify(code: str, language: str | None = None) -> dict[str, Any]:
-    """Verify formal proof with redundant gate (3-variant voting) in Lean4, Agda, Coq, Dafny, or Hoare logic."""
+    """Verify formal proof in lean4, coq, dafny, agda, z3, hoare, cvc5, tla, or alloy."""
     try:
         if not HAS_TOOLS:
             return {"error": "Verification module not available"}
@@ -281,7 +285,7 @@ async def c4_verify(code: str, language: str | None = None) -> dict[str, Any]:
             if not client.available:
                 return {"valid": False, "error": "Lean4 not installed"}
             result = client.check_proof(code)
-            return {"valid": result.get("valid", False), "proof": code, "language": language, "details": result}
+            return {"valid": result.get("success", False), "proof": code, "language": language, "details": result}
         elif language == "coq":
             client = CoqClient()
             if not client.is_available():
@@ -361,11 +365,54 @@ async def c4_verify(code: str, language: str | None = None) -> dict[str, Any]:
             hv = HoareVerifier()
             result = hv.verify(code)
             return {
-                "valid": result.get("valid", False),
+                "valid": result.valid,
                 "proof": code,
                 "language": language,
-                "details": result.get("details", {}),
-                "error": result.get("error"),
+                "details": result.to_dict(),
+                "error": result.error or None,
+            }
+        elif language == "cvc5":
+            from src.verification.cvc5_client import CVC5Client
+            client = CVC5Client()
+            if not client.is_available():
+                return {"valid": False, "error": "CVC5 not installed"}
+            result = client.verify(code)
+            return {"valid": result.get("valid", False), "proof": code, "language": language, "details": result}
+        elif language in ("tla", "tla+"):
+            from src.verification.tla_client import TLAClient
+            client = TLAClient()
+            if not client.is_available():
+                return {"valid": False, "error": "TLA+ TLC not installed"}
+            result = client.verify(code)
+            return {"valid": result.get("valid", False), "proof": code, "language": "tla", "details": result}
+        elif language == "alloy":
+            from src.verification.alloy_client import AlloyClient
+            client = AlloyClient()
+            if not client.is_available():
+                return {"valid": False, "error": "Alloy not installed"}
+            result = client.verify(code)
+            return {"valid": result.get("valid", False), "proof": code, "language": language, "details": result}
+        elif language in ("haskell", "haskell-typecheck"):
+            from src.verification.haskell_bridge import verify_haskell_typecheck
+            result = verify_haskell_typecheck(code)
+            valid = result.get("status") == "passed"
+            return {
+                "valid": valid,
+                "proof": code,
+                "language": "haskell-typecheck",
+                "details": result,
+                "error": None if valid else str(result.get("error", result.get("message", ""))),
+            }
+        elif language == "haskell-quickcheck":
+            from src.verification.haskell_bridge import verify_haskell_quickcheck
+            result = verify_haskell_quickcheck(code)
+            valid = result.get("status") == "passed"
+            return {
+                "valid": valid,
+                "proof": code,
+                "language": "haskell-quickcheck",
+                "details": result,
+                "error": None if valid else str(result.get("error", result.get("message", ""))),
             }
         else:
             return {"valid": False, "error": f"Unsupported language: {language}"}
@@ -385,7 +432,7 @@ async def c4_prove(hypothesis: str, language: str = "lean4") -> dict[str, Any]:
 
     Args:
         hypothesis: Natural-language hypothesis to prove
-        language: Target language (lean4, coq, dafny, agda, z3, hoare)
+        language: Target language (lean4, coq, dafny, agda, z3, hoare, cvc5, tla, alloy)
 
     Returns:
         Dict with valid, proof, iterations, error
@@ -418,12 +465,13 @@ async def c4_transfer(problem: str, source_domain: str, target_domain: str) -> d
 @server.tool("c4_simulate")
 
 async def c4_simulate(pattern_id: str, hypothesis: dict[str, Any]) -> dict[str, Any]:
-    """Run physics simulation on any of 5 GPU engines (Newton, TorchSim, JaxSim, Schr, vast.ai)."""
+    """Run physics simulation via PatternRunnerV2 (pattern_id selects engine)."""
     try:
         if not HAS_TOOLS:
             return {"error": "Simulation modules not available"}
-        bridge = NewtonBridge()
-        result = bridge.run(hypothesis)
+        from src.simulations.runner_v2 import get_runner_v2
+        runner = get_runner_v2()
+        result = runner.run(pattern_id, hypothesis or {})
         return {"pattern": pattern_id, "result": result}
     except (AttributeError, ImportError) as e:
         logger.warning("MCP tool optional dep missing: %s", e)
@@ -978,8 +1026,8 @@ c4_solve.schema = {"type":"object","properties":{"problem":{"type":"string","des
 c4_search.schema = {"type":"object","properties":{"query":{"type":"string","description":"Search query across 33 knowledge sources"},"sources":{"type":"array","items":{"type":"string"},"description":"Optional list of source names"}},"required":["query"]}
 c4_triz.schema = {"type":"object","properties":{"improving":{"type":"integer","description":"TRIZ parameter to improve (1-39)","default":1},"worsening":{"type":"integer","description":"TRIZ parameter that worsens (1-39)","default":2},"mode":{"type":"string","description":"TRIZ mode: matrix, ariz, standard, sufield","enum":["matrix","ariz","standard","sufield"],"default":"matrix"},"problem":{"type":"string","description":"Problem description for ARIZ/sufield modes","default":""}}}
 c4_fingerprint.schema = {"type":"object","properties":{"problem":{"type":"string","description":"Problem text to classify into C4 Z33 cognitive state"}},"required":["problem"]}
-c4_verify.schema = {"type":"object","properties":{"code":{"type":"string","description":"Proof code to verify"},"language":{"type":"string","description":"Proof language: lean4, coq, dafny, agda, z3, hoare"}},"required":["code"]}
-c4_prove.schema = {"type":"object","properties":{"hypothesis":{"type":"string","description":"Natural-language hypothesis to prove"},"language":{"type":"string","description":"Target proof language: lean4, coq, dafny, agda, z3, hoare","default":"lean4"}},"required":["hypothesis"]}
+c4_verify.schema = {"type":"object","properties":{"code":{"type":"string","description":"Proof code to verify"},"language":{"type":"string","description":"Proof language: lean4, coq, dafny, agda, z3, hoare, cvc5, tla, alloy, haskell-typecheck, haskell-quickcheck"}},"required":["code"]}
+c4_prove.schema = {"type":"object","properties":{"hypothesis":{"type":"string","description":"Natural-language hypothesis to prove"},"language":{"type":"string","description":"Target proof language: lean4, coq, dafny, agda, z3, hoare, cvc5, tla, alloy, haskell-typecheck, haskell-quickcheck","default":"lean4"}},"required":["hypothesis"]}
 c4_transfer.schema = {"type":"object","properties":{"problem":{"type":"string","description":"Problem to transfer across domains"},"source_domain":{"type":"string","description":"Source domain name"},"target_domain":{"type":"string","description":"Target domain name"}},"required":["problem","source_domain","target_domain"]}
 c4_simulate.schema = {"type":"object","properties":{"pattern_id":{"type":"string","description":"Simulation pattern ID"},"hypothesis":{"type":"object","description":"Hypothesis dict with parameters"}},"required":["pattern_id","hypothesis"]}
 c4_bayesian.schema = {"type":"object","properties":{"models":{"type":"object","description":"Dict of model_name: prior_probability"},"samples":{"type":"integer","description":"Number of MCMC samples","default":1000}},"required":["models"]}

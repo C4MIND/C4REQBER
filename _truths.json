@@ -1,16 +1,16 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "generated_at": "2026-07-11T20:31:45Z",
+  "generated_at": "2026-07-12T11:27:31Z",
   "version_backend": "5.6.0",
   "version_tui": "v9.13.0",
-  "git_head": "a7c19ee",
-  "git_branch": "feat/production-upgrade",
+  "git_head": "8840585",
+  "git_branch": "main",
   "python": {
-    "loc": 225566,
-    "tests_collected": 9798
+    "loc": 226661,
+    "tests_collected": 9887
   },
   "go": {
-    "loc_tui_v9": 21148
+    "loc_tui_v9": 21159
   },
   "mcp": {
     "tools": 21
@@ -24,14 +24,20 @@
   },
   "simulations": {
     "engines": 38,
-    "footnote": "5 internal + 26 P1 bridges + 1 virtual bio = 32 (matching TUI v9 capabilities overlay)"
+    "footnote": "38 engine bridges probed by GET /v8/simulations/capabilities"
   },
   "llm": {
     "providers": 6,
     "footnote": "auto-detected at runtime: OpenRouter, XAI, Mistral, Moonshot, DeepSeek, Liquid, NVIDIA NIM, YandexGPT, Ollama, LM Studio, MLX"
   },
   "verifiers": {
-    "real": 14,
-    "stubs": 0
+    "real": 9,
+    "guard_stubs": 0,
+    "guard_stub_names": [],
+    "footnote": "Real bridges: Lean4, Coq, Dafny, Agda, Z3/Hoare, Haskell, CVC5, TLA+, Alloy."
+  },
+  "quality": {
+    "mypy_baseline": 0,
+    "mypy_note": "regression-gated baseline; new errors fail CI"
   }
 }

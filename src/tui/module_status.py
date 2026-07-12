@@ -94,10 +94,16 @@ def make_module_status_panel() -> Panel:
 
     # ── Formal Verification ──
     table.add_row("", "", "")
-    table.add_row("[bold #FFD93D]FORMAL VERIFICATION[/]", "", "")
+    table.add_row("[bold #FFD93D]FORMAL VERIFICATION (9 backends)[/]", "", "")
     table.add_row("Lean4 Client", "✅", "~/.elan/bin/lean")
     table.add_row("Coq/Rocq Client", "✅", "$(brew --prefix coq)/bin")
     table.add_row("Dafny Client", "✅", "$(brew --prefix dafny)/bin")
+    table.add_row("Agda Client", "✅", "agda CLI")
+    table.add_row("Z3 / Hoare", "✅", "SMT-LIB2 + WP calculus")
+    table.add_row("CVC5", "✅", "SMT-LIB2 (brew install cvc5)")
+    table.add_row("TLA+", "✅", "TLC model checker (tla2tools.jar)")
+    table.add_row("Alloy", "✅", "Relational models (brew alloy-analyzer)")
+    table.add_row("Haskell", "✅", "Typecheck + QuickCheck bridges")
 
     # ── Export & Publishing ──
     table.add_row("", "", "")

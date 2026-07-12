@@ -19,31 +19,6 @@ _project_root = str(Path(__file__).resolve().parents[2])
 if _project_root not in sys.path:
     sys.path.insert(0, _project_root)
 
-# Prevent validation/__init__.py from importing heavy deps that fail
-import types
-
-
-_fake_agents = types.ModuleType("agents")
-_fake_pipeline = types.ModuleType("pipeline")
-_fake_pipeline.UniversalSolvePipeline = object
-sys.modules["src.agents"] = _fake_agents
-sys.modules["src.agents.pipeline"] = _fake_pipeline
-
-_fake_complexity = types.ModuleType("complexity_adapter")
-
-
-class _FakeLevel:
-    LITE = "lite"
-    ADVANCED = "advanced"
-    EXPERT = "expert"
-
-
-_fake_complexity.ComplexityLevel = _FakeLevel
-_fake_complexity.get_config = lambda x: MagicMock(
-    show_operators=True, model_dump=lambda: {}
-)
-sys.modules["src.core.complexity_adapter"] = _fake_complexity
-
 from src.validation.core import (
     BayesianUpdater,
     CalibrationTracker,

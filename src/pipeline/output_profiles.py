@@ -38,7 +38,9 @@ class OutputProfile:
     require_epistemic_notice: bool = True
 
     # Verification auto-selection
-    verification_backends: list[str] = field(default_factory=lambda: ["lean4", "coq", "dafny", "agda", "z3", "hoare"])
+    verification_backends: list[str] = field(
+        default_factory=lambda: ["lean4", "coq", "dafny", "agda", "z3", "cvc5", "hoare", "tla", "alloy"]
+    )
     require_formal_proof: bool = False
     require_empirical_validation: bool = False
 
@@ -61,7 +63,7 @@ OUTPUT_PROFILES: dict[OutputFormat, OutputProfile] = {
         page_estimate={"turbo": "5-15", "solve": "3-8", "turbofactory": "10-50"},
         prompt_role="You are a distinguished professor writing a paradigm-shifting academic dissertation.",
         prompt_structure="Include: Abstract, Introduction, Literature Review, Methodology, Results, Discussion, Conclusion, References.",
-        verification_backends=["lean4", "coq", "dafny", "agda", "z3", "hoare"],
+        verification_backends=["lean4", "coq", "dafny", "agda", "z3", "cvc5", "hoare", "tla", "alloy"],
         require_formal_proof=True,
         file_extension=".md",
         export_formats=["markdown", "json", "bibtex", "latex"],
@@ -78,7 +80,7 @@ OUTPUT_PROFILES: dict[OutputFormat, OutputProfile] = {
         page_estimate={"turbo": "4-12", "solve": "2-6", "turbofactory": "8-20"},
         prompt_role="You are a senior researcher writing a scientific paper for journal submission.",
         prompt_structure="Include: Abstract, Introduction, Methods, Results, Discussion, References. Target: journal-ready formatting.",
-        verification_backends=["z3", "dafny", "hoare"],
+        verification_backends=["z3", "cvc5", "dafny", "hoare"],
         require_formal_proof=False,
         require_empirical_validation=True,
         file_extension=".md",
@@ -96,7 +98,7 @@ OUTPUT_PROFILES: dict[OutputFormat, OutputProfile] = {
         page_estimate={"turbo": "5-15", "solve": "3-7", "turbofactory": "8-25"},
         prompt_role="You are a senior software architect writing a technical whitepaper.",
         prompt_structure="Include: Executive Summary, Problem Statement, Architecture Overview, Design Decisions, Trade-offs, Implementation Plan, Recommendations.",
-        verification_backends=["z3", "cvc5", "alloy", "hoare"],  # SMT + Alloy for architecture verification
+        verification_backends=["z3", "cvc5", "tla", "alloy", "hoare"],
         require_formal_proof=False,
         require_epistemic_notice=False,
         file_extension=".md",
@@ -114,7 +116,7 @@ OUTPUT_PROFILES: dict[OutputFormat, OutputProfile] = {
         page_estimate={"turbo": "3-12", "solve": "2-6", "turbofactory": "6-20"},
         prompt_role="You are a lead engineer writing a technical specification.",
         prompt_structure="Include: Requirements (functional + non-functional), System Design, Component Architecture, API Contracts, Data Flow, Security Model, Deployment Architecture.",
-        verification_backends=["dafny", "z3", "hoare", "haskell-typecheck", "haskell-quickcheck"],
+        verification_backends=["dafny", "z3", "cvc5", "hoare", "haskell-typecheck", "haskell-quickcheck", "tla"],
         require_formal_proof=True,
         require_epistemic_notice=False,
         file_extension=".md",
@@ -132,7 +134,7 @@ OUTPUT_PROFILES: dict[OutputFormat, OutputProfile] = {
         page_estimate={"turbo": "100-500 LOC", "solve": "50-200 LOC", "turbofactory": "500-2000 LOC"},
         prompt_role="You are an expert programmer generating production-quality code.",
         prompt_structure="Include: File header, Imports, Class/Function definitions with docstrings, Inline comments, Type hints, Unit tests.",
-        verification_backends=["dafny", "z3", "hoare", "haskell-typecheck", "haskell-quickcheck"],
+        verification_backends=["dafny", "z3", "cvc5", "hoare", "haskell-typecheck", "haskell-quickcheck", "tla"],
         require_formal_proof=True,
         require_epistemic_notice=False,
         require_abstract=False,

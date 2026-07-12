@@ -37,55 +37,60 @@ help:
 	@echo "║  make pre-commit-run    — Run all pre-commit checks         ║"
 	@echo "╚══════════════════════════════════════════════════════════════╝"
 
-## install — pip install + npm install + pre-commit install
+## install — pip install + pre-commit install
 install:
 	@echo "=== Installing backend dependencies ==="
 	pip install -r requirements.txt
 	pip install pytest pytest-cov mypy ruff black pip-audit pre-commit
-	@echo "=== Installing frontend dependencies ==="
-	cd web-v2 && npm install
 	@echo "=== Installing pre-commit hooks ==="
 	pre-commit install || true
-	@echo "=== Installing husky ==="
-	cd web-v2 && npx husky-init && npm install || true
+	@echo "=== Frontend: TUI v9 (Go) — cd src/tui/v9 && go test ./... ==="
+	@echo "=== Static site: landing/ (GitLab Pages) ==="
 
-## lint — ruff + ESLint (блокировка при ошибках)
+## install-verifiers — CVC5 + TLA+ + Alloy + Lean/Coq/Dafny/Agda/Z3 (macOS brew + jars)
+install-verifiers:
+	bash tools/install-verifiers.sh
+
+## verify-backends — smoke-test CVC5/TLA+/Alloy on live binaries
+verify-backends:
+	python3 scripts/verify_backends_smoke.py
+
+## lint — ruff (Python)
 lint:
 	@echo "=== Python lint (ruff) ==="
 	cd . && ruff check src/
-	@echo "=== JavaScript lint (ESLint) ==="
-	cd web-v2 && npm run lint 2>/dev/null || echo "ESLint skipped (npm not installed)"
 
-## typecheck — tsc + mypy
-typecheck: typecheck-frontend typecheck-backend
+## typecheck — mypy backend + Go TUI compile check
+typecheck: typecheck-backend typecheck-tui
 
-## typecheck-frontend — TypeScript type checking
-typecheck-frontend:
-	@echo "=== TypeScript typecheck ==="
-	cd web-v2 && npx tsc --noEmit 2>/dev/null || echo "tsc skipped (npm not installed)"
+## typecheck-tui — Go TUI v9 compile/test
+typecheck-tui:
+	@echo "=== Go TUI v9 typecheck ==="
+	cd src/tui/v9 && go test ./... -count=1
 
 ## typecheck-backend — Python mypy type checking
 typecheck-backend:
 	@echo "=== Python mypy ==="
 	python3 -m mypy src/
 
-## test — pytest + vitest
-test: test-backend test-frontend
+## test — pytest + Go TUI
+test: test-backend test-tui
 
 ## test-backend — pytest
 test-backend:
 	@echo "=== Running backend tests (pytest + coverage) ==="
 	PYTHONPATH=src python3 -m pytest tests/ --cov=src --cov-report=term --cov-report=html --cov-config=.coveragerc --cov-fail-under=60 -v
 
-## test-frontend — vitest
-test-frontend:
-	@echo "=== Running frontend tests (vitest) ==="
-	cd web-v2 && npm run test
-
-## test-e2e — playwright
+## test-e2e — verifier smoke + manual E2E script
 test-e2e:
-	@echo "=== Running e2e tests (Playwright) ==="
-	cd web-v2 && npx playwright test || true
+	@echo "=== Running verifier E2E smoke ==="
+	python3 scripts/verify_backends_smoke.py
+	bash scripts/manual_e2e_verifiers.sh
+
+## test-tui — Go TUI v9 tests
+test-tui:
+	@echo "=== Running TUI v9 tests (go test) ==="
+	cd src/tui/v9 && go test ./... -count=1
 
 ## coverage — pytest --cov + open HTML report
 coverage:
@@ -94,26 +99,21 @@ coverage:
 	@echo "=== Opening HTML coverage report ==="
 	@open htmlcov/index.html 2>/dev/null || echo "Open htmlcov/index.html manually"
 
-## format — black + prettier
+## format — black
 format:
 	@echo "=== Formatting Python (black) ==="
 	cd . && black src/ tests/
-	@echo "=== Formatting JavaScript/TypeScript (prettier) ==="
-	cd web-v2 && npx prettier --write "src/**/*.{ts,tsx,js,jsx,json,css,md}"
 
-## security — trivy + npm audit + pip-audit
+## security — trivy + pip-audit
 security:
 	@echo "=== Trivy filesystem scan ==="
 	trivy filesystem --scanners vuln,secret,misconfig . || true
-	@echo "=== npm audit ==="
-	cd web-v2 && npm audit --audit-level=moderate || true
 	@echo "=== pip-audit ==="
 	pip-audit --desc || true
 
 ## clean — rm build artifacts, __pycache__, .ruff_cache
 clean:
 	@echo "=== Cleaning build artifacts ==="
-	@cd web-v2 && rm -rf dist node_modules/.vite .turbo
 	@find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
 	@find . -type f -name "*.pyc" -delete 2>/dev/null || true
 	@find . -type d -name .pytest_cache -exec rm -rf {} + 2>/dev/null || true
@@ -187,8 +187,7 @@ build-backend-artifact:
 
 build-frontend-artifact:
 	@mkdir -p dist
-	@cd web-v2 && npm run build
-	@tar czf dist/frontend-$$(git describe --tags --always 2>/dev/null || echo "dev").tar.gz web-v2/dist/
+	@tar czf dist/landing-$$(git describe --tags --always 2>/dev/null || echo "dev").tar.gz landing/
 
 # ── Legacy aliases ──
 dev:
@@ -200,12 +199,7 @@ backend:
 	@PYTHONPATH=src python3 -m uvicorn src.api.server:app --reload --host 0.0.0.0 --port 8000
 
 frontend:
-	@echo "Starting Vite frontend..."
-	@cd web-v2 && npm run dev
-
-build:
-	@echo "Building production frontend..."
-	@cd web-v2 && npm run build
+	@echo "Static site: open landing/index.html or deploy via GitLab Pages (make pages)"
 
 monitoring-up:  ## Start monitoring stack (Prometheus + Grafana + Alertmanager)
 	docker-compose -f monitoring/docker-compose.yml up -d

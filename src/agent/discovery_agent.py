@@ -406,7 +406,7 @@ class ScientificDiscoveryAgent:
 
     def _generate_summary(self, hypotheses: list[AgentHypothesis]) -> str:
         """Generate executive summary."""
-        methods = {}
+        methods: dict[str, int] = {}
         for h in hypotheses:
             methods[h.generation_method] = methods.get(h.generation_method, 0) + 1
 
@@ -418,7 +418,7 @@ class ScientificDiscoveryAgent:
         return f"""Generated {len(hypotheses)} hypotheses across {len(methods)} methods.
 Average confidence: {avg_confidence:.1%}
 Total validation budget: ${total_cost:,.0f}
-Top method: {max(methods, key=methods.get) if methods else "N/A"}
+Top method: {max(methods, key=lambda k: methods[k]) if methods else "N/A"}
 """
 
     def _generate_recommendations(self, hypotheses: list[AgentHypothesis]) -> list[str]:

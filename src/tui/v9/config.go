@@ -212,6 +212,12 @@ func HelpOverlayWith(width, height int, km *KeyMap) string {
 			{"burst", i18n.T("help.burst")},
 			{"sparks", i18n.T("help.sparks")},
 		}},
+		{"Simulation", []entry{
+			{km.Label(ActCapabilities), i18n.T("sim.capabilities.title")},
+			{km.Label(ActInstallHint), i18n.T("sim.action.install")},
+			{km.Label(ActSelectFallback), i18n.T("sim.action.fallback")},
+			{km.Label(ActOpenPlot), i18n.T("sim.action.plot")},
+		}},
 	}
 
 	var b strings.Builder

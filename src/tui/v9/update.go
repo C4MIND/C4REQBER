@@ -756,7 +756,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.appendCard(c)
 			m.simCountThisRun++
 		}
-		m.setToast("⏚ capabilities loaded (" + capsim.ShortSummary(msg.report) + ")")
+		m.setToast("⏚ " + i18n.T("sim.toast.loaded") + " (" + capsim.ShortSummary(msg.report) + ")")
 		return m, nil
 	}
 

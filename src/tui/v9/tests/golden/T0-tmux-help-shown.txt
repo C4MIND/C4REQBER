@@ -22,4 +22,10 @@
    32mburstm         Discovery burst effect                                       
    32msparksm        Cursor sparkles                                              
                                                                               
+ 1;36mSimulationm                                                                   
+   32mCtrl+Shift+Cm  Simulation capabilities                                      
+   32mim             Show install hint                                            
+   32mfm             Show fallback chain                                          
+   32mom             Open plot in browser                                         
+                                                                              
  90mPress ? to close this overlaym                                                

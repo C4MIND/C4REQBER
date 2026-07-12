@@ -8,7 +8,9 @@
 
 c4reqber (formerly TURBO-CDI) v5.4.0 is **BLAST** — Brain-like Adaptive System for Thought. A cognitive exoskeleton with a 4-mode pipeline system, terminal-first UI/UX, and formal C4-META architecture. **The UI/UX Polish + Code Quality Audit Release.**
 
-**Theory vs. Implementation:** The C4-META framework (27-state cognitive space Z₃³, Theorem 11) is a formal theory from the `adaptive-topology` research repository. c4reqber is the **production implementation** — Python-based, with 524+ tests, 6 real verification backends + 4 guard-stubs, 37 knowledge sources, 21 MCP tools, and A+ quality gates.
+**Theory vs. Implementation:** The C4-META framework (27-state cognitive space Z₃³, Theorem 11) is a formal theory from the `adaptive-topology` research repository. c4reqber is the **production implementation** — Python-based, with 9,800+ tests, **9 real verification backends** (incl. CVC5, TLA+, Alloy), 51 knowledge sources, 21 MCP tools, and regression-gated quality gates.
+
+**Whitepaper:** [WHITEPAPER.md](../WHITEPAPER.md) (EN) · [WHITEPAPER.ru.md](../WHITEPAPER.ru.md) (RU) · [VERIFICATION_BACKENDS.md](VERIFICATION_BACKENDS.md)
 
 ### BLAST 4-Mode System
 
@@ -160,17 +162,16 @@ User Query
 
 **Honest description:** TRIZ principles and contradiction matrix are complete and correct per Altshuller. TRIZ bridge now has a real implementation. Constraint solver uses true SVD null-space computation. Physics simulations: Newton CPU works; TorchSim MLIP interface is functional; JaxSim is fallback; vast.ai delegation is interface-only. Quantum backends are not implemented.
 
-### Layer 4: Verification & Export (v5.3.5)
-- **6 real verification backends**: Lean4 (45s), Coq (60s), Dafny (60s), Z3 (5s), Hoare (5s), Statistical (SciPy, <1s)
-- **4 guard-stubs**: Agda (60s), CVC5 v1.3.4 (30s), Haskell-Typecheck (30s), Haskell-QuickCheck (60s), TLA+ v1.7.4 (120s), Alloy v6.2.0 (60s) — not fully implemented
+### Layer 4: Verification & Export (v5.6.0)
+- **9 real verification backends**: Lean4, Coq, Dafny, Agda, Z3/Hoare, Haskell, CVC5, TLA+, Alloy
 - **MathDetector**: Classifies hypotheses into Categories A/B/C — Category A (mathematically scaffolded → full formal verification), B (empirical with math bridge → structural check + flagged assumptions), C (qualitative → skip, literature consistency only)
-- **Verification guardrails**: Complexity pre-flight estimation → skip/fallback decision. Memory limits: 256MB (Z3/CVC5) — 1GB (Agda). Hang detection: 5-60s stall timeout per backend. Fallback cascade: Lean4→Z3→CVC5→skip.
+- **Verification guardrails**: Complexity pre-flight estimation → skip/fallback decision. Memory limits: 256MB (Z3/CVC5) — 1GB (Agda). Hang detection: 5-60s stall timeout per backend. Fallback cascade: Lean4→Z3/CVC5→TLA+→Alloy→skip.
 - **Known hang patterns**: Lean4: `simp/omega/native_decide`. Coq: `auto/ring/firstorder`. Dafny: `forall/exists` triggers. Agda: `termination/mutual`. TLA+: `liveness/fairness`. Alloy: `reachable/transitive`.
-- **Proof export**: Each verified backend exports to file (.lean/.v/.smt2/.dfy) + verification_summary.json
+- **Proof export**: Each verified backend exports to file (.lean/.v/.smt2/.dfy/.tla/.als) + verification_summary.json
 - **Appendix A**: All generated documents include verification appendix with proof summaries and file references
 - **Export formats**: LaTeX, Markdown, JSON, HTML, PDF, BibTeX — functional
 
-**Honest description:** Lean4, Coq, and Dafny are fully implemented with error/goal feedback. Auto-proof is LLM-generated with self-check. Agda and Hoare are stubbed. Success rate depends heavily on problem domain — trivial properties verify, complex scientific hypotheses do not. Lean4 and Coq have the highest success rates.
+**Honest description:** Lean4, Coq, Dafny, Agda, CVC5, TLA+, and Alloy have real client implementations with install scripts (`tools/install-verifiers.sh`). Success rate depends on problem domain — trivial properties verify, complex scientific hypotheses may need LLM proof generation.
 
 ### Layer 4.5: Verification v8 (6-Layer Defense Pipeline)
 
@@ -447,7 +448,7 @@ Output with Cube-Mascot + Quality Report + Metrics
 
 **Citation:** Selyutin I.G., Kovalev N.I. (2026). *c4reqber v5.3.9: BLAST — Brain-like Adaptive System for Thought. The Multi-Agent Discovery Release.*
 
-**Repository:** https://github.com/c4-meta-labs/c4reqber
+**Repository:** https://gitlab.com/cognitive-functors/turbo-cdi
 **License:** AGPL-3.0
 **Version:** v5.3.9 (Release date: 2026-05-17)
 

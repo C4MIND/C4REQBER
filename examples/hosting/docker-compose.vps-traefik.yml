@@ -76,14 +76,12 @@ services:
       timeout: 10s
       retries: 3
 
-  # Web UI v2 (React + Vite production build)
+  # Static landing site (GitLab Pages / nginx). web-v2 removed 2026-07-12.
   web:
-    build:
-      context: ./web-v2
-      dockerfile: Dockerfile
-      args:
-        - VITE_API_URL=https://api.turbo-cdi.org
+    image: nginx:alpine
     profiles: ["full"]
+    volumes:
+      - ./landing:/usr/share/nginx/html:ro
     depends_on:
       - api
     restart: unless-stopped

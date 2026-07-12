@@ -22,10 +22,27 @@ from src.verification.unified_score import (
 router = APIRouter(prefix="/verification", tags=["v8-verification"])
 
 _VERIFY_CACHE_TTL = 3600
+_VERIFY_CACHE_MAX = 500
 _verify_cache: dict[str, dict[str, Any]] = {}
 
 
+def _prune_verify_cache() -> None:
+    """Drop expired entries and enforce max size (LRU by updated_at)."""
+    now = time.time()
+    expired = [
+        key
+        for key, entry in _verify_cache.items()
+        if now - entry.get("updated_at", 0) > _VERIFY_CACHE_TTL
+    ]
+    for key in expired:
+        _verify_cache.pop(key, None)
+    while len(_verify_cache) >= _VERIFY_CACHE_MAX:
+        oldest = min(_verify_cache, key=lambda k: _verify_cache[k].get("updated_at", 0))
+        _verify_cache.pop(oldest, None)
+
+
 def _set_verify_cache(verify_id: str, data: dict[str, Any]) -> None:
+    _prune_verify_cache()
     data["updated_at"] = time.time()
     _verify_cache[verify_id] = data
 
@@ -125,7 +142,14 @@ async def verify_hypothesis(req: HypothesisVerifyRequest) -> dict[str, Any]:
                 "title": req.hypothesis[:200],
                 "description": req.hypothesis,
             }
-            hv_result = await hv.verify(hypothesis_dict, context=req.context)
+            ctx = dict(req.context or {})
+            if "preferred_backends" not in ctx:
+                from src.pipeline.output_profiles import detect_format, get_profile
+                mode = str(ctx.get("mode", "solve"))
+                output_fmt = detect_format(req.hypothesis, mode=mode)
+                profile = get_profile(output_fmt)
+                ctx["preferred_backends"] = list(profile.verification_backends)
+            hv_result = await hv.verify(hypothesis_dict, context=ctx)
             backend_results.append(BackendResult(
                 backend=hv_result.backend,
                 status=hv_result.status,
@@ -194,13 +218,21 @@ async def list_methods() -> dict[str, Any]:
     hv = HybridVerifier()
     stats = StatisticalValidator()
 
+    from src.verification.alloy_client import AlloyClient
+    from src.verification.cvc5_client import CVC5Client
+    from src.verification.tla_client import TLAClient
+
     backends = {
         "statistical": stats.available,
         "lean4": hv._check_executable(hv.LEAN4_PATH),
         "coq": hv._check_executable(hv.COQ_PATH),
         "dafny": hv._check_executable(hv.DAFNY_PATH),
         "agda": hv._check_executable(hv.AGDA_PATH),
-        "z3": True,  # auto_theorem.py uses z3 directly
+        "z3": True,
+        "cvc5": CVC5Client().test_connection(),
+        "tla": TLAClient().test_connection(),
+        "alloy": AlloyClient().test_connection(),
+        "hoare": True,
     }
     return {
         "available": [k for k, v in backends.items() if v],
@@ -246,7 +278,51 @@ async def verify_code(req: VerifyRequest) -> dict[str, Any]:
             if not client.available:
                 raise C4APIError("Lean 4 not installed", status_code=501, error_code="lean4_not_installed")
             result = client.verify_theorem(req.code, req.proof)
-            payload = {"verified": result.get("verified", False), "errors": result.get("errors", []), "method": "lean4"}
+            err = result.get("error", "")
+            payload = {
+                "verified": result.get("valid", False),
+                "errors": [err] if err else [],
+                "method": "lean4",
+            }
+        elif req.formal_method == "coq":
+            from src.verification.coq_client import CoqClient
+            client = CoqClient()
+            if not client.is_available():
+                raise C4APIError("Coq not installed", status_code=501, error_code="coq_not_installed")
+            result = client.check_proof(req.code)
+            err = str(result.get("error", result.get("output", "")))
+            payload = {
+                "verified": result.get("valid", False),
+                "errors": [err] if not result.get("valid") else [],
+                "method": "coq",
+            }
+        elif req.formal_method == "agda":
+            from src.verification.agda_bridge import AgdaBridge
+            client = AgdaBridge()
+            if not client.available:
+                raise C4APIError("Agda not installed", status_code=501, error_code="agda_not_installed")
+            result = client.type_check(req.code)
+            err = str(result.get("error", ""))
+            payload = {
+                "verified": result.get("success", False),
+                "errors": [err] if not result.get("success") else [],
+                "method": "agda",
+            }
+        elif req.formal_method == "z3":
+            try:
+                import z3
+                solver = z3.Solver()
+                solver.set("timeout", 5000)
+                solver.from_string(req.code)
+                check = solver.check()
+                valid = check == z3.sat
+                payload = {
+                    "verified": valid,
+                    "errors": [] if valid else [str(check)],
+                    "method": "z3",
+                }
+            except Exception as exc:
+                payload = {"verified": False, "errors": [str(exc)], "method": "z3"}
         elif req.formal_method == "hoare":
             from src.verification.hoare_verifier import HoareVerifier
             hv = HoareVerifier()
@@ -259,6 +335,27 @@ async def verify_code(req: VerifyRequest) -> dict[str, Any]:
                 raise C4APIError("Dafny not installed", status_code=501, error_code="dafny_not_installed")
             result = dc.verify(req.code)
             payload = {"verified": result.get("valid", False), "errors": [str(result.get("output", ""))] if not result.get("valid") else []}
+        elif req.formal_method == "cvc5":
+            from src.verification.cvc5_client import CVC5Client
+            client = CVC5Client()
+            if not client.is_available():
+                raise C4APIError("CVC5 not installed", status_code=501, error_code="cvc5_not_installed")
+            result = client.verify(req.code)
+            payload = {"verified": result.get("valid", False), "errors": [result.get("error", "")] if not result.get("valid") else [], "method": "cvc5"}
+        elif req.formal_method in ("tla", "tla+"):
+            from src.verification.tla_client import TLAClient
+            client = TLAClient()
+            if not client.is_available():
+                raise C4APIError("TLA+ TLC not installed", status_code=501, error_code="tla_not_installed")
+            result = client.verify(req.code)
+            payload = {"verified": result.get("valid", False), "errors": [result.get("error", "")] if not result.get("valid") else [], "method": "tla"}
+        elif req.formal_method == "alloy":
+            from src.verification.alloy_client import AlloyClient
+            client = AlloyClient()
+            if not client.is_available():
+                raise C4APIError("Alloy not installed", status_code=501, error_code="alloy_not_installed")
+            result = client.verify(req.code)
+            payload = {"verified": result.get("valid", False), "errors": [result.get("error", "")] if not result.get("valid") else [], "method": "alloy"}
         else:
             raise ValidationError(f"Unsupported formal method: {req.formal_method}")
     except C4APIError:
@@ -290,7 +387,8 @@ async def verify_lean(req: LeanVerifyRequest) -> dict[str, Any]:
     if not client.available:
         raise C4APIError("Lean 4 not installed", status_code=501, error_code="lean4_not_installed")
     result = client.verify_theorem(req.theorem, req.proof)
-    return {"verified": result.get("verified", False), "errors": result.get("errors", [])}
+    err = result.get("error", "")
+    return {"verified": result.get("valid", False), "errors": [err] if err else []}
 
 
 @router.post("/auto-proof")
@@ -306,7 +404,7 @@ async def auto_generate_proof(req: AutoProofRequest) -> dict[str, Any]:
 @router.get("/tools")
 async def list_tools() -> list[str]:
     """List available verification tools (legacy endpoint)."""
-    return ["hoare", "lean4", "dafny"]
+    return ["hoare", "lean4", "dafny", "coq", "agda", "z3", "cvc5", "tla", "alloy"]
 
 
 @router.get("/status/{verify_id}")

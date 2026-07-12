@@ -79,6 +79,7 @@ make format            # black + prettier
 3. Add `_compile_{name}()` to `hybrid_verifier.py`
 4. Update `BACKEND_GUARDS` in `guardrails.py`
 5. Add to relevant output profiles in `output_profiles.py`
+6. Phase E reads `detect_format()` → `get_profile().verification_backends` and passes `preferred_backends` into `HybridVerifier.verify()` context
 
 ### New Knowledge Source
 1. Create `src/knowledge/sources/{name}.py` with `search_sources()` and `is_available()`
@@ -106,25 +107,21 @@ AGPL-3.0 (open-source) / Commercial license available. All contributions must be
 ## Why `from src.X` Imports?
 
 The codebase uses `from src.X` (and `import src.X`) throughout (~1200 statements
-across ~400 files). This is intentional and tracked in `REWORK_PLAN.md → P3-4`.
+across ~400 files). This is intentional — see `CHANGELOG.md` for history.
 
 **Why not rename to `from c4reqber.X`?**
 1. **Mechanical blast radius**: 399 files / 1220 statements would all need to
    be updated atomically, with import-graph verification, before the rename
    can ship. A half-rename breaks the entire test suite.
-2. **Architectural debate**: `REWORK_PLAN.md → P3-4` notes the rename is
-   *conditional* on continuing to invest in Python. The owner has flagged
-   Python as "a tidy dead-end" pending the Agda-core rewrite.
-3. **pyproject.toml** declares `packages = ["src"]` and `[project.scripts] =
-   src.cli.blast_app:app` — this works for `pip install -e .` from source
-   (the only supported install path until TestPyPI publication lands via
-   `.github/workflows/pypi-publish.yml`).
-4. **Test discovery**: `pytest.ini` sets `pythonpath = src`. Combined with
+2. **pyproject.toml** declares `packages = ["src"]` and `[project.scripts] =
+   src.cli.blast_app:app` — works for `pip install c4reqber` (PyPI) or
+   `pip install -e .` from a GitLab clone.
+3. **Test discovery**: `pytest.ini` sets `pythonpath = src`. Combined with
    `src/__init__.py`, all internal imports resolve consistently.
 
 **Until P3-4 ships, the rule is: all internal Python imports use `from src.X`.**
-External consumers (once published to PyPI) can use either `import c4reqber` or
-`import src` since both entry points will be exposed.
+External consumers can use `pip install c4reqber` (`import c4reqber` or
+`import src` — both entry points are exposed on PyPI).
 
 **How to verify nothing accidentally drops the prefix:**
 ```bash
@@ -132,5 +129,4 @@ grep -rE "^(from|import) (?!src\.)[a-zA-Z]" src/ | grep -v __pycache__
 # Should only show legitimate third-party imports
 ```
 
-**Tracking**: see `audit/MASTER_AUDIT_2026-06-22.md` → H-5 and
-`REWORK_PLAN.md` → P3-4.
+**Tracking**: see `CHANGELOG.md` (v9.14+ release notes) for import-layout history.

@@ -1,5 +1,51 @@
 # Changelog — TUI v9 + Backend Pipeline
 
+> **Русская версия:** [CHANGELOG.ru.md](CHANGELOG.ru.md)
+
+## v9.16.1 (2026-07-12) — Full-suite green + docs/site sync
+
+### Production fixes (overnight audit)
+- **Full pytest:** 9,767 passed, 0 failed (causal `d_separated`, metrics import chain, router lazy-init)
+- **`src/causal/`** — `networkx.d_separated` (replaces removed `is_d_separator`)
+- **`src/api/routers/__init__.py`** — no eager router imports (fixes Prometheus/metrics tests under full collection)
+- **`tests/validation/`** — removed `sys.modules` poisoning of `src.agents`
+- **MCP / verification / v8 API** — hoare `valid`, lean4 `success`, hybrid verifier status mapping, verification LRU cache, `/v8` path consistency
+- **`web-v2/` removed** — primary UI = TUI v9 + `landing/` (GitLab Pages); CI/Makefile/Docker updated
+
+### Docs / landing (bilingual)
+- `_truths.json` + `scripts/sync_truths_to_docs.py` — README, AGENTS.md, landing i18n (7 langs), `index.html`, `main.js`
+- `WHITEPAPER.md` / `WHITEPAPER.ru.md` — metrics aligned to `_truths.json`
+- `CHANGELOG.ru.md` — Russian mirror of release notes
+- Landing API copy: `/v8` discovery aggregator documented alongside legacy `/api/v1`
+- `docs/INSTALL.md`, root `INSTALL.md` — GitLab clone + `pip install c4reqber` (PyPI live at v5.6.0)
+
+---
+
+
+### Verification backends
+- **CVC5, TLA+, Alloy** — real clients (not guard-stubs): SMT-LIB2, TLC, Alloy exec
+- **TLAClient hardening** — pre-flight rejects unbounded Naturals counters; always `-modelcheck -depth`; 120s timeout; parses TLC 65536-state limit
+- `HybridVerifier` fast-path for embedded SMT/TLA/Alloy code (no LLM required)
+- `output_profiles` → Phase E → `preferred_backends` in HybridVerifier
+- `tools/install-verifiers.sh` + `~/.c4reqber/verifiers.env`; wired into `blast setup` and MCP startup
+- Few-shot RAG examples: `cvc5_examples.json`, `tla_examples.json`, `alloy_examples.json`
+- `ConsensusEngine` defaults extended to cvc5/tla/alloy
+- `docs/VERIFICATION_BACKENDS.md` — install + TLA+ bounded-model guide
+
+### API / TUI / MCP
+- `GET /v8/simulations/capabilities` — 38 engines + 10 verifier rows incl. cvc5/tla/alloy
+- CSRF: Bearer-token bypass for API clients; proper 403 JSON (no 500)
+- TUI overlay i18n (14 new keys, 7 languages); golden snapshots regen; sim_summary i18n
+- Help `?` lists Ctrl+Shift+C, i/f/o sim shortcuts
+
+### Docs / landing
+- **`WHITEPAPER.md` + `WHITEPAPER.ru.md`** — bilingual technical whitepaper (EN/RU)
+- `_truths.json`: 9 real verifiers, 0 guard-stubs
+- README, AGENTS.md, ARCHITECTURE.md, landing i18n synced via `sync_truths_to_docs.py`
+- Landing verification section: 9 backend cards (CVC5, TLA+, Alloy added)
+
+---
+
 ## v9.15.0 (2026-07-10) — Production mission release
 
 Verified turbo research proposals, pipeline hardening, GitLab Pages gallery.

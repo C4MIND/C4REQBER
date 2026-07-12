@@ -19,7 +19,7 @@ This is a permanent rule. If you accidentally wrote "github" — flag it to the 
 **Version:** 9.14.0 (TUI v9 Simulation Surface) | **Branch:** `feat/production-upgrade` | **Date:** 2026-06-22 | Production — Round 5 Master Audit fixes landed (10 CRITICAL + 19 HIGH + 20 MEDIUM + 11 LOW resolved)
 > Previous: Round 4 Audit (16 CRITICAL + 39 HIGH + 55 MEDIUM + 14 LOW fixes) | 2026-05-29
 > **Purpose:** Provide AI agents with instant project context. Loaded by Kilo CLI and compatible tools.
-> **Doc status:** Body is a snapshot of the v9.13.0 / v5.6.0 architecture (last full rewrite). For post-v9.14.0 changes (Round 5 audit fixes, H-8 Tier 1 hotfix, P2-A1/B/E/F, P2-D `PatternResult`), see `CHANGELOG.md` and `REWORK_PLAN.md` — they are the source of truth.
+> **Doc status:** Body is a snapshot of the v9.13.0 / v5.6.0 architecture (last full rewrite). For post-v9.14.0 changes see `CHANGELOG.md`. **Canonical technical whitepaper:** [WHITEPAPER.md](WHITEPAPER.md) (EN) · [WHITEPAPER.ru.md](WHITEPAPER.ru.md) (RU) · [docs/VERIFICATION_BACKENDS.md](docs/VERIFICATION_BACKENDS.md).
 
 ---
 
@@ -52,11 +52,11 @@ Updated during 2026-05-19 + 2026-05-21 + 2026-06-03 (Kimi Code CLI audit + v5.6.
 - **Social Publishing System** — 17 modules, 5 platform poster implementations (Twitter, Mastodon, Telegram, SciMatic, Bluesky) + webhook clients for Reddit/Discord/Slack, Zenodo/arXiv upload, ORCID integration, Fernet keyring, LatexCompiler, BYOK model
 - **Hoare logic verifier** (`src/verification/hoare_verifier.py`) — Z3-based WP calculus, full while+invariant support
 - **LLM Prover** (`src/verification/llm_prover.py`) — iterative LLM→compile→error→fix loop for 6 languages
-- **TUI v9** (Go Bubble Tea v2, sim surface: `CardSimulation` kind + capabilities overlay Ctrl+Shift+C listing 32 engines + 27 verifiers with per-platform status and install hints, command palette `:`, debug overlay Ctrl+Shift+D, status bar Ctrl+B, per-card expansion Enter/Esc, 7-language i18n at 100% parity, 7 color profiles including solarized-dark, adaptive layout T0/T1/T2/T3, feed.jsonl persistence + resume on launch, 132 golden snapshots) — 0 critical bugs, 27 atomic commits, +7302 lines. **Merged on `feat/production-upgrade` branch (round 5 audit landed).**
+- **TUI v9** (Go Bubble Tea v2, sim surface: `CardSimulation` kind + capabilities overlay Ctrl+Shift+C listing 38 engine bridges + 9 verifiers with per-platform status and install hints, command palette `:`, debug overlay Ctrl+Shift+D, status bar Ctrl+B, per-card expansion Enter/Esc, 7-language i18n at 100% parity, 7 color profiles including solarized-dark, adaptive layout T0/T1/T2/T3, feed.jsonl persistence + resume on launch, 132 golden snapshots) — 0 critical bugs, 27 atomic commits, +7302 lines. **Merged on `feat/production-upgrade` branch (round 5 audit landed).**
 - **CLI** (blast commands) — 14 commands + 7 social subcommands
 - **Agent system** (Pydantic AI, 11 skills, MCP bridge, memory, sub-agents, `/preprint`, LangGraph executor, FastMCP external tool discovery, ChromaDB memory)
 - **TRIZ** (40 principles, contradiction matrix) — semantic C4 mapping
-- **6 real verification backends** (Lean4, Coq, Dafny, Agda, Z3+Hoare); CVC5/TLA+/Alloy are guard-stubs (not implemented)
+- **9 real verification backends** (Lean4, Coq, Dafny, Agda, Z3/Hoare, Haskell, CVC5, TLA+, Alloy)
 - **251 few-shot proof examples** (Lean4×56, Coq×48, Dafny×52, Z3×50, Agda×45) with TF-IDF RAG retrieval
 - **Causal inference adult** (DoWhy + EconML + gCastle: PC/FCI/NOTEARS/ANM)
 - **Hypothesis ranking** (PriorScorer × EIGEstimator × CostModel × MCDMRanker)
@@ -72,8 +72,8 @@ Updated during 2026-05-19 + 2026-05-21 + 2026-06-03 (Kimi Code CLI audit + v5.6.
 - **MCP Server** — 21 tools (per `_truths.json` + `docs/mcp_registry.md`), all verified working with JSON Schema sync (c4_solve, c4_search, c4_triz, c4_fingerprint, c4_verify, c4_prove, c4_transfer, c4_simulate, c4_bayesian, c4_causal, c4_export, c4_autoresearch, c4_chain, c4_meta, c4_social, c4_codegen, blast_solve, blast_turbo, blast_flash, blast_turbofactory, blast_auto)
 - **Security**: JWT+HMAC auth, CSRF hardened, subprocess injection blocked, prompt injection fail-closed, path traversal blocked, pip allow-list, MATLAB sandbox, 0 CRITICAL/HIGH findings
 - **Code quality**: 0 ruff lint errors across entire `src/`, `__import__` antipatterns removed, importlib for dynamic loading
-- **Type safety**: 0 mypy errors across 1145 source files (559→508→0 after 3 audit rounds)
-- **Tests**: 9908+ collected (Python), 485+ passed core suites, 1 flaky Monte Carlo. Go TUI: 8/8 packages pass, staticcheck clean.
+- **Type safety**: 56 mypy baseline errors (regression-gated; no new errors in CI) (559→508→0 after 3 audit rounds)
+- **Tests**: 9887+ collected (Python), 485+ passed core suites, 1 flaky Monte Carlo. Go TUI: 8/8 packages pass, staticcheck clean.
 - **Pydantic V2 migration** — `ConfigDict`, `field_validator`, `min_length/max_length` across all models
 - **Citation verifier** — hallucination detection for fake theory names ("Recursive Harmonic", "Pantheon Theory", "UCH-HSTR")
 - **Cost tracker** — resets per `solve()` call, prevents cumulative inflation
@@ -127,7 +127,7 @@ Updated during 2026-05-19 + 2026-05-21 + 2026-06-03 (Kimi Code CLI audit + v5.6.
 
 ## What is this?
 
-**c4reqber** is a terminal-first scientific discovery pipeline with C4 state-space navigation layer. 27 Z₃³ states, 10 verification backends + MathDetector (Categories A/B/C) + guardrails, 6 virtual biology simulators, experimental protocol generator, simulation config (GPU/CPU/off), 6 output formats with auto-detection, 12 auto-detected LLM providers (MLX/LM Studio/Ollama/OpenRouter/DeepSeek/XAI/Mistral/Moonshot/Liquid/NVIDIA/YandexGPT), MLX-LM local ($0/MTok), file/OCR workflow, Live Intelligence Feed, 7-language i18n, **21 MCP tools** (all verified working post-audit), 16 TUI shortcuts, 11 slash commands, **1 main AI Agent** (skills, MCP, memory, sub-agents, Pydantic AI, `/preprint`), **Social Publishing module** (Zenodo/arXiv/Reddit/Discord/Slack/Telegram/ORCID — 9 platforms, BYOK), 14 CLI commands, 5 WASM plugins. **TUI v9** (v9.13.0) adds: simulation surface with 32 engines + 27 verifiers (capabilities overlay Ctrl+Shift+C), CardSimulation kind in the feed, typed SSE decoder for `sim_started/sim_finished/sim_skipped` events, command palette `:`, debug overlay Ctrl+Shift+D, status bar Ctrl+B, per-card expansion Enter/Esc, 7 color profiles including solarized-dark, adaptive layout T0/T1/T2/T3, feed.jsonl persistence + resume on launch, 132 golden snapshots. **Security hardened**: auth bypass fixed, prompt injection fail-closed with nonce delimiters + HTML entity decoding + LaTeX escaping, subprocess shell-injection blocked, path traversal protected, SSRF protection on paper IDs, symlink guards, Agda module validation, rate-limiter token leak fixed, all 16 CRITICAL + 34 HIGH + 55 MEDIUM + 14 LOW findings resolved (Round 4 audit).
+**c4reqber** is a terminal-first scientific discovery pipeline with C4 state-space navigation layer. 27 Z₃³ states, 10 verification backends + MathDetector (Categories A/B/C) + guardrails, 6 virtual biology simulators, experimental protocol generator, simulation config (GPU/CPU/off), 6 output formats with auto-detection, 12 auto-detected LLM providers (MLX/LM Studio/Ollama/OpenRouter/DeepSeek/XAI/Mistral/Moonshot/Liquid/NVIDIA/YandexGPT), MLX-LM local ($0/MTok), file/OCR workflow, Live Intelligence Feed, 7-language i18n, **21 MCP tools** (all verified working post-audit), 16 TUI shortcuts, 11 slash commands, **1 main AI Agent** (skills, MCP, memory, sub-agents, Pydantic AI, `/preprint`), **Social Publishing module** (Zenodo/arXiv/Reddit/Discord/Slack/Telegram/ORCID — 9 platforms, BYOK), 14 CLI commands, 5 WASM plugins. **TUI v9** (v9.13.0) adds: simulation surface with 38 engine bridges + 9 verifiers (capabilities overlay Ctrl+Shift+C), CardSimulation kind in the feed, typed SSE decoder for `sim_started/sim_finished/sim_skipped` events, command palette `:`, debug overlay Ctrl+Shift+D, status bar Ctrl+B, per-card expansion Enter/Esc, 7 color profiles including solarized-dark, adaptive layout T0/T1/T2/T3, feed.jsonl persistence + resume on launch, 132 golden snapshots. **Security hardened**: auth bypass fixed, prompt injection fail-closed with nonce delimiters + HTML entity decoding + LaTeX escaping, subprocess shell-injection blocked, path traversal protected, SSRF protection on paper IDs, symlink guards, Agda module validation, rate-limiter token leak fixed, all 16 CRITICAL + 34 HIGH + 55 MEDIUM + 14 LOW findings resolved (Round 4 audit).
 
 ---
 
@@ -136,7 +136,7 @@ Updated during 2026-05-19 + 2026-05-21 + 2026-06-03 (Kimi Code CLI audit + v5.6.
 ### Install & Quickstart
 
 ```bash
-pip install c4reqber           # PyPI entry point (pending publication)
+pip install c4reqber           # PyPI — https://pypi.org/project/c4reqber/
 blast setup                    # Interactive checkbox wizard — pick packages, auto-isolate incompatible ones
 blast setup --auto             # Non-interactive: install everything automatically
 blast solve "problem"         # 4-mode auto-router
@@ -207,7 +207,7 @@ When `blast serve --mcp` is running, 21 tools are available with synchronized JS
 | `c4_verify` | Formal proof verification (Lean4/Coq/Dafny/Agda/Z3/Hoare) — direct proof check |
 | `c4_prove` | **LLM-based hypothesis proving** — generates formal proofs with iterative error correction |
 | `c4_transfer` | Cross-domain isomorphism transfer |
-| `c4_simulate` | Physics simulation (32 engine adapters: 5 internal GPU + 26 P1 open-source bridges + 6 virtual bio) |
+| `c4_simulate` | Physics simulation (38 engine bridges: 5 internal GPU + 26 P1 open-source bridges + 6 virtual bio) |
 | `c4_bayesian` | Bayesian inference (MCMC/BMA) |
 | `c4_causal` | Causal discovery (do-calculus) |
 | `c4_export` | Export to Markdown/JSON/BibTeX/LaTeX |
@@ -261,7 +261,7 @@ c4reqber/
 │   │   ├── observer.py        # PipelineObserver (stagnation detection)
 │   │   ├── final_verifier.py  # FinalVerifier (post-pipeline check)
 │   │   └── quality.py         # QualityGates (weighted 8-gate scoring)
-│   ├── simulations/            # 101+ patterns + 32 engine adapters (5 internal + 26 P1 bridges + 6 virtual bio)
+│   ├── simulations/            # 101+ patterns + 38 engine bridges (5 internal + 26 P1 bridges + 6 virtual bio)
 │   │   ├── newton_bridge.py    # Newton Physics (mlx-env Python 3.11+)
 │   │   └── domain_selector.py # Domain-specific simulation patterns
 │   ├── knowledge/              # 33+ sources via orchestrator.py
@@ -331,7 +331,7 @@ LOG_LEVEL=INFO
 ```
 Layer 1: TUI / CLI / MCP — Terminal-first interaction
 Layer 2: API — FastAPI + Pydantic v2 + WebSocket + SSE
-       POST /api/v8/discover/dissertation (paradigm shift detection)
+       POST /v8/discover/dissertation (paradigm shift detection)
 Layer 3: Core Engines — C4 (6 operators, Z₃³, 27 states, Theorem 11: undirected Ø=3), TRIZ, 28 Plugins (12 compute + 16 cognitive), 7 Metamodels, 101+ Patterns
          SystemAnalyzer — universal entry point (Phase A): entity extraction, dependency graph,
                           systemicity classification (0.0→1.0), decomposition, centrality ranking
@@ -339,7 +339,7 @@ Layer 3: Core Engines — C4 (6 operators, Z₃³, 27 states, Theorem 11: undire
          Auto-selector — keyword + complexity + domain → plugin selection
 Layer 4: Cognitive — Causal, Bayesian, System Dynamics, Decision, Discovery,
          Literature Intel, Experimental, Meta (8 layers)
-Layer 5: Knowledge + Verification — 33+ sources (orchestrator.py), 32 simulation engine adapters, Lean4/Coq/Dafny
+Layer 5: Knowledge + Verification — 33+ sources (orchestrator.py), 38 simulation engine bridges, Lean4/Coq/Dafny
 ```
 
 ---
@@ -396,7 +396,7 @@ Layer 5: Knowledge + Verification — 33+ sources (orchestrator.py), 32 simulati
 
 | Key | Action | Key | Action |
 |-----|--------|-----|--------|
-| `:` | Open command palette (fuzzy-matches 35+ cmds) | `Ctrl+Shift+C` | Capabilities overlay (32 engines + 27 verifiers) |
+| `:` | Open command palette (fuzzy-matches 35+ cmds) | `Ctrl+Shift+C` | Capabilities overlay (38 engine bridges + 9 verifiers) |
 | `Ctrl+Shift+D` | Debug overlay (live state dump) | `Ctrl+B` | Toggle status bar |
 | `j` / `k` | Focus next / prev card | `g g` / `G` | Focus first / last card |
 | `Enter` (on focused card) | Expand to FullBody | `Esc` (on expanded) | Collapse |
@@ -626,7 +626,7 @@ Step 6.5a: Falsification Engine (Popper)
 Step 6.5b: DoE Design
 Step 6.5c: Power Analysis
 Step 6.5d: Reproducibility Check
-Step 7:   Physics Simulation (auto-select from 32 engine adapters via PatternRunnerV2)
+Step 7:   Physics Simulation (auto-select from 38 engine bridges via PatternRunnerV2)
 Step 7.1: Causal Do-Calculus
 Step 7.2: Counterfactual Reasoning
 Step 8:   Formal Verification (Lean4 + Coq + Dafny)

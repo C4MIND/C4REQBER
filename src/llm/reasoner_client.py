@@ -261,6 +261,18 @@ Return corrected code ONLY:"""
 - Use: precondition, postcondition, invariant
 - Format: {P} C {Q}
 - Include loop invariants""",
+            "cvc5": """CVC5 SMT-LIB2 rules:
+- Use (set-logic QF_LIA) or appropriate logic
+- (declare-const x Int) (assert (> x 0)) (check-sat)
+- Return sat/unsat answer, no Python wrapper""",
+            "tla": """TLA+ rules:
+- Start with ---- MODULE Name ----
+- Define Init == and Next == with bounded variables
+- End with ====""",
+            "alloy": """Alloy rules:
+- sig, fun, fact declarations
+- run {} for N  or  check assertionName for N
+- Relational models for architecture/protocols""",
         }
 
         parts = [

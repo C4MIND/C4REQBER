@@ -378,7 +378,7 @@ async def quick_novelty_check(hypothesis: str, domain: str = "general") -> dict[
     Fast novelty check — just Pass 1 broad scan across Semantic Scholar + OpenAlex.
     Returns within 5-10 seconds. Shows if ANY paper overlaps with the hypothesis.
 
-    Query: GET /api/v8/novelty/quick?hypothesis=<text>&domain=general
+    Query: GET /v8/novelty/quick?hypothesis=<text>&domain=general
     """
     t0 = time.perf_counter()
     validator = ThreePassNoveltyValidator()

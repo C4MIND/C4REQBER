@@ -57,7 +57,13 @@ class MLXProvider:
             return False
         try:
             import mlx_lm
-            self._model, self._tokenizer = mlx_lm.load(self._model_name)
+
+            loaded = mlx_lm.load(self._model_name)
+            if isinstance(loaded, tuple) and len(loaded) >= 2:
+                self._model = loaded[0]
+                self._tokenizer = loaded[1]
+            else:
+                raise RuntimeError(f"Unexpected mlx_lm.load return: {type(loaded)}")
             return True
         except Exception as e:
             logger.error("Failed to load MLX model %s: %s", self._model_name, e)

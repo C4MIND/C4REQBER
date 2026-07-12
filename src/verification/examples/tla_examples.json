@@ -1,0 +1,10 @@
+[
+  {"hypothesis": "Counter increments until bound", "proof": "---- MODULE Counter ----\nEXTENDS Naturals\nVARIABLE x\nInit == x = 0\nNext == /\\ x < 5 /\\ x' = x + 1\n===="},
+  {"hypothesis": "Toggle flips between two states", "proof": "---- MODULE Toggle ----\nVARIABLE on\nInit == on = FALSE\nNext == on' = /\\ on /\\ TRUE\n===="},
+  {"hypothesis": "Two-phase commit init", "proof": "---- MODULE TwoPhase ----\nVARIABLE state\nInit == state = \"idle\"\nNext == /\\ state = \"idle\" /\\ state' = \"prepare\"\n===="},
+  {"hypothesis": "Bounded queue size", "proof": "---- MODULE Queue ----\nEXTENDS Naturals\nVARIABLE len\nInit == len = 0\nNext == /\\ len < 10 /\\ len' = len + 1\n===="},
+  {"hypothesis": "Mutex entry attempt", "proof": "---- MODULE Mutex ----\nVARIABLE held\nInit == held = FALSE\nNext == /\\ ~held /\\ held' = TRUE\n===="},
+  {"hypothesis": "Traffic light cycle start", "proof": "---- MODULE Traffic ----\nVARIABLE color\nInit == color = \"red\"\nNext == /\\ color = \"red\" /\\ color' = \"green\"\n===="},
+  {"hypothesis": "Resource counter decrement", "proof": "---- MODULE Resource ----\nEXTENDS Naturals\nVARIABLE n\nInit == n = 3\nNext == /\\ n > 0 /\\ n' = n - 1\n===="},
+  {"hypothesis": "Simple latch holds value", "proof": "---- MODULE Latch ----\nVARIABLE v\nInit == v = 0\nNext == v' = v\n===="}
+]

@@ -10,7 +10,7 @@
 
 ### Method 1: Docker (Recommended)
 ```bash
-git clone https://github.com/c4reqber/turbo-cdi.git
+git clone https://gitlab.com/cognitive-functors/turbo-cdi.git
 cd turbo-cdi
 cp .env.example .env
 # Edit .env with your settings
@@ -19,7 +19,7 @@ docker-compose -f examples/hosting/docker-compose.vps-traefik.yml up -d
 
 ### Method 2: Manual
 ```bash
-git clone https://github.com/c4reqber/turbo-cdi.git
+git clone https://gitlab.com/cognitive-functors/turbo-cdi.git
 cd turbo-cdi
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt

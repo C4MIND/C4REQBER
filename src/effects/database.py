@@ -3,7 +3,7 @@ TURBO-CDI: Effects Database
 Physical and chemical effects for problem solving
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 
 @dataclass
@@ -14,14 +14,8 @@ class PhysicalEffect:
     description: str
     category: str  # mechanical, thermal, electromagnetic, etc.
     formula: str = ""
-    parameters: list[str] = None
-    applications: list[str] = None
-
-    def __post_init__(self):
-        if self.parameters is None:
-            self.parameters = []
-        if self.applications is None:
-            self.applications = []
+    parameters: list[str] = field(default_factory=list)
+    applications: list[str] = field(default_factory=list)
 
 
 class EffectsDatabase:

@@ -603,8 +603,8 @@ Sub-problems:"""
 
             if use_solve:
                 try:
-                    pipeline = UniversalSolvePipeline()
-                    solve_record = await pipeline.solve(topic, mode="autopilot")
+                    solve_pipeline = UniversalSolvePipeline()
+                    solve_record = await solve_pipeline.solve(topic, mode="autopilot")
                     result["solve_result"] = {
                         "final_solution": solve_record.final_solution[:500],
                         "confidence": solve_record.confidence,
@@ -619,8 +619,8 @@ Sub-problems:"""
 
             if use_turbo:
                 try:
-                    pipeline = HILDiscoveryPipeline(config=config, user_profile=user_profile)
-                    turbo_record = await pipeline.discover(topic)
+                    turbo_pipeline = HILDiscoveryPipeline(config=config, user_profile=user_profile)
+                    turbo_record = await turbo_pipeline.discover(topic)
                     result["turbo_result"] = {
                         "hypotheses": len(turbo_record.hypotheses),
                         "sources": len(turbo_record.sources),

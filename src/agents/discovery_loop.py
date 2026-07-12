@@ -43,9 +43,20 @@ class DiscoveryAgent:
         self.cycle_count += 1
         try:
             import httpx
+            import os
+            headers: dict[str, str] = {}
+            jwt_secret = os.getenv("JWT_SECRET", "")
+            if jwt_secret:
+                import jwt
+                headers["Authorization"] = (
+                    "Bearer " + jwt.encode({"sub": "discovery-agent"}, jwt_secret, algorithm="HS256")
+                )
             async with httpx.AsyncClient(timeout=300) as c:
-                r = await c.post("http://127.0.0.1:8000/api/v8/discover/one-click",
-                    json={"problem": problem, "domain": "science"})
+                r = await c.post(
+                    "http://127.0.0.1:8000/v8/discover/one-click",
+                    json={"problem": problem, "domain": "science"},
+                    headers=headers,
+                )
                 return r.json()# type: ignore[no-any-return]
         except (TimeoutError, ImportError, TypeError, httpx.HTTPError, json.JSONDecodeError) as e:
             logger.warning("discovery request failed for problem=%r: %s", problem, e)

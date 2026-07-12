@@ -1,53 +1,134 @@
 #!/bin/bash
-# Install formal verification backends for c4reqber
-# macOS only — uses Homebrew
+# Install formal verification backends for c4reqber (macOS + Linux)
+# Idempotent — safe to re-run.
 
-set -e
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+BIN_DIR="${HOME}/.c4reqber/bin"
+ENV_FILE="${HOME}/.c4reqber/verifiers.env"
+TLA_JAR="${HOME}/.tlaplus/tla2tools.jar"
+TLA_RELEASE="v1.8.0"
+TLA_URL="https://github.com/tlaplus/tlaplus/releases/download/${TLA_RELEASE}/tla2tools.jar"
+
+mkdir -p "$BIN_DIR" "${HOME}/.tlaplus" "${HOME}/.c4reqber"
 
 echo "=== Installing Formal Verification Backends ==="
 echo ""
 
-# Lean4 (via elan)
-if ! command -v lean &> /dev/null; then
-    echo "Installing Lean4 via elan..."
-    curl https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -sSf | sh
-    source "$HOME/.elan/env"
+# --- Java (macOS brew; Linux apt hint) ---
+if [[ "$(uname -s)" == "Darwin" ]]; then
+  if ! command -v brew >/dev/null 2>&1; then
+    echo "ERROR: Homebrew required on macOS" >&2
+    exit 1
+  fi
+  brew install openjdk alloy-analyzer 2>/dev/null || brew upgrade openjdk alloy-analyzer 2>/dev/null || true
+  export PATH="/opt/homebrew/opt/openjdk/bin:/usr/local/opt/openjdk/bin:${PATH}"
+  if [[ -d /opt/homebrew/opt/openjdk ]]; then
+    export JAVA_HOME="/opt/homebrew/opt/openjdk"
+  elif [[ -d /usr/local/opt/openjdk ]]; then
+    export JAVA_HOME="/usr/local/opt/openjdk"
+  fi
 else
-    echo "✓ Lean4: $(lean --version | head -1)"
+  if ! command -v java >/dev/null 2>&1; then
+    echo "Install OpenJDK: sudo apt install openjdk-17-jre-headless" >&2
+  fi
 fi
 
-# Coq / Rocq
-if ! command -v coqc &> /dev/null; then
-    echo "Installing Coq (Rocq) via brew..."
-    brew install coq
+# --- Lean4 (elan) ---
+if ! command -v lean >/dev/null 2>&1; then
+  echo "Installing Lean4 via elan..."
+  curl -fsSL https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | sh -s -- -y
+  # shellcheck disable=SC1090
+  [[ -f "${HOME}/.elan/env" ]] && source "${HOME}/.elan/env"
 else
-    echo "✓ Coq: $(coqc --version | head -1)"
+  echo "✓ Lean4: $(lean --version 2>/dev/null | head -1)"
 fi
 
-# Dafny
-if ! command -v dafny &> /dev/null; then
-    echo "Installing Dafny via brew..."
-    brew install dafny
-else
-    echo "✓ Dafny: $(dafny --version | head -1)"
+# --- Coq / Rocq ---
+if [[ "$(uname -s)" == "Darwin" ]] && ! command -v coqc >/dev/null 2>&1; then
+  echo "Installing Coq via brew..."
+  brew install coq
+elif command -v coqc >/dev/null 2>&1; then
+  echo "✓ Coq: $(coqc --version 2>/dev/null | head -1)"
 fi
 
-# Agda
-if ! command -v agda &> /dev/null; then
-    echo "Installing Agda via brew..."
-    brew install agda
-else
-    echo "✓ Agda: $(agda --version | head -1)"
+# --- Dafny ---
+if [[ "$(uname -s)" == "Darwin" ]] && ! command -v dafny >/dev/null 2>&1; then
+  echo "Installing Dafny via brew..."
+  brew install dafny
+elif command -v dafny >/dev/null 2>&1; then
+  echo "✓ Dafny: $(dafny --version 2>/dev/null | head -1)"
 fi
 
-# Z3 (for Hoare logic)
+# --- Agda ---
+if [[ "$(uname -s)" == "Darwin" ]] && ! command -v agda >/dev/null 2>&1; then
+  echo "Installing Agda via brew..."
+  brew install agda
+elif command -v agda >/dev/null 2>&1; then
+  echo "✓ Agda: $(agda --version 2>/dev/null | head -1)"
+fi
+
+# --- Z3 Python ---
 if ! python3 -c "import z3" 2>/dev/null; then
-    echo "Installing Z3 Python bindings..."
-    pip install z3-solver
+  echo "Installing Z3 Python bindings..."
+  pip install z3-solver
 else
-    echo "✓ Z3 Python: already installed"
+  echo "✓ Z3 Python: already installed"
 fi
+
+# --- CVC5 ---
+if command -v cvc5 >/dev/null 2>&1; then
+  echo "✓ CVC5: $(cvc5 --version 2>/dev/null | head -1)"
+else
+  echo "Installing CVC5 binary to ${BIN_DIR}..."
+  ARCH="$(uname -m)"
+  OS="$(uname -s)"
+  CVC5_VER="cvc5-1.2.1"
+  if [[ "$OS" == "Darwin" && "$ARCH" == "arm64" ]]; then
+    CVC5_URL="https://github.com/cvc5/cvc5/releases/download/${CVC5_VER}/cvc5-macOS-arm64"
+  elif [[ "$OS" == "Darwin" ]]; then
+    CVC5_URL="https://github.com/cvc5/cvc5/releases/download/${CVC5_VER}/cvc5-macOS"
+  elif [[ "$ARCH" == "aarch64" || "$ARCH" == "arm64" ]]; then
+    CVC5_URL="https://github.com/cvc5/cvc5/releases/download/${CVC5_VER}/cvc5-Linux-arm64"
+  else
+    CVC5_URL="https://github.com/cvc5/cvc5/releases/download/${CVC5_VER}/cvc5-Linux"
+  fi
+  curl -fsSL -o "${BIN_DIR}/cvc5" "$CVC5_URL"
+  chmod +x "${BIN_DIR}/cvc5"
+  echo "✓ CVC5: installed to ${BIN_DIR}/cvc5"
+fi
+
+# --- TLA+ TLC (tla2tools.jar) ---
+if [[ -f "$TLA_JAR" ]]; then
+  echo "✓ TLA+ tla2tools.jar: ${TLA_JAR}"
+else
+  echo "Downloading TLA+ tla2tools.jar..."
+  curl -fsSL -o "$TLA_JAR" "$TLA_URL"
+  echo "✓ TLA+ tla2tools.jar: ${TLA_JAR}"
+fi
+
+# --- Alloy (brew on macOS; jar fallback on Linux) ---
+if command -v alloy >/dev/null 2>&1; then
+  echo "✓ Alloy CLI: $(command -v alloy)"
+elif [[ "$(uname -s)" == "Darwin" ]]; then
+  echo "Alloy should be installed via alloy-analyzer brew formula"
+else
+  echo "ℹ Alloy on Linux: install manually or set ALLOY_JAR"
+fi
+
+# --- Persist env for blast / API / MCP ---
+{
+  echo "# Auto-generated by tools/install-verifiers.sh — do not edit by hand"
+  echo "export PATH=\"${BIN_DIR}:/opt/homebrew/opt/openjdk/bin:/usr/local/opt/openjdk/bin:\${PATH}\""
+  [[ -n "${JAVA_HOME:-}" ]] && echo "export JAVA_HOME=\"${JAVA_HOME}\""
+  echo "export TLA_TOOLS_JAR=\"${TLA_JAR}\""
+  command -v alloy >/dev/null 2>&1 && echo "export ALLOY_PATH=\"$(command -v alloy)\""
+  command -v cvc5 >/dev/null 2>&1 && echo "export CVC5_PATH=\"$(command -v cvc5)\""
+  [[ -x "${BIN_DIR}/cvc5" ]] && echo "export CVC5_PATH=\"${BIN_DIR}/cvc5\""
+} > "$ENV_FILE"
 
 echo ""
-echo "=== All verifiers installed ==="
-echo "Run tests: python3 -m pytest tests/verification/ -q"
+echo "=== Verifier env written: ${ENV_FILE} ==="
+echo "Run smoke test: python3 ${ROOT}/scripts/verify_backends_smoke.py"
+echo ""

@@ -10,15 +10,12 @@ import (
 
 	"github.com/figuramax/c4reqber-tui-v9/capsim"
 	"github.com/figuramax/c4reqber-tui-v9/cards"
+	"github.com/figuramax/c4reqber-tui-v9/i18n"
 )
 
 // capSummaryCard builds a synthetic CardSimulation that summarizes the
 // capabilities report — useful for the user to see in their feed that
-// "this machine has 22/32 sims available" right after pressing Ctrl+Shift+C.
-//
-// One CardSimulation per domain with EngineStatus="available" → renders as
-// "summary card" via the (Engine="capsim:domain") sentinel. The user sees
-// what they have without needing to leave the feed for the overlay.
+// "this machine has N/M sims available" right after pressing Ctrl+Shift+C.
 func capSummaryCard(r *capsim.Report) cards.Card {
 	ok := 0
 	for _, e := range r.Engines {
@@ -27,14 +24,13 @@ func capSummaryCard(r *capsim.Report) cards.Card {
 		}
 	}
 	groups := r.GroupByDomain()
-	body := fmt.Sprintf("%d/%d engines available across %d domains",
-		ok, len(r.Engines), len(groups))
+	body := fmt.Sprintf(i18n.T("sim.card.cap_body"), ok, len(r.Engines), len(groups))
 	c := cards.Card{
-		ID:    cards.NextID(),
-		Kind:  cards.KindSimulation,
-		Title: "Capabilities probed",
-		Body:  body,
-		Time:  time.Now(),
+		ID:     cards.NextID(),
+		Kind:   cards.KindSimulation,
+		Title:  i18n.T("sim.card.cap_title"),
+		Body:   body,
+		Time:   time.Now(),
 		Status: "done",
 		Sim: cards.SimFields{
 			Engine:       "capsim",
@@ -46,30 +42,24 @@ func capSummaryCard(r *capsim.Report) cards.Card {
 			BackendHost:  r.Platform.System + "/" + r.Platform.Arch,
 			Evidence: cards.SimEvidence{
 				Type:    "table",
-				Caption: fmt.Sprintf("%d engines probed", len(r.Engines)),
+				Caption: fmt.Sprintf(i18n.T("sim.card.cap_evidence"), len(r.Engines)),
 			},
 		},
 	}
-	// Populate the per-domain fallback chain so the user sees
-	// "domain X had Y sims" at a glance.
 	for _, g := range groups {
 		c.Sim.PatternsTried = append(c.Sim.PatternsTried, cards.PatternTry{
 			Engine: string(g.Domain),
-			Status: fmt.Sprintf("%d engines", len(g.Engines)),
+			Status: fmt.Sprintf(i18n.T("sim.card.domain_engines"), len(g.Engines)),
 		})
 	}
 	return c
 }
 
-// capUnavailableCard emits a per-engine CardSimulation with status=unavailable
-// for every engine that the user can install. Adds one card per missing engine.
-// This is the key affordance the plan calls out (D-03): "engine unavailability
-// is a first-class state". The user always knows what's missing.
-//
-// Capped at maxPerReport to avoid flooding the feed on a 32-engine machine.
+// capUnavailableCards emits a per-engine CardSimulation with status=unavailable
+// for every engine that the user can install.
 func capUnavailableCards(r *capsim.Report, maxPerReport int) []cards.Card {
 	if maxPerReport <= 0 {
-		maxPerReport = 6 // default
+		maxPerReport = 6
 	}
 	var out []cards.Card
 	for i, e := range r.Engines {
@@ -81,15 +71,15 @@ func capUnavailableCards(r *capsim.Report, maxPerReport int) []cards.Card {
 		}
 		reason := e.MissingReason
 		if reason == "" {
-			reason = "not on this platform"
+			reason = i18n.T("sim.card.reason_default")
 		}
 		out = append(out, cards.Card{
-			ID:    cards.NextID(),
-			Kind:  cards.KindSimulation,
-			Title: "engine " + e.ID + " unavailable",
-			Body:  e.Name + " · " + reason,
-			Time:  time.Now().Add(time.Duration(i) * time.Millisecond),
-			Meta:  []cards.MetaKV{{Key: "domain", Value: string(e.Domain)}, {Key: "tier", Value: e.Tier}},
+			ID:     cards.NextID(),
+			Kind:   cards.KindSimulation,
+			Title:  fmt.Sprintf(i18n.T("sim.card.engine_unavailable"), e.ID),
+			Body:   e.Name + " · " + reason,
+			Time:   time.Now().Add(time.Duration(i) * time.Millisecond),
+			Meta:   []cards.MetaKV{{Key: "domain", Value: string(e.Domain)}, {Key: "tier", Value: e.Tier}},
 			Status: "error",
 			Sim: cards.SimFields{
 				Engine:        e.ID,

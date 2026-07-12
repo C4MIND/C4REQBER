@@ -168,10 +168,10 @@ class CitationChaser:
         paper_id: str,
         limit: int = 50,
     ) -> list[dict[str, Any]]:
-        paper_id = self._validate_paper_id(paper_id)
-        if paper_id is None:
+        validated = self._validate_paper_id(paper_id)
+        if validated is None:
             return []
-        url = f"https://api.semanticscholar.org/graph/v1/paper/{paper_id}/citations"
+        url = f"https://api.semanticscholar.org/graph/v1/paper/{validated}/citations"
         params: dict[str, Any] = {
             "limit": limit,
             "fields": "title,authors,year,abstract,citationCount,externalIds,publicationVenue,publicationDate",
@@ -217,10 +217,10 @@ class CitationChaser:
         paper_id: str,
         limit: int = 50,
     ) -> list[dict[str, Any]]:
-        paper_id = self._validate_paper_id(paper_id)
-        if paper_id is None:
+        validated = self._validate_paper_id(paper_id)
+        if validated is None:
             return []
-        url = f"https://api.semanticscholar.org/graph/v1/paper/{paper_id}/references"
+        url = f"https://api.semanticscholar.org/graph/v1/paper/{validated}/references"
         params: dict[str, Any] = {
             "limit": limit,
             "fields": "title,authors,year,abstract,citationCount,externalIds,publicationVenue,publicationDate",

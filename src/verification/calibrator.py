@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from typing import Literal
 
 
-BackendChoice = Literal["lean4", "coq", "dafny", "agda", "hoare"]
+BackendChoice = Literal["lean4", "coq", "dafny", "agda", "hoare", "cvc5", "tla", "alloy"]
 
 
 @dataclass
@@ -105,6 +105,33 @@ class VerificationCalibrator:
             r"\bHoare\b",
             r"\bverification.condition\b",
         ],
+        "cvc5": [
+            r"\(declare-",
+            r"\(assert",
+            r"\(check-sat\)",
+            r"set-logic",
+            r"\(define-fun",
+            r"\(forall",
+            r"\(exists",
+        ],
+        "tla": [
+            r"----\s*MODULE",
+            r"\bEXTENDS\b",
+            r"\bInit\s*==",
+            r"\bNext\s*==",
+            r"\[\]",
+            r"<>",
+            r"\bTLA\+",
+        ],
+        "alloy": [
+            r"\bsig\b",
+            r"\bfun\b",
+            r"\bassert\b",
+            r"\brun\b",
+            r"\bcheck\b",
+            r"\bfact\b",
+            r"\bpred\b",
+        ],
     }
 
     # Pipeline tool → backend mapping
@@ -116,7 +143,7 @@ class VerificationCalibrator:
     }
 
     # Valid backends for quick validation
-    _VALID_BACKENDS: set[str] = {"lean4", "coq", "dafny", "agda", "hoare"}
+    _VALID_BACKENDS: set[str] = {"lean4", "coq", "dafny", "agda", "hoare", "cvc5", "tla", "alloy"}
 
     def select_backend(
         self,

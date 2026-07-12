@@ -3,8 +3,9 @@ from __future__ import annotations
 
 """
 Reqber v8.0: Turbo Discovery + Paradigm Shift API Router
-POST /api/v8/discover/turbo — multi-agent turbo discovery
-POST /api/v8/discover/paradigm — paradigm shift detection (100+ agents)
+POST /v8/turbo — multi-agent turbo discovery
+POST /v8/discover/turbo — alias (same handler)
+POST /v8/turbo/paradigm — paradigm shift detection (100+ agents)
 """
 import asyncio
 import logging
@@ -142,7 +143,7 @@ def _extract_contradictions(results: list[dict[str, Any]]) -> list[dict[str, Any
 # Turbo Discovery Endpoint
 # ---------------------------------------------------------------------------
 
-@router.post("/turbo")
+@router.post("/")
 async def turbo_discovery(request: TurboRequest) -> dict[str, Any]:
     """
     Turbo discovery: multiple functor-agents explore a problem in parallel.

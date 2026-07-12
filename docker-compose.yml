@@ -34,30 +34,8 @@ services:
     networks:
       - turbo-cdi-network
 
-  # ============================================
-  # Frontend Service
-  # ============================================
-  frontend:
-    build:
-      context: ./web-v2
-      dockerfile: ../Dockerfile.frontend
-    image: turbo-cdi-web:v8.0
-    container_name: turbo-cdi-frontend
-    ports:
-      - "3000:80"
-    environment:
-      - REACT_APP_API_URL=http://localhost:8000
-    depends_on:
-      api:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    restart: unless-stopped
-    networks:
-      - turbo-cdi-network
+  # Frontend: use landing/ static site (GitLab Pages). web-v2 removed 2026-07-12.
+  # frontend service removed — API-only docker-compose by default.
 
   # ============================================
   # Redis Cache Service

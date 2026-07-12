@@ -2,8 +2,8 @@
 // for the TUI v9 "what works on this machine" surface (Ctrl+Shift+C overlay).
 //
 // BE-SIM-01 in the unified plan. Aggregates:
-//   - 32 simulation engine bridges (src/simulations/*_bridge.py)
-//   - 27 verification/formal backends (src/verification/*_bridge.py)
+//   - 38 simulation engine bridges (src/simulations/*_bridge.py)
+//   - 10 verification/formal backends (capabilities_probe.py; 9 real + Z3/Hoare split)
 //   - Hardware detection (Metal/CUDA/CPU)
 //
 // Cache TTL: 5 minutes, process-local. The backend has the same TTL on its side;

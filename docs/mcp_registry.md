@@ -41,7 +41,7 @@
     worsening: int = 2,
     mode: str = "matrix",
     problem: str = "",` | Resolve contradiction using TRIZ tools. |
-| 21 | `c4_verify` | `code: str, language: str \| None = None` | Verify formal proof with redundant gate (3-variant voting) in Lean4, Agda, Coq, Dafny, or Hoare logic. |
+| 21 | `c4_verify` | `code: str, language: str \| None = None` | Verify formal proof in lean4, coq, dafny, agda, z3, hoare, cvc5, tla, or alloy. |
 
 ## Verification
 

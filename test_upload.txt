@@ -1,8 +1,0 @@
-This is a test document for TURBO-CDI v8.3 RAG system.
-
-The document discusses quantum computing concepts including:
-- Qubits and superposition
-- Quantum entanglement
-- Quantum algorithms like Shor's and Grover's
-
-This document is used for testing the document upload and RAG query functionality.

@@ -39,13 +39,15 @@ class JWTAuthMiddleware(BaseHTTPMiddleware):
             "/",
             "/api/v1/auth/login",
             "/api/v1/auth/register",
+            "/v8/simulations/capabilities",
+            "/v8/verification/methods",
         }
         if request.url.path.rstrip("/") in {p.rstrip("/") for p in public_paths}:
             return await call_next(request)
 
         # Webhook endpoints require HMAC auth and JWT
         body = b""
-        if request.url.path.startswith("/api/v8/webhook"):
+        if request.url.path.startswith("/v8/webhook") or request.url.path.startswith("/api/v8/webhook"):
             signature = request.headers.get("X-C4-HMAC", "")
             body = await request.body()
             webhook_secret = os.getenv("WEBHOOK_SECRET", "")

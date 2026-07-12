@@ -2,12 +2,8 @@
 set -e
 
 echo "═══════════════════════════════════════════════════════════════"
-echo "  TURBO-CDI Pre-Push Hook"
+echo "  c4reqber Pre-Push Hook"
 echo "═══════════════════════════════════════════════════════════════"
-
-echo ""
-echo "=== TypeScript typecheck ==="
-cd web-v2 && npx tsc --noEmit && cd ..
 
 echo ""
 echo "=== Python mypy ==="
@@ -18,8 +14,8 @@ echo "=== Python ruff ==="
 ruff check src/
 
 echo ""
-echo "=== ESLint ==="
-cd web-v2 && npm run lint && cd ..
+echo "=== Go TUI v9 ==="
+cd src/tui/v9 && go test ./... -count=1 && cd - >/dev/null
 
 echo ""
 echo "=== pytest ==="
@@ -49,14 +45,7 @@ except Exception:
     except Exception:
         print('unknown')
 " 2>/dev/null || echo "unknown")
-JS_VERSION=$(node -p "require('./web-v2/package.json').version" 2>/dev/null || echo "unknown")
 echo "pyproject.toml version: $PY_VERSION"
-echo "package.json version:   $JS_VERSION"
-
-if [ "$PY_VERSION" != "$JS_VERSION" ]; then
-    echo "WARNING: Version mismatch! pyproject.toml ($PY_VERSION) != package.json ($JS_VERSION)"
-    echo "Continuing anyway..."
-fi
 
 echo ""
 echo "═══════════════════════════════════════════════════════════════"

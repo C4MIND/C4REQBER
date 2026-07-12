@@ -1,21 +1,23 @@
 # TURBO-CDI Documentation
 
+> **Primary remote:** [GitLab](https://gitlab.com/cognitive-functors/turbo-cdi) · **UI:** TUI v9 + static `landing/` (GitLab Pages). No `web-v2` SPA.
+
 ## 🚀 Quick Start
 
-### Docker Compose (Recommended)
+### Docker Compose (API only)
 
 ```bash
 # Clone repository
-git clone https://github.com/your-org/turbo-cdi.git
+git clone git@gitlab.com:cognitive-functors/turbo-cdi.git
 cd turbo-cdi
 
-# Start all services
-docker-compose up -d
+# Start API (optional — most users use CLI/TUI locally)
+docker compose -f docker-compose.release.yml up -d
 
 # Access:
 # - API: http://localhost:8000
-# - Web UI: http://localhost:3000
 # - API Docs: http://localhost:8000/docs
+# - Static site: landing/ or GitLab Pages deploy
 ```
 
 ### Manual Installation

@@ -5,6 +5,7 @@ from fastapi import APIRouter
 
 from src.api.v8_routers.agenda import router as agenda_router
 from src.api.v8_routers.arxiv_v8 import router as arxiv_router
+from src.api.v8_routers.capabilities_v8 import router as capabilities_router
 from src.api.v8_routers.discovery_v8 import router as discovery_router
 from src.api.v8_routers.exploration import router as exploration_router
 from src.api.v8_routers.knowledge_v8 import router as knowledge_router
@@ -18,12 +19,15 @@ from src.api.v8_routers.verification_v8 import router as verification_router
 
 try:
     from src.api.v8_routers.news_v8 import router as news_router
-except Exception:
+except Exception as exc:
+    import logging
+    logging.getLogger("c4reqber.api.v8").error("news_v8 router failed to load: %s", exc)
     news_router = APIRouter(prefix="/news", tags=["v8-news"])
 
 __all__ = [
     "agenda_router",
     "arxiv_router",
+    "capabilities_router",
     "discovery_router",
     "exploration_router",
     "knowledge_router",

@@ -90,7 +90,7 @@ The TURBO-CDI bug bounty program covers the following assets:
 | `src/api/auth.py` | Authentication | ✅ Yes |
 | `src/api/middleware/security.py` | Security middleware | ✅ Yes |
 | `src/security/` | Security modules | ✅ Yes |
-| `web-v2/` | Frontend application | ✅ Yes |
+| `landing/` + TUI v9 | Terminal + static site (primary UI) | ✅ Yes |
 | `docker/` | Container configs | ✅ Yes |
 | `k8s/` | Kubernetes manifests | ✅ Yes |
 | Third-party dependencies | Out of scope | ❌ No |

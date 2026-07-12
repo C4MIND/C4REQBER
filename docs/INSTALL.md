@@ -6,6 +6,7 @@
 
 ```bash
 pip install c4reqber
+# or from source: git clone + pip install -e ".[science]"
 blast setup          # interactive wizard — picks packages, API keys
 cp .env.example .env # add OPENROUTER_API_KEY (see docs/API_KEYS.md)
 blast solve "your problem"

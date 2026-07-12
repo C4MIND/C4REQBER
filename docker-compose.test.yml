@@ -20,20 +20,7 @@ services:
       - ./src:/app/src  # Hot reload
     command: uvicorn api.server:app --host 0.0.0.0 --port 8000 --reload
 
-  # Frontend
-  web:
-    build:
-      context: ./web-v2
-      dockerfile: Dockerfile.web
-    ports:
-      - "3001:3000"
-    environment:
-      - VITE_API_URL=http://localhost:8000
-    volumes:
-      - ./web-v2/src:/app/src  # Hot reload
-    command: npm run dev
-    depends_on:
-      - api
+  # web-v2 removed 2026-07-12 — use landing/ static site or TUI v9
 
   # PostgreSQL
   db:

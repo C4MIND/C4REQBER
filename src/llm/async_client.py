@@ -266,7 +266,8 @@ class AsyncLLMClient:
         # Audit 2026-06-22 H-8 Tier 1: instrument at this layer (the
         # router itself). The actual httpx call has already happened
         # inside the retry loop above.
-        self._record_metric(data.get("model", model), "success", time.time() - start_time)
+        model_name = str(data.get("model", model))
+        self._record_metric(model_name, "success", time.time() - start_time)
 
         try:
             result = response.json()
@@ -278,7 +279,7 @@ class AsyncLLMClient:
         in_tok = int(usage.get("prompt_tokens", 0) or 0)
         out_tok = int(usage.get("completion_tokens", 0) or 0)
         if in_tok or out_tok:
-            self._record_cost(data.get("model", model), in_tok, out_tok)
+            self._record_cost(model_name, in_tok, out_tok)
 
         latency_ms = (time.time() - start_time) * 1000
 

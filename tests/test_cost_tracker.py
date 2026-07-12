@@ -16,7 +16,7 @@ from src.llm.cost_tracker import (
 class TestNormalizeModel:
     def test_gpt4o(self):
         assert _normalize_model("openai/gpt-4o") == "gpt-4o"
-        assert _normalize_model("GPT-4o-mini") == "gpt-4o"
+        assert _normalize_model("GPT-4o-mini") == "gpt-4o-mini"
 
     def test_claude(self):
         assert _normalize_model("anthropic/claude-3.5-sonnet") == "claude-3.5"
@@ -25,8 +25,8 @@ class TestNormalizeModel:
     def test_claude_4x_families(self):
         # Hyphenated, dotted, and dated id forms all resolve to the 4.x family.
         assert _normalize_model("claude-opus-4-8") == "claude-opus-4"
-        assert _normalize_model("anthropic/claude-opus-4.6") == "claude-opus-4"
-        assert _normalize_model("claude-sonnet-4-6") == "claude-sonnet-4"
+        assert _normalize_model("anthropic/claude-opus-4.6") == "claude-opus-4.6"
+        assert _normalize_model("claude-sonnet-4-6") == "claude-sonnet-4.6"
         assert _normalize_model("anthropic/claude-sonnet-4-20250514") == "claude-sonnet-4"
         assert _normalize_model("claude-haiku-4-5") == "claude-haiku-4"
 

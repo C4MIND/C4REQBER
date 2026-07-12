@@ -1,16 +1,17 @@
 #!/bin/bash
 set -e
 
-echo "Building TURBO-CDI WASM modules..."
+ROOT="$(cd "$(dirname "$0")" && pwd)"
+OUT="$ROOT/pkg"
 
-# Build spectral embedding module
+echo "Building c4reqber WASM modules → $OUT"
+
 echo "  → spectral"
-cd "$(dirname "$0")/spectral"
-wasm-pack build --target web --out-dir ../../web-v2/src/wasm/spectral
+cd "$ROOT/spectral"
+wasm-pack build --target web --out-dir "$OUT/spectral"
 
-# Build graph algorithms module
 echo "  → graph"
-cd "$(dirname "$0")/graph"
-wasm-pack build --target web --out-dir ../../web-v2/src/wasm/graph
+cd "$ROOT/graph"
+wasm-pack build --target web --out-dir "$OUT/graph"
 
-echo "WASM build complete. Output: web-v2/src/wasm/"
+echo "WASM build complete. Output: $OUT/"

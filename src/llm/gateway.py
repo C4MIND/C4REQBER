@@ -50,10 +50,11 @@ class LLMGateway(Protocol):
 
     async def generate_for_stage(
         self,
-        stage: str,
-        prompt: str,
+        stage: str | None = None,
+        prompt: str = "",
         system_prompt: str | None = None,
         use_retry: bool = True,
+        stage_name: str | None = None,
     ) -> Any: ...
 
     async def generate(
@@ -112,17 +113,20 @@ class DefaultGateway:
 
     async def generate_for_stage(
         self,
-        stage: str,
-        prompt: str,
+        stage: str | None = None,
+        prompt: str = "",
         system_prompt: str | None = None,
         use_retry: bool = True,
+        stage_name: str | None = None,
     ) -> Any:
+        resolved_stage = stage or stage_name or "default"
+        _ = stage_name
         t0 = time.monotonic()
         provider = "stage_router"
-        model = stage
+        model = resolved_stage
         try:
             result = await self._router().generate(
-                stage, prompt, system_prompt=system_prompt, use_retry=use_retry
+                resolved_stage, prompt, system_prompt=system_prompt, use_retry=use_retry
             )
             _record_llm_call(provider, model, "success", time.monotonic() - t0)
             return result

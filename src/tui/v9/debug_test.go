@@ -47,7 +47,7 @@ func TestRenderDebugOverlayContains(t *testing.T) {
 		SimCountRun: 3,
 		SimCountTotal: 2,
 		SimCost: 0.05,
-		SimCapabilitySummary: "⏚ 22/32 engines",
+		SimCapabilitySummary: "⏚ 28/38 engines",
 		Follow:   true,
 		Focused:  -1,
 		MemoryEst: "~0 KB",
@@ -61,7 +61,7 @@ func TestRenderDebugOverlayContains(t *testing.T) {
 		"Feed",
 		"Sims",
 		"Memory",
-		"⏚ 22/32 engines",
+		"⏚ 28/38 engines",
 		"bookmarks: 1",
 	} {
 		if !strings.Contains(out, want) {

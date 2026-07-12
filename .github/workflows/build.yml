@@ -43,37 +43,46 @@ jobs:
           name: backend-artifact
           path: dist/backend.tar.gz
 
-  build-frontend:
+  build-landing:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: "npm"
-          cache-dependency-path: web-v2/package-lock.json
-
-      - name: Install dependencies
+      - name: Package landing static site
         run: |
-          cd web-v2
-          npm ci --legacy-peer-deps
+          mkdir -p dist
+          tar czf dist/landing.tar.gz landing/
 
-      - name: Build frontend
-        run: |
-          cd web-v2
-          npm run build
-
-      - name: Upload frontend artifact
+      - name: Upload landing artifact
         uses: actions/upload-artifact@v4
         with:
-          name: frontend-artifact
-          path: web-v2/dist/
+          name: landing-artifact
+          path: dist/landing.tar.gz
+
+  build-tui:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+
+      - name: Build TUI v9 binary
+        working-directory: src/tui/v9
+        run: |
+          go build -o ../../../dist/c4tui-v9 ./cmd/c4tui-v9
+
+      - name: Upload TUI artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tui-artifact
+          path: dist/c4tui-v9
 
   verify-artifacts:
     runs-on: ubuntu-latest
-    needs: [build-backend, build-frontend]
+    needs: [build-backend, build-landing, build-tui]
     steps:
       - uses: actions/checkout@v4
 
@@ -83,13 +92,20 @@ jobs:
           name: backend-artifact
           path: dist/
 
-      - name: Download frontend artifact
+      - name: Download landing artifact
         uses: actions/download-artifact@v4
         with:
-          name: frontend-artifact
-          path: web-v2/dist/
+          name: landing-artifact
+          path: dist/
+
+      - name: Download TUI artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: tui-artifact
+          path: dist/
 
       - name: Verify artifacts exist
         run: |
           test -f dist/backend.tar.gz && echo "Backend artifact OK"
-          test -d web-v2/dist && echo "Frontend artifact OK"
+          test -f dist/landing.tar.gz && echo "Landing artifact OK"
+          test -f dist/c4tui-v9 && echo "TUI artifact OK"

@@ -1,4 +1,4 @@
-1;36m⏚ Simulation Capabilities (Darwin arm64)m
+1;36m⏚ Simulation capabilities (Darwin arm64)m
 90mGPU: Apple M3 Pro · 18.0 GB · 12 CPUs · 36 GB RAMm
 
 1;34m  physicsm
@@ -13,12 +13,12 @@
     31m○m GROMACS         31m (unavailable)m
 
 1;34m  ── Verification ──m
-  ● lean4 (4.0.0)
+  ● Lean 4 (4.0.0)
+  ● CVC5 (1.2.0)
+  ○ TLA+
+  ● Alloy (6.1.0)
 
 90m  Last probe: <CLOCK> (1200ms) · Ctrl+R to refresh · Esc to closem
-
-
-
 
 
 

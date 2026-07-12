@@ -122,7 +122,7 @@ def test_api_requests_counter_increments():
     """API_REQUESTS must be incrementable with (method, endpoint, status_code) labels."""
     from src.api.routers.metrics import API_REQUESTS
 
-    counter = API_REQUESTS.labels(method="GET", endpoint="/api/v8/discovery", status_code="200")
+    counter = API_REQUESTS.labels(method="GET", endpoint="/v8/discovery", status_code="200")
     before = counter._value.get()
     counter.inc()
     after = counter._value.get()

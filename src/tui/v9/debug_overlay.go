@@ -31,7 +31,7 @@ type DebugSnapshot struct {
 	SimCountRun   int
 	SimCountTotal int           // total CardSimulation in feed
 	SimCost       float64
-	SimCapabilitySummary string  // "22/32 engines" or empty
+	SimCapabilitySummary string  // "⏚ X/Y engines" or empty
 	Follow        bool
 	Focused       int          // -1 = none
 	MemoryEst     string        // "feed × ~200 bytes"

@@ -4,6 +4,9 @@ import (
 	"math/rand"
 	"strings"
 	"testing"
+	"time"
+
+	tea "charm.land/bubbletea/v2"
 )
 
 // TestBuildCrystalFrames_AllFramesAtSameXCenter verifies that
@@ -91,29 +94,136 @@ func TestBuildCrystalFrames_PurpleCubeWithinCompositeWidth(t *testing.T) {
 	}
 }
 
-// TestBuildSplashForms_AllFormsAtSameXCenter verifies that
-// the dissolve forms [purple, noise, C4R-intermediate, final]
-// all have the same visual X-center.
-func TestBuildSplashForms_AllFormsAtSameXCenter(t *testing.T) {
+// TestBuildDissolveSequence_Shape verifies the web-parity dissolve:
+// 16 forms (seed, noise, 13 cube-glitch, clean cube, final), all padded
+// to the same width, with a valid C4R start row and cell map.
+func TestBuildDissolveSequence_Shape(t *testing.T) {
 	const h = 40
 	rng := rand.New(rand.NewSource(42))
-	forms := buildSplashForms(h, v8RawANSISmall, false, rng)
-	if len(forms) != 4 {
-		t.Fatalf("expected 4 forms, got %d", len(forms))
+	forms, c4rStart, cells := buildDissolveSequence(h, v8RawANSISmall, false, rng)
+	wantForms := 2 + splashDissolveGlitchForms + 2
+	if len(forms) != wantForms {
+		t.Fatalf("expected %d forms, got %d", wantForms, len(forms))
 	}
-	centers := make([]float64, len(forms))
+	if c4rStart < 0 {
+		t.Fatal("c4rStart should be >= 0 for non-compact art")
+	}
+	if len(cells) == 0 {
+		t.Fatal("cell map should not be empty")
+	}
+	width := lenRunes(forms[0][0])
 	for i, f := range forms {
-		centers[i] = visualCenterColumnSplash(f)
-	}
-	first := centers[0]
-	for i, c := range centers {
-		diff := c - first
-		if diff < 0 {
-			diff = -diff
+		for j, l := range f {
+			if lenRunes(l) != width {
+				t.Errorf("form %d line %d width %d != %d (all forms must share one width)",
+					i, j, lenRunes(l), width)
+			}
 		}
-		if diff > 2.0 {
-			t.Errorf("form %d center %.1f differs from form 0 center %.1f by %.1f cols",
-				i, c, first, diff)
+	}
+}
+
+// TestBuildDissolveSequence_CellsMatchFinal verifies every cell in the
+// map points at a '1' in the aligned final form — the invariant that
+// makes mid-animation C4R geometry identical to the final geometry.
+func TestBuildDissolveSequence_CellsMatchFinal(t *testing.T) {
+	const h = 40
+	rng := rand.New(rand.NewSource(42))
+	forms, c4rStart, cells := buildDissolveSequence(h, v8RawANSISmall, false, rng)
+	final := forms[len(forms)-1]
+	count1 := 0
+	for y := c4rStart; y < len(final); y++ {
+		for _, r := range []rune(final[y]) {
+			if r == '1' {
+				count1++
+			}
+		}
+	}
+	if len(cells) != count1 {
+		t.Errorf("cell map has %d cells, final form has %d '1' runes", len(cells), count1)
+	}
+	for _, c := range cells {
+		y, x := c[0], c[1]
+		if y < c4rStart || y >= len(final) {
+			t.Fatalf("cell row %d outside C4R block [%d, %d)", y, c4rStart, len(final))
+		}
+		runes := []rune(final[y])
+		if x >= len(runes) || runes[x] != '1' {
+			t.Errorf("cell (%d,%d) does not point at '1' in final form", y, x)
+		}
+	}
+}
+
+// TestSplash_DissolveNeverBendsC4R runs the model through the entire
+// dissolve tick-by-tick and asserts every '1' visible in the C4R region
+// sits at a coordinate from the final form's cell map — i.e. the letter
+// walls and bars can never appear shifted mid-animation (web parity).
+func TestSplash_DissolveNeverBendsC4R(t *testing.T) {
+	m := NewSplash("v9.14.0", "")
+	m.width, m.height = 200, 50
+	u, _ := m.Update(tea.KeyPressMsg{Code: ' '}) // crystal → dissolve
+	mm := u.(SplashModel)
+	if mm.phase != "dissolve" {
+		t.Fatalf("phase = %s, want dissolve", mm.phase)
+	}
+	if mm.c4rStartRow < 0 || len(mm.c4rCells) == 0 {
+		t.Fatal("dissolve must carry a C4R cell map")
+	}
+	valid := map[[2]int]bool{}
+	for _, c := range mm.c4rCells {
+		valid[c] = true
+	}
+	total := mm.totalMorphTicks()
+	if got := total * int(splashTickInterval/time.Millisecond); got < 10000 {
+		t.Errorf("dissolve duration %dms, want >= 10s (web parity ~11.25s)", got)
+	}
+	for tick := 0; tick <= total; tick++ {
+		u, _ = mm.Update(splashTickMsg{tick: tick})
+		mm = u.(SplashModel)
+		for y := mm.c4rStartRow; y < len(mm.morphLines); y++ {
+			for x, r := range []rune(mm.morphLines[y]) {
+				if r == '1' && !valid[[2]int{y, x}] {
+					t.Fatalf("tick %d: '1' at (%d,%d) not in final cell map", tick, y, x)
+				}
+			}
+		}
+	}
+	if mm.phase != "waiting" {
+		t.Errorf("after %d ticks phase = %s, want waiting", total, mm.phase)
+	}
+	// Entering waiting must not replay the bloom (would re-assemble C4R).
+	if mm.bloomFrame != splashBloomFrames {
+		t.Errorf("bloomFrame = %d, want %d (no bloom replay)", mm.bloomFrame, splashBloomFrames)
+	}
+}
+
+// TestPaintC4RCellsSplash_ExactCoordinates verifies the assembly overlay
+// only ever paints '1' at coordinates present in the cell map, at any
+// partial reveal count.
+func TestPaintC4RCellsSplash_ExactCoordinates(t *testing.T) {
+	const h = 40
+	rng := rand.New(rand.NewSource(42))
+	forms, c4rStart, cells := buildDissolveSequence(h, v8RawANSISmall, false, rng)
+	final := forms[len(forms)-1]
+	valid := map[[2]int]bool{}
+	for _, c := range cells {
+		valid[c] = true
+	}
+	for _, count := range []int{0, 1, len(cells) / 3, len(cells) / 2, len(cells) - 1, len(cells)} {
+		lines := make([]string, len(final))
+		for i, l := range final {
+			if i >= c4rStart {
+				lines[i] = strings.Repeat(" ", lenRunes(l))
+			} else {
+				lines[i] = l
+			}
+		}
+		paintC4RCellsSplash(lines, cells, count, splashC4RFringe, 7, rng)
+		for y := c4rStart; y < len(lines); y++ {
+			for x, r := range []rune(lines[y]) {
+				if r == '1' && !valid[[2]int{y, x}] {
+					t.Errorf("count=%d: '1' painted at (%d,%d) which is not in the cell map", count, y, x)
+				}
+			}
 		}
 	}
 }

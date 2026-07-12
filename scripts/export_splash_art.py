@@ -53,10 +53,34 @@ def json_escape(s: str) -> str:
     return "".join(out)
 
 
+def normalize_c4r_left_wall(text: str) -> str:
+    """Ensure every C4R line shares the same left margin (straight C wall)."""
+    lines = text.split("\n")
+    if not lines:
+        return text
+    lead_counts: list[int] = []
+    for line in lines:
+        stripped = line.lstrip(" ")
+        if not stripped:
+            continue
+        lead_counts.append(len(line) - len(stripped))
+    if not lead_counts:
+        return text
+    target = min(lead_counts)
+    out: list[str] = []
+    for line in lines:
+        stripped = line.lstrip(" ")
+        if not stripped:
+            out.append(line)
+            continue
+        out.append(" " * target + stripped)
+    return "\n".join(out)
+
+
 def main() -> None:
     go_src = EMBEDDED.read_text(encoding="utf-8", errors="replace")
     green = GREEN_CUBE.read_text(encoding="utf-8").strip("\n")
-    big_c4r = extract_go_const("v8BigC4R", go_src).strip("\n")
+    big_c4r = normalize_c4r_left_wall(extract_go_const("v8BigC4R", go_src).strip("\n"))
     crystal_raw = extract_go_var("v8RawANSISmall", go_src)
     crystal = "\n".join(ANSI_RE.sub("", line) for line in crystal_raw.splitlines()).strip("\n")
 

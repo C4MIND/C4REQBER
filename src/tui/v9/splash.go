@@ -44,29 +44,43 @@ type SplashModel struct {
 	morphFrame   int    // global morph progress (combined crystal+dissolve)
 	aurora       *BioAurora
 	rng          *rand.Rand
+	// C4R exact-coordinate assembly (web-splash parity, v9.14.x):
+	// every "1" of the final C4R block is painted only at its final
+	// (row, col), so the letters can never look shifted mid-animation.
+	c4rStartRow  int            // first row of the C4R block in aligned final form (-1 if none)
+	c4rCells     [][2]int       // sorted (y, x) of every '1' in the aligned final form
+	c4rCellIdx   map[[2]int]int // (y, x) → reveal order index
 	appVersion   string
 	gitRef       string    // e.g. "v9.4.0 (abcdef0)"
 	crystalStart time.Time // for boot progress display
 	phaseStart   time.Time // start time of current phase (for timed reveals + breathes)
 	// micro-polish additions (v9 polish pack)
-	crtY         int    // CRT scanline drift Y (crystal phase)
-	crtActive    bool   // enable CRT scanline during crystal phase
-	bloomShock   int    // bloom shockwave counter (0 = not firing)
-	starsActive  bool   // render stars background (crystal + early waiting)
+	crtY        int  // CRT scanline drift Y (crystal phase)
+	crtActive   bool // enable CRT scanline during crystal phase
+	bloomShock  int  // bloom shockwave counter (0 = not firing)
+	starsActive bool // render stars background (crystal + early waiting)
 }
 
 // Splash constants
 const (
-	splashFormDuration  = 10                     // ticks per morph form
-	splashTickInterval  = 75 * time.Millisecond  // polished smooth morph (tuned 90→75ms for legend feel)
+	splashFormDuration  = 10                      // ticks per morph form
+	splashTickInterval  = 75 * time.Millisecond   // polished smooth morph (tuned 90→75ms for legend feel)
 	splashCrystalDelay  = 5500 * time.Millisecond // tuned hold for crystal reveal (visible + not too long)
-	splashArtReserve    = 14                     // tagline+motto+version+status+footer+spacers+tier
-	splashPulseInterval = 600 * time.Millisecond // calmer + responsive pulse
-	splashTextFade      = 100 * time.Millisecond // crisper text fade-in
+	splashArtReserve    = 14                      // tagline+motto+version+status+footer+spacers+tier
+	splashPulseInterval = 600 * time.Millisecond  // calmer + responsive pulse
+	splashTextFade      = 100 * time.Millisecond  // crisper text fade-in
 	splashBottomLift    = 2
-	splashMorphForms    = 6  // more intermediate morph forms (was 4)
 	splashBloomFrames   = 12 // bloom-in animation frames for cube
+	// splashDissolveGlitchForms: cube-glitch frames between the crystal
+	// seed and the final composite. 16 total forms → 150 ticks × 75ms
+	// ≈ 11.25s dissolve (matches the web splash).
+	splashDissolveGlitchForms = 13
+	// splashC4RFringe: how many upcoming C4R cells shimmer as fringe
+	// (░▒▓) at their exact final coordinates before turning into '1'.
+	splashC4RFringe = 14
 )
+
+var splashC4RFringeGlyphs = []rune("░▒▓█▄▀")
 
 var splashAnsiPattern = regexp.MustCompile(`\x1b\[[0-9;]*[a-zA-Z]`)
 
@@ -85,6 +99,7 @@ func NewSplash(version, gitRef string) SplashModel {
 		phaseStart:   now,
 		crtActive:    true,
 		starsActive:  true,
+		c4rStartRow:  -1,               // set when the dissolve sequence is built
 		aurora:       NewBioAurora(11), // C4R art occupies 11 rows; aurora respects this
 	}
 }
@@ -104,7 +119,7 @@ func (m SplashModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.width = msg.Width
 		m.height = msg.Height
 		if m.phase == "waiting" || m.phase == "fadeout" {
-			m.forms = buildSplashForms(m.artHeight(), m.seedArt, m.isCompact(), m.rng)
+			m.forms, m.c4rStartRow, m.c4rCells = buildDissolveSequence(m.artHeight(), m.seedArt, m.isCompact(), m.rng)
 			m.morphLines = make([]string, len(m.forms[len(m.forms)-1]))
 			copy(m.morphLines, m.forms[len(m.forms)-1])
 		}
@@ -120,6 +135,9 @@ func (m SplashModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.phaseStart = time.Now()
 			m.morphLines = make([]string, len(m.forms[len(m.forms)-1]))
 			copy(m.morphLines, m.forms[len(m.forms)-1])
+			// Skip lands on the finished form — no bloom replay that
+			// would re-assemble (and visually bend) the C4R block.
+			m.bloomFrame = splashBloomFrames
 			m.bloomShock = 1
 			return m, splashPulseCmd()
 		case "waiting":
@@ -164,6 +182,9 @@ func (m SplashModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			m.phase = "waiting"
 			m.phaseStart = time.Now()
+			// The C4R already assembled cell-by-cell during dissolve —
+			// don't replay the bloom reveal on top of a finished form.
+			m.bloomFrame = splashBloomFrames
 			m.bloomShock = 1
 			return m, splashPulseCmd()
 		}
@@ -230,18 +251,16 @@ func (m SplashModel) startDissolve() (tea.Model, tea.Cmd) {
 	m.phaseStart = time.Now()
 	m.seedArt = stripSplashANSI(m.pickANSI())
 	m.rng.Seed(time.Now().UnixNano())
-	// Build the multi-frame dissolve sequence:
-	// 12 crystal frames → 4 dissolve forms (seed→noise→C4R→final)
-	crystalForms := buildCrystalFrames(m.seedArt, m.artHeight(), m.isCompact(), m.rng, FinalFormTargetCenterSplash(m.artHeight(), m.isCompact()))
-	dissolveForms := buildSplashForms(m.artHeight(), m.seedArt, m.isCompact(), m.rng)
-	// Concatenate: crystal first, then dissolve
-	m.forms = append(crystalForms, dissolveForms...)
+	// Web-parity dissolve (v9.14.x): NO crystal-frame rewind. Forms are
+	// [seed, noise, cube-glitch ×N, clean cube, final composite]; the
+	// C4R never participates in the char morph — it assembles as an
+	// overlay of '1' cells at their exact final coordinates (with a
+	// ░▒▓ fringe running ahead), so its lines can never look bent.
+	m.forms, m.c4rStartRow, m.c4rCells = buildDissolveSequence(m.artHeight(), m.seedArt, m.isCompact(), m.rng)
 	m.morphLines = make([]string, len(m.forms[0]))
 	copy(m.morphLines, m.forms[0])
 	m.morphTick = 0
 	m.morphFrame = 0
-	// Position: start at crystalFrame 0 (will advance through crystal frames
-	// before reaching dissolve forms)
 	return m, splashTickCmd(0)
 }
 
@@ -258,7 +277,10 @@ func (m SplashModel) isCompact() bool {
 	return m.height < 30
 }
 
-// advanceMorphWave performs center-expanding wave dissolve.
+// advanceMorphWave performs center-expanding wave dissolve on the cube
+// rows only. C4R rows are excluded from the char morph entirely: they
+// are blanked, then re-painted from the exact-coordinate cell map so
+// every '1' lands only at its final (row, col) — web-splash parity.
 func (m SplashModel) advanceMorphWave() {
 	if len(m.forms) == 0 || len(m.morphLines) == 0 {
 		return
@@ -281,6 +303,16 @@ func (m SplashModel) advanceMorphWave() {
 	center := totalRows / 2
 	waveReach := tickInForm
 	for row := 0; row < totalRows; row++ {
+		if m.c4rStartRow >= 0 && row >= m.c4rStartRow {
+			width := 0
+			if row < len(prev) {
+				width = lenRunes(prev[row])
+			} else if row < len(curr) {
+				width = lenRunes(curr[row])
+			}
+			m.morphLines[row] = strings.Repeat(" ", width)
+			continue
+		}
 		dist := row - center
 		if dist < 0 {
 			dist = -dist
@@ -290,6 +322,16 @@ func (m SplashModel) advanceMorphWave() {
 		} else {
 			m.morphLines[row] = scrambleSplashRow(prev, row, m.rng)
 		}
+	}
+	// C4R overlay: reveal cells proportionally to overall morph progress,
+	// fringe glyphs shimmering at the exact coordinates of upcoming cells.
+	if total := m.totalMorphTicks(); total > 0 && len(m.c4rCells) > 0 {
+		progress := float64(m.morphTick+1) / float64(total)
+		if progress > 1 {
+			progress = 1
+		}
+		reveal := int(progress * float64(len(m.c4rCells)))
+		paintC4RCellsSplash(m.morphLines, m.c4rCells, reveal, splashC4RFringe, m.morphTick, m.rng)
 	}
 }
 
@@ -389,23 +431,6 @@ var bigCrystalLines = v8RawANSI
 
 func splitSplashLines(s string) []string {
 	return strings.Split(strings.Trim(s, "\n"), "\n")
-}
-
-func padToMaxWidthSplash(lines []string) []string {
-	max := 0
-	for _, l := range lines {
-		if w := len([]rune(l)); w > max {
-			max = w
-		}
-	}
-	out := make([]string, len(lines))
-	for i, l := range lines {
-		if w := len([]rune(l)); w < max {
-			l = l + strings.Repeat(" ", max-w)
-		}
-		out[i] = l
-	}
-	return out
 }
 
 func padToHeightSplash(lines []string, h int) []string {
@@ -661,54 +686,181 @@ func padToWidthSplash(lines []string, targetWidth int) []string {
 	return out
 }
 
-// buildSplashForms returns morph forms: ANSI crystal → noise → C4R → final.
-func buildSplashForms(h int, seedArt string, compact bool, rng *rand.Rand) [][]string {
+// ── Web-parity dissolve sequence (v9.14.x) ──────────────────────────────────
+//
+// The web splash proved the design: the C4R block must NEVER go through the
+// character morph. Instead, every '1' of the final C4R is painted only at
+// its exact final (row, col) — the morph/glitch effects run on the cube
+// rows, and a ░▒▓ fringe shimmers at the coordinates of upcoming cells.
+
+// findC4RStartSplash returns the first row of the C4R block (identified by
+// the 18-wide top bar of the letter C), or -1 if the form has no C4R block
+// (e.g. compact mode uses box-drawing art instead of '1' digits).
+func findC4RStartSplash(lines []string) int {
+	for i, l := range lines {
+		if strings.Contains(l, "111111111111111111") {
+			return i
+		}
+	}
+	return -1
+}
+
+// extractC4RCellsSplash collects the (row, col) of every '1' in the final
+// form's C4R block, sorted top-to-bottom then left-to-right — the exact
+// reveal order used by the assembly overlay.
+func extractC4RCellsSplash(final []string, c4rStart int) [][2]int {
+	if c4rStart < 0 {
+		return nil
+	}
+	var cells [][2]int
+	for y := c4rStart; y < len(final); y++ {
+		for x, r := range []rune(final[y]) {
+			if r == '1' {
+				cells = append(cells, [2]int{y, x})
+			}
+		}
+	}
+	return cells
+}
+
+// paintC4RCellsSplash paints the first `count` cells as '1' at their exact
+// coordinates and shimmers up to `fringeCount` upcoming cells with ░▒▓
+// glyphs (also only at exact final coordinates). Mutates lines in place.
+func paintC4RCellsSplash(lines []string, cells [][2]int, count, fringeCount, tick int, rng *rand.Rand) {
+	if count > len(cells) {
+		count = len(cells)
+	}
+	if count < 0 {
+		count = 0
+	}
+	set := func(y, x int, r rune) {
+		if y < 0 || y >= len(lines) {
+			return
+		}
+		runes := []rune(lines[y])
+		for len(runes) <= x {
+			runes = append(runes, ' ')
+		}
+		runes[x] = r
+		lines[y] = string(runes)
+	}
+	for i := 0; i < count; i++ {
+		set(cells[i][0], cells[i][1], '1')
+	}
+	end := count + fringeCount
+	if end > len(cells) {
+		end = len(cells)
+	}
+	for i := count; i < end; i++ {
+		depth := float64(i-count) / float64(max(1, fringeCount))
+		if (tick+i)%3 == 0 && rng != nil && rng.Float64() < depth*0.55 {
+			continue // flicker: deeper fringe cells blink out more often
+		}
+		glyph := splashC4RFringeGlyphs[(tick+i+cells[i][1])%len(splashC4RFringeGlyphs)]
+		set(cells[i][0], cells[i][1], glyph)
+	}
+}
+
+// glitchRowPreserveSplash replaces a small fraction of non-space runes with
+// scramble glyphs — a light glitch that keeps the cube silhouette readable
+// (unlike scrambleSplashRow's heavy 0.7 rate).
+func glitchRowPreserveSplash(line string, rng *rand.Rand, rate float64) string {
+	chars := []rune("░▒▓█▄▀▌▐│─┌┐└┘@#%&*+=-~:.")
+	runes := []rune(line)
+	for i := range runes {
+		if runes[i] != ' ' && rng.Float64() < rate {
+			runes[i] = chars[rng.Intn(len(chars))]
+		}
+	}
+	return string(runes)
+}
+
+// buildDissolveSequence builds the full dissolve journey:
+//
+//	form 0:            crystal seed (shape carried over from the crystal phase)
+//	form 1:            heavy noise (seed breaking apart)
+//	forms 2..N+1:      cube-only glitch frames (cube alive, C4R region blank)
+//	form N+2:          clean cube-only
+//	form N+3 (last):   final composite (cube + C4R)
+//
+// 16 forms × 10 ticks × 75ms ≈ 11.25s — matches the web splash duration.
+// All forms are padded to one width and shifted by a single GLOBAL offset
+// computed from the final form (per-form shifts would make the C4R walls
+// land at different columns between frames — the web splash bug).
+//
+// Returns the aligned forms plus the C4R start row and the exact-coordinate
+// cell map extracted from the aligned final form.
+func buildDissolveSequence(h int, seedArt string, compact bool, rng *rand.Rand) ([][]string, int, [][2]int) {
 	if h <= 0 {
 		h = 30
 	}
 	final := buildSplashFinalForm(h, compact)
-	// v9.11.5: strip ANSI escape codes from seedArt before any
-	// width measurements. Same reason as in buildCrystalFrames —
-	// lenRunes() over-counts when ANSI sequences are present.
-	seedArt = stripSplashANSI(seedArt)
-	// v9.11.5: compute the target X-center from the final form's
-	// C4R block. All earlier forms (purple crystal, noise, C4R
-	// intermediate) will be aligned to this center so the cube
-	// doesn't visually "jump" when transitioning between phases.
-	targetCenter := FinalFormTargetCenterSplash(h, compact)
-	// v9.11.5: clip the purple cube's lines to match the final
-	// composite's max width. Without this, v8RawANSISmall (170 wide)
-	// makes the purple cube drift 40+ cols to the right of the green
-	// cube (80 wide) + C4R (70 wide) composite, producing a
-	// jarring "cube lands left/bottom" jump during the dissolve.
 	compositeMaxW := 0
 	for _, l := range final {
 		if w := contentWidthSplash(l); w > compositeMaxW {
 			compositeMaxW = w
 		}
 	}
-	form0 := splitSplashLines(seedArt)
-	form0 = padToHeightSplash(form0, h)
+	seedArt = stripSplashANSI(seedArt)
+	form0 := padToHeightSplash(splitSplashLines(seedArt), h)
 	if compositeMaxW > 0 {
 		form0 = padToWidthSplash(form0, compositeMaxW)
 	}
-	// Form 1: heavy noise
 	form1 := make([]string, len(form0))
 	for i := range form0 {
 		form1[i] = scrambleSplashRow(form0, i, rng)
 	}
-	// Form 2: C4R block
-	var c4r []string
-	if compact {
-		c4r = splitSplashLines(c4rCompact)
-	} else {
-		c4r = padToMaxWidthSplash(splitSplashLines(bigC4R))
+	// Cube-only frame: final composite with the C4R region blanked so the
+	// cube is at its final position for the whole glitch stretch.
+	c4rStartPre := findC4RStartSplash(final)
+	cubeOnly := make([]string, len(final))
+	for i, l := range final {
+		if c4rStartPre >= 0 && i >= c4rStartPre {
+			cubeOnly[i] = strings.Repeat(" ", lenRunes(l))
+		} else {
+			cubeOnly[i] = l
+		}
 	}
-	form2 := padToHeightSplash(c4r, h)
-	// Align all forms to the target center so the X-position of the
-	// cube is stable from the first crystal frame to the final form.
-	aligned := AlignFormsCenterX([][]string{form0, form1, form2, final}, targetCenter)
-	return aligned
+	forms := [][]string{form0, form1}
+	for s := 0; s < splashDissolveGlitchForms; s++ {
+		frame := make([]string, len(cubeOnly))
+		rate := 0.08 + float64(s%5)*0.03
+		for i, l := range cubeOnly {
+			frame[i] = glitchRowPreserveSplash(l, rng, rate)
+		}
+		forms = append(forms, frame)
+	}
+	clean := make([]string, len(cubeOnly))
+	copy(clean, cubeOnly)
+	forms = append(forms, clean, final)
+
+	// Pad everything to one width, then apply a single global shift from
+	// the final form so every frame lands on identical columns.
+	maxW := 0
+	for _, f := range forms {
+		for _, l := range f {
+			if w := lenRunes(l); w > maxW {
+				maxW = w
+			}
+		}
+	}
+	if maxW > 0 {
+		for i, f := range forms {
+			forms[i] = padToWidthSplash(f, maxW)
+		}
+	}
+	target := FinalFormTargetCenterSplash(h, compact)
+	ref := forms[len(forms)-1]
+	globalShift := int(target - visualCenterColumnSplash(ref))
+	if globalShift > 0 {
+		for i, f := range forms {
+			forms[i] = padToWidthSplash(shiftLinesBySplash(f, globalShift), maxW+globalShift)
+		}
+	}
+	alignedFinal := forms[len(forms)-1]
+	c4rStart := findC4RStartSplash(alignedFinal)
+	cells := extractC4RCellsSplash(alignedFinal, c4rStart)
+	return forms, c4rStart, cells
 }
 
 // pickANSI selects the best ANSI art for terminal dimensions.
@@ -1184,22 +1336,35 @@ func (m SplashModel) coloredArtLines(primary, success, accent, muted, highlight 
 			blended = splashLerpColor(blended, "#5fff5f", (progress-0.55)/0.45)
 		}
 		blendStyle := lipgloss.NewStyle().Foreground(lipgloss.Color(blended))
-		for _, line := range m.morphLines {
-			artLines = append(artLines, blendStyle.Render(line))
+		// Web parity: the assembling C4R block renders golden from the
+		// first revealed cell (the web's .splash-ch-c4r), not the cube's
+		// transitional blend color.
+		c4rStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("3"))
+		for i, line := range m.morphLines {
+			if m.c4rStartRow >= 0 && i >= m.c4rStartRow {
+				artLines = append(artLines, c4rStyle.Render(line))
+			} else {
+				artLines = append(artLines, blendStyle.Render(line))
+			}
 		}
 	case "waiting":
 		// Apply progressive bloom-in over splashBloomFrames frames
 		artLines = m.morphLines
 		bloomedArt := BloomFrame(artLines, m.bloomFrame, splashBloomFrames)
-		// After bloom completes: apply bio-aurora color modulation
-		// (smooth wave-based palette shifting, sub-1Hz, no epilepsy)
+		// Web parity: C4R rows stay solid golden (never aurora-tinted),
+		// exactly like the site's .splash-ch-c4r styling. Aurora runs on
+		// the cube rows only.
+		c4rStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("3"))
 		if m.bloomFrame >= splashBloomFrames && m.aurora != nil {
 			for i, line := range bloomedArt {
-				// Strip ANSI to get plain text, then re-color with bio-aurora.
+				plain := stripSplashANSI(line)
+				if m.c4rStartRow >= 0 && i >= m.c4rStartRow {
+					bloomedArt[i] = c4rStyle.Render(plain)
+					continue
+				}
 				// ditherStyle (muted/gray) is what every 5th cell uses so
 				// the dither creates a soft fade rather than a bright-yellow
 				// strobe on alternating cells.
-				plain := stripSplashANSI(line)
 				bloomedArt[i] = m.aurora.RenderAurora(plain, i, primaryStyle, ditherStyle)
 			}
 		} else {
@@ -1222,7 +1387,7 @@ func (m SplashModel) splashTextLines(primary, success, accent, muted, highlight 
 	primaryStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color(primary))
 	mutedStyle := lipgloss.NewStyle().Foreground(lipgloss.Color(muted))
 	highlightStyle := lipgloss.NewStyle().Foreground(lipgloss.Color(highlight))
-	easterStyle := lipgloss.NewStyle().Italic(true).Foreground(lipgloss.Color("6"))  // easter egg
+	easterStyle := lipgloss.NewStyle().Italic(true).Foreground(lipgloss.Color("6")) // easter egg
 
 	// ── Shift hue breathe: the "Shift" word subtly oscillates between
 	// green and teal (6) over ~12s — emphasizes the action word, fits
@@ -1357,7 +1522,7 @@ func (m SplashModel) splashTextLines(primary, success, accent, muted, highlight 
 	case "dissolve":
 		status = primaryStyle.Render("◆ awakening cube state ◆")
 	case "waiting":
-		status = highlightStyle.Render("✨ ready "+sep+" press any key to launch")
+		status = highlightStyle.Render("✨ ready " + sep + " press any key to launch")
 	case "fadeout":
 		status = mutedStyle.Render("transitioning...")
 	}

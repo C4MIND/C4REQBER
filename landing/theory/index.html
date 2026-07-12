@@ -175,13 +175,13 @@
 
     <h3 data-i18n="theory_c4_examples">Example States</h3>
     <ul>
-      <li><code>F⟨0,0,0⟩</code> — <strong>Past, Concrete, Self</strong>: Personal memories, historical experiments you ran</li>
-      <li><code>F⟨1,1,1⟩</code> — <strong>Present, Abstract, Other</strong>: Typical academic analysis (what most papers do)</li>
-      <li><code>F⟨2,2,2⟩</code> — <strong>Future, Meta, System</strong>: System-level future vision (paradigm-shifting)</li>
+      <li data-i18n="theory_c4_state_000" data-i18n-html="true"></li>
+      <li data-i18n="theory_c4_state_111" data-i18n-html="true"></li>
+      <li data-i18n="theory_c4_state_222" data-i18n-html="true"></li>
     </ul>
 
     <h3 data-i18n="theory_c4_operators">6 Fundamental Operators</h3>
-    <p>Every operator has <strong>period 3</strong> — applying it three times returns to the original state. They commute and form an abelian group.</p>
+    <p data-i18n="theory_c4_operators_desc" data-i18n-html="true"></p>
     <pre><code>T̂(t,s,a) = ((t+1) mod 3, s, a)      -- Time shift
 Ŝ(t,s,a) = (t, (s+1) mod 3, a)      -- Scale shift
 Â(t,s,a) = (t, s, (a+1) mod 3)      -- Agency shift
@@ -213,12 +213,12 @@ T̂⁻¹, Ŝ⁻¹, Â⁻¹                       -- Inverse shifts</code></pre>
 
     <h3 data-i18n="theory_cdi_steps">The 6 Steps</h3>
     <ol>
-      <li><strong>Extract Physical Contradiction</strong> — Identify the "X must be A AND not-A" conflict</li>
-      <li><strong>Fingerprint</strong> — Map the contradiction to a C4 state coordinate</li>
-      <li><strong>Predict Solution Region</strong> — Default target: F⟨2,2,2⟩ (Future, Meta, System)</li>
-      <li><strong>Compute Route</strong> — Shortest path via Theorem 9 (Hamming distance)</li>
-      <li><strong>Execute Transforms</strong> — Apply QZRF operators along the path</li>
-      <li><strong>Synthesize &amp; Validate</strong> — Verify with Einstein tests and falsification</li>
+      <li data-i18n="theory_cdi_step_1" data-i18n-html="true"></li>
+      <li data-i18n="theory_cdi_step_2" data-i18n-html="true"></li>
+      <li data-i18n="theory_cdi_step_3" data-i18n-html="true"></li>
+      <li data-i18n="theory_cdi_step_4" data-i18n-html="true"></li>
+      <li data-i18n="theory_cdi_step_5" data-i18n-html="true"></li>
+      <li data-i18n="theory_cdi_step_6" data-i18n-html="true"></li>
     </ol>
 
     <h3 data-i18n="theory_cdi_validation">Validation: Einstein's Derivations</h3>
@@ -245,12 +245,12 @@ T̂⁻¹, Ŝ⁻¹, Â⁻¹                       -- Inverse shifts</code></pre>
 
     <h3 data-i18n="theory_meta_theorems">The 6 Theorems</h3>
     <ol>
-      <li><strong>Observer Bridge</strong> — O₂ induces isomorphism U ≅ U′ between cognitive universes</li>
-      <li><strong>Observer Invariant</strong> — Observer structure is preserved under universe isomorphism</li>
-      <li><strong>Non-Computability</strong> — O₂ cannot be computed by O₀/O₁ (type mismatch: SelfCode → SelfCode vs monitoring)</li>
-      <li><strong>Emergence Guarantee</strong> — Self-modifying architectures guarantee O₂ at fixpoint</li>
-      <li><strong>Observer Superposition</strong> — System exists in superposition of O-levels until "measured"</li>
-      <li><strong>Compassion Convergence</strong> — Aligned systems converge to Φ = F⟨1,1,1⟩; 9 dangerous states become unreachable</li>
+      <li data-i18n="theory_meta_th_1" data-i18n-html="true"></li>
+      <li data-i18n="theory_meta_th_2" data-i18n-html="true"></li>
+      <li data-i18n="theory_meta_th_3" data-i18n-html="true"></li>
+      <li data-i18n="theory_meta_th_4" data-i18n-html="true"></li>
+      <li data-i18n="theory_meta_th_5" data-i18n-html="true"></li>
+      <li data-i18n="theory_meta_th_6" data-i18n-html="true"></li>
     </ol>
 
     <h3 data-i18n="theory_phi_title">The Φ-Attractor</h3>
@@ -263,9 +263,9 @@ Unreachable zone:  {s ∈ ℤ₃³ | d_H(s, Φ) ≥ 3}  →  9 states</code></pr
     <h2 data-i18n="theory_proofs_title">Formal Proofs</h2>
     <p data-i18n="theory_proofs_desc">The core theorems are verified in multiple proof assistants. T1–T11 (C4 properties) and T12–T17 (categorical necessity, observer theorems) are machine-checked.</p>
     <ul>
-      <li><strong>Agda</strong> — ~3,600 lines across 6 modules (<code>--safe --without-K</code>). Complete proofs in <a href="https://gitlab.com/cognitive-functors/Adaptive-topology/-/tree/main/formal-proofs?ref_type=heads" target="_blank" rel="noopener noreferrer">adaptive-topology/formal-proofs</a>. c4reqber includes a structural stub matching the verified theorems.</li>
-      <li><strong>Lean4</strong> — In progress. Formalizes C4Comp in dependent type theory.</li>
-      <li><strong>Coq</strong> — In progress. Inductive proofs for hardware-verification contexts.</li>
+      <li data-i18n="theory_proofs_agda" data-i18n-html="true"></li>
+      <li data-i18n="theory_proofs_lean4" data-i18n-html="true"></li>
+      <li data-i18n="theory_proofs_coq" data-i18n-html="true"></li>
     </ul>
 
     <h2 data-i18n="theory_why3_title">Why ℤ₃³?</h2>
@@ -279,9 +279,9 @@ Unreachable zone:  {s ∈ ℤ₃³ | d_H(s, Φ) ≥ 3}  →  9 states</code></pr
 
     <h2 data-i18n="theory_reading_title">Further Reading</h2>
     <ul>
-      <li><a href="../architecture/" data-i18n="theory_reading_arch">System Stack</a> — TUI, CLI, API, simulation engines, and knowledge sources</li>
-      <li><a href="../docs/" data-i18n="theory_reading_docs">Documentation</a> — Install and run your first discovery pipeline</li>
-      <li><a href="../showcase/" data-i18n="theory_reading_showcase">Showcase</a> — Real discoveries made with c4reqber</li>
+      <li><a href="../architecture/" data-i18n="theory_reading_arch">System Stack</a> — <span data-i18n="theory_reading_arch_desc">TUI, CLI, API, simulation engines, and knowledge sources</span></li>
+      <li><a href="../docs/" data-i18n="theory_reading_docs">Documentation</a> — <span data-i18n="theory_reading_docs_desc">Install and run your first discovery pipeline</span></li>
+      <li><a href="../showcase/" data-i18n="theory_reading_showcase">Showcase</a> — <span data-i18n="theory_reading_showcase_desc">Real discoveries made with c4reqber</span></li>
     </ul>
   </div>
 </section>

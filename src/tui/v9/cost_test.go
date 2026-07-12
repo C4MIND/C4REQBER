@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/figuramax/c4reqber-tui-v9/capsim"
+	"github.com/figuramax/c4reqber-tui-v9/i18n"
 )
 
 func TestApplySimCostAccumulates(t *testing.T) {
@@ -26,6 +27,8 @@ func TestApplySimCostRejectsNegative(t *testing.T) {
 }
 
 func TestCapsimShortSummaryWithReport(t *testing.T) {
+	defer SetLang(i18n.LangEN)
+	SetLang(i18n.LangEN)
 	r := &capsim.Report{Engines: []capsim.Engine{
 		{Status: capsim.StatusAvailable},
 		{Status: capsim.StatusSlow},

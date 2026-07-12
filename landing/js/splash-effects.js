@@ -86,6 +86,12 @@
           html += " ";
           continue;
         }
+        // C4R block stays solid brand-orange: aurora only modulates opacity a touch.
+        if (this.isC4RRow(y)) {
+          const shimmer = 0.88 + 0.12 * Math.sin(this.startTime * 1.4 + i * 0.18 + y * 0.5);
+          html += `<span class="splash-ch-c4r" style="opacity:${shimmer.toFixed(2)}">${esc(ch)}</span>`;
+          continue;
+        }
         if ((i + ditherSkip) % 5 === 0 || ((i * 3 + y) % 7 === 0)) {
           html += `<span class="splash-aurora-dither">${esc(ch)}</span>`;
           continue;
@@ -93,7 +99,7 @@
         const idx = this.colorAt(i, y);
         const intensity = this.intensityAt(i, y);
         const color = AURORA_PALETTE[idx];
-        const bold = intensity > MAX_AURORA_OPACITY * 0.85 && !this.isC4RRow(y) ? " splash-aurora-bold" : "";
+        const bold = intensity > MAX_AURORA_OPACITY * 0.85 ? " splash-aurora-bold" : "";
         const faint = intensity < 0.1 ? " splash-aurora-faint" : "";
         html += `<span class="splash-aurora-ch${bold}${faint}" style="color:${color};opacity:${intensity.toFixed(2)}">${esc(ch)}</span>`;
       }
@@ -105,29 +111,21 @@
     return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   }
 
-  function bloomFrame(artLines, frame, total) {
+  function bloomFrame(artLines, frame, total, c4rStartRow, c4rCells, opts = {}) {
     if (total <= 0 || frame >= total) return artLines;
+    const baseRevealed = opts.baseRevealed ?? 0;
+    if (!c4rCells || !c4rCells.length || baseRevealed >= c4rCells.length) return artLines;
+
     const t = 1 - Math.pow(1 - frame / total, 3);
-    const fringe = ["░", "▒", "░", "░", "▒"];
-    const centerLine = Math.floor(artLines.length / 2);
-    return artLines.map((line, i) => {
-      const plain = [...line];
-      const plainLen = plain.length;
-      if (!plainLen) return line;
-      const center = Math.floor(plainLen / 2);
-      const dist = Math.abs(i - centerLine);
-      const revealLines = Math.floor(t * (artLines.length + 1));
-      if (dist > revealLines) return " ".repeat(plainLen);
-      let maxR = Math.floor(t * (plainLen + 1));
-      if (frame > total - 3) maxR += 2;
-      return plain
-        .map((ch, j) => {
-          const dc = Math.abs(j - center);
-          if (dc <= maxR) return ch;
-          if (dc <= maxR + 3 && (j + i + frame) % 4 !== 0) return fringe[(j + i + frame) % fringe.length];
-          return " ";
-        })
-        .join("");
+    const span = c4rCells.length - baseRevealed;
+    const revealCount = baseRevealed + Math.floor(t * span);
+    const c4rStart = c4rStartRow >= 0 ? c4rStartRow : artLines.length;
+    const blanked = artLines.map((line, i) => (i < c4rStart ? line : " ".repeat(line.length)));
+
+    if (!global.C4_SPLASH_PAINT_C4R_CELLS) return artLines;
+    return global.C4_SPLASH_PAINT_C4R_CELLS(blanked, c4rCells, revealCount, {
+      fringeCount: 10,
+      tick: frame,
     });
   }
 
@@ -150,6 +148,35 @@
       const px = sx * w;
       const py = sy * h * 0.75;
       ctx.fillRect(px, py, 1.2, 1.2);
+    }
+  }
+
+  function drawCrystalGlow(ctx, w, h, t, hold) {
+    const cx = w * 0.5;
+    const cy = h * 0.42;
+    const radius = hold ? w * 0.62 : w * 0.55;
+    const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
+    const pulse = 0.5 + 0.5 * Math.sin(t * (hold ? 0.55 : 0.9));
+    if (hold) {
+      g.addColorStop(0, `rgba(95,95,255,${0.22 + 0.08 * pulse})`);
+      g.addColorStop(0.25, `rgba(124,108,248,${0.14 + 0.05 * pulse})`);
+      g.addColorStop(0.55, `rgba(95,175,255,${0.06 + 0.02 * pulse})`);
+      g.addColorStop(1, "rgba(15,17,23,0)");
+    } else {
+      g.addColorStop(0, `rgba(95,95,255,${0.14 + 0.06 * pulse})`);
+      g.addColorStop(0.35, `rgba(124,108,248,${0.08 + 0.03 * pulse})`);
+      g.addColorStop(0.7, `rgba(95,175,255,${0.03})`);
+      g.addColorStop(1, "rgba(15,17,23,0)");
+    }
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, w, h);
+    if (hold) {
+      const vg = ctx.createRadialGradient(cx, cy, w * 0.2, cx, cy, w * 0.85);
+      vg.addColorStop(0, "rgba(15,17,23,0)");
+      vg.addColorStop(0.72, "rgba(15,17,23,0)");
+      vg.addColorStop(1, "rgba(15,17,23,0.55)");
+      ctx.fillStyle = vg;
+      ctx.fillRect(0, 0, w, h);
     }
   }
 
@@ -183,11 +210,64 @@
     ctx.stroke();
   }
 
+  function isBlockChar(ch) {
+    return "█▀▓▒░▄▌▐".includes(ch);
+  }
+
+  function isDotChar(ch) {
+    return ch !== " " && !isBlockChar(ch) && ch !== "1";
+  }
+
+  function renderColoredLine(line, y, phase, phaseColor, c4rStartRow, opts) {
+    const inC4R = y >= c4rStartRow;
+    let html = "";
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (ch === " ") {
+        html += " ";
+        continue;
+      }
+      if (inC4R || ch === "1") {
+        html += `<span class="splash-ch-c4r">${esc(ch)}</span>`;
+        continue;
+      }
+      if (isBlockChar(ch)) {
+        const hold = phase === "crystal" && opts && opts.crystalHold;
+        const cls = hold ? "splash-ch-crystal splash-ch-crystal-hold" : "splash-ch-crystal";
+        html += `<span class="${cls}" style="color:${phaseColor}">${esc(ch)}</span>`;
+        continue;
+      }
+      if (phase === "crystal") {
+        const hold = opts && opts.crystalHold;
+        const cls = hold ? "splash-ch-purple-cube splash-ch-crystal-hold" : "splash-ch-purple-cube";
+        html += `<span class="${cls}" style="color:${phaseColor}">${esc(ch)}</span>`;
+        continue;
+      }
+      const cls =
+        phase === "dissolve" ? "splash-ch-dissolve-dot" : phase === "waiting" ? "splash-ch-cube" : "splash-ch-dot";
+      html += `<span class="${cls}" style="color:${phaseColor}">${esc(ch)}</span>`;
+    }
+    return html;
+  }
+
+  function renderColoredLines(lines, opts) {
+    const { phase, phaseColor, c4rStartRow, aurora, useAurora } = opts;
+    return lines
+      .map((line, y) => {
+        if (useAurora && aurora) return aurora.renderLine(line, y);
+        return renderColoredLine(line, y, phase, phaseColor, c4rStartRow, opts);
+      })
+      .join("<br>");
+  }
+
   global.C4SplashEffects = {
     BioAurora,
     bloomFrame,
     findC4RStart,
+    renderColoredLines,
+    renderColoredLine,
     drawStars,
+    drawCrystalGlow,
     drawScanline,
     drawAuroraGlow,
     drawShockwave,

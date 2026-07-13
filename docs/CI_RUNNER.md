@@ -72,7 +72,9 @@ See `scripts/ci/gitlab-runner.colima.example.toml`:
 
 ## Pages
 
-Public URL: https://turbo-cdi-86c583.gitlab.io/
+Public URL: https://cognitive-functors.gitlab.io/turbo-cdi/
+
+Legacy unique domain (redirect): https://turbo-cdi-86c583.gitlab.io/
 
 If login redirect: Settings → General → Pages → **Everyone**.
 

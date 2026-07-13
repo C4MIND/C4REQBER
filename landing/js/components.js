@@ -30,10 +30,13 @@ function injectHeader() {
   const current = window.location.pathname;
   const base = getBasePath();
 
+  const pagesPrefix = (window.C4R_PAGES_PREFIX || '/').replace(/\/$/, '');
   const navItems = SITE_NAV.map(item => {
     const href = item.path.replace(/^\.\//, base);
     const itemPath = item.path.replace(/^\.\//, '');
-    const isActive = current === '/' + itemPath || current.startsWith('/' + itemPath) || (item.path === './index.html' && (current === '/' || current === '/index.html'));
+    const fullPath = pagesPrefix ? `${pagesPrefix}/${itemPath}` : `/${itemPath}`;
+    const isHome = item.path === './index.html' && typeof window.c4rIsHomePath === 'function' && window.c4rIsHomePath();
+    const isActive = isHome || current === fullPath || current.startsWith(`${fullPath}/`) || current.endsWith(`/${itemPath}`);
     return `<a href="${href}" class="nav-link${isActive ? ' active' : ''}" data-nav-id="${item.id}" data-i18n="${item.id.replace('nav-', 'nav_')}">${item.label}</a>`;
   }).join('');
 

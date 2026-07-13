@@ -25,6 +25,7 @@
   }
 
   function shouldShow() {
+    if (typeof window.c4rIsHomePath === "function") return window.c4rIsHomePath();
     const path = window.location.pathname.replace(/\/$/, "") || "/";
     return path === "" || path === "/" || path === "/index.html";
   }

@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "c4reqber"
-version = "5.7.0"
+version = "5.7.1"
 description = "Cognitive exoskeleton for AI agents — MCP-native discovery pipeline"
 readme = "README.md"
 license = { text = "AGPL-3.0" }

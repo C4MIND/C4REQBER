@@ -5,7 +5,7 @@
 [![Tests](https://img.shields.io/badge/tests-9924%20collected-yellowgreen)]()
 [![Lint](https://img.shields.io/badge/lint-41%20baseline%20%2B%20regression%20check-yellow)]()
 [![Typecheck](https://img.shields.io/badge/typecheck-0%20mypy%20errors-brightgreen)]()
-[![Version](https://img.shields.io/badge/version-5.7.0-magenta)]()
+[![Version](https://img.shields.io/badge/version-5.7.1-magenta)]()
 [![TUI](https://img.shields.io/badge/TUI-v9.13.0-blueviolet)]()
 [![Python](https://img.shields.io/badge/python-3.11%2B-blue)]()
 [![License](https://img.shields.io/badge/license-AGPL--3.0-green)]()

@@ -2,6 +2,17 @@
 
 > **Русская версия:** [CHANGELOG.ru.md](CHANGELOG.ru.md)
 
+## v9.17.1 (2026-07-13) — PyPI 5.7.1 metadata + landing mobile splash
+
+### PyPI / badges
+- **5.7.1** on PyPI — trove classifiers (Python 3.11–3.14), fixes Shields `python: missing` badge
+- GitLab Release notes + project badge metadata aligned
+
+### Landing
+- Mobile splash: full animation on phones, C4R via font-size (no transform blur), touch copy
+
+---
+
 ## v9.17.0 (2026-07-13) — Waves A–C production release (PyPI 5.7.0)
 
 ### Setup Hub & TUI v9 overlays

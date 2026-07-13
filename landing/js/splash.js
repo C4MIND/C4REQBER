@@ -142,9 +142,6 @@
 
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const returning = hasSeenBefore();
-    // On mobile we always show the full crystal → dissolve animation. This avoids
-    // "instant final" caused by prior visits or device-level reduced-motion quirks.
-    const forceFullAnim = isMobileSplash();
 
     const overlay = document.createElement("div");
     overlay.id = "splash-overlay";
@@ -572,18 +569,15 @@
       updateCrystalHud(now);
     }, 50));
 
-    if (reduced && !forceFullAnim) {
-      showFinalState();
-      if (typeof applyLanguage === "function") applyLanguage(window.c4rCurrentLang || "en");
-      updateActionButton();
-      return;
-    }
-
-    if (returning && !forceFullAnim) {
-      showFinalState();
-      if (typeof applyLanguage === "function") applyLanguage(window.c4rCurrentLang || "en");
-      updateActionButton();
-      return;
+    // Never auto-skip to final. The only ways to reach the final state are:
+    // - play through the splash animation
+    // - user explicitly taps/clicks "Skip →"
+    //
+    // We still *respect* reduced motion by shortening the crystal hold to near-zero
+    // (engine timing stays deterministic, just much faster visually).
+    if (reduced) {
+      window.C4_SPLASH_CRYSTAL_HOLD_MS = Math.min(window.C4_SPLASH_CRYSTAL_HOLD_MS || 3000, 250);
+      window.C4_SPLASH_CRYSTAL_MS = Math.min(window.C4_SPLASH_CRYSTAL_MS || 5500, 1200);
     }
 
     engine = new window.C4SplashEngine({

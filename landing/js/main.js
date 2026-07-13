@@ -119,7 +119,7 @@ if (document.readyState === 'loading') {
 
 // GitLab repo links — primary remote only
 (function(){
-  const gitlabRepo = 'https://gitlab.com/cognitive-functors/turbo-cdi';
+  const gitlabRepo = 'https://gitlab.com/cognitive-functors/c4reqber';
   document.querySelectorAll('a[href*="gitlab.com/c4reqber"]').forEach(a => {
     a.href = a.href.replace('https://gitlab.com/c4reqber/c4reqber', gitlabRepo);
   });

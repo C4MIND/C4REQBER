@@ -3,7 +3,7 @@
 # Runs in CI after build-api — does NOT deploy to any host.
 set -eu
 
-REGISTRY_IMAGE="${CI_REGISTRY_IMAGE:-registry.gitlab.com/cognitive-functors/turbo-cdi}"
+REGISTRY_IMAGE="${CI_REGISTRY_IMAGE:-registry.gitlab.com/cognitive-functors/c4reqber}"
 IMAGE_TAG="${API_IMAGE_TAG:-latest}"
 IMAGE_REF="${REGISTRY_IMAGE}/api:${IMAGE_TAG}"
 SHA_TAG="${REGISTRY_IMAGE}/api:${CI_COMMIT_SHA}"

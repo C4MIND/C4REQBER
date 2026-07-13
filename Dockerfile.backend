@@ -20,13 +20,11 @@ COPY requirements-docker.txt .
 RUN pip install --upgrade pip uv \
     && uv pip install --system --no-cache -r requirements-docker.txt
 
-# Copy source
-COPY src/ ./src/
-COPY migrations/ ./migrations/
-COPY alembic.ini .
-COPY pyproject.toml .
-RUN mkdir -p /app/data \
-    && chown -R c4reqber:c4reqber /app
+# Copy source (per-file ownership — avoids OOM from chown -R /app in Kaniko)
+COPY --chown=c4reqber:c4reqber src/ ./src/
+COPY --chown=c4reqber:c4reqber migrations/ ./migrations/
+COPY --chown=c4reqber:c4reqber alembic.ini pyproject.toml ./
+RUN install -d -o c4reqber -g c4reqber /app/data
 
 # Environment
 ENV ENV="production"

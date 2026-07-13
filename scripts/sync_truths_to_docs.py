@@ -33,7 +33,13 @@ def patch_readme(t: dict) -> None:
     ver_real = t["verifiers"]["real"]
     providers = t["llm"]["providers"]
     cli_commands = t["cli"]["commands"]
+    ver = t["version_backend"]
 
+    text = re.sub(
+        r"\[!\[Version\]\(https://img\.shields\.io/badge/version-[^)]+\)\]\(\)",
+        f"[![Version](https://img.shields.io/badge/version-{ver}-magenta)]()",
+        text,
+    )
     text = re.sub(
         r"\[!\[Tests\]\([^)]+\)\]\(\)",
         f"[![Tests](https://img.shields.io/badge/tests-{tests}%20collected-yellowgreen)]()",
@@ -258,6 +264,24 @@ def patch_landing_i18n(t: dict, lang: str) -> None:
     )
 
     data["hero_badge"] = f"v{ver} + TUI {tui} · Open source · {mcp} MCP tools"
+    data["doc_badge"] = f"Docs v{ver}"
+    data["foot_product"] = f"c4reqber v{ver}"
+    footer_docs = {
+        "en": "Docs",
+        "ru": "Документация",
+        "de": "Dokumentation",
+        "zh": "文档",
+        "ja": "ドキュメント",
+        "ar": "التوثيق",
+        "hi": "दस्तावेज़",
+    }
+    data["footer_version"] = (
+        f"c4reqber v{ver} + TUI {tui} · GitLab · {footer_docs.get(lang, 'Docs')} · AGPL-3.0"
+    )
+    if lang == "en":
+        data["api_rest_title"] = f"REST API Endpoints (v{ver} + /v8)"
+    elif lang == "ru":
+        data["api_rest_title"] = f"REST API (v{ver} + /v8)"
     data["foot_tests"] = foot_by_lang.get(lang, foot_en)
     data["feat_verify_desc"] = (
         f"Lean4, Coq, Dafny, Agda, Z3/Hoare, Haskell, CVC5, TLA+, Alloy ({ver_real} real bridges)."
@@ -387,7 +411,14 @@ def patch_landing_html(t: dict) -> None:
     sources = t["knowledge"]["sources"]
     ver_real = t["verifiers"]["real"]
     mcp = t["mcp"]["tools"]
+    ver = t["version_backend"]
 
+    text = re.sub(
+        r'"softwareVersion": "[^"]+"',
+        f'"softwareVersion": "{ver}"',
+        text,
+        count=1,
+    )
     text = re.sub(
         r'<meta name="description" content="[^"]*">',
         f'<meta name="description" content="Cognitive exoskeleton for AI agents. '

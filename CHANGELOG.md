@@ -2,6 +2,20 @@
 
 > **Русская версия:** [CHANGELOG.ru.md](CHANGELOG.ru.md)
 
+## v9.17.0 (2026-07-13) — Waves A–C production release (PyPI 5.7.0)
+
+### Setup Hub & TUI v9 overlays
+- **`blast config keys`** — registry, `--assign`, `--health`, `--json`; secrets in `~/.c4reqber/secrets.env`
+- **TUI v9:** `Ctrl+Shift+K` Setup Hub · `Ctrl+Shift+S` Social · `Ctrl+Shift+M` Models · `Shift+A` Agenda
+- **Social publishing** — `blast social post`, Zenodo/ORCID/multi-platform dispatcher
+- **Legacy Python TUI removed** — Go TUI v9 only (`blast tui`)
+
+### Docs / landing
+- 7-language i18n sync, `docs/SOCIAL_PUBLISHING.md`, `docs/API_KEYS.md`
+- GitLab Pages CTAs link to [PyPI](https://pypi.org/project/c4reqber/)
+
+---
+
 ## v9.16.1 (2026-07-12) — Full-suite green + docs/site sync
 
 ### Production fixes (overnight audit)

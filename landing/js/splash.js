@@ -3,7 +3,7 @@
  */
 (function () {
   const SEEN_KEY = "c4r_splash_seen";
-  const VERSION = "v5.6.0";
+  const VERSION = "v5.7.0";
   const ART_H = 42;
   const effects = () => window.C4SplashEffects;
   const BLOOM_FRAMES = () => effects().BLOOM_FRAMES;

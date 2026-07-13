@@ -8,6 +8,8 @@ import json
 import sys
 from typing import Any
 
+from src import __version__
+
 
 try:
     from mcp.server import Server
@@ -180,7 +182,7 @@ class _FallbackServer:
                 "result": {
                     "protocolVersion": requested or "2025-03-26",
                     "capabilities": {"tools": {"listChanged": False}},
-                    "serverInfo": {"name": self.name, "version": "5.6.0"},
+                    "serverInfo": {"name": self.name, "version": __version__},
                 },
             }
         if method == "notifications/initialized":

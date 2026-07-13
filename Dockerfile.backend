@@ -24,7 +24,7 @@ RUN pip install --upgrade pip uv \
 COPY --chown=c4reqber:c4reqber src/ ./src/
 COPY --chown=c4reqber:c4reqber migrations/ ./migrations/
 COPY --chown=c4reqber:c4reqber alembic.ini pyproject.toml ./
-RUN install -d -o c4reqber -g c4reqber /app/data
+RUN mkdir -p /app/data && chown c4reqber:c4reqber /app/data
 
 # Environment
 ENV ENV="production"

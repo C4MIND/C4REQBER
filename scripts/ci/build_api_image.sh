@@ -42,6 +42,8 @@ EOF
     --destination "${DEST_SHA}" \
     --destination "${DEST_LATEST}" \
     --snapshot-mode=redo \
+    --single-snapshot \
+    --compressed-caching=false \
     --use-new-run \
     --verbosity=info
   exit 0

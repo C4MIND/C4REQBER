@@ -57,4 +57,27 @@ Dockerfile*
 
 # CI/CD
 .github
+.gitlab-ci.yml
 .pre-commit-config.yaml
+
+# Not needed in API image (shrinks Kaniko context → less OOM on Mac Colima)
+landing/
+tests/
+test/
+discovery/
+discoveries/
+docs/
+archive/
+archives/
+examples/
+monitoring/
+k8s/
+packaging/
+scripts/
+src/tui/v9/
+**/*.go
+go.sum
+go.work
+go.work.sum
+Makefile
+*.html

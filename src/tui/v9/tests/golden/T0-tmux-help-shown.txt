@@ -1,31 +1,30 @@
- 1;33m✨ C4REQBER v9 — Keyboard shortcuts (macOS)m                                  
-                                                                              
- 1;36mNavigationm                                                                   
-   32mTabm           Cycle mode (DISCOVER/FLASH/TURBO/TURBOFACTORY)               
-   32mLm             Cycle language (EN/RU/ZH/JA/DE/AR/HI)                        
-   32mCmd+Y / Ctrl+YmCycle LLM tier (C1/C2/C3)                                    
-   32mCmd+Tm         Toggle telemetry panel                                       
-   32m?m             Toggle this help overlay                                     
-   32mEscm           Cancel running discovery                                     
-   32mCtrl+Cm        Quit (saves telemetry history)                               
-                                                                              
- 1;36mRunm                                                                          
-   32mEnterm         Run discovery / submit                                       
-   32mmousem         Click on a card to focus                                     
-   32mCmd+Shift+P /m                                                              
- 32mCtrl+Shift+Pm  Cycle color profile (6 modes)                                  
-   32mCmd+, / Ctrl+,mSettings                                                     
-   32mCmd+Lm         Re-authenticated                                             
-                                                                              
- 1;36mDisplaym                                                                      
-   32mrainm          Matrix rain (idle ambient)                                   
-   32mburstm         Discovery burst effect                                       
-   32msparksm        Cursor sparkles                                              
-                                                                              
- 1;36mSimulationm                                                                   
-   32mCtrl+Shift+Cm  Simulation capabilities                                      
-   32mim             Show install hint                                            
-   32mfm             Show fallback chain                                          
-   32mom             Open plot in browser                                         
-                                                                              
- 90mPress ? to close this overlaym                                                
+ 1;33m✨ C4REQBER v9 — Keyboard shortcuts (Linux)m
+
+ 1;36mNavigationm
+   32mTabm           Cycle mode (DISCOVER/FLASH/TURBO/TURBOFACTORY)
+   32mLm             Cycle language (EN/RU/ZH/JA/DE/AR/HI)
+   32mCtrl+Ym        Cycle LLM tier (C1/C2/C3)
+   32mCtrl+Tm        Toggle telemetry panel
+   32m?m             Toggle this help overlay
+   32mEscm           Cancel running discovery
+   32mCtrl+Cm        Quit (saves telemetry history)
+
+ 1;36mRunm
+   32mEnterm         Run discovery / submit
+   32mmousem         Click on a card to focus
+   32mCtrl+Shift+Pm  Cycle color profile (6 modes)
+   32mCtrl+,m        Settings
+   32mCtrl+Lm        Re-authenticated
+
+ 1;36mDisplaym
+   32mrainm          Matrix rain (idle ambient)
+   32mburstm         Discovery burst effect
+   32msparksm        Cursor sparkles
+
+ 1;36mSimulationm
+   32mCtrl+Shift+Cm  Simulation capabilities
+   32mim             Show install hint
+   32mfm             Show fallback chain
+   32mom             Open plot in browser
+
+ 90mPress ? to close this overlaym

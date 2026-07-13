@@ -47,7 +47,7 @@ func (m *model) View() tea.View {
 		body = RenderWizard(m.width, m.height, m.wizard.Step())
 	}
 	if m.showHelp {
-		body = HelpOverlay(m.width, m.height)
+		body = HelpOverlayWith(m.width, m.height, m.keymap)
 	}
 	if m.dream != nil && m.dream.Active() && !m.showHelp {
 		body = m.dream.Render(m.width, m.height)

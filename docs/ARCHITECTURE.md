@@ -8,7 +8,7 @@
 
 c4reqber (formerly TURBO-CDI) v5.4.0 is **BLAST** — Brain-like Adaptive System for Thought. A cognitive exoskeleton with a 4-mode pipeline system, terminal-first UI/UX, and formal C4-META architecture. **The UI/UX Polish + Code Quality Audit Release.**
 
-**Theory vs. Implementation:** The C4-META framework (27-state cognitive space Z₃³, Theorem 11) is a formal theory from the `adaptive-topology` research repository. c4reqber is the **production implementation** — Python-based, with 9,906 tests collected, **9 real verification backends** (incl. CVC5, TLA+, Alloy), 47 configured knowledge sources, 21 MCP tools, and regression-gated quality gates.
+**Theory vs. Implementation:** The C4-META framework (27-state cognitive space Z₃³, Theorem 11) is a formal theory from the `adaptive-topology` research repository. c4reqber is the **production implementation** — Python-based, with 9,924 tests collected, **9 real verification backends** (incl. CVC5, TLA+, Alloy), 47 configured knowledge sources, 21 MCP tools, and regression-gated quality gates.
 
 **Whitepaper:** [WHITEPAPER.md](../WHITEPAPER.md) (EN) · [WHITEPAPER.ru.md](../WHITEPAPER.ru.md) (RU) · [VERIFICATION_BACKENDS.md](VERIFICATION_BACKENDS.md)
 

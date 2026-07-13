@@ -213,7 +213,7 @@ Round 5 audit: **0 CRITICAL / 0 HIGH** в scope.
 - CSRF: Bearer bypass для API-клиентов
 - Subprocess: без shell injection
 
-**Тесты:** 9 906 collected · mypy baseline: 0 (регрессионный gate).
+**Тесты:** 9 924 collected · mypy baseline: 0 (регрессионный gate).
 
 ---
 
@@ -222,7 +222,7 @@ Round 5 audit: **0 CRITICAL / 0 HIGH** в scope.
 | Метрика | Значение |
 |---------|----------|
 | Python LOC | ~226k |
-| Тестов collected | 9 906 |
+| Тестов collected | 9 924 |
 | MCP tools | 21 |
 | Бэкендов верификации (real) | 9 |
 | Guard-stubs | 0 |

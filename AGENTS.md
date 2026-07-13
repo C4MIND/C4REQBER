@@ -73,7 +73,7 @@ Updated during 2026-05-19 + 2026-05-21 + 2026-06-03 (Kimi Code CLI audit + v5.6.
 - **Security**: JWT+HMAC auth, CSRF hardened, subprocess injection blocked, prompt injection fail-closed, path traversal blocked, pip allow-list, MATLAB sandbox, 0 CRITICAL/HIGH findings
 - **Code quality**: 0 ruff lint errors across entire `src/`, `__import__` antipatterns removed, importlib for dynamic loading
 - **Type safety**: 56 mypy baseline errors (regression-gated; no new errors in CI) (559→508→0 after 3 audit rounds)
-- **Tests**: 9,906 collected (Python), 485+ passed core suites, 1 flaky Monte Carlo. Go TUI: 8/8 packages pass, staticcheck clean.
+- **Tests**: 9,924 collected (Python), 485+ passed core suites, 1 flaky Monte Carlo. Go TUI: 8/8 packages pass, staticcheck clean.
 - **Pydantic V2 migration** — `ConfigDict`, `field_validator`, `min_length/max_length` across all models
 - **Citation verifier** — hallucination detection for fake theory names ("Recursive Harmonic", "Pantheon Theory", "UCH-HSTR")
 - **Cost tracker** — resets per `solve()` call, prevents cumulative inflation

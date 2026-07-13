@@ -2,7 +2,7 @@
 
 **Terminal-first. MCP-native. One command to discovery.**
 
-[![Tests](https://img.shields.io/badge/tests-9906%20collected-yellowgreen)]()
+[![Tests](https://img.shields.io/badge/tests-9924%20collected-yellowgreen)]()
 [![Lint](https://img.shields.io/badge/lint-41%20baseline%20%2B%20regression%20check-yellow)]()
 [![Typecheck](https://img.shields.io/badge/typecheck-0%20mypy%20errors-brightgreen)]()
 [![Version](https://img.shields.io/badge/version-5.6.0-magenta)]()

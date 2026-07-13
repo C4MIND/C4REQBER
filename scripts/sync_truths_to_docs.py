@@ -443,6 +443,12 @@ def patch_landing_html(t: dict) -> None:
         "✓ Type safety zero (0 mypy errors)",
         f"✓ Mypy baseline tracked ({t['quality']['mypy_baseline']} errors, regression-gated)",
     )
+    text = re.sub(
+        r'<div class="stat-card accent"><div class="stat-value accent">\d+</div><div class="stat-label" data-i18n="stat_tests">',
+        f'<div class="stat-card accent"><div class="stat-value accent">{tests}</div><div class="stat-label" data-i18n="stat_tests">',
+        text,
+        count=1,
+    )
     path.write_text(text)
     print(f"patched {path}")
 

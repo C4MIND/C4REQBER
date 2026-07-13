@@ -22,4 +22,3 @@ Sims
 
 Memory
   est:      ~0 KB (feed × ~200 bytes/card)
-

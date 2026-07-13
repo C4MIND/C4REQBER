@@ -1,50 +1,36 @@
-                                                                                                                                                                                                
-                                                                                                                                                                                                
-                                                                                                                                                                                                
-                                                                                                                                                                                                
-                                                                                                                                                                                                
-                                                                                                                                                                                                
-                                                                                                                                                                                                
-                                                                                                                                                                                                
-                                                                                                                                                                                                
-                                                                                                                                                                                                
-                                                                                                                                                                                                
-                                                                                                                                                                                                
-                                                                                                                                                                                                
-                                                             33m╭────────────────────────────────────────────────────────────────────╮m                                                             
-                                                             33m│m                                                                    33m│m                                                             
-                                                             33m│m    1;33m⚙  Settingsm                                                     33m│m                                                             
-                                                             33m│m                                                                    33m│m                                                             
-                                                             33m│m  1;33m▶ m1;33mLLM tierm  1;33mC2 (qwen-2.5-72b-instruct · ~$0.012)m                  33m│m                                                             
-                                                             33m│m    37mPer-stage LLMm         1;36mA:local B:balanced C:balanced D:premiumm   33m│m                                                             
-                                                             33m│m  1;36mE:— F:premium G:balancedm                                          33m│m                                                             
-                                                             33m│m    37mColor profilem         1;36mdefaultm                                   33m│m                                                             
-                                                             33m│m    37mDream idlem            1;36m300sm                                      33m│m                                                             
-                                                             33m│m    37msettings.langm         1;36menm                                        33m│m                                                             
-                                                             33m│m    37mAPI URLm               1;36mhttp://127.0.0.1:8000m                     33m│m                                                             
-                                                             33m│m    37mSave historym          1;36mONm                                        33m│m                                                             
-                                                             33m│m    37mTelemetrym             1;36mdisc=0 ok=0 fail=0 abort=0m                33m│m                                                             
-                                                             33m│m    37mSimulationm                                                      33m│m                                                             
-                                                             33m│m  37mpreferencem            1;36mautom                                        33m│m                                                             
-                                                             33m│m    37mCost limit per runm    1;36m$5.00m                                     33m│m                                                             
-                                                             33m│m    37mSim spend thism                                                  33m│m                                                             
-                                                             33m│m  37msessionm               1;36m$0.0000 (cap $5.00)m                         33m│m                                                             
-                                                             33m│m    37mCapabilitiesm          1;36mm                                          33m│m                                                             
-                                                             33m│m                                                                    33m│m                                                             
-                                                             33m│m  90mPress Ctrl+, to close · ↑/↓ to move · current values shownm        33m│m                                                             
-                                                             33m│m                                                                    33m│m                                                             
-                                                             33m╰────────────────────────────────────────────────────────────────────╯m                                                             
-                                                                                                                                                                                                
-                                                                                                                                                                                                
-                                                                                                                                                                                                
-                                                                                                                                                                                                
-                                                                                                                                                                                                
-                                                                                                                                                                                                
-                                                                                                                                                                                                
-                                                                                                                                                                                                
-                                                                                                                                                                                                
-                                                                                                                                                                                                
-                                                                                                                                                                                                
-                                                                                                                                                                                                
-                                                                                                                                                                                                
-                                                                                                                                                                                                
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                                             33m╭────────────────────────────────────────────────────────────────────╮m
+                                                             33m│m                                                                    33m│m
+                                                             33m│m    1;33m⚙  Settingsm                                                     33m│m
+                                                             33m│m                                                                    33m│m
+                                                             33m│m  1;33m▶ m1;33mLLM tierm  1;33mC2 (qwen-2.5-72b-instruct · ~$0.012)m                  33m│m
+                                                             33m│m    37mPer-stage LLMm         1;36mA:local B:balanced C:balanced D:premiumm   33m│m
+                                                             33m│m  1;36mE:— F:premium G:balancedm                                          33m│m
+                                                             33m│m    37mColor profilem         1;36mdefaultm                                   33m│m
+                                                             33m│m    37mDream idlem            1;36m300sm                                      33m│m
+                                                             33m│m    37msettings.langm         1;36menm                                        33m│m
+                                                             33m│m    37mAPI URLm               1;36mhttp://127.0.0.1:8000m                     33m│m
+                                                             33m│m    37mSave historym          1;36mONm                                        33m│m
+                                                             33m│m    37mTelemetrym             1;36mdisc=0 ok=0 fail=0 abort=0m                33m│m
+                                                             33m│m    37mSimulationm                                                      33m│m
+                                                             33m│m  37mpreferencem            1;36mautom                                        33m│m
+                                                             33m│m    37mCost limit per runm    1;36m$5.00m                                     33m│m
+                                                             33m│m    37mSim spend thism                                                  33m│m
+                                                             33m│m  37msessionm               1;36m$0.0000 (cap $5.00)m                         33m│m
+                                                             33m│m    37mCapabilitiesm          1;36mm                                          33m│m
+                                                             33m│m                                                                    33m│m
+                                                             33m│m  90mPress Ctrl+, to close · ↑/↓ to move · current values shownm        33m│m
+                                                             33m│m                                                                    33m│m
+                                                             33m╰────────────────────────────────────────────────────────────────────╯m

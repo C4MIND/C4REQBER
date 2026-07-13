@@ -94,7 +94,12 @@ func renderClean(s string) string {
 		b.WriteString("<CLOCK>")
 		b.WriteString(s[i+8:])
 	}
-	return b.String()
+	s = b.String()
+	lines := strings.Split(s, "\n")
+	for i, line := range lines {
+		lines[i] = strings.TrimRight(line, " \t")
+	}
+	return strings.TrimRight(strings.Join(lines, "\n"), "\n")
 }
 
 // indexTime returns the index of the first HH:MM:SS in s, or -1.
@@ -384,7 +389,7 @@ func TestGoldenSnapshotsAll(t *testing.T) {
 				continue
 			}
 			want := strings.TrimRight(string(data), "\n")
-			got := strings.TrimRight(clean, "\n")
+			got := clean
 			if want != got {
 				t.Errorf("golden mismatch for %s\n--- want ---\n%s\n--- got ---\n%s\n(run with UPDATE=1 to accept)",
 					file, want, got)

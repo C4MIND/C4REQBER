@@ -1,4 +1,5 @@
 """C4REQBER: WASM runtime for plugin execution."""
+
 from __future__ import annotations
 
 import hashlib
@@ -9,8 +10,7 @@ from typing import Any, Protocol
 class WASMModule(Protocol):
     """Protocol for a loaded WASM module."""
 
-    def get_export(self, name: str) -> Any:
-        ...
+    def get_export(self, name: str) -> Any: ...
 
 
 @dataclass
@@ -92,12 +92,12 @@ class WASMPluginRuntime:
         """Execute an exported WASM function with the given arguments."""
         if isinstance(module, dict) and module.get("_stub"):
             raise RuntimeError(
-                "WASM execution requires 'wasmtime' package. "
-                "Install it: pip install wasmtime"
+                "WASM execution requires 'wasmtime' package. Install it: pip install wasmtime"
             )
 
         if self._has_wasmtime:
             import wasmtime
+
             store, instance = module if isinstance(module, tuple) else (self._store, module)
 
             export = instance.exports(store).get(function)
@@ -147,7 +147,7 @@ class WASMPluginRuntime:
                         if (byte & 0x80) == 0:
                             break
                         shift += 7
-                    name = wasm_bytes[pos:pos + name_len].decode()
+                    name = wasm_bytes[pos : pos + name_len].decode()
                     pos += name_len
                     kind = wasm_bytes[pos]
                     pos += 1
@@ -173,6 +173,7 @@ class WASMPluginRuntime:
 
         if self._has_wasmtime:
             import wasmtime
+
             store, instance = module if isinstance(module, tuple) else (self._store, module)
 
             return [
@@ -193,7 +194,8 @@ class WASMPluginRuntime:
 
             mem = module.exports(self._store).get(name)
             if isinstance(mem, wasmtime.Memory):
-                return mem.read(self._store, 0, mem.size(self._store))
+                data = mem.read(self._store, 0, mem.size(self._store))
+                return bytes(data)
         return None
 
 

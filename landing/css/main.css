@@ -16,14 +16,14 @@ body{overflow-x:hidden;padding-top:56px}
 
 /* Hero */
 .hero{position:relative;min-height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden}
-.hero-bg{background:radial-gradient(circle,rgba(78,205,196,.08)1px,transparent 1px);background-size:40px 40px;position:absolute;inset:0;z-index:0;animation:gridMove 30s linear infinite}
+.hero-bg{background:radial-gradient(circle,rgba(78,205,196,.08)1px,transparent 1px);background-size:40px 40px;position:absolute;inset:0;z-index:0;pointer-events:none;animation:gridMove 30s linear infinite}
 @keyframes gridMove{0%{background-position:0 0}100%{background-position:40px 40px}}
-.orb{position:absolute;border-radius:50%;filter:blur(80px);opacity:.25;z-index:1}
+.orb{position:absolute;border-radius:50%;filter:blur(80px);opacity:.25;z-index:1;pointer-events:none}
 .orb-1{width:400px;height:400px;background:var(--accent);top:10%;left:-10%}
 .orb-2{width:300px;height:300px;background:var(--pink);bottom:10%;right:-5%}
 .orb-3{width:200px;height:200px;background:var(--blue);top:50%;left:60%}
 .container{max-width:1200px;margin:0 auto;padding:0 24px;position:relative;z-index:2}
-.hero-content{text-align:center;animation:fadeUp 1s ease}
+.hero-content{position:relative;z-index:2;text-align:center;animation:fadeUp 1s ease}
 @keyframes fadeUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
 .badge{display:inline-flex;align-items:center;gap:8px;background:rgba(78,205,196,.15);border:1px solid rgba(78,205,196,.3);border-radius:100px;padding:6px 18px;font-size:13px;margin-bottom:32px;color:var(--primary)}
 .badge .dot{width:8px;height:8px;background:#10b981;border-radius:50%;animation:pulse 2s ease infinite}

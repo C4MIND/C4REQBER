@@ -9,6 +9,17 @@ description = "Cognitive exoskeleton for AI agents — MCP-native discovery pipe
 readme = "README.md"
 license = { text = "AGPL-3.0" }
 requires-python = ">=3.11"
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
 dependencies = [
     "openai>=1.0.0",
     "tenacity>=8.0.0",

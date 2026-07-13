@@ -30,6 +30,20 @@
     return path === "" || path === "/" || path === "/index.html";
   }
 
+  function isMobileSplash() {
+    return window.matchMedia("(max-width: 768px)").matches;
+  }
+
+  function isTouchSplash() {
+    return isMobileSplash() || window.matchMedia("(pointer: coarse)").matches;
+  }
+
+  function skipHint() {
+    return isTouchSplash()
+      ? t("splash_status_skip_touch", "tap to skip")
+      : t("splash_status_skip_hint", "click to skip to final");
+  }
+
   function clearSplashPending() {
     document.documentElement.classList.remove("splash-pending");
   }
@@ -96,12 +110,14 @@
     let status = "";
     if (phase === "crystal") {
       const prog = bootingProgress(crystalElapsed / (window.C4_SPLASH_CRYSTAL_MS / 1000));
-      status = `${t("splash_status_boot", "booting")} ${window.C4_SPLASH_CRYSTAL_MS / 1000}s ${sepBlink} ${prog} ${sepBlink} ${t("splash_status_skip_hint", "click to skip to final")}`;
+      status = `${t("splash_status_boot", "booting")} ${window.C4_SPLASH_CRYSTAL_MS / 1000}s ${sepBlink} ${prog} ${sepBlink} ${skipHint()}`;
     } else if (phase === "dissolve") {
-      status = `${t("splash_status_awakening", "◆ awakening cube state ◆")} ${sepBlink} ${t("splash_status_skip_hint", "click to skip to final")}`;
+      status = `${t("splash_status_awakening", "◆ awakening cube state ◆")} ${sepBlink} ${skipHint()}`;
     } else if (phase === "waiting") {
       status = readyToLaunch
-        ? t("splash_status_launch", "press Enter to launch")
+        ? isTouchSplash()
+          ? t("splash_status_launch_touch", "tap Enter to launch")
+          : t("splash_status_launch", "press Enter to launch")
         : `${t("splash_status_ready", "✨ ready")} ${sepBlink} …`;
     }
 
@@ -221,7 +237,7 @@
       const sepBlink = Math.sin(crystalElapsed * ((2 * Math.PI) / 3.3)) > 0.5 ? "·" : " ";
       let status = "";
       if (isCrystalHold()) {
-        status = `${t("splash_status_boot", "booting")} ${holdSec.toFixed(0)}s ${sepBlink} ${t("splash_status_skip_hint", "click to skip to final")}`;
+        status = `${t("splash_status_boot", "booting")} ${holdSec.toFixed(0)}s ${sepBlink} ${skipHint()}`;
       } else {
         const prog = bootingProgress(crystalElapsed / (window.C4_SPLASH_CRYSTAL_MS / 1000));
         status = `${t("splash_status_awakening", "◆ awakening cube state ◆")} ${sepBlink} ${prog}`;
@@ -274,18 +290,44 @@
     }
 
     function fitArt() {
+      const mobile = isMobileSplash();
+      artEl.classList.toggle("splash-art-mobile", mobile);
+      overlay.classList.toggle("splash-mobile", mobile);
       artEl.style.transform = "";
-      const rect = artEl.getBoundingClientRect();
-      if (!rect.width || !rect.height) return;
-      const maxW = (columnEl ? columnEl.clientWidth : window.innerWidth * 0.94) * 0.98;
-      const maxH = window.innerHeight * ART_VIEWPORT_H;
-      const raw = Math.min(maxW / rect.width, maxH / rect.height, 2.4);
-      if (!baseArtScale) baseArtScale = raw;
-      const s = Math.min(baseArtScale * artCompactMul(), 2.4);
-      artEl.style.transform = `translateX(0px) scale(${s})`;
+      artEl.style.fontSize = "";
       void artEl.offsetWidth;
-      const dx = anchorCenterX() - artVisualCenterX();
-      artEl.style.transform = `translateX(${dx.toFixed(2)}px) scale(${s})`;
+
+      let rect = artEl.getBoundingClientRect();
+      if (!rect.width || !rect.height) return;
+
+      const maxW = (columnEl ? columnEl.clientWidth : window.innerWidth * 0.94) * (mobile ? 0.99 : 0.98);
+      const maxH = window.innerHeight * (mobile ? 0.5 : ART_VIEWPORT_H);
+      const compact = artCompactMul();
+
+      if (mobile) {
+        const basePx = parseFloat(getComputedStyle(artEl).fontSize) || 10;
+        const ratio = Math.min(maxW / rect.width, maxH / rect.height, 2.2) * compact;
+        let px = Math.max(4.5, Math.min(basePx * ratio, 10.5));
+        artEl.style.fontSize = `${px.toFixed(2)}px`;
+        void artEl.offsetWidth;
+        rect = artEl.getBoundingClientRect();
+        if (rect.width > maxW || rect.height > maxH) {
+          const fix = Math.min(maxW / rect.width, maxH / rect.height, 1);
+          px = Math.max(4.5, px * fix);
+          artEl.style.fontSize = `${px.toFixed(2)}px`;
+          void artEl.offsetWidth;
+        }
+        const dx = anchorCenterX() - artVisualCenterX();
+        artEl.style.transform = Math.abs(dx) > 0.5 ? `translateX(${dx.toFixed(2)}px)` : "";
+      } else {
+        const raw = Math.min(maxW / rect.width, maxH / rect.height, 2.4);
+        if (!baseArtScale) baseArtScale = raw;
+        const s = Math.min(baseArtScale * compact, 2.4);
+        artEl.style.transform = `translateX(0px) scale(${s})`;
+        void artEl.offsetWidth;
+        const dx = anchorCenterX() - artVisualCenterX();
+        artEl.style.transform = `translateX(${dx.toFixed(2)}px) scale(${s})`;
+      }
       artEl.classList.add("splash-art-fitted");
     }
 
@@ -365,6 +407,7 @@
         aurora,
         useAurora,
         crystalHold,
+        compactC4R: isMobileSplash(),
       });
 
       requestAnimationFrame(() => requestAnimationFrame(fitArt));
@@ -508,7 +551,10 @@
     });
     overlay.addEventListener("click", (e) => {
       if (e.target === skipBtn) return;
-      if (isLaunchReady()) return;
+      if (isLaunchReady()) {
+        if (isTouchSplash()) end();
+        return;
+      }
       if (phase !== "waiting") onAdvance();
     });
     document.addEventListener("keydown", onKey);
@@ -530,7 +576,7 @@
       return;
     }
 
-    if (returning) {
+    if (returning && !isMobileSplash()) {
       showFinalState();
       if (typeof applyLanguage === "function") applyLanguage(window.c4rCurrentLang || "en");
       updateActionButton();

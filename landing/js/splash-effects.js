@@ -77,8 +77,11 @@
       return intensity;
     }
 
-    renderLine(plain, y) {
+    renderLine(plain, y, opts) {
       const ditherSkip = (y + Math.floor(y / 2)) % 4;
+      if (opts && opts.compactC4R && this.isC4RRow(y)) {
+        return `<span class="splash-c4r-line">${esc(plain)}</span>`;
+      }
       let html = "";
       for (let i = 0; i < plain.length; i++) {
         const ch = plain[i];
@@ -220,6 +223,9 @@
 
   function renderColoredLine(line, y, phase, phaseColor, c4rStartRow, opts) {
     const inC4R = y >= c4rStartRow;
+    if (inC4R && opts && opts.compactC4R) {
+      return `<span class="splash-c4r-line">${esc(line)}</span>`;
+    }
     let html = "";
     for (let i = 0; i < line.length; i++) {
       const ch = line[i];
@@ -254,7 +260,7 @@
     const { phase, phaseColor, c4rStartRow, aurora, useAurora } = opts;
     return lines
       .map((line, y) => {
-        if (useAurora && aurora) return aurora.renderLine(line, y);
+        if (useAurora && aurora) return aurora.renderLine(line, y, opts);
         return renderColoredLine(line, y, phase, phaseColor, c4rStartRow, opts);
       })
       .join("<br>");

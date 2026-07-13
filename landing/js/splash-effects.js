@@ -3,6 +3,8 @@
  */
 (function (global) {
   const AURORA_PALETTE = ["#4ade80", "#22d3ee", "#60a5fa", "#c084fc", "#fbbf24", "#4ade80"];
+  // Warm-biased palette for C4R waves (brand-forward, less neon than full aurora).
+  const C4R_PALETTE = ["#fbbf24", "#fb923c", "#f97316", "#fbbf24", "#fde047"];
   const MAX_AURORA_OPACITY = 0.55;
   const BLOOM_FRAMES = 12;
   const PULSE_MS = 600;
@@ -79,9 +81,6 @@
 
     renderLine(plain, y, opts) {
       const ditherSkip = (y + Math.floor(y / 2)) % 4;
-      if (opts && opts.compactC4R && this.isC4RRow(y)) {
-        return `<span class="splash-c4r-line">${esc(plain)}</span>`;
-      }
       let html = "";
       for (let i = 0; i < plain.length; i++) {
         const ch = plain[i];
@@ -89,10 +88,16 @@
           html += " ";
           continue;
         }
-        // C4R block stays solid brand-orange: aurora only modulates opacity a touch.
+        // C4R block: animated warm waves (per-char) while preserving readability on mobile.
         if (this.isC4RRow(y)) {
-          const shimmer = 0.88 + 0.12 * Math.sin(this.startTime * 1.4 + i * 0.18 + y * 0.5);
-          html += `<span class="splash-ch-c4r" style="opacity:${shimmer.toFixed(2)}">${esc(ch)}</span>`;
+          const wave = Math.sin(this.startTime * 1.55 + i * 0.22 + y * 0.35) * 0.5 + 0.5;
+          const idx = Math.min(C4R_PALETTE.length - 1, Math.floor(wave * C4R_PALETTE.length));
+          const color = C4R_PALETTE[idx];
+          const shimmer = 0.78 + 0.22 * Math.sin(this.startTime * 1.35 + i * 0.18 + y * 0.5);
+          const compact = opts && opts.compactC4R ? " splash-ch-c4r-compact" : "";
+          html += `<span class="splash-ch-c4r splash-ch-c4r-wave${compact}" style="color:${color};opacity:${shimmer.toFixed(
+            2
+          )}">${esc(ch)}</span>`;
           continue;
         }
         if ((i + ditherSkip) % 5 === 0 || ((i * 3 + y) % 7 === 0)) {
@@ -223,9 +228,6 @@
 
   function renderColoredLine(line, y, phase, phaseColor, c4rStartRow, opts) {
     const inC4R = y >= c4rStartRow;
-    if (inC4R && opts && opts.compactC4R) {
-      return `<span class="splash-c4r-line">${esc(line)}</span>`;
-    }
     let html = "";
     for (let i = 0; i < line.length; i++) {
       const ch = line[i];
@@ -234,7 +236,8 @@
         continue;
       }
       if (inC4R || ch === "1") {
-        html += `<span class="splash-ch-c4r">${esc(ch)}</span>`;
+        const compact = opts && opts.compactC4R ? " splash-ch-c4r-compact" : "";
+        html += `<span class="splash-ch-c4r${compact}">${esc(ch)}</span>`;
         continue;
       }
       if (isBlockChar(ch)) {

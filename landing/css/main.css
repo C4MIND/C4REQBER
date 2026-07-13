@@ -225,6 +225,8 @@ body.splash-active #site-header,body.splash-active #main,body.splash-active #sit
 .splash-ch-cube{color:#4ade80!important;text-shadow:0 0 10px rgba(74,222,128,.9),0 0 24px rgba(34,211,238,.4)}
 .splash-ch-c4r{color:#fbbf24!important;text-shadow:0 0 14px rgba(251,191,36,.9),0 0 24px rgba(251,191,36,.45)}
 .splash-phase-waiting .splash-ch-c4r{animation:splash-c4r-breathe 3.6s ease-in-out infinite}
+.splash-ch-c4r-wave{transition:color .2s linear}
+.splash-ch-c4r-compact{text-shadow:0 0 8px rgba(251,191,36,.7),0 0 14px rgba(251,191,36,.35)!important}
 @keyframes splash-c4r-breathe{0%,100%{text-shadow:0 0 14px rgba(251,191,36,.9),0 0 24px rgba(251,191,36,.45)}50%{text-shadow:0 0 18px rgba(251,191,36,1),0 0 34px rgba(251,191,36,.6),0 0 52px rgba(249,115,22,.25)}}
 .splash-aurora-ch{display:inline;text-shadow:0 0 8px color-mix(in srgb,currentColor 50%,transparent)}
 .splash-aurora-bold{text-shadow:0 0 12px color-mix(in srgb,currentColor 75%,transparent)}
@@ -251,13 +253,11 @@ body.splash-active #site-header,body.splash-active #main,body.splash-active #sit
 @keyframes splash-enter-pulse{0%,100%{box-shadow:0 0 20px rgba(74,222,128,.4),0 0 40px rgba(34,211,238,.15)}50%{box-shadow:0 0 32px rgba(74,222,128,.65),0 0 64px rgba(34,211,238,.35)}}
 @keyframes splash-crystal-hold-glow{0%,100%{filter:drop-shadow(0 0 28px rgba(95,95,255,.18)) brightness(1)}50%{filter:drop-shadow(0 0 36px rgba(95,95,255,.28)) brightness(1.06)}}
 @keyframes splash-crystal-glow{0%,100%{filter:brightness(1)}50%{filter:brightness(1.18)}}
-.splash-c4r-line{color:#fbbf24!important;text-shadow:0 0 10px rgba(251,191,36,.8);white-space:pre;display:inline-block}
-.splash-phase-waiting .splash-c4r-line{animation:splash-c4r-breathe 3.6s ease-in-out infinite}
 #splash-overlay.splash-mobile{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 #splash-overlay.splash-mobile .splash-skip{touch-action:manipulation;min-height:44px}
 #splash-art.splash-art-mobile{filter:drop-shadow(0 0 16px rgba(95,95,255,.14));line-height:1.02;letter-spacing:0;-webkit-text-size-adjust:100%;text-size-adjust:100%}
 #splash-art.splash-art-mobile .splash-ch-c4r{text-shadow:0 0 6px rgba(251,191,36,.7)}
-#splash-art.splash-art-mobile .splash-c4r-line{text-shadow:0 0 8px rgba(251,191,36,.75)}
+#splash-art.splash-art-mobile .splash-ch-c4r-wave{text-shadow:0 0 6px rgba(251,191,36,.7),0 0 10px rgba(249,115,22,.25)}
 @media(max-width:768px){
   #splash-overlay{padding:0 10px;padding-top:env(safe-area-inset-top,0);padding-bottom:env(safe-area-inset-bottom,0)}
   .splash-column{width:100%;max-width:100%}

@@ -202,6 +202,14 @@ def apply_config_to_env() -> None:
     Called early by desktop launcher and CLI entrypoints.
     """
     load_kilo_env()
+    try:
+        from src.config.secrets_store import load_secrets_env
+
+        load_secrets_env(override=False)
+    except Exception as exc:
+        import logging
+
+        logging.getLogger(__name__).warning("secrets.env load failed: %s", exc)
     mapping = get_user_keys()
     extra = {}
     sections = load_config_toml()

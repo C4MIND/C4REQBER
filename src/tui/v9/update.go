@@ -210,6 +210,29 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		keyStr := msg.String()
 		km := m.keymap
 
+		if m.setupVisible && m.setupEditing {
+			if msg.Code == tea.KeyEnter {
+				return m, setupMenuEnter(m)
+			}
+			if msg.Code == tea.KeyBackspace || keyStr == "backspace" {
+				if len(m.setupEditValue) > 0 {
+					m.setupEditValue = m.setupEditValue[:len(m.setupEditValue)-1]
+				}
+				return m, nil
+			}
+			if km.Matches(ActCancel, keyStr) || km.Matches(ActEscape, keyStr) {
+				m.setupEditing = false
+				m.setupEditEnvName = ""
+				m.setupEditValue = ""
+				return m, nil
+			}
+			if msg.Code != 0 && msg.Text != "" {
+				m.setupEditValue += msg.Text
+				return m, nil
+			}
+			return m, nil
+		}
+
 		// Wizard 'd'/'r'/'?' shortcuts (always active when wizard is on screen,
 		// even on the welcome/help steps). Each closes the wizard and gives
 		// the user the relevant hint.
@@ -248,6 +271,18 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			return m, tea.Quit
 		case km.Matches(ActRun, keyStr):
+			if m.agendaVisible {
+				return m, agendaMenuEnter(m)
+			}
+			if m.modelsVisible {
+				return m, modelsMenuEnter(m)
+			}
+			if m.setupVisible {
+				return m, setupMenuEnter(m)
+			}
+			if m.socialVisible {
+				return m, socialMenuEnter(m)
+			}
 			// Wizard: Enter advances / finishes
 			if m.wizard != nil && m.wizard.Active() {
 				m.wizard.Next()
@@ -281,6 +316,33 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			if m.showCapabilities {
 				m.showCapabilities = false
+				return m, nil
+			}
+			if m.socialVisible {
+				m.socialVisible = false
+				m.socialLoading = false
+				return m, nil
+			}
+			if m.setupVisible {
+				if m.setupInCategory {
+					m.setupInCategory = false
+					m.setupSelectedCategory = ""
+					m.setupFocusActions = false
+					return m, nil
+				}
+				m.setupVisible = false
+				m.setupLoading = false
+				m.setupEditing = false
+				return m, nil
+			}
+			if m.agendaVisible {
+				m.agendaVisible = false
+				m.agendaLoading = false
+				return m, nil
+			}
+			if m.modelsVisible {
+				m.modelsVisible = false
+				m.modelsLoading = false
 				return m, nil
 			}
 			if m.wizard != nil && m.wizard.Active() {
@@ -459,7 +521,60 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.setToast("settings closed")
 			}
 			return m, nil
+		case km.Matches(ActSocial, keyStr):
+			if m.socialVisible {
+				m.socialVisible = false
+				m.socialLoading = false
+				m.setToast(i18n.T("social.closed"))
+			} else {
+				openSocialMenu(m)
+			}
+			return m, nil
+		case km.Matches(ActSetupHub, keyStr):
+			if m.setupVisible {
+				m.setupVisible = false
+				m.setupLoading = false
+				m.setupEditing = false
+				m.setToast(i18n.T("setup.closed"))
+			} else {
+				return m, openSetupHub(m)
+			}
+			return m, nil
+		case km.Matches(ActAgenda, keyStr):
+			if m.agendaVisible {
+				m.agendaVisible = false
+				m.agendaLoading = false
+				m.setToast(i18n.T("agenda.closed"))
+			} else {
+				return m, openAgendaMenu(m)
+			}
+			return m, nil
+		case km.Matches(ActModels, keyStr):
+			if m.modelsVisible {
+				m.modelsVisible = false
+				m.modelsLoading = false
+				m.setToast(i18n.T("models.closed"))
+			} else {
+				return m, openModelsMenu(m)
+			}
+			return m, nil
 		case km.Matches(ActUp, keyStr):
+			if m.agendaVisible {
+				truncateAgendaNav(m, true)
+				return m, nil
+			}
+			if m.modelsVisible {
+				truncateModelsNav(m, true)
+				return m, nil
+			}
+			if m.setupVisible {
+				truncateSetupNav(m, true)
+				return m, nil
+			}
+			if m.socialVisible {
+				truncateSocialNav(m, true)
+				return m, nil
+			}
 			if m.settingsVisible {
 				if m.settingsCursor > 0 {
 					m.settingsCursor--
@@ -471,6 +586,22 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.rebuildFeedContent()
 			return m, nil
 		case km.Matches(ActDown, keyStr):
+			if m.agendaVisible {
+				truncateAgendaNav(m, false)
+				return m, nil
+			}
+			if m.modelsVisible {
+				truncateModelsNav(m, false)
+				return m, nil
+			}
+			if m.setupVisible {
+				truncateSetupNav(m, false)
+				return m, nil
+			}
+			if m.socialVisible {
+				truncateSocialNav(m, false)
+				return m, nil
+			}
 			if m.settingsVisible {
 				rows := m.CurrentSettings()
 				if m.settingsCursor < len(rows)-1 {
@@ -483,6 +614,9 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.rebuildFeedContent()
 			return m, nil
 		case km.Matches(ActFocusPrev, keyStr):
+			if m.agendaVisible || m.modelsVisible || m.setupVisible || m.socialVisible || m.settingsVisible {
+				return m, nil
+			}
 			// v9.13: navigate card focus up.
 			if len(m.feed) > 0 {
 				if m.focusedCardIdx < 0 {
@@ -495,6 +629,9 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			return m, nil
 		case km.Matches(ActFocusNext, keyStr):
+			if m.agendaVisible || m.modelsVisible || m.setupVisible || m.socialVisible || m.settingsVisible {
+				return m, nil
+			}
 			if len(m.feed) > 0 {
 				if m.focusedCardIdx < 0 {
 					m.focusedCardIdx = 0
@@ -757,6 +894,87 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.simCountThisRun++
 		}
 		m.setToast("⏚ " + i18n.T("sim.toast.loaded") + " (" + capsim.ShortSummary(msg.report) + ")")
+		return m, nil
+
+	case socialMsg:
+		m.socialLoading = false
+		m.socialOutput = msg.output
+		if msg.err != nil {
+			m.setToast("📣 social: " + truncate(msg.output, 60))
+		} else {
+			m.setToast("📣 social: done")
+		}
+		return m, nil
+
+	case setupMsg:
+		m.setupLoading = false
+		if len(msg.payload.Categories) > 0 {
+			m.applySetupPayload(msg.payload)
+		}
+		if msg.output != "" {
+			m.setupOutput = msg.output
+		}
+		if msg.err != nil && m.setupOutput == "" {
+			m.setupOutput = msg.err.Error()
+		}
+		return m, nil
+
+	case setupAssignMsg:
+		m.setupLoading = false
+		m.setupOutput = msg.output
+		if msg.err != nil {
+			m.setToast("🔑 " + truncate(msg.output, 60))
+		} else {
+			m.setToast("🔑 saved " + msg.envName)
+		}
+		return m, setupKeysCmd()
+
+	case agendaGenerateMsg:
+		m.agendaLoading = false
+		if msg.resp != nil {
+			m.agendaQuestions = msg.resp.Questions
+			m.agendaFocusActions = len(m.agendaQuestions) == 0
+			m.agendaQCursor = 0
+			m.agendaOutput = i18n.T("agenda.generated")
+		}
+		if msg.err != nil {
+			m.agendaOutput = msg.output
+		}
+		return m, nil
+
+	case agendaActionMsg:
+		m.agendaLoading = false
+		m.agendaOutput = msg.output
+		if msg.err != nil {
+			m.setToast("📋 agenda: " + truncate(msg.output, 60))
+		} else {
+			m.setToast("📋 agenda: " + truncate(msg.output, 40))
+		}
+		return m, agendaProgressCmd(m.api)
+
+	case agendaProgressMsg:
+		m.agendaLoading = false
+		if msg.progress != nil {
+			m.agendaOutput = fmt.Sprintf(
+				"approved=%d rejected=%d latest=%v",
+				msg.progress.ApprovedCount,
+				msg.progress.RejectedCount,
+				msg.progress.LatestApproved,
+			)
+		}
+		if msg.err != nil {
+			m.agendaOutput = msg.output
+		}
+		return m, nil
+
+	case modelsConfigMsg:
+		m.modelsLoading = false
+		if len(msg.payload.Phases) > 0 || msg.payload.Council != nil {
+			m.applyModelsPayload(msg.payload)
+		}
+		if msg.err != nil {
+			m.modelsOutput = msg.output
+		}
 		return m, nil
 	}
 

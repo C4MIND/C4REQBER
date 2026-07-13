@@ -152,6 +152,51 @@ type model struct {
 	// settingsCursor tracks the currently highlighted row in settings menu
 	settingsCursor int
 
+	// socialVisible toggles the social publishing menu (Ctrl+Shift+S)
+	socialVisible       bool
+	socialDraftCursor   int
+	socialActionCursor  int
+	socialFocusActions  bool
+	socialDrafts        []string
+	socialOutput        string
+	socialLoading       bool
+
+	// setupVisible toggles the API keys setup hub (Ctrl+Shift+K)
+	setupVisible          bool
+	setupLoading          bool
+	setupOutput           string
+	setupCategories       []setupCategoryRow
+	setupKeys             []setupKeyRow
+	setupCatCursor        int
+	setupKeyCursor        int
+	setupActionCursor     int
+	setupInCategory       bool
+	setupFocusActions     bool
+	setupEditing          bool
+	setupEditEnvName      string
+	setupEditValue        string
+	setupSelectedCategory string
+
+	// agendaVisible toggles research agenda overlay (Shift+A)
+	agendaVisible        bool
+	agendaLoading        bool
+	agendaOutput         string
+	agendaQuestions      []api.AgendaQuestion
+	agendaQCursor        int
+	agendaActionCursor   int
+	agendaFocusActions   bool
+
+	// modelsVisible toggles phase/council models overlay (Ctrl+Shift+M)
+	modelsVisible   bool
+	modelsLoading   bool
+	modelsOutput    string
+	modelsPhases    []modelsPhaseRow
+	modelsCouncil   map[string][]string
+	modelsCostTier  string
+	modelsEstCost   float64
+	modelsView      int
+	modelsCursor    int
+
 	// showAchievementOverlay shows the fullscreen unlock animation
 	showAchievementOverlay bool
 

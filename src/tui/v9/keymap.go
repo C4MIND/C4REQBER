@@ -58,6 +58,10 @@ const (
 	ActOpenPlot     Action = "open_plot"     // o — open a sim plot URL in browser
 	ActStatusBar    Action = "status_bar"    // Ctrl+B — toggle 1-line status bar (§3.3)
 	ActDebug        Action = "debug"         // Ctrl+Shift+D — debug overlay (§15)
+	ActSocial       Action = "social"        // Ctrl+Shift+S — social publishing menu
+	ActSetupHub     Action = "setup_hub"     // Ctrl+Shift+K — API keys setup hub
+	ActAgenda       Action = "agenda"        // Shift+A — research agenda overlay
+	ActModels       Action = "models"        // Ctrl+Shift+M — phase/council models
 	ActPalette      Action = "palette"       // : — command palette (§16.2)
 	ActFocusPrev    Action = "focus_prev"    // k — focus previous card
 	ActFocusNext    Action = "focus_next"    // j — focus next card
@@ -123,6 +127,10 @@ func defaultBindings() map[Action][]keyBinding {
 		ActOpenPlot:     {{label: "o", keys: []string{"o"}}},
 		ActStatusBar:    {{label: "Ctrl+B", keys: []string{"ctrl+b"}}},
 		ActDebug:        {{label: "Ctrl+Shift+D", keys: []string{"ctrl+shift+d"}}},
+		ActSocial:       {{label: "Ctrl+Shift+S", keys: []string{"ctrl+shift+s"}}},
+		ActSetupHub:     {{label: "Ctrl+Shift+K", keys: []string{"ctrl+shift+k"}}},
+		ActAgenda:       {{label: "Shift+A", keys: []string{"shift+a"}}},
+		ActModels:       {{label: "Ctrl+Shift+M", keys: []string{"ctrl+shift+m"}}},
 		ActPalette:      {{label: ":", keys: []string{":"}}},
 		ActFocusPrev:    {{label: "k", keys: []string{"k"}}},
 		ActFocusNext:    {{label: "j", keys: []string{"j"}}},
@@ -268,7 +276,7 @@ func (km *KeyMap) HelpRows() []HelpRow {
 	order := []Action{
 		ActRun, ActCancel, ActCycleMode, ActLang, ActTier,
 		ActReauth, ActSearch, ActCopy, ActJump, ActSettings, ActCapabilities,
-		ActInstallHint, ActSelectFallback, ActOpenPlot, ActStatusBar, ActDebug, ActPalette,
+		ActInstallHint, ActSelectFallback, ActOpenPlot, ActStatusBar, ActDebug, ActSocial, ActPalette,
 		ActColorProfile, ActProfileMac, ActNewTab, ActEscape, ActHelp, ActQuit,
 	}
 	rows := make([]HelpRow, 0, len(order))
@@ -316,6 +324,8 @@ func helpDescKey(a Action) string {
 		return "help.status_bar"
 	case ActDebug:
 		return "help.debug"
+	case ActSocial:
+		return "social.title"
 	case ActPalette:
 		return "help.palette"
 	case ActColorProfile, ActProfileMac:

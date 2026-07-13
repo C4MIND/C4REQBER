@@ -206,15 +206,13 @@ async def c4_social(action: str, draft_id: str = "", platform: str = "") -> dict
         return result.get("steps", result)
 
     if action == "post" and draft_id and platform:
-        from src.social.i18n_templates import detect_language, format_post
-        from src.social.social_history import SocialHistory
+        from src.social.post_dispatcher import post_draft
 
-        lang = detect_language()
-        post = format_post(
-            lang, "preprint_post", title=draft_id, url=f"https://doi.org/c4reqber/{draft_id}"
-        )
-        SocialHistory().record("mcp_post", platform, draft_id, "pending", text=post)
-        return {"draft_id": draft_id, "platform": platform, "post": post[:280], "status": "queued"}
+        try:
+            result = await post_draft(draft_id, platform=platform, dry_run=False)
+        except (FileNotFoundError, ValueError) as exc:
+            return {"error": str(exc)}
+        return result
 
     return {
         "error": f"Unknown action: {action}. Use: status, publish, preview, drafts, health, post"

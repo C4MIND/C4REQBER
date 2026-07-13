@@ -237,6 +237,17 @@ func TestFeedPath_Preferred(t *testing.T) {
 	}
 }
 
+func TestFeedPath_C4REQBERConfig(t *testing.T) {
+	custom := t.TempDir()
+	t.Setenv("C4REQBER_CONFIG", custom)
+	t.Setenv("HOME", t.TempDir())
+	f, _ := NewFeedStore(50)
+	want := filepath.Join(custom, "tui-v9-feed.jsonl")
+	if f.Path() != want {
+		t.Errorf("Path() = %q, want %q (C4REQBER_CONFIG override)", f.Path(), want)
+	}
+}
+
 func titlesOf(es []FeedEntry) []string {
 	out := make([]string, len(es))
 	for i, e := range es {

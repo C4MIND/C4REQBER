@@ -12,30 +12,38 @@ layout: default
 pip install c4reqber
 ```
 
-Requires Python 3.10+.
+Requires Python 3.11+.
 
 Verify the installation:
 
 ```bash
-c4reqber --version  # should print 5.4.1
+blast --help  # c4reqber v5.6.0+
 ```
 
-Run the interactive configuration wizard:
+Configure API keys (primary store `~/.c4reqber/secrets.env`):
 
 ```bash
-c4reqber init
+blast init
+# or: blast config keys --assign OPENROUTER_API_KEY=sk-or-...
+```
+
+Scientific packages (separate wizard):
+
+```bash
+blast setup
 ```
 
 ## 2. Quick Commands
 
 | Command | What it does |
 |---------|-------------|
-| `c4reqber solve "problem"` | One-shot discovery pipeline |
-| `c4reqber solve "problem" --mode deep-work` | Full verification + proof export |
-| `c4reqber solve "problem" --mode turbo` | Fast parallel execution |
-| `c4reqber tui --cyberpunk` | Full-screen cyberpunk TUI |
-| `c4reqber serve --mcp` | Start MCP server for AI agents |
-| `c4reqber verify --backend lean4 theorem.lean` | Formal proof verification |
+| `blast solve "problem"` | One-shot discovery pipeline |
+| `blast turbo "topic"` | Paradigm-shifting research proposal |
+| `blast flash "question"` | Quick answer |
+| `blast tui` | TUI v9 feed cockpit (Go) |
+| `blast serve --mcp` | Start MCP server for AI agents |
+| `blast config keys` | API keys Setup Hub |
+| `blast social publish --id …` | Publish draft to Zenodo + social |
 
 ## 3. MCP Server Setup
 
@@ -190,14 +198,16 @@ docker run -it --rm \
 | `API key not set` error | Set env vars or use `--local` mode |
 | TUI shows garbled characters | Use `--layout minimal` or increase terminal width to 80+ |
 | Verification fails | Check backend is installed (`lean4 --version`, `coqc --version`, etc.) |
-| MCP connection refused | Ensure `c4reqber serve --mcp` is running |
-| Balance shows zero | Press `[B]` in TUI or run `c4reqber credits status` |
+| MCP connection refused | Ensure `blast serve --mcp` is running |
+| Balance shows zero | Press `Ctrl+B` in TUI v9 for status bar |
 
 ---
 
 ## Next Steps
 
+- Open the TUI: `blast tui` (overlays: `Ctrl+Shift+K` keys, `Ctrl+Shift+S` social, `Shift+A` agenda, `Ctrl+Shift+M` models)
+
 - Read the [API Reference](API.md)
 - Browse the [Formal Proofs](formal-proofs/)
-- Run `c4reqber --help` for all commands
-- Open the TUI: `c4reqber tui --cyberpunk`
+- Run `blast --help` for all commands
+- Social publishing: [SOCIAL_PUBLISHING.md](SOCIAL_PUBLISHING.md) · TUI `Ctrl+Shift+S`

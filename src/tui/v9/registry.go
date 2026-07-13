@@ -48,6 +48,26 @@ func buildRegistry() *commands.Registry {
 		Run: nil,
 	})
 	r.Register(commands.Command{
+		ID: "app.social", Title: "Open social publishing", Aliases: []string{"social", "publish", "zenodo"},
+		Category: "Publish", Key: "Ctrl+Shift+S", Icon: "📣",
+		Run: nil,
+	})
+	r.Register(commands.Command{
+		ID: "app.setup", Title: "Open API keys setup hub", Aliases: []string{"setup", "keys", "apikeys"},
+		Category: "Settings", Key: "Ctrl+Shift+K", Icon: "🔑",
+		Run: nil,
+	})
+	r.Register(commands.Command{
+		ID: "app.agenda", Title: "Open research agenda", Aliases: []string{"agenda", "questions"},
+		Category: "Discover", Key: "Shift+A", Icon: "📋",
+		Run: nil,
+	})
+	r.Register(commands.Command{
+		ID: "app.models", Title: "Open models & council config", Aliases: []string{"models", "council", "phases"},
+		Category: "Settings", Key: "Ctrl+Shift+M", Icon: "🧠",
+		Run: nil,
+	})
+	r.Register(commands.Command{
 		ID: "app.debug", Title: "Show debug overlay", Aliases: []string{"debug", "diag", "diagnostics"},
 		Category: "App", Key: "Ctrl+Shift+D", Icon: "🔧",
 		Run: nil,
@@ -158,7 +178,7 @@ func buildRegistry() *commands.Registry {
 	}
 	// ── Help ───────────────────────────────────────────────────
 	r.Register(commands.Command{
-		ID: "help.shortcuts", Title: "Show keyboard shortcuts", Aliases: []string{"keys", "shortcuts"},
+		ID: "help.shortcuts", Title: "Show keyboard shortcuts", Aliases: []string{"hotkeys", "shortcuts"},
 		Category: "Help", Icon: "🗝", Run: nil,
 	})
 	return r
@@ -191,6 +211,43 @@ func (m *model) bindRegistry() {
 			if m.showCapabilities {
 				m.capsimLoading = true
 				return capsimCmd(m.capsimClient, false)
+			}
+			return nil
+		},
+		"app.social": func() any {
+			if m.socialVisible {
+				m.socialVisible = false
+				m.socialLoading = false
+			} else {
+				openSocialMenu(m)
+			}
+			return nil
+		},
+		"app.setup": func() any {
+			if m.setupVisible {
+				m.setupVisible = false
+				m.setupLoading = false
+				m.setupEditing = false
+			} else {
+				return openSetupHub(m)
+			}
+			return nil
+		},
+		"app.agenda": func() any {
+			if m.agendaVisible {
+				m.agendaVisible = false
+				m.agendaLoading = false
+			} else {
+				return openAgendaMenu(m)
+			}
+			return nil
+		},
+		"app.models": func() any {
+			if m.modelsVisible {
+				m.modelsVisible = false
+				m.modelsLoading = false
+			} else {
+				return openModelsMenu(m)
 			}
 			return nil
 		},

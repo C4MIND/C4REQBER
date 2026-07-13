@@ -1,4 +1,5 @@
 """Launch c4tui-v9 from blast CLI."""
+
 from __future__ import annotations
 
 import os
@@ -21,6 +22,7 @@ def tui_v9_version() -> str:
     string.
     """
     import re
+
     binary = find_tui_v9_binary()
     if binary is None:
         return "v9"
@@ -120,7 +122,7 @@ def launch_tui_v9(extra_args: list[str] | None = None, *, build_if_missing: bool
 
 def launch_package_installer() -> int:
     """Open the Rich arrow-key package installer (Python TUI)."""
-    from src.tui.package_installer import tui_package_manager
+    from src.cli.package_installer_tui import tui_package_manager
 
     try:
         tui_package_manager()

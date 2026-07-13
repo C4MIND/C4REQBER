@@ -40,7 +40,10 @@ See [`v9/README.md`](v9/README.md) and [`v9/ARCHITECTURE.md`](v9/ARCHITECTURE.md
 
 ## Legacy
 
-The retired v6/v7 Python interfaces and v8 parallel Go app have been removed. Python launchers delegate to TUI v9.
+Retired v6/v7/v8 Python TUI modules were removed (Wave C, 2026-07). `src/tui/` now contains thin Python shims plus `v9/` (Go).
+
+- **Package installer** (`blast tui --packages`): `src/cli/package_installer_tui.py` (Rich arrow-key UI)
+- **Launch**: `blast tui` → `src/cli/tui_launcher.py` → `c4tui-v9`
 
 ## License
 

@@ -8,6 +8,7 @@ import (
 	"sort"
 	"time"
 
+	"github.com/figuramax/c4reqber-tui-v9/persist"
 	"github.com/figuramax/c4reqber-tui-v9/telemetry"
 )
 
@@ -30,15 +31,11 @@ type HistoryFile struct {
 	Snapshot   telemetry.Snapshot `json:"snapshot"`
 }
 
-// HistoryDir returns ~/.c4reqber (unified with Python ~/.c4reqber for desktop + CLI).
-// Always creates the dir. No more .config fallback (prevents split state).
+// HistoryDir returns the unified config dir (C4REQBER_CONFIG or ~/.c4reqber).
+// Always creates the dir. No XDG fallback when override is set.
 func HistoryDir() (string, error) {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return "", err
-	}
-	dir := filepath.Join(home, ".c4reqber")
-	if err := os.MkdirAll(dir, 0755); err != nil {
+	dir := persist.UserConfigDir()
+	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return "", err
 	}
 	return dir, nil

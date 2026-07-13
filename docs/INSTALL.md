@@ -7,14 +7,15 @@
 ```bash
 pip install c4reqber
 # or from source: git clone + pip install -e ".[science]"
-blast setup          # interactive wizard — picks packages, API keys
-cp .env.example .env # add OPENROUTER_API_KEY (see docs/API_KEYS.md)
+blast setup          # scientific packages only (GROMACS, OpenMM, …)
+blast init           # interactive API key wizard → ~/.c4reqber/secrets.env
+# or: blast config keys --assign OPENROUTER_API_KEY=sk-or-...
 blast solve "your problem"
-blast tui            # TUI v9 cockpit
+blast tui            # TUI v9 cockpit (Go)
 blast serve --mcp    # MCP server for AI agents
 ```
 
-Minimum: Python 3.11+, `OPENROUTER_API_KEY` in `.env`.
+Minimum: Python 3.11+, `OPENROUTER_API_KEY` in `secrets.env` or env (see [docs/API_KEYS.md](docs/API_KEYS.md)).
 
 ## 2. Optional — Docker API only
 
@@ -49,4 +50,4 @@ On GitLab `main`, after `build-api` succeeds, `deploy-production` **verifies** t
 
 ## Keys
 
-Full registration guide: [API_KEYS.md](API_KEYS.md) · [mini Pages version](https://turbo-cdi-86c583.gitlab.io/docs/setup/api-keys.html)
+Full registration guide: [docs/API_KEYS.md](docs/API_KEYS.md) · [mini Pages version](https://turbo-cdi-86c583.gitlab.io/docs/setup/api-keys.html)

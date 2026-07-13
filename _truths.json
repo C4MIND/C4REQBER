@@ -1,16 +1,16 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "generated_at": "2026-07-13T00:29:51Z",
+  "generated_at": "2026-07-13T09:49:47Z",
   "version_backend": "5.6.0",
   "version_tui": "v9.13.0",
-  "git_head": "b94071b",
+  "git_head": "19c7889",
   "git_branch": "fix/capital-audit-wave-a",
   "python": {
-    "loc": 227572,
-    "tests_collected": 9906
+    "loc": 221974,
+    "tests_collected": 9924
   },
   "go": {
-    "loc_tui_v9": 21628
+    "loc_tui_v9": 23287
   },
   "mcp": {
     "tools": 21

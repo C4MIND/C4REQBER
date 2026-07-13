@@ -469,17 +469,14 @@ description: "The missing cognitive layer for the agentic era. 115 simulations, 
       <pre><code><span class="comment"># Install</span>
 <span class="command">pip install c4reqber</span>
 
-<span class="comment"># Verify</span>
-<span class="command">c4reqber --version</span>
-
-<span class="comment"># Initialize</span>
-<span class="command">c4reqber init</span>
+<span class="comment"># Initialize keys → ~/.c4reqber/secrets.env</span>
+<span class="command">blast init</span>
 
 <span class="comment"># Solve a problem</span>
 <span class="command">blast solve</span> <span class="arg">"your scientific question"</span>
 
-<span class="comment"># Launch cyberpunk TUI</span>
-<span class="command">c4reqber tui --cyberpunk</span>
+<span class="comment"># TUI v9 cockpit (Go)</span>
+<span class="command">blast tui</span>
 
 <span class="comment"># Serve MCP tools</span>
 <span class="command">blast serve --mcp</span></code></pre>

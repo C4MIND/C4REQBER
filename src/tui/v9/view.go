@@ -69,6 +69,62 @@ func (m *model) View() tea.View {
 	if m.showCapabilities {
 		body = capsim.RenderCapabilitiesOverlay(m.width, m.height, m.capsimReport)
 	}
+	if m.socialVisible {
+		body = RenderSocialMenu(
+			m.socialDrafts,
+			m.socialDraftCursor,
+			m.socialActionCursor,
+			m.socialOutput,
+			m.socialLoading,
+			m.width,
+			m.height,
+		)
+	}
+	if m.setupVisible {
+		body = RenderSetupHub(
+			m.setupCategories,
+			m.setupKeys,
+			m.setupSelectedCategory,
+			m.setupInCategory,
+			m.setupEditing,
+			m.setupCatCursor,
+			m.setupKeyCursor,
+			m.setupActionCursor,
+			m.setupFocusActions,
+			m.setupEditEnvName,
+			m.setupEditValue,
+			m.setupOutput,
+			m.setupLoading,
+			m.width,
+			m.height,
+		)
+	}
+	if m.agendaVisible {
+		body = RenderAgendaMenu(
+			m.agendaQuestions,
+			m.agendaQCursor,
+			m.agendaActionCursor,
+			m.agendaFocusActions,
+			m.agendaOutput,
+			m.agendaLoading,
+			m.width,
+			m.height,
+		)
+	}
+	if m.modelsVisible {
+		body = RenderModelsMenu(
+			m.modelsPhases,
+			m.modelsCouncil,
+			m.modelsView,
+			m.modelsCursor,
+			m.modelsCostTier,
+			m.modelsEstCost,
+			m.modelsOutput,
+			m.modelsLoading,
+			m.width,
+			m.height,
+		)
+	}
 	// v9.13 (§15): debug overlay (Ctrl+Shift+D) — also high priority
 	if m.showDebug {
 		body = RenderDebugOverlay(m.CollectDebugSnapshot())

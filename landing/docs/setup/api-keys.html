@@ -79,18 +79,18 @@
     <h2 data-i18n="keys_h2_nokey">No registration needed</h2>
     <div data-i18n="keys_nokey_html" data-i18n-html="true"></div>
 
-    <h2 data-i18n="keys_h2_setup">Add to .env</h2>
-    <pre><code>cp .env.example .env
+    <h2 data-i18n="keys_h2_setup">User secrets store</h2>
+    <pre><code># Recommended — saved to ~/.c4reqber/secrets.env
+blast init
+# or one key at a time:
+blast config keys --assign OPENROUTER_API_KEY=sk-or-...
 
-# Minimum
-export OPENROUTER_API_KEY="<paste-from-openrouter-settings>"
+# TUI v9: Ctrl+Shift+K — Setup Hub
 
-# Recommended for literature at scale
-export NCBI_API_KEY="<your-ncbi-key>"
-export NCBI_EMAIL="you@institution.edu"
-export CORE_API_KEY="<your-core-key>"
-export TAVILY_API_KEY="<your-tavily-key>"</code></pre>
-    <p data-i18n="keys_setup_note" data-i18n-html="true">Copy <code>.env.example</code> → <code>.env</code>. Never commit secrets. Verify: <code>python3 tools/check_keys.py</code></p>
+# Dev/Docker fallback
+cp .env.example .env
+export OPENROUTER_API_KEY="sk-or-..."  <!-- pragma: allowlist secret --></code></pre>
+    <p data-i18n="keys_setup_note" data-i18n-html="true"><code>blast init</code> or <code>blast config keys --assign KEY=value</code> → <code>~/.c4reqber/secrets.env</code>. TUI: <code>Ctrl+Shift+K</code>. Override: <code>C4REQBER_CONFIG</code>. Never commit secrets.</p>
 
     <h2 data-i18n="keys_h2_full">Full guide</h2>
     <div data-i18n="keys_full_html" data-i18n-html="true"></div>

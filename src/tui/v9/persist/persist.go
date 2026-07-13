@@ -35,10 +35,7 @@ type Store struct {
 }
 
 func DefaultPath() string {
-	home, _ := os.UserHomeDir()
-	// Always ~/.c4reqber for full consistency with Python CLI/desktop/launcher_entry.
-	c4dir := filepath.Join(home, ".c4reqber")
-	return filepath.Join(c4dir, "tui-v9-state.json")
+	return filepath.Join(UserConfigDir(), "tui-v9-state.json")
 }
 
 // New creates a Store, loading existing state if available.

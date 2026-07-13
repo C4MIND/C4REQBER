@@ -49,12 +49,7 @@ func NewFeedStore(maxLen int) (*FeedStore, error) {
 	if maxLen <= 0 {
 		maxLen = 50
 	}
-	home, _ := os.UserHomeDir()
-	// Align with Python + persist.DefaultPath for unified desktop config dir
-	dir := filepath.Join(home, ".c4reqber")
-	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		dir = filepath.Join(home, ".config", "c4reqber")
-	}
+	dir := dataDir()
 	p := filepath.Join(dir, "tui-v9-feed.jsonl")
 	return &FeedStore{path: p, maxLen: maxLen}, nil
 }
@@ -225,11 +220,7 @@ func NewInputHistory(limit int) (*InputHistory, error) {
 	if limit <= 0 {
 		limit = 200
 	}
-	home, _ := os.UserHomeDir()
-	dir := filepath.Join(home, ".c4reqber")
-	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		dir = filepath.Join(home, ".config", "c4reqber")
-	}
+	dir := dataDir()
 	p := filepath.Join(dir, "tui-v9-input-history.json")
 	h := &InputHistory{path: p, limit: limit}
 	h.load()

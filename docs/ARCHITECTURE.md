@@ -240,7 +240,7 @@ The verification system was refactored from a single `HybridVerifier` into a **6
 - `FeasibilityChecker` — Tool availability, cost/time estimates, tractability scoring
 - `PriorityScorer` — Weights: novelty 0.3, tractability 0.3, impact 0.2, alignment 0.2
 - `ProgressTracker` — Open gaps vs. covered topics tracking
-- **TUI Screen**: `shift+a` opens agenda overlay with approve/reject/modify actions
+- **TUI Screen (v9)**: `Shift+A` opens agenda overlay (generate, approve/reject, progress, run discovery) — `src/tui/v9/agenda_menu.go`
 - **API**: `/v8/agenda/generate`, `/v8/agenda/approve`, `/v8/agenda/progress`
 
 ### Layer 4.10: Open-Ended Exploration (P5)
@@ -306,34 +306,15 @@ Pipeline Architecture:
 
 **Discovery Memory:** Every discovery is SHA256-hashed and stored in `discovery/memory/fingerprints.json`. Jaccard similarity >0.7 rejects near-duplicates. Prevents re-discovering the same idea.
 
-### Layer 7: CLI Display (Cyberpunk TUI v3.1)
-```
-CLI Display Module (cli/display.py + terminal_/):
-├── C44TCDIHeader      (brand + metrics + sparklines + C4 state badge)
-├── CubeMascot         (8-bit states: idle/thinking/processing/discovery/error/done/paradigm)
-├── LayoutManager      (5 layouts: minimal/standard/deep-work/turbo/tui-mode, multi-language auto-detect)
-├── SessionTimeline    (visual history + branch rendering + time-travel cursor)
-├── CyberpunkTheme     (Neon Noir palette: true-color ANSI, gradients, glow effects)
-├── AnimationEngine    (60fps: MatrixRain, StateMorph, DiscoveryBurst, Glitch, Scanline, PulseGlow)
-├── MiniMetricsPanel   (live token/cost/latency sparklines)
-├── SystemResourceMonitor (CPU/RAM/GPU bars, optional psutil)
-├── ServiceMonitor     (live service status + [B] balance refresh for Tavily/Exa/OpenRouter)
-├── HumanityProblemsWidget (Crisis Radar — RSS-fed ranking by urgency×C4-fit×novelty)
-└── SplashScreen       (6-phase C4 cube animation + 3-step config wizard)
-```
+### Layer 7: Terminal UI (TUI v9 — Go/Bubble Tea)
 
-**Cube States (8-bit enhanced):**
-| State | ASCII | Effect | Commentary |
-|-------|-------|--------|------------|
-| idle | ▫▫▫ | Breathing pulse | C4 space ready. 27 dimensions. |
-| thinking | ▫◈▫ | Blinking | Navigating cognitive space... |
-| processing | ◈▣▫ | Progress fill | TRIZ matrix accessed. |
-| discovery | ◈▣◈ | Rainbow + burst | Novel hypothesis detected! |
-| error | ✖▫▫ | Red pulse + glitch | Anomaly in cognitive field. |
-| done | ◈▣◈ ✓ | Green glow fade | Pipeline step completed. |
-| paradigm | ✦◈▣◈✦ | Blink + bold | Paradigm shift cascade! |
+Production TUI lives in `src/tui/v9/` (`blast tui` → `c4tui-v9`). Legacy Python Rich/Textual modules were removed in Wave C (2026-07); only `blast tui --packages` still uses a small Rich installer in `src/cli/package_installer_tui.py`.
 
-**Honest description:** The CLI is a genuine differentiator — fast, terminal-native, and visually informative. The ASCII cube and commentary are decorative but useful for state awareness.
+Key overlays: command palette (`:`), capabilities (`Ctrl+Shift+C`), agenda (`Shift+A`), models/council (`Ctrl+Shift+M`), API keys (`Ctrl+Shift+K`), social (`Ctrl+Shift+S`), settings (`Ctrl+,`).
+
+See `src/tui/v9/ARCHITECTURE.md` for feed cards, SSE, persistence, and layout tiers.
+
+**Honest description:** The CLI is a genuine differentiator — fast, terminal-native, and visually informative.
 
 ---
 
@@ -460,7 +441,7 @@ Output with Cube-Mascot + Quality Report + Metrics
 - **MULTI-AGENT**: CoordinatedDiscovery — parallel pipelines sharing findings, cross-validating gaps, detecting contradictions, merging consensus
 - **PROVIDER AUTO-DETECT**: 5 providers (MLX, LM Studio, Ollama, OpenRouter, DeepSeek) auto-detected on startup. ProviderAwareCoordinator assigns pipelines intelligently
 - **SMART SCHEDULER**: Token-bucket rate limiting + exponential backoff for `blast turbofactory`
-- **TUI**: I key for Provider Dashboard (real-time status: local/cloud, load, rate limits, cost). Footer now 16 shortcuts
+- **TUI**: Provider/capability surfaces in v9 (`Ctrl+Shift+C` capabilities, `Ctrl+Shift+M` models). See `src/tui/v9/keymap.go`.
 - **SLASH**: /sim command for simulation config
 - **MCP**: 21 tools (was 18) — blast_analyze, blast_wasm_load, blast_wasm_list added
 - **WAVE 6 FIXES**: 15 findings → 0: CRITICAL stub functions, ClickableCube→InteractiveCube, Body(default={}), __version__ bumped. 4x except:pass→logger. README synced. 0 bare except:pass, 0 hardcoded keys, 0 Body(default={}), 60/60 pipeline tests

@@ -1,4 +1,5 @@
-"""C4REQBER TUI — delegates to v8 Go binary."""
+"""C4REQBER TUI — delegates to v9 Go binary (c4tui-v9)."""
+
 from __future__ import annotations
 
 from src.tui import main

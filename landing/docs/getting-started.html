@@ -45,8 +45,11 @@
     <p data-i18n="gs_requires">Requires Python 3.11+.</p>
     <p data-i18n="gs_verify">Verify the installation:</p>
     <pre><code>blast --help  # c4reqber v5.6.0</code></pre>
-    <p data-i18n="gs_setup">Run the interactive configuration wizard:</p>
-    <pre><code>blast setup</code></pre>
+    <p data-i18n="gs_setup">Packages vs API keys (different commands):</p>
+    <ul>
+      <li data-i18n="gs_setup_packages" data-i18n-html="true"><code>blast setup</code> — scientific packages (GROMACS, OpenMM, …)</li>
+      <li data-i18n="gs_setup_keys" data-i18n-html="true"><code>blast init</code> or <code>blast config keys</code> — API keys → <code>~/.c4reqber/secrets.env</code></li>
+    </ul>
 
     <h2 data-i18n="gs_h2_commands">2. Quick Commands</h2>
     <table>
@@ -59,7 +62,13 @@
       <tr><td><code>blast tui</code></td><td data-i18n="gs_cmd_tui">TUI v9 Cockpit — feed-driven discovery UI</td></tr>
       <tr><td><code>blast tui --demo --story=crispr</code></td><td data-i18n="gs_cmd_tui_demo">Demo mode without backend</td></tr>
       <tr><td><code>blast serve --mcp</code></td><td data-i18n="gs_cmd_mcp">MCP server for AI agents (21 tools)</td></tr>
+      <tr><td><code>blast config keys</code></td><td data-i18n="gs_cmd_config_keys"><code>blast config keys</code> — manage ~/.c4reqber/secrets.env</td></tr>
+      <tr><td><code>blast social publish</code></td><td data-i18n="gs_cmd_social"><code>blast social publish</code> / <code>blast social post</code></td></tr>
     </table>
+
+    <h2 data-i18n="gs_h2_tui">TUI v9 overlays</h2>
+    <p data-i18n="gs_tui_intro">Launch <code>blast tui</code>. Key overlays (also in <code>:</code> palette):</p>
+    <div data-i18n="gs_tui_keys_html" data-i18n-html="true"></div>
 
     <h2 data-i18n="gs_h2_first">3. Your First Discovery</h2>
     <pre><code># One-shot discovery → strategic artifact
@@ -105,17 +114,27 @@ blast tui</code></pre>
 
     <h2 data-i18n="gs_h2_config">5. Configuration</h2>
     <pre><code># View current setup
-c4reqber config --show
+blast config --show
+blast config --show --json   # TUI models overlay (Ctrl+Shift+M)
+blast models --json
 
 # Set model per phase
-c4reqber config --set F=claude-sonnet-4.6
+blast config --set F=claude-sonnet-4.6 --save
+
+# API keys (primary store)
+blast config keys
+blast config keys --assign OPENROUTER_API_KEY=sk-or-...
 
 # Set cost tier
-c4reqber config --tier balanced --save  # $0.35/run
-c4reqber config --tier budget --save     # $0.002/run</code></pre>
+blast config --tier balanced --save  # $0.35/run
+blast config --tier budget --save     # $0.002/run
+
+# Custom config dir (optional)
+export C4REQBER_CONFIG=/path/to/config</code></pre>
 
     <h2 data-i18n="gs_h2_next">6. Next Steps</h2>
     <ul>
+      <li data-i18n="gs_next_social" data-i18n-html="true"><a href="https://gitlab.com/cognitive-functors/turbo-cdi/-/blob/main/docs/SOCIAL_PUBLISHING.md" rel="noopener noreferrer" target="_blank">Social publishing guide</a> — Zenodo, ORCID, Mastodon, Bluesky, …</li>
       <li data-i18n="gs_next_keys" data-i18n-html="true"><a href="setup/api-keys.html">Register API keys</a> — OpenRouter + scientific knowledge sources</li>
       <li data-i18n="gs_next_gpu" data-i18n-html="true"><a href="setup/gpu.html">Configure GPU acceleration</a> — Apple Silicon or NVIDIA CUDA</li>
       <li data-i18n="gs_next_arch" data-i18n-html="true"><a href="../architecture/">Read the Architecture guide</a> — understand 7-layer system design</li>

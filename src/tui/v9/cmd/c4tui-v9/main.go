@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
+	"path/filepath"
 	"strings"
 	"syscall"
 	"time"
@@ -21,6 +22,7 @@ import (
 	tui "github.com/figuramax/c4reqber-tui-v9"
 	"github.com/figuramax/c4reqber-tui-v9/demo"
 	"github.com/figuramax/c4reqber-tui-v9/i18n"
+	"github.com/figuramax/c4reqber-tui-v9/persist"
 	"github.com/figuramax/c4reqber-tui-v9/telemetry"
 )
 
@@ -210,9 +212,10 @@ func runPrune(days int) {
 	removed := 0
 	for _, f := range files {
 		if f.SessionEnd.Before(cutoff) {
-			home, _ := os.UserHomeDir()
-			path := fmt.Sprintf("%s/.c4reqber/tui-v9-history-%s.json",
-				home, f.SessionEnd.Format("2006-01-02-15-04-05"))
+			path := filepath.Join(
+				persist.UserConfigDir(),
+				fmt.Sprintf("tui-v9-history-%s.json", f.SessionEnd.Format("2006-01-02-15-04-05")),
+			)
 			if err := os.Remove(path); err == nil {
 				removed++
 			}

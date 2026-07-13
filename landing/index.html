@@ -196,7 +196,7 @@
       <div class="feature-card"><div class="feature-icon">&#9632;</div><h3 data-i18n="feat_verify">Formal Verification Engine</h3><p data-i18n="feat_verify_desc">Lean4, Coq, Dafny, Agda, Z3, Hoare logic — your hypotheses don't just claim, they prove.</p><div class="feature-tags"><span class="tag">Lean4</span><span class="tag">Coq</span><span class="tag">Dafny</span><span class="tag">Z3</span></div></div>
       <div class="feature-card"><div class="feature-icon">&#9733;</div><h3 data-i18n="feat_sim">38 Simulation Engines</h3><p data-i18n="feat_sim_desc">Molecular dynamics (GROMACS, OpenMM), quantum (PySCF), CFD (OpenFOAM), neuro (NEURON), and more.</p><div class="feature-tags"><span class="tag">GROMACS</span><span class="tag">OpenFOAM</span><span class="tag">PySCF</span><span class="tag">NEURON</span></div></div>
       <div class="feature-card"><div class="feature-icon">&#9735;</div><h3 data-i18n="feat_kg">47 Knowledge Sources</h3><p data-i18n="feat_kg_desc">arXiv, PubMed, Semantic Scholar, OpenAlex, Europe PMC, Crossref, Zenodo, ClinicalTrials.gov, GBIF, NASA Earthdata, Materials Project, Kaggle, OpenFDA, ORCID, and other configured sources. MultiSourceSearcher with circuit breaker and semantic dedup.</p><div class="feature-tags"><span class="tag">arXiv</span><span class="tag">PubMed</span><span class="tag">DOI</span><span class="tag">Circuit Breaker</span></div></div>
-      <div class="feature-card"><div class="feature-icon">&#9654;</div><h3 data-i18n="feat_pub">Automated Dissertation Generator</h3><p data-i18n="feat_pub_desc">LaTeX + BibTeX + Markdown + JSON + HTML exports. Citation verifier with hallucination detection. Ready for arXiv, bioRxiv, or peer review.</p><div class="feature-tags"><span class="tag">LaTeX</span><span class="tag">BibTeX</span><span class="tag">Anti-Hallucination</span></div></div>
+      <div class="feature-card"><div class="feature-icon">&#9654;</div><h3 data-i18n="feat_pub">Automated Dissertation Generator</h3><p data-i18n="feat_pub_desc">LaTeX + BibTeX + Markdown + JSON + HTML exports. Citation verifier with hallucination detection. Zenodo DOI upload; arXiv/bioRxiv = LaTeX package generation only (no auto-submit API).</p><div class="feature-tags"><span class="tag">LaTeX</span><span class="tag">BibTeX</span><span class="tag">Anti-Hallucination</span></div></div>
       <div class="feature-card"><div class="feature-icon">&#9673;</div><h3 data-i18n="feat_mcp">MCP Server — 21 Tools</h3><p data-i18n="feat_mcp_desc">Expose full C4REQBER capability to AI agents. JSON Schema compliant. stdio JSON-RPC.</p><div class="feature-tags"><span class="tag">21 Tools</span><span class="tag">JSON Schema</span><span class="tag">Claude</span></div></div>
       <div class="feature-card" style="border-color:rgba(236,72,153,.2)"><div class="feature-icon" style="color:#f472b6">&#9670;</div><h3 data-i18n="feat_observer">Observer Position Shifts</h3><p data-i18n="feat_observer_desc">O₀→O₁ self-diagnostic after synthesis detects blind spots. O₁→O₂ meta-reflection on stagnation derives alternative C4 routes. Keyword-driven axis shifts + deterministic fallback.</p><div class="feature-tags"><span class="tag">O₀→O₁→O₂</span><span class="tag">Blind Spots</span><span class="tag">Stagnation</span></div></div>
       <div class="feature-card" style="border-color:rgba(59,130,246,.2)"><div class="feature-icon" style="color:#60a5fa">&#9733;</div><h3 data-i18n="feat_mp">23 Core Metaprograms</h3><p data-i18n="feat_mp_desc">Multi-perspective analysis via 23 perceptual filters across 9 dimensions (thinking, feeling, doing, relating, perceiving, time, chunking, direction, reason). Pipeline step s4 rotates problems through 3 keyword-matched profiles.</p><div class="feature-tags"><span class="tag">23 MPs</span><span class="tag">9 Dimensions</span><span class="tag">MP Rotation</span></div></div>
@@ -276,6 +276,21 @@
       </table>
     </div>
     <p style="text-align:center;margin-top:16px;font-size:12px;color:var(--fg-3)" data-i18n="comp_legend">&#9679; Yes · &#9675; No · ◐ Partial</p>
+    <div style="margin-top:36px" data-i18n="comp_2026_html" data-i18n-html="true">
+      <h3 style="text-align:center;margin-bottom:10px">2026 AI-for-science entrants — what they actually are</h3>
+      <p style="max-width:900px;margin:0 auto 18px;text-align:center;color:var(--fg-2)">These launches are not equivalent. Claude Science is the closest workflow-level competitor; GPT‑Rosalind competes in the life-sciences vertical; Prism primarily competes with the writing and publication layer.</p>
+      <div class="table-scroll">
+        <table class="comp-table">
+          <thead><tr><th>Product</th><th>Actual scope</th><th>Where it leads</th><th>Limits versus c4reqber</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Claude Science</strong></td><td>Paid beta scientific workbench with a general coordinator, 60+ skills/connectors, and local, SSH, or HPC execution. Broad in principle; currently strongest in computational life sciences.</td><td>Reproducible artifacts with full provenance, native scientific figures, compute orchestration, and a reviewer agent.</td><td>Closed and paid; current domain pack is biology-heavy. No announced formal-proof stack, C4/TRIZ reasoning, or broad built-in simulation catalogue.</td></tr>
+            <tr><td><strong>GPT‑Rosalind</strong></td><td>Controlled-access model for biology, drug discovery, and translational medicine, with 50+ scientific tools available through a Codex plugin.</td><td>Purpose-trained biochemical reasoning across proteins, genes, chemistry, experimental planning, and tool-heavy workflows.</td><td>Qualified-access life-sciences preview, not a general cross-domain workbench; no announced formal-verification stack.</td></tr>
+            <tr><td><strong>Prism</strong></td><td>Free cloud LaTeX workspace for scientific writing and collaboration with GPT‑5.2 in the document context.</td><td>Manuscript-wide editing, equations, citations, figures, and real-time collaboration without local LaTeX setup.</td><td>Not an autonomous researcher; no lab/HPC orchestration, domain simulation, causal pipeline, or formal verification.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="margin-top:12px;text-align:center;font-size:12px;color:var(--fg-3)">Assessment dated July 13, 2026. Primary sources: <a href="https://www.anthropic.com/news/claude-science-ai-workbench" target="_blank" rel="noopener noreferrer">Claude Science</a> · <a href="https://openai.com/index/introducing-gpt-rosalind/" target="_blank" rel="noopener noreferrer">GPT‑Rosalind</a> · <a href="https://openai.com/index/introducing-prism/" target="_blank" rel="noopener noreferrer">Prism</a>.</p>
+    </div>
   </div>
 </section>
 
@@ -617,6 +632,10 @@
       <span class="tag" style="font-size:12px" data-i18n="home_tui_tag_expand">Enter: Expand</span>
       <span class="tag" style="font-size:12px" data-i18n="home_tui_tag_install">i: Install hint</span>
       <span class="tag" style="font-size:12px" data-i18n="home_tui_tag_fallback">f: Fallback chain</span>
+      <span class="tag" style="font-size:12px" data-i18n="home_tui_tag_setup">Ctrl+Shift+K: Setup Hub</span>
+      <span class="tag" style="font-size:12px" data-i18n="home_tui_tag_social">Ctrl+Shift+S: Social publish</span>
+      <span class="tag" style="font-size:12px" data-i18n="home_tui_tag_agenda">Shift+A: Research agenda</span>
+      <span class="tag" style="font-size:12px" data-i18n="home_tui_tag_models">Ctrl+Shift+M: Models & council</span>
     </div>
   </div>
 </section>
@@ -626,8 +645,8 @@
   <div class="container">
     <div class="section-header">
       <span class="section-label" data-i18n="home_social_label">Publish Everywhere</span>
-      <h2 class="section-title" data-i18n="home_social_title">Social Publishing — 9 Platforms</h2>
-      <p class="section-desc" data-i18n="home_social_desc">Dissertation → LaTeX + BibTeX → Auto-upload → ORCID → Social blast.</p>
+      <h2 class="section-title" data-i18n="home_social_title">Social Publishing — Multi-Channel</h2>
+      <p class="section-desc" data-i18n="home_social_desc">Discovery → draft → blast social publish. Zenodo DOI + every configured social channel (skipped if no API key).</p>
     </div>
     <div class="platform-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:16px;max-width:800px;margin:0 auto">
       <div style="text-align:center;padding:20px 12px;background:var(--bg-3);border-radius:var(--radius);border:1px solid rgba(255,255,255,.06)"><div style="font-size:24px;margin-bottom:8px">&#128240;</div><div style="font-size:13px">arXiv</div></div>
@@ -640,7 +659,11 @@
       <div style="text-align:center;padding:20px 12px;background:var(--bg-3);border-radius:var(--radius);border:1px solid rgba(255,255,255,.06)"><div style="font-size:24px;margin-bottom:8px">&#128038;</div><div style="font-size:13px">Twitter/X</div></div>
       <div style="text-align:center;padding:20px 12px;background:var(--bg-3);border-radius:var(--radius);border:1px solid rgba(255,255,255,.06)"><div style="font-size:24px;margin-bottom:8px">&#127756;</div><div style="font-size:13px">Bluesky</div></div>
     </div>
-    <p style="text-align:center;margin-top:24px;font-size:13px;color:var(--fg-3)" data-i18n="home_social_workflow">Workflow: Dissertation → LaTeX + BibTeX → Auto-upload → ORCID registration → Social blast</p>
+    <p style="text-align:center;margin-top:16px;font-size:13px;color:var(--fg-3)" data-i18n="home_social_workflow">Workflow: Discovery → draft → Zenodo → ORCID (optional) → social post to configured platforms. arXiv: LaTeX package generation only.</p>
+    <p style="text-align:center;margin-top:8px;font-size:12px;color:var(--fg-3)" data-i18n="home_social_platform_note">Zenodo = real DOI upload. arXiv = LaTeX package only. bioRxiv = not yet wired. Each social channel skipped without API key.</p>
+    <p style="text-align:center;margin-top:8px;font-size:13px" data-i18n="home_social_tui_hint" data-i18n-html="true">TUI: <code>Ctrl+Shift+S</code> — drafts, health check, publish</p>
+    <p style="text-align:center;margin-top:4px;font-size:13px" data-i18n="home_social_post_hint" data-i18n-html="true">CLI: <code>blast social publish</code> · <code>blast social post --id … --platform mastodon</code></p>
+    <p style="text-align:center;margin-top:8px;font-size:12px" data-i18n="home_social_doc" data-i18n-html="true">Full guide: <a href="https://gitlab.com/cognitive-functors/turbo-cdi/-/blob/main/docs/SOCIAL_PUBLISHING.md" target="_blank" rel="noopener">docs/SOCIAL_PUBLISHING.md</a> on GitLab</p>
   </div>
 </section>
 
@@ -668,9 +691,10 @@
 <span class="dim"># → paradigm-shifting hypothesis + dissertation + citations</span>
 
 <span class="comment"># Model-per-stage config</span>
-<span class="cmd">c4reqber config --tier</span> budget --save       <span class="dim"># $0.002/pipeline</span>
-<span class="cmd">c4reqber config --tier</span> premium --save      <span class="dim"># Claude Opus everywhere</span>
-<span class="cmd">c4reqber config --set</span> D=gemma4:26b       <span class="dim"># Local model for hypotheses</span>
+<span class="cmd">blast config --tier</span> budget --save       <span class="dim"># $0.002/pipeline</span>
+<span class="cmd">blast config --tier</span> premium --save      <span class="dim"># Claude Opus everywhere</span>
+<span class="cmd">blast config --set</span> D=gemma4:26b       <span class="dim"># Local model for hypotheses</span>
+<span class="cmd">blast config keys --assign</span> OPENROUTER_API_KEY=sk-or-...  <span class="dim"># secrets.env</span>
 </code>
     </div>
     <p style="text-align:center;margin-top:16px;font-size:12px;color:var(--fg-3)" data-i18n="qs_academic_hint">Academic tip: Run with --verify flag to auto-invoke Lean4/Coq for theorem-checking.</p>

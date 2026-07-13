@@ -27,9 +27,6 @@ make db-migrate
 make backend
 ```
 
-### Method 3: Desktop App
-Download latest release from GitHub Releases.
-
 ## Configuration
 See `.env.example` for all environment variables.
 

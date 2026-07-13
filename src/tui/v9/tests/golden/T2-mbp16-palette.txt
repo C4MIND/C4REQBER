@@ -8,6 +8,7 @@
   ? Show help overlay  App  [?]
   📜 Show history  App
   📊 Toggle status bar  App  [Ctrl+B]
+  📋 Open research agenda  Discover  [Shift+A]
   🗑 Clear feed  Feed  [Ctrl+K]
   ⤒ Focus first card  Feed  [g g]
   ⤓ Focus last card  Feed  [G]
@@ -25,6 +26,9 @@
   ⚡ Switch to FLASH mode  Mode
   🚀 Switch to TURBO mode  Mode
   🏭 Switch to TURBOFACTORY mode  Mode
+  📣 Open social publishing  Publish  [Ctrl+Shift+S]
+  🔑 Open API keys setup hub  Settings  [Ctrl+Shift+K]
+  🧠 Open models & council config  Settings  [Ctrl+Shift+M]
   ⚙ Open settings  Settings  [Ctrl+,]
   ⏚ List simulation capabilities  Sim
   ↻ Refresh sim capabilities (force)  Sim
@@ -38,4 +42,4 @@
   🎨 Theme: high-contrast  Theme
   🎨 Theme: solarized-dark  Theme
 
-  35 commands  ·  ↑↓ to navigate  ·  Enter to run  ·  Esc to close
+  39 commands  ·  ↑↓ to navigate  ·  Enter to run  ·  Esc to close

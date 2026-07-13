@@ -20,8 +20,9 @@
 
 ```bash
 pip install c4reqber
-blast setup                         # wizard: packages + API keys
-cp .env.example .env                # add OPENROUTER_API_KEY — see docs/API_KEYS.md
+blast setup                         # scientific packages wizard (15 packages)
+blast init                          # interactive API key wizard
+cp .env.example .env                # optional dev copy — see docs/API_KEYS.md
 blast solve "your problem"          # One-shot discovery → article/blueprint/whitepaper
 blast turbo "your topic"            # Paradigm-shifting research proposal + verification
 blast flash "your question"         # Quick answer
@@ -59,7 +60,7 @@ A cognitive exoskeleton for AI agents and humans.
 - **Causal inference adult**: DoWhy + EconML + gCastle (PC, FCI, NOTEARS, ANM) with data-driven / toy fallback tagging
 - **Hypothesis ranking**: PriorScorer × EIGEstimator × CostModel × MCDMRanker (weighted MCDM) integrated into discovery pipeline
 - **Closed-loop simulation**: Bayesian tracker, experiment designer, ensemble runner, convergence checker, refiner
-- **Self-directed agenda**: Generator, feasibility checker, priority scorer, progress tracker, TUI screen (shift+a)
+- **Self-directed agenda**: Generator, feasibility checker, priority scorer, progress tracker — **TUI v9 `Shift+A`** overlay (`/v8/agenda/*`)
 - **Open-ended exploration**: Anomaly detector (IsolationForest), surprise-driven question generator, formal framework extender
 - **6 output formats**: dissertation, article, whitepaper, blueprint, code, verification_report — auto-detected
 - **Verification guardrails**: complexity pre-flight, memory caps (256MB-1GB), hang detection (5-60s), proof export (.lean/.v/.smt2)
@@ -113,9 +114,14 @@ Press `:` to open fuzzy-search command palette. Examples:
 | Debug | `Ctrl+Shift+D` — SSE/job debug snapshot |
 | Language | `L` — cycle EN/RU/ZH/JA/DE/AR/HI |
 
-Legacy Python TUI slash commands (`/models`, `/council`, …) apply to **v8 only**. Use `blast config` for LLM/council setup with v9.
+| Agenda | `Shift+A` — research questions, approve/reject, run discovery |
+| Models & Council | `Ctrl+Shift+M` — phase A–G assignments + council tiers |
+| API Keys | `Ctrl+Shift+K` — Setup Hub (`~/.c4reqber/secrets.env`) |
+| Social | `Ctrl+Shift+S` — publish drafts, health check |
 
-## Quick Config & First Run (Polished Desktop Experience)
+Use `:` command palette for all overlays. Configure models via `blast config --show` or TUI `Ctrl+Shift+M` (not legacy slash commands — removed with Python TUI).
+
+## Quick Config & First Run
 
 ```bash
 # First run — beautiful wizard that sets everything
@@ -130,7 +136,16 @@ blast config --show               # Model assignments per phase
 blast config --set D=anthropic/claude-sonnet-4.6 --save
 ```
 
-All keys (OpenRouter, DeepSeek, Brave, Tavily, Exa, XAI, Lean4...) are managed in `~/.c4reqber/config.toml` + `models.json`. The desktop app, CLI and TUI all read from the same place.
+All keys are managed in `~/.c4reqber/secrets.env` (Setup Hub / `blast config keys`), with legacy support in `config.toml`. CLI and TUI v9 read the same store.
+
+```bash
+blast config keys                   # Category summary + masked values
+blast config keys --assign KEY=val  # Save to ~/.c4reqber/secrets.env
+blast config keys --json            # Machine-readable (TUI Setup Hub)
+```
+
+**TUI v9:** `Ctrl+Shift+K` — API Keys Setup Hub · `Ctrl+,` — runtime settings (tier, theme, sim prefs).
+**TUI v9:** `Shift+A` — Research agenda (`/v8/agenda`) · `Ctrl+Shift+M` — phase models & council.
 
 ## Install from source
 
@@ -250,11 +265,10 @@ Copy these into your `.env` file. Keys marked **Required** will disable the sour
 - **Causal inference** — DoWhy/EconML estimation + ANM/PC/NOTEARS discovery + GP-SCM counterfactuals (data-driven); keyword-based fallback when no data
 - **Hypothesis ranking** — Prior scoring + Expected Information Gain + cost model + MCDM ranker
 - **Closed-loop simulation** — Bayesian hypothesis tracker + adaptive experiment design + ensemble simulation + convergence detection
-- **Self-directed agenda** — Gap-driven / extension-driven / conflict-driven question generation with feasibility scoring
+- **Self-directed agenda** — Gap/conflict/extension question generation; TUI v9 `Shift+A` + `/v8/agenda/*`
 - **Open-ended exploration** — Literature anomaly detection (IsolationForest) + surprise-driven question generation + formal framework extension
 - **Knowledge search** — 47 configured source integrations (arXiv, PubMed, Crossref, Europe PMC, Semantic Scholar, OpenAlex, Zenodo, Figshare, NCBI, PubChem, ChEMBL, Materials Project, AFLOW, Kaggle, UCI ML, Harvard Dataverse, re3data, STRING, ClinicalTrials.gov, GBIF, Allen Brain, USGS, CERN, USPTO, OpenReview, HuggingFace, OpenFDA, NASA Earthdata, CyberLeninka, Math-Net.Ru, and more)
-- **Python TUI** (blast tui) — Textual interface with real-time progress, chat, history, slash commands
-- **Go TUI v9** (src/tui/v9) — Bubble Tea v2 interface with 7-phase pipeline, C4 grid, sim surface (CardSimulation kind + capabilities overlay Ctrl+Shift+C), command palette `:`, debug overlay Ctrl+Shift+D, status bar Ctrl+B, 7-language i18n (100% parity), 7 color profiles (incl. solarized-dark), adaptive layout (T0/T1/T2/T3), 132 golden snapshots
+- **TUI v9** (`blast tui`) — Go/Bubble Tea feed cockpit: SSE discovery, sim surface (`Ctrl+Shift+C`), agenda (`Shift+A`), models/council (`Ctrl+Shift+M`), API keys (`Ctrl+Shift+K`), social (`Ctrl+Shift+S`), command palette `:`, 7-language i18n, 244 i18n keys, golden snapshots
 - **Falsification** — Domain-aware simulation + statistical tests with Bonferroni correction
 - **MCP server** — 21 tools verified working for AI agent integration
 
@@ -297,7 +311,8 @@ All documentation lives in the repo — no separate docs site needed.
 | `audit/TUI_V9_UNIFIED_PLAN_2026-06-11.md` | TUI v9 unified plan — 25 sections, 8 sprints, 27 design decisions, 13 backend contracts |
 | `INSTALL.md` | Full developer setup (Python + Go + engines + API keys) |
 | `QUICKSTART.md` | First discovery in 5 minutes |
-| `docs/onboarding/API_KEYS.md` | How to obtain every API key (registration links, pricing, rate limits) |
+| `docs/API_KEYS.md` | How to obtain every API key (registration links, categories, CLI/TUI) |
+| `docs/SOCIAL_PUBLISHING.md` | Zenodo, ORCID, social post workflow, TUI `Ctrl+Shift+S`, honest limits |
 | `docs/onboarding/ENGINES.md` | Installing all 38 simulation engines |
 | `src/tui/v9/README.md` | Building and running the Go TUI v9 |
 | `docs/onboarding/SECRETS.md` | Secure team secrets sharing |

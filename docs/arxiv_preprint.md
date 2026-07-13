@@ -142,8 +142,8 @@ The IMPACT/COMPASS/TOTE execution model orchestrates problem-solving steps. This
 ### UCOS Interaction Protocol
 
 ```
-Problem → IMPACT (decompose) → C4 (fingerprint) → MP (profile) 
-→ QZRF (operators) → Isomorphism (analogies) → Plugins (tools) 
+Problem → IMPACT (decompose) → C4 (fingerprint) → MP (profile)
+→ QZRF (operators) → Isomorphism (analogies) → Plugins (tools)
 → Synthesis (LLM) → TOTE (validate) → Simulation (pattern) → Solution
 ```
 
@@ -360,7 +360,7 @@ c4reqber v8.0 is the reference implementation of C4-META:
 
 **Infrastructure**: Docker multi-arch (amd64/arm64), Kubernetes, Prometheus, Nginx, Traefik v3, GHCR publishing.
 
-**Desktop**: Tauri desktop app for macOS (ARM64/Intel), Windows, and Linux.
+**Terminal UI**: TUI v9 (Go/Bubble Tea) — `blast tui` ships with PyPI. Desktop bundles in `packaging/desktop/` are maintainer-only experiments, not part of the release.
 
 **i18n**: 12 languages, 279 translation keys each, including RTL Arabic support.
 

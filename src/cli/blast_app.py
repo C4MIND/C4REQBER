@@ -223,7 +223,7 @@ def wasm_load(
         else [(n, 0) for n in funcs]
     )
     console.print(
-        f"  Exports: {[(n, 'func' if k==0 else 'mem' if k==2 else f'kind{k}') for n,k in exports]}"
+        f"  Exports: {[(n, 'func' if k == 0 else 'mem' if k == 2 else f'kind{k}') for n, k in exports]}"
     )
     console.print(
         f"  Runtime: {'wasmtime' if _wasm_runtime._has_wasmtime else 'stub (pip install wasmtime for execution)'}"
@@ -317,9 +317,16 @@ def blast_models(
     tier: str = typer.Option(
         "", "--tier", "-t", help="Filter: frontier|premium|balanced|budget|ultra_budget|free|local"
     ),
+    json_out: bool = typer.Option(False, "--json", help="JSON output for TUI/automation"),
 ) -> None:
     """Browse available LLM models with benchmarks and pricing."""
     from src.llm.model_catalog import CATALOG, estimate_pipeline_cost, list_models
+
+    if json_out:
+        from src.cli.config_models import export_models_json, print_json
+
+        print_json(export_models_json(tier))
+        return
 
     if tier:
         models = list_models(tier)
@@ -335,11 +342,11 @@ def blast_models(
     for m in models:
         price = f"in=${m['cost_in']:.2f} out=${m['cost_out']:.2f}" if m["cost_in"] > 0 else "FREE"
         console.print(f"  [cyan]{m['key']}[/cyan] ({m['provider']})")
-        console.print(f"    {price} | {m['context']//1000}K ctx | tier={m['tier']}")
+        console.print(f"    {price} | {m['context'] // 1000}K ctx | tier={m['tier']}")
         if m["strengths"]:
             console.print(f"    {', '.join(m['strengths'][:5])}")
         if m.get("open_weight"):
-            console.print(f"    open-weight ({m.get('license','')})")
+            console.print(f"    open-weight ({m.get('license', '')})")
 
     console.print()
     cost = estimate_pipeline_cost(1000)
@@ -359,6 +366,10 @@ def blast_config(
     ),
     show: bool = typer.Option(False, "--show", help="Show current model assignments"),
     save: bool = typer.Option(False, "--save", help="Save config to ~/.c4reqber/models.json"),
+    keys_json: bool = typer.Option(False, "--json", help="(keys) JSON output for TUI/automation"),
+    keys_category: str = typer.Option("", "--category", help="(keys) Filter by category id"),
+    keys_assign: str = typer.Option("", "--assign", help="(keys) Set secret: ENV_NAME=value"),
+    keys_health: bool = typer.Option(False, "--health", help="(keys) Essential key health check"),
 ) -> None:
     """Configure model assignments per pipeline phase (or full user config).
 
@@ -387,24 +398,13 @@ def blast_config(
         # fallthrough only for other ops
 
     if section.lower() == "keys":
-        from src.config import get_user_keys
+        from src.cli.config_keys import handle_keys_command
 
-        keys = get_user_keys()
-        console.print("\n[bold]Current API keys (from ~/.c4reqber + env)[/bold]\n")
-        important = [
-            "openrouter_api_key",
-            "deepseek_api_key",
-            "brave_api_key",
-            "tavily_api_key",
-            "exa_api_key",
-            "xai_api_key",
-        ]
-        for k in important:
-            val = keys.get(k, "")
-            masked = "****" + val[-4:] if len(val) > 8 else "(not set)"
-            console.print(f"  {k}: {masked}")
-        console.print(
-            "\n[dim]Use 'blast init' to set keys interactively, or edit ~/.c4reqber/config.toml[/]"
+        handle_keys_command(
+            json_out=keys_json,
+            category=keys_category,
+            assign=keys_assign,
+            health=keys_health,
         )
         return
 
@@ -442,6 +442,11 @@ def blast_config(
 
     # Show current state
     if show:
+        if keys_json:
+            from src.cli.config_models import export_config_json, print_json
+
+            print_json(export_config_json())
+            return
         console.print()
         console.print(f"[bold]Model Assignments — {assignment.cost_tier} tier[/bold]")
         if assignment.api_base_url:
@@ -465,11 +470,12 @@ def blast_config(
         console.print(f"[bold]Estimated pipeline cost:[/bold] ${cost['total']:.4f}")
 
     # Save
+    mutated = bool(cost_tier or set_phase)
     if save:
         assignment.save()
         console.print(f"[green]Saved to {CONFIG_FILE}[/]")
         console.print(f"[dim]Config file:[/] {CONFIG_FILE}")
-    else:
+    elif mutated:
         console.print("[dim]Use --save to persist to disk[/]")
 
 
@@ -634,7 +640,7 @@ def blast_qa(
         else "red"
     )
     console.print(
-        f"\n[bold]Result:[/] [{rate_color}]{qa_result.passed}/{qa_result.total} passed ({qa_result.success_rate*100:.0f}%)[/] in {qa_result.duration_sec:.1f}s"
+        f"\n[bold]Result:[/] [{rate_color}]{qa_result.passed}/{qa_result.total} passed ({qa_result.success_rate * 100:.0f}%)[/] in {qa_result.duration_sec:.1f}s"
     )
 
 
@@ -689,9 +695,12 @@ def blast_guardian(
 @app.command("social")
 def blast_social(
     action: str = typer.Argument(
-        "status", help="Action: status, health, publish, preview, drafts, clean, setup"
+        "status", help="Action: status, health, publish, post, preview, drafts, clean, setup"
     ),
     draft_id: str = typer.Option("", "--id", help="Draft ID"),
+    platform: str = typer.Option(
+        "", "--platform", help="Platform for post action (mastodon, bluesky, ...)"
+    ),
     dry_run: bool = typer.Option(False, "--dry-run", help="Simulate without API calls"),
     confirm: bool = typer.Option(False, "--confirm", help="Confirm publish"),
     older_than_days: int = typer.Option(30, "--older-than", help="Days for cleanup"),
@@ -703,10 +712,11 @@ def blast_social(
         blast social status           # Show social module status
         blast social health           # Check all platform connections
         blast social preview --id X   # Preview a draft
-        blast social publish --id X   # Publish a draft
+        blast social publish --id X   # Publish draft (Zenodo + ORCID + social)
+        blast social post --id X --platform mastodon  # Post to one platform
         blast social publish --id X --dry-run  # Simulate publish
         blast social clean --older-than 30     # Clean old drafts
-        blast social setup telegram   # Setup wizard
+        blast social setup            # Show env var setup hints
     """
     import asyncio
 
@@ -751,10 +761,58 @@ def blast_social(
             else:
                 console.print(f"[green]Published {draft_id}[/]")
                 for step, val in result.get("steps", {}).items():
-                    doi = val.get("doi", "") if isinstance(val, dict) else ""
-                    console.print(f"  {step}: {doi or val}")
+                    if step == "social" and isinstance(val, dict):
+                        posts = val.get("posts", {})
+                        console.print(f"  social: {len(posts)} platform(s)")
+                        for plat, res in posts.items():
+                            status = (
+                                res.get("status", res.get("error", "?"))
+                                if isinstance(res, dict)
+                                else res
+                            )
+                            console.print(f"    {plat}: {status}")
+                    elif isinstance(val, dict):
+                        doi = val.get("doi", "")
+                        console.print(f"  {step}: {doi or val}")
+                    else:
+                        console.print(f"  {step}: {val}")
 
         asyncio.run(_pub())
+        return
+
+    if action == "post" and draft_id and platform:
+
+        async def _post():
+            from src.social.post_dispatcher import normalize_platform, post_draft
+
+            try:
+                canonical = normalize_platform(platform)
+                result = await post_draft(draft_id, platform=canonical, dry_run=dry_run)
+            except (FileNotFoundError, ValueError) as exc:
+                console.print(f"[red]{exc}[/]")
+                return
+            plat_result = result.get("results", {}).get(canonical, {})
+            status = plat_result.get("status", plat_result.get("error", "unknown"))
+            if status in {"posted", "sent", "dry_run"}:
+                console.print(f"[green]{canonical}: {status}[/]")
+            elif status == "skipped":
+                console.print(f"[yellow]{canonical}: skipped — {plat_result.get('message', '')}[/]")
+            else:
+                console.print(
+                    f"[red]{canonical}: {status} — "
+                    f"{plat_result.get('message', plat_result.get('error', ''))}[/]"
+                )
+            if plat_result.get("url"):
+                console.print(f"  url: {plat_result['url']}")
+            if plat_result.get("preview"):
+                console.print(f"  preview: {plat_result['preview'][:200]}")
+
+        asyncio.run(_post())
+        return
+
+    if action == "post" and draft_id and not platform:
+        console.print("[yellow]--platform required for post action[/]")
+        console.print("  Example: blast social post --id 2026-07-13_topic --platform mastodon")
         return
 
     if action == "preview" and draft_id:
@@ -802,20 +860,28 @@ def blast_social(
         return
 
     if action == "setup":
-        console.print("[bold]Setup Wizards[/bold]")
-        console.print("  Telegram: Set TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID in .env")
-        console.print("  Slack:    Set SLACK_WEBHOOK_URL in .env")
-        console.print("  Discord:  Set DISCORD_WEBHOOK_URL in .env")
+        console.print("[bold]Social Publishing Setup[/bold]")
+        console.print("  See docs/SOCIAL_PUBLISHING.md for the full guide.")
+        console.print("")
+        console.print("  Zenodo:   ZENODO_ACCESS_TOKEN")
+        console.print("  ORCID:    ORCID_CLIENT_ID + ORCID_CLIENT_SECRET")
+        console.print("  Mastodon: MASTODON_ACCESS_TOKEN (+ MASTODON_INSTANCE_URL)")
         console.print(
-            "  Reddit:   Set REDDIT_CLIENT_ID + REDDIT_CLIENT_SECRET + REDDIT_USERNAME + REDDIT_PASSWORD in .env"
+            "  Twitter:  X_API_KEY, X_API_SECRET, X_ACCESS_TOKEN, X_ACCESS_SECRET, X_BEARER_TOKEN"
         )
-        console.print("  Zenodo:   Set ZENODO_ACCESS_TOKEN in .env")
-        console.print("  Twitter:  Set TWITTER_API_KEY + TWITTER_ACCESS_TOKEN in .env")
-        console.print("  ORCID:    Set ORCID_CLIENT_ID + ORCID_CLIENT_SECRET in .env")
+        console.print("            (legacy: TWITTER_API_KEY + TWITTER_ACCESS_TOKEN via API)")
+        console.print("  Bluesky:  BLUESKY_HANDLE + BLUESKY_APP_PASSWORD")
+        console.print("  Telegram: TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID")
+        console.print(
+            "  Reddit:   REDDIT_CLIENT_ID, REDDIT_CLIENT_SECRET, REDDIT_USERNAME, REDDIT_PASSWORD"
+        )
+        console.print("            (+ REDDIT_SUBREDDIT, default: science)")
+        console.print("  Discord:  DISCORD_WEBHOOK_URL")
+        console.print("  Slack:    SLACK_WEBHOOK_URL")
         return
 
     console.print("[bold]blast social[/bold] — Preprint publishing & social posting")
-    console.print("  Use: status | health | preview | publish | drafts | clean | setup")
+    console.print("  Use: status | health | preview | publish | post | drafts | clean | setup")
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -907,6 +973,14 @@ def blast_serve(
 
     load_kilo_env()
     load_verifiers_env()
+    try:
+        from src.config.secrets_store import load_secrets_env
+
+        load_secrets_env(override=False)
+    except Exception as exc:
+        import logging
+
+        logging.getLogger(__name__).warning("secrets.env load failed: %s", exc)
 
     console.print("[bold cyan]Starting C4REQBER MCP Server...[/]")
     console.print("[dim]MCP stdio JSON-RPC transport[/]")
@@ -1093,7 +1167,7 @@ def blast_analyze(
         console.print("[bold]Critical Path:[/]")
         for i, step in enumerate(critical[:5]):
             name = step.get("name", step.get("problem", "?"))[:60]
-            console.print(f"  {i+1}. {name}")
+            console.print(f"  {i + 1}. {name}")
 
     console.print()
     console.print(f"[dim]{result['explanation']}[/]")
@@ -1390,7 +1464,9 @@ def _install_verifiers(console: Console) -> None:
     if result.returncode == 0:
         console.print("[green]Verifiers installed (see ~/.c4reqber/verifiers.env)[/]")
     else:
-        console.print("[yellow]Verifier install finished with warnings — run: bash tools/install-verifiers.sh[/]")
+        console.print(
+            "[yellow]Verifier install finished with warnings — run: bash tools/install-verifiers.sh[/]"
+        )
 
 
 @app.command("setup")
@@ -1454,7 +1530,7 @@ def blast_setup(
 
     for i, pkg in enumerate(installable):
         st = statuses[pkg.id]
-        prefix = f"[{i+1}]"
+        prefix = f"[{i + 1}]"
         st_icon = "[yellow]○[/]" if st == PackageStatus.AVAILABLE else "[red]✗[/]"
         env_tag = " [dim](needs isolated 3.12 env)[/]" if st == PackageStatus.INCOMPATIBLE else ""
         weight = f" [dim]({pkg.weight_mb}MB)[/]" if pkg.weight_mb > 0 else ""

@@ -127,7 +127,7 @@ Updated during 2026-05-19 + 2026-05-21 + 2026-06-03 (Kimi Code CLI audit + v5.6.
 
 ## What is this?
 
-**c4reqber** is a terminal-first scientific discovery pipeline with C4 state-space navigation layer. 27 Z₃³ states, 9 verification backends + MathDetector (Categories A/B/C) + guardrails, 6 virtual biology simulators, experimental protocol generator, simulation config (GPU/CPU/off), 6 output formats with auto-detection, 11 configured LLM providers (MLX/LM Studio/Ollama/OpenRouter/DeepSeek/XAI/Mistral/Moonshot/Liquid/NVIDIA/YandexGPT), MLX-LM local ($0/MTok), file/OCR workflow, Live Intelligence Feed, 7-language i18n, **21 MCP tools** (all verified working post-audit), 16 TUI shortcuts, 11 slash commands, **1 main AI Agent** (skills, MCP, memory, sub-agents, Pydantic AI, `/preprint`), **Social Publishing module** (Zenodo/arXiv/Reddit/Discord/Slack/Telegram/ORCID — 9 platforms, BYOK), 24 CLI commands, 5 WASM plugins. **TUI v9** (v9.13.0) adds: simulation surface with 38 engine bridges + 9 verifiers (capabilities overlay Ctrl+Shift+C), CardSimulation kind in the feed, typed SSE decoder for `sim_started/sim_finished/sim_skipped` events, command palette `:`, debug overlay Ctrl+Shift+D, status bar Ctrl+B, per-card expansion Enter/Esc, 7 color profiles including solarized-dark, adaptive layout T0/T1/T2/T3, feed.jsonl persistence + resume on launch, 132 golden snapshots. **Security hardened**: auth bypass fixed, prompt injection fail-closed with nonce delimiters + HTML entity decoding + LaTeX escaping, subprocess shell-injection blocked, path traversal protected, SSRF protection on paper IDs, symlink guards, Agda module validation, rate-limiter token leak fixed, all 16 CRITICAL + 34 HIGH + 55 MEDIUM + 14 LOW findings resolved (Round 4 audit).
+**c4reqber** is a terminal-first scientific discovery pipeline with C4 state-space navigation layer. 27 Z₃³ states, 9 verification backends + MathDetector (Categories A/B/C) + guardrails, 6 virtual biology simulators, experimental protocol generator, simulation config (GPU/CPU/off), 6 output formats with auto-detection, 11 configured LLM providers (MLX/LM Studio/Ollama/OpenRouter/DeepSeek/XAI/Mistral/Moonshot/Liquid/NVIDIA/YandexGPT), MLX-LM local ($0/MTok), file/OCR workflow, Live Intelligence Feed, 7-language i18n, **21 MCP tools** (all verified working post-audit), **TUI v9** (`blast tui`, Go feed cockpit with overlays `Ctrl+Shift+K/S/M`, `Shift+A`, `:`), **1 main AI Agent** (skills, MCP, memory, sub-agents, Pydantic AI, `/preprint`), **Social Publishing module** (Zenodo/ORCID/Mastodon/Bluesky/Telegram/Reddit/Discord/Slack — BYOK, honest limits), 24 CLI commands, 5 WASM plugins. **TUI v9** (v9.13.0) adds: simulation surface with 38 engine bridges + 9 verifiers (capabilities overlay Ctrl+Shift+C), CardSimulation kind in the feed, typed SSE decoder for `sim_started/sim_finished/sim_skipped` events, command palette `:`, debug overlay Ctrl+Shift+D, status bar Ctrl+B, per-card expansion Enter/Esc, 7 color profiles including solarized-dark, adaptive layout T0/T1/T2/T3, feed.jsonl persistence + resume on launch, 132 golden snapshots. **Security hardened**: auth bypass fixed, prompt injection fail-closed with nonce delimiters + HTML entity decoding + LaTeX escaping, subprocess shell-injection blocked, path traversal protected, SSRF protection on paper IDs, symlink guards, Agda module validation, rate-limiter token leak fixed, all 16 CRITICAL + 34 HIGH + 55 MEDIUM + 14 LOW findings resolved (Round 4 audit).
 
 ---
 
@@ -174,10 +174,12 @@ blast serve --mcp    # Start MCP server via stdio
 | `blast agent` | **Main AI agent** — interactive REPL with /commands, Pydantic AI, skills, MCP, memory |
 | `blast agent --cmd "..."` | One-shot agent query |
 | `blast agent --config` | Show agent configuration |
-| `tui` | Interactive terminal interface — cube 3×3×3, live mascot, NightMode, arrow-key package installer, shortcut legend `?` |
-| `tui --packages` | Interactive package installer (arrow keys, space to toggle, enter to install) |
-| `tui --config` | Configuration editor — view all providers, keys, models, validation |
-| `tui --turbo` | Auto-discovery factory (dissertation/paradigm shift) |
+| `blast config keys` | API keys Setup Hub CLI — `secrets.env`, `--json`, `--assign`, `--health` |
+| `blast config --show --json` | Phase models + council (TUI `Ctrl+Shift+M`) |
+| `blast models --json` | Model list export for automation |
+| `blast social post` | Post to one configured social platform |
+| `blast tui` | **TUI v9** (Go) — feed cockpit, overlays: `Ctrl+Shift+K/S/M`, `Shift+A`, `:` |
+| `blast tui --packages` | Rich package installer (arrow keys) |
 
 ### Make Commands (development)
 
@@ -231,69 +233,45 @@ When `blast serve --mcp` is running, 21 tools are available with synchronized JS
 ```
 c4reqber/
 ├── src/
-│   ├── tui/c4_tui.py           # Rich TUI — ASCII cube, pipeline, keyboard-driven
-│   ├── tui/mascot.py           # C4 Mascot — meta-mind commentary, local model detection
-│   ├── tui/mascot.py           # MascotCommentary v2 — LLM-powered (xAI/OpenRouter)
-│   ├── tui/living_cube.py      # Living Cube entity — personality, thinking animations
-│   ├── tui/easing.py           # Physics easing curves (cubic, elastic, back, inertia)
-│   ├── tui/gradient_bar.py     # Unicode gradient █▊▋▌▍▎▏░ progress bars + glow
-│   ├── tui/particles.py        # Cursor sparkles + Discovery fireworks (physics)
-│   ├── tui/breathing.py        # Cube breathing idle animation (CogLoad-adaptive)
-│   ├── tui/staged_error.py     # Staged error colors (no startle reflex)
-│   ├── tui/smart_prompt.py     # Context-aware REPL prompt + ghost text completion
-│   ├── tui/delight.py          # Night mode, Cube memory, Shutdown ritual, Birthday easter egg
-│   ├── tui/micro_animations.py # Shake vibrato + Phase swoosh transitions
-│   ├── tui/delta_renderer.py   # Flicker-free cell-diff renderer (ANSI CSI)
-│   ├── repl/core.py            # REPL shell — smart prompt, particles, fuzzy matching
-│   ├── repl/input_handler.py   # Raw-terminal input with spark particles + ghost text
-│   ├── utils/formatting.py     # Number formatters (1.2K, $0.041, 2m14s, 85.6%)
-│   ├── mcp_server/server.py    # MCP server (21 tools, inline JSON Schema, stdio JSON-RPC)
-│   ├── cli/                    # CLI argument parser + command dispatch
-│   ├── wasm/                   # WASM plugin runtime (wasmtime + stub mode)
-│   ├── c4/engine.py            # C4 engine (Z₃³, 27 states, 6 operators, undirected Ø=3, directed fwd=6)
-│   ├── operators/              # 20-operator algebra (QZRF expanded)
-│   ├── triz/                   # TRIZ bridge (40 principles)
-│   ├── plugins/                # 20 cognitive plugins (SWOT, Red Team, etc.)
-│   ├── metamodels/             # 7 metamodels (IMPACT, COMPASS, NOTE, QZRF...)
-│   ├── pipeline/               # Pipeline architecture
-│   │   ├── base.py            # BasePipeline — shared infrastructure
-│   │   ├── hil_pipeline.py    # HILDiscoveryPipeline (inherits BasePipeline)
-│   │   ├── observer.py        # PipelineObserver (stagnation detection)
-│   │   ├── final_verifier.py  # FinalVerifier (post-pipeline check)
-│   │   └── quality.py         # QualityGates (weighted 8-gate scoring)
-│   ├── simulations/            # 101+ patterns + 38 engine bridges (5 internal + 26 P1 bridges + 6 virtual bio)
-│   │   ├── newton_bridge.py    # Newton Physics (mlx-env Python 3.11+)
-│   │   └── domain_selector.py # Domain-specific simulation patterns
-│   ├── knowledge/              # 47 configured sources via orchestrator.py
-│   │   └── multi_source.py   # Backward-compat shim (→ orchestrator)
-│   ├── publishing/             # Dissertation + preprint submission
-│   │   ├── dissertation.py    # LLM-powered dissertation generator
-│   │   └── submitter.py       # Real arXiv/bioRxiv LaTeX + BibTeX packages
-│   ├── causal/                 # Causal engine (do-calculus, SCM)
-│   ├── bayesian/               # Bayesian engine (MCMC, BMA)
-│   ├── discovery/              # GapAnalyzer (ABC), GapMiner, NoveltyValidator, Falsifier
-│   ├── litintel/               # AlreadyShiftedDetector (iterative, subtractive), ParadigmShift
-│   ├── api/server.py           # FastAPI server (lifespan with auto-start)
-│   ├── api/v8_routers/        # v8 endpoints (discovery, dissertation)
-│   │   └── discovery_v8.py  # 12-step pipeline + 20 wired modules
-│   ├── llm/providers/unified.py # Unified LLM Router (11 providers, prompt-injection hardened)
-│   ├── agents/soul.py            # Persona Layer — identity, values, refusal rules
-│   ├── agents/policy.py          # Policy Engine — 4-tier risk + audit trail
-│   ├── agents/qa.py              # QA Controller — lint, typecheck, tests, version sync
-│   ├── agents/guardian.py        # Safety Guardian — prompt injection, credential scan
-│   └── agents/pipeline.py        # UniversalSolvePipeline (10-step orchestration)
-├── discovery/                 # Discovery outputs
-│   ├── batch_v6/              # Sleep paradigm (ALREADY_SHIFTED)
-│   ├── batch_v7/              # Language gene transfer (SHIFTED, 66.67%)
-│   └── batch_v5/exports/      # Generated papers, verification reports
-├── tests/                      # 9,905 collected Python tests
-├── docs/                       # Architecture, PRD, completion reports
-├── .env.example              # Template for API keys
-├── requirements.txt            # Python dependencies
-├── Makefile                    # Dev targets
-├── LICENSE                     # AGPL-3.0
-└── README.md                  # This file
+│   ├── tui/
+│   │   ├── v9/                      # TUI v9 (Go/Bubble Tea) — production `blast tui`
+│   │   │   ├── model.go, update.go, view.go, keymap.go
+│   │   │   ├── setup_menu.go, social_menu.go, agenda_menu.go, models_menu.go
+│   │   │   ├── api/                 # HTTP client (discovery SSE, agenda)
+│   │   │   ├── persist/             # feed.jsonl, state, C4REQBER_CONFIG paths
+│   │   │   └── i18n/                # 7 languages (en/ru/zh/ja/de/ar/hi)
+│   │   ├── app.py, entry.py         # Thin Python shims → c4tui-v9
+│   ├── cli/
+│   │   ├── blast_app.py             # `blast` CLI dispatch
+│   │   ├── config_keys.py           # `blast config keys`
+│   │   ├── tui_launcher.py          # Spawns Go binary
+│   │   └── package_installer_tui.py # `blast tui --packages` (Rich)
+│   ├── config/
+│   │   ├── paths.py                 # CONFIG_DIR, C4REQBER_CONFIG
+│   │   ├── key_registry.py          # SSOT from .env.example
+│   │   └── secrets_store.py         # ~/.c4reqber/secrets.env
+│   ├── social/                      # post_dispatcher, publisher, social_bridge
+│   ├── repl/core.py                 # Agent REPL (`blast agent`)
+│   ├── utils/formatting.py          # fmt_count, fmt_dollars, fmt_duration, …
+│   ├── mcp_server/server.py         # MCP server (21 tools, stdio JSON-RPC)
+│   ├── c4/engine.py                 # C4 engine (Z₃³, 27 states, 6 operators)
+│   ├── pipeline/                    # BasePipeline, HILDiscoveryPipeline, …
+│   ├── simulations/                 # 101+ patterns + 38 engine bridges
+│   ├── knowledge/                   # 47 sources via orchestrator.py
+│   ├── publishing/                  # dissertation.py, submitter.py
+│   ├── api/server.py                # FastAPI (lifespan auto-start)
+│   ├── api/v8_routers/              # discovery, agenda, simulations, …
+│   ├── llm/providers/unified.py     # Unified LLM Router (11 providers)
+│   └── agents/                      # soul, policy, qa, guardian, pipeline
+├── discovery/                         # Batch outputs (batch_v6/v7, exports)
+├── tests/                             # ~9,924 collected Python tests
+├── docs/                              # API_KEYS.md, SOCIAL_PUBLISHING.md, INSTALL.md
+├── landing/                           # Static site + i18n (7 langs)
+├── .env.example                       # Template for all env vars
+└── README.md
 ```
+
+> **Wave C (2026-07):** Legacy Python Rich/Textual TUI modules under `src/tui/*.py` (mascot, living_cube, proof_graph, cube_navigator, …) were **removed**. Only `src/tui/v9/` (Go) + thin shims remain.
 
 ---
 
@@ -363,9 +341,9 @@ Layer 5: Knowledge + Verification — 47 configured sources (orchestrator.py), 3
 | Gap Mining | AutoGapAnalyzer with LLM + keyword fallback + topic-based guaranteed minimum (≥1 gap always) |
 | Dissertation | Auto-regeneration (2 retries) if <600 words. Quality gate: sources, gaps, hypotheses, simulation, verification, bibliography, dissertation, novelty. |
 | RedundantGate | Pure-Python cosine similarity fallback (no sklearn required) |
-| Micro-features | **17 integrated**: C4 Layer Stream, CogLoad Modes, Alert Taxonomy, Depth Ladder, Formal Citations, Cost Router, Live Verification Injection, Stratified Blocks, PATH.toml, Hypothesis Sandbox, Gated Pipeline, State Replay, Proof Graph, Graph History, Structured Input, Cube Navigator, Dashboard |
-| TUI shortcuts | 20: Tab/Enter/L/A/B/D/T/R/V/I/F/G/M/P/Q/1-5 + ←↑↓→ — ALL wired to live panels (alert, budget, depth, article, proof, cube nav, feed, thinking, GPU, modules, plugins, export) |
-| Slash commands | `/models` `/council` `/connect` `/api` `/test` `/profile` `/plugins` `/debug` `/config` `/help` `/sim` — 11 total |
+| Micro-features | **17 integrated** (pipeline/C4 Python modules). Legacy Python TUI widgets removed Wave C — see TUI v9 overlays |
+| TUI shortcuts | **TUI v9 only** (`blast tui`): `:` palette, `Ctrl+Shift+K/S/C/M`, `Shift+A`, `j/k` cards, `Ctrl+B` status — see keymap below |
+| Slash commands | **Removed** with legacy Python TUI. Use `:` command palette or `blast config` / `blast config keys` |
 | Knowledge sources | 47 configured; 46 wired |
 | Simulation patterns | 101+ (CPU fluid: Navier-Stokes Euler solver) |
 | Physics engines | 5 internal (Newton, TorchSim, JaxSim, Schr, vast.ai) + 26 P1 bridges (FEniCSx, OpenFOAM, GROMACS, LAMMPS, MDAnalysis, PySCF, Psi4, QE, Tellurium, NEURON, Brian2, Jaxley, COPASI, xarray, WRF, Mesa, SimPy, Rebound, AMUSE, MuJoCo, PyBullet, diffeqpy, Taichi, JAX MD, JAX-LaB, ModelingToolkit.jl) + 6 Virtual Biology + MirrorFish + MATLAB |
@@ -379,30 +357,22 @@ Layer 5: Knowledge + Verification — 47 configured sources (orchestrator.py), 3
 
 ---
 
-## TUI Keyboard Shortcuts (v5.4.0)
-
-| Key | Action | Key | Action |
-|-----|--------|-----|--------|
-| `Tab` | Switch mode (discover/invent/transform) | `L` | Switch language |
-| `Enter` | Run discovery | `Q` / `Esc` | Quit |
-| `A` | Toggle Alert panel (severity-coded) | `B` | Toggle Budget gauge ($ cost) |
-| `D` | Toggle Depth Ladder (C1→C2→C3) | `T` | Toggle Article Canvas (dissertation) |
-| `R` | Toggle Proof Graph (ASCII dependency) | `V` | Toggle Cube Navigator (interactive) |
-| `O` | Toggle Operations panel | `G` | Toggle GPU dashboard |
-| `M` | Toggle Module status | `I` | Toggle Provider dashboard |
-| `F` | Toggle Live Intelligence Feed | `Ctrl+R` | Force refresh feed/cache |
-
-## TUI v9 Keyboard Shortcuts (v9.13.0) — added on top of v5.4.0
+## TUI v9 Keyboard Shortcuts (production — `blast tui`)
 
 | Key | Action | Key | Action |
 |-----|--------|-----|--------|
 | `:` | Open command palette (fuzzy-matches 35+ cmds) | `Ctrl+Shift+C` | Capabilities overlay (38 engine bridges + 9 verifiers) |
 | `Ctrl+Shift+D` | Debug overlay (live state dump) | `Ctrl+B` | Toggle status bar |
+| `Ctrl+Shift+K` | API Keys Setup Hub | `Ctrl+Shift+S` | Social publishing menu |
+| `Shift+A` | Research agenda overlay | `Ctrl+Shift+M` | Models & council config |
+| `Tab` | Cycle mode (Discover/Flash/Turbo/TurboFactory) | `Ctrl+,` | Runtime settings menu |
 | `j` / `k` | Focus next / prev card | `g g` / `G` | Focus first / last card |
 | `Enter` (on focused card) | Expand to FullBody | `Esc` (on expanded) | Collapse |
 | `i` (on sim card) | Show install hint | `f` (on sim card) | Show fallback chain |
 | `o` (on sim with image) | Open plot in browser | `c` (on focused) | Copy as markdown |
-| `←↑↓→` | Navigate 3×3×3 C4 cube | | |
+| `↑` / `↓` | Navigate within overlays / settings | `Enter` | Run discovery / overlay action |
+
+> Legacy v5.4 Python TUI shortcuts (L/A/B/D/T/R/V cube panels, slash commands) **removed Wave C**.
 
 ---
 
@@ -476,12 +446,12 @@ Global Kilo agents for c4reqber development. Located in `~/.kilo/agent/`:
 | **C4StateJournal** | `src/c4/state_journal.py` | Cognitive state transition recording + replay |
 | **HistoryGraph** | `src/c4/history_graph.py` | Graph-structured history with logical traversal |
 | **parse_structured_input** | `src/c4/structured_input.py` | REQ:/HYP:/VERIFY: syntax highlighting |
-| **ProofGraph** | `src/tui/proof_graph.py` | ASCII dependency graph with C4 coloring |
-| **InteractiveCube** | `src/tui/cube_navigator.py` | Clickable 3×3×3 C4 cube with arrow navigation |
-| **ArticleCanvas** | `src/tui/article_canvas.py` | Dissertation display with section scrolling |
-| **DepthLadder** | `src/tui/depth_ladder.py` | C1→C2→C3 progress visualization |
-| **AlertPanel** | `src/tui/alert_widget.py` | Severity-coded alert panel with auto-dismiss |
-| **BudgetGauge** | `src/tui/budget_gauge.py` | Real-time pipeline cost estimation |
+| ~~ProofGraph~~ | *(removed Wave C)* | Was `src/tui/proof_graph.py` — use TUI v9 feed + proof cards |
+| ~~InteractiveCube~~ | *(removed Wave C)* | Was `src/tui/cube_navigator.py` |
+| ~~ArticleCanvas~~ | *(removed Wave C)* | Was `src/tui/article_canvas.py` — use card expand (Enter) |
+| ~~DepthLadder~~ | *(removed Wave C)* | Was `src/tui/depth_ladder.py` |
+| ~~AlertPanel~~ | *(removed Wave C)* | Was `src/tui/alert_widget.py` |
+| ~~BudgetGauge~~ | *(removed Wave C)* | Was `src/tui/budget_gauge.py` — cost in TUI v9 status/telemetry |
 
 ---
 
@@ -503,54 +473,41 @@ Global Kilo agents for c4reqber development. Located in `~/.kilo/agent/`:
 
 ---
 
-## UI/UX Polish Features (v5.4.0 — 24 features)
+## UI/UX Polish Features
 
-### L5 — Infrastructure
+> **Wave C (2026-07):** Legacy Python TUI polish modules (`src/tui/mascot.py`, `gradient_bar.py`, `delight.py`, …) were **removed**. Production UI = **TUI v9** (`src/tui/v9/`, Go). `src/repl/core.py` remains for `blast agent` REPL. `src/utils/formatting.py` is shared.
+
+### Still active (CLI / agent)
 | Module | Feature |
 |--------|---------|
-| `utils/formatting.py` | 9 formatters — `fmt_count` (1.2K), `fmt_dollars` ($0.041), `fmt_duration` (2m 14s), `fmt_tokens` (12.3K tok), `fmt_percent` (85.6%), `ElapsedTimer` |
-| `tui/delta_renderer.py` | Cell-diff tracker — flicker-free terminal via ANSI CSI n;mH cursor jumps. Only changed cells rewritten |
-| `tui/easing.py` | 6 easing curves (cubic, elastic, back, quart, expo) + `InertiaSimulation` physics |
+| `utils/formatting.py` | 9 formatters — `fmt_count`, `fmt_dollars`, `fmt_duration`, `fmt_tokens`, `fmt_percent`, `ElapsedTimer` |
+| `repl/core.py` | Agent REPL — fuzzy matching, session stats |
 
-### L1 — Always Visible
+### Removed with legacy Python TUI (historical reference only)
+### Removed with legacy Python TUI (historical reference only)
 | Module | Feature |
 |--------|---------|
-| `tui/gradient_bar.py` | 8-level Unicode gradient `█▊▋▌▍▎▏░` + dual cyan→magenta glow tail + pulse mode |
-| `tui/animation.py` | Cubic ease-out per-character typing in startup animation |
-| `repl/core.py` | C4REQBER banner — correct C-4-R-E-Q-B-E-R sequence + Q `▀▀═╝` bottom serif |
+| `tui/delta_renderer.py` | *(removed)* Cell-diff renderer |
+| `tui/easing.py` | *(removed)* Physics easing curves |
+| `tui/gradient_bar.py` | *(removed)* Unicode gradient progress bars |
+| `tui/animation.py` | *(removed)* Startup typing animation |
+| `tui/breathing.py` | *(removed)* Cube idle breathing |
+| `tui/staged_error.py` | *(removed)* Staged error colors |
+| `tui/smart_prompt.py` | *(removed)* Ghost text REPL prompt |
+| `tui/delight.py` | *(removed)* Night mode, cube memory, shutdown ritual |
+| `tui/particles.py` | *(removed)* Discovery fireworks |
+| `tui/micro_animations.py` | *(removed)* Shake vibrato, phase swoosh |
+| `tui/results_display.py` | *(removed)* Rate-limit border |
+| `repl/input_handler.py` | *(removed)* Spark particles on keypress |
 
-### L2 — Micro-Interactions
+### TUI v9 equivalents (Go — `src/tui/v9/`)
 | Module | Feature |
 |--------|---------|
-| `repl/input_handler.py` | Raw-terminal input — 5 spark particles on each keypress (gravity + friction) |
-| `tui/breathing.py` | Cube idle breathing — 5s idle threshold, CogLoad-adaptive frequency (C1=4s, C2=2.5s, C3=1.5s) |
-| `tui/staged_error.py` | 300ms cyan → 200ms transition → red. No startle reflex |
-
-### L3 — Anticipation
-| Module | Feature |
-|--------|---------|
-| `tui/smart_prompt.py` | Context-aware: `c4reqber ❯` / `c4reqber [openrouter] ❯` / `c4reqber ⏳ ❯` / `c4reqber ✓ ❯` |
-| `tui/smart_prompt.py` | Ghost text: `/mod` → grey `els` preview inline; Tab → complete |
-| `repl/core.py` | Fuzzy matching: `anlyz` → "Did you mean: analyze?" |
-
-### L4 — Delight (Easter Eggs + Rituals)
-| Module | Feature |
-|--------|---------|
-| `tui/delight.py` | Night mode — auto after 23:00; palette dims 20%, cyan→warmer, magenta→muted |
-| `tui/delight.py` | Birthday easter egg — May 15: ASCII cake + "Z₃³ was born today. 27 states. Still going." |
-| `tui/delight.py` | Cube memory — recalls user's analyze/turbo topics; idle musings reference them |
-| `tui/delight.py` | Shutdown ritual — 6-framespin cube turn → fade → "All 27 states archived. Until next theorem." |
-| `repl/core.py` | Session stats — "14m 32s · 8 commands · 2 discoveries" before shutdown |
-| `tui/particles.py` | Discovery fireworks — 100 particles, gravity 9.8, 6 colors, 2.5s on confidence >80% |
-
-### L2+/L1 Hybrid
-| Module | Feature |
-|--------|---------|
-| `tui/micro_animations.py` | Shake vibrato — cube wobbles 1-2 cells on navigation (150ms) |
-| `tui/micro_animations.py` | Phase swoosh — `A ▁▂▃▄▅▆▇█████ B` sweep between pipeline stages (180ms, 60fps) |
-| `tui/micro_animations.py` | Adaptive wait — rotating contextual messages: "Waking the cube..." → "Theorem 11: connecting states..." |
-| `tui/results_display.py` | Rate-limit border — progress bar border cyan→yellow→red at 30%/60%/85% API usage |
-| `repl/core.py` | Cursor state — CogLoad 1=blinking bar (dim cyan), 2=underline (bright cyan), 3=block (magenta) |
+| `effects/`, `splash.go` | Startup splash, bio-aurora idle |
+| `wizard.go` | First-run wizard overlay |
+| `settings_menu.go` | `Ctrl+,` runtime settings |
+| `setup_menu.go` | `Ctrl+Shift+K` API keys |
+| `golden_snapshots_test.go` | 132 layout goldens (T0–T3) |
 
 ---
 

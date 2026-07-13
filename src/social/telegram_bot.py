@@ -1,4 +1,5 @@
 """c4reqber: Telegram Bot — preprint notifications + LLM-assisted editing."""
+
 from __future__ import annotations
 
 import os
@@ -7,6 +8,8 @@ from pathlib import Path
 from typing import Any
 
 import httpx
+
+from src.config.paths import CONFIG_DIR
 
 
 class TelegramBot:
@@ -31,7 +34,9 @@ class TelegramBot:
     def configured(self) -> bool:
         return bool(self.token and self.chat_id)
 
-    async def send_preprint_review(self, title: str, words: int, abstract: str, draft_id: str) -> dict[str, Any]:
+    async def send_preprint_review(
+        self, title: str, words: int, abstract: str, draft_id: str
+    ) -> dict[str, Any]:
         """Send a preprint for review with Approve/Changes/Reject buttons."""
         text = (
             f"📄 *{title[:200]}*\n"
@@ -39,11 +44,13 @@ class TelegramBot:
             f"*Abstract:* {abstract[:500]}"
         )
         keyboard = {
-            "inline_keyboard": [[
-                {"text": "✅ Approve", "callback_data": f"approve_{draft_id}"},
-                {"text": "📝 Changes", "callback_data": f"edit_{draft_id}"},
-                {"text": "❌ Reject", "callback_data": f"reject_{draft_id}"},
-            ]]
+            "inline_keyboard": [
+                [
+                    {"text": "✅ Approve", "callback_data": f"approve_{draft_id}"},
+                    {"text": "📝 Changes", "callback_data": f"edit_{draft_id}"},
+                    {"text": "❌ Reject", "callback_data": f"reject_{draft_id}"},
+                ]
+            ]
         }
         return await self._send_message(text, reply_markup=keyboard)
 
@@ -51,7 +58,9 @@ class TelegramBot:
         """Send a simple status update."""
         return await self._send_message(text[:4000])
 
-    async def _send_message(self, text: str, reply_markup: dict[str, Any] | None = None) -> dict[str, Any]:
+    async def _send_message(
+        self, text: str, reply_markup: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         if self.dry_run:
             return {"ok": True, "_dry_run": True}
         if not self.configured:
@@ -76,7 +85,9 @@ class TelegramBot:
         if self.dry_run:
             return []
         async with httpx.AsyncClient() as c:
-            resp = await c.get(f"{self.API}/bot{self.token}/getUpdates", params={"offset": offset, "timeout": 10})
+            resp = await c.get(
+                f"{self.API}/bot{self.token}/getUpdates", params={"offset": offset, "timeout": 10}
+            )
             if resp.status_code == 200:
                 return resp.json().get("result", [])
             return []
@@ -117,35 +128,55 @@ class TelegramBot:
         await self.get_updates(offset=max_id + 1)  # acknowledge
         return results
 
-    async def _handle_approve(self, draft_id: str, callback_id: str, chat_id: str) -> dict[str, Any]:
+    async def _handle_approve(
+        self, draft_id: str, callback_id: str, chat_id: str
+    ) -> dict[str, Any]:
         import json
         import time
-        from pathlib import Path
-        state_path = Path.home() / ".c4reqber" / "drafts" / draft_id / "draft_state.json"
+
+        state_path = CONFIG_DIR / "drafts" / draft_id / "draft_state.json"
         if state_path.exists():
             state = json.loads(state_path.read_text())
             if state.get("status") != "pending_review":
                 await self._send_message("This preprint was already reviewed.")
                 return {"status": "already_reviewed", "draft_id": draft_id}
-        state = {"id": draft_id, "status": "approved", "approved_at": time.time(), "via": "telegram"}
+        state = {
+            "id": draft_id,
+            "status": "approved",
+            "approved_at": time.time(),
+            "via": "telegram",
+        }
         state_path.parent.mkdir(parents=True, exist_ok=True)
         state_path.write_text(json.dumps(state, indent=2))
-        await self._send_message(f"✅ Approved: {draft_id}. Publish with: `blast social publish --id {draft_id}`")
+        await self._send_message(
+            f"✅ Approved: {draft_id}. Publish with: `blast social publish --id {draft_id}`"
+        )
         return {"status": "approved", "draft_id": draft_id}
 
     async def _handle_reject(self, draft_id: str, callback_id: str, chat_id: str) -> dict[str, Any]:
         import json
         import time
-        from pathlib import Path
-        state_path = Path.home() / ".c4reqber" / "drafts" / draft_id / "draft_state.json"
-        state = {"id": draft_id, "status": "rejected", "rejected_at": time.time(), "via": "telegram"}
+
+        state_path = CONFIG_DIR / "drafts" / draft_id / "draft_state.json"
+        state = {
+            "id": draft_id,
+            "status": "rejected",
+            "rejected_at": time.time(),
+            "via": "telegram",
+        }
         state_path.parent.mkdir(parents=True, exist_ok=True)
         state_path.write_text(json.dumps(state, indent=2))
         await self._send_message(f"❌ Rejected: {draft_id}")
         return {"status": "rejected", "draft_id": draft_id}
 
-    async def _handle_edit_request(self, draft_id: str, callback_id: str, chat_id: str) -> dict[str, Any]:
-        self._edit_sessions[chat_id] = {"draft_id": draft_id, "state": "awaiting_changes", "started_at": time.time()}
+    async def _handle_edit_request(
+        self, draft_id: str, callback_id: str, chat_id: str
+    ) -> dict[str, Any]:
+        self._edit_sessions[chat_id] = {
+            "draft_id": draft_id,
+            "state": "awaiting_changes",
+            "started_at": time.time(),
+        }
         await self._send_message(
             "📝 Describe the changes you want:\n\n"
             "Examples:\n"
@@ -166,7 +197,7 @@ class TelegramBot:
             return "No active edit session. Start with 📝 Changes button."
 
         draft_id = session["draft_id"]
-        draft_dir = Path.home() / ".c4reqber" / "drafts" / draft_id
+        draft_dir = CONFIG_DIR / "drafts" / draft_id
         md_file = draft_dir / "dissertation.md"
         if not md_file.exists():
             del self._edit_sessions[chat_id]
@@ -183,17 +214,25 @@ class TelegramBot:
         # Call LLM via ProviderRouter
         try:
             from src.llm.gateway import DefaultGateway
+
             router = DefaultGateway()
             response = await router.generate_for_stage("proof_generation", prompt)
-            new_content = getattr(response, "content", str(response)) if hasattr(response, "content") else str(response)
+            new_content = (
+                getattr(response, "content", str(response))
+                if hasattr(response, "content")
+                else str(response)
+            )
 
             md_file.write_text(new_content, encoding="utf-8")
 
             from src.social.i18n_templates import detect_language, format_post
+
             lang = detect_language()
             await self._send_message(
-                format_post(lang, "review_request", title=draft_id, words=str(len(new_content.split()))) +
-                f"\n\nChanges applied:\n_{message_text[:200]}_\n\n"
+                format_post(
+                    lang, "review_request", title=draft_id, words=str(len(new_content.split()))
+                )
+                + f"\n\nChanges applied:\n_{message_text[:200]}_\n\n"
                 "[✅ Approve] [📝 More Changes] [❌ Reject]"
             )
             return "Changes applied successfully."

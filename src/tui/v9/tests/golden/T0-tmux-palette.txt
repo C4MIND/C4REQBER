@@ -8,6 +8,7 @@
   ? Show help overlay  App  [?]
   📜 Show history  App
   📊 Toggle status bar  App  [Ctrl+B]
+  📋 Open research agenda  Discover  [Shift+A]
   🗑 Clear feed  Feed  [Ctrl+K]
   ⤒ Focus first card  Feed  [g g]
   ⤓ Focus last card  Feed  [G]
@@ -19,6 +20,5 @@
   🌐 Language: hi  Language
   🌐 Language: ja  Language
   🌐 Language: ru  Language
-  🌐 Language: zh  Language
 
-  35 commands  ·  ↑↓ to navigate  ·  Enter to run  ·  Esc to close
+  39 commands  ·  ↑↓ to navigate  ·  Enter to run  ·  Esc to close

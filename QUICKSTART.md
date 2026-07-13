@@ -66,6 +66,10 @@ blast tui --demo --story=crispr
 - `:` — command palette (settings, capabilities, language, debug)
 - `?` — help overlay
 - `Ctrl+Shift+C` — simulation/verifier capabilities overlay
+- `Ctrl+Shift+K` — API Keys Setup Hub (`secrets.env`)
+- `Ctrl+Shift+S` — social publishing (drafts, health, publish)
+- `Shift+A` — research agenda (`/v8/agenda/*`)
+- `Ctrl+Shift+M` — phase models & council (`blast config --show --json`)
 
 ---
 

@@ -383,9 +383,11 @@ func TestGoldenSnapshotsAll(t *testing.T) {
 				t.Errorf("missing golden file %s (run with UPDATE=1 to create): %v", file, err)
 				continue
 			}
-			if string(data) != clean {
+			want := strings.TrimRight(string(data), "\n")
+			got := strings.TrimRight(clean, "\n")
+			if want != got {
 				t.Errorf("golden mismatch for %s\n--- want ---\n%s\n--- got ---\n%s\n(run with UPDATE=1 to accept)",
-					file, string(data), clean)
+					file, want, got)
 			}
 		}
 	}

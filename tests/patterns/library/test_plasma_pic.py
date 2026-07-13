@@ -21,26 +21,27 @@ Covers:
 - get_metadata()
 - Edge cases: zero particles, minimal grid, leapfrog pusher
 """
+
 from __future__ import annotations
 
 import sys
 from pathlib import Path
 from unittest.mock import patch
 
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 import numpy as np
 import pytest
 
-from src.patterns.library.plasma_pic import (
-    PICConfig,
-    PlasmaPICPattern,
-    PICDimension,
-    ParticlePusher,
-    Particle,
-)
 from src.patterns.core import Hypothesis, SimulationStatus
-
+from src.patterns.library.plasma_pic import (
+    Particle,
+    ParticlePusher,
+    PICConfig,
+    PICDimension,
+    PlasmaPICPattern,
+)
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -216,13 +217,15 @@ class TestParseConfig:
 
     def test_custom_parsing(self):
         pattern = PlasmaPICPattern()
-        cfg = pattern._parse_config({
-            "n_particles": 5000,
-            "n_steps": 500,
-            "plasma_density": 1e18,
-            "electron_temp": 50.0,
-            "pusher": "leapfrog",
-        })
+        cfg = pattern._parse_config(
+            {
+                "n_particles": 5000,
+                "n_steps": 500,
+                "plasma_density": 1e18,
+                "electron_temp": 50.0,
+                "pusher": "leapfrog",
+            }
+        )
         assert cfg.n_particles == 5000
         assert cfg.n_steps == 500
         assert cfg.n0 == 1e18

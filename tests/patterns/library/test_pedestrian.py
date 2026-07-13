@@ -15,10 +15,12 @@ Covers:
 - get_metadata()
 - Edge cases: different scenarios, empty simulation, single pedestrian
 """
+
 from __future__ import annotations
 
 import sys
 from pathlib import Path
+
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
@@ -26,9 +28,8 @@ import numpy as np
 import pytest
 
 from src.patterns.library.pedestrian import (
-
-    PedestrianPattern,
     PedestrianConfig,
+    PedestrianPattern,
     PedestrianScenario,
 )
 
@@ -59,10 +60,7 @@ class TestPedestrianConfig:
 
     def test_custom_init(self):
         cfg = PedestrianConfig(
-            scenario=PedestrianScenario.EVACUATION,
-            n_pedestrians=50,
-            desired_speed=1.5,
-            width=30.0
+            scenario=PedestrianScenario.EVACUATION, n_pedestrians=50, desired_speed=1.5, width=30.0
         )
         assert cfg.scenario == PedestrianScenario.EVACUATION
         assert cfg.n_pedestrians == 50
@@ -313,7 +311,9 @@ class TestRun:
         assert "statistics" in result
 
     def test_run_bottleneck(self):
-        cfg = PedestrianConfig(scenario=PedestrianScenario.BOTTLENECK, n_pedestrians=20, n_steps=100)
+        cfg = PedestrianConfig(
+            scenario=PedestrianScenario.BOTTLENECK, n_pedestrians=20, n_steps=100
+        )
         pattern = PedestrianPattern(cfg)
         result = pattern.run()
         assert result["scenario"] == "bottleneck"
@@ -325,7 +325,9 @@ class TestRun:
         assert result["scenario"] == "crossing"
 
     def test_run_evacuation(self):
-        cfg = PedestrianConfig(scenario=PedestrianScenario.EVACUATION, n_pedestrians=20, n_steps=100)
+        cfg = PedestrianConfig(
+            scenario=PedestrianScenario.EVACUATION, n_pedestrians=20, n_steps=100
+        )
         pattern = PedestrianPattern(cfg)
         result = pattern.run()
         assert result["scenario"] == "evacuation"
@@ -399,7 +401,7 @@ class TestEdgeCases:
         cfg = PedestrianConfig(
             n_pedestrians=20,
             n_steps=50,
-            obstacles=[(10, 5, 1.0)]  # One obstacle
+            obstacles=[(10, 5, 1.0)],  # One obstacle
         )
         pattern = PedestrianPattern(cfg)
         result = pattern.run()
@@ -407,12 +409,7 @@ class TestEdgeCases:
 
     def test_very_high_density(self):
         """High density should slow down pedestrians"""
-        cfg = PedestrianConfig(
-            n_pedestrians=200,
-            width=10,
-            height=5,
-            n_steps=100
-        )
+        cfg = PedestrianConfig(n_pedestrians=200, width=10, height=5, n_steps=100)
         pattern = PedestrianPattern(cfg)
         result = pattern.run()
         # Mean speed should be less than desired speed due to crowding

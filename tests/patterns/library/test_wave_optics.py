@@ -10,25 +10,27 @@ Covers:
 - Edge cases: empty power, zero core_radius, no waveguide, invalid beam_profile,
   very small grids, TBC with 2x2 field
 """
+
 from __future__ import annotations
 
 import sys
 from pathlib import Path
 
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 import asyncio
+
 import numpy as np
 import pytest
 
+from src.patterns.core import Hypothesis, SimulationStatus
 from src.patterns.library.wave_optics import (
-    BPMMethod,
     BeamProfile,
+    BPMMethod,
     WaveOpticsConfig,
     WaveOpticsPattern,
 )
-from src.patterns.core import Hypothesis, SimulationStatus
-
 
 
 # ═══════════════════════════════════════════════════════════════════

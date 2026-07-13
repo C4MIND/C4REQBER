@@ -14,10 +14,12 @@ Covers:
 - get_metadata()
 - Edge cases: extreme parameters, policy comparisons
 """
+
 from __future__ import annotations
 
 import sys
 from pathlib import Path
+
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
@@ -25,9 +27,8 @@ import numpy as np
 import pytest
 
 from src.patterns.library.search_matching import (
-
-    SearchMatchingModel,
     SearchMatchingConfig,
+    SearchMatchingModel,
 )
 
 
@@ -49,12 +50,7 @@ class TestSearchMatchingConfig:
         assert cfg.eta == 0.5
 
     def test_custom_init(self):
-        cfg = SearchMatchingConfig(
-            alpha=0.6,
-            gamma=0.4,
-            r=0.04,
-            delta=0.02
-        )
+        cfg = SearchMatchingConfig(alpha=0.6, gamma=0.4, r=0.04, delta=0.02)
         assert cfg.alpha == 0.6
         assert cfg.gamma == 0.4
         assert cfg.r == 0.04
@@ -168,8 +164,15 @@ class TestSolveSteadyState:
     def test_contains_required_keys(self):
         model = SearchMatchingModel()
         ss = model.solve_steady_state()
-        required = ["theta", "unemployment_rate", "vacancy_rate",
-                   "job_finding_rate", "job_filling_rate", "match_rate", "wage"]
+        required = [
+            "theta",
+            "unemployment_rate",
+            "vacancy_rate",
+            "job_finding_rate",
+            "job_filling_rate",
+            "match_rate",
+            "wage",
+        ]
         for key in required:
             assert key in ss
 

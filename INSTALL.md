@@ -9,7 +9,7 @@
 | Requirement | Version | Notes |
 |-------------|---------|-------|
 | Python | 3.11+ | 3.14 recommended for latest features |
-| Go | 1.22+ | Required for TUI v8 (Bubble Tea) |
+| Go | 1.22+ | Required for TUI v9 (Bubble Tea) |
 | Git | 2.30+ | For cloning and version control |
 | pip | 24+ | For package installation |
 | (Optional) Docker | 24+ | For containerized deployment |
@@ -46,10 +46,8 @@ pytest tests/ -q
 # 7. Start the API server
 python -m src.api.server
 
-# 8. Build TUI v8 (Go)
-cd src/tui/v8
-go build -o c4tui-v8 .
-cd ../..
+# 8. Build TUI v9 (Go)
+make -C src/tui/v9 build
 
 # 9. Or use the CLI
 python -m src.cli.typer_app --help
@@ -250,13 +248,13 @@ c4reqber/
 │   ├── observability/    # OpenTelemetry tracing
 │   ├── pipeline/         # HIL pipeline, quality gates
 │   ├── plugins/          # Plugin registry
-│   ├── simulations/      # 36 engines, 32 adapters, runner_v2
-│   ├── tui/              # Textual v8 terminal UI
+│   ├── simulations/      # 38 engine bridges
+│   ├── tui/              # Go TUI v9 terminal cockpit
 │   └── utils/            # Shared utilities
-├── tests/                # Test suite (565+ tests)
+├── tests/                # Test suite (9,906 collected)
 ├── dissertations/        # Generated output
 ├── ARCHITECTURE_C4R.md   # Full system architecture
-├── ARCHITECTURE_TUI_V8.md# TUI-specific architecture
+├── src/tui/v9/ARCHITECTURE.md # TUI-specific architecture
 ├── AGENTS.md             # Agent developer guide
 ├── INSTALL.md            # This file
 └── README.md             # User-facing overview
@@ -268,9 +266,9 @@ c4reqber/
 
 - **Documentation:** See `ARCHITECTURE_C4R.md` for full system architecture
 - **Agent guide:** See `AGENTS.md` for coding conventions and agent preferences
-- **Issues:** Open a GitHub issue with `bug`, `feature`, or `question` label
-- **Discussions:** Use GitHub Discussions for architecture questions
+- **Issues:** Open a GitLab issue with `bug`, `feature`, or `question` label
+- **Discussions:** Use GitLab issues for architecture questions
 
 ---
 
-*Last updated: 2026-06-03 (v5.6.0)*
+*Last updated: 2026-07-13*

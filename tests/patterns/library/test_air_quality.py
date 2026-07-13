@@ -1,11 +1,11 @@
 """
 Tests for air_quality pattern module.
 """
+
 import numpy as np
 import pytest
 
 from src.patterns.library.air_quality import AirQualityConfig, AirQualityPattern
-
 
 
 class TestConfig:
@@ -148,5 +148,9 @@ class TestEdgeCases:
         pattern = AirQualityPattern()
         result = pattern.run()
         assert result["aqi_summary"]["category"] in [
-            "Good", "Moderate", "Unhealthy for Sensitive", "Unhealthy", "Very Unhealthy"
+            "Good",
+            "Moderate",
+            "Unhealthy for Sensitive",
+            "Unhealthy",
+            "Very Unhealthy",
         ]

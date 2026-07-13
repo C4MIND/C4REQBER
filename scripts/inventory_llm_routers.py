@@ -15,6 +15,7 @@ Usage:
 
 Exit 0 always (inventory is read-only).
 """
+
 from __future__ import annotations
 
 import argparse
@@ -29,14 +30,14 @@ SRC = REPO / "src"
 
 
 FEATURES = [
-    "guardian_scan",     # Prompt-injection scan before send
-    "retry_policy",      # Explicit retry with backoff
-    "cost_tracking",     # Per-call USD accumulation
-    "response_cache",    # In-memory or disk cache
-    "stage_model_table", # Maps pipeline stage -> model name
-    "provider_fallback", # Tries alternative providers on failure
-    "structured_logging",# Structured fields for observability
-    "timeout_enforcement",# Per-request timeout
+    "guardian_scan",  # Prompt-injection scan before send
+    "retry_policy",  # Explicit retry with backoff
+    "cost_tracking",  # Per-call USD accumulation
+    "response_cache",  # In-memory or disk cache
+    "stage_model_table",  # Maps pipeline stage -> model name
+    "provider_fallback",  # Tries alternative providers on failure
+    "structured_logging",  # Structured fields for observability
+    "timeout_enforcement",  # Per-request timeout
 ]
 
 
@@ -58,18 +59,14 @@ def classify_text(text: str) -> dict[str, bool]:
     feats["cost_tracking"] = bool(
         re.search(r"cost_tracker|estimated_cost|llm_cost|CostTracker", text)
     )
-    feats["response_cache"] = bool(
-        re.search(r"response_cache|_cache\.|@cache|TTL.*cache", text)
-    )
+    feats["response_cache"] = bool(re.search(r"response_cache|_cache\.|@cache|TTL.*cache", text))
     feats["stage_model_table"] = bool(
         re.search(r"DEPTH_MODEL_MAP|PRESETS|model_per_stage|stage_to_model", text)
     )
     feats["provider_fallback"] = bool(
         re.search(r"fallback|failover|next_provider|try_next", text, re.IGNORECASE)
     )
-    feats["structured_logging"] = bool(
-        re.search(r"structlog|extra\s*=\{|logger\.info\(.*\{", text)
-    )
+    feats["structured_logging"] = bool(re.search(r"structlog|extra\s*=\{|logger\.info\(.*\{", text))
     feats["timeout_enforcement"] = bool(
         re.search(r"timeout|asyncio\.wait_for|httpx\.Timeout", text)
     )
@@ -78,8 +75,7 @@ def classify_text(text: str) -> dict[str, bool]:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--report", default=None,
-                        help="write markdown report to PATH")
+    parser.add_argument("--report", default=None, help="write markdown report to PATH")
     args = parser.parse_args()
 
     routers = {
@@ -133,7 +129,7 @@ def main() -> int:
     print(header)
     print("-" * len(header))
     for name, feats in matrix.items():
-        row = name[:col_width - 1].ljust(col_width)
+        row = name[: col_width - 1].ljust(col_width)
         for f in FEATURES:
             mark = "Y" if feats[f] else "."
             row += mark.center(feat_width)
@@ -188,20 +184,27 @@ def main() -> int:
         lines = [
             "# LLM Router Inventory — Audit 2026-06-22 (H-8 / REWORK_PLAN P2-A)",
             "",
-            f"_Generated: {datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}_",
+            f"_Generated: {datetime.datetime.now(datetime.UTC).strftime('%Y-%m-%d %H:%M UTC')}_",
             "",
             "## Routers inventoried",
             "",
         ]
         for name in matrix:
             lines.append(f"- `{name}`")
-        lines += ["", "## Feature matrix", "", "| Router/Site | " + " | ".join(f for f in FEATURES) + " |"]
+        lines += [
+            "",
+            "## Feature matrix",
+            "",
+            "| Router/Site | " + " | ".join(f for f in FEATURES) + " |",
+        ]
         lines += ["|" + "---|" * (len(FEATURES) + 1)]
         for name, feats in matrix.items():
             marks = ["Y" if feats[f] else "·" for f in FEATURES]
             lines.append(f"| `{name}` | " + " | ".join(marks) + " |")
         lines += [
-            "", "## Coverage statistics", "",
+            "",
+            "## Coverage statistics",
+            "",
             "| Feature | Sites | % |",
             "|---|---|---|",
         ]
@@ -210,14 +213,18 @@ def main() -> int:
             pct = present * 100 // max(n, 1)
             lines.append(f"| `{f}` | {present}/{n} | {pct}% |")
         lines += [
-            "", "## Raw LLM call sites (bypass gateway)", "",
+            "",
+            "## Raw LLM call sites (bypass gateway)",
+            "",
             f"Total: **{len(raw_sites)}**",
             "",
         ]
         for f in raw_sites:
             lines.append(f"- `{f.relative_to(REPO)}`")
         lines += [
-            "", "## Recommendations", "",
+            "",
+            "## Recommendations",
+            "",
             "1. **CONSOLIDATE_TO_GATEWAY** — migrate the 21 raw sites onto the",
             "   `LLMGateway` facade (src/llm/gateway.py) to pick up guardian_scan,",
             "   unified retry, and cost tracking.",

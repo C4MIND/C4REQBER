@@ -14,18 +14,19 @@ Covers:
 - get_metadata()
 - Edge cases: zero volatility, very short maturity, deep ITM/OTM
 """
+
 from __future__ import annotations
 
 import sys
 from pathlib import Path
+
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 import numpy as np
 import pytest
 
-from src.patterns.library.option_pricing import OptionPricingModel, OptionPricingConfig
-
+from src.patterns.library.option_pricing import OptionPricingConfig, OptionPricingModel
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -161,18 +162,18 @@ class TestPutCallParity:
     def test_put_call_parity(self):
         # C - P = S * exp(-qT) - K * exp(-rT)
         cfg = OptionPricingConfig(S0=100, K=100, T=1.0, r=0.05, q=0.02)
-        
+
         cfg.option_type = "call"
         model_call = OptionPricingModel(cfg)
         call_price = model_call.black_scholes()["price"]
-        
+
         cfg.option_type = "put"
         model_put = OptionPricingModel(cfg)
         put_price = model_put.black_scholes()["price"]
-        
+
         lhs = call_price - put_price
         rhs = 100 * np.exp(-0.02 * 1.0) - 100 * np.exp(-0.05 * 1.0)
-        
+
         assert lhs == pytest.approx(rhs, abs=0.01)
 
 
@@ -183,7 +184,9 @@ class TestPutCallParity:
 
 class TestBinomialTree:
     def test_european_call_price(self):
-        model = OptionPricingModel(OptionPricingConfig(option_type="call", exercise_type="european"))
+        model = OptionPricingModel(
+            OptionPricingConfig(option_type="call", exercise_type="european")
+        )
         result = model.binomial_tree(american=False)
         assert result["price"] > 0
 

@@ -11,10 +11,12 @@ Covers:
 - get_metadata()
 - Edge cases: empty environment, zero step size, same start/goal
 """
+
 from __future__ import annotations
 
 import sys
 from pathlib import Path
+
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
@@ -22,7 +24,6 @@ import numpy as np
 import pytest
 
 from src.patterns.library.path_planning import (
-
     AStarPlanner,
     EnvironmentType,
     Node,
@@ -549,8 +550,9 @@ class TestEdgeCases:
         )
         pattern = PathPlanningPattern(cfg)
         result = pattern.run()
-        # Should still complete even with zero bounds
-        assert isinstance(result, dict)
+        assert result["success"] is False
+        assert result["iterations"] == 0
+        assert "bounds" in result["error"]
 
 
 if __name__ == "__main__":

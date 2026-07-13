@@ -4,6 +4,7 @@ PatternResult is the structured, JSON-serializable result type for
 all BasePattern subclasses. Old dict-returning subclasses are still
 supported via from_dict() for backward compatibility.
 """
+
 from __future__ import annotations
 
 import json
@@ -19,6 +20,7 @@ sys.path.insert(0, str(REPO))
 
 def test_pattern_result_basic_construction():
     from src.patterns.library.base import PatternResult
+
     r = PatternResult(pattern_id="test.foo", status="ok", data={"x": 42})
     assert r.pattern_id == "test.foo"
     assert r.status == "ok"
@@ -31,6 +33,7 @@ def test_pattern_result_basic_construction():
 def test_pattern_result_to_dict_is_serializable():
     """to_dict() output must be JSON-serializable (crosses RPC boundary)."""
     from src.patterns.library.base import PatternResult
+
     r = PatternResult(
         pattern_id="acoustic.wave",
         status="ok",
@@ -48,6 +51,7 @@ def test_pattern_result_to_dict_is_serializable():
 def test_from_dict_handles_legacy_fields():
     """Legacy subclasses may use 'error' instead of 'error_message', 'duration' instead of 'elapsed_seconds'."""
     from src.patterns.library.base import PatternResult
+
     legacy = {"error": "boom", "duration": 1.5, "data": {"x": 1}}
     r = PatternResult.from_dict(legacy)
     assert r.error_message == "boom"
@@ -58,6 +62,7 @@ def test_from_dict_handles_legacy_fields():
 def test_from_dict_handles_missing_keys():
     """from_dict must not crash when keys are absent."""
     from src.patterns.library.base import PatternResult
+
     r = PatternResult.from_dict({})
     assert r.pattern_id == "unknown"
     assert r.status == "ok"
@@ -68,6 +73,7 @@ def test_from_dict_handles_missing_keys():
 def test_from_dict_preserves_non_dict_data():
     """If 'data' is not a dict (legacy scalar/list), wrap it."""
     from src.patterns.library.base import PatternResult
+
     r = PatternResult.from_dict({"data": [1, 2, 3]})
     assert r.data == {"result": [1, 2, 3]}
 
@@ -75,6 +81,7 @@ def test_from_dict_preserves_non_dict_data():
 def test_from_dict_returns_pattern_result():
     """from_dict return type is PatternResult (not bare dict)."""
     from src.patterns.library.base import PatternResult
+
     r = PatternResult.from_dict({"data": {}, "status": "ok"})
     assert isinstance(r, PatternResult)
     assert hasattr(r, "to_dict")

@@ -1,4 +1,5 @@
 """Tests for SemanticAlignmentChecker."""
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -6,7 +7,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from src.verification.semantic_alignment import AlignmentResult, SemanticAlignmentChecker
-
 
 
 class TestAlignmentResult:
@@ -40,10 +40,15 @@ class TestSemanticAlignmentChecker:
     async def test_alignment_success(self) -> None:
         checker = SemanticAlignmentChecker()
         mock_response = MagicMock()
-        mock_response.content = '{"aligned": true, "explanation": "Proof proves the theorem", "confidence": 0.92}'
+        mock_response.content = (
+            '{"aligned": true, "explanation": "Proof proves the theorem", "confidence": 0.92}'
+        )
 
         with patch.object(
-            checker._router, "generate_for_stage", new_callable=AsyncMock, return_value=mock_response
+            checker._router,
+            "generate_for_stage",
+            new_callable=AsyncMock,
+            return_value=mock_response,
         ):
             result = await checker.check_alignment(
                 "forall n, n + 0 = n",
@@ -61,7 +66,10 @@ class TestSemanticAlignmentChecker:
         mock_response.content = '{"aligned": false, "explanation": "Proof is for different theorem", "confidence": 0.85}'
 
         with patch.object(
-            checker._router, "generate_for_stage", new_callable=AsyncMock, return_value=mock_response
+            checker._router,
+            "generate_for_stage",
+            new_callable=AsyncMock,
+            return_value=mock_response,
         ):
             result = await checker.check_alignment(
                 "forall n, n + 0 = n",
@@ -81,7 +89,10 @@ class TestSemanticAlignmentChecker:
 ```"""
 
         with patch.object(
-            checker._router, "generate_for_stage", new_callable=AsyncMock, return_value=mock_response
+            checker._router,
+            "generate_for_stage",
+            new_callable=AsyncMock,
+            return_value=mock_response,
         ):
             result = await checker.check_alignment(
                 "forall x, P(x",
@@ -96,7 +107,10 @@ class TestSemanticAlignmentChecker:
     async def test_llm_error(self) -> None:
         checker = SemanticAlignmentChecker()
         with patch.object(
-            checker._router, "generate_for_stage", new_callable=AsyncMock, side_effect=RuntimeError("API down")
+            checker._router,
+            "generate_for_stage",
+            new_callable=AsyncMock,
+            side_effect=RuntimeError("API down"),
         ):
             result = await checker.check_alignment(
                 "forall x, P(x",
@@ -115,7 +129,10 @@ class TestSemanticAlignmentChecker:
         mock_response.content = "not json"
 
         with patch.object(
-            checker._router, "generate_for_stage", new_callable=AsyncMock, return_value=mock_response
+            checker._router,
+            "generate_for_stage",
+            new_callable=AsyncMock,
+            return_value=mock_response,
         ):
             result = await checker.check_alignment(
                 "forall x, P(x",

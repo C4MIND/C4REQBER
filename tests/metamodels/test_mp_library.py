@@ -3,6 +3,7 @@ Tests for src/metamodels/mp/library.py and its submodules.
 
 Covers: MPDimension, Metaprogram, MPProfile, MPLibrary — profiles, rotation, prompts.
 """
+
 from __future__ import annotations
 
 from unittest.mock import patch
@@ -66,9 +67,12 @@ class TestMetaprogram:
 
     def test_profile_prompt_balanced(self):
         mp = Metaprogram(
-            id="MP-99", name="X/Y", name_ru="X/Y",
+            id="MP-99",
+            name="X/Y",
+            name_ru="X/Y",
             dimension=MPDimension.THINKING,
-            pole_a="left", pole_b="right",
+            pole_a="left",
+            pole_b="right",
             description="Test",
         )
         prompt = mp.profile_prompt("balanced")
@@ -76,9 +80,12 @@ class TestMetaprogram:
 
     def test_profile_prompt_a(self):
         mp = Metaprogram(
-            id="MP-99", name="X/Y", name_ru="X/Y",
+            id="MP-99",
+            name="X/Y",
+            name_ru="X/Y",
             dimension=MPDimension.THINKING,
-            pole_a="left", pole_b="right",
+            pole_a="left",
+            pole_b="right",
             description="Test",
         )
         prompt = mp.profile_prompt("a")
@@ -86,9 +93,12 @@ class TestMetaprogram:
 
     def test_profile_prompt_b(self):
         mp = Metaprogram(
-            id="MP-99", name="X/Y", name_ru="X/Y",
+            id="MP-99",
+            name="X/Y",
+            name_ru="X/Y",
             dimension=MPDimension.THINKING,
-            pole_a="left", pole_b="right",
+            pole_a="left",
+            pole_b="right",
             description="Test",
         )
         prompt = mp.profile_prompt("b")
@@ -96,9 +106,12 @@ class TestMetaprogram:
 
     def test_profile_prompt_invalid_leaning(self):
         mp = Metaprogram(
-            id="MP-99", name="X/Y", name_ru="X/Y",
+            id="MP-99",
+            name="X/Y",
+            name_ru="X/Y",
             dimension=MPDimension.THINKING,
-            pole_a="left", pole_b="right",
+            pole_a="left",
+            pole_b="right",
             description="Test",
         )
         prompt = mp.profile_prompt("invalid")
@@ -296,7 +309,7 @@ class TestMPProfile:
         lib = MPLibrary()
         for name in lib.all_profiles():
             profile = lib.get_profile(name)
-            for mp_id, setting in profile.settings.items():
+            for _mp_id, setting in profile.settings.items():
                 assert setting in {"a", "b", "balanced"}
 
 
@@ -376,6 +389,7 @@ class TestBackwardCompat:
             MPLibrary,
             MPProfile,
         )
+
         assert CORE_METAPROGRAMS is not None
         assert MPDimension is not None
         assert MPProfile is not None
@@ -385,4 +399,5 @@ class TestBackwardCompat:
     def test_wrapper_same_objects(self):
         from src.metamodels.mp.library import MPLibrary as WrappedLib
         from src.metamodels.mp.patterns import MPLibrary as DirectLib
+
         assert WrappedLib is DirectLib

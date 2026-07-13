@@ -1,4 +1,5 @@
 """Tests for agenda module."""
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock
@@ -10,7 +11,7 @@ from src.agenda.feasibility import FeasibilityChecker, FeasibilityResult
 from src.agenda.generator import AgendaGenerator, ResearchQuestion
 from src.agenda.priority import PriorityScorer
 from src.agenda.progress import ProgressTracker
-from src.api.v8_routers.agenda import generate_agenda, approve_question
+from src.api.v8_routers.agenda import approve_question, generate_agenda
 
 
 class TestResearchQuestion:

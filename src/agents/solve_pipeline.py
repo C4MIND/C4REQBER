@@ -2,6 +2,7 @@
 
 Orchestrator — delegates to step modules.
 """
+
 from __future__ import annotations
 
 
@@ -14,9 +15,9 @@ __all__ = [
     "UniversalSolvePipeline",
 ]
 
-from collections.abc import AsyncGenerator
 import asyncio
 import logging
+from collections.abc import AsyncGenerator
 from dataclasses import dataclass, field
 from typing import Any, Literal, TypedDict
 
@@ -40,6 +41,7 @@ from src.pipeline.config import PipelineConfig
 
 class PipelineEvent(TypedDict, total=False):
     """PipelineEvent."""
+
     event: Literal["start", "step_start", "step_complete", "complete", "error", "done"]
     problem: str
     mode: str
@@ -54,6 +56,7 @@ class PipelineEvent(TypedDict, total=False):
 @dataclass
 class SolvePipelineResult:
     """SolvePipelineResult."""
+
     problem: str
     mode: str
     steps: list[PipelineStepResult] = field(default_factory=list)
@@ -96,11 +99,14 @@ class SolvePipelineResult:
 class UniversalSolvePipeline(BasePipeline):
     """Universal Problem-Solving Pipeline — inherits config, events, observer from BasePipeline."""
 
-    def __init__(self, provider_router: ProviderRouter | None = None, config: PipelineConfig | None = None) -> None:
+    def __init__(
+        self, provider_router: ProviderRouter | None = None, config: PipelineConfig | None = None
+    ) -> None:
         super().__init__(config=config)
         if provider_router is None:
             from src.llm.config import ProviderPreset
             from src.llm.router import ProviderRouter
+
             provider_router = ProviderRouter.from_preset(ProviderPreset.C4REQBER)
         self.c4_space = C4Space()
         self.transformer = DomainTransformer(self.c4_space)
@@ -116,11 +122,20 @@ class UniversalSolvePipeline(BasePipeline):
         self.matrix_dream = MatrixDreamLibrary()
         self.memory = StructuralMemoryBank()
         from src.knowledge.orchestrator import MultiSourceSearcher
+
         self.prior_art = MultiSourceSearcher(
             sources={
-                "openalex", "crossref", "pubmed", "europe_pmc",
-                "dblp", "datacite", "zenodo", "figshare", "doaj",
-                "inspire_hep", "arxiv",
+                "openalex",
+                "crossref",
+                "pubmed",
+                "europe_pmc",
+                "dblp",
+                "datacite",
+                "zenodo",
+                "figshare",
+                "doaj",
+                "inspire_hep",
+                "arxiv",
             },
             max_concurrent=8,
             cache_enabled=True,
@@ -187,16 +202,19 @@ class UniversalSolvePipeline(BasePipeline):
                 result.observer_insights = data.get("observer_insights", [])
                 # Restore steps
                 from src.agents.pipeline.steps.base import PipelineStage, PipelineStepResult
+
                 for s in data.get("steps", []):
                     try:
-                        result.steps.append(PipelineStepResult(
-                            stage=PipelineStage(s["stage"]),
-                            status=s["status"],
-                            input_data=s.get("input_data", {}),
-                            output_data=s.get("output_data", {}),
-                            duration_ms=s.get("duration_ms", 0),
-                            error=s.get("error"),
-                        ))
+                        result.steps.append(
+                            PipelineStepResult(
+                                stage=PipelineStage(s["stage"]),
+                                status=s["status"],
+                                input_data=s.get("input_data", {}),
+                                output_data=s.get("output_data", {}),
+                                duration_ms=s.get("duration_ms", 0),
+                                error=s.get("error"),
+                            )
+                        )
                     except Exception:
                         pass
         result.cost_usd = self._cost_tracker.get_session_cost()

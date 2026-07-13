@@ -7,6 +7,7 @@ Do NOT add CORSMiddleware here — audit 2026-06-22 found CORS being mounted
 twice (here + in cors.py), causing duplicate Access-Control-* headers that
 browsers reject. CORS registration is the sole responsibility of setup_cors().
 """
+
 from __future__ import annotations
 
 import os
@@ -128,9 +129,10 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         api_key = request.headers.get("X-API-Key", "")
         if api_key:
             return f"api:{api_key[:16]}"
-        forwarded = request.headers.get("X-Forwarded-For", "")
-        if forwarded:
-            return forwarded.split(",")[-1].strip()
+        if os.getenv("TRUST_PROXY_HEADERS", "false").lower() in {"1", "true", "yes"}:
+            forwarded = request.headers.get("X-Forwarded-For", "")
+            if forwarded:
+                return forwarded.split(",")[0].strip()
         return request.client.host if request.client else "unknown"
 
     async def dispatch(self, request: Request, call_next: Any) -> Any:
@@ -230,6 +232,27 @@ class APIKeyMiddleware(BaseHTTPMiddleware):
 
 def setup_security_middleware(app: FastAPI) -> None:
     """Register all security middleware on the FastAPI app."""
+    if os.getenv("ENV", "development").lower() == "production":
+        for name in ("JWT_SECRET", "CSRF_SECRET"):
+            secret = os.getenv(name, "")
+            weak_patterns = ("changeme", "password", "dev-secret", "test-secret")
+            if len(secret) < 32 or any(pattern in secret.lower() for pattern in weak_patterns):
+                raise RuntimeError(
+                    f"{name} must be at least 32 characters and non-default in production"
+                )
+        worker_value = os.getenv("WEB_CONCURRENCY", os.getenv("UVICORN_WORKERS", "1"))
+        try:
+            worker_count = int(worker_value)
+        except ValueError as exc:
+            raise RuntimeError("API worker count must be an integer") from exc
+        if worker_count > 1 and (
+            not os.getenv("REDIS_URL")
+            or os.getenv("RATE_LIMIT_BACKEND", "memory").lower() != "redis"
+        ):
+            raise RuntimeError(
+                "Multi-worker production requires REDIS_URL and RATE_LIMIT_BACKEND=redis"
+            )
+
     # Security headers (ASGI middleware — add first so it runs last)
     app.add_middleware(SecurityHeadersMiddleware)
 
@@ -238,9 +261,6 @@ def setup_security_middleware(app: FastAPI) -> None:
 
     # CSRF protection for state-changing requests
     app.add_middleware(CSRFProtectionMiddleware)
-
-    # CORS registration moved to setup_cors() (src/api/middleware/cors.py).
-    # Audit 2026-06-22 C-8: removed duplicate mount that produced double headers.
 
     # Rate limiting with configurable per-endpoint limits
     rpm = int(os.getenv("RATE_LIMIT_RPM", "60"))
@@ -264,3 +284,9 @@ def setup_security_middleware(app: FastAPI) -> None:
     # API key validation (only if API_KEYS env is set)
     if os.getenv("API_KEYS"):
         app.add_middleware(APIKeyMiddleware)
+
+    # Add CORS once and last so preflight requests are handled by the outermost
+    # middleware before authentication and CSRF checks.
+    from src.api.middleware.cors import setup_cors
+
+    setup_cors(app)

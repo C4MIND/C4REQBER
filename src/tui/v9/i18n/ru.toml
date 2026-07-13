@@ -163,8 +163,8 @@ widget.mode.factory = "параллельный пайплайн-завод (5-1
 widget.achievements.title = "Достижения"
 
 widget.achievements.body = "Первое открытие, 5 открытий, мульти-папер шифт, S-rank качество, быстрый turnaround. Продолжайте чтобы разблокировать их все."
-settings.llm_stage = "Per-stage LLM"
-settings.llm_stage.desc = "Phase-specific model tier. A:local → D/E/F:premium → G:cheap"
+settings.llm_stage = "LLM по этапам"
+settings.llm_stage.desc = "Уровень модели для каждой фазы: A — локальная → D/E/F — премиум → G — экономичная"
 
 # v9.13 (capabilities overlay)
 sim.capabilities.title = "Возможности симуляции"

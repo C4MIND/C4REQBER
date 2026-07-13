@@ -1,17 +1,17 @@
 """Tests for open_quantum pattern module."""
 
-import numpy as np
-import pytest
 import asyncio
 
+import numpy as np
+import pytest
+
+from src.patterns.core import Hypothesis, SimulationStatus
 from src.patterns.library.open_quantum import (
+    DissipationType,
     OpenQuantumConfig,
     OpenQuantumPattern,
     OpenSystemMethod,
-    DissipationType,
 )
-from src.patterns.core import Hypothesis, SimulationStatus
-
 
 
 class TestOpenQuantumConfig:
@@ -171,7 +171,8 @@ class TestOpenQuantumPattern:
     @pytest.mark.asyncio
     async def test_run_quantum_jump(self, pattern, hypothesis):
         result = await pattern.run(
-            hypothesis, {"n_qubits": 1, "t_final": 1.0, "dt": 0.01, "method": "jump", "n_trajectories": 10}
+            hypothesis,
+            {"n_qubits": 1, "t_final": 1.0, "dt": 0.01, "method": "jump", "n_trajectories": 10},
         )
         # Quantum jump has a known bug: missing rng attribute
         assert result.status in (SimulationStatus.COMPLETED, SimulationStatus.FAILED)

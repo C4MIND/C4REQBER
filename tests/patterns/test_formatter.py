@@ -10,11 +10,12 @@ Covers:
 - Helper utilities: _fmt_val, _pick_key_metrics, _extract_*
 - Edge cases: empty results, unknown formats, failed results, missing fields
 """
+
 from __future__ import annotations
-from pathlib import Path
 
 import json
 import sys
+from pathlib import Path
 
 
 _root = Path(__file__).resolve().parent.parent
@@ -585,7 +586,9 @@ class TestExtractStocks:
     """Test _extract_stocks helper."""
 
     def test_basic(self):
-        data = {"metrics": {"population_initial": 100, "population_final": 200, "population_mean": 150}}
+        data = {
+            "metrics": {"population_initial": 100, "population_final": 200, "population_mean": 150}
+        }
         result = _extract_stocks(data)
         assert "population" in result
         assert result["population"]["initial"] == 100
@@ -676,7 +679,14 @@ class TestExtractSolution:
     """Test _extract_solution helper."""
 
     def test_basic(self):
-        data = {"metrics": {"optimal_value": 42.0, "optimal_variables": [1.0], "success": True, "num_iterations": 10}}
+        data = {
+            "metrics": {
+                "optimal_value": 42.0,
+                "optimal_variables": [1.0],
+                "success": True,
+                "num_iterations": 10,
+            }
+        }
         result = _extract_solution(data)
         assert result["optimal_value"] == 42.0
         assert result["success"] is True
@@ -729,7 +739,14 @@ class TestMdAgentBased:
     """Test _md_agent_based markdown generation."""
 
     def test_with_metrics(self):
-        data = {"metrics": {"final_mean_wealth": 100.0, "final_gini": 0.5, "equilibrium_reached": True, "phase_transitions": 2}}
+        data = {
+            "metrics": {
+                "final_mean_wealth": 100.0,
+                "final_gini": 0.5,
+                "equilibrium_reached": True,
+                "phase_transitions": 2,
+            }
+        }
         lines = _md_agent_based(data)
         assert "### Agent Summary" in lines
         assert any("Final mean wealth: 100.00" in line for line in lines)
@@ -745,7 +762,9 @@ class TestMdMonteCarlo:
     """Test _md_monte_carlo markdown generation."""
 
     def test_with_metrics(self):
-        data = {"metrics": {"mean": 42.0, "std": 5.0, "ci_lower": 40.0, "ci_upper": 44.0, "ess": 1000.0}}
+        data = {
+            "metrics": {"mean": 42.0, "std": 5.0, "ci_lower": 40.0, "ci_upper": 44.0, "ess": 1000.0}
+        }
         lines = _md_monte_carlo(data)
         assert "### Statistical Summary" in lines
         assert any("Mean: 42.000000" in line for line in lines)
@@ -788,7 +807,14 @@ class TestMdOptimization:
     """Test _md_optimization markdown generation."""
 
     def test_with_metrics(self):
-        data = {"metrics": {"optimal_value": 42.0, "success": True, "num_iterations": 10, "optimal_variables": [1.0, 2.0]}}
+        data = {
+            "metrics": {
+                "optimal_value": 42.0,
+                "success": True,
+                "num_iterations": 10,
+                "optimal_variables": [1.0, 2.0],
+            }
+        }
         lines = _md_optimization(data)
         assert "### Optimization Result" in lines
         assert any("Optimal value: 42.0000" in line for line in lines)
@@ -818,9 +844,19 @@ class TestEdgeCases:
     def test_pattern_type_map_comprehensive(self, formatter):
         """PATTERN_TYPE_MAP should cover all major pattern types."""
         expected_types = {
-            "agent_based", "monte_carlo", "system_dynamics", "optimization",
-            "circuit", "fem", "cfd", "thermal", "n_body", "quantum",
-            "neural_network", "game_theory", "climate_gcm",
+            "agent_based",
+            "monte_carlo",
+            "system_dynamics",
+            "optimization",
+            "circuit",
+            "fem",
+            "cfd",
+            "thermal",
+            "n_body",
+            "quantum",
+            "neural_network",
+            "game_theory",
+            "climate_gcm",
         }
         for t in expected_types:
             assert t in formatter.PATTERN_TYPE_MAP.values(), f"Missing {t}"

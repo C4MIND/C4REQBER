@@ -16,24 +16,25 @@ Covers:
 - get_metadata()
 - Edge cases: zero substrate, zero enzyme, very short time
 """
+
 from __future__ import annotations
 
 import sys
 from pathlib import Path
 from unittest.mock import patch
 
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 import numpy as np
 import pytest
 
+from src.patterns.core import Hypothesis, SimulationStatus
 from src.patterns.library.enzyme_kinetics import (
     EnzymeKineticsConfig,
     EnzymeKineticsPattern,
     KineticModel,
 )
-from src.patterns.core import Hypothesis, SimulationStatus
-
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -166,27 +167,29 @@ class TestParseConfig:
 
     def test_all_fields_parsing(self):
         pattern = EnzymeKineticsPattern()
-        cfg = pattern._parse_config({
-            "model": "briggs_haldane",
-            "Vmax": 150.0,
-            "Km": 25.0,
-            "E0": 2.0,
-            "S0": 200.0,
-            "P0": 0.0,
-            "ES0": 0.0,
-            "k1": 200.0,
-            "k_1": 100.0,
-            "k2": 100.0,
-            "I0": 10.0,
-            "Ki": 5.0,
-            "n": 2.0,
-            "Kd": 30.0,
-            "L": 500.0,
-            "c": 0.005,
-            "t_max": 50.0,
-            "dt": 0.05,
-            "num_points": 15,
-        })
+        cfg = pattern._parse_config(
+            {
+                "model": "briggs_haldane",
+                "Vmax": 150.0,
+                "Km": 25.0,
+                "E0": 2.0,
+                "S0": 200.0,
+                "P0": 0.0,
+                "ES0": 0.0,
+                "k1": 200.0,
+                "k_1": 100.0,
+                "k2": 100.0,
+                "I0": 10.0,
+                "Ki": 5.0,
+                "n": 2.0,
+                "Kd": 30.0,
+                "L": 500.0,
+                "c": 0.005,
+                "t_max": 50.0,
+                "dt": 0.05,
+                "num_points": 15,
+            }
+        )
         assert cfg.model == KineticModel.BRIGGS_HALDANE
         assert cfg.E0 == 2.0
         assert cfg.k1 == 200.0

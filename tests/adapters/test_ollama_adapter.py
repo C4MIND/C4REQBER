@@ -1,10 +1,11 @@
 """Tests for src/adapters/ollama_adapter.py"""
+
 from __future__ import annotations
-from pathlib import Path
 
 import json
 import sys
 from io import BytesIO
+from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock, patch
 
@@ -42,6 +43,7 @@ def mock_response():
         response.__exit__ = MagicMock(return_value=False)
         response.read = MagicMock(return_value=json.dumps(data).encode())
         return response
+
     return make_response
 
 
@@ -131,7 +133,7 @@ class TestListModels:
                         "quantization_level": "q4_0",
                         "format": "gguf",
                         "family": "llama",
-                    }
+                    },
                 }
             ]
         }
@@ -205,7 +207,7 @@ class TestGenerate:
             result = adapter.generate("test", system="You are a test")
 
         assert result == "System response"
-            # Verify system was included in request
+        # Verify system was included in request
         call_args = mock_urlopen.call_args
         request = call_args[0][0]
         body = json.loads(request.data)
@@ -291,7 +293,7 @@ class TestGenerateStructured:
                 "properties": {
                     "name": {"type": "string"},
                     "value": {"type": "integer"},
-                }
+                },
             }
             result = adapter.generate_structured("test", schema)
 
@@ -325,7 +327,7 @@ class TestGenerateStructured:
                 "properties": {
                     "items": {"type": "array"},
                     "name": {"type": "string"},
-                }
+                },
             }
             result = adapter.generate_structured("test", schema)
 
@@ -458,7 +460,9 @@ class TestLLMProvider:
             mock_client = MagicMock()
             fake_module = MagicMock()
             fake_module.LLMClient = mock_client
-            with patch.dict(sys.modules, {"src.llm.client": fake_module, "llm.client": fake_module}):
+            with patch.dict(
+                sys.modules, {"src.llm.client": fake_module, "llm.client": fake_module}
+            ):
                 provider = LLMProvider(openrouter_key="test-key")
                 assert provider.active == "openrouter"
                 assert provider.openrouter is not None
@@ -497,7 +501,9 @@ class TestLLMProvider:
         with patch.object(OllamaAdapter, "is_available", return_value=True):
             provider = LLMProvider()
             schema = {"type": "object", "properties": {"x": {"type": "string"}}}
-            with patch.object(provider.ollama, "generate_structured", return_value={"x": "test"}) as mock_gen:
+            with patch.object(
+                provider.ollama, "generate_structured", return_value={"x": "test"}
+            ) as mock_gen:
                 result = provider.generate_structured("test", schema)
                 assert result == {"x": "test"}
 
@@ -533,7 +539,9 @@ class TestLLMProvider:
             mock_client = MagicMock()
             fake_module = MagicMock()
             fake_module.LLMClient = MagicMock(return_value=mock_client)
-            with patch.dict(sys.modules, {"src.llm.client": fake_module, "llm.client": fake_module}):
+            with patch.dict(
+                sys.modules, {"src.llm.client": fake_module, "llm.client": fake_module}
+            ):
                 provider = LLMProvider(openrouter_key="test-key")
                 assert provider.openrouter is not None
 
@@ -595,7 +603,9 @@ class TestEdgeCases:
             mock_client = MagicMock()
             fake_module = MagicMock()
             fake_module.LLMClient = MagicMock(return_value=mock_client)
-            with patch.dict(sys.modules, {"src.llm.client": fake_module, "llm.client": fake_module}):
+            with patch.dict(
+                sys.modules, {"src.llm.client": fake_module, "llm.client": fake_module}
+            ):
                 provider = LLMProvider(openrouter_key="key")
                 assert provider.active == "openrouter"
 
@@ -604,7 +614,9 @@ class TestEdgeCases:
             mock_client = MagicMock()
             fake_module = MagicMock()
             fake_module.LLMClient = MagicMock(return_value=mock_client)
-            with patch.dict(sys.modules, {"src.llm.client": fake_module, "llm.client": fake_module}):
+            with patch.dict(
+                sys.modules, {"src.llm.client": fake_module, "llm.client": fake_module}
+            ):
                 provider = LLMProvider(openrouter_key="key", prefer_local=True)
                 assert provider.active == "ollama"
 

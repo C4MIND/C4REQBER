@@ -3,6 +3,7 @@ Tests for src/patterns/library/inverse_kinematics.py
 
 Covers: RobotKinematics, all IKSolver classes, InverseKinematicsPattern
 """
+
 from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
@@ -11,7 +12,6 @@ import numpy as np
 import pytest
 
 from src.patterns.library.inverse_kinematics import (
-
     CCDSolver,
     DampedLeastSquaresSolver,
     IKConfig,
@@ -119,9 +119,7 @@ class TestIKConfig:
         assert cfg.n_dof == 4
 
     def test_custom(self):
-        cfg = IKConfig(
-            robot_type=RobotType.CUSTOM, n_dof=3, link_lengths=np.array([2.0, 1.0, 0.5])
-        )
+        cfg = IKConfig(robot_type=RobotType.CUSTOM, n_dof=3, link_lengths=np.array([2.0, 1.0, 0.5]))
         assert cfg.n_dof == 3
 
     def test_default_joint_limits(self):
@@ -416,9 +414,7 @@ class TestInverseKinematicsPattern:
             robot_type=RobotType.PLANAR_2R,
             solver=IKSolver.DAMPED_LEAST_SQUARES,
             target_position=np.array([1.0, 0.0]),
-            joint_limits=np.array(
-                [[-np.pi / 4, np.pi / 4], [-np.pi / 4, np.pi / 4]]
-            ),
+            joint_limits=np.array([[-np.pi / 4, np.pi / 4], [-np.pi / 4, np.pi / 4]]),
         )
         pattern = InverseKinematicsPattern(cfg)
         result = pattern.solve()

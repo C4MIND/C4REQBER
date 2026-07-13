@@ -4,6 +4,7 @@
 For each .go file with such a hack, verify the import is actually unused
 in the file body and recommend removal.
 """
+
 import re
 import sys
 from pathlib import Path
@@ -21,7 +22,7 @@ def check_file(path: Path) -> list[tuple[str, str]]:
     if not m:
         return []
     import_block = m.group(1)
-    body = src[m.end():]
+    body = src[m.end() :]
     findings = []
     for line in import_block.split("\n"):
         s = line.strip()
@@ -32,7 +33,9 @@ def check_file(path: Path) -> list[tuple[str, str]]:
         pkg = s.strip('"').split("/")[-1].split(" ")[0]
         identifier = pkg.split(".")[-1].split('"')[0]
         # Check if identifier appears in body outside the var _ = hack itself
-        body_no_hack = re.sub(r"var _ = [a-zA-Z_]+\.[A-Za-z_]+\s*(//.*)?$", "", body, flags=re.MULTILINE)
+        body_no_hack = re.sub(
+            r"var _ = [a-zA-Z_]+\.[A-Za-z_]+\s*(//.*)?$", "", body, flags=re.MULTILINE
+        )
         if identifier not in body_no_hack:
             # Find the marker line
             marker_match = re.search(rf"var _ = {identifier}\.[A-Za-z_]+", body)

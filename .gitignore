@@ -329,10 +329,6 @@ v8_discovery.db
 *.db-shm
 *.db-wal
 
-# Go build artifacts (platform-specific, rebuild in 2s)
-src/tui/v8/c4tui*
-src/tui/v8/bin/
-
 # Backup files
 *.bak
 docs/*.backup.*

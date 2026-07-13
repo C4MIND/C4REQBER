@@ -16,24 +16,25 @@ Covers:
 - get_metadata()
 - Edge cases: zero time, minimal params, empty hypothesis
 """
+
 from __future__ import annotations
 
 import sys
 from pathlib import Path
 from unittest.mock import patch
 
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 import numpy as np
 import pytest
 
+from src.patterns.core import Hypothesis, SimulationStatus
 from src.patterns.library.signal_transduction import (
+    SignalingModel,
     SignalTransductionConfig,
     SignalTransductionPattern,
-    SignalingModel,
 )
-from src.patterns.core import Hypothesis, SimulationStatus
-
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -163,32 +164,34 @@ class TestParseConfig:
 
     def test_all_fields_parsing(self):
         pattern = SignalTransductionPattern()
-        cfg = pattern._parse_config({
-            "model": "repressilator",
-            "t_max": 100.0,
-            "dt": 0.05,
-            "E1_total": 0.2,
-            "E2_total": 0.2,
-            "MAPKK_total": 20.0,
-            "MAPK_total": 20.0,
-            "k1": 0.02,
-            "k2": 0.2,
-            "k3": 0.02,
-            "k4": 0.2,
-            "R_total": 2.0,
-            "G_total": 2.0,
-            "ligand_conc": 0.5,
-            "stimulus_amp": 2.0,
-            "stimulus_duration": 50.0,
-            "adaptation_rate": 0.2,
-            "n_genes": 4,
-            "alpha": 500.0,
-            "beta": 10.0,
-            "n_hill": 3.0,
-            "gamma": 2.0,
-            "K": 2.0,
-            "num_stimulus_levels": 15,
-        })
+        cfg = pattern._parse_config(
+            {
+                "model": "repressilator",
+                "t_max": 100.0,
+                "dt": 0.05,
+                "E1_total": 0.2,
+                "E2_total": 0.2,
+                "MAPKK_total": 20.0,
+                "MAPK_total": 20.0,
+                "k1": 0.02,
+                "k2": 0.2,
+                "k3": 0.02,
+                "k4": 0.2,
+                "R_total": 2.0,
+                "G_total": 2.0,
+                "ligand_conc": 0.5,
+                "stimulus_amp": 2.0,
+                "stimulus_duration": 50.0,
+                "adaptation_rate": 0.2,
+                "n_genes": 4,
+                "alpha": 500.0,
+                "beta": 10.0,
+                "n_hill": 3.0,
+                "gamma": 2.0,
+                "K": 2.0,
+                "num_stimulus_levels": 15,
+            }
+        )
         assert cfg.model == SignalingModel.REPRESSILATOR
         assert cfg.t_max == 100.0
         assert cfg.alpha == 500.0
@@ -384,9 +387,7 @@ class TestCalculateConfidence:
     def test_mapk_confidence(self):
         pattern = SignalTransductionPattern()
         pattern.config = SignalTransductionConfig(model=SignalingModel.MAPK_CASCADE)
-        results = {
-            "metrics": {"amplification_factor": 2.0, "hill_coefficient": 3.0}
-        }
+        results = {"metrics": {"amplification_factor": 2.0, "hill_coefficient": 3.0}}
         confidence = pattern._calculate_confidence(results)
         assert confidence > 0.5
 

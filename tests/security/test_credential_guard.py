@@ -1,4 +1,5 @@
 """Tests for credential_guard — credential redaction and audit safety."""
+
 from __future__ import annotations
 
 import pytest
@@ -80,6 +81,7 @@ class TestAuditLogSafe:
 class TestBlocklistPatterns:
     def test_all_patterns_compile(self) -> None:
         import re
-        for pattern, name in CREDENTIALS_BLOCKLIST:
+
+        for pattern, _name in CREDENTIALS_BLOCKLIST:
             compiled = re.compile(pattern, re.IGNORECASE)
             assert compiled is not None

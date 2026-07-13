@@ -15,18 +15,19 @@ Covers:
 - get_metadata()
 - Edge cases: single country, zero trade costs, extreme trade elasticity
 """
+
 from __future__ import annotations
 
 import sys
 from pathlib import Path
+
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 import numpy as np
 import pytest
 
-from src.patterns.library.gravity_trade import GravityTradeModel, GravityTradeConfig
-
+from src.patterns.library.gravity_trade import GravityTradeConfig, GravityTradeModel
 
 
 # ═══════════════════════════════════════════════════════════════════

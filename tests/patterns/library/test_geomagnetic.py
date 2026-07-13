@@ -1,11 +1,11 @@
 """
 Tests for geomagnetic pattern module.
 """
+
 import numpy as np
 import pytest
 
 from src.patterns.library.geomagnetic import GeomagneticConfig, GeomagneticPattern
-
 
 
 class TestConfig:

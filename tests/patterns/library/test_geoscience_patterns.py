@@ -54,6 +54,7 @@ from patterns.library.sea_ice import SeaIceConfig, SeaIcePattern
 # Helpers
 # ===========================================================================
 
+
 def _assert_dict_keys(d: dict[str, Any], required: list[str]) -> None:
     """Assert that all required keys are present in dict *d*."""
     for key in required:
@@ -79,6 +80,7 @@ GEOSCIENCE_PATTERNS = [
 # 1. Ocean Circulation
 # ===========================================================================
 
+
 class TestOceanCirculation:
     """Test suite for OceanCirculationPattern."""
 
@@ -103,9 +105,7 @@ class TestOceanCirculation:
 
     def test_run_happy_path(self):
         """Short simulation runs and returns expected keys."""
-        cfg = OceanCirculationConfig(
-            nx=8, ny=4, nz=2, days=1, dt=3600, output_interval=1
-        )
+        cfg = OceanCirculationConfig(nx=8, ny=4, nz=2, days=1, dt=3600, output_interval=1)
         pattern = OceanCirculationPattern(cfg)
         result = pattern.run()
 
@@ -169,6 +169,7 @@ class TestOceanCirculation:
 # 2. Geomagnetic
 # ===========================================================================
 
+
 class TestGeomagnetic:
     """Test suite for GeomagneticPattern."""
 
@@ -182,9 +183,7 @@ class TestGeomagnetic:
         ],
     )
     def test_init_happy_path(self, nr, ntheta, nphi, max_time, dt):
-        cfg = GeomagneticConfig(
-            nr=nr, ntheta=ntheta, nphi=nphi, max_time=max_time, dt=dt
-        )
+        cfg = GeomagneticConfig(nr=nr, ntheta=ntheta, nphi=nphi, max_time=max_time, dt=dt)
         pattern = GeomagneticPattern(cfg)
 
         assert pattern.config == cfg
@@ -230,9 +229,7 @@ class TestGeomagnetic:
 
     @patch("numpy.random.seed")
     def test_run_with_mocked_random(self, mock_seed):
-        cfg = GeomagneticConfig(
-            nr=8, ntheta=8, nphi=16, max_time=0.0001, dt=1e-7
-        )
+        cfg = GeomagneticConfig(nr=8, ntheta=8, nphi=16, max_time=0.0001, dt=1e-7)
         pattern = GeomagneticPattern(cfg)
         result = pattern.run()
         assert "final_state" in result
@@ -240,9 +237,7 @@ class TestGeomagnetic:
     # -- Results formatting -------------------------------------------------
 
     def test_format_output_types(self):
-        cfg = GeomagneticConfig(
-            nr=8, ntheta=8, nphi=16, max_time=0.0001, dt=1e-7
-        )
+        cfg = GeomagneticConfig(nr=8, ntheta=8, nphi=16, max_time=0.0001, dt=1e-7)
         pattern = GeomagneticPattern(cfg)
         pattern.run()
         out = pattern._format_output()
@@ -255,6 +250,7 @@ class TestGeomagnetic:
 # ===========================================================================
 # 3. Mantle Convection
 # ===========================================================================
+
 
 class TestMantleConvection:
     """Test suite for MantleConvectionPattern."""
@@ -269,9 +265,7 @@ class TestMantleConvection:
         ],
     )
     def test_init_happy_path(self, nx, ny, nz, max_time, dt):
-        cfg = MantleConvectionConfig(
-            nx=nx, ny=ny, nz=nz, max_time=max_time, dt=dt
-        )
+        cfg = MantleConvectionConfig(nx=nx, ny=ny, nz=nz, max_time=max_time, dt=dt)
         pattern = MantleConvectionPattern(cfg)
 
         assert pattern.config == cfg
@@ -279,9 +273,7 @@ class TestMantleConvection:
         assert pattern.u.shape == (nx - 1, ny, nz)
 
     def test_run_happy_path(self):
-        cfg = MantleConvectionConfig(
-            nx=8, ny=8, nz=4, max_time=0.0001, dt=1e-7, output_interval=10
-        )
+        cfg = MantleConvectionConfig(nx=8, ny=8, nz=4, max_time=0.0001, dt=1e-7, output_interval=10)
         pattern = MantleConvectionPattern(cfg)
         result = pattern.run()
 
@@ -317,9 +309,7 @@ class TestMantleConvection:
 
     @patch("numpy.random.seed")
     def test_run_with_mocked_random(self, mock_seed):
-        cfg = MantleConvectionConfig(
-            nx=8, ny=8, nz=4, max_time=0.0001, dt=1e-7
-        )
+        cfg = MantleConvectionConfig(nx=8, ny=8, nz=4, max_time=0.0001, dt=1e-7)
         pattern = MantleConvectionPattern(cfg)
         result = pattern.run()
         assert "final_state" in result
@@ -327,9 +317,7 @@ class TestMantleConvection:
     # -- Results formatting -------------------------------------------------
 
     def test_format_output_types(self):
-        cfg = MantleConvectionConfig(
-            nx=8, ny=8, nz=4, max_time=0.0001, dt=1e-7
-        )
+        cfg = MantleConvectionConfig(nx=8, ny=8, nz=4, max_time=0.0001, dt=1e-7)
         pattern = MantleConvectionPattern(cfg)
         pattern.run()
         out = pattern._format_output()
@@ -342,6 +330,7 @@ class TestMantleConvection:
 # ===========================================================================
 # 4. Sea Ice
 # ===========================================================================
+
 
 class TestSeaIce:
     """Test suite for SeaIcePattern."""
@@ -419,6 +408,7 @@ class TestSeaIce:
 # 5. Biogeochemistry
 # ===========================================================================
 
+
 class TestBiogeochemistry:
     """Test suite for BiogeochemistryPattern."""
 
@@ -442,9 +432,7 @@ class TestBiogeochemistry:
         assert pattern.D.shape == (nx, ny, nz)
 
     def test_run_happy_path(self):
-        cfg = BiogeochemistryConfig(
-            nx=8, ny=8, nz=2, days=2, dt=3600, output_interval=1
-        )
+        cfg = BiogeochemistryConfig(nx=8, ny=8, nz=2, days=2, dt=3600, output_interval=1)
         pattern = BiogeochemistryPattern(cfg)
         result = pattern.run()
 
@@ -481,9 +469,7 @@ class TestBiogeochemistry:
 
     @patch("numpy.random.seed")
     def test_run_with_mocked_random(self, mock_seed):
-        cfg = BiogeochemistryConfig(
-            nx=8, ny=8, nz=2, days=1, dt=3600
-        )
+        cfg = BiogeochemistryConfig(nx=8, ny=8, nz=2, days=1, dt=3600)
         pattern = BiogeochemistryPattern(cfg)
         result = pattern.run()
         assert "final_state" in result
@@ -491,9 +477,7 @@ class TestBiogeochemistry:
     # -- Results formatting -------------------------------------------------
 
     def test_format_output_types(self):
-        cfg = BiogeochemistryConfig(
-            nx=8, ny=8, nz=2, days=1, dt=3600
-        )
+        cfg = BiogeochemistryConfig(nx=8, ny=8, nz=2, days=1, dt=3600)
         pattern = BiogeochemistryPattern(cfg)
         pattern.run()
         out = pattern._format_output()
@@ -506,6 +490,7 @@ class TestBiogeochemistry:
 # ===========================================================================
 # 6. Cloud Microphysics
 # ===========================================================================
+
 
 class TestCloudMicrophysics:
     """Test suite for CloudMicrophysicsPattern."""
@@ -529,9 +514,7 @@ class TestCloudMicrophysics:
         assert pattern.qr.shape == (nx, ny, nz)
 
     def test_run_happy_path(self):
-        cfg = CloudMicrophysicsConfig(
-            nx=8, ny=8, nz=4, minutes=5, dt=30, output_interval=1
-        )
+        cfg = CloudMicrophysicsConfig(nx=8, ny=8, nz=4, minutes=5, dt=30, output_interval=1)
         pattern = CloudMicrophysicsPattern(cfg)
         result = pattern.run()
 
@@ -567,9 +550,7 @@ class TestCloudMicrophysics:
 
     @patch("numpy.random.seed")
     def test_run_with_mocked_random(self, mock_seed):
-        cfg = CloudMicrophysicsConfig(
-            nx=8, ny=8, nz=4, minutes=5, dt=30
-        )
+        cfg = CloudMicrophysicsConfig(nx=8, ny=8, nz=4, minutes=5, dt=30)
         pattern = CloudMicrophysicsPattern(cfg)
         result = pattern.run()
         assert "final_state" in result
@@ -577,9 +558,7 @@ class TestCloudMicrophysics:
     # -- Results formatting -------------------------------------------------
 
     def test_format_output_types(self):
-        cfg = CloudMicrophysicsConfig(
-            nx=8, ny=8, nz=4, minutes=5, dt=30
-        )
+        cfg = CloudMicrophysicsConfig(nx=8, ny=8, nz=4, minutes=5, dt=30)
         pattern = CloudMicrophysicsPattern(cfg)
         pattern.run()
         out = pattern._format_output()
@@ -592,6 +571,7 @@ class TestCloudMicrophysics:
 # ===========================================================================
 # 7. Groundwater
 # ===========================================================================
+
 
 class TestGroundwater:
     """Test suite for GroundwaterPattern."""
@@ -614,9 +594,7 @@ class TestGroundwater:
         assert pattern.theta.shape == (nx, ny, nz)
 
     def test_run_happy_path(self):
-        cfg = GroundwaterConfig(
-            nx=10, ny=10, nz=3, days=1, dt=1000, output_interval=1
-        )
+        cfg = GroundwaterConfig(nx=10, ny=10, nz=3, days=1, dt=1000, output_interval=1)
         pattern = GroundwaterPattern(cfg)
         result = pattern.run()
 
@@ -652,9 +630,7 @@ class TestGroundwater:
 
     @patch("numpy.random.seed")
     def test_run_with_mocked_random(self, mock_seed):
-        cfg = GroundwaterConfig(
-            nx=10, ny=10, nz=3, days=1, dt=1000
-        )
+        cfg = GroundwaterConfig(nx=10, ny=10, nz=3, days=1, dt=1000)
         pattern = GroundwaterPattern(cfg)
         result = pattern.run()
         assert "final_state" in result
@@ -662,9 +638,7 @@ class TestGroundwater:
     # -- Results formatting -------------------------------------------------
 
     def test_format_output_types(self):
-        cfg = GroundwaterConfig(
-            nx=10, ny=10, nz=3, days=1, dt=1000
-        )
+        cfg = GroundwaterConfig(nx=10, ny=10, nz=3, days=1, dt=1000)
         pattern = GroundwaterPattern(cfg)
         pattern.run()
         out = pattern._format_output()
@@ -679,6 +653,7 @@ class TestGroundwater:
 # Cross-cutting parametrized tests
 # ===========================================================================
 
+
 class TestAllPatterns:
     """Smoke tests executed across every geoscience pattern."""
 
@@ -686,9 +661,7 @@ class TestAllPatterns:
         "name,config_cls,pattern_cls",
         GEOSCIENCE_PATTERNS,
     )
-    def test_pattern_id_matches_name(
-        self, name: str, config_cls: type, pattern_cls: type
-    ):
+    def test_pattern_id_matches_name(self, name: str, config_cls: type, pattern_cls: type):
         """Each pattern exposes a PATTERN_ID matching its registered name."""
         assert pattern_cls.PATTERN_ID == name
 
@@ -696,22 +669,16 @@ class TestAllPatterns:
         "name,config_cls,pattern_cls",
         GEOSCIENCE_PATTERNS,
     )
-    def test_metadata_has_required_keys(
-        self, name: str, config_cls: type, pattern_cls: type
-    ):
+    def test_metadata_has_required_keys(self, name: str, config_cls: type, pattern_cls: type):
         """Metadata dict contains the mandatory top-level keys."""
         meta = pattern_cls.get_metadata()
-        _assert_dict_keys(
-            meta, ["id", "version", "name", "category", "parameters", "assumptions"]
-        )
+        _assert_dict_keys(meta, ["id", "version", "name", "category", "parameters", "assumptions"])
 
     @pytest.mark.parametrize(
         "name,config_cls,pattern_cls",
         GEOSCIENCE_PATTERNS,
     )
-    def test_default_config_is_valid(
-        self, name: str, config_cls: type, pattern_cls: type
-    ):
+    def test_default_config_is_valid(self, name: str, config_cls: type, pattern_cls: type):
         """Default config can be instantiated without arguments."""
         cfg = config_cls()
         assert cfg is not None
@@ -720,9 +687,7 @@ class TestAllPatterns:
         "name,config_cls,pattern_cls",
         GEOSCIENCE_PATTERNS,
     )
-    def test_small_run_produces_result_dict(
-        self, name: str, config_cls: type, pattern_cls: type
-    ):
+    def test_small_run_produces_result_dict(self, name: str, config_cls: type, pattern_cls: type):
         """Every pattern can execute a minimal run and return a dict."""
         # Build tiny config via kwargs tailored to each pattern
         tiny_kwargs: dict[str, Any]
@@ -759,9 +724,7 @@ class TestAllPatterns:
         "name,config_cls,pattern_cls",
         GEOSCIENCE_PATTERNS,
     )
-    def test_result_contains_final_state(
-        self, name: str, config_cls: type, pattern_cls: type
-    ):
+    def test_result_contains_final_state(self, name: str, config_cls: type, pattern_cls: type):
         """Run result always contains a 'final_state' sub-dict."""
         tiny_kwargs: dict[str, Any]
         if name == "geomagnetic":
@@ -798,6 +761,7 @@ class TestAllPatterns:
 # Edge-case / integration scenarios
 # ===========================================================================
 
+
 class TestEdgeCases:
     """Edge-case scenarios across multiple patterns."""
 
@@ -811,9 +775,7 @@ class TestEdgeCases:
 
     def test_geomagnetic_zero_max_time(self):
         """Zero max_time should produce minimal output."""
-        cfg = GeomagneticConfig(
-            nr=6, ntheta=6, nphi=12, max_time=0.0, dt=1e-7
-        )
+        cfg = GeomagneticConfig(nr=6, ntheta=6, nphi=12, max_time=0.0, dt=1e-7)
         pattern = GeomagneticPattern(cfg)
         result = pattern.run()
         assert "final_state" in result
@@ -845,9 +807,7 @@ class TestEdgeCases:
         assert "final_state" in result
 
     def test_mantle_convection_zero_max_time(self):
-        cfg = MantleConvectionConfig(
-            nx=8, ny=8, nz=4, max_time=0.0, dt=1e-7
-        )
+        cfg = MantleConvectionConfig(nx=8, ny=8, nz=4, max_time=0.0, dt=1e-7)
         pattern = MantleConvectionPattern(cfg)
         result = pattern.run()
         assert "final_state" in result

@@ -14,19 +14,20 @@ Covers:
 - run() async integration
 - Edge cases: extreme temperatures, small grids
 """
+
 from __future__ import annotations
 
 import sys
 from pathlib import Path
+
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 import numpy as np
 import pytest
 
-from src.patterns.library.thermal import ThermalPattern, HeatTransferMode
 from src.patterns.core import Hypothesis, SimulationStatus
-
+from src.patterns.library.thermal import HeatTransferMode, ThermalPattern
 
 
 # ═══════════════════════════════════════════════════════════════════

@@ -6,7 +6,6 @@ import pytest
 from src.patterns.library.groundwater import GroundwaterConfig, GroundwaterPattern
 
 
-
 class TestGroundwaterConfig:
     def test_default_values(self):
         cfg = GroundwaterConfig()
@@ -134,17 +133,21 @@ class TestGroundwaterPattern:
 
     def test_pumping_effect(self):
         config = GroundwaterConfig(
-            nx=10, ny=10, nz=3, days=2, dt=1000,
-            pumping_start=0, pumping_duration=2, pumping_rate=0.1
+            nx=10,
+            ny=10,
+            nz=3,
+            days=2,
+            dt=1000,
+            pumping_start=0,
+            pumping_duration=2,
+            pumping_rate=0.1,
         )
         pattern = GroundwaterPattern(config)
         result = pattern.run()
         assert result["final_state"]["final_drawdown"] > 0
 
     def test_recharge_effect(self):
-        config = GroundwaterConfig(
-            nx=10, ny=10, nz=3, days=2, dt=1000, recharge_rate=1.0e-6
-        )
+        config = GroundwaterConfig(nx=10, ny=10, nz=3, days=2, dt=1000, recharge_rate=1.0e-6)
         pattern = GroundwaterPattern(config)
         result = pattern.run()
         assert result["final_state"]["total_storage"] > 0

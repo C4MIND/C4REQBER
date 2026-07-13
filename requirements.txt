@@ -55,7 +55,7 @@ scikit-learn>=1.3.0
 # ═══════════════════════════════════════════════════════════════
 fastapi>=0.104.0
 uvicorn[standard]>=0.24.0
-python-multipart>=0.0.6  # Form data handling
+python-multipart>=0.0.31  # Form data handling
 starlette>=0.27.0
 
 # Database
@@ -68,7 +68,7 @@ alembic>=1.12.0  # Database migrations
 redis>=5.0.0  # Redis client
 
 # Authentication
-pyjwt>=2.8.0
+pyjwt>=2.13.0
 bcrypt>=4.1.0
 
 # ═══════════════════════════════════════════════════════════════
@@ -97,7 +97,7 @@ pytest-timeout>=2.1.0
 mypy>=1.5.0
 
 # Security
-cryptography>=41.0.0
+cryptography>=48.0.1
 
 # Simulations (optional)
 numba>=0.56.0 # optional

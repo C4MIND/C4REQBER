@@ -10,10 +10,12 @@ Covers:
 - Multiplier calculations
 - Edge cases: zero values, singular matrices
 """
+
 from __future__ import annotations
 
 import sys
 from pathlib import Path
+
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
@@ -21,8 +23,8 @@ import numpy as np
 import pytest
 
 from src.patterns.library.input_output import (
-    InputOutputModel,
     InputOutputConfig,
+    InputOutputModel,
 )
 
 

@@ -35,6 +35,7 @@ from src.triz.solver import (
 # PRINCIPLES TESTS
 # =============================================================================
 
+
 class TestPrinciples:
     def test_all_40_principles_exist(self):
         """Verify all 40 principles are defined."""
@@ -123,6 +124,7 @@ class TestPrinciples:
 # MATRIX TESTS
 # =============================================================================
 
+
 class TestMatrix:
     def test_all_39_parameters_exist(self):
         """Verify all 39 engineering parameters are defined."""
@@ -144,8 +146,8 @@ class TestMatrix:
 
     def test_matrix_cells_have_principles(self):
         """Verify all matrix cells contain valid principle numbers."""
-        for improving, row in MATRIX.items():
-            for worsening, principles in row.items():
+        for _improving, row in MATRIX.items():
+            for _worsening, principles in row.items():
                 assert isinstance(principles, list)
                 assert len(principles) >= 1
                 for p in principles:
@@ -303,6 +305,7 @@ class TestMatrix:
 # SOLVER TESTS
 # =============================================================================
 
+
 class TestSolver:
     def test_solve_contradiction_basic(self):
         """Test basic contradiction solving."""
@@ -323,32 +326,28 @@ class TestSolver:
 
     def test_solve_from_text_basic(self):
         """Test NLP-based problem solving."""
-        result = solve_from_text(
-            "I want to improve speed but reliability gets worse"
-        )
+        result = solve_from_text("I want to improve speed but reliability gets worse")
         assert result is not None
         assert result.improving_param_id == 9  # Speed
         assert result.worsening_param_id == 27  # Reliability
 
     def test_solve_from_text_temperature(self):
         """Test NLP extraction for temperature/energy contradiction."""
-        result = solve_from_text(
-            "How to increase temperature without wasting so much energy"
-        )
+        result = solve_from_text("How to increase temperature without wasting so much energy")
         assert result is not None
         assert result.improving_param_id == 17  # Temperature
         assert result.worsening_param_id == 19  # Energy spent
 
     def test_solve_from_text_strength_weight(self):
         """Test NLP extraction for strength/weight contradiction."""
-        result = solve_from_text(
-            "Make the bridge stronger but keep it lightweight"
-        )
+        result = solve_from_text("Make the bridge stronger but keep it lightweight")
         assert result is not None
         # NLP may match strength (14) or weight (1) first depending on keyword scoring
         # Verify we got a valid contradiction with strength and weight parameters
         param_ids = {result.improving_param_id, result.worsening_param_id}
-        assert 14 in param_ids or 1 in param_ids, f"Expected strength or weight in params, got {param_ids}"
+        assert 14 in param_ids or 1 in param_ids, (
+            f"Expected strength or weight in params, got {param_ids}"
+        )
         assert result.improving_param_id != result.worsening_param_id
 
     def test_extract_parameters_from_text(self):
@@ -356,14 +355,12 @@ class TestSolver:
         improving, worsening = extract_parameters_from_text(
             "I need more speed but reliability decreases"
         )
-        assert improving == 9   # Speed
+        assert improving == 9  # Speed
         assert worsening == 27  # Reliability
 
     def test_extract_parameters_no_match(self):
         """Test extraction with no recognizable parameters."""
-        improving, worsening = extract_parameters_from_text(
-            "The weather is nice today"
-        )
+        improving, worsening = extract_parameters_from_text("The weather is nice today")
         assert improving is None or worsening is None
 
     def test_list_all_parameters(self):
@@ -404,6 +401,7 @@ class TestSolver:
 # INTEGRATION TESTS
 # =============================================================================
 
+
 class TestIntegration:
     def test_end_to_end_contradiction_resolution(self):
         """
@@ -411,14 +409,14 @@ class TestIntegration:
         """
         problem = "How to make the car faster without making it less reliable"
         result = solve_from_text(problem)
-        
+
         assert result is not None
         # NLP extracts speed (9) from the text; worsening may be reliability (27) or manufacturability (32)
         # due to "car" matching production/manufacturing keywords
         assert result.improving_param_id == 9  # Speed
         assert result.worsening_param_id in (27, 32)  # Reliability or Manufacturability
         assert len(result.principles) >= 1
-        
+
         # Verify principle 13 (Inversion) is recommended for speed vs reliability
         principle_numbers = [p.number for p in result.principles]
         assert 13 in principle_numbers
@@ -428,7 +426,7 @@ class TestIntegration:
         used_principles = set()
         for _, _, principles in get_all_matrix_cells():
             used_principles.update(principles)
-        
+
         # All principles should be used at least once
         assert len(used_principles) >= 35, f"Only {len(used_principles)} principles used in matrix"
 
@@ -447,14 +445,15 @@ class TestIntegration:
         """
         test_cases = [
             # (improving, worsening, expected_principles)
-            (14, 1, [28, 35, 10, 36]),   # Strength vs Weight
-            (9, 1, [2, 28, 13, 38]),     # Speed vs Weight
-            (14, 9, [28, 10, 19, 26]),   # Strength vs Speed
-            (39, 25, [28, 10, 1, 35]),   # Productivity vs Time
+            (14, 1, [28, 35, 10, 36]),  # Strength vs Weight
+            (9, 1, [2, 28, 13, 38]),  # Speed vs Weight
+            (14, 9, [28, 10, 19, 26]),  # Strength vs Speed
+            (39, 25, [28, 10, 1, 35]),  # Productivity vs Time
         ]
-        
+
         for improving, worsening, expected in test_cases:
             principles = get_recommended_principles(improving, worsening)
             for exp in expected:
-                assert exp in principles, \
+                assert exp in principles, (
                     f"Expected principle {exp} for ({improving},{worsening}), got {principles}"
+                )

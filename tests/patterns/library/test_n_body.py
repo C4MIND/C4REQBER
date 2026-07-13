@@ -15,18 +15,19 @@ Covers:
 - get_metadata()
 - Edge cases: few particles, different distributions, integrator comparison
 """
+
 from __future__ import annotations
 
 import sys
 from pathlib import Path
+
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 import numpy as np
 import pytest
 
-from src.patterns.library.n_body import NBodyGravity, NBodyConfig, OctreeNode
-
+from src.patterns.library.n_body import NBodyConfig, NBodyGravity, OctreeNode
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -46,12 +47,7 @@ class TestNBodyConfig:
         assert cfg.integrator == "leapfrog"
 
     def test_custom_init(self):
-        cfg = NBodyConfig(
-            n_particles=500,
-            theta=0.3,
-            dt=0.01,
-            integrator="rk4"
-        )
+        cfg = NBodyConfig(n_particles=500, theta=0.3, dt=0.01, integrator="rk4")
         assert cfg.n_particles == 500
         assert cfg.theta == 0.3
         assert cfg.dt == 0.01
@@ -160,7 +156,7 @@ class TestDiskModel:
         positions, _ = pattern._disk_model(1000)
         # Z spread should be smaller than R spread
         z_spread = np.std(positions[:, 2])
-        r_spread = np.std(np.sqrt(positions[:, 0]**2 + positions[:, 1]**2))
+        r_spread = np.std(np.sqrt(positions[:, 0] ** 2 + positions[:, 1] ** 2))
         assert z_spread < r_spread
 
     def test_rotation(self):

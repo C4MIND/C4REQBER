@@ -1,22 +1,23 @@
 """
 Tests for src/patterns/library/reaction_diffusion.py
 """
+
 from __future__ import annotations
 
 import sys
 from pathlib import Path
+
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 import numpy as np
 import pytest
 
-from src.patterns.library.reaction_diffusion import (
-    ReactionDiffusionPattern,
-    ReactionDiffusionConfig,
-)
 from src.patterns.core import Hypothesis, SimulationStatus
-
+from src.patterns.library.reaction_diffusion import (
+    ReactionDiffusionConfig,
+    ReactionDiffusionPattern,
+)
 
 
 class TestReactionDiffusionConfig:
@@ -88,7 +89,13 @@ class TestSimulateGrayScott:
         pattern = ReactionDiffusionPattern()
         pattern.config = ReactionDiffusionConfig(model="gray_scott", nx=32, n_steps=1000)
         result = await pattern._simulate_gray_scott()
-        assert result["metrics"]["pattern_type"] in ["homogeneous", "spots", "stripes", "waves", "chaotic"]
+        assert result["metrics"]["pattern_type"] in [
+            "homogeneous",
+            "spots",
+            "stripes",
+            "waves",
+            "chaotic",
+        ]
 
     async def test_final_v_in_range(self):
         pattern = ReactionDiffusionPattern()
@@ -110,7 +117,9 @@ class TestSimulateTuring:
 class TestCalculateConfidence:
     def test_high_confidence(self):
         pattern = ReactionDiffusionPattern()
-        results = {"metrics": {"V_variance": 0.01, "F": 0.035, "pattern_type": "spots", "n_steps": 5000}}
+        results = {
+            "metrics": {"V_variance": 0.01, "F": 0.035, "pattern_type": "spots", "n_steps": 5000}
+        }
         confidence = pattern._calculate_confidence(results)
         assert confidence > 0.5
 

@@ -1,22 +1,23 @@
 """
 Tests for src/patterns/library/fractal_julia.py
 """
+
 from __future__ import annotations
 
 import sys
 from pathlib import Path
+
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 import numpy as np
 import pytest
 
-from src.patterns.library.fractal_julia import (
-    JuliaPattern,
-    JuliaConfig,
-)
 from src.patterns.core import Hypothesis, SimulationStatus
-
+from src.patterns.library.fractal_julia import (
+    JuliaConfig,
+    JuliaPattern,
+)
 
 
 class TestJuliaConfig:
@@ -115,7 +116,14 @@ class TestSimulateJulia:
 class TestCalculateConfidence:
     def test_high_confidence(self):
         pattern = JuliaPattern()
-        results = {"metrics": {"inside_points": 1000, "boundary_points": 500, "fractal_dimension_estimate": 1.5, "max_iter": 100}}
+        results = {
+            "metrics": {
+                "inside_points": 1000,
+                "boundary_points": 500,
+                "fractal_dimension_estimate": 1.5,
+                "max_iter": 100,
+            }
+        }
         confidence = pattern._calculate_confidence(results)
         assert confidence > 0.5
 

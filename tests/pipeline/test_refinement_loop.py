@@ -2,6 +2,7 @@
 
 Tests the decision logic inline in src/api/v8_routers/discovery/pipeline.py lines ~1037-1154.
 """
+
 from __future__ import annotations
 
 import pytest
@@ -10,8 +11,8 @@ import pytest
 @pytest.fixture
 def thresholds():
     return {
-        "min_papers_for_discovery": 50,
-        "min_papers_for_paradigm_shift": 100,
+        "min_papers_for_discovery": 5,
+        "min_papers_for_paradigm_shift": 20,
         "min_gap_miner_potential": 0.15,
         "min_novelty_score": 0.5,
         "min_contradictions_found": 3,
@@ -59,13 +60,15 @@ def simulate_loop_body(
     if papers is None:
         papers = [{"title": f"Paper {i}", "abstract": f"Abstract {i}"} for i in range(30)]
 
-    refinement_history.append({
-        "iteration": iteration,
-        "hypothesis": hypothesis_text[:300],
-        "abort_reasons": list(abort_reasons),
-        "gap_miner_score": gap_potential,
-        "papers_found": papers_found,
-    })
+    refinement_history.append(
+        {
+            "iteration": iteration,
+            "hypothesis": hypothesis_text[:300],
+            "abort_reasons": list(abort_reasons),
+            "gap_miner_score": gap_potential,
+            "papers_found": papers_found,
+        }
+    )
 
     if refined_no_improvement:
         return {
@@ -77,8 +80,7 @@ def simulate_loop_body(
 
     if recheck_shifted is True:
         abort_reasons[:] = [
-            f"ALREADY_SHIFTED(iter{iteration}): ALREADY_SHIFTED. "
-            f"Seminal: []. Consensus: 0.85."
+            f"ALREADY_SHIFTED(iter{iteration}): ALREADY_SHIFTED. Seminal: []. Consensus: 0.85."
         ]
         return {
             "break": True,
@@ -99,9 +101,7 @@ def simulate_loop_body(
             abort_reasons.append(reason)
 
     if papers_found < thresholds["min_papers_for_discovery"]:
-        reason = (
-            f"INSUFFICIENT_DATA(iter{iteration}): Found only {papers_found} papers."
-        )
+        reason = f"INSUFFICIENT_DATA(iter{iteration}): Found only {papers_found} papers."
         if not any("INSUFFICIENT_DATA" in r for r in abort_reasons):
             abort_reasons.append(reason)
 
@@ -152,22 +152,18 @@ class TestRefinementLoop:
             thresholds=thresholds,
             abort_reasons=["SELF_CRITIQUE_REJECT: needs work"],
         )
-        assert any(
-            "LOW_DISCOVERY_POTENTIAL" in r for r in result["abort_reasons"]
-        )
+        assert any("LOW_DISCOVERY_POTENTIAL" in r for r in result["abort_reasons"])
 
     def test_refinement_abort_on_insufficient_data(self, thresholds):
         """Too few papers triggers INSUFFICIENT_DATA abort."""
         result = simulate_loop_body(
             hypothesis_text="test hypothesis",
-            papers_found=10,
+            papers_found=2,
             gap_potential=0.5,
             thresholds=thresholds,
             abort_reasons=["SELF_CRITIQUE_REJECT: needs work"],
         )
-        assert any(
-            "INSUFFICIENT_DATA" in r for r in result["abort_reasons"]
-        )
+        assert any("INSUFFICIENT_DATA" in r for r in result["abort_reasons"])
 
     def test_refinement_no_abort_with_good_scores(self, thresholds):
         """High scores do not add new abort reasons."""
@@ -177,9 +173,7 @@ class TestRefinementLoop:
             gap_potential=0.8,
             thresholds=thresholds,
             recheck_shifted=False,
-            abort_reasons=[
-                "SELF_CRITIQUE_REJECT: existing reason that keeps loop alive"
-            ],
+            abort_reasons=["SELF_CRITIQUE_REJECT: existing reason that keeps loop alive"],
         )
         assert not any("LOW_DISCOVERY_POTENTIAL" in r for r in result["abort_reasons"])
         assert not any("INSUFFICIENT_DATA" in r for r in result["abort_reasons"])
@@ -280,7 +274,7 @@ class TestRefinementLoop:
         abort_reasons = ["SELF_CRITIQUE_REJECT: initial"]
         result1 = simulate_loop_body(
             hypothesis_text="h1",
-            papers_found=10,
+            papers_found=2,
             gap_potential=0.05,
             thresholds=thresholds,
             abort_reasons=list(abort_reasons),
@@ -293,7 +287,7 @@ class TestRefinementLoop:
 
         result2 = simulate_loop_body(
             hypothesis_text="h2",
-            papers_found=10,
+            papers_found=2,
             gap_potential=0.05,
             thresholds=thresholds,
             abort_reasons=list(result1["abort_reasons"]),

@@ -8,6 +8,7 @@ Targets:
 - src/patterns/library/epidemic_seir.py
 - src/patterns/library/neural_mass.py
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -17,12 +18,12 @@ import numpy as np
 import pytest
 
 from patterns.core import Hypothesis, SimulationStatus
-from patterns.library.epidemic_seir import SEIRConfig, EpidemicSEIRPattern
+from patterns.library.epidemic_seir import EpidemicSEIRPattern, SEIRConfig
 from patterns.library.epidemic_sir import SIRConfig, SIREpidemicPattern
 from patterns.library.gene_regulatory import (
-    GRNModel,
     GeneRegulatoryConfig,
     GeneRegulatoryPattern,
+    GRNModel,
 )
 from patterns.library.metapopulation import (
     MetapopulationConfig,
@@ -36,7 +37,6 @@ from patterns.library.neural_mass import (
     NeuralMassPattern,
 )
 from patterns.library.protein_folding import (
-
     FoldingModel,
     ProteinFoldingConfig,
     ProteinFoldingPattern,
@@ -170,7 +170,12 @@ class TestProteinFoldingPattern:
         pattern = ProteinFoldingPattern()
         hypo = _mock_hypothesis("Protein", "Harmonic test")
         mock_result = {
-            "metrics": {"num_residues": 5, "mean_rmsd": 0.5, "rmsd_fluctuation": 0.1, "model": "harmonic"},
+            "metrics": {
+                "num_residues": 5,
+                "mean_rmsd": 0.5,
+                "rmsd_fluctuation": 0.1,
+                "model": "harmonic",
+            },
             "logs": ["Harmonic network simulation completed"],
             "rmsd_values": [0.4, 0.5, 0.6],
         }
@@ -201,9 +206,7 @@ class TestProteinFoldingPattern:
     def test_run_error_handling(self):
         pattern = ProteinFoldingPattern()
         hypo = _mock_hypothesis("Protein", "Error test")
-        with patch.object(
-            pattern, "_go_model_simulation", side_effect=KeyError("missing_key")
-        ):
+        with patch.object(pattern, "_go_model_simulation", side_effect=KeyError("missing_key")):
             result = _run(pattern, hypo, {"model": "go_model"})
         assert result.status == SimulationStatus.FAILED
         assert "missing_key" in result.error_message
@@ -405,9 +408,7 @@ class TestGeneRegulatoryPattern:
     def test_run_error_handling(self):
         pattern = GeneRegulatoryPattern()
         hypo = _mock_hypothesis("Gene", "Error test")
-        with patch.object(
-            pattern, "_boolean_simulation", side_effect=TypeError("invalid type")
-        ):
+        with patch.object(pattern, "_boolean_simulation", side_effect=TypeError("invalid type")):
             result = _run(pattern, hypo, {"model": "boolean"})
         assert result.status == SimulationStatus.FAILED
         assert "invalid type" in result.error_message
@@ -587,9 +588,7 @@ class TestMetapopulationPattern:
             "patch_areas": [10.0, 20.0],
             "patch_incidences": [0.5, 0.5],
         }
-        with patch.object(
-            pattern, "_incidence_function_simulation", return_value=mock_result
-        ):
+        with patch.object(pattern, "_incidence_function_simulation", return_value=mock_result):
             result = _run(pattern, hypo, {"model": "incidence_function"})
         assert result.status == SimulationStatus.COMPLETED
         assert result.metrics["model"] == "incidence_function"
@@ -617,9 +616,7 @@ class TestMetapopulationPattern:
     def test_run_error_handling(self):
         pattern = MetapopulationPattern()
         hypo = _mock_hypothesis("Metapopulation", "Error test")
-        with patch.object(
-            pattern, "_levins_simulation", side_effect=TypeError("bad config")
-        ):
+        with patch.object(pattern, "_levins_simulation", side_effect=TypeError("bad config")):
             result = _run(pattern, hypo, {"model": "levins"})
         assert result.status == SimulationStatus.FAILED
         assert "bad config" in result.error_message
@@ -812,9 +809,7 @@ class TestEpidemicSEIRPattern:
         hypo = _mock_hypothesis("Epidemic", f"{model_type.upper()} test")
         n_states = 3 if model_type == "sir" else 4
         mock_solve_ivp.side_effect = _make_mock_solve_ivp(n_states=n_states)
-        result = _run(
-            pattern, hypo, {"model_type": model_type, "N": 1000, "t_max": 10, "dt": 1}
-        )
+        result = _run(pattern, hypo, {"model_type": model_type, "N": 1000, "t_max": 10, "dt": 1})
         assert result.status == SimulationStatus.COMPLETED
         assert "R0" in result.metrics
         assert "peak_infections" in result.metrics
@@ -834,9 +829,7 @@ class TestEpidemicSEIRPattern:
         pattern = EpidemicSEIRPattern()
         hypo = _mock_hypothesis("Epidemic", "Seed test")
         mock_solve_ivp.side_effect = _make_mock_solve_ivp(n_states=4)
-        result = _run(
-            pattern, hypo, {"model_type": "seir", "random_seed": 123}
-        )
+        result = _run(pattern, hypo, {"model_type": "seir", "random_seed": 123})
         assert result.status == SimulationStatus.COMPLETED
 
     @patch("patterns.library.epidemic_seir.solve_ivp")
@@ -1089,7 +1082,13 @@ class TestTinyIntegration:
         result = _run(
             pattern,
             hypo,
-            {"model": "go_model", "num_residues": 5, "t_max": 0.01, "dt": 0.001, "record_interval": 1},
+            {
+                "model": "go_model",
+                "num_residues": 5,
+                "t_max": 0.01,
+                "dt": 0.001,
+                "record_interval": 1,
+            },
         )
         assert result.status == SimulationStatus.COMPLETED
         assert "final_rmsd" in result.metrics
@@ -1097,9 +1096,7 @@ class TestTinyIntegration:
     def test_metapopulation_tiny_levins(self):
         pattern = MetapopulationPattern()
         hypo = _mock_hypothesis("Metapopulation", "Tiny levins test")
-        result = _run(
-            pattern, hypo, {"model": "levins", "years": 5, "num_patches": 5}
-        )
+        result = _run(pattern, hypo, {"model": "levins", "years": 5, "num_patches": 5})
         assert result.status == SimulationStatus.COMPLETED
         assert "final_occupancy" in result.metrics
 
@@ -1127,9 +1124,7 @@ class TestTinyIntegration:
         pattern = EpidemicSEIRPattern()
         hypo = _mock_hypothesis("Epidemic", "Tiny SEIR")
         mock_solve_ivp.side_effect = _make_mock_solve_ivp(n_states=4)
-        result = _run(
-            pattern, hypo, {"model_type": "seir", "N": 100, "t_max": 5, "dt": 1}
-        )
+        result = _run(pattern, hypo, {"model_type": "seir", "N": 100, "t_max": 5, "dt": 1})
         assert result.status == SimulationStatus.COMPLETED
 
     @patch("patterns.library.neural_mass.solve_ivp")

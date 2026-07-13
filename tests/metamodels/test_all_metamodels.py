@@ -3,6 +3,7 @@ Tests for src/metamodels/ — all 7 metamodels
 
 Covers: IMPACT, COMPASS, TOTE, QZRF, MP Library, Matrix Dream, C4 projections
 """
+
 from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
@@ -762,7 +763,7 @@ class TestQzrfC4Projections:
     def test_pipeline_state_progression(self):
         start = C4State(0, 0, 0)
         pipeline = QzrfC4Projections.full_qzrf_pipeline(start)
-        for phase, state in pipeline:
+        for _phase, state in pipeline:
             assert isinstance(state, C4State)
             assert 0 <= state.T <= 2
             assert 0 <= state.S <= 2
@@ -810,36 +811,52 @@ class TestMetaprogram:
 
     def test_profile_prompt_balanced(self):
         mp = Metaprogram(
-            id="MP-99", name="X/Y", name_ru="X/Y",
+            id="MP-99",
+            name="X/Y",
+            name_ru="X/Y",
             dimension=MPDimension.THINKING,
-            pole_a="left", pole_b="right", description="Test",
+            pole_a="left",
+            pole_b="right",
+            description="Test",
         )
         prompt = mp.profile_prompt("balanced")
         assert "Balance left and right" in prompt
 
     def test_profile_prompt_a(self):
         mp = Metaprogram(
-            id="MP-99", name="X/Y", name_ru="X/Y",
+            id="MP-99",
+            name="X/Y",
+            name_ru="X/Y",
             dimension=MPDimension.THINKING,
-            pole_a="left", pole_b="right", description="Test",
+            pole_a="left",
+            pole_b="right",
+            description="Test",
         )
         prompt = mp.profile_prompt("a")
         assert "Prioritize left over right" in prompt
 
     def test_profile_prompt_b(self):
         mp = Metaprogram(
-            id="MP-99", name="X/Y", name_ru="X/Y",
+            id="MP-99",
+            name="X/Y",
+            name_ru="X/Y",
             dimension=MPDimension.THINKING,
-            pole_a="left", pole_b="right", description="Test",
+            pole_a="left",
+            pole_b="right",
+            description="Test",
         )
         prompt = mp.profile_prompt("b")
         assert "Prioritize right over left" in prompt
 
     def test_profile_prompt_invalid(self):
         mp = Metaprogram(
-            id="MP-99", name="X/Y", name_ru="X/Y",
+            id="MP-99",
+            name="X/Y",
+            name_ru="X/Y",
             dimension=MPDimension.THINKING,
-            pole_a="left", pole_b="right", description="Test",
+            pole_a="left",
+            pole_b="right",
+            description="Test",
         )
         prompt = mp.profile_prompt("invalid")
         assert "Balance" in prompt  # defaults to balanced
@@ -854,9 +871,7 @@ class TestMPProfile:
 
     def test_to_prompt_missing_mp(self):
         lib = MPLibrary()
-        profile = MPProfile(
-            name="Test", name_ru="Тест", settings={"MP-999": "a"}
-        )
+        profile = MPProfile(name="Test", name_ru="Тест", settings={"MP-999": "a"})
         prompt = profile.to_prompt(lib)
         assert "Agent Profile: Test" in prompt
 
@@ -884,9 +899,7 @@ class TestMPLibrary:
     def test_all_profiles(self):
         lib = MPLibrary()
         profiles = lib.all_profiles()
-        assert set(profiles) == {
-            "systems", "pragmatic", "creative", "critical", "intuitive"
-        }
+        assert set(profiles) == {"systems", "pragmatic", "creative", "critical", "intuitive"}
 
     def test_get_profile_systems(self):
         lib = MPLibrary()

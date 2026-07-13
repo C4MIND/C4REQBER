@@ -6,6 +6,7 @@ Comprehensive unit tests for C4 core modules:
 
 No mocks, no network, no LLM calls — pure logic verification.
 """
+
 from __future__ import annotations
 
 import warnings
@@ -103,7 +104,7 @@ class TestC4StateConstruction:
         assert s.a == 2
 
     def test_from_coords_large_values(self):
-        s = C4State.from_coords(2**31, 2**31 + 1, -2**31)
+        s = C4State.from_coords(2**31, 2**31 + 1, -(2**31))
         assert s.t == (2**31) % 3
         assert s.s == (2**31 + 1) % 3
         assert s.a == (-(2**31)) % 3
@@ -198,14 +199,17 @@ class TestC4StateValidation:
 
 
 class TestOperators:
-    @pytest.mark.parametrize("op,start,step1,step2,step3", [
-        ("T",   (0, 1, 2), (1, 1, 2), (2, 1, 2), (0, 1, 2)),
-        ("T_INV", (0, 1, 2), (2, 1, 2), (1, 1, 2), (0, 1, 2)),
-        ("S",   (0, 1, 2), (0, 2, 2), (0, 0, 2), (0, 1, 2)),
-        ("S_INV", (0, 1, 2), (0, 0, 2), (0, 2, 2), (0, 1, 2)),
-        ("A",   (0, 1, 2), (0, 1, 0), (0, 1, 1), (0, 1, 2)),
-        ("A_INV", (0, 1, 2), (0, 1, 1), (0, 1, 0), (0, 1, 2)),
-    ])
+    @pytest.mark.parametrize(
+        "op,start,step1,step2,step3",
+        [
+            ("T", (0, 1, 2), (1, 1, 2), (2, 1, 2), (0, 1, 2)),
+            ("T_INV", (0, 1, 2), (2, 1, 2), (1, 1, 2), (0, 1, 2)),
+            ("S", (0, 1, 2), (0, 2, 2), (0, 0, 2), (0, 1, 2)),
+            ("S_INV", (0, 1, 2), (0, 0, 2), (0, 2, 2), (0, 1, 2)),
+            ("A", (0, 1, 2), (0, 1, 0), (0, 1, 1), (0, 1, 2)),
+            ("A_INV", (0, 1, 2), (0, 1, 1), (0, 1, 0), (0, 1, 2)),
+        ],
+    )
     def test_operator_steps(self, op, start, step1, step2, step3):
         s = C4State(*start)
         r1 = s.apply_operator(op)
@@ -300,15 +304,11 @@ class TestDistance:
                     )
 
     def test_undirected_diameter_is_3(self):
-        max_dist = max(
-            undirected_distance(a, b) for a in _all_27() for b in _all_27()
-        )
+        max_dist = max(undirected_distance(a, b) for a in _all_27() for b in _all_27())
         assert max_dist == 3
 
     def test_directed_diameter_is_6(self):
-        max_dist = max(
-            a.directed_distance(b) for a in _all_27() for b in _all_27()
-        )
+        max_dist = max(a.directed_distance(b) for a in _all_27() for b in _all_27())
         assert max_dist == 6
 
     def test_antipodal_symmetric_distance_equals_3(self):
@@ -371,9 +371,7 @@ class TestC4Space:
         assert self.space.hamming_distance(_origin(), _antipode()) == 3
 
     def test_space_hamming_max_is_3(self):
-        max_h = max(
-            self.space.hamming_distance(a, b) for a in _all_27() for b in _all_27()
-        )
+        max_h = max(self.space.hamming_distance(a, b) for a in _all_27() for b in _all_27())
         assert max_h == 3
 
     def test_shortest_path_length_equals_hamming(self):
@@ -479,6 +477,7 @@ class TestBFS:
 
     def test_bfs_path_reaches_goal(self):
         import random
+
         states = _all_27()
         for _ in range(50):
             a = random.choice(states)
@@ -531,7 +530,11 @@ class TestTheorem11:
             assert s1.is_antipode(s2)
 
     def test_verify_canonical_equals_bfs(self):
-        import pytest; pytest.skip("canonical_path and BFS may differ in route choice while both are valid shortest paths")
+        import pytest
+
+        pytest.skip(
+            "canonical_path and BFS may differ in route choice while both are valid shortest paths"
+        )
         assert verify_canonical_equals_bfs()
 
 
@@ -626,12 +629,17 @@ class TestEdgeCases:
         assert s.color == ""
 
     def test_custom_name_metadata(self):
-        s = C4State(1, 1, 1, name_en="Present Abstract Self",
-                    name_ru="Настоящее Абстрактное Я",
-                    description="Balanced reflection state",
-                    metaphor="mirror",
-                    strengths=["balance", "insight"],
-                    color="#FF9900")
+        s = C4State(
+            1,
+            1,
+            1,
+            name_en="Present Abstract Self",
+            name_ru="Настоящее Абстрактное Я",
+            description="Balanced reflection state",
+            metaphor="mirror",
+            strengths=["balance", "insight"],
+            color="#FF9900",
+        )
         assert s.name_en == "Present Abstract Self"
         assert s.name_ru == "Настоящее Абстрактное Я"
         assert s.description == "Balanced reflection state"

@@ -23,17 +23,20 @@ Covers:
 - get_metadata()
 - Edge cases: zero agents, single agent, empty network
 """
+
 from __future__ import annotations
 
 import sys
 from pathlib import Path
 from unittest.mock import patch
 
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 import numpy as np
 import pytest
 
+from src.patterns.core import Hypothesis, SimulationStatus
 from src.patterns.library.agent_based import (
     Agent,
     AgentBasedConfig,
@@ -41,8 +44,6 @@ from src.patterns.library.agent_based import (
     AgentBehavior,
     AgentType,
 )
-from src.patterns.core import Hypothesis, SimulationStatus
-
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -79,7 +80,9 @@ class TestAgentBasedConfig:
         assert cfg.network_type == "grid"
 
     def test_custom_init(self):
-        cfg = AgentBasedConfig(n_agents=50, n_steps=100, grid_size=(20, 20), agent_behavior="rational")
+        cfg = AgentBasedConfig(
+            n_agents=50, n_steps=100, grid_size=(20, 20), agent_behavior="rational"
+        )
         assert cfg.n_agents == 50
         assert cfg.n_steps == 100
         assert cfg.grid_size == (20, 20)
@@ -100,7 +103,9 @@ class TestAgent:
         assert agent.history == []
 
     def test_custom_state(self):
-        agent = Agent(agent_id=1, agent_type=AgentType.PRODUCER, position=(1, 1), state={"wealth": 200.0})
+        agent = Agent(
+            agent_id=1, agent_type=AgentType.PRODUCER, position=(1, 1), state={"wealth": 200.0}
+        )
         assert agent.state["wealth"] == 200.0
 
 
@@ -282,8 +287,20 @@ class TestBehaviorFunctions:
         pattern = AgentBasedPattern()
         pattern.rng = np.random.default_rng(42)
         pattern.agents = {
-            0: Agent(0, AgentType.CONSUMER, (0, 0), state={"wealth": 100.0, "satisfaction": 0.5, "innovation": 0.0}, neighbors=[1]),
-            1: Agent(1, AgentType.CONSUMER, (1, 1), state={"wealth": 100.0, "satisfaction": 0.5, "innovation": 0.0}, neighbors=[0]),
+            0: Agent(
+                0,
+                AgentType.CONSUMER,
+                (0, 0),
+                state={"wealth": 100.0, "satisfaction": 0.5, "innovation": 0.0},
+                neighbors=[1],
+            ),
+            1: Agent(
+                1,
+                AgentType.CONSUMER,
+                (1, 1),
+                state={"wealth": 100.0, "satisfaction": 0.5, "innovation": 0.0},
+                neighbors=[0],
+            ),
         }
         cfg = AgentBasedConfig()
         new_state = pattern._rational_behavior(pattern.agents[0], cfg)
@@ -294,8 +311,20 @@ class TestBehaviorFunctions:
         pattern = AgentBasedPattern()
         pattern.rng = np.random.default_rng(42)
         pattern.agents = {
-            0: Agent(0, AgentType.CONSUMER, (0, 0), state={"wealth": 100.0, "satisfaction": 0.5, "innovation": 0.0}, neighbors=[1]),
-            1: Agent(1, AgentType.CONSUMER, (1, 1), state={"wealth": 200.0, "satisfaction": 0.5, "innovation": 0.5}, neighbors=[0]),
+            0: Agent(
+                0,
+                AgentType.CONSUMER,
+                (0, 0),
+                state={"wealth": 100.0, "satisfaction": 0.5, "innovation": 0.0},
+                neighbors=[1],
+            ),
+            1: Agent(
+                1,
+                AgentType.CONSUMER,
+                (1, 1),
+                state={"wealth": 200.0, "satisfaction": 0.5, "innovation": 0.5},
+                neighbors=[0],
+            ),
         }
         cfg = AgentBasedConfig()
         new_state = pattern._bounded_rationality(pattern.agents[0], cfg)
@@ -305,8 +334,30 @@ class TestBehaviorFunctions:
         pattern = AgentBasedPattern()
         pattern.rng = np.random.default_rng(42)
         pattern.agents = {
-            0: Agent(0, AgentType.CONSUMER, (0, 0), state={"wealth": 50.0, "satisfaction": 0.5, "innovation": 0.0, "risk_tolerance": 0.5}, neighbors=[1]),
-            1: Agent(1, AgentType.CONSUMER, (1, 1), state={"wealth": 200.0, "satisfaction": 0.5, "innovation": 0.8, "risk_tolerance": 0.5}, neighbors=[0]),
+            0: Agent(
+                0,
+                AgentType.CONSUMER,
+                (0, 0),
+                state={
+                    "wealth": 50.0,
+                    "satisfaction": 0.5,
+                    "innovation": 0.0,
+                    "risk_tolerance": 0.5,
+                },
+                neighbors=[1],
+            ),
+            1: Agent(
+                1,
+                AgentType.CONSUMER,
+                (1, 1),
+                state={
+                    "wealth": 200.0,
+                    "satisfaction": 0.5,
+                    "innovation": 0.8,
+                    "risk_tolerance": 0.5,
+                },
+                neighbors=[0],
+            ),
         }
         cfg = AgentBasedConfig()
         new_state = pattern._imitative_behavior(pattern.agents[0], cfg)
@@ -315,7 +366,12 @@ class TestBehaviorFunctions:
     def test_exploratory_behavior(self):
         pattern = AgentBasedPattern()
         pattern.rng = np.random.default_rng(42)
-        agent = Agent(0, AgentType.CONSUMER, (0, 0), state={"wealth": 100.0, "satisfaction": 0.5, "innovation": 0.5, "risk_tolerance": 0.5})
+        agent = Agent(
+            0,
+            AgentType.CONSUMER,
+            (0, 0),
+            state={"wealth": 100.0, "satisfaction": 0.5, "innovation": 0.5, "risk_tolerance": 0.5},
+        )
         cfg = AgentBasedConfig(exploration_rate=0.5)
         new_state = pattern._exploratory_behavior(agent, cfg)
         assert "innovation" in new_state
@@ -325,8 +381,16 @@ class TestBehaviorFunctions:
         pattern = AgentBasedPattern()
         pattern.rng = np.random.default_rng(42)
         agent = Agent(
-            0, AgentType.CONSUMER, (0, 0),
-            state={"wealth": 100.0, "satisfaction": 0.5, "innovation": 0.5, "risk_tolerance": 0.5, "social_influence": 0.3},
+            0,
+            AgentType.CONSUMER,
+            (0, 0),
+            state={
+                "wealth": 100.0,
+                "satisfaction": 0.5,
+                "innovation": 0.5,
+                "risk_tolerance": 0.5,
+                "social_influence": 0.3,
+            },
             history=[{"step": 0, "state": {"wealth": 90.0}}],
         )
         cfg = AgentBasedConfig(learning_rate=0.1)
@@ -355,8 +419,18 @@ class TestComputeMetrics:
     def test_with_agents(self):
         pattern = AgentBasedPattern()
         pattern.agents = {
-            0: Agent(0, AgentType.CONSUMER, (0, 0), state={"wealth": 100.0, "satisfaction": 0.5, "innovation": 0.0}),
-            1: Agent(1, AgentType.PRODUCER, (1, 1), state={"wealth": 200.0, "satisfaction": 0.7, "innovation": 0.5}),
+            0: Agent(
+                0,
+                AgentType.CONSUMER,
+                (0, 0),
+                state={"wealth": 100.0, "satisfaction": 0.5, "innovation": 0.0},
+            ),
+            1: Agent(
+                1,
+                AgentType.PRODUCER,
+                (1, 1),
+                state={"wealth": 200.0, "satisfaction": 0.7, "innovation": 0.5},
+            ),
         }
         metrics = pattern._compute_metrics()
         assert "mean_wealth" in metrics

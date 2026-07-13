@@ -4,7 +4,6 @@ import numpy as np
 import pytest
 
 from src.patterns.library.crystal_growth import (
-
     CrystalGrowthConfig,
     CrystalGrowthPattern,
     CrystalSymmetry,
@@ -156,9 +155,7 @@ class TestCrystalGrowthPattern:
         assert result["symmetry"] == "isotropic"
 
     def test_run_no_noise(self):
-        config = CrystalGrowthConfig(
-            nx=32, ny=32, n_steps=100, thermal_noise=False
-        )
+        config = CrystalGrowthConfig(nx=32, ny=32, n_steps=100, thermal_noise=False)
         pattern = CrystalGrowthPattern(config)
         result = pattern.run()
         assert result["final_solid_fraction"] >= 0

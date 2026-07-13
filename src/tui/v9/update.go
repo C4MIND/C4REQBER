@@ -42,9 +42,6 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case tickMsg:
 		m.tick++
-		if m.running && m.cost > 0 {
-			m.cost = float64(m.tick) / 60.0 * 0.001
-		}
 		// v9.11.9: auto-clear toast after ~1.5s (96 ticks at 16ms).
 		if m.toast != "" && m.toastTick > 0 && m.tick-m.toastTick > 96 {
 			m.toast = ""
@@ -68,12 +65,11 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, m.tickCmd()
 
 	case pollTickMsg:
-		// Legacy polling — superseded by SSE (see sseEventMsg below).
-		// Kept for fallback if SSE endpoint unavailable.
+		// Poll only after SSE has closed or exhausted reconnect attempts.
 		if m.running && m.jobID != "" {
 			return m, pollCmd(m.api, m.jobID)
 		}
-		return m, m.pollTickCmd()
+		return m, nil
 
 	case sseEventMsg:
 		// SSE event from /v8/discover/stream/{job_id}
@@ -81,6 +77,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.sseEvents = msg.events
 			m.sseCancel = msg.cancel
 		}
+		m.sseRetryCount = 0
 		// v9.13: use the typed decoder for proper event-type dispatch.
 		// Falls back to legacy extraction for the old v8.12 events.
 		te, terr := api.DecodeTypedEvent(msg.event.Data)
@@ -148,10 +145,10 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 
 	case sseReconnectMsg:
-		// Audit 2026-06-22 H-18: re-attempt the SSE stream after backoff.
-		// The actual re-stream happens via the existing sseContinueCmd path.
+		// Open a new HTTP stream. teardownStream deliberately cleared the old
+		// channel and cancel function, so reusing them would only block on nil.
 		if m.running && m.jobID != "" && m.sseRetryCount <= sseMaxRetries {
-			return m, sseContinueCmd(m.sseEvents, m.sseCancel)
+			return m, sseCmd(m.api, m.jobID)
 		}
 		return m, nil
 
@@ -639,8 +636,8 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.running = true
 			m.startedAt = time.Now()
 			m.appendCard(Card{Kind: CardPhase, Title: "Submitted", Body: "job " + msg.jobID, Time: time.Now(), Status: "running", Progress: 0.0})
-			// Prefer SSE; fall back to polling if SSE fails
-			return m, tea.Batch(sseCmd(m.api, msg.jobID), m.pollTickCmd())
+			// Prefer SSE. Polling begins only if the stream closes or retries fail.
+			return m, sseCmd(m.api, msg.jobID)
 		}
 		return m, nil
 
@@ -678,6 +675,9 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					}
 				}
 			}
+		}
+		if m.running && m.jobID != "" {
+			return m, m.pollTickCmd()
 		}
 		return m, nil
 
@@ -802,6 +802,8 @@ func (m *model) appendCard(c Card) {
 	}
 	if c.ID == 0 {
 		c.ID = cards.NextID()
+	} else {
+		cards.ReserveID(c.ID)
 	}
 	m.feed = append(m.feed, c)
 	m.rebuildFeedContent()

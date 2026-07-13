@@ -21,6 +21,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 from patterns.core import Hypothesis, SimulationResult, SimulationStatus
@@ -107,7 +108,11 @@ class MockArray:
                     d = d[k]
             last = keys[-1]
             if isinstance(last, slice):
-                d[last] = [value] * len(d[last]) if not hasattr(value, "__iter__") or isinstance(value, (int, float, str)) else list(value)
+                d[last] = (
+                    [value] * len(d[last])
+                    if not hasattr(value, "__iter__") or isinstance(value, (int, float, str))
+                    else list(value)
+                )
             else:
                 nk = self._norm_idx(last, len(d))
                 d[nk] = value
@@ -156,7 +161,7 @@ class MockArray:
         return self._binop(other, lambda a, b: a / b if b != 0 else 0.0)
 
     def __pow__(self, other):
-        return self._binop(other, lambda a, b: a ** b)
+        return self._binop(other, lambda a, b: a**b)
 
     def __neg__(self):
         return self._unaryop(lambda a: -a)
@@ -170,10 +175,13 @@ class MockArray:
             n = self.shape[0]
             m = other.shape[1]
             p = self.shape[1]
-            result = [[sum(self[i, k] * other[k, j] for k in range(p)) for j in range(m)] for i in range(n)]
+            result = [
+                [sum(self[i, k] * other[k, j] for k in range(p)) for j in range(m)]
+                for i in range(n)
+            ]
             return MockArray(result)
         if self.ndim == 1 and hasattr(other, "ndim") and other.ndim == 1:
-            return sum(a * b for a, b in zip(self._flat(), other._flat()))
+            return sum(a * b for a, b in zip(self._flat(), other._flat(), strict=False))
         return MockArray([0.0])
 
     def __lt__(self, other):
@@ -216,6 +224,7 @@ class MockArray:
             else:
                 for item in d:
                     yield from flatten(item)
+
         return list(flatten(self._data))
 
     def _binop(self, other, op):
@@ -233,13 +242,15 @@ class MockArray:
             if not isinstance(d, list):
                 return f(d)
             return [apply(x) for x in d]
+
         return apply(self._data)
 
     def _map2(self, other_data, f):
         def apply(d1, d2):
             if not isinstance(d1, list):
                 return f(d1, d2)
-            return [apply(x, y) for x, y in zip(d1, d2)]
+            return [apply(x, y) for x, y in zip(d1, d2, strict=False)]
+
         return apply(self._data, other_data)
 
     def flatten(self):
@@ -250,12 +261,15 @@ class MockArray:
 
     def copy(self):
         import copy
+
         return MockArray(copy.deepcopy(self._data))
 
     @property
     def T(self):
         if self.ndim == 2:
-            return MockArray([[self[j, i] for j in range(self.shape[0])] for i in range(self.shape[1])])
+            return MockArray(
+                [[self[j, i] for j in range(self.shape[0])] for i in range(self.shape[1])]
+            )
         return self
 
     @property
@@ -390,7 +404,12 @@ def mock_np() -> MagicMock:
         if isinstance(arr, (int, float, complex)):
             return arr
         if axis == 0 and arr.ndim == 2:
-            return MockArray([sum(arr[i, j] for i in range(arr.shape[0])) / arr.shape[0] for j in range(arr.shape[1])])
+            return MockArray(
+                [
+                    sum(arr[i, j] for i in range(arr.shape[0])) / arr.shape[0]
+                    for j in range(arr.shape[1])
+                ]
+            )
         return arr.mean()
 
     def _std(x, axis=None):
@@ -398,8 +417,18 @@ def mock_np() -> MagicMock:
         if isinstance(arr, (int, float, complex)):
             return 0.0
         if axis == 0 and arr.ndim == 2:
-            means = [sum(arr[i, j] for i in range(arr.shape[0])) / arr.shape[0] for j in range(arr.shape[1])]
-            return MockArray([math.sqrt(sum((arr[i, j] - means[j]) ** 2 for i in range(arr.shape[0])) / arr.shape[0]) for j in range(arr.shape[1])])
+            means = [
+                sum(arr[i, j] for i in range(arr.shape[0])) / arr.shape[0]
+                for j in range(arr.shape[1])
+            ]
+            return MockArray(
+                [
+                    math.sqrt(
+                        sum((arr[i, j] - means[j]) ** 2 for i in range(arr.shape[0])) / arr.shape[0]
+                    )
+                    for j in range(arr.shape[1])
+                ]
+            )
         return arr.std()
 
     def _sum(x, axis=None):
@@ -512,7 +541,9 @@ def mock_np() -> MagicMock:
     mock.meshgrid = _meshgrid
 
     def _hanning(n):
-        return MockArray([0.5 * (1 - math.cos(2 * math.pi * i / (n - 1))) if n > 1 else 1.0 for i in range(n)])
+        return MockArray(
+            [0.5 * (1 - math.cos(2 * math.pi * i / (n - 1))) if n > 1 else 1.0 for i in range(n)]
+        )
 
     mock.hanning = _hanning
     mock.hamming = _hanning
@@ -536,7 +567,9 @@ def mock_np() -> MagicMock:
     mock.polyfit = _polyfit
 
     def _polyval(p, x):
-        return sum(c * (x ** i) for i, c in enumerate(reversed(p._flat() if hasattr(p, "_flat") else p)))
+        return sum(
+            c * (x**i) for i, c in enumerate(reversed(p._flat() if hasattr(p, "_flat") else p))
+        )
 
     mock.polyval = _polyval
 
@@ -552,7 +585,7 @@ def mock_np() -> MagicMock:
 
     def _linalg_norm(a):
         if isinstance(a, MockArray):
-            return math.sqrt(sum(v ** 2 for v in a._flat()))
+            return math.sqrt(sum(v**2 for v in a._flat()))
         return abs(a)
 
     mock.linalg.eigvalsh = _linalg_eigvalsh
@@ -563,7 +596,9 @@ def mock_np() -> MagicMock:
 
     def _sinc(x):
         if isinstance(x, MockArray):
-            return x._unaryop(lambda v: 1.0 if abs(v) < 1e-10 else math.sin(math.pi * v) / (math.pi * v))
+            return x._unaryop(
+                lambda v: 1.0 if abs(v) < 1e-10 else math.sin(math.pi * v) / (math.pi * v)
+            )
         return 1.0 if abs(x) < 1e-10 else math.sin(math.pi * x) / (math.pi * x)
 
     mock.sinc = _sinc
@@ -596,8 +631,17 @@ def mock_np() -> MagicMock:
 
     mock.where = _where
     mock.isrealobj = lambda x: True
-    mock.isclose = lambda a, b, atol=1e-8: abs(a - b) <= atol if not hasattr(a, "_flat") else all(abs(x - y) <= atol for x, y in zip(_to_mock(a)._flat(), _to_mock(b)._flat()))
-    mock.allclose = lambda a, b, atol=1e-8: all(abs(x - y) <= atol for x, y in zip(_to_mock(a)._flat(), _to_mock(b)._flat()))
+    mock.isclose = lambda a, b, atol=1e-8: (
+        abs(a - b) <= atol
+        if not hasattr(a, "_flat")
+        else all(
+            abs(x - y) <= atol
+            for x, y in zip(_to_mock(a)._flat(), _to_mock(b)._flat(), strict=False)
+        )
+    )
+    mock.allclose = lambda a, b, atol=1e-8: all(
+        abs(x - y) <= atol for x, y in zip(_to_mock(a)._flat(), _to_mock(b)._flat(), strict=False)
+    )
 
     mock.pi = math.pi
     mock.cos = lambda x: math.cos(x) if not hasattr(x, "_flat") else _to_mock(x)._unaryop(math.cos)
@@ -617,7 +661,12 @@ def mock_np() -> MagicMock:
     mock.trace = _trace
     mock.argmin = _argmin
     mock.argmax = _argmax
-    mock.outer = lambda a, b: MockArray([[x * y for y in (_to_mock(b)._flat() if hasattr(b, "_flat") else [b])] for x in (_to_mock(a)._flat() if hasattr(a, "_flat") else [a])])
+    mock.outer = lambda a, b: MockArray(
+        [
+            [x * y for y in (_to_mock(b)._flat() if hasattr(b, "_flat") else [b])]
+            for x in (_to_mock(a)._flat() if hasattr(a, "_flat") else [a])
+        ]
+    )
 
     class _RNG:
         def random(self, shape=None):
@@ -667,7 +716,10 @@ def mock_np() -> MagicMock:
         if x is not None:
             arr_x = _to_mock(x)
             flat_x = arr_x._flat()
-            return sum((flat_x[i+1] - flat_x[i]) * (flat[i] + flat[i+1]) / 2 for i in range(len(flat)-1))
+            return sum(
+                (flat_x[i + 1] - flat_x[i]) * (flat[i] + flat[i + 1]) / 2
+                for i in range(len(flat) - 1)
+            )
         return sum(v * dx for v in flat)
 
     mock.trapz = _trapz
@@ -692,10 +744,12 @@ def mock_np() -> MagicMock:
     def _full(shape, fill_value, dtype=None):
         if isinstance(shape, int):
             return MockArray([float(fill_value)] * shape)
+
         def nest(sizes, val):
             if not sizes:
                 return val
             return [nest(sizes[1:], val) for _ in range(sizes[0])]
+
         return MockArray(nest(list(shape), float(fill_value)))
 
     mock.full = _full
@@ -706,7 +760,11 @@ def mock_np() -> MagicMock:
         return x * math.pi / 180.0
 
     mock.radians = _radians
-    mock.degrees = lambda x: x * 180.0 / math.pi if not isinstance(x, MockArray) else x._unaryop(lambda v: v * 180.0 / math.pi)
+    mock.degrees = lambda x: (
+        x * 180.0 / math.pi
+        if not isinstance(x, MockArray)
+        else x._unaryop(lambda v: v * 180.0 / math.pi)
+    )
 
     def _diag(v, k=0):
         arr = _to_mock(v)
@@ -796,7 +854,8 @@ class TestPercolationPattern:
                 "numpy.random": mock_np.random,
             },
         ):
-            from patterns.library.percolation import PercolationPattern, PercolationConfig
+            from patterns.library.percolation import PercolationConfig, PercolationPattern
+
             yield PercolationPattern, PercolationConfig
 
     @pytest.mark.parametrize(
@@ -948,7 +1007,8 @@ class TestPoissonSolverPattern:
                 "scipy.sparse.linalg": mock_scipy.sparse.linalg,
             },
         ):
-            from patterns.library.poisson_solver import PoissonSolverPattern, PoissonConfig
+            from patterns.library.poisson_solver import PoissonConfig, PoissonSolverPattern
+
             yield PoissonSolverPattern, PoissonConfig
 
     @pytest.mark.parametrize(
@@ -1052,7 +1112,8 @@ class TestOpenQuantumPattern:
                 "numpy.random": mock_np.random,
             },
         ):
-            from patterns.library.open_quantum import OpenQuantumPattern, OpenQuantumConfig
+            from patterns.library.open_quantum import OpenQuantumConfig, OpenQuantumPattern
+
             yield OpenQuantumPattern, OpenQuantumConfig
 
     @pytest.mark.parametrize(
@@ -1169,7 +1230,9 @@ class TestOpenQuantumPattern:
     def test_estimate_resources(self, patched_open_quantum):
         pattern_cls, _ = patched_open_quantum
         pattern = pattern_cls()
-        h = Hypothesis(parameters={"n_qubits": 2, "t_final": 10.0, "dt": 0.01, "method": "lindblad"})
+        h = Hypothesis(
+            parameters={"n_qubits": 2, "t_final": 10.0, "dt": 0.01, "method": "lindblad"}
+        )
         resources = pattern.estimate_resources(h)
         assert "cpu_cores" in resources
         assert "memory_gb" in resources
@@ -1192,14 +1255,18 @@ class TestWildfirePattern:
                 "numpy.random": mock_np.random,
             },
         ):
-            from patterns.library.wildfire import WildfirePattern, WildfireConfig
+            from patterns.library.wildfire import WildfireConfig, WildfirePattern
+
             yield WildfirePattern, WildfireConfig
 
     @pytest.mark.parametrize(
         "config_kwargs,expected",
         [
             ({"nx": 50, "ny": 50}, {"nx": 50, "ny": 50}),
-            ({"fuel_type": "grass", "wind_speed": 20.0}, {"fuel_type": "grass", "wind_speed": 20.0}),
+            (
+                {"fuel_type": "grass", "wind_speed": 20.0},
+                {"fuel_type": "grass", "wind_speed": 20.0},
+            ),
             ({"spotting_enabled": False}, {"spotting_enabled": False}),
         ],
     )
@@ -1326,10 +1393,11 @@ class TestSpectralEstimationPattern:
             },
         ):
             from patterns.library.spectral_estimation import (
-                SpectralEstimationPattern,
                 SpectralEstimationConfig,
+                SpectralEstimationPattern,
                 SpectralMethod,
             )
+
             yield SpectralEstimationPattern, SpectralEstimationConfig, SpectralMethod
 
     @pytest.mark.parametrize(
@@ -1397,7 +1465,9 @@ class TestSpectralEstimationPattern:
             "multitaper": SpectralMethod.MTM,
             "bartlett": SpectralMethod.BARTLETT,
         }
-        cfg = SpectralEstimationConfig(method=method_map[method], n_samples=256, nperseg=64, noverlap=32)
+        cfg = SpectralEstimationConfig(
+            method=method_map[method], n_samples=256, nperseg=64, noverlap=32
+        )
         pattern = SpectralEstimationPattern(cfg)
         result = pattern.run()
         assert isinstance(result, dict)
@@ -1472,11 +1542,11 @@ class TestPatternIntegration:
                 "scipy.stats": mock_scipy.stats,
             },
         ):
+            from patterns.library.open_quantum import OpenQuantumPattern
             from patterns.library.percolation import PercolationPattern
             from patterns.library.poisson_solver import PoissonSolverPattern
-            from patterns.library.open_quantum import OpenQuantumPattern
-            from patterns.library.wildfire import WildfirePattern
             from patterns.library.spectral_estimation import SpectralEstimationPattern
+            from patterns.library.wildfire import WildfirePattern
 
             assert hasattr(PercolationPattern, "run")
             assert hasattr(PoissonSolverPattern, "run")
@@ -1497,9 +1567,8 @@ class TestPatternIntegration:
                 "scipy.stats": mock_scipy.stats,
             },
         ):
-            from patterns.library.wildfire import WildfirePattern, WildfireConfig
             from patterns.library.spectral_estimation import SpectralEstimationPattern
-
+            from patterns.library.wildfire import WildfireConfig, WildfirePattern
 
             wf = WildfirePattern(WildfireConfig(nx=10, ny=10, hours=1, dt=60, output_interval=1))
             result = wf.run()

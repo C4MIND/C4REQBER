@@ -1,11 +1,11 @@
 """
 Tests for mantle_convection pattern module.
 """
+
 import numpy as np
 import pytest
 
 from src.patterns.library.mantle_convection import MantleConvectionConfig, MantleConvectionPattern
-
 
 
 class TestConfig:

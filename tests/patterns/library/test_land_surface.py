@@ -6,7 +6,6 @@ import pytest
 from src.patterns.library.land_surface import LandSurfaceConfig, LandSurfacePattern
 
 
-
 class TestLandSurfaceConfig:
     def test_default_values(self):
         cfg = LandSurfaceConfig()

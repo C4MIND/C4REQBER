@@ -14,22 +14,23 @@ Covers:
 - run() async integration
 - Edge cases: small grids, short simulations
 """
+
 from __future__ import annotations
 
 import sys
 from pathlib import Path
+
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 import numpy as np
 import pytest
 
-from src.patterns.library.phase_field import (
-    PhaseFieldPattern,
-    PhaseFieldConfig,
-)
 from src.patterns.core import Hypothesis, SimulationStatus
-
+from src.patterns.library.phase_field import (
+    PhaseFieldConfig,
+    PhaseFieldPattern,
+)
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -151,13 +152,15 @@ class TestParseConfig:
 
     def test_custom_config(self):
         pattern = PhaseFieldPattern()
-        config = pattern._parse_config({
-            "grid_size": 64,
-            "dt": 0.005,
-            "n_steps": 1000,
-            "M": 0.5,
-            "gamma": 0.3,
-        })
+        config = pattern._parse_config(
+            {
+                "grid_size": 64,
+                "dt": 0.005,
+                "n_steps": 1000,
+                "M": 0.5,
+                "gamma": 0.3,
+            }
+        )
         assert config.grid_size == 64
         assert config.dt == 0.005
         assert config.n_steps == 1000
@@ -279,12 +282,15 @@ class TestRun:
     async def test_run_with_config(self):
         pattern = PhaseFieldPattern()
         h = Hypothesis(title="Phase field", description="cahn-hilliard")
-        result = await pattern.run(h, {
-            "grid_size": 32,
-            "n_steps": 100,
-            "dt": 0.005,
-            "M": 0.5,
-        })
+        result = await pattern.run(
+            h,
+            {
+                "grid_size": 32,
+                "n_steps": 100,
+                "dt": 0.005,
+                "M": 0.5,
+            },
+        )
         assert result.status == SimulationStatus.COMPLETED
 
     async def test_metrics_present(self):

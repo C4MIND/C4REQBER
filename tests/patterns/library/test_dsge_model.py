@@ -12,20 +12,21 @@ Covers:
 - get_metadata()
 - Edge cases: extreme parameters, empty config, invalid model_type
 """
+
 from __future__ import annotations
 
 import sys
 from pathlib import Path
 from unittest.mock import patch
 
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 import numpy as np
 import pytest
 
-from src.patterns.library.dsge import DSGEPattern
 from src.patterns.core import Hypothesis, SimulationStatus
-
+from src.patterns.library.dsge import DSGEPattern
 
 
 # ═══════════════════════════════════════════════════════════════════

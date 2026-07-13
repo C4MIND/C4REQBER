@@ -20,24 +20,25 @@ Covers:
 - get_metadata()
 - Edge cases: minimal residues, zero temperature, single replica
 """
+
 from __future__ import annotations
 
 import sys
 from pathlib import Path
 from unittest.mock import patch
 
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 import numpy as np
 import pytest
 
+from src.patterns.core import Hypothesis, SimulationStatus
 from src.patterns.library.protein_folding import (
+    FoldingModel,
     ProteinFoldingConfig,
     ProteinFoldingPattern,
-    FoldingModel,
 )
-from src.patterns.core import Hypothesis, SimulationStatus
-
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -166,13 +167,15 @@ class TestParseConfig:
 
     def test_custom_parsing(self):
         pattern = ProteinFoldingPattern()
-        cfg = pattern._parse_config({
-            "model": "ca_only",
-            "num_residues": 20,
-            "epsilon": 2.0,
-            "temperature": 400.0,
-            "k_bond": 50.0,
-        })
+        cfg = pattern._parse_config(
+            {
+                "model": "ca_only",
+                "num_residues": 20,
+                "epsilon": 2.0,
+                "temperature": 400.0,
+                "k_bond": 50.0,
+            }
+        )
         assert cfg.model == FoldingModel.CA_ONLY
         assert cfg.num_residues == 20
         assert cfg.epsilon == 2.0
@@ -235,7 +238,7 @@ class TestInitializeExtended:
         pattern.config = ProteinFoldingConfig(num_residues=5, sigma=3.8)
         coords = pattern._initialize_extended()
         for i in range(4):
-            dist = np.linalg.norm(coords[i+1] - coords[i])
+            dist = np.linalg.norm(coords[i + 1] - coords[i])
             assert dist > 0
 
 
@@ -475,7 +478,9 @@ class TestRun:
     async def test_run_failure_handling(self):
         pattern = ProteinFoldingPattern()
         h = Hypothesis(title="Protein folding", description="test")
-        with patch.object(pattern, "_prepare_native_structure", side_effect=ValueError("test error")):
+        with patch.object(
+            pattern, "_prepare_native_structure", side_effect=ValueError("test error")
+        ):
             result = await pattern.run(h, {"num_residues": 10})
             assert result.status == SimulationStatus.FAILED
             assert "test error" in result.error_message

@@ -1,17 +1,19 @@
 """
 Tests for epidemic_seir pattern module.
 """
+
 import numpy as np
 import pytest
 
 from src.patterns.library.epidemic_seir import (
-    SEIRConfig,
     EpidemicSEIRPattern,
+    SEIRConfig,
 )
 
 
 class TestConfig:
     """Test dataclass initialization and defaults"""
+
     def test_default_config(self):
         cfg = SEIRConfig()
         assert cfg.model_type == "seir"
@@ -38,6 +40,7 @@ class TestConfig:
 
 class TestInit:
     """Test pattern class __init__"""
+
     def test_pattern_init(self):
         pattern = EpidemicSEIRPattern()
         assert pattern.config is None  # Not set until run
@@ -55,26 +58,31 @@ class TestInit:
 
 class TestCanSimulate:
     """Test keyword matching for can_simulate"""
+
     def test_can_simulate_epidemic(self):
         from src.patterns.core import Hypothesis
+
         pattern = EpidemicSEIRPattern()
         hypo = Hypothesis(title="Epidemic outbreak simulation", description="Test")
         assert pattern.can_simulate(hypo) is True
 
     def test_can_simulate_sir(self):
         from src.patterns.core import Hypothesis
+
         pattern = EpidemicSEIRPattern()
         hypo = Hypothesis(title="SIR model analysis", description="Test")
         assert pattern.can_simulate(hypo) is True
 
     def test_can_simulate_herd_immunity(self):
         from src.patterns.core import Hypothesis
+
         pattern = EpidemicSEIRPattern()
         hypo = Hypothesis(title="Herd immunity threshold study", description="Test")
         assert pattern.can_simulate(hypo) is True
 
     def test_cannot_simulate_unrelated(self):
         from src.patterns.core import Hypothesis
+
         pattern = EpidemicSEIRPattern()
         hypo = Hypothesis(title="Stock market prediction", description="Test")
         assert pattern.can_simulate(hypo) is False
@@ -82,6 +90,7 @@ class TestCanSimulate:
 
 class TestCoreMethods:
     """Test main simulation methods"""
+
     def test_parse_config(self):
         pattern = EpidemicSEIRPattern()
         cfg = pattern._parse_config({"model_type": "sir", "N": 50000, "beta": 0.8})
@@ -92,22 +101,18 @@ class TestCoreMethods:
     def test_calculate_confidence(self):
         pattern = EpidemicSEIRPattern()
         pattern.config = SEIRConfig(stochastic=True, n_realizations=100)
-        results = {
-            "metrics": {
-                "R0": 2.5,
-                "peak_infections": 10000,
-                "final_epidemic_size": 50000
-            }
-        }
+        results = {"metrics": {"R0": 2.5, "peak_infections": 10000, "final_epidemic_size": 50000}}
         confidence = pattern._calculate_confidence(results)
         assert 0 <= confidence <= 0.9
 
 
 class TestRun:
     """Test async run() method with mocks"""
+
     @pytest.mark.asyncio
     async def test_run_deterministic_sir(self):
         from src.patterns.core import Hypothesis
+
         pattern = EpidemicSEIRPattern()
         hypo = Hypothesis(title="Test", description="Epidemic test")
 
@@ -131,6 +136,7 @@ class TestRun:
     @pytest.mark.asyncio
     async def test_run_deterministic_seir(self):
         from src.patterns.core import Hypothesis
+
         pattern = EpidemicSEIRPattern()
         hypo = Hypothesis(title="Test", description="Epidemic test")
 
@@ -152,6 +158,7 @@ class TestRun:
     @pytest.mark.asyncio
     async def test_run_stochastic(self):
         from src.patterns.core import Hypothesis
+
         pattern = EpidemicSEIRPattern()
         hypo = Hypothesis(title="Test", description="Epidemic test")
 
@@ -172,6 +179,7 @@ class TestRun:
 
 class TestEdgeCases:
     """Test zero values, empty inputs, extremes"""
+
     def test_r0_less_than_one(self):
         """When R0 < 1, epidemic should die out"""
         pattern = EpidemicSEIRPattern()
@@ -192,7 +200,7 @@ class TestEdgeCases:
         # R0 = 5, herd immunity = 1 - 1/5 = 0.8
         pattern.config = SEIRConfig(beta=0.5, gamma=0.1)
         R0 = 5.0
-        threshold = 1 - 1/R0
+        threshold = 1 - 1 / R0
         assert threshold == 0.8
 
     def test_zero_initial_infected(self):

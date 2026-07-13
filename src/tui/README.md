@@ -2,59 +2,45 @@
 
 The official TUI for C4REQBER — a keyboard-driven, themeable, i18n-aware terminal interface for cognitive discovery.
 
-## Current Version: v8 (Go)
+## Current Version: v9 (Go)
 
-TUI v8 is built in **Go** using [Bubble Tea](https://github.com/charmbracelet/bubbletea) and [Lipgloss](https://github.com/charmbracelet/lipgloss). It replaces the previous Python/Textual stack (v6/v7) with a statically compiled, allocation-optimized implementation.
+TUI v9 is built in **Go** using Bubble Tea v2 and Lipgloss. It is the supported, feed-driven terminal cockpit.
 
-- **Location**: `src/tui/v8/`
-- **Binary**: `c4tui-v8`
-- **Build**: `cd src/tui/v8 && go build -o c4tui-v8 .`
-- **Launch**: `./launch_tui_v8.sh` or `cd src/tui/v8 && ./c4tui-v8`
+- **Location**: `src/tui/v9/`
+- **Binary**: `c4tui-v9`
+- **Build**: `make -C src/tui/v9 build`
+- **Launch**: `blast tui`
 
 ## Quick Start
 
 ```bash
 # Build
-cd src/tui/v8
-go build -o c4tui-v8 .
+make -C src/tui/v9 build
 
 # Run
-./c4tui-v8
+blast tui
 
-# With options
-./c4tui-v8 --api http://localhost:8000 --lang ru --theme matrix
+# Demo mode (no backend required)
+blast tui --demo --story=crispr
 ```
 
 ## Features
 
-- **7-phase discovery pipeline** with real-time SSE updates
-- **3×3×3 C4 Cognitive Cube** — interactive navigation with theme-aware colors
-- **7 languages** — cycle with `L`
-- **3 themes** — Dark, Matrix, Paper — cycle with `T`
-- **Responsive layout** — adapts to any terminal size
-- **Quantum mascot** — animated companion cube
-- **Export** — Markdown, JSON, HTML, BibTeX
-
-## Keyboard Shortcuts
-
-| Key | Action |
-|-----|--------|
-| `Enter` | Submit query |
-| `Tab` / `←→↑↓` | Navigate C4 cube |
-| `Shift+↑↓` | Agency axis |
-| `Ctrl+Enter` | Start pipeline |
-| `F1`–`F12` | Overlays (help, chat, dashboard, export, etc.) |
-| `T` | Cycle theme |
-| `L` | Cycle language |
-| `Esc` | Close overlay / quit |
+- **Feed-driven discovery pipeline** with real-time SSE updates
+- **Inline cards** for hypotheses, papers, simulations, and verification
+- **7 languages** with complete translation parity
+- **7 color profiles**, including solarized dark
+- **Adaptive layouts** for narrow through wide terminals
+- **Command palette, debug overlay, and capability browser**
+- **Persistent feed** with resume on launch
 
 ## Architecture
 
-See [`IMPLEMENTATION.md`](IMPLEMENTATION.md) for the full architecture deep-dive.
+See [`v9/README.md`](v9/README.md) and [`v9/ARCHITECTURE.md`](v9/ARCHITECTURE.md).
 
 ## Legacy
 
-v6 and v7 (Python/Textual) have been removed. Python shims in `src/tui/__init__.py`, `app.py`, and `entry.py` now delegate to the Go binary.
+The retired v6/v7 Python interfaces and v8 parallel Go app have been removed. Python launchers delegate to TUI v9.
 
 ## License
 

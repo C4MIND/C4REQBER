@@ -1,7 +1,9 @@
 """HybridVerifier Hoare compile contract must match retry loop expectations."""
+
 from __future__ import annotations
 
 import pytest
+
 
 z3 = pytest.importorskip("z3")
 

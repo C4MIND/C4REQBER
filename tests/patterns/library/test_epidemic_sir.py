@@ -1,22 +1,23 @@
 """
 Tests for src/patterns/library/epidemic_sir.py
 """
+
 from __future__ import annotations
 
 import sys
 from pathlib import Path
+
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 import numpy as np
 import pytest
 
-from src.patterns.library.epidemic_sir import (
-    SIREpidemicPattern,
-    SIRConfig,
-)
 from src.patterns.core import Hypothesis, SimulationStatus
-
+from src.patterns.library.epidemic_sir import (
+    SIRConfig,
+    SIREpidemicPattern,
+)
 
 
 class TestSIRConfig:
@@ -108,7 +109,7 @@ class TestSimulateSIR:
         pattern = SIREpidemicPattern()
         pattern.config = SIRConfig(N=10000, beta=0.3, gamma=0.1, t_max=100.0)
         result = await pattern._simulate_sir()
-        assert result["metrics"]["herd_immunity_threshold"] == pytest.approx(2/3, abs=0.01)
+        assert result["metrics"]["herd_immunity_threshold"] == pytest.approx(2 / 3, abs=0.01)
 
     async def test_conservation(self):
         pattern = SIREpidemicPattern()
@@ -131,7 +132,15 @@ class TestSimulateSIR:
 class TestCalculateConfidence:
     def test_high_confidence(self):
         pattern = SIREpidemicPattern()
-        results = {"metrics": {"R0": 3.0, "peak_infections": 1000, "attack_rate": 0.5, "herd_immunity_threshold": 0.67, "generation_time_days": 10}}
+        results = {
+            "metrics": {
+                "R0": 3.0,
+                "peak_infections": 1000,
+                "attack_rate": 0.5,
+                "herd_immunity_threshold": 0.67,
+                "generation_time_days": 10,
+            }
+        }
         confidence = pattern._calculate_confidence(results)
         assert confidence > 0.5
 

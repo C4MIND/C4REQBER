@@ -1,22 +1,23 @@
 """
 Tests for src/patterns/library/cellular_automata.py
 """
+
 from __future__ import annotations
 
 import sys
 from pathlib import Path
+
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 import numpy as np
 import pytest
 
-from src.patterns.library.cellular_automata import (
-    CellularAutomataPattern,
-    CellularAutomataConfig,
-)
 from src.patterns.core import Hypothesis, SimulationStatus
-
+from src.patterns.library.cellular_automata import (
+    CellularAutomataConfig,
+    CellularAutomataPattern,
+)
 
 
 class TestCellularAutomataConfig:
@@ -78,7 +79,9 @@ class TestParseConfig:
 class TestSimulateGOL:
     async def test_simulation_completes(self):
         pattern = CellularAutomataPattern()
-        pattern.config = CellularAutomataConfig(model="game_of_life", width=20, height=20, n_steps=10)
+        pattern.config = CellularAutomataConfig(
+            model="game_of_life", width=20, height=20, n_steps=10
+        )
         result = await pattern._simulate_gol()
         assert "metrics" in result
         assert "logs" in result
@@ -86,31 +89,41 @@ class TestSimulateGOL:
 
     async def test_density_in_range(self):
         pattern = CellularAutomataPattern()
-        pattern.config = CellularAutomataConfig(model="game_of_life", width=20, height=20, n_steps=10)
+        pattern.config = CellularAutomataConfig(
+            model="game_of_life", width=20, height=20, n_steps=10
+        )
         result = await pattern._simulate_gol()
         assert 0 <= result["metrics"]["final_density"] <= 1
 
     async def test_alive_cells_count(self):
         pattern = CellularAutomataPattern()
-        pattern.config = CellularAutomataConfig(model="game_of_life", width=20, height=20, n_steps=10)
+        pattern.config = CellularAutomataConfig(
+            model="game_of_life", width=20, height=20, n_steps=10
+        )
         result = await pattern._simulate_gol()
         assert 0 <= result["metrics"]["alive_cells"] <= 400
 
     async def test_entropy_history(self):
         pattern = CellularAutomataPattern()
-        pattern.config = CellularAutomataConfig(model="game_of_life", width=20, height=20, n_steps=10)
+        pattern.config = CellularAutomataConfig(
+            model="game_of_life", width=20, height=20, n_steps=10
+        )
         result = await pattern._simulate_gol()
         assert len(result["entropy_history"]) == 10
 
     async def test_density_history(self):
         pattern = CellularAutomataPattern()
-        pattern.config = CellularAutomataConfig(model="game_of_life", width=20, height=20, n_steps=10)
+        pattern.config = CellularAutomataConfig(
+            model="game_of_life", width=20, height=20, n_steps=10
+        )
         result = await pattern._simulate_gol()
         assert len(result["density_history"]) == 10
 
     async def test_zero_density(self):
         pattern = CellularAutomataPattern()
-        pattern.config = CellularAutomataConfig(model="game_of_life", width=20, height=20, n_steps=10, initial_density=0.0)
+        pattern.config = CellularAutomataConfig(
+            model="game_of_life", width=20, height=20, n_steps=10, initial_density=0.0
+        )
         result = await pattern._simulate_gol()
         assert result["metrics"]["final_density"] == 0.0
 

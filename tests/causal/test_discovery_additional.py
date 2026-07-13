@@ -1,4 +1,5 @@
 """Additional tests for causal discovery algorithms to improve coverage."""
+
 from __future__ import annotations
 
 import networkx as nx
@@ -93,7 +94,7 @@ class TestFisherZTestEdgeCases:
 
     def test_zero_correlation(self):
         is_ind, p_val = fisher_z_test(0.0, 100)
-        assert is_ind == True
+        assert is_ind
         assert p_val > 0.05
 
     def test_small_sample_size(self):
@@ -104,7 +105,7 @@ class TestFisherZTestEdgeCases:
 
     def test_extreme_correlation(self):
         is_ind, p_val = fisher_z_test(0.99, 1000)
-        assert is_ind == False
+        assert not is_ind
         assert p_val < 0.05
 
     def test_negative_n_eff(self):
@@ -147,6 +148,7 @@ class TestPCAlgorithmEdgeCases:
     def test_orient_edges_empty_skeleton(self):
         pc = PCAlgorithm()
         import networkx as nx
+
         skeleton = nx.Graph()
         skeleton.add_nodes_from([0, 1, 2])
         cpdag = pc._orient_edges(skeleton, 3)
@@ -155,6 +157,7 @@ class TestPCAlgorithmEdgeCases:
     def test_triples_no_valid(self):
         pc = PCAlgorithm()
         import networkx as nx
+
         g = nx.DiGraph()
         g.add_nodes_from([0, 1, 2])
         # No directed edges
@@ -164,6 +167,7 @@ class TestPCAlgorithmEdgeCases:
     def test_triples_with_directed_edges(self):
         pc = PCAlgorithm()
         import networkx as nx
+
         g = nx.DiGraph()
         g.add_edges_from([(0, 1), (1, 2)])
         triples = pc._triples(g)
@@ -193,6 +197,7 @@ class TestFCIAlgorithmEdgeCases:
     def test_get_pag_edges_empty(self):
         fci = FCIAlgorithm()
         import networkx as nx
+
         pag = nx.DiGraph()
         pag.add_nodes_from(["A", "B"])
         edges = fci.get_pag_edges(pag)
@@ -201,6 +206,7 @@ class TestFCIAlgorithmEdgeCases:
     def test_get_pag_edges_with_types(self):
         fci = FCIAlgorithm()
         import networkx as nx
+
         pag = nx.DiGraph()
         pag.add_nodes_from(["A", "B"])
         pag.add_edge("A", "B", edge_type="->")
@@ -211,6 +217,7 @@ class TestFCIAlgorithmEdgeCases:
     def test_orient_fci_no_changes(self):
         fci = FCIAlgorithm()
         import networkx as nx
+
         pag = nx.DiGraph()
         pag.add_nodes_from(["A", "B", "C"])
         pag.add_edge("A", "B", edge_type="->")
@@ -266,6 +273,7 @@ class TestGESAlgorithmEdgeCases:
     def test_dag_to_cpdaG(self):
         ges = GESAlgorithm()
         import networkx as nx
+
         dag = nx.DiGraph()
         dag.add_nodes_from(["A", "B"])
         dag.add_edge("A", "B")

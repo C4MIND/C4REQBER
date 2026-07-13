@@ -1,4 +1,5 @@
 """MCP per-tool timeout configuration."""
+
 from __future__ import annotations
 
 from src.mcp_server.fallback_protocol import DEFAULT_TOOL_TIMEOUT, tool_timeout_seconds

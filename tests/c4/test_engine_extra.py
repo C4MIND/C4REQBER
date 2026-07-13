@@ -4,6 +4,7 @@ Additional tests for src/c4/engine.py to reach 80%+ coverage.
 Covers: all 27 states, transitions, shortest path, edge cases,
         C4Path, C4Transition, C4Space, predefined constants.
 """
+
 from __future__ import annotations
 
 import pytest
@@ -163,12 +164,7 @@ class TestC4StateSerialization:
 
     def test_all_states_cover_all_combinations(self):
         states = C4State.all_states()
-        expected = {
-            (t, s, a)
-            for t in range(3)
-            for s in range(3)
-            for a in range(3)
-        }
+        expected = {(t, s, a) for t in range(3) for s in range(3) for a in range(3)}
         actual = {st.to_tuple() for st in states}
         assert actual == expected
 
@@ -280,7 +276,9 @@ class TestC4Path:
     def test_with_transitions(self):
         t1 = C4Transition("tau+", C4State(0, 0, 0), C4State(1, 0, 0))
         t2 = C4Transition("lambda+", C4State(1, 0, 0), C4State(1, 1, 0))
-        path = C4Path(transitions=[t1, t2], start_state=C4State(0, 0, 0), end_state=C4State(1, 1, 0))
+        path = C4Path(
+            transitions=[t1, t2], start_state=C4State(0, 0, 0), end_state=C4State(1, 1, 0)
+        )
         assert path.length == 2
         assert path.operators == ["tau+", "lambda+"]
 
@@ -726,7 +724,7 @@ class TestOperatorApplication:
         space = C4Space()
         states = C4State.all_states()
         for state in states:
-            for op_name, op in space._ops.items():
+            for _op_name, op in space._ops.items():
                 result = op(state)
                 assert isinstance(result, C4State)
                 assert 0 <= result.T <= 2

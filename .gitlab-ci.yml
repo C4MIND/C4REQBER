@@ -59,12 +59,25 @@ variables:
 test-backend-checks:
   extends: .test-backend-base
   script:
-    - ruff check src/ --exclude="archive/" --select=E9,F
+    - ruff check src tests scripts --exclude scripts/archive --exclude scripts/build_de_i18n.py --exclude scripts/build_hi_i18n.py
+    - mypy src --no-error-summary
     - CI_TRUTHS_SKIP_PYTHON=1 python3 scripts/gen_truths.py --check
+    - python3 scripts/sync_truths_to_docs.py --check
     - python3 scripts/gen_mcp_registry.py --check
     - python3 scripts/check_i18n_parity.py
     - sh scripts/ci/check_docker_requirements.sh
     - PYTHONPATH=. pytest tests/mcp_server/ tests/utils/ tests/publishing/ tests/patterns/test_topic_router.py -v --tb=short
+
+security-checks:
+  extends: .mac-colima
+  stage: test
+  image: python:3.11-slim
+  before_script:
+    - pip install --no-cache-dir uv pip-audit bandit
+  script:
+    - uv export --no-dev --no-emit-project --no-hashes --output-file /tmp/c4reqber-audit.txt
+    - pip-audit --requirement /tmp/c4reqber-audit.txt --no-deps --disable-pip --progress-spinner off
+    - bandit -q -r src -x src/tui,src/frontend -lll
 
 test-backend-suite:
   extends: .test-backend-base
@@ -96,13 +109,12 @@ tui-v9-test:
   extends: .mac-colima
   stage: test
   image: golang:1.26
-  allow_failure: true
   before_script:
     - cd src/tui/v9
   script:
     - go vet ./...
     - go build ./...
-    - go test ./... -count=1 -skip 'Golden'
+    - go test ./... -count=1 -race
   artifacts:
     when: on_failure
     expire_in: 7 days
@@ -133,6 +145,8 @@ build-api:
   needs:
     - job: test-backend-checks
     - job: test-backend-suite
+    - job: security-checks
+    - job: tui-v9-test
   before_script:
     - chmod +x scripts/ci/build_api_image.sh
   script:
@@ -184,22 +198,8 @@ deploy-production:
       when: on_success
 
 # ═══════════════════════════════════════════════════════════════
-# TUI v9 — optional path-filtered jobs (advisory)
+# TUI v9 — path-filtered binary artifact
 # ═══════════════════════════════════════════════════════════════
-
-tui-v9:test:
-  extends: .mac-colima
-  stage: test
-  image: golang:1.26
-  allow_failure: true
-  before_script:
-    - cd src/tui/v9
-    - go mod download
-  script:
-    - go test ./... -count=1 -race -skip 'Golden'
-  rules:
-    - changes:
-        - src/tui/v9/**/*
 
 tui-v9:build:
   extends: .mac-colima
@@ -219,8 +219,7 @@ tui-v9:build:
       - bin/c4tui-v9-${CI_COMMIT_REF_SLUG}
     expire_in: 30 days
   needs:
-    - job: tui-v9:test
-      optional: true
+    - job: tui-v9-test
   rules:
     - changes:
         - src/tui/v9/**/*

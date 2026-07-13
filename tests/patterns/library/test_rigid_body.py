@@ -15,10 +15,12 @@ Covers:
 - get_metadata()
 - Edge cases: single body, zero gravity
 """
+
 from __future__ import annotations
 
 import sys
 from pathlib import Path
+
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
@@ -26,10 +28,9 @@ import numpy as np
 import pytest
 
 from src.patterns.library.rigid_body import (
-
+    BodyState,
     RigidBody,
     RigidBodyConfig,
-    BodyState,
 )
 
 
@@ -199,7 +200,7 @@ class TestStep:
     def test_bodies_above_ground(self):
         cfg = RigidBodyConfig(n_bodies=3, n_steps=10)
         sim = RigidBody(cfg)
-        for step in range(10):
+        for _step in range(10):
             sim._step(0.01)
         for body in sim.bodies:
             assert body.position[1] >= 0.4  # Approximate ground level

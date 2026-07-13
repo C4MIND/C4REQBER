@@ -8,9 +8,9 @@ from src.pipeline.auto_fix import AUTO_FIX_REGISTRY, KNOWN_BROKEN, SelfHealingIm
 class TestSelfHealingImporter:
     def test_importer_registered_in_meta_path(self):
         importer = SelfHealingImporter()
-        assert any(
-            isinstance(h, SelfHealingImporter) for h in sys.meta_path
-        ), "SelfHealingImporter not in sys.meta_path"
+        assert any(isinstance(h, SelfHealingImporter) for h in sys.meta_path), (
+            "SelfHealingImporter not in sys.meta_path"
+        )
 
     def test_find_spec_known_broken_module(self):
         importer = SelfHealingImporter()

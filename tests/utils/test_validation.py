@@ -7,11 +7,12 @@ Covers:
 - validate_on_startup() mode-gated behavior
 - Edge cases: empty env, partial env, all env set
 """
+
 from __future__ import annotations
-from pathlib import Path
 
 import os
 import sys
+from pathlib import Path
 from unittest.mock import patch
 
 
@@ -222,7 +223,10 @@ class TestValidateOnStartup:
         # Should not raise or exit
         validate_on_startup()
 
-    @pytest.mark.xfail(reason="validate_on_startup no longer exits on missing keys — validation logic changed", strict=False)
+    @pytest.mark.xfail(
+        reason="validate_on_startup no longer exits on missing keys — validation logic changed",
+        strict=False,
+    )
     def test_api_mode_invalid_calls_sys_exit(self, clean_env):
         os.environ["TURBO_CDI_MODE"] = "api"
         # Missing critical keys

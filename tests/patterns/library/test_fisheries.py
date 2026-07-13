@@ -1,17 +1,17 @@
 """Tests for fisheries pattern module."""
 
-import numpy as np
-import pytest
 import asyncio
 
+import numpy as np
+import pytest
+
+from src.patterns.core import Hypothesis
 from src.patterns.library.fisheries import (
     FisheriesConfig,
     FisheriesPattern,
-    RecruitmentModel,
     ProductionModel,
+    RecruitmentModel,
 )
-from src.patterns.core import Hypothesis
-
 
 
 class TestRecruitmentModel:
@@ -75,12 +75,14 @@ class TestFisheriesPattern:
             assert pattern.can_simulate(h) is True
 
     def test_parse_config(self, pattern):
-        pattern.config = pattern._parse_config({
-            "production_model": "fox",
-            "K": 5000.0,
-            "fishing_mortality": 0.3,
-            "years": 20,
-        })
+        pattern.config = pattern._parse_config(
+            {
+                "production_model": "fox",
+                "K": 5000.0,
+                "fishing_mortality": 0.3,
+                "years": 20,
+            }
+        )
         assert pattern.config.production_model == ProductionModel.FOX
         assert pattern.config.K == 5000.0
         assert pattern.config.fishing_mortality == 0.3

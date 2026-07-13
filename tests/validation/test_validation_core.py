@@ -4,6 +4,7 @@ Comprehensive tests for src/validation/core.py, consensus_meter.py, empirical_la
 Covers: validation rules, consensus meter, empirical layer,
         Bayesian updating, calibration tracking, experiment lifecycle
 """
+
 from __future__ import annotations
 
 import json
@@ -121,9 +122,7 @@ class TestFalsifiabilityCriterion:
         assert fc.difficulty == "hard"
 
     def test_to_dict(self):
-        fc = FalsifiabilityCriterion(
-            statement="S", measurement="M", threshold="T"
-        )
+        fc = FalsifiabilityCriterion(statement="S", measurement="M", threshold="T")
         d = fc.to_dict()
         assert d["statement"] == "S"
         assert d["difficulty"] == "medium"
@@ -211,8 +210,14 @@ class TestExperiment:
     def test_all_statuses_exist(self):
         statuses = list(ExperimentStatus)
         expected = [
-            "design", "ready", "running", "analyzing",
-            "validated", "falsified", "inconclusive", "cancelled",
+            "design",
+            "ready",
+            "running",
+            "analyzing",
+            "validated",
+            "falsified",
+            "inconclusive",
+            "cancelled",
         ]
         assert sorted([s.value for s in statuses]) == sorted(expected)
 
@@ -337,21 +342,31 @@ class TestConsensusMeter:
         assert score.total_count == 3
 
     def test_consensus_levels(self, consensus_meter):
-        for level_name, (min_val, max_val, label) in ConsensusMeter.CONSENSUS_LEVELS.items():
+        for _level_name, (min_val, max_val, label) in ConsensusMeter.CONSENSUS_LEVELS.items():
             assert min_val <= max_val
             assert isinstance(label, str)
 
     def test_strong_consensus(self, consensus_meter):
         evidence = [
             Evidence(
-                source="S1", type=EvidenceType.SUPPORTING,
-                strength=EvidenceStrength.STRONG, description="D1",
-                citation_count=200, year=2023, peer_reviewed=True, sample_size=1000,
+                source="S1",
+                type=EvidenceType.SUPPORTING,
+                strength=EvidenceStrength.STRONG,
+                description="D1",
+                citation_count=200,
+                year=2023,
+                peer_reviewed=True,
+                sample_size=1000,
             ),
             Evidence(
-                source="S2", type=EvidenceType.SUPPORTING,
-                strength=EvidenceStrength.STRONG, description="D2",
-                citation_count=150, year=2022, peer_reviewed=True, sample_size=800,
+                source="S2",
+                type=EvidenceType.SUPPORTING,
+                strength=EvidenceStrength.STRONG,
+                description="D2",
+                citation_count=150,
+                year=2022,
+                peer_reviewed=True,
+                sample_size=800,
             ),
         ]
         score = consensus_meter.calculate_consensus("h1", "H", evidence)
@@ -361,12 +376,16 @@ class TestConsensusMeter:
     def test_contested_consensus(self, consensus_meter):
         evidence = [
             Evidence(
-                source="S1", type=EvidenceType.SUPPORTING,
-                strength=EvidenceStrength.STRONG, description="D1",
+                source="S1",
+                type=EvidenceType.SUPPORTING,
+                strength=EvidenceStrength.STRONG,
+                description="D1",
             ),
             Evidence(
-                source="S2", type=EvidenceType.CONTRADICTING,
-                strength=EvidenceStrength.STRONG, description="D2",
+                source="S2",
+                type=EvidenceType.CONTRADICTING,
+                strength=EvidenceStrength.STRONG,
+                description="D2",
             ),
         ]
         score = consensus_meter.calculate_consensus("h1", "H", evidence)
@@ -441,7 +460,7 @@ class TestEmpiricalLayer:
         assert "cross_domain_innovation" in layer.benchmarks
 
     def test_benchmarks_structure(self, layer):
-        for bid, bm in layer.benchmarks.items():
+        for _bid, bm in layer.benchmarks.items():
             assert "type" in bm
             assert "problem" in bm
             assert "theoretical_max_steps" in bm
@@ -456,9 +475,7 @@ class TestEmpiricalLayer:
 
     @pytest.mark.anyio(backend="asyncio")
     async def test_run_benchmark_invalid_id_defaults(self, layer):
-        with patch.object(
-            layer.pipeline, "solve", new_callable=AsyncMock
-        ) as mock_solve:
+        with patch.object(layer.pipeline, "solve", new_callable=AsyncMock) as mock_solve:
             mock_result = MagicMock()
             mock_result.steps = [1, 2, 3]
             mock_result.confidence = 0.9
@@ -469,9 +486,7 @@ class TestEmpiricalLayer:
 
     @pytest.mark.anyio(backend="asyncio")
     async def test_run_suite(self, layer):
-        with patch.object(
-            layer.pipeline, "solve", new_callable=AsyncMock
-        ) as mock_solve:
+        with patch.object(layer.pipeline, "solve", new_callable=AsyncMock) as mock_solve:
             mock_result = MagicMock()
             mock_result.steps = [1, 2]
             mock_result.confidence = 0.85
@@ -491,6 +506,7 @@ class TestEmpiricalLayer:
 class TestEmpiricalResult:
     def test_creation(self):
         from src.core.complexity_adapter import ComplexityLevel
+
         result = EmpiricalResult(
             benchmark_id="test",
             benchmark_type=BenchmarkType.EINSTEIN_TEST,

@@ -15,19 +15,20 @@ Covers:
 - run() async integration
 - Edge cases: different variance reduction methods, convergence
 """
+
 from __future__ import annotations
 
 import sys
 from pathlib import Path
+
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 import numpy as np
 import pytest
 
-from src.patterns.library.monte_carlo import MonteCarloPattern, MonteCarloConfig
 from src.patterns.core import Hypothesis, SimulationStatus
-
+from src.patterns.library.monte_carlo import MonteCarloConfig, MonteCarloPattern
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -44,11 +45,7 @@ class TestMonteCarloConfig:
         assert cfg.batch_size == 1000
 
     def test_custom_init(self):
-        cfg = MonteCarloConfig(
-            n_samples=5000,
-            confidence_level=0.99,
-            variance_reduction="sobol"
-        )
+        cfg = MonteCarloConfig(n_samples=5000, confidence_level=0.99, variance_reduction="sobol")
         assert cfg.n_samples == 5000
         assert cfg.confidence_level == 0.99
         assert cfg.variance_reduction == "sobol"
@@ -264,28 +261,19 @@ class TestRun:
     async def test_run_stratified(self):
         pattern = MonteCarloPattern()
         h = Hypothesis(title="Probability test", description="uncertainty analysis")
-        result = await pattern.run(h, {
-            "n_samples": 200,
-            "variance_reduction": "stratified"
-        })
+        result = await pattern.run(h, {"n_samples": 200, "variance_reduction": "stratified"})
         assert result.status == SimulationStatus.COMPLETED
 
     async def test_run_importance(self):
         pattern = MonteCarloPattern()
         h = Hypothesis(title="Probability test", description="uncertainty analysis")
-        result = await pattern.run(h, {
-            "n_samples": 200,
-            "variance_reduction": "importance"
-        })
+        result = await pattern.run(h, {"n_samples": 200, "variance_reduction": "importance"})
         assert result.status == SimulationStatus.COMPLETED
 
     async def test_run_sobol(self):
         pattern = MonteCarloPattern()
         h = Hypothesis(title="Probability test", description="uncertainty analysis")
-        result = await pattern.run(h, {
-            "n_samples": 128,
-            "variance_reduction": "sobol"
-        })
+        result = await pattern.run(h, {"n_samples": 128, "variance_reduction": "sobol"})
         assert result.status == SimulationStatus.COMPLETED
 
     async def test_metrics_present(self):
@@ -321,19 +309,13 @@ class TestEdgeCases:
     async def test_high_confidence_level(self):
         pattern = MonteCarloPattern()
         h = Hypothesis(title="Probability test", description="uncertainty analysis")
-        result = await pattern.run(h, {
-            "n_samples": 100,
-            "confidence_level": 0.999
-        })
+        result = await pattern.run(h, {"n_samples": 100, "confidence_level": 0.999})
         assert result.status == SimulationStatus.COMPLETED
 
     async def test_with_seed(self):
         pattern = MonteCarloPattern()
         h = Hypothesis(title="Probability test", description="uncertainty analysis")
-        result = await pattern.run(h, {
-            "n_samples": 100,
-            "random_seed": 42
-        })
+        result = await pattern.run(h, {"n_samples": 100, "random_seed": 42})
         assert result.status == SimulationStatus.COMPLETED
 
 

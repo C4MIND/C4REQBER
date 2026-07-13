@@ -1,17 +1,17 @@
 """Tests for poisson_solver pattern module."""
 
-import numpy as np
-import pytest
 import asyncio
 
+import numpy as np
+import pytest
+
+from src.patterns.core import Hypothesis
 from src.patterns.library.poisson_solver import (
+    MultigridCycle,
     PoissonConfig,
     PoissonSolverPattern,
-    MultigridCycle,
     RelaxationMethod,
 )
-from src.patterns.core import Hypothesis
-
 
 
 class TestPoissonConfig:
@@ -52,7 +52,9 @@ class TestPoissonSolverPattern:
         assert pattern.can_simulate(h) is False
 
     def test_parse_config(self, pattern):
-        cfg = pattern._parse_config({"grid_size": 64, "equation": "laplace", "cycle_type": "w_cycle"})
+        cfg = pattern._parse_config(
+            {"grid_size": 64, "equation": "laplace", "cycle_type": "w_cycle"}
+        )
         assert cfg.nx == 64
         assert cfg.equation == "laplace"
         assert cfg.cycle_type == "w_cycle"

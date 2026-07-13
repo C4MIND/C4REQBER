@@ -1,22 +1,23 @@
 """
 Tests for src/patterns/library/fractal_mandelbrot.py
 """
+
 from __future__ import annotations
 
 import sys
 from pathlib import Path
+
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 import numpy as np
 import pytest
 
-from src.patterns.library.fractal_mandelbrot import (
-    MandelbrotPattern,
-    MandelbrotConfig,
-)
 from src.patterns.core import Hypothesis, SimulationStatus
-
+from src.patterns.library.fractal_mandelbrot import (
+    MandelbrotConfig,
+    MandelbrotPattern,
+)
 
 
 class TestMandelbrotConfig:
@@ -120,7 +121,15 @@ class TestSimulateMandelbrot:
 class TestCalculateConfidence:
     def test_high_confidence(self):
         pattern = MandelbrotPattern()
-        results = {"metrics": {"area_estimate": 1.5, "inside_points": 1000, "boundary_points": 500, "max_iter": 100, "cardioid_points": 10}}
+        results = {
+            "metrics": {
+                "area_estimate": 1.5,
+                "inside_points": 1000,
+                "boundary_points": 500,
+                "max_iter": 100,
+                "cardioid_points": 10,
+            }
+        }
         confidence = pattern._calculate_confidence(results)
         assert confidence > 0.5
 

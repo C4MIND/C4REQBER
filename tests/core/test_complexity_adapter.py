@@ -4,6 +4,7 @@ Tests for ComplexityLevel enum, DisclosureConfig, and filtering logic
 """
 
 import pytest
+from pydantic import ValidationError
 
 from src.core.complexity_adapter import (
     ADVANCED_CONFIG,
@@ -65,7 +66,7 @@ class TestDisclosureConfig:
         """Test that config fields are immutable (Pydantic frozen)"""
         config = DisclosureConfig()
 
-        with pytest.raises(Exception):  # Pydantic should prevent direct mutation
+        with pytest.raises(ValidationError):
             config.show_c4_coordinates = True
 
     def test_config_serialization(self):
@@ -221,24 +222,24 @@ class TestConfigImmutability:
         """Test LITE_CONFIG is immutable"""
         config = LITE_CONFIG
 
-        with pytest.raises(Exception):
+        with pytest.raises(ValidationError):
             config.show_c4_coordinates = True
 
-        with pytest.raises(Exception):
+        with pytest.raises(ValidationError):
             config.allow_custom_operators = True
 
     def test_advanced_config_immutable(self):
         """Test ADVANCED_CONFIG is immutable"""
         config = ADVANCED_CONFIG
 
-        with pytest.raises(Exception):
+        with pytest.raises(ValidationError):
             config.allow_custom_operators = True
 
     def test_expert_config_immutable(self):
         """Test EXPERT_CONFIG is immutable"""
         config = EXPERT_CONFIG
 
-        with pytest.raises(Exception):
+        with pytest.raises(ValidationError):
             config.show_c4_coordinates = False
 
 

@@ -4,11 +4,10 @@ import numpy as np
 import pytest
 
 from src.patterns.library.wavelet_analysis import (
-
+    ThresholdMethod,
     WaveletAnalysisConfig,
     WaveletAnalysisPattern,
     WaveletFamily,
-    ThresholdMethod,
 )
 
 
@@ -111,7 +110,9 @@ class TestWaveletAnalysisPattern:
         assert result["reconstruction_error"] < 1e-10
 
     def test_perfect_reconstruction_db(self):
-        config = WaveletAnalysisConfig(wavelet_family=WaveletFamily.DB, wavelet_order=4, max_level=3)
+        config = WaveletAnalysisConfig(
+            wavelet_family=WaveletFamily.DB, wavelet_order=4, max_level=3
+        )
         pattern = WaveletAnalysisPattern(config)
         signal = np.random.randn(128)
         result = pattern.run({"signal": signal})
@@ -122,12 +123,17 @@ class TestWaveletAnalysisPattern:
         clean = np.sin(2 * np.pi * 10 * t)
         noisy = clean + 0.5 * np.random.randn(len(t))
 
-        config_no = WaveletAnalysisConfig(wavelet_family=WaveletFamily.HAAR, max_level=4, denoise=False)
+        config_no = WaveletAnalysisConfig(
+            wavelet_family=WaveletFamily.HAAR, max_level=4, denoise=False
+        )
         result_no = WaveletAnalysisPattern(config_no).run({"signal": noisy})
 
         config_yes = WaveletAnalysisConfig(
-            wavelet_family=WaveletFamily.HAAR, max_level=4, denoise=True,
-            threshold_method=ThresholdMethod.SOFT, threshold_sigma=0.3
+            wavelet_family=WaveletFamily.HAAR,
+            max_level=4,
+            denoise=True,
+            threshold_method=ThresholdMethod.SOFT,
+            threshold_sigma=0.3,
         )
         result_yes = WaveletAnalysisPattern(config_yes).run({"signal": noisy})
 

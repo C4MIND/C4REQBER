@@ -1,7 +1,7 @@
 # Технический Whitepaper c4reqber
 
-**Версия:** backend 5.6.0 · TUI v9.13.0 · **июль 2026**  
-**Авторы:** c4reqber Contributors (AGPL-3.0)  
+**Версия:** backend 5.6.0 · TUI v9.13.0 · **июль 2026**
+**Авторы:** c4reqber Contributors (AGPL-3.0)
 **Источник метрик:** `_truths.json` (обновление: `python3 scripts/gen_truths.py`)
 
 > **English version:** [WHITEPAPER.md](WHITEPAPER.md)
@@ -13,7 +13,7 @@
 **c4reqber** — терминальный когнитивный экзоскелет для AI-агентов и исследователей. Превращает запросы на естественном языке в **артефакты с жёсткими гейтами** — диссертации, статьи, whitepaper, blueprint, код и отчёты верификации — с опорой на:
 
 - навигацию **C4-META** в Z₃³ (27 когнитивных состояний, 6 операторов, Теорема 11)
-- **51 источник знаний** (литература + данные/биология)
+- **47 источник знаний** (литература + данные/биология)
 - **38 мостов симуляции** (GPU, CPU, облачная делегация)
 - **9 реальных бэкендов формальной верификации** (Lean4, Coq, Dafny, Agda, Z3/Hoare, Haskell, CVC5, TLA+, Alloy)
 - **21 MCP-инструмент** для интеграции агентов
@@ -107,7 +107,7 @@ c4reqber закрывает все четыре пункта **единым ко
 | Фаза | Название | Ключевые модули |
 |------|----------|-----------------|
 | A | Framing | SystemAnalyzer, C4 |
-| B | Knowledge | MultiSourceSearcher (51 источник) |
+| B | Knowledge | MultiSourceSearcher (47 настроенных источников) |
 | C | Gap analysis | GapMiner |
 | D | Hypotheses | LLM + TRIZ + 20 плагинов |
 | E | Simulation + Verification | PatternRunnerV2, HybridVerifier |
@@ -171,7 +171,7 @@ TUI **Ctrl+Shift+C** — статус per-platform + install hints.
 
 ## 7. Получение знаний
 
-**51 источник** через `orchestrator.py`: arXiv, PubMed, Crossref, Semantic Scholar, OpenAlex, PubChem, ChEMBL, STRING, …
+**47 настроенных источников** через `orchestrator.py`: arXiv, PubMed, Crossref, Semantic Scholar, OpenAlex, PubChem, ChEMBL, STRING, …
 
 Circuit breaker, semantic dedup, domain boost, ChromaDB cache.
 
@@ -213,7 +213,7 @@ Round 5 audit: **0 CRITICAL / 0 HIGH** в scope.
 - CSRF: Bearer bypass для API-клиентов
 - Subprocess: без shell injection
 
-**Тесты:** 9 861+ collected · mypy baseline: 0 (regression-gated).
+**Тесты:** 9 906 collected · mypy baseline: 0 (регрессионный gate).
 
 ---
 
@@ -222,12 +222,12 @@ Round 5 audit: **0 CRITICAL / 0 HIGH** в scope.
 | Метрика | Значение |
 |---------|----------|
 | Python LOC | ~226k |
-| Тестов collected | 9 887+ |
+| Тестов collected | 9 906 |
 | MCP tools | 21 |
 | Бэкендов верификации (real) | 9 |
 | Guard-stubs | 0 |
-| Движков симуляции | 38 |
-| Источников знаний | 51 |
+| Мостов симуляции | 38 |
+| Источников знаний | 47 настроено |
 
 ### Ограничения
 

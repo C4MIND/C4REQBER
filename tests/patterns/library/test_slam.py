@@ -19,10 +19,12 @@ Covers:
 - get_metadata()
 - Edge cases: zero steps, single landmark, empty trajectory
 """
+
 from __future__ import annotations
 
 import sys
 from pathlib import Path
+
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
@@ -30,12 +32,11 @@ import numpy as np
 import pytest
 
 from src.patterns.library.slam import (
-
+    PoseGraph,
+    SensorType,
     SLAMConfig,
     SLAMPattern,
     SLAMType,
-    SensorType,
-    PoseGraph,
 )
 
 
@@ -251,7 +252,7 @@ class TestObserveLandmarks:
         pose = np.array([0.0, 0.0, 0.0])
         observations = pattern._observe_landmarks(pose)
         assert isinstance(observations, list)
-        for lm_id, meas in observations:
+        for _lm_id, meas in observations:
             assert len(meas) == 2
             assert meas[0] > 0  # range positive
 

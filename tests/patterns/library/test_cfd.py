@@ -15,20 +15,21 @@ Covers:
 - get_metadata()
 - Edge cases: Re < 0, zero grid, zero velocity
 """
+
 from __future__ import annotations
 
 import sys
 from pathlib import Path
 from unittest.mock import patch
 
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 import numpy as np
 import pytest
 
-from src.patterns.library.cfd import CFDPattern, FlowType
 from src.patterns.core import Hypothesis, SimulationStatus
-
+from src.patterns.library.cfd import CFDPattern, FlowType
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -113,7 +114,12 @@ class TestPotentialFlow:
     async def test_potential_flow_default(self):
         pattern = CFDPattern()
         h = Hypothesis(parameters={})
-        config = {"flow_type": "potential", "grid_size": 20, "inlet_velocity": 1.0, "domain_size": 1.0}
+        config = {
+            "flow_type": "potential",
+            "grid_size": 20,
+            "inlet_velocity": 1.0,
+            "domain_size": 1.0,
+        }
         result = await pattern._potential_flow(h, config)
         assert "metrics" in result
         assert "logs" in result
@@ -155,7 +161,12 @@ class TestStokesFlow:
     async def test_stokes_flow_default(self):
         pattern = CFDPattern()
         h = Hypothesis(parameters={})
-        config = {"flow_type": "stokes", "grid_size": 20, "inlet_velocity": 0.01, "domain_size": 1.0}
+        config = {
+            "flow_type": "stokes",
+            "grid_size": 20,
+            "inlet_velocity": 0.01,
+            "domain_size": 1.0,
+        }
         result = await pattern._stokes_flow(h, config)
         assert "metrics" in result
         assert "logs" in result
@@ -188,7 +199,12 @@ class TestLaminarFlow:
     async def test_laminar_flow_default(self):
         pattern = CFDPattern()
         h = Hypothesis(parameters={})
-        config = {"flow_type": "laminar", "reynolds_number": 100.0, "inlet_velocity": 1.0, "domain_size": 0.1}
+        config = {
+            "flow_type": "laminar",
+            "reynolds_number": 100.0,
+            "inlet_velocity": 1.0,
+            "domain_size": 0.1,
+        }
         result = await pattern._laminar_flow(h, config)
         assert "metrics" in result
         assert "logs" in result
@@ -231,7 +247,12 @@ class TestTurbulentFlow:
     async def test_turbulent_flow_default(self):
         pattern = CFDPattern()
         h = Hypothesis(parameters={})
-        config = {"flow_type": "turbulent", "reynolds_number": 10000.0, "inlet_velocity": 1.0, "domain_size": 0.1}
+        config = {
+            "flow_type": "turbulent",
+            "reynolds_number": 10000.0,
+            "inlet_velocity": 1.0,
+            "domain_size": 0.1,
+        }
         result = await pattern._turbulent_flow(h, config)
         assert "metrics" in result
         assert "logs" in result
@@ -246,13 +267,18 @@ class TestTurbulentFlow:
         config = {"flow_type": "turbulent", "reynolds_number": 10000.0, "inlet_velocity": 1.0}
         result = await pattern._turbulent_flow(h, config)
         # Blasius: f = 0.316/Re^0.25 = 0.316/10 = 0.0316
-        expected_f = 0.316 / (10000 ** 0.25)
+        expected_f = 0.316 / (10000**0.25)
         assert result["metrics"]["friction_factor"] == pytest.approx(expected_f, rel=0.1)
 
     async def test_turbulent_falls_back_to_laminar(self):
         pattern = CFDPattern()
         h = Hypothesis(parameters={})
-        config = {"flow_type": "turbulent", "reynolds_number": 100.0, "inlet_velocity": 1.0, "domain_size": 0.1}
+        config = {
+            "flow_type": "turbulent",
+            "reynolds_number": 100.0,
+            "inlet_velocity": 1.0,
+            "domain_size": 0.1,
+        }
         result = await pattern._turbulent_flow(h, config)
         # Re < 2300 should fall back to laminar
         assert result["metrics"]["reynolds_number"] == 100.0

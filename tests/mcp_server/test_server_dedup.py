@@ -1,8 +1,9 @@
 """MCP server uses canonical fallback_protocol implementation."""
+
 from __future__ import annotations
 
-from src.mcp_server.fallback_protocol import _FallbackServer, tool_timeout_seconds
 from src.mcp_server import server as mcp_server_module
+from src.mcp_server.fallback_protocol import _FallbackServer, tool_timeout_seconds
 
 
 def test_server_instance_uses_fallback_protocol_class():

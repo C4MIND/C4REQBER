@@ -4,16 +4,15 @@ import numpy as np
 import pytest
 
 from src.patterns.library.market_microstructure import (
-
-    OrderType,
-    Side,
-    Order,
-    OrderBook,
+    InformedTrader,
+    MarketMaker,
     MarketMicrostructureConfig,
     MarketMicrostructureModel,
     NoiseTrader,
-    InformedTrader,
-    MarketMaker,
+    Order,
+    OrderBook,
+    OrderType,
+    Side,
 )
 
 
@@ -153,9 +152,7 @@ class TestAgents:
 class TestMarketMicrostructureModel:
     @pytest.fixture
     def config(self):
-        return MarketMicrostructureConfig(
-            n_agents=20, simulation_time=10.0, random_seed=42
-        )
+        return MarketMicrostructureConfig(n_agents=20, simulation_time=10.0, random_seed=42)
 
     @pytest.fixture
     def model(self, config):
@@ -197,9 +194,7 @@ class TestMarketMicrostructureModel:
         assert result["trades"]["total_volume"] > 0
 
     def test_price_impact(self):
-        config = MarketMicrostructureConfig(
-            n_agents=30, simulation_time=30.0, random_seed=42
-        )
+        config = MarketMicrostructureConfig(n_agents=30, simulation_time=30.0, random_seed=42)
         model = MarketMicrostructureModel(config)
         result = model.simulate()
         assert "kyle_lambda" in result["price_impact"]

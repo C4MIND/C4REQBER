@@ -11,6 +11,7 @@ conflicts with strict parsers; the key extraction is what matters.
 
 Exit 0 if all 7 files have identical key sets; exit 1 otherwise.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -44,8 +45,9 @@ def extract_keys(path: Path) -> set[str]:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--strict", action="store_true",
-                        help="fail if any language has < reference count")
+    parser.add_argument(
+        "--strict", action="store_true", help="fail if any language has < reference count"
+    )
     args = parser.parse_args()
 
     all_keys: dict[str, set[str]] = {}

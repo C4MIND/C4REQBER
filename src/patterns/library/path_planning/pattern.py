@@ -17,6 +17,7 @@ from .core import AStarPlanner, RRTPlanner
 
 logger = logging.getLogger(__name__)
 
+
 class PathPlanningPattern:
     """
     Path planning pattern with RRT*, A*, and Dijkstra.
@@ -46,10 +47,29 @@ class PathPlanningPattern:
     def run(self, hypothesis: dict[str, Any] = None) -> dict[str, Any]:  # type: ignore[assignment]
         """Run path planning"""
         cfg = self.config
+        low, high = cfg.bounds
+        if (
+            low.shape != high.shape
+            or low.size == 0
+            or not np.all(np.isfinite(low))
+            or not np.all(np.isfinite(high))
+            or np.any(high <= low)
+        ):
+            return {
+                "planner_type": cfg.planner_type.value,
+                "environment_type": cfg.environment_type.value,
+                "success": False,
+                "planning_time": 0.0,
+                "iterations": 0,
+                "path_length": None,
+                "start": cfg.start.tolist(),
+                "goal": cfg.goal.tolist(),
+                "n_obstacles": len(cfg.obstacles),
+                "error": "bounds must be finite and strictly increasing",
+            }
 
         logger.info(
-            f"Starting path planning: {cfg.planner_type.value}, "
-            f"{cfg.environment_type.value}"
+            f"Starting path planning: {cfg.planner_type.value}, {cfg.environment_type.value}"
         )
 
         self._initialize_planner()
@@ -88,8 +108,7 @@ class PathPlanningPattern:
                     if np.linalg.norm(v1) > 1e-10 and np.linalg.norm(v2) > 1e-10:
                         angle = np.arccos(
                             np.clip(
-                                np.dot(v1, v2)
-                                / (np.linalg.norm(v1) * np.linalg.norm(v2)),
+                                np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2)),
                                 -1,
                                 1,
                             )

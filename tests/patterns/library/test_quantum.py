@@ -3,8 +3,7 @@
 import numpy as np
 import pytest
 
-from src.patterns.library.quantum import QuantumConfig, QuantumPattern, QuantumMethod
-
+from src.patterns.library.quantum import QuantumConfig, QuantumMethod, QuantumPattern
 
 
 class TestQuantumConfig:
@@ -84,11 +83,11 @@ class TestQuantumPattern:
 
     def test_apply_gate_x(self, circuit_pattern):
         circuit_pattern._apply_gate("X", [0])
-        assert np.isclose(np.sum(np.abs(circuit_pattern.state)**2), 1.0)
+        assert np.isclose(np.sum(np.abs(circuit_pattern.state) ** 2), 1.0)
 
     def test_apply_gate_cnot(self, circuit_pattern):
         circuit_pattern._apply_gate("CNOT", [0, 1])
-        assert np.isclose(np.sum(np.abs(circuit_pattern.state)**2), 1.0)
+        assert np.isclose(np.sum(np.abs(circuit_pattern.state) ** 2), 1.0)
 
     def test_expand_single_qubit_gate(self, circuit_pattern):
         U = np.array([[1, 0], [0, 1]], dtype=complex)
@@ -108,7 +107,7 @@ class TestQuantumPattern:
         state_before = schrodinger_pattern.state.copy()
         schrodinger_pattern._schrodinger_step()
         assert not np.allclose(schrodinger_pattern.state, state_before)
-        assert np.isclose(np.sum(np.abs(schrodinger_pattern.state)**2), 1.0)
+        assert np.isclose(np.sum(np.abs(schrodinger_pattern.state) ** 2), 1.0)
 
     def test_vqe_step(self, vqe_pattern):
         params_before = vqe_pattern.ansatz_params.copy()
@@ -119,7 +118,7 @@ class TestQuantumPattern:
     def test_create_ansatz(self, vqe_pattern):
         psi = vqe_pattern._create_ansatz(vqe_pattern.ansatz_params)
         assert len(psi) == 2**vqe_pattern.config.n_qubits
-        assert np.isclose(np.sum(np.abs(psi)**2), 1.0)
+        assert np.isclose(np.sum(np.abs(psi) ** 2), 1.0)
 
     def test_vqe_gradient(self, vqe_pattern):
         grad = vqe_pattern._vqe_gradient()
@@ -157,7 +156,9 @@ class TestQuantumPattern:
         assert "final_probabilities" in result
 
     def test_run_density_matrix(self):
-        pattern = QuantumPattern(QuantumConfig(method=QuantumMethod.DENSITY_MATRIX, steps=20, n_qubits=3))
+        pattern = QuantumPattern(
+            QuantumConfig(method=QuantumMethod.DENSITY_MATRIX, steps=20, n_qubits=3)
+        )
         result = pattern.run()
         assert result["method"] == "density_matrix"
         assert "final_purity" in result

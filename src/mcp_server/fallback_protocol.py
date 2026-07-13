@@ -50,117 +50,201 @@ class _FallbackServer:
             return
         current_hash = self._compute_tool_hash(tool_name)
         if tool_name in self.verified_hashes:
-            assert current_hash == self.verified_hashes[tool_name], f"Rug pull detected: {tool_name}"
+            assert current_hash == self.verified_hashes[tool_name], (
+                f"Rug pull detected: {tool_name}"
+            )
         else:
             self.verified_hashes[tool_name] = current_hash
 
-    async def run_stdio_fallback(self):
-        """Read JSON-RPC requests from stdin, write responses to stdout."""
+    def _list_tools(self) -> list[dict[str, Any]]:
+        tools = []
+        for tool_name, tool_func in self._tools.items():
+            self._verify_tool_hash(tool_name)
+            tools.append(
+                {
+                    "name": tool_name,
+                    "description": tool_func.__doc__ or "",
+                    "inputSchema": getattr(
+                        tool_func,
+                        "schema",
+                        {"type": "object", "properties": {}},
+                    ),
+                }
+            )
+        return tools
+
+    async def _call_tool(self, request_id: Any, params: dict[str, Any]) -> dict[str, Any]:
+        tool_name = params.get("name")
+        if not isinstance(tool_name, str) or tool_name not in self._tools:
+            return {
+                "jsonrpc": "2.0",
+                "id": request_id,
+                "error": {"code": -32601, "message": f"Tool not found: {tool_name}"},
+            }
+
+        tool_args = params.get("arguments", {})
+        if not isinstance(tool_args, dict):
+            return {
+                "jsonrpc": "2.0",
+                "id": request_id,
+                "error": {"code": -32602, "message": "Tool arguments must be an object"},
+            }
+
+        self._verify_tool_hash(tool_name)
+        tool = self._tools[tool_name]
+        schema = getattr(tool, "schema", {})
+        if schema:
+            properties = schema.get("properties", {})
+            extra_keys = set(tool_args) - set(properties)
+            if extra_keys and not schema.get("additionalProperties", True):
+                return {
+                    "jsonrpc": "2.0",
+                    "id": request_id,
+                    "error": {
+                        "code": -32602,
+                        "message": f"Extra arguments not allowed: {sorted(extra_keys)}",
+                    },
+                }
+
+        try:
+            tool_args = validate_tool_input(tool_name, dict(tool_args))
+        except ValueError as exc:
+            _mcp_logger.warning(
+                "Input validation failed for tool '%s': %s",
+                redact_credentials(tool_name),
+                redact_credentials(str(exc)),
+            )
+            return {
+                "jsonrpc": "2.0",
+                "id": request_id,
+                "error": {"code": -32602, "message": f"Invalid input: {exc}"},
+            }
+
+        try:
+            result = await asyncio.wait_for(
+                tool(**tool_args),
+                timeout=tool_timeout_seconds(tool_name),
+            )
+        except TimeoutError:
+            timeout_s = tool_timeout_seconds(tool_name)
+            result = {
+                "status": "error",
+                "code": "TIMEOUT",
+                "errors": [f"Tool execution timed out after {int(timeout_s)} seconds"],
+                "tool": tool_name,
+                "hint": "For long pipelines use blast CLI directly or retry with a narrower query.",
+            }
+        except (IndexError, KeyError, TypeError, ValueError) as exc:
+            result = {"status": "error", "errors": [str(exc)]}
+
+        if isinstance(result, str):
+            result = redact_credentials(result)
+        elif isinstance(result, dict):
+            result = {
+                key: redact_credentials(str(value)) if isinstance(value, str) else value
+                for key, value in result.items()
+            }
+
+        is_error = isinstance(result, dict) and result.get("status") == "error"
+        return {
+            "jsonrpc": "2.0",
+            "id": request_id,
+            "result": {
+                "content": [
+                    {
+                        "type": "text",
+                        "text": json.dumps(result, ensure_ascii=False, default=str),
+                    }
+                ],
+                "structuredContent": result,
+                "isError": is_error,
+            },
+        }
+
+    async def handle_request(self, request: dict[str, Any]) -> dict[str, Any] | None:
+        """Handle one MCP JSON-RPC message and return a response when required."""
+        request_id = request.get("id")
+        method = request.get("method")
+
+        if request.get("jsonrpc") != "2.0" or not isinstance(method, str):
+            return {
+                "jsonrpc": "2.0",
+                "id": request_id,
+                "error": {"code": -32600, "message": "Invalid Request"},
+            }
+        if method == "initialize":
+            requested = request.get("params", {}).get("protocolVersion")
+            return {
+                "jsonrpc": "2.0",
+                "id": request_id,
+                "result": {
+                    "protocolVersion": requested or "2025-03-26",
+                    "capabilities": {"tools": {"listChanged": False}},
+                    "serverInfo": {"name": self.name, "version": "5.6.0"},
+                },
+            }
+        if method == "notifications/initialized":
+            return None
+        if method == "ping":
+            return {"jsonrpc": "2.0", "id": request_id, "result": {}}
+        if method == "tools/list":
+            return {
+                "jsonrpc": "2.0",
+                "id": request_id,
+                "result": {"tools": self._list_tools()},
+            }
+        if method == "tools/call":
+            params = request.get("params", {})
+            if not isinstance(params, dict):
+                return {
+                    "jsonrpc": "2.0",
+                    "id": request_id,
+                    "error": {"code": -32602, "message": "Params must be an object"},
+                }
+            return await self._call_tool(request_id, params)
+        return {
+            "jsonrpc": "2.0",
+            "id": request_id,
+            "error": {"code": -32601, "message": f"Method not found: {method}"},
+        }
+
+    async def run_stdio_fallback(self) -> None:
+        """Read newline-delimited MCP JSON-RPC requests from stdin."""
         reader = asyncio.StreamReader()
         protocol = asyncio.StreamReaderProtocol(reader)
         await asyncio.get_event_loop().connect_read_pipe(lambda: protocol, sys.stdin)
-
         while True:
             line = await reader.readline()
             if not line:
                 break
             try:
                 request = json.loads(line)
-                method = request.get("method", "")
-                if method == "tools/list":
-                    tools = []
-                    for tool_name, tool_func in self._tools.items():
-                        current_hash = self._compute_tool_hash(tool_name)
-                        if tool_name in self.verified_hashes:
-                            assert current_hash == self.verified_hashes[tool_name], f"Rug pull detected: {tool_name}"
-                        else:
-                            self.verified_hashes[tool_name] = current_hash
-                        tools.append(
-                            {
-                                "name": tool_name,
-                                "description": tool_func.__doc__ or "",
-                                "inputSchema": getattr(
-                                    tool_func,
-                                    "schema",
-                                    {
-                                        "type": "object",
-                                        "properties": {},
-                                    },
-                                ),
-                            }
-                        )
-                    response = json.dumps({"jsonrpc": "2.0", "id": request.get("id"), "result": {"tools": tools}})
-                elif method == "tools/call":
-                    tool_name = request["params"]["name"]
-                    tool_args = request["params"].get("arguments", {})
-                    if tool_name not in self._tools:
-                        response = json.dumps(
-                            {
-                                "jsonrpc": "2.0",
-                                "id": request.get("id"),
-                                "error": {"code": -32601, "message": f"Tool not found: {tool_name}"},
-                            }
-                        )
-                        sys.stdout.write(response + "\n")
-                        sys.stdout.flush()
-                        continue
-                    self._verify_tool_hash(tool_name)
-                    tool = self._tools[tool_name]
-                    schema = getattr(tool, "schema", {})
-                    if schema:
-                        properties = schema.get("properties", {})
-                        allowed_keys = set(properties.keys())
-                        input_keys = set(tool_args.keys())
-                        extra_keys = input_keys - allowed_keys
-                        if extra_keys and not schema.get("additionalProperties", True):
-                            raise ValueError(f"Extra arguments not allowed: {extra_keys}")
-                    try:
-                        tool_args = validate_tool_input(tool_name, tool_args)
-                    except ValueError as e:
-                        _mcp_logger.warning(
-                            "Input validation failed for tool '%s': %s",
-                            redact_credentials(tool_name),
-                            redact_credentials(str(e)),
-                        )
-                        err_response = json.dumps(
-                            {
-                                "jsonrpc": "2.0",
-                                "id": request.get("id"),
-                                "error": {"code": -32602, "message": f"Invalid input: {e}"},
-                            }
-                        )
-                        sys.stdout.write(err_response + "\n")
-                        sys.stdout.flush()
-                        continue
-                    timeout_s = tool_timeout_seconds(tool_name)
-                    try:
-                        result = await asyncio.wait_for(self._tools[tool_name](**tool_args), timeout=timeout_s)
-                    except TimeoutError:
-                        result = {
-                            "status": "error",
-                            "code": "TIMEOUT",
-                            "errors": [f"Tool execution timed out after {int(timeout_s)} seconds"],
-                            "tool": tool_name,
-                            "hint": "For long pipelines use blast CLI directly or retry with a narrower query.",
-                        }
-                    except (IndexError, KeyError, TypeError) as e:
-                        result = {"status": "error", "errors": [str(e)]}
-                    if isinstance(result, str):
-                        result = redact_credentials(result)
-                    elif isinstance(result, dict):
-                        result = {k: redact_credentials(str(v)) if isinstance(v, str) else v for k, v in result.items()}
-                    response = json.dumps({"jsonrpc": "2.0", "id": request.get("id"), "result": result})
-                else:
-                    response = json.dumps({"jsonrpc": "2.0", "id": request.get("id"), "result": {}})
-                sys.stdout.write(response + "\n")
-                sys.stdout.flush()
-            except (TimeoutError, AttributeError, IndexError, KeyError, TypeError, ValueError, json.JSONDecodeError) as e:
+                if not isinstance(request, dict):
+                    raise ValueError("Request must be an object")
+                response = await self.handle_request(request)
+                if response is not None:
+                    sys.stdout.write(json.dumps(response, ensure_ascii=False) + "\n")
+                    sys.stdout.flush()
+            except json.JSONDecodeError as exc:
                 error_response = json.dumps(
-                    {"jsonrpc": "2.0", "id": None, "error": {"code": -32700, "message": f"Parse error: {e}"}}
+                    {
+                        "jsonrpc": "2.0",
+                        "id": None,
+                        "error": {"code": -32700, "message": f"Parse error: {exc}"},
+                    }
                 )
                 sys.stdout.write(error_response + "\n")
                 sys.stdout.flush()
-                continue
+            except (AttributeError, IndexError, KeyError, TypeError, ValueError) as exc:
+                error_response = json.dumps(
+                    {
+                        "jsonrpc": "2.0",
+                        "id": None,
+                        "error": {"code": -32600, "message": f"Invalid Request: {exc}"},
+                    }
+                )
+                sys.stdout.write(error_response + "\n")
+                sys.stdout.flush()
 
 
 import logging

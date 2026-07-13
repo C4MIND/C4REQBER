@@ -15,24 +15,25 @@ Covers:
 - get_metadata()
 - Edge cases: invalid params, missing cvxpy, empty hypothesis
 """
+
 from __future__ import annotations
 
 import sys
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 import numpy as np
 import pytest
 
+from src.patterns.core import Hypothesis, SimulationStatus
 from src.patterns.library.optimization import (
     HAS_CVXPY,
     LinearProgrammingPattern,
     OptimizationType,
 )
-from src.patterns.core import Hypothesis, SimulationStatus
-
 
 
 # ═══════════════════════════════════════════════════════════════════

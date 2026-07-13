@@ -1,6 +1,7 @@
 """
 C4REQBER API: Theorem Router
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -23,7 +24,7 @@ async def formalize_hypothesis(payload: dict[str, Any]) -> dict[str, Any]:
     prover = get_theorem_prover(backend)
     hypothesis_id = payload.get(
         "hypothesis_id",
-        f"h-{hashlib.md5(payload.get('hypothesis', '').encode()).hexdigest()[:16]}",
+        f"h-{hashlib.sha256(payload.get('hypothesis', '').encode()).hexdigest()[:16]}",
     )
     hypothesis = payload.get("hypothesis", "")
     domain = payload.get("domain", "general")

@@ -1,23 +1,24 @@
 """Tests for new data source clients (P6)."""
+
 from __future__ import annotations
 
 from unittest.mock import Mock, patch
 
 import pytest
 
-from src.knowledge.sources.ncbi_eutils import NCBIEUtilsClient
-from src.knowledge.sources.pubchem import PubChemClient
-from src.knowledge.sources.chembl import ChEMBLClient
-from src.knowledge.sources.materials_project import MaterialsProjectClient
-from src.knowledge.sources.noaa import NOAAClient
-from src.knowledge.sources.gtex import GTExClient
-from src.knowledge.sources.uniprot import UniProtClient
-from src.knowledge.sources.kaggle import KaggleClient
-from src.knowledge.sources.drugbank import DrugBankClient
 from src.knowledge.sources.aflow import AflowClient
-from src.knowledge.sources.uci_ml import UciMlClient
+from src.knowledge.sources.chembl import ChEMBLClient
+from src.knowledge.sources.drugbank import DrugBankClient
+from src.knowledge.sources.gtex import GTExClient
 from src.knowledge.sources.harvard_dataverse import HarvardDataverseClient
+from src.knowledge.sources.kaggle import KaggleClient
+from src.knowledge.sources.materials_project import MaterialsProjectClient
+from src.knowledge.sources.ncbi_eutils import NCBIEUtilsClient
+from src.knowledge.sources.noaa import NOAAClient
+from src.knowledge.sources.pubchem import PubChemClient
 from src.knowledge.sources.re3data import Re3dataClient
+from src.knowledge.sources.uci_ml import UciMlClient
+from src.knowledge.sources.uniprot import UniProtClient
 
 
 class TestNCBIEUtilsClient:
@@ -29,9 +30,7 @@ class TestNCBIEUtilsClient:
     async def test_search_returns_results(self) -> None:
         client = NCBIEUtilsClient(api_key="test_key")
         mock_response = Mock()
-        mock_response.json.return_value = {
-            "esearchresult": {"idlist": ["123", "456"]}
-        }
+        mock_response.json.return_value = {"esearchresult": {"idlist": ["123", "456"]}}
         mock_response.raise_for_status = Mock(return_value=None)
 
         with patch.object(client._client, "get", return_value=mock_response):
@@ -64,9 +63,7 @@ class TestPubChemClient:
     async def test_search_compound(self) -> None:
         client = PubChemClient()
         mock_response = Mock()
-        mock_response.json.return_value = {
-            "PC_Compounds": [{"id": {"id": [{"cid": 123}]}}]
-        }
+        mock_response.json.return_value = {"PC_Compounds": [{"id": {"id": [{"cid": 123}]}}]}
         mock_response.raise_for_status = Mock(return_value=None)
 
         with patch.object(client._client, "get", return_value=mock_response):
@@ -110,9 +107,7 @@ class TestChEMBLClient:
     async def test_get_bioactivities(self) -> None:
         client = ChEMBLClient()
         mock_response = Mock()
-        mock_response.json.return_value = {
-            "activities": [{"activity_id": 1, "value": 10.0}]
-        }
+        mock_response.json.return_value = {"activities": [{"activity_id": 1, "value": 10.0}]}
         mock_response.raise_for_status = Mock(return_value=None)
 
         with patch.object(client._client, "get", return_value=mock_response):
@@ -170,9 +165,7 @@ class TestNOAAClient:
     async def test_get_daily_data(self) -> None:
         client = NOAAClient(api_key="test_token")
         mock_response = Mock()
-        mock_response.json.return_value = {
-            "results": [{"date": "2024-01-01", "value": 5.2}]
-        }
+        mock_response.json.return_value = {"results": [{"date": "2024-01-01", "value": 5.2}]}
         mock_response.raise_for_status = Mock(return_value=None)
 
         with patch.object(client._client, "get", return_value=mock_response):
@@ -246,7 +239,10 @@ class TestUniProtClient:
     async def test_get_entry(self) -> None:
         client = UniProtClient()
         mock_response = Mock()
-        mock_response.json.return_value = {"primaryAccession": "P04637", "proteinDescription": {"recommendedName": {"fullName": "Cellular tumor antigen p53"}}}
+        mock_response.json.return_value = {
+            "primaryAccession": "P04637",
+            "proteinDescription": {"recommendedName": {"fullName": "Cellular tumor antigen p53"}},
+        }
         mock_response.raise_for_status = Mock(return_value=None)
 
         with patch.object(client._client, "get", return_value=mock_response):
@@ -306,9 +302,7 @@ class TestDrugBankClient:
     async def test_search_drugs(self) -> None:
         client = DrugBankClient(api_key="test_key")
         mock_response = Mock()
-        mock_response.json.return_value = {
-            "drugs": [{"drugbank_id": "DB00945", "name": "Aspirin"}]
-        }
+        mock_response.json.return_value = {"drugs": [{"drugbank_id": "DB00945", "name": "Aspirin"}]}
         mock_response.raise_for_status = Mock(return_value=None)
 
         with patch.object(client._client, "get", return_value=mock_response):
@@ -324,9 +318,7 @@ class TestAflowClient:
         client = AflowClient()
         mock_response = Mock()
         mock_response.json.return_value = {
-            "entries": [
-                {"auid": "aflow:123", "aurl": "test/auid/123", "species": "Al,O"}
-            ]
+            "entries": [{"auid": "aflow:123", "aurl": "test/auid/123", "species": "Al,O"}]
         }
         mock_response.raise_for_status = Mock(return_value=None)
 
@@ -356,7 +348,12 @@ class TestUciMlClient:
         mock_response = Mock()
         mock_response.json.return_value = {
             "datasets": [
-                {"id": 53, "name": "Iris", "abstract": "Classic classification dataset", "area": "biology"}
+                {
+                    "id": 53,
+                    "name": "Iris",
+                    "abstract": "Classic classification dataset",
+                    "area": "biology",
+                }
             ]
         }
         mock_response.raise_for_status = Mock(return_value=None)
@@ -388,7 +385,11 @@ class TestHarvardDataverseClient:
         mock_response.json.return_value = {
             "data": {
                 "items": [
-                    {"global_id": "doi:10.7910/DVN/ABC123", "name": "Test Dataset", "authors": ["Doe, J"]}
+                    {
+                        "global_id": "doi:10.7910/DVN/ABC123",
+                        "name": "Test Dataset",
+                        "authors": ["Doe, J"],
+                    }
                 ]
             }
         }
@@ -419,11 +420,7 @@ class TestRe3dataClient:
         client = Re3dataClient()
         mock_response = Mock()
         mock_response.json.return_value = {
-            "re3data": {
-                "repository": [
-                    {"id": "r3d100000001", "name": "Zenodo", "type": "general"}
-                ]
-            }
+            "re3data": {"repository": [{"id": "r3d100000001", "name": "Zenodo", "type": "general"}]}
         }
         mock_response.raise_for_status = Mock(return_value=None)
 

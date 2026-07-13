@@ -1,11 +1,11 @@
 """
 Tests for seismic_waves pattern module.
 """
+
 import numpy as np
 import pytest
 
 from src.patterns.library.seismic_waves import SeismicWavesConfig, SeismicWavesPattern
-
 
 
 class TestConfig:

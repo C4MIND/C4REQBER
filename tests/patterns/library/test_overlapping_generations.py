@@ -13,10 +13,12 @@ Covers:
 - get_metadata()
 - Edge cases: extreme parameters, convergence
 """
+
 from __future__ import annotations
 
 import sys
 from pathlib import Path
+
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
@@ -24,8 +26,8 @@ import numpy as np
 import pytest
 
 from src.patterns.library.overlapping_generations import (
-    OverlappingGenerationsModel,
     OLGConfig,
+    OverlappingGenerationsModel,
 )
 
 
@@ -101,7 +103,7 @@ class TestSteadyState:
         cfg = OLGConfig()
         model = OverlappingGenerationsModel(cfg)
         # Check production function consistency
-        expected_y = model.A * model.k_ss ** model.alpha
+        expected_y = model.A * model.k_ss**model.alpha
         assert abs(model.y_ss - expected_y) < 0.01
 
 

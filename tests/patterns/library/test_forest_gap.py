@@ -1,16 +1,16 @@
 """Tests for forest_gap pattern module."""
 
-import numpy as np
-import pytest
 import asyncio
 
+import numpy as np
+import pytest
+
+from src.patterns.core import Hypothesis
 from src.patterns.library.forest_gap import (
     ForestGapConfig,
     ForestGapPattern,
     GapState,
 )
-from src.patterns.core import Hypothesis
-
 
 
 class TestGapState:
@@ -70,7 +70,9 @@ class TestForestGapPattern:
             assert pattern.can_simulate(h) is True
 
     def test_parse_config(self, pattern):
-        pattern.config = pattern._parse_config({"grid_size": 30, "years": 100, "disturbance_rate": 0.05})
+        pattern.config = pattern._parse_config(
+            {"grid_size": 30, "years": 100, "disturbance_rate": 0.05}
+        )
         assert pattern.config.grid_size == 30
         assert pattern.config.years == 100
         assert pattern.config.disturbance_rate == 0.05
@@ -133,7 +135,14 @@ class TestForestGapPattern:
         assert n >= 1
 
     def test_calculate_confidence(self, pattern):
-        results = {"metrics": {"final_cover": 0.5, "final_species_richness": 2, "shannon_diversity": 0.5, "cover_stability": 0.6}}
+        results = {
+            "metrics": {
+                "final_cover": 0.5,
+                "final_species_richness": 2,
+                "shannon_diversity": 0.5,
+                "cover_stability": 0.6,
+            }
+        }
         score = pattern._calculate_confidence(results)
         assert 0 <= score <= 0.95
 

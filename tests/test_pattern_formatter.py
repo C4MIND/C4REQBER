@@ -1,4 +1,6 @@
 from pathlib import Path
+
+
 """
 Tests for PatternResultFormatter
 """
@@ -24,6 +26,7 @@ def formatter():
 # --------------------------------------------------------------------------- #
 # Fixtures: sample results for each pattern type
 # --------------------------------------------------------------------------- #
+
 
 @pytest.fixture
 def agent_based_result():
@@ -150,6 +153,7 @@ def failed_result():
 # Tests: format()
 # --------------------------------------------------------------------------- #
 
+
 class TestFormatMarkdown:
     def test_markdown_header(self, formatter, agent_based_result):
         md = formatter.format(agent_based_result, "markdown")
@@ -227,6 +231,7 @@ class TestFormatUnknown:
 # Tests: format_for_synthesis()
 # --------------------------------------------------------------------------- #
 
+
 class TestFormatForSynthesis:
     def test_synthesis_compact(self, formatter, agent_based_result):
         synth = formatter.format_for_synthesis(agent_based_result)
@@ -247,6 +252,7 @@ class TestFormatForSynthesis:
 # --------------------------------------------------------------------------- #
 # Tests: format_for_display()
 # --------------------------------------------------------------------------- #
+
 
 class TestFormatForDisplay:
     def test_display_structure(self, formatter, agent_based_result):
@@ -299,10 +305,15 @@ class TestTypeDetection:
         assert _detect_result_type(monte_carlo_result, formatter.PATTERN_TYPE_MAP) == "monte_carlo"
 
     def test_detect_system_dynamics(self, formatter, system_dynamics_result):
-        assert _detect_result_type(system_dynamics_result, formatter.PATTERN_TYPE_MAP) == "system_dynamics"
+        assert (
+            _detect_result_type(system_dynamics_result, formatter.PATTERN_TYPE_MAP)
+            == "system_dynamics"
+        )
 
     def test_detect_optimization(self, formatter, optimization_result):
-        assert _detect_result_type(optimization_result, formatter.PATTERN_TYPE_MAP) == "optimization"
+        assert (
+            _detect_result_type(optimization_result, formatter.PATTERN_TYPE_MAP) == "optimization"
+        )
 
     def test_detect_generic(self, formatter):
         generic = {"pattern_id": "unknown", "result": {"metrics": {"foo": 1}}}
@@ -312,6 +323,7 @@ class TestTypeDetection:
 # --------------------------------------------------------------------------- #
 # Tests: helper utilities
 # --------------------------------------------------------------------------- #
+
 
 class TestHelpers:
     def test_fmt_val_float(self, formatter):

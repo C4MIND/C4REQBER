@@ -1,11 +1,14 @@
 """
 Tests for portfolio_optimization pattern module.
 """
+
 import numpy as np
 import pytest
 
-from src.patterns.library.portfolio_optimization import PortfolioOptimizationConfig, PortfolioOptimizationModel
-
+from src.patterns.library.portfolio_optimization import (
+    PortfolioOptimizationConfig,
+    PortfolioOptimizationModel,
+)
 
 
 class TestConfig:
@@ -66,14 +69,14 @@ class TestMarkowitz:
         model = PortfolioOptimizationModel()
         model.generate_sample_data()
         result = model.markowitz_optimization()
-        assert abs(sum(result['weights']) - 1.0) < 0.01
-        assert all(w >= 0 for w in result['weights'])
+        assert abs(sum(result["weights"]) - 1.0) < 0.01
+        assert all(w >= 0 for w in result["weights"])
 
     def test_markowitz_risk_positive(self):
         model = PortfolioOptimizationModel()
         model.generate_sample_data()
         result = model.markowitz_optimization()
-        assert result['risk'] > 0
+        assert result["risk"] > 0
 
 
 class TestMaxSharpe:
@@ -81,14 +84,14 @@ class TestMaxSharpe:
         model = PortfolioOptimizationModel()
         model.generate_sample_data()
         result = model.maximum_sharpe_portfolio()
-        assert abs(sum(result['weights']) - 1.0) < 0.01
+        assert abs(sum(result["weights"]) - 1.0) < 0.01
 
     def test_max_sharpe_highest(self):
         model = PortfolioOptimizationModel()
         model.generate_sample_data()
         max_sharpe = model.maximum_sharpe_portfolio()
         markowitz = model.markowitz_optimization()
-        assert max_sharpe['sharpe_ratio'] >= min(markowitz['sharpe_ratio'], 0) - 0.01
+        assert max_sharpe["sharpe_ratio"] >= min(markowitz["sharpe_ratio"], 0) - 0.01
 
 
 class TestMinVariance:
@@ -96,14 +99,14 @@ class TestMinVariance:
         model = PortfolioOptimizationModel()
         model.generate_sample_data()
         result = model.minimum_variance_portfolio()
-        assert abs(sum(result['weights']) - 1.0) < 0.01
+        assert abs(sum(result["weights"]) - 1.0) < 0.01
 
     def test_min_variance_lowest_risk(self):
         model = PortfolioOptimizationModel()
         model.generate_sample_data()
         min_var = model.minimum_variance_portfolio()
         markowitz = model.markowitz_optimization()
-        assert min_var['risk'] <= markowitz['risk'] * 1.01
+        assert min_var["risk"] <= markowitz["risk"] * 1.01
 
 
 class TestRiskParity:
@@ -111,14 +114,14 @@ class TestRiskParity:
         model = PortfolioOptimizationModel()
         model.generate_sample_data()
         result = model.risk_parity_portfolio()
-        assert abs(sum(result['weights']) - 1.0) < 0.01
+        assert abs(sum(result["weights"]) - 1.0) < 0.01
 
     def test_risk_parity_contributions(self):
         model = PortfolioOptimizationModel()
         model.generate_sample_data()
         result = model.risk_parity_portfolio()
-        assert 'risk_contributions' in result
-        rc = np.array(result['risk_contributions'])
+        assert "risk_contributions" in result
+        rc = np.array(result["risk_contributions"])
         if len(rc) > 0 and np.sum(rc) > 0:
             rc_norm = rc / np.sum(rc)
             assert np.std(rc_norm) < 0.3
@@ -128,10 +131,10 @@ class TestBlackLitterman:
     def test_black_litterman_returns(self):
         model = PortfolioOptimizationModel()
         model.generate_sample_data()
-        views = [{'assets': [0], 'view': 0.20, 'confidence': 0.8}]
+        views = [{"assets": [0], "view": 0.20, "confidence": 0.8}]
         result = model.black_litterman(views)
-        assert 'bl_expected_returns' in result
-        assert len(result['bl_expected_returns']) == 10
+        assert "bl_expected_returns" in result
+        assert len(result["bl_expected_returns"]) == 10
 
 
 class TestEfficientFrontier:
@@ -139,25 +142,25 @@ class TestEfficientFrontier:
         model = PortfolioOptimizationModel()
         model.generate_sample_data()
         frontier = model.efficient_frontier(n_points=20)
-        assert len(frontier['returns']) == 20
-        assert len(frontier['risks']) == 20
+        assert len(frontier["returns"]) == 20
+        assert len(frontier["risks"]) == 20
 
 
 class TestRun:
     def test_run(self):
         model = PortfolioOptimizationModel()
         result = model.run()
-        assert 'markowitz' in result
-        assert 'maximum_sharpe' in result
-        assert 'minimum_variance' in result
-        assert 'risk_parity' in result
-        assert 'black_litterman' in result
-        assert 'efficient_frontier' in result
+        assert "markowitz" in result
+        assert "maximum_sharpe" in result
+        assert "minimum_variance" in result
+        assert "risk_parity" in result
+        assert "black_litterman" in result
+        assert "efficient_frontier" in result
 
     def test_metadata(self):
         meta = PortfolioOptimizationModel.get_metadata()
-        assert 'pattern_id' in meta
-        assert 'name' in meta
+        assert "pattern_id" in meta
+        assert "name" in meta
 
 
 class TestEdgeCases:
@@ -166,18 +169,18 @@ class TestEdgeCases:
         model = PortfolioOptimizationModel(cfg)
         model.generate_sample_data()
         result = model.markowitz_optimization()
-        assert abs(result['weights'][0] - 1.0) < 0.01
+        assert abs(result["weights"][0] - 1.0) < 0.01
 
     def test_equal_weight_benchmark(self):
         model = PortfolioOptimizationModel()
         model.generate_sample_data()
         result = model.run()
-        eq = result['equal_weight_benchmark']
-        assert abs(sum(eq['weights']) - 1.0) < 0.01
+        eq = result["equal_weight_benchmark"]
+        assert abs(sum(eq["weights"]) - 1.0) < 0.01
 
     def test_short_sales_allowed(self):
         cfg = PortfolioOptimizationConfig(allow_short=True)
         model = PortfolioOptimizationModel(cfg)
         model.generate_sample_data()
         result = model.markowitz_optimization()
-        assert abs(sum(result['weights']) - 1.0) < 0.01
+        assert abs(sum(result["weights"]) - 1.0) < 0.01

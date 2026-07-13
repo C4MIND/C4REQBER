@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import logging
 import os
+import shutil
 import subprocess
 from typing import Any
 
@@ -27,13 +28,11 @@ class LMStudioCLI:
 
     @property
     def available(self) -> bool:
-        return os.path.exists(self.lms) or os.system(f"which {self.lms} >/dev/null 2>&1") == 0
+        return os.path.exists(self.lms) or shutil.which(self.lms) is not None
 
     def _run(self, *args: str, timeout: int = 30) -> tuple[int, str, str]:
         try:
-            r = subprocess.run(
-                [self.lms, *args], capture_output=True, text=True, timeout=timeout
-            )
+            r = subprocess.run([self.lms, *args], capture_output=True, text=True, timeout=timeout)
             return r.returncode, r.stdout.strip(), r.stderr.strip()
         except (FileNotFoundError, subprocess.TimeoutExpired) as e:
             return 1, "", str(e)
@@ -57,11 +56,22 @@ class LMStudioCLI:
         models = []
         for line in out.split("\n"):
             line = line.strip()
-            if not line or line.startswith("You have") or line.startswith("LLM") or line.startswith("───"):
+            if (
+                not line
+                or line.startswith("You have")
+                or line.startswith("LLM")
+                or line.startswith("───")
+            ):
                 continue
             parts = line.split()
             if len(parts) >= 3:
-                models.append({"name": parts[0], "params": parts[1] if len(parts) > 1 else "", "size": parts[-2] + " " + parts[-1] if len(parts) > 3 else ""})
+                models.append(
+                    {
+                        "name": parts[0],
+                        "params": parts[1] if len(parts) > 1 else "",
+                        "size": parts[-2] + " " + parts[-1] if len(parts) > 3 else "",
+                    }
+                )
         return models
 
     def load_model(self, model_id: str) -> dict[str, Any]:

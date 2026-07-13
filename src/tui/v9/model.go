@@ -65,7 +65,6 @@ type model struct {
 	keymap *KeyMap
 
 	mode      Mode
-	cost      float64
 	running   bool
 	jobID     string
 	startedAt time.Time
@@ -350,7 +349,14 @@ func NewApp(apiURL string) *model {
 			entries[i], entries[j] = entries[j], entries[i]
 		}
 		for _, e := range entries {
+			id := cards.ID(e.ID)
+			if id == 0 {
+				id = cards.NextID()
+			} else {
+				cards.ReserveID(id)
+			}
 			m.feed = append(m.feed, Card{
+				ID:       id,
 				Kind:     CardKind(e.Kind),
 				Title:    e.Title,
 				Body:     e.Body,
@@ -366,6 +372,7 @@ func NewApp(apiURL string) *model {
 					HypothesisID: cards.ID(e.SimHypothesisID),
 				},
 			})
+			m.zoneIDs = append(m.zoneIDs, fmt.Sprintf("card-%d", id))
 			restoredCount++
 		}
 	}
@@ -385,6 +392,7 @@ func NewApp(apiURL string) *model {
 		m.appendCard(Card{Kind: CardEmpty, Title: i18n.T("empty.title"), Body: i18n.T("empty.hint"), Time: time.Now()})
 	}
 	if restoredCount > 0 {
+		m.rebuildFeedContent()
 		m.setToast(fmt.Sprintf("restored %d cards from last session", restoredCount))
 	}
 	return m

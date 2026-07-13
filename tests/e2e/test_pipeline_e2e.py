@@ -1,10 +1,12 @@
 """Test runner for UniversalSolvePipeline — all 10 steps including step 10"""
+
 import asyncio
 import os
 import sys
-import pytest
 import time
 from pathlib import Path
+
+import pytest
 
 
 _project_root = Path(__file__).resolve().parent
@@ -29,7 +31,9 @@ if _missing:
 import src.llm.config as _llm_config
 
 
-_llm_config._PROVIDER_DEFAULT_MODELS[_llm_config.LLMProvider.OPENROUTER] = "google/gemini-2.0-flash-001"
+_llm_config._PROVIDER_DEFAULT_MODELS[_llm_config.LLMProvider.OPENROUTER] = (
+    "google/gemini-2.0-flash-001"
+)
 
 from src.agents.pipeline import UniversalSolvePipeline
 
@@ -52,7 +56,9 @@ async def main():
             ev = {k: v for k, v in event.items()}
             if "result" in ev and hasattr(ev["result"], "to_dict"):
                 ev["result"] = ev["result"].to_dict()
-            print(f"EVENT: {ev.get('event'):12s} | stage={ev.get('stage')} | status={ev.get('status')} | err={ev.get('error')}")
+            print(
+                f"EVENT: {ev.get('event'):12s} | stage={ev.get('stage')} | status={ev.get('status')} | err={ev.get('error')}"
+            )
             if ev.get("event") == "step_complete":
                 step_events.append(ev)
             if ev.get("event") == "complete":
@@ -60,6 +66,7 @@ async def main():
     except Exception as e:
         print(f"ERROR: {e}")
         import traceback
+
         traceback.print_exc()
     finally:
         await pipeline.close()
@@ -68,16 +75,18 @@ async def main():
 
     print("\n--- STEP SUMMARY ---")
     for i, ev in enumerate(step_events, 1):
-        dur = ev.get('duration_ms', 0)
-        print(f"Step {i:02d}: {ev.get('stage'):25s} | {ev.get('status'):10s} | {dur:.0f}ms | err={ev.get('error') or 'None'}")
+        dur = ev.get("duration_ms", 0)
+        print(
+            f"Step {i:02d}: {ev.get('stage'):25s} | {ev.get('status'):10s} | {dur:.0f}ms | err={ev.get('error') or 'None'}"
+        )
 
-    print(f"\n--- FINAL SOLUTION ---")
+    print("\n--- FINAL SOLUTION ---")
     sol = final_result.get("final_solution", "") if final_result else ""
     print(sol[:4000] if sol else "(empty)")
     if len(sol or "") > 4000:
         print(f"... ({len(sol)} chars total)")
 
-    print(f"\n--- METRICS ---")
+    print("\n--- METRICS ---")
     if final_result:
         print(f"Confidence: {final_result.get('confidence')}")
         print(f"Isomorphism found: {final_result.get('isomorphism_found')}")
@@ -85,6 +94,7 @@ async def main():
         print(f"MP perspectives: {len(final_result.get('mp_perspectives', []))}")
         print(f"QZRF recommendations: {final_result.get('qzrf_recommendations', [])}")
     print(f"Total time: {elapsed:.2f}s")
+
 
 if __name__ == "__main__":
     asyncio.run(main())

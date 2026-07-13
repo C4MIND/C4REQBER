@@ -6,6 +6,7 @@ import pytest
 
 from src.agents.pipeline.steps.step_02d_reality_check import RealityCheckStep
 
+
 pytestmark = pytest.mark.anyio
 
 
@@ -32,7 +33,9 @@ class TestExtraordinaryPatterns:
 
     async def test_no_false_positive(self) -> None:
         step = RealityCheckStep()
-        result = await step.execute({"problem": "We study protein folding using molecular dynamics."})
+        result = await step.execute(
+            {"problem": "We study protein folding using molecular dynamics."}
+        )
         assert result.output_data["is_extraordinary"] is False
         assert result.output_data["warning_count"] == 0
 
@@ -48,7 +51,9 @@ class TestNumericalPatterns:
 
     async def test_ten_fold_increase(self) -> None:
         step = RealityCheckStep()
-        result = await step.execute({"problem": "The new method provides a 15-fold increase in efficiency."})
+        result = await step.execute(
+            {"problem": "The new method provides a 15-fold increase in efficiency."}
+        )
         assert result.output_data["is_extraordinary"] is True
         assert any("metrics" in w["domain"] for w in result.output_data["warnings"])
 
@@ -98,7 +103,9 @@ class TestDomainPatterns:
 
     async def test_creation_science(self) -> None:
         step = RealityCheckStep()
-        result = await step.execute({"problem": "Intelligent design is supported by scientific evidence."})
+        result = await step.execute(
+            {"problem": "Intelligent design is supported by scientific evidence."}
+        )
         assert result.output_data["is_extraordinary"] is True
 
 
@@ -107,19 +114,25 @@ class TestSolutionCheck:
 
     async def test_hypothesis_text_checked(self) -> None:
         step = RealityCheckStep()
-        result = await step.execute({
-            "problem": "We study materials science.",
-            "hypothesis": {"text": "Our material achieves 500% improvement in tensile strength."},
-        })
+        result = await step.execute(
+            {
+                "problem": "We study materials science.",
+                "hypothesis": {
+                    "text": "Our material achieves 500% improvement in tensile strength."
+                },
+            }
+        )
         assert result.output_data["is_extraordinary"] is True
         assert result.output_data["warning_count"] >= 1
 
     async def test_solution_text_checked(self) -> None:
         step = RealityCheckStep()
-        result = await step.execute({
-            "problem": "We study biology.",
-            "solution": "The treatment provides a 100% cure rate with zero side effects.",
-        })
+        result = await step.execute(
+            {
+                "problem": "We study biology.",
+                "solution": "The treatment provides a 100% cure rate with zero side effects.",
+            }
+        )
         assert result.output_data["is_extraordinary"] is True
         assert result.output_data["extraordinary_count"] >= 1
 
@@ -129,7 +142,9 @@ class TestStructuredOutput:
 
     async def test_has_extraordinary_and_falsifier_counts(self) -> None:
         step = RealityCheckStep()
-        result = await step.execute({"problem": "Our perpetual motion machine generates free energy."})
+        result = await step.execute(
+            {"problem": "Our perpetual motion machine generates free energy."}
+        )
         assert "extraordinary_count" in result.output_data
         assert "falsifier_count" in result.output_data
         assert isinstance(result.output_data["extraordinary_count"], int)

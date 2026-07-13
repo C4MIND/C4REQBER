@@ -1,11 +1,11 @@
 """
 Tests for wildfire pattern module.
 """
+
 import numpy as np
 import pytest
 
 from src.patterns.library.wildfire import WildfireConfig, WildfirePattern
-
 
 
 class TestConfig:
@@ -162,4 +162,10 @@ class TestEdgeCases:
         cfg = WildfireConfig(nx=20, ny=20, hours=1, dt=60)
         pattern = WildfirePattern(cfg)
         result = pattern.run()
-        assert result["final_state"]["fire_class"] in ["Low", "Moderate", "High", "Very High", "Extreme"]
+        assert result["final_state"]["fire_class"] in [
+            "Low",
+            "Moderate",
+            "High",
+            "Very High",
+            "Extreme",
+        ]

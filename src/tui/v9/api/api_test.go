@@ -239,12 +239,38 @@ func TestMock_SSEBoundaryIndex(t *testing.T) {
 		{"a\n\n", 1},
 		{"a\n\nb", 1},
 		{"a\n\n\nb", 1}, // returns first occurrence
+		{"a\r\n\r\n", 1},
+		{"a\r\n\r\nb", 1},
 	}
 	for _, tt := range tests {
 		got := indexOfSSEBoundary(tt.input)
 		if got != tt.want {
 			t.Errorf("indexOfSSEBoundary(%q) = %d, want %d", tt.input, got, tt.want)
 		}
+	}
+}
+
+func TestMock_StreamClosesOnOversizedUnframedEvent(t *testing.T) {
+	srv := mockServer(t, map[string]http.HandlerFunc{
+		"/v8/discover/stream/oversized": func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "text/event-stream")
+			_, _ = w.Write([]byte(strings.Repeat("x", maxSSEPendingBytes+4096)))
+		},
+	})
+	c := New(srv.URL)
+	events, cancel, err := c.Stream(context.Background(), "oversized")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer cancel()
+
+	select {
+	case _, ok := <-events:
+		if ok {
+			t.Fatal("oversized unframed event should close the stream")
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("oversized stream was not bounded")
 	}
 }
 

@@ -4,8 +4,8 @@
 > picture by [`ARCHITECTURE_AUDIT.md`](./ARCHITECTURE_AUDIT.md) (refreshed 2026-06-24).
 > Kept for the C4/QZRF/UCOS design rationale; treat structural/path claims as dated.
 
-> **Version:** 5.6.0  
-> **Date:** 2026-06-03  
+> **Version:** 5.6.0
+> **Date:** 2026-06-03
 > **Systems:** C4 · QZRF · UCOS · CDI · TOTE · MatrixDream
 
 ---
@@ -33,8 +33,8 @@ The architecture follows three principles:
 ┌─────────────────────────────────────────────────────────────────────┐
 │                         User Interfaces                              │
 │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌────────────────────┐  │
-│  │  TUI v8  │  │ Typer CLI│  │ FastAPI  │  │  MCP Server        │  │
-│  │(Textual) │  │ (Rich)   │  │(SSE/WS)  │  │  (blast serve)     │  │
+│  │  TUI v9  │  │ Typer CLI│  │ FastAPI  │  │  MCP Server        │  │
+│  │(BubbleTea)│ │ (Rich)   │  │(SSE/WS)  │  │  (blast serve)     │  │
 │  └────┬─────┘  └────┬─────┘  └────┬─────┘  └─────────┬──────────┘  │
 │       │             │             │                  │              │
 │       └─────────────┴─────────────┴──────────────────┘              │
@@ -363,7 +363,7 @@ class BaseSimulationAdapter(abc.ABC):
 - **StyledTable** — `rich.Table` with theme colors
 - **StatusIndicator** — colored status badges
 
-**Color palette (TUI v8 sync):**
+**Color palette (TUI v9 sync):**
 - Primary: `#00FF41` (Matrix Green)
 - Secondary: `#00D4FF` (Cyber Cyan)
 - Accent: `#FF006E` (Neon Pink)
@@ -495,7 +495,7 @@ If no keyword matches → deterministic rotation `(T+1, S+1, A+1) mod 3` to forc
 | `observer_diagnostic` | `observer_o1` | `position`, `visible_states_count`, `blind_spots`, `insights`, `flag` |
 | `observer_meta` | `observer_o2` | `position`, `visible_states_count`, `blind_spots`, `insights`, `flag`, `recommendation` |
 
-Consumed by TUI v8 and WebSocket clients for real-time meta-cognitive feedback.
+Consumed by TUI v9 and WebSocket clients for real-time meta-cognitive feedback.
 
 ---
 
@@ -561,12 +561,12 @@ C4REQBER/
 │   ├── pipeline/               # HIL pipeline, quality gates
 │   ├── plugins/                # Plugin registry
 │   ├── simulations/            # 36 engines, 32 adapters, runner_v2
-│   ├── tui/                    # Textual v8 interface
+│   ├── tui/                    # Go TUI v9 cockpit
 │   └── utils/                  # Shared utilities
 ├── tests/                      # Test suite (565+)
 ├── dissertations/              # Generated output
 ├── ARCHITECTURE_C4R.md         # This document
-├── ARCHITECTURE_TUI_V8.md      # TUI-specific architecture
+├── src/tui/v9/ARCHITECTURE.md  # TUI-specific architecture
 └── AGENTS.md                   # Agent developer guide
 ```
 

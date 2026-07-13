@@ -14,20 +14,21 @@ Covers:
 - run() integration
 - Edge cases: R0 < 1, zero population, zero initial infected
 """
+
 from __future__ import annotations
 
 import sys
 from pathlib import Path
 from unittest.mock import patch
 
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 import numpy as np
 import pytest
 
-from src.patterns.library.epidemic_seir import EpidemicSEIRPattern, SEIRConfig
 from src.patterns.core import Hypothesis, SimulationStatus
-
+from src.patterns.library.epidemic_seir import EpidemicSEIRPattern, SEIRConfig
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -161,9 +162,7 @@ class TestSimulateDeterministic:
 
     async def test_seirs_model(self):
         pattern = EpidemicSEIRPattern()
-        pattern.config = SEIRConfig(
-            model_type="seirs", N=10000, I0=10, t_max=50.0, omega=0.01
-        )
+        pattern.config = SEIRConfig(model_type="seirs", N=10000, I0=10, t_max=50.0, omega=0.01)
         h = Hypothesis()
         result = await pattern._simulate_deterministic(h)
         assert "R0" in result["metrics"]
@@ -259,7 +258,11 @@ class TestAnalyzeResults:
         pattern = EpidemicSEIRPattern()
         pattern.config = SEIRConfig(beta=0.5, gamma=0.1)
         pattern.time_points = np.array([0, 1])
-        pattern.trajectories = {"S": np.array([1000, 900]), "I": np.array([10, 100]), "R": np.array([0, 10])}
+        pattern.trajectories = {
+            "S": np.array([1000, 900]),
+            "I": np.array([10, 100]),
+            "R": np.array([0, 10]),
+        }
         result = pattern._analyze_results()
         assert result["metrics"]["R0"] == pytest.approx(5.0)
 
@@ -267,7 +270,11 @@ class TestAnalyzeResults:
         pattern = EpidemicSEIRPattern()
         pattern.config = SEIRConfig(beta=0.5, gamma=0.1)
         pattern.time_points = np.array([0, 1])
-        pattern.trajectories = {"S": np.array([1000, 900]), "I": np.array([10, 100]), "R": np.array([0, 10])}
+        pattern.trajectories = {
+            "S": np.array([1000, 900]),
+            "I": np.array([10, 100]),
+            "R": np.array([0, 10]),
+        }
         result = pattern._analyze_results()
         assert result["metrics"]["herd_immunity_threshold"] == pytest.approx(0.8, abs=0.01)
 
@@ -275,7 +282,11 @@ class TestAnalyzeResults:
         pattern = EpidemicSEIRPattern()
         pattern.config = SEIRConfig(N=1000)
         pattern.time_points = np.array([0, 1])
-        pattern.trajectories = {"S": np.array([990, 500]), "I": np.array([10, 100]), "R": np.array([0, 400])}
+        pattern.trajectories = {
+            "S": np.array([990, 500]),
+            "I": np.array([10, 100]),
+            "R": np.array([0, 400]),
+        }
         result = pattern._analyze_results()
         assert result["metrics"]["attack_rate"] == pytest.approx(0.4)
 
@@ -303,7 +314,12 @@ class TestAnalyzeResults:
         pattern = EpidemicSEIRPattern()
         pattern.config = SEIRConfig(model_type="seir", sigma=0.2, gamma=0.1)
         pattern.time_points = np.array([0, 1])
-        pattern.trajectories = {"S": np.array([1000, 900]), "E": np.array([0, 50]), "I": np.array([10, 50]), "R": np.array([0, 0])}
+        pattern.trajectories = {
+            "S": np.array([1000, 900]),
+            "E": np.array([0, 50]),
+            "I": np.array([10, 50]),
+            "R": np.array([0, 0]),
+        }
         result = pattern._analyze_results()
         # T_incubation = 1/0.2 = 5, T_infectious = 1/0.1 = 10
         # generation_time = 5 + 10/2 = 10
@@ -313,7 +329,11 @@ class TestAnalyzeResults:
         pattern = EpidemicSEIRPattern()
         pattern.config = SEIRConfig(model_type="sir", gamma=0.1)
         pattern.time_points = np.array([0, 1])
-        pattern.trajectories = {"S": np.array([1000, 900]), "I": np.array([10, 100]), "R": np.array([0, 10])}
+        pattern.trajectories = {
+            "S": np.array([1000, 900]),
+            "I": np.array([10, 100]),
+            "R": np.array([0, 10]),
+        }
         result = pattern._analyze_results()
         assert result["metrics"]["generation_time"] == pytest.approx(10.0)
 
@@ -327,9 +347,7 @@ class TestCalculateConfidence:
     def test_high_confidence(self):
         pattern = EpidemicSEIRPattern()
         pattern.config = SEIRConfig(stochastic=True, n_realizations=100)
-        results = {
-            "metrics": {"R0": 2.5, "peak_infections": 5000, "final_epidemic_size": 8000}
-        }
+        results = {"metrics": {"R0": 2.5, "peak_infections": 5000, "final_epidemic_size": 8000}}
         confidence = pattern._calculate_confidence(results)
         assert confidence > 0.5
 

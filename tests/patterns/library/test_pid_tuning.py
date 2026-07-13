@@ -9,10 +9,12 @@ Covers:
   auto-tune step, run(), get_metadata()
 - Edge cases: zero dt, negative gains
 """
+
 from __future__ import annotations
 
 import sys
 from pathlib import Path
+
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
@@ -20,7 +22,6 @@ import numpy as np
 import pytest
 
 from src.patterns.library.pid_tuning import (
-
     PIDConfig,
     PIDController,
     PIDStructure,
@@ -186,18 +187,14 @@ class TestPIDController:
         assert output2 < 0.0
 
     def test_update_series_structure(self):
-        pid = PIDController(
-            Kp=1.0, Ki=1.0, Kd=0.0, dt=0.1, structure=PIDStructure.SERIES
-        )
+        pid = PIDController(Kp=1.0, Ki=1.0, Kd=0.0, dt=0.1, structure=PIDStructure.SERIES)
         output = pid.update(setpoint=1.0, measurement=0.0)
         # Series: Kp * (error + Ki * integral)
         expected = 1.0 * (1.0 + 1.0 * 0.1)
         assert output == pytest.approx(expected)
 
     def test_update_ideal_structure(self):
-        pid = PIDController(
-            Kp=1.0, Ki=0.1, Kd=0.01, dt=0.1, structure=PIDStructure.IDEAL
-        )
+        pid = PIDController(Kp=1.0, Ki=0.1, Kd=0.01, dt=0.1, structure=PIDStructure.IDEAL)
         output = pid.update(setpoint=1.0, measurement=0.0)
         # Ideal behaves same as parallel in this implementation
         expected = 1.0 * 1.0 + 0.1 * 0.1 + 0.0  # P + I + D
@@ -259,9 +256,7 @@ class TestPIDController:
         assert pid.integral > 10.0
 
     def test_output_limits(self):
-        pid = PIDController(
-            Kp=10.0, Ki=0.0, Kd=0.0, dt=0.1, output_limits=(-2.0, 2.0)
-        )
+        pid = PIDController(Kp=10.0, Ki=0.0, Kd=0.0, dt=0.1, output_limits=(-2.0, 2.0))
         output = pid.update(setpoint=1.0, measurement=0.0)
         assert output == 2.0  # Clamped to upper limit
 

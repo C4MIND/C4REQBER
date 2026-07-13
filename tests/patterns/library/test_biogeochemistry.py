@@ -6,7 +6,6 @@ import pytest
 from src.patterns.library.biogeochemistry import BiogeochemistryConfig, BiogeochemistryPattern
 
 
-
 class TestBiogeochemistryConfig:
     def test_default_values(self):
         cfg = BiogeochemistryConfig()

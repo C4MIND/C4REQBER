@@ -1,13 +1,15 @@
 """
 Tests for qft_lattice pattern module.
 """
-import numpy as np
-import pytest
+
 import asyncio
 
+import numpy as np
+import pytest
+
 from src.patterns.library.qft_lattice import (
-    GaugeGroup,
     FermionType,
+    GaugeGroup,
     LatticeQFTConfig,
     LatticeQFTPattern,
 )
@@ -47,12 +49,14 @@ class TestCanSimulate:
     def test_can_simulate_lattice(self):
         pattern = LatticeQFTPattern()
         from src.patterns.core import Hypothesis
+
         h = Hypothesis(title="lattice gauge theory", description="wilson loop")
         assert pattern.can_simulate(h) is True
 
     def test_can_simulate_no_match(self):
         pattern = LatticeQFTPattern()
         from src.patterns.core import Hypothesis
+
         h = Hypothesis(title="weather forecast", description="")
         assert pattern.can_simulate(h) is False
 
@@ -70,12 +74,16 @@ class TestU1Simulation:
     async def test_u1_simulation(self):
         pattern = LatticeQFTPattern()
         cfg = LatticeQFTConfig(
-            nx=8, ny=8, nz=8, nt=8,
+            nx=8,
+            ny=8,
+            nz=8,
+            nt=8,
             n_thermalization=10,
             n_measurements=20,
             n_sweeps_between=5,
         )
         from src.patterns.core import Hypothesis
+
         h = Hypothesis(title="test", description="test")
         result = await pattern._u1_simulation(h, cfg)
         assert "metrics" in result
@@ -86,11 +94,15 @@ class TestU1Simulation:
     async def test_u1_plaquette(self):
         pattern = LatticeQFTPattern()
         cfg = LatticeQFTConfig(
-            nx=8, ny=8, nz=8, nt=8,
+            nx=8,
+            ny=8,
+            nz=8,
+            nt=8,
             n_thermalization=5,
             n_measurements=10,
         )
         from src.patterns.core import Hypothesis
+
         h = Hypothesis(title="test", description="test")
         result = await pattern._u1_simulation(h, cfg)
         assert 0 < result["metrics"]["avg_plaquette"] < 1
@@ -101,12 +113,16 @@ class TestSU2Simulation:
     async def test_su2_simulation(self):
         pattern = LatticeQFTPattern()
         cfg = LatticeQFTConfig(
-            nx=8, ny=8, nz=8, nt=8,
+            nx=8,
+            ny=8,
+            nz=8,
+            nt=8,
             gauge_group="su2",
             n_thermalization=5,
             n_measurements=10,
         )
         from src.patterns.core import Hypothesis
+
         h = Hypothesis(title="test", description="test")
         result = await pattern._su2_simulation(h, cfg)
         assert result["metrics"]["gauge_group"] == "SU(2)"
@@ -158,6 +174,7 @@ class TestRun:
     async def test_run_u1(self):
         pattern = LatticeQFTPattern()
         from src.patterns.core import Hypothesis
+
         h = Hypothesis(title="test", description="test")
         result = await pattern.run(
             hypothesis=h,
@@ -169,7 +186,14 @@ class TestRun:
 class TestEdgeCases:
     def test_confidence(self):
         pattern = LatticeQFTPattern()
-        results = {"metrics": {"n_measurements": 1000, "avg_plaquette": 0.5, "wilson_loop_1x1": 0.3, "std_plaquette": 0.05}}
+        results = {
+            "metrics": {
+                "n_measurements": 1000,
+                "avg_plaquette": 0.5,
+                "wilson_loop_1x1": 0.3,
+                "std_plaquette": 0.05,
+            }
+        }
         score = pattern._calculate_confidence(results)
         assert 0 <= score <= 0.85
 
@@ -177,7 +201,11 @@ class TestEdgeCases:
         pattern = LatticeQFTPattern()
         from src.patterns.core import Hypothesis
 
-        h = Hypothesis(title="test", description="test", parameters={"lattice_size": 16, "n_measurements": 1000})
+        h = Hypothesis(
+            title="test",
+            description="test",
+            parameters={"lattice_size": 16, "n_measurements": 1000},
+        )
         resources = pattern.estimate_resources(h)
         assert "cpu_cores" in resources
         assert "memory_gb" in resources

@@ -1,4 +1,5 @@
 """v8 verification router — formal, statistical, and SMT verification."""
+
 from __future__ import annotations
 
 import logging
@@ -61,6 +62,7 @@ def _get_verify_cache(verify_id: str) -> dict[str, Any] | None:
 # Request/Response models
 # ---------------------------------------------------------------------------
 
+
 class HypothesisVerifyRequest(BaseModel):
     """Verify a scientific hypothesis using multiple backends."""
 
@@ -85,6 +87,7 @@ class HypothesisVerifyRequest(BaseModel):
 # Unified hypothesis verification endpoint
 # ---------------------------------------------------------------------------
 
+
 @router.post("/hypothesis")
 async def verify_hypothesis(req: HypothesisVerifyRequest) -> dict[str, Any]:
     """Verify a hypothesis using available backends and return unified score (0–100).
@@ -103,6 +106,7 @@ async def verify_hypothesis(req: HypothesisVerifyRequest) -> dict[str, Any]:
     # 1. Statistical validation (if applicable)
     if req.context.get("test_type") in ("ttest", "chi2", "ks", "correlation"):
         from src.verification.stats_validator import StatisticalValidator
+
         validator = StatisticalValidator()
         try:
             stat_result = await validator.verify(
@@ -110,23 +114,27 @@ async def verify_hypothesis(req: HypothesisVerifyRequest) -> dict[str, Any]:
                 context=req.context,
                 timeout=req.timeout_per_method,
             )
-            backend_results.append(BackendResult(
-                backend="statistical",
-                status=stat_result.get("status", "unknown"),
-                confidence=stat_result.get("confidence", 0.0),
-                proof_text=stat_result.get("proof_output", ""),
-                error_message=stat_result.get("error_message", ""),
-                execution_time_ms=stat_result.get("execution_time_ms", 0.0),
-                metadata=stat_result.get("metadata", {}),
-            ))
+            backend_results.append(
+                BackendResult(
+                    backend="statistical",
+                    status=stat_result.get("status", "unknown"),
+                    confidence=stat_result.get("confidence", 0.0),
+                    proof_text=stat_result.get("proof_output", ""),
+                    error_message=stat_result.get("error_message", ""),
+                    execution_time_ms=stat_result.get("execution_time_ms", 0.0),
+                    metadata=stat_result.get("metadata", {}),
+                )
+            )
         except Exception as exc:
             logger.warning("statistical verifier failed: %s", exc)
-            backend_results.append(BackendResult(
-                backend="statistical",
-                status="failed",
-                confidence=0.0,
-                error_message=str(exc),
-            ))
+            backend_results.append(
+                BackendResult(
+                    backend="statistical",
+                    status="failed",
+                    confidence=0.0,
+                    error_message=str(exc),
+                )
+            )
 
     # 2. Formal verification via hybrid verifier
     try:
@@ -145,36 +153,46 @@ async def verify_hypothesis(req: HypothesisVerifyRequest) -> dict[str, Any]:
             ctx = dict(req.context or {})
             if "preferred_backends" not in ctx:
                 from src.pipeline.output_profiles import detect_format, get_profile
+
                 mode = str(ctx.get("mode", "solve"))
                 output_fmt = detect_format(req.hypothesis, mode=mode)
                 profile = get_profile(output_fmt)
                 ctx["preferred_backends"] = list(profile.verification_backends)
             hv_result = await hv.verify(hypothesis_dict, context=ctx)
-            backend_results.append(BackendResult(
-                backend=hv_result.backend,
-                status=hv_result.status,
-                confidence=0.9 if hv_result.status == "verified" else 0.3,
-                proof_code=hv_result.proof_code,
-                proof_text=hv_result.proof_text,
-                error_message=hv_result.error_message,
-                execution_time_ms=hv_result.execution_time_ms,
-                metadata={"iterations": hv_result.iterations, "was_timeout": hv_result.was_timeout},
-            ))
+            backend_results.append(
+                BackendResult(
+                    backend=hv_result.backend,
+                    status=hv_result.status,
+                    confidence=0.9 if hv_result.status == "verified" else 0.3,
+                    proof_code=hv_result.proof_code,
+                    proof_text=hv_result.proof_text,
+                    error_message=hv_result.error_message,
+                    execution_time_ms=hv_result.execution_time_ms,
+                    metadata={
+                        "iterations": hv_result.iterations,
+                        "was_timeout": hv_result.was_timeout,
+                    },
+                )
+            )
         else:
-            backend_results.append(BackendResult(
-                backend="math_detector",
-                status="uncertain",
-                confidence=0.0,
-                proof_text=assessment.get("category_label", ""),
-            ))
+            backend_results.append(
+                BackendResult(
+                    backend="math_detector",
+                    status="uncertain",
+                    confidence=0.0,
+                    proof_text=assessment.get("category_label", ""),
+                )
+            )
     except Exception as exc:
         logger.warning("hybrid verifier failed: %s", exc)
-        backend_results.append(BackendResult(
-            backend="hybrid_verifier",
-            status="failed",
-            confidence=0.0,
-            error_message=str(exc),
-        ))
+        backend_results.append(
+            BackendResult(
+                backend="hybrid_verifier",
+                status="failed",
+                confidence=0.0,
+                error_message=str(exc),
+            )
+        )
 
     # 3. Compute unified score
     unified = compute_unified_score(req.hypothesis, backend_results)
@@ -245,8 +263,10 @@ async def list_methods() -> dict[str, Any]:
 # LEGACY: Original verification endpoints (backward compatibility)
 # ---------------------------------------------------------------------------
 
+
 class VerifyRequest(BaseModel):
     """VerifyRequest."""
+
     code: str
     specification: dict[str, str] | None = None
     formal_method: str = "hoare"
@@ -255,12 +275,14 @@ class VerifyRequest(BaseModel):
 
 class AutoProofRequest(BaseModel):
     """AutoProofRequest."""
+
     discovery: dict[str, Any]
     evidence: list[str] = []
 
 
 class LeanVerifyRequest(BaseModel):
     """LeanVerifyRequest."""
+
     theorem: str
     proof: str = "sorry"
 
@@ -269,15 +291,20 @@ class LeanVerifyRequest(BaseModel):
 async def verify_code(req: VerifyRequest) -> dict[str, Any]:
     """Verify code using specified formal method (legacy endpoint)."""
     verify_id = f"verify_{uuid4().hex[:12]}"
-    _set_verify_cache(verify_id, {"status": "pending", "verified": False, "method": req.formal_method})
+    _set_verify_cache(
+        verify_id, {"status": "pending", "verified": False, "method": req.formal_method}
+    )
 
     try:
         if req.formal_method == "lean4":
             from src.verification.lean4_client import Lean4Client
-            client = Lean4Client()
-            if not client.available:
-                raise C4APIError("Lean 4 not installed", status_code=501, error_code="lean4_not_installed")
-            result = client.verify_theorem(req.code, req.proof)
+
+            lean_client = Lean4Client()
+            if not lean_client.available:
+                raise C4APIError(
+                    "Lean 4 not installed", status_code=501, error_code="lean4_not_installed"
+                )
+            result = lean_client.verify_theorem(req.code, req.proof)
             err = result.get("error", "")
             payload = {
                 "verified": result.get("valid", False),
@@ -286,10 +313,13 @@ async def verify_code(req: VerifyRequest) -> dict[str, Any]:
             }
         elif req.formal_method == "coq":
             from src.verification.coq_client import CoqClient
-            client = CoqClient()
-            if not client.is_available():
-                raise C4APIError("Coq not installed", status_code=501, error_code="coq_not_installed")
-            result = client.check_proof(req.code)
+
+            coq_client = CoqClient()
+            if not coq_client.is_available():
+                raise C4APIError(
+                    "Coq not installed", status_code=501, error_code="coq_not_installed"
+                )
+            result = coq_client.check_proof(req.code)
             err = str(result.get("error", result.get("output", "")))
             payload = {
                 "verified": result.get("valid", False),
@@ -298,10 +328,13 @@ async def verify_code(req: VerifyRequest) -> dict[str, Any]:
             }
         elif req.formal_method == "agda":
             from src.verification.agda_bridge import AgdaBridge
-            client = AgdaBridge()
-            if not client.available:
-                raise C4APIError("Agda not installed", status_code=501, error_code="agda_not_installed")
-            result = client.type_check(req.code)
+
+            agda_client = AgdaBridge()
+            if not agda_client.available:
+                raise C4APIError(
+                    "Agda not installed", status_code=501, error_code="agda_not_installed"
+                )
+            result = agda_client.type_check(req.code)
             err = str(result.get("error", ""))
             payload = {
                 "verified": result.get("success", False),
@@ -311,6 +344,7 @@ async def verify_code(req: VerifyRequest) -> dict[str, Any]:
         elif req.formal_method == "z3":
             try:
                 import z3
+
                 solver = z3.Solver()
                 solver.set("timeout", 5000)
                 solver.from_string(req.code)
@@ -325,44 +359,77 @@ async def verify_code(req: VerifyRequest) -> dict[str, Any]:
                 payload = {"verified": False, "errors": [str(exc)], "method": "z3"}
         elif req.formal_method == "hoare":
             from src.verification.hoare_verifier import HoareVerifier
+
             hv = HoareVerifier()
             hoare_result = hv.verify(req.code)
-            payload = {"verified": hoare_result.valid, "errors": [hoare_result.error] if hoare_result.error else []}
+            payload = {
+                "verified": hoare_result.valid,
+                "errors": [hoare_result.error] if hoare_result.error else [],
+            }
         elif req.formal_method == "dafny":
             from src.verification.dafny_client import DafnyClient
+
             dc = DafnyClient()
             if not dc.is_available():
-                raise C4APIError("Dafny not installed", status_code=501, error_code="dafny_not_installed")
+                raise C4APIError(
+                    "Dafny not installed", status_code=501, error_code="dafny_not_installed"
+                )
             result = dc.verify(req.code)
-            payload = {"verified": result.get("valid", False), "errors": [str(result.get("output", ""))] if not result.get("valid") else []}
+            payload = {
+                "verified": result.get("valid", False),
+                "errors": [str(result.get("output", ""))] if not result.get("valid") else [],
+            }
         elif req.formal_method == "cvc5":
             from src.verification.cvc5_client import CVC5Client
-            client = CVC5Client()
-            if not client.is_available():
-                raise C4APIError("CVC5 not installed", status_code=501, error_code="cvc5_not_installed")
-            result = client.verify(req.code)
-            payload = {"verified": result.get("valid", False), "errors": [result.get("error", "")] if not result.get("valid") else [], "method": "cvc5"}
+
+            cvc5_client = CVC5Client()
+            if not cvc5_client.is_available():
+                raise C4APIError(
+                    "CVC5 not installed", status_code=501, error_code="cvc5_not_installed"
+                )
+            result = cvc5_client.verify(req.code)
+            payload = {
+                "verified": result.get("valid", False),
+                "errors": [result.get("error", "")] if not result.get("valid") else [],
+                "method": "cvc5",
+            }
         elif req.formal_method in ("tla", "tla+"):
             from src.verification.tla_client import TLAClient
-            client = TLAClient()
-            if not client.is_available():
-                raise C4APIError("TLA+ TLC not installed", status_code=501, error_code="tla_not_installed")
-            result = client.verify(req.code)
-            payload = {"verified": result.get("valid", False), "errors": [result.get("error", "")] if not result.get("valid") else [], "method": "tla"}
+
+            tla_client = TLAClient()
+            if not tla_client.is_available():
+                raise C4APIError(
+                    "TLA+ TLC not installed", status_code=501, error_code="tla_not_installed"
+                )
+            result = tla_client.verify(req.code)
+            payload = {
+                "verified": result.get("valid", False),
+                "errors": [result.get("error", "")] if not result.get("valid") else [],
+                "method": "tla",
+            }
         elif req.formal_method == "alloy":
             from src.verification.alloy_client import AlloyClient
-            client = AlloyClient()
-            if not client.is_available():
-                raise C4APIError("Alloy not installed", status_code=501, error_code="alloy_not_installed")
-            result = client.verify(req.code)
-            payload = {"verified": result.get("valid", False), "errors": [result.get("error", "")] if not result.get("valid") else [], "method": "alloy"}
+
+            alloy_client = AlloyClient()
+            if not alloy_client.is_available():
+                raise C4APIError(
+                    "Alloy not installed", status_code=501, error_code="alloy_not_installed"
+                )
+            result = alloy_client.verify(req.code)
+            payload = {
+                "verified": result.get("valid", False),
+                "errors": [result.get("error", "")] if not result.get("valid") else [],
+                "method": "alloy",
+            }
         else:
             raise ValidationError(f"Unsupported formal method: {req.formal_method}")
     except C4APIError:
         raise
     except Exception as exc:
         logger.exception("Verification failed")
-        raise C4APIError(f"Verification failed: {exc}", status_code=500, error_code="verification_failed") from exc
+        raise C4APIError(
+            f"Verification failed: {exc}", status_code=500, error_code="verification_failed"
+        ) from exc
 
     _set_verify_cache(verify_id, {"status": "completed", **payload})
     return {"verify_id": verify_id, **payload}
@@ -372,6 +439,7 @@ async def verify_code(req: VerifyRequest) -> dict[str, Any]:
 async def verify_lean4(req: VerifyRequest) -> dict[str, Any]:
     """Verify theorem using Lean 4 (legacy endpoint)."""
     from src.verification.lean4_client import Lean4Client
+
     client = Lean4Client()
     if not client.available:
         raise C4APIError("Lean 4 not installed", status_code=501, error_code="lean4_not_installed")
@@ -383,6 +451,7 @@ async def verify_lean4(req: VerifyRequest) -> dict[str, Any]:
 async def verify_lean(req: LeanVerifyRequest) -> dict[str, Any]:
     """Verify Lean 4 theorem (legacy endpoint)."""
     from src.verification.lean4_client import Lean4Client
+
     client = Lean4Client()
     if not client.available:
         raise C4APIError("Lean 4 not installed", status_code=501, error_code="lean4_not_installed")
@@ -395,6 +464,7 @@ async def verify_lean(req: LeanVerifyRequest) -> dict[str, Any]:
 async def auto_generate_proof(req: AutoProofRequest) -> dict[str, Any]:
     """Auto-generate proof from discovery using LLM (legacy endpoint)."""
     from src.verification.llm_prover import LLMProver
+
     prover = LLMProver()
     hypothesis = req.discovery.get("hypothesis", {}).get("text", str(req.discovery)[:500])
     result = await prover.prove(hypothesis, "lean4")
@@ -412,7 +482,11 @@ async def get_verify_status(verify_id: str) -> dict[str, Any]:
     """Get verification status by ID."""
     cached = _get_verify_cache(verify_id)
     if not cached:
-        raise C4APIError(f"Verification {verify_id} not found", status_code=404, error_code="verification_not_found")
+        raise C4APIError(
+            f"Verification {verify_id} not found",
+            status_code=404,
+            error_code="verification_not_found",
+        )
     return cached
 
 
@@ -420,5 +494,6 @@ async def get_verify_status(verify_id: str) -> dict[str, Any]:
 async def check_lean4lean() -> dict[str, Any]:
     """Check lean4lean kernel checker availability."""
     from src.verification.lean4lean_client import Lean4LeanClient
+
     client = Lean4LeanClient()
     return {"available": client.available, "license": "BSD-style"}

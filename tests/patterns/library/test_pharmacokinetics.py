@@ -16,19 +16,20 @@ Covers:
 - run() async integration
 - Edge cases: different dosing regimens, model types
 """
+
 from __future__ import annotations
 
 import sys
 from pathlib import Path
+
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 import numpy as np
 import pytest
 
-from src.patterns.library.pharmacokinetics import PKPattern, PKModel, DosingRegimen
 from src.patterns.core import Hypothesis, SimulationStatus
-
+from src.patterns.library.pharmacokinetics import DosingRegimen, PKModel, PKPattern
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -52,13 +53,7 @@ class TestDosingRegimen:
         assert dr.route == "oral"
 
     def test_custom_init(self):
-        dr = DosingRegimen(
-            dose=200.0,
-            interval=8.0,
-            num_doses=3,
-            route="iv",
-            absorption_rate=0.0
-        )
+        dr = DosingRegimen(dose=200.0, interval=8.0, num_doses=3, route="iv", absorption_rate=0.0)
         assert dr.dose == 200.0
         assert dr.route == "iv"
 
@@ -125,58 +120,42 @@ class TestOneCompartment:
     async def test_one_compartment_runs(self):
         pattern = PKPattern()
         h = Hypothesis(title="PK simulation", description="test")
-        result = await pattern._one_compartment(h, {
-            "dose": 100.0,
-            "halflife": 4.0,
-            "volume": 50.0,
-            "num_doses": 1
-        })
+        result = await pattern._one_compartment(
+            h, {"dose": 100.0, "halflife": 4.0, "volume": 50.0, "num_doses": 1}
+        )
         assert "metrics" in result
         assert "logs" in result
 
     async def test_cmax_positive(self):
         pattern = PKPattern()
         h = Hypothesis(title="PK simulation", description="test")
-        result = await pattern._one_compartment(h, {
-            "dose": 100.0,
-            "halflife": 4.0,
-            "volume": 50.0,
-            "num_doses": 1
-        })
+        result = await pattern._one_compartment(
+            h, {"dose": 100.0, "halflife": 4.0, "volume": 50.0, "num_doses": 1}
+        )
         assert result["metrics"]["cmax"] > 0
 
     async def test_tmax_positive(self):
         pattern = PKPattern()
         h = Hypothesis(title="PK simulation", description="test")
-        result = await pattern._one_compartment(h, {
-            "dose": 100.0,
-            "halflife": 4.0,
-            "volume": 50.0,
-            "num_doses": 1
-        })
+        result = await pattern._one_compartment(
+            h, {"dose": 100.0, "halflife": 4.0, "volume": 50.0, "num_doses": 1}
+        )
         assert result["metrics"]["tmax"] >= 0
 
     async def test_auc_positive(self):
         pattern = PKPattern()
         h = Hypothesis(title="PK simulation", description="test")
-        result = await pattern._one_compartment(h, {
-            "dose": 100.0,
-            "halflife": 4.0,
-            "volume": 50.0,
-            "num_doses": 1
-        })
+        result = await pattern._one_compartment(
+            h, {"dose": 100.0, "halflife": 4.0, "volume": 50.0, "num_doses": 1}
+        )
         assert result["metrics"]["auc"] > 0
 
     async def test_multiple_doses(self):
         pattern = PKPattern()
         h = Hypothesis(title="PK simulation", description="test")
-        result = await pattern._one_compartment(h, {
-            "dose": 100.0,
-            "interval": 12.0,
-            "num_doses": 5,
-            "halflife": 4.0,
-            "volume": 50.0
-        })
+        result = await pattern._one_compartment(
+            h, {"dose": 100.0, "interval": 12.0, "num_doses": 5, "halflife": 4.0, "volume": 50.0}
+        )
         assert result["metrics"]["cmax"] > 0
 
 
@@ -190,22 +169,14 @@ class TestTwoCompartment:
     async def test_two_compartment_runs(self):
         pattern = PKPattern()
         h = Hypothesis(title="PK simulation", description="test")
-        result = await pattern._two_compartment(h, {
-            "dose": 100.0,
-            "halflife": 4.0,
-            "volume": 50.0
-        })
+        result = await pattern._two_compartment(h, {"dose": 100.0, "halflife": 4.0, "volume": 50.0})
         assert "metrics" in result
         assert "peripheral_cmax" in result["metrics"]
 
     async def test_peripheral_cmax_positive(self):
         pattern = PKPattern()
         h = Hypothesis(title="PK simulation", description="test")
-        result = await pattern._two_compartment(h, {
-            "dose": 100.0,
-            "halflife": 4.0,
-            "volume": 50.0
-        })
+        result = await pattern._two_compartment(h, {"dose": 100.0, "halflife": 4.0, "volume": 50.0})
         assert result["metrics"]["peripheral_cmax"] > 0
 
 
@@ -219,20 +190,14 @@ class TestMichaelisMenten:
     async def test_mm_runs(self):
         pattern = PKPattern()
         h = Hypothesis(title="PK simulation", description="test")
-        result = await pattern._michaelis_menten(h, {
-            "dose": 100.0,
-            "volume": 50.0
-        })
+        result = await pattern._michaelis_menten(h, {"dose": 100.0, "volume": 50.0})
         assert "metrics" in result
         assert result["metrics"]["nonlinear"] is True
 
     async def test_mm_cmax_positive(self):
         pattern = PKPattern()
         h = Hypothesis(title="PK simulation", description="test")
-        result = await pattern._michaelis_menten(h, {
-            "dose": 100.0,
-            "volume": 50.0
-        })
+        result = await pattern._michaelis_menten(h, {"dose": 100.0, "volume": 50.0})
         assert result["metrics"]["cmax"] > 0
 
 
@@ -308,7 +273,7 @@ class TestCalculateConfidence:
                 "cmax": 50.0,
                 "auc": 500.0,
                 "half_life_estimate": 4.0,
-                "steady_state_reached": True
+                "steady_state_reached": True,
             }
         }
         confidence = pattern._calculate_confidence(results)
@@ -353,29 +318,21 @@ class TestRun:
     async def test_run_one_compartment(self):
         pattern = PKPattern()
         h = Hypothesis(title="PK simulation", description="drug concentration")
-        result = await pattern.run(h, {
-            "model_type": "one_compartment",
-            "dose": 100.0,
-            "num_doses": 1
-        })
+        result = await pattern.run(
+            h, {"model_type": "one_compartment", "dose": 100.0, "num_doses": 1}
+        )
         assert result.status == SimulationStatus.COMPLETED
 
     async def test_run_two_compartment(self):
         pattern = PKPattern()
         h = Hypothesis(title="PK simulation", description="drug concentration")
-        result = await pattern.run(h, {
-            "model_type": "two_compartment",
-            "dose": 100.0
-        })
+        result = await pattern.run(h, {"model_type": "two_compartment", "dose": 100.0})
         assert result.status == SimulationStatus.COMPLETED
 
     async def test_run_michaelis_menten(self):
         pattern = PKPattern()
         h = Hypothesis(title="PK simulation", description="drug concentration")
-        result = await pattern.run(h, {
-            "model_type": "michaelis_menten",
-            "dose": 100.0
-        })
+        result = await pattern.run(h, {"model_type": "michaelis_menten", "dose": 100.0})
         assert result.status == SimulationStatus.COMPLETED
 
     async def test_logs_present(self):

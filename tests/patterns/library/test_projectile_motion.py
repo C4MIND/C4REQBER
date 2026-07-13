@@ -1,22 +1,23 @@
 """
 Tests for src/patterns/library/projectile_motion.py
 """
+
 from __future__ import annotations
 
 import sys
 from pathlib import Path
+
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 import numpy as np
 import pytest
 
-from src.patterns.library.projectile_motion import (
-    ProjectileMotionPattern,
-    ProjectileConfig,
-)
 from src.patterns.core import Hypothesis, SimulationStatus
-
+from src.patterns.library.projectile_motion import (
+    ProjectileConfig,
+    ProjectileMotionPattern,
+)
 
 
 class TestProjectileConfig:
@@ -113,13 +114,17 @@ class TestSimulateProjectile:
         pattern = ProjectileMotionPattern()
         pattern.config = ProjectileConfig(v0=50.0, angle=45.0, drag_coefficient=0.0, t_max=10.0)
         result = await pattern._simulate_projectile()
-        assert result["metrics"]["range"] == pytest.approx(result["metrics"]["range_vacuum"], rel=0.05)
+        assert result["metrics"]["range"] == pytest.approx(
+            result["metrics"]["range_vacuum"], rel=0.05
+        )
 
 
 class TestCalculateConfidence:
     def test_high_confidence(self):
         pattern = ProjectileMotionPattern()
-        results = {"metrics": {"range": 100.0, "range_vacuum": 150.0, "apogee": 50.0, "impact_speed": 40.0}}
+        results = {
+            "metrics": {"range": 100.0, "range_vacuum": 150.0, "apogee": 50.0, "impact_speed": 40.0}
+        }
         confidence = pattern._calculate_confidence(results)
         assert confidence > 0.5
 

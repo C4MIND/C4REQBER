@@ -1,11 +1,11 @@
 """
 Tests for continuum_mechanics pattern module.
 """
+
 import numpy as np
 import pytest
 
-from src.patterns.library.continuum_mechanics import ContinuumMechanicsConfig, ContinuumMechanics
-
+from src.patterns.library.continuum_mechanics import ContinuumMechanics, ContinuumMechanicsConfig
 
 
 class TestConfig:

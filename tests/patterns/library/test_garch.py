@@ -10,19 +10,20 @@ Covers:
 - run() async integration
 - Edge cases: extreme parameters, near-unit-root
 """
+
 from __future__ import annotations
 
 import sys
 from pathlib import Path
+
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 import numpy as np
 import pytest
 
-from src.patterns.library.garch import GARCHPattern
 from src.patterns.core import Hypothesis, SimulationStatus
-
+from src.patterns.library.garch import GARCHPattern
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -171,12 +172,15 @@ class TestRun:
     async def test_run_with_config(self):
         pattern = GARCHPattern()
         h = Hypothesis(title="GARCH model", description="volatility clustering")
-        result = await pattern.run(h, {
-            "periods": 200,
-            "omega": 0.00001,
-            "alpha": 0.15,
-            "beta": 0.8,
-        })
+        result = await pattern.run(
+            h,
+            {
+                "periods": 200,
+                "omega": 0.00001,
+                "alpha": 0.15,
+                "beta": 0.8,
+            },
+        )
         assert result.status == SimulationStatus.COMPLETED
 
     async def test_metrics_present(self):

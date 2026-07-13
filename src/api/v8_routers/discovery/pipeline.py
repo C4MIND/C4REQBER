@@ -57,6 +57,11 @@ from src.discovery.pipeline_logic import (
     search_isomorphisms,
 )
 from src.llm.gateway import get_gateway
+from src.pipeline.discovery_config import (
+    minimum_discovery_papers,
+    minimum_paradigm_shift_papers,
+    simulation_timeout_seconds,
+)
 
 
 logger = logging.getLogger("c4_cdi_turbo.api.v8.discovery")
@@ -177,8 +182,8 @@ async def one_click_discovery(
         "warnings": [],
     }
     thresholds = {
-        "min_papers_for_discovery": 50,
-        "min_papers_for_paradigm_shift": 100,
+        "min_papers_for_discovery": minimum_discovery_papers(),
+        "min_papers_for_paradigm_shift": minimum_paradigm_shift_papers(),
         "min_gap_miner_potential": 0.15,
         "min_novelty_score": 0.5,
         "min_contradictions_found": 3,
@@ -366,7 +371,10 @@ async def multi_hypothesis_discovery(request: MultiHypothesisRequest) -> dict[st
     # Run simulation only on top-ranked hypotheses (budget-aware)
     for h in ranked:
         try:
-            sim = await asyncio.wait_for(run_relevant_simulation(domain, h), timeout=2.0)
+            sim = await asyncio.wait_for(
+                run_relevant_simulation(domain, h),
+                timeout=simulation_timeout_seconds(),
+            )
             h["simulation"] = sim
         except TimeoutError:
             h["simulation"] = {"status": "timeout", "note": "exceeded time budget"}

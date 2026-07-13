@@ -13,19 +13,20 @@ Covers:
 - run() async integration
 - Edge cases: few nodes, different network types
 """
+
 from __future__ import annotations
 
 import sys
 from pathlib import Path
+
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 import numpy as np
 import pytest
 
-from src.patterns.library.social_network import SocialNetworkPattern
 from src.patterns.core import Hypothesis, SimulationStatus
-
+from src.patterns.library.social_network import SocialNetworkPattern
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -253,19 +254,25 @@ class TestRun:
     async def test_run_independent_cascade(self):
         pattern = SocialNetworkPattern()
         h = Hypothesis(title="Social network", description="viral diffusion")
-        result = await pattern.run(h, {
-            "num_nodes": 50,
-            "diffusion_model": "independent_cascade",
-        })
+        result = await pattern.run(
+            h,
+            {
+                "num_nodes": 50,
+                "diffusion_model": "independent_cascade",
+            },
+        )
         assert result.status == SimulationStatus.COMPLETED
 
     async def test_run_linear_threshold(self):
         pattern = SocialNetworkPattern()
         h = Hypothesis(title="Social network", description="viral diffusion")
-        result = await pattern.run(h, {
-            "num_nodes": 50,
-            "diffusion_model": "linear_threshold",
-        })
+        result = await pattern.run(
+            h,
+            {
+                "num_nodes": 50,
+                "diffusion_model": "linear_threshold",
+            },
+        )
         assert result.status == SimulationStatus.COMPLETED
 
     async def test_metrics_present(self):

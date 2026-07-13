@@ -1,11 +1,11 @@
 """
 Tests for urban_growth pattern module.
 """
+
 import numpy as np
 import pytest
 
 from src.patterns.library.urban_growth import UrbanGrowthConfig, UrbanGrowthPattern
-
 
 
 class TestConfig:

@@ -1,14 +1,17 @@
 #!/usr/bin/env python3
 """Smoke-test all verification backends (CVC5, TLA+, Alloy + core). Exit 0 only if all available backends pass."""
+
 from __future__ import annotations
 
 import sys
 from pathlib import Path
 
+
 REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO))
 
 from src.config.paths import load_verifiers_env  # noqa: E402
+
 
 load_verifiers_env()
 

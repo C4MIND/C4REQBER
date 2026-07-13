@@ -1,22 +1,23 @@
 """
 Tests for src/patterns/library/wave_equation.py
 """
+
 from __future__ import annotations
 
 import sys
 from pathlib import Path
+
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 import numpy as np
 import pytest
 
-from src.patterns.library.wave_equation import (
-    WaveEquationPattern,
-    WaveEquationConfig,
-)
 from src.patterns.core import Hypothesis, SimulationStatus
-
+from src.patterns.library.wave_equation import (
+    WaveEquationConfig,
+    WaveEquationPattern,
+)
 
 
 class TestWaveEquationConfig:
@@ -127,7 +128,14 @@ class TestSimulate2D:
 class TestCalculateConfidence:
     def test_high_confidence(self):
         pattern = WaveEquationPattern()
-        results = {"metrics": {"cfl_number": 0.5, "max_amplitude": 1.0, "energy_drift": 0.01, "n_steps": 100}}
+        results = {
+            "metrics": {
+                "cfl_number": 0.5,
+                "max_amplitude": 1.0,
+                "energy_drift": 0.01,
+                "n_steps": 100,
+            }
+        }
         confidence = pattern._calculate_confidence(results)
         assert confidence > 0.5
 

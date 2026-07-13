@@ -4,7 +4,8 @@ Tests for C4 state space and operators
 """
 
 import pytest
-from src.core.c4_state import C4State, C4Space, TimeAxis, ScaleAxis, AgencyAxis
+
+from src.core.c4_state import AgencyAxis, C4Space, C4State, ScaleAxis, TimeAxis
 from src.core.operators import apply_operator, get_operator_transform
 
 
@@ -175,9 +176,7 @@ class TestTheorem11:
             for s2 in states[:5]:
                 path = self.space.find_path(s1, s2)
                 hamming = self.space.hamming_distance(s1, s2)
-                assert len(path) - 1 == hamming, (
-                    f"Path length {len(path) - 1} != Hamming {hamming}"
-                )
+                assert len(path) - 1 == hamming, f"Path length {len(path) - 1} != Hamming {hamming}"
 
 
 if __name__ == "__main__":

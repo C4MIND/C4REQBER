@@ -1,5 +1,8 @@
 """Tests for src/projects/manager.py - using in-memory SQLite."""
+
 from __future__ import annotations
+
+from typing import Any
 
 import pytest
 
@@ -73,12 +76,22 @@ class TestProjectCRUD:
 
     def test_list_projects_by_status(self, manager: ProjectManager) -> None:
         active = ResearchProject(
-            id=None, name="A", description="D", domain="x",
-            status=ProjectStatus.ACTIVE.value, created_at="", updated_at=""
+            id=None,
+            name="A",
+            description="D",
+            domain="x",
+            status=ProjectStatus.ACTIVE.value,
+            created_at="",
+            updated_at="",
         )
         completed = ResearchProject(
-            id=None, name="C", description="D", domain="x",
-            status=ProjectStatus.COMPLETED.value, created_at="", updated_at=""
+            id=None,
+            name="C",
+            description="D",
+            domain="x",
+            status=ProjectStatus.COMPLETED.value,
+            created_at="",
+            updated_at="",
         )
         manager.create_project(active)
         manager.create_project(completed)
@@ -87,12 +100,22 @@ class TestProjectCRUD:
 
     def test_list_projects_by_domain(self, manager: ProjectManager) -> None:
         p1 = ResearchProject(
-            id=None, name="A", description="D", domain="physics",
-            status=ProjectStatus.ACTIVE.value, created_at="", updated_at=""
+            id=None,
+            name="A",
+            description="D",
+            domain="physics",
+            status=ProjectStatus.ACTIVE.value,
+            created_at="",
+            updated_at="",
         )
         p2 = ResearchProject(
-            id=None, name="B", description="D", domain="ai",
-            status=ProjectStatus.ACTIVE.value, created_at="", updated_at=""
+            id=None,
+            name="B",
+            description="D",
+            domain="ai",
+            status=ProjectStatus.ACTIVE.value,
+            created_at="",
+            updated_at="",
         )
         manager.create_project(p1)
         manager.create_project(p2)
@@ -100,8 +123,13 @@ class TestProjectCRUD:
 
     def test_update_project_status(self, manager: ProjectManager) -> None:
         p = ResearchProject(
-            id=None, name="X", description="D", domain="x",
-            status=ProjectStatus.ACTIVE.value, created_at="", updated_at=""
+            id=None,
+            name="X",
+            description="D",
+            domain="x",
+            status=ProjectStatus.ACTIVE.value,
+            created_at="",
+            updated_at="",
         )
         pid = manager.create_project(p)
         manager.update_project_status(pid, "completed")
@@ -110,8 +138,13 @@ class TestProjectCRUD:
 
     def test_add_hypothesis_to_project(self, manager: ProjectManager) -> None:
         p = ResearchProject(
-            id=None, name="X", description="D", domain="x",
-            status=ProjectStatus.ACTIVE.value, created_at="", updated_at=""
+            id=None,
+            name="X",
+            description="D",
+            domain="x",
+            status=ProjectStatus.ACTIVE.value,
+            created_at="",
+            updated_at="",
         )
         pid = manager.create_project(p)
         manager.add_hypothesis_to_project(pid, 101)
@@ -126,29 +159,50 @@ class TestProjectCRUD:
 class TestTaskOperations:
     def test_create_task(self, manager: ProjectManager) -> None:
         p = ResearchProject(
-            id=None, name="P", description="D", domain="x",
-            status=ProjectStatus.ACTIVE.value, created_at="", updated_at=""
+            id=None,
+            name="P",
+            description="D",
+            domain="x",
+            status=ProjectStatus.ACTIVE.value,
+            created_at="",
+            updated_at="",
         )
         pid = manager.create_project(p)
         task = Task(
-            id=None, project_id=pid, title="T1",
-            description="Desc", status=TaskStatus.TODO.value,
-            priority=3, due_date=None, created_at="", tags=["urgent"]
+            id=None,
+            project_id=pid,
+            title="T1",
+            description="Desc",
+            status=TaskStatus.TODO.value,
+            priority=3,
+            due_date=None,
+            created_at="",
+            tags=["urgent"],
         )
         tid = manager.create_task(task)
         assert isinstance(tid, int)
 
     def test_get_project_tasks(self, manager: ProjectManager) -> None:
         p = ResearchProject(
-            id=None, name="P", description="D", domain="x",
-            status=ProjectStatus.ACTIVE.value, created_at="", updated_at=""
+            id=None,
+            name="P",
+            description="D",
+            domain="x",
+            status=ProjectStatus.ACTIVE.value,
+            created_at="",
+            updated_at="",
         )
         pid = manager.create_project(p)
         for i in range(3):
             t = Task(
-                id=None, project_id=pid, title=f"T{i}",
-                description="D", status=TaskStatus.TODO.value,
-                priority=i+1, due_date=None, created_at=""
+                id=None,
+                project_id=pid,
+                title=f"T{i}",
+                description="D",
+                status=TaskStatus.TODO.value,
+                priority=i + 1,
+                due_date=None,
+                created_at="",
             )
             manager.create_task(t)
         tasks = manager.get_project_tasks(pid)
@@ -156,19 +210,34 @@ class TestTaskOperations:
 
     def test_get_project_tasks_by_status(self, manager: ProjectManager) -> None:
         p = ResearchProject(
-            id=None, name="P", description="D", domain="x",
-            status=ProjectStatus.ACTIVE.value, created_at="", updated_at=""
+            id=None,
+            name="P",
+            description="D",
+            domain="x",
+            status=ProjectStatus.ACTIVE.value,
+            created_at="",
+            updated_at="",
         )
         pid = manager.create_project(p)
         t1 = Task(
-            id=None, project_id=pid, title="T1",
-            description="D", status=TaskStatus.TODO.value,
-            priority=1, due_date=None, created_at=""
+            id=None,
+            project_id=pid,
+            title="T1",
+            description="D",
+            status=TaskStatus.TODO.value,
+            priority=1,
+            due_date=None,
+            created_at="",
         )
         t2 = Task(
-            id=None, project_id=pid, title="T2",
-            description="D", status=TaskStatus.DONE.value,
-            priority=1, due_date=None, created_at=""
+            id=None,
+            project_id=pid,
+            title="T2",
+            description="D",
+            status=TaskStatus.DONE.value,
+            priority=1,
+            due_date=None,
+            created_at="",
         )
         manager.create_task(t1)
         manager.create_task(t2)
@@ -177,14 +246,24 @@ class TestTaskOperations:
 
     def test_complete_task(self, manager: ProjectManager) -> None:
         p = ResearchProject(
-            id=None, name="P", description="D", domain="x",
-            status=ProjectStatus.ACTIVE.value, created_at="", updated_at=""
+            id=None,
+            name="P",
+            description="D",
+            domain="x",
+            status=ProjectStatus.ACTIVE.value,
+            created_at="",
+            updated_at="",
         )
         pid = manager.create_project(p)
         t = Task(
-            id=None, project_id=pid, title="T",
-            description="D", status=TaskStatus.IN_PROGRESS.value,
-            priority=1, due_date=None, created_at=""
+            id=None,
+            project_id=pid,
+            title="T",
+            description="D",
+            status=TaskStatus.IN_PROGRESS.value,
+            priority=1,
+            due_date=None,
+            created_at="",
         )
         tid = manager.create_task(t)
         manager.complete_task(tid)
@@ -196,29 +275,45 @@ class TestTaskOperations:
 class TestMilestoneOperations:
     def test_create_milestone(self, manager: ProjectManager) -> None:
         p = ResearchProject(
-            id=None, name="P", description="D", domain="x",
-            status=ProjectStatus.ACTIVE.value, created_at="", updated_at=""
+            id=None,
+            name="P",
+            description="D",
+            domain="x",
+            status=ProjectStatus.ACTIVE.value,
+            created_at="",
+            updated_at="",
         )
         pid = manager.create_project(p)
         ms = Milestone(
-            id=None, project_id=pid, title="M1",
-            description="D", target_date="2025-01-01",
-            deliverables=["paper"]
+            id=None,
+            project_id=pid,
+            title="M1",
+            description="D",
+            target_date="2025-01-01",
+            deliverables=["paper"],
         )
         mid = manager.create_milestone(ms)
         assert isinstance(mid, int)
 
     def test_get_project_milestones(self, manager: ProjectManager) -> None:
         p = ResearchProject(
-            id=None, name="P", description="D", domain="x",
-            status=ProjectStatus.ACTIVE.value, created_at="", updated_at=""
+            id=None,
+            name="P",
+            description="D",
+            domain="x",
+            status=ProjectStatus.ACTIVE.value,
+            created_at="",
+            updated_at="",
         )
         pid = manager.create_project(p)
         for i in range(2):
             ms = Milestone(
-                id=None, project_id=pid, title=f"M{i}",
-                description="D", target_date=f"2025-0{i+1}-01",
-                deliverables=[]
+                id=None,
+                project_id=pid,
+                title=f"M{i}",
+                description="D",
+                target_date=f"2025-0{i + 1}-01",
+                deliverables=[],
             )
             manager.create_milestone(ms)
         milestones = manager.get_project_milestones(pid)
@@ -228,8 +323,13 @@ class TestMilestoneOperations:
 class TestResearchLog:
     def test_add_log_entry(self, manager: ProjectManager) -> None:
         p = ResearchProject(
-            id=None, name="P", description="D", domain="x",
-            status=ProjectStatus.ACTIVE.value, created_at="", updated_at=""
+            id=None,
+            name="P",
+            description="D",
+            domain="x",
+            status=ProjectStatus.ACTIVE.value,
+            created_at="",
+            updated_at="",
         )
         pid = manager.create_project(p)
         lid = manager.add_log_entry(pid, "observation", "Found correlation", tags=["key"])
@@ -237,8 +337,13 @@ class TestResearchLog:
 
     def test_get_research_log(self, manager: ProjectManager) -> None:
         p = ResearchProject(
-            id=None, name="P", description="D", domain="x",
-            status=ProjectStatus.ACTIVE.value, created_at="", updated_at=""
+            id=None,
+            name="P",
+            description="D",
+            domain="x",
+            status=ProjectStatus.ACTIVE.value,
+            created_at="",
+            updated_at="",
         )
         pid = manager.create_project(p)
         manager.add_log_entry(pid, "observation", "O1")
@@ -253,21 +358,35 @@ class TestResearchLog:
 class TestProjectStats:
     def test_get_project_stats(self, manager: ProjectManager) -> None:
         p = ResearchProject(
-            id=None, name="P", description="D", domain="x",
-            status=ProjectStatus.ACTIVE.value, created_at="", updated_at=""
+            id=None,
+            name="P",
+            description="D",
+            domain="x",
+            status=ProjectStatus.ACTIVE.value,
+            created_at="",
+            updated_at="",
         )
         pid = manager.create_project(p)
         for i in range(3):
             t = Task(
-                id=None, project_id=pid, title=f"T{i}",
-                description="D", status=TaskStatus.TODO.value,
-                priority=1, due_date=None, created_at=""
+                id=None,
+                project_id=pid,
+                title=f"T{i}",
+                description="D",
+                status=TaskStatus.TODO.value,
+                priority=1,
+                due_date=None,
+                created_at="",
             )
             manager.create_task(t)
         manager.complete_task(1)  # first task
         ms = Milestone(
-            id=None, project_id=pid, title="M",
-            description="D", target_date="2025-01-01", deliverables=[]
+            id=None,
+            project_id=pid,
+            title="M",
+            description="D",
+            target_date="2025-01-01",
+            deliverables=[],
         )
         manager.create_milestone(ms)
         manager.add_log_entry(pid, "observation", "O")

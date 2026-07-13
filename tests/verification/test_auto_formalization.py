@@ -1,4 +1,5 @@
 """Tests for auto-formalization integration in verification clients."""
+
 from __future__ import annotations
 
 import inspect
@@ -8,9 +9,8 @@ import pytest
 
 from src.verification.config import AutoFormalizationConfig, reset_auto_formalization_config
 from src.verification.coq_client import CoqClient
-from src.verification.lean4_client import Lean4Client
 from src.verification.dafny_client import DafnyClient
-
+from src.verification.lean4_client import Lean4Client
 
 
 class TestVerifyDiscoveryIntegration:
@@ -65,7 +65,13 @@ class TestVerifyDiscoveryIntegration:
         mock_consensus.status = "verified"
         mock_consensus.confidence = 1.0
         mock_consensus.languages = {
-            "lean4": {"valid": True, "iterations": 2, "error": None, "total_time_ms": 1000, "proof": "theorem"},
+            "lean4": {
+                "valid": True,
+                "iterations": 2,
+                "error": None,
+                "total_time_ms": 1000,
+                "proof": "theorem",
+            },
         }
         mock_consensus.human_review_recommended = False
         mock_consensus.theorem_statement = "forall x, x = x"
@@ -107,8 +113,20 @@ class TestVerifyDiscoveryIntegration:
         mock_consensus.status = "partial"
         mock_consensus.confidence = 0.33
         mock_consensus.languages = {
-            "lean4": {"valid": True, "iterations": 1, "error": None, "total_time_ms": 500, "proof": ""},
-            "coq": {"valid": False, "iterations": 0, "error": "fail", "total_time_ms": 0, "proof": ""},
+            "lean4": {
+                "valid": True,
+                "iterations": 1,
+                "error": None,
+                "total_time_ms": 500,
+                "proof": "",
+            },
+            "coq": {
+                "valid": False,
+                "iterations": 0,
+                "error": "fail",
+                "total_time_ms": 0,
+                "proof": "",
+            },
         }
         mock_consensus.human_review_recommended = True
         mock_consensus.theorem_statement = "theorem"
@@ -143,5 +161,7 @@ class TestVerifyDiscoveryIntegration:
     def test_all_clients_have_same_interface(self) -> None:
         """Verify all three clients have async verify_discovery."""
         for client_cls in [CoqClient, Lean4Client, DafnyClient]:
-            method = getattr(client_cls, "verify_discovery")
-            assert inspect.iscoroutinefunction(method), f"{client_cls.__name__}.verify_discovery must be async"
+            method = client_cls.verify_discovery
+            assert inspect.iscoroutinefunction(method), (
+                f"{client_cls.__name__}.verify_discovery must be async"
+            )

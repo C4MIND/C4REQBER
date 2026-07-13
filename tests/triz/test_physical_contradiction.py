@@ -2,6 +2,7 @@
 Tests for TRIZ Physical Contradictions.
 Verifies detection, resolution, and C4 mapping on classic examples.
 """
+
 import pytest
 
 from src.triz.physical_contradiction import (
@@ -20,6 +21,7 @@ from src.triz.physical_contradiction import (
 # =============================================================================
 # DETECTION TESTS
 # =============================================================================
+
 
 class TestDetection:
     def test_detect_explicit_pattern_both(self):
@@ -53,8 +55,7 @@ class TestDetection:
 
     def test_detect_multiple_in_same_text(self):
         text = (
-            "The cup must be hot to keep coffee warm. "
-            "The cup must be cold to avoid burning hands."
+            "The cup must be hot to keep coffee warm. The cup must be cold to avoid burning hands."
         )
         analyzer = PhysicalContradictionAnalyzer()
         results = analyzer.detect(text)
@@ -65,6 +66,7 @@ class TestDetection:
 # =============================================================================
 # RESOLUTION TESTS
 # =============================================================================
+
 
 class TestResolution:
     def test_resolve_in_time(self):
@@ -97,7 +99,7 @@ class TestResolution:
             assert sep_type in SEPARATION_STRATEGIES
 
     def test_c4_trajectories_present(self):
-        for sep_type, strategy in SEPARATION_STRATEGIES.items():
+        for _sep_type, strategy in SEPARATION_STRATEGIES.items():
             assert len(strategy.c4_trajectory) >= 2
             for t, s, a in strategy.c4_trajectory:
                 assert 0 <= t <= 2
@@ -108,6 +110,7 @@ class TestResolution:
 # =============================================================================
 # C4 MAPPING TESTS
 # =============================================================================
+
 
 class TestC4Mapping:
     def test_map_to_c4_transition(self):
@@ -127,6 +130,7 @@ class TestC4Mapping:
     def test_observer_transition_label(self):
         analyzer = PhysicalContradictionAnalyzer()
         from c4.types import C4State
+
         s1 = C4State(T=1, S=0, A=0)
         s2 = C4State(T=2, S=0, A=0)
         label = analyzer._observer_transition_label([s1, s2])
@@ -136,6 +140,7 @@ class TestC4Mapping:
 # =============================================================================
 # CLASSIC EXAMPLES TESTS
 # =============================================================================
+
 
 class TestClassicExamples:
     def test_all_10_classic_examples_present(self):
@@ -217,12 +222,10 @@ class TestClassicExamples:
 # BATCH ANALYSIS TESTS
 # =============================================================================
 
+
 class TestBatchAnalysis:
     def test_analyze_text(self):
-        text = (
-            "The diving suit must be thick for thermal insulation "
-            "but thin for flexibility."
-        )
+        text = "The diving suit must be thick for thermal insulation but thin for flexibility."
         analyzer = PhysicalContradictionAnalyzer()
         report = analyzer.analyze_text(text)
         assert report["contradictions_found"] >= 1

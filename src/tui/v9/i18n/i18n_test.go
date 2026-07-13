@@ -60,23 +60,15 @@ func TestTLangSwitch(t *testing.T) {
 }
 
 func TestAllLangsHaveAllKeys(t *testing.T) {
-	requiredKeys := []string{
-		"app.title", "app.lang", "app.model", "footer.ready", "footer.running",
-		"footer.done", "footer.cost", "keymap.run", "keymap.help", "keymap.quit",
-		"keymap.cancel", "phase.a", "phase.b", "phase.c", "phase.d", "phase.e",
-		"phase.f", "phase.g", "card.phase.status", "card.hypothesis.t",
-		"card.paper.t", "card.code.t", "card.error.t", "empty.title", "empty.hint",
-		"placeholder", "toast.empty", "toast.cancelled", "toast.complete",
-		"toast.submit_failed",
-	}
 	langs := []Lang{LangEN, LangRU, LangZH, LangJA, LangDE, LangAR, LangHI}
+	en := translations[LangEN]
 	for _, lang := range langs {
 		m := translations[lang]
 		if m == nil {
 			t.Errorf("lang %s: no translations", lang)
 			continue
 		}
-		for _, k := range requiredKeys {
+		for k := range en {
 			v, ok := m[k]
 			if !ok {
 				t.Errorf("lang %s: missing key %s", lang, k)
@@ -85,6 +77,37 @@ func TestAllLangsHaveAllKeys(t *testing.T) {
 			if v == "" {
 				t.Errorf("lang %s: empty value for %s", lang, k)
 			}
+		}
+	}
+}
+
+func TestSimulationStringsAreTranslated(t *testing.T) {
+	allowIdentical := map[string]bool{
+		"sim.overlay.tier.slow": true, // CPU is a universal technical acronym.
+	}
+	for _, lang := range []Lang{LangZH, LangJA, LangDE, LangAR, LangHI} {
+		for key, english := range translations[LangEN] {
+			if !strings.HasPrefix(key, "sim.") || allowIdentical[key] {
+				continue
+			}
+			if got := translations[lang][key]; got == english {
+				t.Errorf("lang %s: %s is still English: %q", lang, key, got)
+			}
+		}
+	}
+}
+
+func TestLocaleSpecificSettingsAndAchievementsAreTranslated(t *testing.T) {
+	for _, lang := range []Lang{LangRU, LangZH, LangJA, LangDE, LangAR, LangHI} {
+		for _, key := range []string{"settings.llm_stage", "settings.llm_stage.desc"} {
+			if got := translations[lang][key]; got == translations[LangEN][key] {
+				t.Errorf("lang %s: %s is still English: %q", lang, key, got)
+			}
+		}
+		if got := translations[lang]["achievement.sim_explorer.desc"]; strings.Contains(
+			got, "Ran ",
+		) {
+			t.Errorf("lang %s: explorer achievement contains untranslated text: %q", lang, got)
 		}
 	}
 }
@@ -151,12 +174,12 @@ func containsRune(s string, r rune) bool {
 // TestLoadLangFromToml guards the TOML file loader that powers the
 // regen_i18n.py translation pipeline. Asserts that:
 //
-//   1. A well-formed TOML with N entries loads as N keys
-//   2. The "key = \"value\"" format (with quotes) is the only one
-//      accepted — unquoted values are silently dropped (matches
-//      what regen_i18n.py emits)
-//   3. The keys= value separator can have any whitespace
-//   4. Re-loading a file overwrites (not merges with) previous
+//  1. A well-formed TOML with N entries loads as N keys
+//  2. The "key = \"value\"" format (with quotes) is the only one
+//     accepted — unquoted values are silently dropped (matches
+//     what regen_i18n.py emits)
+//  3. The keys= value separator can have any whitespace
+//  4. Re-loading a file overwrites (not merges with) previous
 func TestLoadLangFromToml(t *testing.T) {
 	dir := t.TempDir()
 	// Custom language to avoid mutating the package-level

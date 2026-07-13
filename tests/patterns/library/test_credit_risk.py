@@ -13,18 +13,19 @@ Covers:
 - get_metadata()
 - Edge cases: extreme leverage, correlation effects, rating migrations
 """
+
 from __future__ import annotations
 
 import sys
 from pathlib import Path
+
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 import numpy as np
 import pytest
 
-from src.patterns.library.credit_risk import CreditRiskModel, CreditRiskConfig
-
+from src.patterns.library.credit_risk import CreditRiskConfig, CreditRiskModel
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -43,10 +44,7 @@ class TestCreditRiskConfig:
 
     def test_custom_init(self):
         cfg = CreditRiskConfig(
-            n_obligors=200,
-            n_simulations=5000,
-            recovery_rate=0.5,
-            correlation=0.3
+            n_obligors=200, n_simulations=5000, recovery_rate=0.5, correlation=0.3
         )
         assert cfg.n_obligors == 200
         assert cfg.n_simulations == 5000
@@ -84,18 +82,14 @@ class TestMertonModel:
     def test_safe_firm(self):
         model = CreditRiskModel()
         # Safe firm: high asset value relative to debt
-        result = model.merton_model(
-            V0=150, K=80, sigma_V=0.2, r=0.05, T=1.0
-        )
+        result = model.merton_model(V0=150, K=80, sigma_V=0.2, r=0.05, T=1.0)
         assert result["distance_to_default"] > 2.0
         assert result["default_probability"] < 0.05
 
     def test_risky_firm(self):
         model = CreditRiskModel()
         # Risky firm: low asset value, high volatility
-        result = model.merton_model(
-            V0=90, K=80, sigma_V=0.4, r=0.05, T=1.0
-        )
+        result = model.merton_model(V0=90, K=80, sigma_V=0.4, r=0.05, T=1.0)
         assert result["distance_to_default"] < 1.0
         assert result["default_probability"] > 0.1
 
@@ -193,14 +187,14 @@ class TestGaussianCopula:
         exposures = np.ones(100) * 1000
         default_probs = np.ones(100) * 0.05
 
-        model_low = CreditRiskModel(CreditRiskConfig(
-            correlation=0.1, n_obligors=100, n_simulations=2000
-        ))
+        model_low = CreditRiskModel(
+            CreditRiskConfig(correlation=0.1, n_obligors=100, n_simulations=2000)
+        )
         result_low = model_low.gaussian_copula_simulation(exposures, default_probs)
 
-        model_high = CreditRiskModel(CreditRiskConfig(
-            correlation=0.5, n_obligors=100, n_simulations=2000
-        ))
+        model_high = CreditRiskModel(
+            CreditRiskConfig(correlation=0.5, n_obligors=100, n_simulations=2000)
+        )
         result_high = model_high.gaussian_copula_simulation(exposures, default_probs)
 
         assert result_high["var"][0.99] > result_low["var"][0.99]

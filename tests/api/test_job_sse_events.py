@@ -1,4 +1,5 @@
 """Tests for typed SSE job event queue (TUI v9 contract)."""
+
 from __future__ import annotations
 
 import pytest
@@ -33,7 +34,9 @@ async def test_drain_events_incremental():
     store = JobStore()
     job = await store.create("flash", {"question": "why?"})
     await store.push_event(job.job_id, "log", {"type": "log", "status": "queued"})
-    await store.push_event(job.job_id, "phase_progress", {"type": "phase_progress", "phase": "B: Search"})
+    await store.push_event(
+        job.job_id, "phase_progress", {"type": "phase_progress", "phase": "B: Search"}
+    )
     first = await store.drain_events(job.job_id, 0)
     assert len(first) == 2
     second = await store.drain_events(job.job_id, first[-1].seq)

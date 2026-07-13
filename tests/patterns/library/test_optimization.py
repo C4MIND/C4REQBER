@@ -8,24 +8,25 @@ This file adds additional coverage for:
 - Additional error handling paths
 - Config edge cases
 """
+
 from __future__ import annotations
 
 import sys
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 import numpy as np
 import pytest
 
+from src.patterns.core import Hypothesis, SimulationStatus
 from src.patterns.library.optimization import (
     HAS_CVXPY,
     LinearProgrammingPattern,
     OptimizationType,
 )
-from src.patterns.core import Hypothesis, SimulationStatus
-
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -121,9 +122,13 @@ class TestMockedHeavyComputations:
 
         with patch("src.patterns.library.optimization.cp.Variable", return_value=mock_x):
             with patch("src.patterns.library.optimization.cp.Minimize"):
-                with patch("src.patterns.library.optimization.cp.Problem", return_value=mock_problem):
+                with patch(
+                    "src.patterns.library.optimization.cp.Problem", return_value=mock_problem
+                ):
                     with patch("src.patterns.library.optimization.cp.quad_form"):
-                        with patch("src.patterns.library.optimization.cp.sum", return_value=mock_sum_result):
+                        with patch(
+                            "src.patterns.library.optimization.cp.sum", return_value=mock_sum_result
+                        ):
                             result = await pattern._solve_quadratic(h, config)
                             assert result["metrics"]["optimal_value"] == 1.5
 
@@ -158,7 +163,9 @@ class TestAdditionalErrorHandling:
         h = Hypothesis(parameters={})
         config = {"optimization_type": "linear", "num_variables": 3, "num_constraints": 5}
 
-        with patch("src.patterns.library.optimization.linprog", side_effect=MemoryError("out of memory")):
+        with patch(
+            "src.patterns.library.optimization.linprog", side_effect=MemoryError("out of memory")
+        ):
             result = await pattern.run(h, config)
             assert result.status == SimulationStatus.FAILED
             assert "out of memory" in result.error_message

@@ -1,11 +1,11 @@
 """
 Tests for surface_water pattern module.
 """
+
 import numpy as np
 import pytest
 
 from src.patterns.library.surface_water import SurfaceWaterConfig, SurfaceWaterPattern
-
 
 
 class TestConfig:

@@ -10,19 +10,20 @@ Covers:
 - run() async integration
 - Edge cases: single echelon, extreme demand
 """
+
 from __future__ import annotations
 
 import sys
 from pathlib import Path
+
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 import numpy as np
 import pytest
 
-from src.patterns.library.supply_chain import SupplyChainPattern
 from src.patterns.core import Hypothesis, SimulationStatus
-
+from src.patterns.library.supply_chain import SupplyChainPattern
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -180,13 +181,16 @@ class TestRun:
     async def test_run_with_config(self):
         pattern = SupplyChainPattern()
         h = Hypothesis(title="Supply chain", description="inventory optimization")
-        result = await pattern.run(h, {
-            "num_echelons": 3,
-            "periods": 50,
-            "demand_mean": 200.0,
-            "demand_std": 30.0,
-            "lead_time": 3,
-        })
+        result = await pattern.run(
+            h,
+            {
+                "num_echelons": 3,
+                "periods": 50,
+                "demand_mean": 200.0,
+                "demand_std": 30.0,
+                "lead_time": 3,
+            },
+        )
         assert result.status == SimulationStatus.COMPLETED
 
     async def test_metrics_present(self):

@@ -16,10 +16,12 @@ Covers:
 - get_metadata()
 - Edge cases: different algorithms, convergence, stability
 """
+
 from __future__ import annotations
 
 import sys
 from pathlib import Path
+
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
@@ -27,10 +29,9 @@ import numpy as np
 import pytest
 
 from src.patterns.library.adaptive_filter import (
-
-    AdaptiveFilterPattern,
-    AdaptiveFilterConfig,
     AdaptiveAlgorithm,
+    AdaptiveFilterConfig,
+    AdaptiveFilterPattern,
 )
 
 
@@ -58,10 +59,7 @@ class TestAdaptiveFilterConfig:
 
     def test_custom_init(self):
         cfg = AdaptiveFilterConfig(
-            filter_order=16,
-            algorithm=AdaptiveAlgorithm.RLS,
-            mu=0.05,
-            n_samples=5000
+            filter_order=16, algorithm=AdaptiveAlgorithm.RLS, mu=0.05, n_samples=5000
         )
         assert cfg.filter_order == 16
         assert cfg.algorithm == AdaptiveAlgorithm.RLS
@@ -69,11 +67,7 @@ class TestAdaptiveFilterConfig:
         assert cfg.n_samples == 5000
 
     def test_rls_params(self):
-        cfg = AdaptiveFilterConfig(
-            algorithm=AdaptiveAlgorithm.RLS,
-            delta=0.5,
-            lambda_factor=0.95
-        )
+        cfg = AdaptiveFilterConfig(algorithm=AdaptiveAlgorithm.RLS, delta=0.5, lambda_factor=0.95)
         assert cfg.delta == 0.5
         assert cfg.lambda_factor == 0.95
 
@@ -117,11 +111,7 @@ class TestInitializeFilter:
 
     def test_system_id_mode_custom(self):
         unknown = np.array([0.5, -0.3, 0.2, -0.1])
-        cfg = AdaptiveFilterConfig(
-            filter_order=4,
-            sys_id_mode=True,
-            unknown_system=unknown
-        )
+        cfg = AdaptiveFilterConfig(filter_order=4, sys_id_mode=True, unknown_system=unknown)
         pattern = AdaptiveFilterPattern(cfg)
         assert np.allclose(pattern.unknown_system, unknown)
 
@@ -154,8 +144,8 @@ class TestGenerateInputSignal:
         x = pattern._generate_input_signal()
         # Compute autocorrelation
         x_centered = x - np.mean(x)
-        autocorr = np.correlate(x_centered, x_centered, mode='full')
-        autocorr = autocorr[len(autocorr)//2:]
+        autocorr = np.correlate(x_centered, x_centered, mode="full")
+        autocorr = autocorr[len(autocorr) // 2 :]
         autocorr = autocorr / autocorr[0]
         # AR(1) with coeff 0.8 should have lag-1 autocorr ~0.8
         assert autocorr[1] > 0.5  # Should be positively correlated
@@ -192,8 +182,8 @@ class TestGenerateDesiredSignal:
         x = pattern_low._generate_input_signal()
         d_low, _ = pattern_low._generate_desired_signal(x)
 
-        noise_high = np.mean((d_high - d_clean)**2)
-        noise_low = np.mean((d_low - d_clean)**2)
+        noise_high = np.mean((d_high - d_clean) ** 2)
+        noise_low = np.mean((d_low - d_clean) ** 2)
         assert noise_high < noise_low
 
 
@@ -275,7 +265,7 @@ class TestComputeLearningCurve:
         pattern = AdaptiveFilterPattern()
         pattern.error_history = []
         curve = pattern._compute_learning_curve()
-        assert len(curve) == 0 or (len(curve) == 1 and (curve[0] == 0.0 or str(curve[0]) == 'nan'))
+        assert len(curve) == 0 or (len(curve) == 1 and (curve[0] == 0.0 or str(curve[0]) == "nan"))
 
     def test_learning_curve_smoothing(self):
         pattern = AdaptiveFilterPattern()
@@ -294,11 +284,7 @@ class TestComputeLearningCurve:
 
 class TestRun:
     def test_run_lms(self):
-        cfg = AdaptiveFilterConfig(
-            algorithm=AdaptiveAlgorithm.LMS,
-            filter_order=8,
-            n_samples=500
-        )
+        cfg = AdaptiveFilterConfig(algorithm=AdaptiveAlgorithm.LMS, filter_order=8, n_samples=500)
         pattern = AdaptiveFilterPattern(cfg)
         result = pattern.run()
         assert result["algorithm"] == "lms"
@@ -306,30 +292,20 @@ class TestRun:
         assert "final_weights" in result
 
     def test_run_nlms(self):
-        cfg = AdaptiveFilterConfig(
-            algorithm=AdaptiveAlgorithm.NLMS,
-            filter_order=8,
-            n_samples=500
-        )
+        cfg = AdaptiveFilterConfig(algorithm=AdaptiveAlgorithm.NLMS, filter_order=8, n_samples=500)
         pattern = AdaptiveFilterPattern(cfg)
         result = pattern.run()
         assert result["algorithm"] == "nlms"
 
     def test_run_rls(self):
-        cfg = AdaptiveFilterConfig(
-            algorithm=AdaptiveAlgorithm.RLS,
-            filter_order=8,
-            n_samples=500
-        )
+        cfg = AdaptiveFilterConfig(algorithm=AdaptiveAlgorithm.RLS, filter_order=8, n_samples=500)
         pattern = AdaptiveFilterPattern(cfg)
         result = pattern.run()
         assert result["algorithm"] == "rls"
 
     def test_run_rls_forgetting(self):
         cfg = AdaptiveFilterConfig(
-            algorithm=AdaptiveAlgorithm.RLS_FORGETTING,
-            filter_order=8,
-            n_samples=500
+            algorithm=AdaptiveAlgorithm.RLS_FORGETTING, filter_order=8, n_samples=500
         )
         pattern = AdaptiveFilterPattern(cfg)
         result = pattern.run()
@@ -346,7 +322,7 @@ class TestRun:
             mu=0.01,
             unknown_system=unknown,
             sys_id_mode=True,
-            snr_db=40
+            snr_db=40,
         )
         pattern = AdaptiveFilterPattern(cfg)
         result = pattern.run()
@@ -355,11 +331,7 @@ class TestRun:
 
     def test_mse_decreases(self):
         """MSE should generally decrease during adaptation"""
-        cfg = AdaptiveFilterConfig(
-            filter_order=8,
-            n_samples=2000,
-            output_interval=10
-        )
+        cfg = AdaptiveFilterConfig(filter_order=8, n_samples=2000, output_interval=10)
         pattern = AdaptiveFilterPattern(cfg)
         result = pattern.run()
         # Early MSE should be higher than final
@@ -385,9 +357,18 @@ class TestFormatOutput:
         pattern = AdaptiveFilterPattern(cfg)
         result = pattern.run()
         required_keys = [
-            "algorithm", "filter_order", "final_weights", "final_mse",
-            "noise_power", "misadjustment", "error_history", "mse_history",
-            "learning_curve", "mean_output", "output_variance", "config"
+            "algorithm",
+            "filter_order",
+            "final_weights",
+            "final_mse",
+            "noise_power",
+            "misadjustment",
+            "error_history",
+            "mse_history",
+            "learning_curve",
+            "mean_output",
+            "output_variance",
+            "config",
         ]
         for key in required_keys:
             assert key in result
@@ -395,10 +376,7 @@ class TestFormatOutput:
     def test_system_id_output(self):
         unknown = np.array([0.5, 0.3, 0.1])
         cfg = AdaptiveFilterConfig(
-            filter_order=3,
-            n_samples=500,
-            unknown_system=unknown,
-            sys_id_mode=True
+            filter_order=3, n_samples=500, unknown_system=unknown, sys_id_mode=True
         )
         pattern = AdaptiveFilterPattern(cfg)
         result = pattern.run()
@@ -444,11 +422,7 @@ class TestEdgeCases:
 
     def test_high_snr(self):
         """Very high SNR should result in low MSE"""
-        cfg = AdaptiveFilterConfig(
-            filter_order=8,
-            n_samples=1000,
-            snr_db=60
-        )
+        cfg = AdaptiveFilterConfig(filter_order=8, n_samples=1000, snr_db=60)
         pattern = AdaptiveFilterPattern(cfg)
         result = pattern.run()
         # MSE should be close to noise power (very small)
@@ -456,11 +430,7 @@ class TestEdgeCases:
 
     def test_low_snr(self):
         """Low SNR should still complete"""
-        cfg = AdaptiveFilterConfig(
-            filter_order=8,
-            n_samples=500,
-            snr_db=5
-        )
+        cfg = AdaptiveFilterConfig(filter_order=8, n_samples=500, snr_db=5)
         pattern = AdaptiveFilterPattern(cfg)
         result = pattern.run()
         assert "final_mse" in result

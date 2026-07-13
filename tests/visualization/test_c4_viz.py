@@ -1,8 +1,9 @@
 """Tests for src/visualization/c4_viz.py"""
+
 from __future__ import annotations
-from pathlib import Path
 
 import sys
+from pathlib import Path
 from unittest.mock import patch
 
 
@@ -187,7 +188,9 @@ class TestDrawOperatorFrequencies:
     def test_max_15_operators(self, viz):
         paths = [[f"op{i}" for i in range(20)] * 2]
         output = viz.draw_operator_frequencies(paths)
-        op_count = sum(1 for line in output.split("\n") if line.strip().startswith("op") and "│" in line)
+        op_count = sum(
+            1 for line in output.split("\n") if line.strip().startswith("op") and "│" in line
+        )
         assert op_count <= 15
 
 

@@ -1,7 +1,9 @@
 """Tests for centralized API error handling."""
+
 from __future__ import annotations
 
 import os
+
 
 # Audit 2026-06-22 (Chunk 5 fix-up): the dev-mode detail leak requires DEV_MODE=1
 # to be set. Without this, the handler returns detail={} in production-like
@@ -12,6 +14,7 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from src.api.errors import C4APIError, NotFoundError, ValidationError, register_error_handlers
+
 
 app = FastAPI()
 register_error_handlers(app)

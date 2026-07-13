@@ -3,6 +3,7 @@ Security Test: Zero eval() / exec() in production code.
 
 CRITICAL GOAL: Zero eval() / exec() in production code.
 """
+
 from __future__ import annotations
 
 import ast
@@ -27,10 +28,12 @@ def _find_python_files(root: Path) -> list[Path]:
 
 # Known legitimate eval/exec uses in the codebase.
 # These are vetted exceptions — do NOT add new entries without code review.
-KNOWN_EXCEPTIONS = frozenset({
-    Path(__file__).resolve().parent.parent.parent / "src" / "skills" / "calculator.py",
-    Path(__file__).resolve().parent.parent.parent / "src" / "simulations" / "boolnet_bridge.py",
-})
+KNOWN_EXCEPTIONS = frozenset(
+    {
+        Path(__file__).resolve().parent.parent.parent / "src" / "skills" / "calculator.py",
+        Path(__file__).resolve().parent.parent.parent / "src" / "simulations" / "boolnet_bridge.py",
+    }
+)
 
 
 def _contains_eval_or_exec(file_path: Path) -> tuple[bool, list[str]]:
@@ -39,7 +42,7 @@ def _contains_eval_or_exec(file_path: Path) -> tuple[bool, list[str]]:
         return False, []
 
     try:
-        with open(file_path, "r", encoding="utf-8") as f:
+        with open(file_path, encoding="utf-8") as f:
             source = f.read()
     except (OSError, UnicodeDecodeError):
         return False, []
@@ -70,8 +73,7 @@ class TestNoEvalExec:
 
         if all_issues:
             pytest.fail(
-                f"Found {len(all_issues)} eval()/exec() call(s) in src/:\n" +
-                "\n".join(all_issues)
+                f"Found {len(all_issues)} eval()/exec() call(s) in src/:\n" + "\n".join(all_issues)
             )
 
     def test_grep_confirms_zero_eval_exec(self) -> None:
@@ -109,6 +111,6 @@ class TestNoEvalExec:
                 continue
             bad_lines.append(line)
 
-        assert len(bad_lines) == 0, (
-            f"ripgrep found potential eval/exec usage:\n" + "\n".join(bad_lines)
+        assert len(bad_lines) == 0, "ripgrep found potential eval/exec usage:\n" + "\n".join(
+            bad_lines
         )

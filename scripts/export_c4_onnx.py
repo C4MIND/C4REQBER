@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Export c4factory's best PyTorch model to ONNX for lightweight deployment.
 ============================================================================
@@ -75,7 +74,11 @@ def export_onnx(
     model.eval()
 
     # Save config for later loading
-    config = {"base_model": "microsoft/mdeberta-v3-base", "hidden_size": 768, "architecture": "C4ClassifierModel"}
+    config = {
+        "base_model": "microsoft/mdeberta-v3-base",
+        "hidden_size": 768,
+        "architecture": "C4ClassifierModel",
+    }
     with open(CONFIG_OUTPUT, "w") as f:
         json.dump(config, f, indent=2)
     logger.info(f"Saved config to {CONFIG_OUTPUT}")
@@ -124,7 +127,7 @@ def export_onnx(
         from onnxruntime.quantization import QuantType, quantize_dynamic
 
         quantized_path = ONNX_OUTPUT.with_suffix(".quantized.onnx")
-        logger.info(f"Applying INT8 dynamic quantization...")
+        logger.info("Applying INT8 dynamic quantization...")
 
         quantize_dynamic(
             model_input=str(ONNX_OUTPUT),
@@ -213,7 +216,9 @@ def verify_onnx(model_path: Path, num_samples: int = 5) -> None:
         onnx_pred = (int(onnx_t.argmax()), int(onnx_d.argmax()), int(onnx_i.argmax()))
 
         match = "✓" if pt_pred == onnx_pred else "✗"
-        logger.info(f"  {match} '{sentence[:50]}...' | PT:{pt_pred} ONNX:{onnx_pred} | max_diff={diff:.6f}")
+        logger.info(
+            f"  {match} '{sentence[:50]}...' | PT:{pt_pred} ONNX:{onnx_pred} | max_diff={diff:.6f}"
+        )
 
     logger.info(f"Maximum difference across all samples: {max_diff:.6f}")
     if max_diff > 1e-4:

@@ -614,6 +614,8 @@ async def run_relevant_simulation(
     job_id: str | None = None,
 ) -> dict[str, Any]:
     try:
+        import asyncio
+
         from src.api.v8_routers.discovery.jobs import get_job_store
         from src.simulations.domain_selector import get_domain_simulations
         from src.simulations.newton_bridge import NewtonBridge
@@ -637,14 +639,15 @@ async def run_relevant_simulation(
                     },
                 )
             try:
-                sim_result = newton.run_simulation(
+                sim_result = await asyncio.to_thread(
+                    newton.run_simulation,
                     {
                         "pattern_id": pid,
                         "domain": domain,
                         "duration": 10.0,
                         "dt": 0.01,
                         "hypothesis": hypothesis.get("text", "")[:100],
-                    }
+                    },
                 )
                 status = sim_result.status if hasattr(sim_result, "status") else "completed"
                 results[pid] = {
@@ -938,11 +941,13 @@ def run_bayesian_model_averaging(
     try:
         from src.bayesian.bma import bayesian_model_averaging
 
+        if monte_carlo.get("p_value") is None:
+            return {
+                "status": "skipped",
+                "reason": "No empirical Monte Carlo result is available",
+            }
         models: list[tuple[str, float, float]] = []
-        if monte_carlo.get("p_value") is not None:
-            models.append(("monte_carlo", 0.5, float(monte_carlo.get("p_value", 0.05))))
-        models.append(("prior", 0.3, 0.5))
-        models.append(("prior_alt", 0.2, 0.5))
+        models.append(("monte_carlo", 1.0, float(monte_carlo["p_value"])))
         result = bayesian_model_averaging(models)
         return {
             "weighted_prediction": round(result.weighted_prediction, 4),
@@ -985,13 +990,16 @@ def run_bayesian_conjugate_update(monte_carlo: dict[str, Any]) -> dict[str, Any]
 
         from src.bayesian.core import normal_normal
 
-        # Use actual simulation data if available; fall back to synthetic only when necessary
+        # Bayesian updates require observed data; inventing samples would turn a
+        # missing experiment into false evidence.
         raw_data = monte_carlo.get("samples") or monte_carlo.get("data")
-        if raw_data is not None:
-            data = np.array(raw_data, dtype=np.float64)
-        else:
-            rng = np.random.default_rng()
-            data = np.array(rng.normal(0.65, 0.12, 20), dtype=np.float64)
+        if raw_data is None:
+            return {
+                "status": "skipped",
+                "reason": "No observed samples are available for Bayesian update",
+                "posterior_mean": None,
+            }
+        data = np.array(raw_data, dtype=np.float64)
         if len(data) == 0:
             return {"error": "No data available for Bayesian update", "posterior_mean": None}
         result = normal_normal(
@@ -1001,7 +1009,7 @@ def run_bayesian_conjugate_update(monte_carlo: dict[str, Any]) -> dict[str, Any]
             "posterior_mean": round(result.mu_post, 4),
             "posterior_precision": round(result.tau_post, 4),
             "credible_interval": tuple(round(v, 4) for v in result.credible_interval),
-            "note": "using synthetic fallback" if raw_data is None else "using observed data",
+            "note": "using observed data",
         }
     except Exception as e:
         logger.warning("Bayesian conjugate update: %s", e)
@@ -1128,7 +1136,7 @@ def generate_paper(
         )
         year = paper.get("year", 2025)
         doi = _escape_latex(paper.get("doi", ""))
-        key = f"ref{i+1}"
+        key = f"ref{i + 1}"
         entry = f"@article{{{key},\n  author = {{{authors_str}}},\n  title = {{{title}}}"
         entry += f",\n  year = {{{year}}}"
         if doi:
@@ -1289,7 +1297,7 @@ async def _refine_hypothesis_llm(
     max_iterations,
     competing_hypotheses=None,
 ) -> dict[str, Any]:
-    closest_titles = "\n".join(f"- {p.get('title','')[:120]}" for p in (top_papers or [])[:8])
+    closest_titles = "\n".join(f"- {p.get('title', '')[:120]}" for p in (top_papers or [])[:8])
     abort_text = "\n".join(f"- {r}" for r in abort_reasons[:3])
     competing_framings_text = (
         "None"
@@ -1378,7 +1386,7 @@ def _build_dissertation(discovery: dict, attempts: list) -> dict:
     # Format BibTeX entries for export
     bibtex_entries = []
     for i, p in enumerate(papers_list_raw[:25]):
-        ref_id = f"ref{i+1:04d}"
+        ref_id = f"ref{i + 1:04d}"
         authors = p.get("authors", p.get("author", "Unknown"))
         if isinstance(authors, list):
             author_str = " and ".join(a.get("name", "Unknown") for a in authors[:5])
@@ -1425,7 +1433,7 @@ def _build_dissertation(discovery: dict, attempts: list) -> dict:
         top_cs = discovery.get("contradiction_mining", {}).get("top_contradictions", [])
         for j, c in enumerate(top_cs[:2], 1):
             lit_review_parts.append(
-                f"Contradiction {j}: \"{c.get('claim_a','')[:100]}\" vs \"{c.get('claim_b','')[:100]}\" (score: {c.get('score',0):.2f})."
+                f'Contradiction {j}: "{c.get("claim_a", "")[:100]}" vs "{c.get("claim_b", "")[:100]}" (score: {c.get("score", 0):.2f}).'
             )
     lit_review = "\n".join(lit_review_parts)
 
@@ -1475,7 +1483,7 @@ def _build_dissertation(discovery: dict, attempts: list) -> dict:
     if output_mode == "explain":
         contradictions_top = discovery.get("contradiction_mining", {}).get("top_contradictions", [])
         "\n".join(
-            f"  A: {c.get('claim_a','')[:80]}\n  B: {c.get('claim_b','')[:80]}\n  Score: {c.get('score',0)}"
+            f"  A: {c.get('claim_a', '')[:80]}\n  B: {c.get('claim_b', '')[:80]}\n  Score: {c.get('score', 0)}"
             for c in contradictions_top[:2]
         )
         tech_appendix = f"""
@@ -1484,12 +1492,12 @@ def _build_dissertation(discovery: dict, attempts: list) -> dict:
 ### Knowledge Acquisition
 - Sources queried: {sources}
 - Papers retrieved: {papers_found}
-- Citation chasing: {discovery.get('_citation_chase_result', {}).get('expanded_count', 0)} papers expanded
+- Citation chasing: {discovery.get("_citation_chase_result", {}).get("expanded_count", 0)} papers expanded
 
 ### Analysis
 - Contradictions found: {contradictions}
-- Gap miner score: {discovery.get('gap_miner', {}).get('discovery_potential', 0):.2f}
-- Isomorphisms detected: {discovery.get('isomorphisms', {}).get('found', 0)}
+- Gap miner score: {discovery.get("gap_miner", {}).get("discovery_potential", 0):.2f}
+- Isomorphisms detected: {discovery.get("isomorphisms", {}).get("found", 0)}
 
 ### Cognitive Operators
 Pattern-based cognitive operators (Expand, Contract, Shift, Resolve, Merge,

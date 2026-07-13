@@ -17,18 +17,19 @@ Covers:
 - get_metadata()
 - Edge cases: equal forces, reinforcement, early termination
 """
+
 from __future__ import annotations
 
 import sys
 from pathlib import Path
+
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 import numpy as np
 import pytest
 
-from src.patterns.library.conflict import ConflictPattern, ConflictConfig, ConflictModel
-
+from src.patterns.library.conflict import ConflictConfig, ConflictModel, ConflictPattern
 
 
 # ═══════════════════════════════════════════════════════════════════

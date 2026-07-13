@@ -17,6 +17,7 @@ the net must outlive it.
 Injection seam: ``executor._get_step_fn`` (pre-P2-B). When P2-B replaces the
 dispatch, repoint the stub here to the new seam; the ASSERTIONS stay fixed.
 """
+
 from __future__ import annotations
 
 from types import SimpleNamespace
@@ -56,9 +57,17 @@ def _make_fake_pipeline() -> SimpleNamespace:
     # collaborators referenced by STEP_PLAN build_args — values are inert
     # sentinels because the steps themselves are stubbed out.
     for attr in (
-        "impact", "prior_art", "multi_searcher", "gap_analyzer", "quality_gates",
-        "mp_rotation", "mp_llm_generator", "provider_router", "qzrf",
-        "transformer", "memory",
+        "impact",
+        "prior_art",
+        "multi_searcher",
+        "gap_analyzer",
+        "quality_gates",
+        "mp_rotation",
+        "mp_llm_generator",
+        "provider_router",
+        "qzrf",
+        "transformer",
+        "memory",
     ):
         setattr(p, attr, object())
     p._cost_tracker = None
@@ -93,8 +102,11 @@ class _FakeStep:
 
 
 def _install_step_stubs(
-    monkeypatch, recorder: list[str], *,
-    prior_art_conf: float = 0.3, synthesis_confidence: float = 0.8,
+    monkeypatch,
+    recorder: list[str],
+    *,
+    prior_art_conf: float = 0.3,
+    synthesis_confidence: float = 0.8,
 ) -> None:
     """Swap every step's ``make`` (and the inline plugin/sim classes) for fakes.
 
@@ -111,18 +123,24 @@ def _install_step_stubs(
         else:
             extra = None
         monkeypatch.setitem(
-            spec, "make",
-            (lambda st, ex: (lambda p: _FakeStep(st, recorder, extra=ex)))(stage, extra),
+            spec,
+            "make",
+            (lambda st, ex: lambda p: _FakeStep(st, recorder, extra=ex))(stage, extra),
         )
 
     # inline special-branch classes (plugins before synthesis, simulation post-loop)
     monkeypatch.setattr(
-        ex_mod, "PluginExecutionStep",
-        lambda: _FakeStep(PipelineStage.PLUGIN_EXECUTION, recorder,
-                          extra={"plugin_results": [{"plugin": "p1", "ok": True}]}),
+        ex_mod,
+        "PluginExecutionStep",
+        lambda: _FakeStep(
+            PipelineStage.PLUGIN_EXECUTION,
+            recorder,
+            extra={"plugin_results": [{"plugin": "p1", "ok": True}]},
+        ),
     )
     monkeypatch.setattr(
-        ex_mod, "SimulationStep",
+        ex_mod,
+        "SimulationStep",
         lambda: _FakeStep(PipelineStage.SIMULATION, recorder, extra={"pattern_results": []}),
     )
 
@@ -138,9 +156,18 @@ def _completed_stages(events: list[dict]) -> list[str]:
 
 # expected step_complete stage order (LITERAL — must outlive STEP_PLAN's deletion)
 _FULL_ORDER = [
-    "impact_identify", "prior_art", "gap_analysis", "quality_gate", "reality_check",
-    "c4_fingerprint", "cross_domain_transfer", "mp_rotation", "qzrf_select",
-    "isomorphism_search", "synthesis", "validation",
+    "impact_identify",
+    "prior_art",
+    "gap_analysis",
+    "quality_gate",
+    "reality_check",
+    "c4_fingerprint",
+    "cross_domain_transfer",
+    "mp_rotation",
+    "qzrf_select",
+    "isomorphism_search",
+    "synthesis",
+    "validation",
 ]
 _TURBO_ORDER = [s for s in _FULL_ORDER if s != "validation"]  # turbo skips s9
 
@@ -175,11 +202,11 @@ async def test_on_complete_side_effects_populate_result(monkeypatch):
     p = _make_fake_pipeline()
     await _drive(p, "autopilot")
     r = p._last_result
-    assert r.qzrf_recommendations == ["op-a", "op-b"]   # _on_s5
-    assert r.isomorphism_found is True                   # _on_s6
-    assert r.prior_art_summary == "REC"                  # _on_s2
-    assert r.mp_perspectives == []                       # _on_s4
-    assert r.c4_path == []                               # finalize via c4_space
+    assert r.qzrf_recommendations == ["op-a", "op-b"]  # _on_s5
+    assert r.isomorphism_found is True  # _on_s6
+    assert r.prior_art_summary == "REC"  # _on_s2
+    assert r.mp_perspectives == []  # _on_s4
+    assert r.c4_path == []  # finalize via c4_space
 
 
 @pytest.mark.asyncio
@@ -191,7 +218,11 @@ async def test_high_confidence_prior_art_early_exits(monkeypatch):
 
     # stops right after reality_check (s2d); synthesis/validation never run
     assert _completed_stages(events) == [
-        "impact_identify", "prior_art", "gap_analysis", "quality_gate", "reality_check",
+        "impact_identify",
+        "prior_art",
+        "gap_analysis",
+        "quality_gate",
+        "reality_check",
     ]
     assert events[-1]["event"] == "complete"
     assert "synthesis" not in rec
@@ -231,6 +262,7 @@ async def test_selected_pattern_runs_simulation_after_loop(monkeypatch):
 @pytest.mark.asyncio
 async def test_deep_work_adds_formal_verification_and_theorem_export(monkeypatch):
     rec: list[str] = []
+    proof_claims: list[str] = []
     _install_step_stubs(monkeypatch, rec)
 
     # deep-work calls the real LLMProver — stub it to keep this fast & offline.
@@ -238,18 +270,21 @@ async def test_deep_work_adds_formal_verification_and_theorem_export(monkeypatch
         proof = "theorem stub"
 
     class _FakeProver:
-        async def prove(self, *a, **k):  # noqa: ANN002, ANN003
+        async def prove(self, claim, *a, **k):  # noqa: ANN001, ANN002, ANN003
+            proof_claims.append(claim)
             return _FakeProof()
 
     import src.verification.llm_prover as prover_mod
+
     monkeypatch.setattr(prover_mod, "LLMProver", _FakeProver)
 
     events = await _drive(_make_fake_pipeline(), "deep-work")
     stages = [e.get("stage") for e in events]
-    assert "validation" in stages                 # deep-work does NOT skip s9
+    assert "validation" in stages  # deep-work does NOT skip s9
     assert "formal_verification" in stages
     assert "theorem_export" in stages
     assert stages.index("formal_verification") > stages.index("synthesis")
+    assert proof_claims == ["SOL"]
 
 
 # ── observer O₂ low-confidence re-synthesis (self-review: the one edited path
@@ -304,7 +339,8 @@ async def test_o2_refinement_keeps_the_better_synthesis(monkeypatch):
             rec.append("synthesis")
             conf = 0.5 if calls["n"] == 1 else 0.9  # refinement beats the first pass
             return PipelineStepResult(
-                stage=PipelineStage.SYNTHESIS, status="completed",
+                stage=PipelineStage.SYNTHESIS,
+                status="completed",
                 output_data={"solution": f"SOL{calls['n']}", "confidence": conf},
             )
 

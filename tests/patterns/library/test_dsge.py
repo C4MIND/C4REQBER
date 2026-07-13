@@ -11,19 +11,20 @@ Covers:
 - run() async integration
 - Edge cases: extreme parameters, different model types
 """
+
 from __future__ import annotations
 
 import sys
 from pathlib import Path
+
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 import numpy as np
 import pytest
 
-from src.patterns.library.dsge import DSGEPattern
 from src.patterns.core import Hypothesis, SimulationStatus
-
+from src.patterns.library.dsge import DSGEPattern
 
 
 # ═══════════════════════════════════════════════════════════════════

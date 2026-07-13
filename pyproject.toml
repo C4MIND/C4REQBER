@@ -13,7 +13,7 @@ dependencies = [
     "openai>=1.0.0",
     "tenacity>=8.0.0",
     "anthropic",
-    "pyjwt",
+    "pyjwt>=2.13.0",
     "bcrypt",
     "cachetools>=5.0.0",
     "prompt-toolkit>=3.0.0",
@@ -22,10 +22,10 @@ dependencies = [
     "fastapi",
     "uvicorn",
     "pydantic>=2.0.0",
-    "pydantic-settings",
+    "pydantic-settings>=2.14.2",
     "rich>=13.0.0",
     "textual>=0.40.0",
-    "typer[all]>=0.9.0",
+    "typer>=0.9.0",
     "click",
     "jinja2",
     "markdown",
@@ -36,10 +36,19 @@ dependencies = [
     "mcp",
     "aiofiles",
     "beautifulsoup4",
+    "feedparser>=6.0.0",
+    "biopython>=1.81",
     "python-dotenv>=1.0.0",
+    "python-multipart>=0.0.31",
     "numpy>=1.24.0",
+    "pandas>=2.0.0",
+    "scipy>=1.10.0",
     "scikit-learn>=1.3.0",
     "networkx>=3.0",
+    "z3-solver>=4.16.0.0",
+    "cryptography>=48.0.1",
+    "wasmtime>=14.0.0",
+    "pydantic-ai>=0.8.0,<2.0.0",
     "prometheus-client>=0.25.0",
     "redis>=5.0.0",
     "asyncpg",
@@ -50,22 +59,10 @@ dependencies = [
 
 [project.optional-dependencies]
 science = [
-    "numpy>=1.24.0",
-    "pandas>=2.0.0",
-    "scipy>=1.10.0",
     "gensim",
     "matplotlib",
     "plotly",
-    "z3-solver>=4.16.0.0",
-    # Previously present in requirements.txt but missing here — pyproject is now
-    # a superset of the flat requirements manifest.
-    "networkx",
-    "scikit-learn",
-    "cryptography",
     "sentence-transformers",
-    "sqlalchemy",
-    "asyncpg",
-    "redis",
 ]
 dev = [
     "pytest",
@@ -77,7 +74,6 @@ dev = [
     "twine",
     "pre-commit",
     "detect-secrets",
-    "gitleaks",
 ]
 
 [tool.hatch.build.targets.wheel]
@@ -128,27 +124,23 @@ module = ["src.simulations.*"]
 ignore_errors = true
 
 [[tool.mypy.overrides]]
-module = ["src.api.v6_routers.*", "src.api.v7_routers.*"]
-ignore_errors = true
-
-[[tool.mypy.overrides]]
 module = ["src.mcp_server.*"]
 ignore_errors = true
 
 [[tool.mypy.overrides]]
-module = ["src.agents.soul", "src.agents.policy", "src.agents.qa", "src.agents.guardian", "src.agents.__init__"]
+module = ["src.agents.soul", "src.agents.policy", "src.agents.qa"]
 ignore_errors = false
 disallow_untyped_defs = true
 warn_return_any = true
 
 # Legacy agents — deferred type fix
 [[tool.mypy.overrides]]
-module = ["src.agents.functors.*", "src.agents.functor_orchestrator", "src.agents.discovery.*", "src.agents.discovery_agent", "src.agents.discovery_loop", "src.agents.mp_llm_generator", "src.agents.orchestrator", "src.agents.paradigm_coordinator", "src.agents.pipeline.*", "src.agents.synthesis_fallback"]
+module = ["src.agents.functors.*", "src.agents.functor_orchestrator", "src.agents.discovery.*", "src.agents.discovery_agent", "src.agents.discovery_loop", "src.agents.mp_llm_generator", "src.agents.orchestrator", "src.agents.paradigm_coordinator", "src.agents.pipeline.*"]
 ignore_errors = true
 
 [tool.ruff.lint.per-file-ignores]
 "archive/**" = ["ALL"]
-"tests/**" = ["E501", "UP017"]
+"tests/**" = ["E501", "E731", "UP017"]
 "src/llm/local_client.py" = ["E501"]
 "src/api/server.py" = ["E501"]
 "src/conceptual_blending/router.py" = ["B008"]

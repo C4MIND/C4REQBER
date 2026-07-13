@@ -8,7 +8,7 @@
 
 c4reqber (formerly TURBO-CDI) v5.4.0 is **BLAST** — Brain-like Adaptive System for Thought. A cognitive exoskeleton with a 4-mode pipeline system, terminal-first UI/UX, and formal C4-META architecture. **The UI/UX Polish + Code Quality Audit Release.**
 
-**Theory vs. Implementation:** The C4-META framework (27-state cognitive space Z₃³, Theorem 11) is a formal theory from the `adaptive-topology` research repository. c4reqber is the **production implementation** — Python-based, with 9,800+ tests, **9 real verification backends** (incl. CVC5, TLA+, Alloy), 51 knowledge sources, 21 MCP tools, and regression-gated quality gates.
+**Theory vs. Implementation:** The C4-META framework (27-state cognitive space Z₃³, Theorem 11) is a formal theory from the `adaptive-topology` research repository. c4reqber is the **production implementation** — Python-based, with 9,906 tests collected, **9 real verification backends** (incl. CVC5, TLA+, Alloy), 47 configured knowledge sources, 21 MCP tools, and regression-gated quality gates.
 
 **Whitepaper:** [WHITEPAPER.md](../WHITEPAPER.md) (EN) · [WHITEPAPER.ru.md](../WHITEPAPER.ru.md) (RU) · [VERIFICATION_BACKENDS.md](VERIFICATION_BACKENDS.md)
 
@@ -268,12 +268,12 @@ The verification system was refactored from a single `HybridVerifier` into a **6
 
 **Integration**: All 9 wrapped by `P6Adapter` → `BaseSourceAdapter` → `MultiSourceSearcher` with feature flags in `SOURCE_REGISTRY`.
 
-### Layer 5: LLM Layer (5 Auto-Detected Providers)
+### Layer 5: LLM Layer (11 Configured Providers)
 ```
-LLM Providers (auto-detected):
-├── Local: MLX-LM (Apple Silicon, $0/MTok), LM Studio (MLX acceleration), Ollama (cross-platform)
-├── Cloud: OpenRouter (primary, arbitrary model strings), DeepSeek (direct API)
-└── Fallback cascade: MLX → LM Studio → Ollama → OpenRouter → DeepSeek
+LLM providers (configured; availability is detected at runtime):
+├── Local: MLX-LM, LM Studio, Ollama
+├── Cloud: OpenRouter, XAI, Mistral, Moonshot, DeepSeek, Liquid, NVIDIA NIM, YandexGPT
+└── Routing: provider-specific clients plus local/cloud fallback chains
 ```
 
 **Arbitrary model strings supported**:
@@ -282,9 +282,9 @@ c4reqber chat --model "anthropic/claude-sonnet-4.6"
 c4reqber chat --model "qwen/qwen-2.5-72b-instruct"
 ```
 
-**Mock Provider**: `LLMProvider.MOCK = "mock"` for testing.
+**Routing sentinel:** `LLMProvider.AUTO` selects a provider; it is not counted as a provider.
 
-**Honest description:** LLM routing works. 5 providers are auto-detected on startup across macOS (M1-M4), Intel Mac, and Windows. OpenRouter is primary cloud provider; MLX-LM provides $0/MTok local inference on Apple Silicon. Quality of discovery is directly proportional to LLM capability. No LLM-agnostic guarantee of correctness.
+**Honest description:** 11 providers are configured across local and cloud routes; runtime availability depends on installed local servers and credentials. OpenRouter is the primary cloud route, and MLX-LM provides local Apple Silicon inference. Discovery quality remains model-dependent; there is no LLM-agnostic correctness guarantee.
 
 ### Layer 6: Pipeline Architecture (L1-L4 v5.3.0)
 ```
@@ -343,7 +343,7 @@ CLI Display Module (cli/display.py + terminal_/):
 | Tool | Description | Implementation | Status |
 |------|-------------|----------------|--------|
 | `c4_solve` | Run discovery pipeline (HIL) | `c4/engine.py` | ✅ Stable |
-| `c4_search` | Search 27 knowledge sources | `knowledge/multi_source.py` | ✅ Stable |
+| `c4_search` | Search 47 configured knowledge sources | `knowledge/multi_source.py` | ✅ Stable |
 | `c4_triz` | Resolve contradiction via TRIZ | `triz/principles.py` | ✅ Stable |
 | `c4_fingerprint` | Classify to C4 state (Z₃³) | `c4/engine.py` | ✅ Stable |
 | `c4_verify` | Verify formal proof (Z3/Lean4/Coq/Dafny/Agda/Hoare) | `verification/` | ✅ Stable |
@@ -551,7 +551,7 @@ Output with Cube-Mascot + Quality Report + Metrics
 
 ### v5.3.4 (Current — Critical Bug Fixes)
 
-**Date:** 2026-05-16  
+**Date:** 2026-05-16
 **Status:** ✅ Production
 
 **Critical Fixes (6):**

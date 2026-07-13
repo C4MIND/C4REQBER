@@ -1,7 +1,8 @@
 """C4REQBER CLI - Shared Typer app and Rich-UI design system.
 
-Synchronized with TUI v8 CyberpunkTheme for consistent visual language.
+Synchronized with the TUI v9 palette for consistent visual language.
 """
+
 from __future__ import annotations
 
 from typing import Any
@@ -25,15 +26,15 @@ app = typer.Typer(
 )
 console = Console()
 
-# ─── Cyberpunk color palette (synced with TUI v8) ──────────────────────────
+# ─── Cyberpunk color palette (synced with TUI v9) ──────────────────────────
 _COLORS = {
-    "primary": "#00FF41",    # Matrix Green
+    "primary": "#00FF41",  # Matrix Green
     "secondary": "#00D4FF",  # Cyber Cyan
-    "accent": "#FF006E",     # Neon Pink
-    "warning": "#FFB800",    # Amber
-    "danger": "#FF2A2A",     # Blood Red
-    "muted": "#6B7280",      # Steel Gray
-    "ghost": "#2A2A3E",      # Trace lines
+    "accent": "#FF006E",  # Neon Pink
+    "warning": "#FFB800",  # Amber
+    "danger": "#FF2A2A",  # Blood Red
+    "muted": "#6B7280",  # Steel Gray
+    "ghost": "#2A2A3E",  # Trace lines
     "white": "#FFFFFF",
 }
 
@@ -83,7 +84,7 @@ class DesignTokens:
 
 
 class StyledPanel:
-    """Rich panel wrapper synced with TUI v8 CyberpunkTheme."""
+    """Rich panel wrapper synced with the TUI v9 palette."""
 
     _TYPE_STYLES: dict[str, str] = {
         PanelType.INFO: _COLORS["secondary"],
@@ -133,7 +134,10 @@ class ProgressIndicator:
         return Progress(
             SpinnerColumn(style=Style(color=_COLORS["accent"])),
             TextColumn(f"[bold {_COLORS['primary']}]{description}[/bold {_COLORS['primary']}]"),
-            BarColumn(complete_style=Style(color=_COLORS["primary"]), finished_style=Style(color=_COLORS["accent"])),
+            BarColumn(
+                complete_style=Style(color=_COLORS["primary"]),
+                finished_style=Style(color=_COLORS["accent"]),
+            ),
             TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
             TimeRemainingColumn(),
             console=console,
@@ -154,7 +158,7 @@ class ProgressIndicator:
 
 
 class ResultDisplay:
-    """Rich result display helpers synced with TUI v8."""
+    """Rich result display helpers synced with TUI v9."""
 
     @staticmethod
     def discovery_summary(
@@ -166,7 +170,9 @@ class ResultDisplay:
         gaps: int | None = None,
         confidence: float | None = None,
     ) -> None:
-        table = Table(title="Discovery Summary", title_style=Style(color=_COLORS["accent"], bold=True))
+        table = Table(
+            title="Discovery Summary", title_style=Style(color=_COLORS["accent"], bold=True)
+        )
         table.add_column("Metric", style=Style(color=_COLORS["secondary"]))
         table.add_column("Value", style=Style(color=_COLORS["primary"]))
         table.add_row("Problem", problem[:60])
@@ -186,7 +192,13 @@ class ResultDisplay:
 
     @staticmethod
     def hypothesis_card(text: str, confidence: float, method: str, id: str | None = None) -> None:
-        color = _COLORS["primary"] if confidence > 0.7 else _COLORS["warning"] if confidence > 0.4 else _COLORS["danger"]
+        color = (
+            _COLORS["primary"]
+            if confidence > 0.7
+            else _COLORS["warning"]
+            if confidence > 0.4
+            else _COLORS["danger"]
+        )
         title = f"[bold {color}]💡 Hypothesis"
         if id:
             title += f" {id}"
@@ -210,8 +222,12 @@ class ResultDisplay:
         console.print(table)
 
     @staticmethod
-    def agent_result(role: str, output: str, confidence: float | None = None, execution_time: float | None = None) -> None:
-        color = _COLORS["secondary"] if confidence is None or confidence > 0.7 else _COLORS["warning"]
+    def agent_result(
+        role: str, output: str, confidence: float | None = None, execution_time: float | None = None
+    ) -> None:
+        color = (
+            _COLORS["secondary"] if confidence is None or confidence > 0.7 else _COLORS["warning"]
+        )
         title = f"[bold {color}]{ICONS.get('agent', '🤖')} {role}[/bold {color}]"
         content = output[:500]
         if execution_time is not None:
@@ -229,7 +245,9 @@ class StyledTable:
     """Rich table rendering helpers for CLI commands."""
 
     @staticmethod
-    def create(title: str, columns: list[dict[str, Any]] | list[str], rows: list[list[str]] | None = None) -> Table:
+    def create(
+        title: str, columns: list[dict[str, Any]] | list[str], rows: list[list[str]] | None = None
+    ) -> Table:
         """Create a Rich Table.
 
         Supports two column formats:
@@ -273,7 +291,7 @@ class StyledTable:
 
 
 class StatusIndicator:
-    """Status badge helpers synced with TUI v8."""
+    """Status badge helpers synced with TUI v9."""
 
     _STATUS_COLORS: dict[str, str] = {
         "success": _COLORS["primary"],
@@ -292,6 +310,11 @@ class StatusIndicator:
 
 
 def print_section_header(title: str, icon: str = "") -> None:
-    """Print a section header with optional icon, synced with TUI v8 style."""
+    """Print a section header with optional icon, synced with TUI v9 style."""
     console.print()
-    console.print(Rule(title=f"[bold {_COLORS['accent']}]{icon} {title}[/bold {_COLORS['accent']}]", style=Style(color=_COLORS["ghost"])))
+    console.print(
+        Rule(
+            title=f"[bold {_COLORS['accent']}]{icon} {title}[/bold {_COLORS['accent']}]",
+            style=Style(color=_COLORS["ghost"]),
+        )
+    )

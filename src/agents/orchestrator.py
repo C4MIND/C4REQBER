@@ -2,6 +2,7 @@
 C4REQBER: Enhanced Agent System
 Multi-agent orchestrator with MP rotation and C4 state tracking.
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -21,6 +22,7 @@ from src.metamodels.qzrf.operators import QzrfLibrary
 
 class AgentRole(Enum):
     """AgentRole."""
+
     ORCHESTRATOR = "orchestrator"
     DOMAIN = "domain"
     CRITIC = "critic"
@@ -132,9 +134,7 @@ class AgentOrchestrator:
         pipeline_result = await pipeline.solve(problem, mode, domain_hint, max_depth)
 
         # Convert pipeline result to AgentSessionResult for API compatibility
-        session_id = (
-            f"sess_{hashlib.md5(problem.encode()).hexdigest()[:8]}_{int(time.time())}"
-        )
+        session_id = f"sess_{hashlib.sha256(problem.encode()).hexdigest()[:8]}_{int(time.time())}"
 
         result = AgentSessionResult(
             session_id=session_id,

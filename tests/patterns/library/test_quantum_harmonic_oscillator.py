@@ -1,22 +1,23 @@
 """
 Tests for src/patterns/library/quantum_harmonic_oscillator.py
 """
+
 from __future__ import annotations
 
 import sys
 from pathlib import Path
+
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 import numpy as np
 import pytest
 
-from src.patterns.library.quantum_harmonic_oscillator import (
-    QuantumHarmonicOscillatorPattern,
-    QHOConfig,
-)
 from src.patterns.core import Hypothesis, SimulationStatus
-
+from src.patterns.library.quantum_harmonic_oscillator import (
+    QHOConfig,
+    QuantumHarmonicOscillatorPattern,
+)
 
 
 class TestQHOConfig:
@@ -121,7 +122,7 @@ class TestSimulateQHO:
         result = await pattern._simulate_qho()
         x = np.array(result["x"])
         dx = x[1] - x[0]
-        for i, prob in enumerate(result["probabilities"]):
+        for _i, prob in enumerate(result["probabilities"]):
             prob_arr = np.array(prob)
             integral = np.trapezoid(prob_arr, x)
             assert integral == pytest.approx(1.0, abs=0.05)

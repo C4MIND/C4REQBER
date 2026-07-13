@@ -3,8 +3,10 @@
 import numpy as np
 import pytest
 
-from src.patterns.library.cloud_microphysics import CloudMicrophysicsConfig, CloudMicrophysicsPattern
-
+from src.patterns.library.cloud_microphysics import (
+    CloudMicrophysicsConfig,
+    CloudMicrophysicsPattern,
+)
 
 
 class TestCloudMicrophysicsConfig:

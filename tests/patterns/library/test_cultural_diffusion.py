@@ -14,10 +14,12 @@ Covers:
 - get_metadata()
 - Edge cases: different grid sizes, mutation effects
 """
+
 from __future__ import annotations
 
 import sys
 from pathlib import Path
+
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
@@ -25,9 +27,8 @@ import numpy as np
 import pytest
 
 from src.patterns.library.cultural_diffusion import (
-
-    CulturalDiffusionPattern,
     CulturalDiffusionConfig,
+    CulturalDiffusionPattern,
 )
 
 
@@ -47,12 +48,7 @@ class TestCulturalDiffusionConfig:
         assert cfg.max_steps == 100000
 
     def test_custom_init(self):
-        cfg = CulturalDiffusionConfig(
-            n_agents=100,
-            n_features=3,
-            n_traits=5,
-            interaction_radius=2
-        )
+        cfg = CulturalDiffusionConfig(n_agents=100, n_features=3, n_traits=5, interaction_radius=2)
         assert cfg.n_agents == 100
         assert cfg.n_features == 3
         assert cfg.n_traits == 5
@@ -183,7 +179,9 @@ class TestInteract:
 
         # Should have adopted trait 2 from agent 1
         if interacted:
-            assert not np.array_equal(pattern.culture[0], culture_before) or pattern.culture[0, 2] == 3
+            assert (
+                not np.array_equal(pattern.culture[0], culture_before) or pattern.culture[0, 2] == 3
+            )
 
     def test_no_interaction_when_identical(self):
         """Identical agents don't interact"""
@@ -402,10 +400,7 @@ class TestEdgeCases:
     def test_mutation_prevents_freeze(self):
         """Mutation should prevent complete freeze"""
         cfg = CulturalDiffusionConfig(
-            n_agents=16,
-            enable_mutation=True,
-            mutation_rate=0.01,
-            max_steps=2000
+            n_agents=16, enable_mutation=True, mutation_rate=0.01, max_steps=2000
         )
         pattern = CulturalDiffusionPattern(cfg)
         result = pattern.run()

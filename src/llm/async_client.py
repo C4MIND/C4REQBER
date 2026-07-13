@@ -109,12 +109,9 @@ class AsyncLLMClient:
         """
         try:
             from src.api.routers.metrics import LLM_CALLS, LLM_LATENCY
-            LLM_CALLS.labels(
-                provider="async_client", model=model or "unknown", status=status
-            ).inc()
-            LLM_LATENCY.labels(
-                provider="async_client", model=model or "unknown"
-            ).observe(duration)
+
+            LLM_CALLS.labels(provider="async_client", model=model or "unknown", status=status).inc()
+            LLM_LATENCY.labels(provider="async_client", model=model or "unknown").observe(duration)
         except Exception:
             pass  # observability must never crash callers
 
@@ -126,19 +123,24 @@ class AsyncLLMClient:
                 CostTracker,
                 _normalize_model,
             )
+
             price_key = _normalize_model(model)
             if price_key not in COST_TABLE:
                 return
             rates = COST_TABLE[price_key]
-            cost = (input_tokens / 1_000_000) * rates["input"] + (output_tokens / 1_000_000) * rates["output"]
-            CostTracker.add(CostEntry(
-                provider="async_client",
-                model=model,
-                input_tokens=input_tokens,
-                output_tokens=output_tokens,
-                duration_ms=0.0,
-                cost_usd=cost,
-            ))
+            cost = (input_tokens / 1_000_000) * rates["input"] + (
+                output_tokens / 1_000_000
+            ) * rates["output"]
+            CostTracker.add(
+                CostEntry(
+                    provider="async_client",
+                    model=model,
+                    input_tokens=input_tokens,
+                    output_tokens=output_tokens,
+                    duration_ms=0.0,
+                    cost_usd=cost,
+                )
+            )
         except Exception:
             pass
 
@@ -179,8 +181,8 @@ class AsyncLLMClient:
                 raise RuntimeError("Prompt rejected by guardian")
         except RuntimeError:
             raise
-        except Exception:
-            pass
+        except Exception as exc:
+            raise RuntimeError("Prompt safety scan failed; refusing to call the LLM") from exc
 
         # ── Cache check ───────────────────────────────────────────────
         prompt_hash = hash_prompt(prompt + (system_prompt or "") + (model or self.DEFAULT_MODEL))
@@ -261,7 +263,9 @@ class AsyncLLMClient:
                     raise RuntimeError(f"LLM request failed: {e}") from e
                 await asyncio.sleep(0.5 * (attempt + 1))
         else:
-            raise RuntimeError(f"LLM API error after {max_retries} retries: {last_error}") from last_error
+            raise RuntimeError(
+                f"LLM API error after {max_retries} retries: {last_error}"
+            ) from last_error
 
         # Audit 2026-06-22 H-8 Tier 1: instrument at this layer (the
         # router itself). The actual httpx call has already happened
@@ -410,7 +414,9 @@ def run_async(coro: Any) -> Any:
         # Already inside an async context — schedule and wait
         import concurrent.futures
 
-        with concurrent.futures.ThreadPoolExecutor(max_workers=min(32, (os.cpu_count() or 1) + 4)) as executor:
+        with concurrent.futures.ThreadPoolExecutor(
+            max_workers=min(32, (os.cpu_count() or 1) + 4)
+        ) as executor:
             future = executor.submit(asyncio.run, coro)
             return future.result()
     return loop.run_until_complete(coro)

@@ -1,4 +1,5 @@
 """Tests for error taxonomy."""
+
 import asyncio
 import subprocess
 
@@ -16,7 +17,7 @@ from src.utils.error_taxonomy import (
 
 
 def test_classify_timeout():
-    assert classify_exception(asyncio.TimeoutError()) == ERR_TIMEOUT
+    assert classify_exception(TimeoutError()) == ERR_TIMEOUT
 
 
 def test_classify_httpx_timeout():

@@ -15,10 +15,12 @@ Covers:
 - get_metadata()
 - Edge cases: zero arrival rate, single node, infinite service rate
 """
+
 from __future__ import annotations
 
 import sys
 from pathlib import Path
+
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
@@ -26,7 +28,6 @@ import numpy as np
 import pytest
 
 from src.patterns.library.queueing_networks import (
-
     ArrivalProcess,
     QueueingNetworkConfig,
     QueueingNetworkPattern,
@@ -175,25 +176,33 @@ class TestGenerateInterarrivalTime:
 class TestGenerateServiceTime:
     def test_exponential_positive(self):
         pattern = QueueingNetworkPattern()
-        node = QueueingNodeConfig(name="test", service_rate=1.0, service_dist=ServiceDistribution.EXPONENTIAL)
+        node = QueueingNodeConfig(
+            name="test", service_rate=1.0, service_dist=ServiceDistribution.EXPONENTIAL
+        )
         t = pattern._generate_service_time(node)
         assert t > 0
 
     def test_deterministic(self):
         pattern = QueueingNetworkPattern()
-        node = QueueingNodeConfig(name="test", service_rate=2.0, service_dist=ServiceDistribution.DETERMINISTIC)
+        node = QueueingNodeConfig(
+            name="test", service_rate=2.0, service_dist=ServiceDistribution.DETERMINISTIC
+        )
         t = pattern._generate_service_time(node)
         assert t == pytest.approx(0.5, abs=1e-10)
 
     def test_erlang_positive(self):
         pattern = QueueingNetworkPattern()
-        node = QueueingNodeConfig(name="test", service_rate=1.0, service_dist=ServiceDistribution.ERLANG, erlang_stages=2)
+        node = QueueingNodeConfig(
+            name="test", service_rate=1.0, service_dist=ServiceDistribution.ERLANG, erlang_stages=2
+        )
         t = pattern._generate_service_time(node)
         assert t > 0
 
     def test_uniform_in_range(self):
         pattern = QueueingNetworkPattern()
-        node = QueueingNodeConfig(name="test", service_rate=1.0, service_dist=ServiceDistribution.UNIFORM)
+        node = QueueingNodeConfig(
+            name="test", service_rate=1.0, service_dist=ServiceDistribution.UNIFORM
+        )
         t = pattern._generate_service_time(node)
         mean = 1.0
         assert mean * 0.5 <= t <= mean * 1.5
@@ -390,7 +399,7 @@ class TestRun:
         )
         pattern = QueueingNetworkPattern(cfg)
         result = pattern.run()
-        assert result["is_stable"] == True
+        assert result["is_stable"]
         assert result["system_metrics"]["total_customers"] > 0
 
     def test_run_unstable_system(self):
@@ -410,14 +419,18 @@ class TestRun:
         assert "is_stable" in result
 
     def test_run_with_analytical(self):
-        cfg = QueueingNetworkConfig(compute_analytical=True, simulation_time=500.0, warmup_time=50.0)
+        cfg = QueueingNetworkConfig(
+            compute_analytical=True, simulation_time=500.0, warmup_time=50.0
+        )
         pattern = QueueingNetworkPattern(cfg)
         result = pattern.run()
         assert "analytical" in result
         assert "throughput" in result["analytical"]
 
     def test_run_without_analytical(self):
-        cfg = QueueingNetworkConfig(compute_analytical=False, simulation_time=500.0, warmup_time=50.0)
+        cfg = QueueingNetworkConfig(
+            compute_analytical=False, simulation_time=500.0, warmup_time=50.0
+        )
         pattern = QueueingNetworkPattern(cfg)
         result = pattern.run()
         assert "analytical" not in result
@@ -446,7 +459,13 @@ class TestRun:
         cfg = QueueingNetworkConfig(
             nodes=[
                 QueueingNodeConfig(name="source", n_servers=1, service_rate=float("inf")),
-                QueueingNodeConfig(name="server", n_servers=1, service_rate=2.0, service_dist=ServiceDistribution.ERLANG, erlang_stages=3),
+                QueueingNodeConfig(
+                    name="server",
+                    n_servers=1,
+                    service_rate=2.0,
+                    service_dist=ServiceDistribution.ERLANG,
+                    erlang_stages=3,
+                ),
                 QueueingNodeConfig(name="sink", n_servers=1, service_rate=float("inf")),
             ],
             arrival_rate=1.0,
@@ -461,7 +480,12 @@ class TestRun:
         cfg = QueueingNetworkConfig(
             nodes=[
                 QueueingNodeConfig(name="source", n_servers=1, service_rate=float("inf")),
-                QueueingNodeConfig(name="server", n_servers=1, service_rate=2.0, service_dist=ServiceDistribution.UNIFORM),
+                QueueingNodeConfig(
+                    name="server",
+                    n_servers=1,
+                    service_rate=2.0,
+                    service_dist=ServiceDistribution.UNIFORM,
+                ),
                 QueueingNodeConfig(name="sink", n_servers=1, service_rate=float("inf")),
             ],
             arrival_rate=1.0,
@@ -485,7 +509,7 @@ class TestRun:
         )
         pattern = QueueingNetworkPattern(cfg)
         result = pattern.run()
-        assert result["is_stable"] == True
+        assert result["is_stable"]
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -563,8 +587,7 @@ class TestEdgeCases:
         )
         pattern = QueueingNetworkPattern(cfg)
         result = pattern.run()
-        assert result["is_stable"] == True
-
+        assert result["is_stable"]
 
     def test_custom_routing_matrix(self):
         # Use a valid custom routing: source -> server1, source -> server2 -> sink
@@ -589,7 +612,10 @@ class TestEdgeCases:
         pattern = QueueingNetworkPattern(cfg)
         result = pattern.run()
         assert "node_results" in result
-        assert result["node_results"]["server1"]["arrivals"] > 0 or result["node_results"]["server2"]["arrivals"] > 0
+        assert (
+            result["node_results"]["server1"]["arrivals"] > 0
+            or result["node_results"]["server2"]["arrivals"] > 0
+        )
 
     def test_buffer_blocking(self):
         cfg = QueueingNetworkConfig(

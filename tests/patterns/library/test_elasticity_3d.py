@@ -4,9 +4,8 @@ import numpy as np
 import pytest
 
 from src.patterns.library.elasticity_3d import (
-
-    Elasticity3DConfig,
     Elasticity3D,
+    Elasticity3DConfig,
     HexahedralElement,
 )
 
@@ -32,10 +31,19 @@ class TestElasticity3DConfig:
 class TestHexahedralElement:
     @pytest.fixture
     def unit_element(self):
-        nodes = np.array([
-            [0, 0, 0], [1, 0, 0], [1, 1, 0], [0, 1, 0],
-            [0, 0, 1], [1, 0, 1], [1, 1, 1], [0, 1, 1],
-        ], dtype=float)
+        nodes = np.array(
+            [
+                [0, 0, 0],
+                [1, 0, 0],
+                [1, 1, 0],
+                [0, 1, 0],
+                [0, 0, 1],
+                [1, 0, 1],
+                [1, 1, 1],
+                [0, 1, 1],
+            ],
+            dtype=float,
+        )
         indices = np.arange(8)
         return HexahedralElement(nodes, indices, is_quadratic=False)
 

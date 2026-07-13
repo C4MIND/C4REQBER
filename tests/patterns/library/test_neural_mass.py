@@ -1,16 +1,16 @@
 """Tests for neural_mass pattern module."""
 
-import numpy as np
-import pytest
 import asyncio
 
+import numpy as np
+import pytest
+
+from src.patterns.core import Hypothesis, SimulationStatus
 from src.patterns.library.neural_mass import (
     NeuralMassConfig,
-    NeuralMassPattern,
     NeuralMassModel,
+    NeuralMassPattern,
 )
-from src.patterns.core import Hypothesis, SimulationStatus
-
 
 
 class TestNeuralMassConfig:

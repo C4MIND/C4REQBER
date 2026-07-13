@@ -1,4 +1,5 @@
 """Benchmark 1: Monte Carlo integration — convergence and performance."""
+
 import sys
 import time
 from pathlib import Path
@@ -8,6 +9,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 import numpy as np
 import pytest
+
 
 np.random.seed(42)
 
@@ -54,9 +56,9 @@ class TestMonteCarloConvergence:
         result_strat = asyncio_run(
             pattern.run(hypothesis, {"n_samples": 50000, "variance_reduction": "stratified"})
         )
-        assert (
-            result_strat.metrics["std"] <= result_naive.metrics["std"] * 1.5
-        ), f"Stratified std={result_strat.metrics['std']:.4f} vs naive={result_naive.metrics['std']:.4f}"
+        assert result_strat.metrics["std"] <= result_naive.metrics["std"] * 1.5, (
+            f"Stratified std={result_strat.metrics['std']:.4f} vs naive={result_naive.metrics['std']:.4f}"
+        )
 
     def test_mc_ci_contains_mean(self):
         """Confidence interval should contain the mean."""
@@ -68,9 +70,7 @@ class TestMonteCarloConvergence:
         result = asyncio_run(
             pattern.run(hypothesis, {"n_samples": 50000, "variance_reduction": "none"})
         )
-        assert (
-            result.metrics["ci_lower"] <= result.metrics["mean"] <= result.metrics["ci_upper"]
-        )
+        assert result.metrics["ci_lower"] <= result.metrics["mean"] <= result.metrics["ci_upper"]
 
 
 class TestMonteCarloPerformance:
@@ -83,9 +83,7 @@ class TestMonteCarloPerformance:
         )
         start = time.perf_counter()
         for _ in range(3):
-            asyncio_run(
-                pattern.run(hypothesis, {"n_samples": 15000, "variance_reduction": "none"})
-            )
+            asyncio_run(pattern.run(hypothesis, {"n_samples": 15000, "variance_reduction": "none"}))
         elapsed = time.perf_counter() - start
         assert elapsed < 5.0, f"MC too slow: {elapsed:.3f}s"
 

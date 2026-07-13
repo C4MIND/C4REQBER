@@ -2,11 +2,12 @@
 C44TCDI: Pipeline Executor
 Extracts step execution logic from UniversalSolvePipeline.
 """
+
 from __future__ import annotations
 
-from collections.abc import AsyncGenerator
 import logging
 import time
+from collections.abc import AsyncGenerator
 from typing import Any
 
 from src.agents.pipeline.steps.base import PipelineStage, PipelineStepResult
@@ -31,8 +32,18 @@ from src.pipeline.observer import PipelineObserver
 
 MODE_CONFIG = {
     "autopilot": {"max_steps": 10, "enable_llm_enhancement": False, "enable_verification": False},
-    "turbo": {"max_steps": 10, "enable_llm_enhancement": True, "enable_verification": False, "parallel_perspectives": True},
-    "deep-work": {"max_steps": 12, "enable_llm_enhancement": True, "enable_verification": True, "proof_export": True},
+    "turbo": {
+        "max_steps": 10,
+        "enable_llm_enhancement": True,
+        "enable_verification": False,
+        "parallel_perspectives": True,
+    },
+    "deep-work": {
+        "max_steps": 12,
+        "enable_llm_enhancement": True,
+        "enable_verification": True,
+        "proof_export": True,
+    },
 }
 
 
@@ -50,6 +61,7 @@ def _step_output(steps, stage, key, default=None):
 # ---------------------------------------------------------------------------
 # Post-processing callbacks — invoked after step_complete for each step_id
 # ---------------------------------------------------------------------------
+
 
 def _on_s2(p, s, r, e):
     """Step 2 (Prior Art): capture confidence and recommendation."""
@@ -101,7 +113,11 @@ def _on_s8(p, s, r, e):
 def _on_s9(p, s, r, e):
     """Step 9 (Validation): maybe revise solution and adjust confidence."""
     last = r.steps[-1] if r.steps else None
-    if last and last.stage == PipelineStage.VALIDATION and last.output_data.get("needs_revision", False):
+    if (
+        last
+        and last.stage == PipelineStage.VALIDATION
+        and last.output_data.get("needs_revision", False)
+    ):
         r.final_solution = last.output_data.get("revised_solution", r.final_solution)
         r.confidence *= 0.9
 
@@ -256,7 +272,9 @@ class PipelineExecutor:
         self._state: dict[str, Any] = {}
         # Observer Position integration
         self._observer_controller: ObserverController | None = getattr(pipeline, "observer", None)
-        self._stagnation_observer = PipelineObserver(stagnation_threshold=0.05, max_stagnant_iterations=3)
+        self._stagnation_observer = PipelineObserver(
+            stagnation_threshold=0.05, max_stagnant_iterations=3
+        )
         self._observer_frame: Any = None
         self._observer_insights: list[str] = []
 
@@ -314,14 +332,21 @@ class PipelineExecutor:
                         "event": "step_complete",
                         "stage": "plugin_execution",
                         "status": plugin_status,
-                        "data": {"plugins_executed": len(plugin_results), "plugin_results": plugin_results},
+                        "data": {
+                            "plugins_executed": len(plugin_results),
+                            "plugin_results": plugin_results,
+                        },
                     }
 
             # O₀ → O₁ self-diagnostic BEFORE synthesis (s8) so insights feed into synthesis
             if step_id == "s8" and self._observer_controller is not None:
                 diagnostic = self._run_observer_diagnostic(state["c4_state"], mode)
                 if diagnostic:
-                    yield {"event": "observer_diagnostic", "stage": "observer_o1", "data": diagnostic}
+                    yield {
+                        "event": "observer_diagnostic",
+                        "stage": "observer_o1",
+                        "data": diagnostic,
+                    }
                     # Inject observer insights into state for synthesis step
                     state["observer_insights"] = self._observer_insights
 
@@ -398,7 +423,9 @@ class PipelineExecutor:
                                 result.steps[-1].output_data["confidence"],
                             )
                             result.confidence = result.steps[-1].output_data["confidence"]
-                            result.final_solution = result.steps[-1].output_data.get("solution", result.final_solution)
+                            result.final_solution = result.steps[-1].output_data.get(
+                                "solution", result.final_solution
+                            )
 
         # ------------------------------------------------------------------
         # Post-loop: conditional pattern simulation
@@ -434,8 +461,10 @@ class PipelineExecutor:
             yield {"event": "step_start", "stage": "formal_verification"}
             try:
                 from src.verification.llm_prover import LLMProver
+
                 prover = LLMProver()
-                proof_result = await prover.prove("generic hypothesis", "lean4")
+                claim = result.final_solution.strip() or problem.strip()
+                proof_result = await prover.prove(claim[:4000], "lean4")
                 proof = proof_result.proof
                 result.steps.append(
                     PipelineStepResult(
@@ -551,7 +580,10 @@ class PipelineExecutor:
         shifted = False
 
         # Time axis shifts
-        if any(k in insights for k in ("future", "long-term", "time horizon", "prediction")) and t < 2:
+        if (
+            any(k in insights for k in ("future", "long-term", "time horizon", "prediction"))
+            and t < 2
+        ):
             t = min(t + 1, 2)
             shifted = True
         elif any(k in insights for k in ("present", "now", "immediate", "current")) and t > 0:
@@ -562,7 +594,10 @@ class PipelineExecutor:
         if any(k in insights for k in ("meta", "framework", "abstract", "high-level")) and s < 2:
             s = min(s + 1, 2)
             shifted = True
-        elif any(k in insights for k in ("concrete", "specific", "implementation", "detail")) and s > 0:
+        elif (
+            any(k in insights for k in ("concrete", "specific", "implementation", "detail"))
+            and s > 0
+        ):
             s = max(s - 1, 0)
             shifted = True
 

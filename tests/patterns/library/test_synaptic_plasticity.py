@@ -1,9 +1,11 @@
 """
 Tests for synaptic_plasticity pattern module.
 """
+
+import asyncio
+
 import numpy as np
 import pytest
-import asyncio
 
 from src.patterns.library.synaptic_plasticity import (
     PlasticityRule,
@@ -45,12 +47,14 @@ class TestCanSimulate:
     def test_can_simulate_plasticity(self):
         pattern = SynapticPlasticityPattern()
         from src.patterns.core import Hypothesis
+
         h = Hypothesis(title="STDP learning", description="synaptic plasticity")
         assert pattern.can_simulate(h) is True
 
     def test_can_simulate_no_match(self):
         pattern = SynapticPlasticityPattern()
         from src.patterns.core import Hypothesis
+
         h = Hypothesis(title="weather forecast", description="")
         assert pattern.can_simulate(h) is False
 
@@ -156,7 +160,14 @@ class TestRun:
 class TestEdgeCases:
     def test_confidence(self):
         pattern = SynapticPlasticityPattern()
-        results = {"metrics": {"weight_change_percent": 10, "saturation_ratio": 0.1, "pre_rate_hz": 5, "stability": 0.05}}
+        results = {
+            "metrics": {
+                "weight_change_percent": 10,
+                "saturation_ratio": 0.1,
+                "pre_rate_hz": 5,
+                "stability": 0.05,
+            }
+        }
         score = pattern._calculate_confidence(results)
         assert 0 <= score <= 0.95
 
@@ -164,7 +175,11 @@ class TestEdgeCases:
         pattern = SynapticPlasticityPattern()
         from src.patterns.core import Hypothesis
 
-        h = Hypothesis(title="test", description="test", parameters={"num_pre": 100, "num_post": 10, "simulation_time": 10000})
+        h = Hypothesis(
+            title="test",
+            description="test",
+            parameters={"num_pre": 100, "num_post": 10, "simulation_time": 10000},
+        )
         resources = pattern.estimate_resources(h)
         assert "cpu_cores" in resources
         assert "memory_gb" in resources

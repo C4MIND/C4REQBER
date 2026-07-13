@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Parallel dissertation generation — all 10 topics at once."""
+
 import os
 import sys
 
@@ -62,28 +63,28 @@ async def generate_one(pipeline, topic: str, idx: int) -> dict:
 
 async def main():
     from src.pipeline.hil_pipeline import HILDiscoveryPipeline
-    
+
     pipeline = HILDiscoveryPipeline()
     logger.info("=" * 70)
     logger.info("PARALLEL GENERATION: 10 dissertations")
     logger.info("=" * 70)
-    
+
     # Launch ALL 10 concurrently
-    tasks = [generate_one(pipeline, topic, i+1) for i, topic in enumerate(TOPICS)]
+    tasks = [generate_one(pipeline, topic, i + 1) for i, topic in enumerate(TOPICS)]
     results = await asyncio.gather(*tasks)
-    
+
     # Summary
     success = sum(1 for r in results if r["success"])
     total_time = sum(r["time"] for r in results)
-    
+
     logger.info("\n" + "=" * 70)
     logger.info("FINAL SUMMARY")
     logger.info("=" * 70)
     logger.info(f"Success: {success}/10")
-    logger.info(f"Failed: {10-success}/10")
-    logger.info(f"Total wall time: {total_time:.0f}s ({total_time/60:.1f} min)")
-    logger.info(f"Parallel speedup: ~{total_time/600:.1f}x vs sequential")
-    
+    logger.info(f"Failed: {10 - success}/10")
+    logger.info(f"Total wall time: {total_time:.0f}s ({total_time / 60:.1f} min)")
+    logger.info(f"Parallel speedup: ~{total_time / 600:.1f}x vs sequential")
+
     for r in results:
         status = "✅" if r["success"] else "❌"
         logger.info(f"  {status} {r['topic'][:50]}... ({r['time']:.0f}s)")

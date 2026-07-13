@@ -10,6 +10,7 @@ Test scenarios per pattern:
 2. Error handling with invalid config / exceptions
 3. Results formatting and metadata
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -19,6 +20,7 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
+
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
@@ -33,7 +35,9 @@ class _RandomState:
     def __init__(self) -> None:
         self._counter = 0
 
-    def randint(self, low: int, high: int | None = None, size: tuple | int | None = None) -> int | "MockArray":
+    def randint(
+        self, low: int, high: int | None = None, size: tuple | int | None = None
+    ) -> int | MockArray:
         if high is None:
             high, low = low, 0
         span = max(1, high - low)
@@ -52,28 +56,38 @@ class _RandomState:
         self._counter += 1
         return val
 
-    def random(self, size: tuple | int | None = None) -> float | "MockArray":
+    def random(self, size: tuple | int | None = None) -> float | MockArray:
         if size is not None:
             return MockArray(0.5, size if isinstance(size, tuple) else (size,), float)
         return 0.5
 
-    def randn(self, *args: int) -> float | "MockArray":
+    def randn(self, *args: int) -> float | MockArray:
         if args:
             return MockArray(0.0, args, float)
         return 0.0
 
-    def normal(self, loc: float = 0.0, scale: float = 1.0, size: tuple | int | None = None) -> float | "MockArray":
+    def normal(
+        self, loc: float = 0.0, scale: float = 1.0, size: tuple | int | None = None
+    ) -> float | MockArray:
         if size is not None:
             return MockArray(loc, size if isinstance(size, tuple) else (size,), float)
         return loc
 
-    def uniform(self, low: float = 0.0, high: float = 1.0, size: tuple | int | None = None) -> float | "MockArray":
+    def uniform(
+        self, low: float = 0.0, high: float = 1.0, size: tuple | int | None = None
+    ) -> float | MockArray:
         val = (low + high) / 2
         if size is not None:
             return MockArray(val, size if isinstance(size, tuple) else (size,), float)
         return val
 
-    def choice(self, a: list | int | MockArray, size: tuple | int | None = None, replace: bool = True, p: list | None = None) -> Any:
+    def choice(
+        self,
+        a: list | int | MockArray,
+        size: tuple | int | None = None,
+        replace: bool = True,
+        p: list | None = None,
+    ) -> Any:
         if isinstance(a, MockArray):
             item = self._counter % 2
         elif isinstance(a, (list, tuple)):
@@ -82,10 +96,14 @@ class _RandomState:
             item = self._counter % a
         self._counter += 1
         if size is not None:
-            return MockArray(item, size if isinstance(size, tuple) else (size,), type(item) if isinstance(item, (int, float, bool)) else object)
+            return MockArray(
+                item,
+                size if isinstance(size, tuple) else (size,),
+                type(item) if isinstance(item, (int, float, bool)) else object,
+            )
         return item
 
-    def permutation(self, x: list | int) -> "MockArray":
+    def permutation(self, x: list | int) -> MockArray:
         if hasattr(x, "__len__"):
             n = len(x)
             return MockArray(list(range(n)), (n,), int)
@@ -105,12 +123,12 @@ class MockArray:
         self.ndim = len(self.shape) if isinstance(self.shape, tuple) else 1
 
     @property
-    def T(self) -> "MockArray":
+    def T(self) -> MockArray:
         if len(self.shape) >= 2:
             return MockArray(self._data, self.shape[::-1], self.dtype)
         return self
 
-    def copy(self) -> "MockArray":
+    def copy(self) -> MockArray:
         return MockArray(self._data, self.shape, self.dtype)
 
     def tolist(self) -> Any:
@@ -122,9 +140,13 @@ class MockArray:
             return [self._data] * self.shape[0]
         if isinstance(self._data, list):
             return [d.tolist() if isinstance(d, MockArray) else d for d in self._data]
-        return [MockArray(self._data, self.shape[1:], self.dtype).tolist() for _ in range(self.shape[0])]
+        return [
+            MockArray(self._data, self.shape[1:], self.dtype).tolist() for _ in range(self.shape[0])
+        ]
 
-    def sum(self, axis: int | None = None, keepdims: bool = False, dtype: type | None = None) -> float | "MockArray":
+    def sum(
+        self, axis: int | None = None, keepdims: bool = False, dtype: type | None = None
+    ) -> float | MockArray:
         if axis is not None and keepdims:
             new_shape = list(self.shape)
             if axis < len(new_shape):
@@ -139,47 +161,47 @@ class MockArray:
             return sum(d._data if isinstance(d, MockArray) else d for d in self._data)
         return float(self._data)
 
-    def mean(self, axis: int | None = None, keepdims: bool = False) -> float | "MockArray":
+    def mean(self, axis: int | None = None, keepdims: bool = False) -> float | MockArray:
         if axis is not None:
             return MockArray(0.5, self.shape, float)
         return 0.5
 
-    def std(self, axis: int | None = None, keepdims: bool = False) -> float | "MockArray":
+    def std(self, axis: int | None = None, keepdims: bool = False) -> float | MockArray:
         if axis is not None:
             return MockArray(0.1, self.shape, float)
         return 0.1
 
-    def var(self, axis: int | None = None, keepdims: bool = False) -> float | "MockArray":
+    def var(self, axis: int | None = None, keepdims: bool = False) -> float | MockArray:
         if axis is not None:
             return MockArray(0.01, self.shape, float)
         return 0.01
 
-    def max(self, axis: int | None = None, keepdims: bool = False) -> float | "MockArray":
+    def max(self, axis: int | None = None, keepdims: bool = False) -> float | MockArray:
         if axis is not None:
             return MockArray(1.0, self.shape, float)
         return 1.0
 
-    def min(self, axis: int | None = None, keepdims: bool = False) -> float | "MockArray":
+    def min(self, axis: int | None = None, keepdims: bool = False) -> float | MockArray:
         if axis is not None:
             return MockArray(0.0, self.shape, float)
         return 0.0
 
-    def argmax(self, axis: int | None = None) -> int | "MockArray":
+    def argmax(self, axis: int | None = None) -> int | MockArray:
         return 0
 
-    def argmin(self, axis: int | None = None) -> int | "MockArray":
+    def argmin(self, axis: int | None = None) -> int | MockArray:
         return 0
 
-    def clip(self, min: float | None = None, max: float | None = None) -> "MockArray":
+    def clip(self, min: float | None = None, max: float | None = None) -> MockArray:
         return self
 
-    def astype(self, dtype: type) -> "MockArray":
+    def astype(self, dtype: type) -> MockArray:
         return MockArray(self._data, self.shape, dtype)
 
     def fill(self, value: Any) -> None:
         self._data = value
 
-    def __getitem__(self, key: Any) -> "MockArray":
+    def __getitem__(self, key: Any) -> MockArray:
         if isinstance(key, tuple) and any(k is None for k in key):
             new_shape = []
             data_idx = 0
@@ -205,73 +227,75 @@ class MockArray:
         if isinstance(key, MockArray):
             return MockArray(0.5, self.shape, self.dtype)
         if isinstance(key, tuple):
-            return MockArray(0.5, self.shape[len(key):] if len(self.shape) > len(key) else (), self.dtype)
+            return MockArray(
+                0.5, self.shape[len(key) :] if len(self.shape) > len(key) else (), self.dtype
+            )
         return MockArray(0.5, (), self.dtype)
 
     def __setitem__(self, key: Any, value: Any) -> None:
         pass
 
-    def __add__(self, other: Any) -> "MockArray":
+    def __add__(self, other: Any) -> MockArray:
         return MockArray(0.5, self.shape, self.dtype)
 
-    def __radd__(self, other: Any) -> "MockArray":
+    def __radd__(self, other: Any) -> MockArray:
         return self.__add__(other)
 
-    def __sub__(self, other: Any) -> "MockArray":
+    def __sub__(self, other: Any) -> MockArray:
         return MockArray(0.5, self.shape, self.dtype)
 
-    def __rsub__(self, other: Any) -> "MockArray":
+    def __rsub__(self, other: Any) -> MockArray:
         return MockArray(0.5, self.shape, self.dtype)
 
-    def __mul__(self, other: Any) -> "MockArray":
+    def __mul__(self, other: Any) -> MockArray:
         return MockArray(0.5, self.shape, self.dtype)
 
-    def __rmul__(self, other: Any) -> "MockArray":
+    def __rmul__(self, other: Any) -> MockArray:
         return self.__mul__(other)
 
-    def __truediv__(self, other: Any) -> "MockArray":
+    def __truediv__(self, other: Any) -> MockArray:
         return MockArray(0.5, self.shape, self.dtype)
 
-    def __rtruediv__(self, other: Any) -> "MockArray":
+    def __rtruediv__(self, other: Any) -> MockArray:
         return MockArray(0.5, self.shape, self.dtype)
 
-    def __floordiv__(self, other: Any) -> "MockArray":
+    def __floordiv__(self, other: Any) -> MockArray:
         return MockArray(0, self.shape, int)
 
-    def __pow__(self, other: Any) -> "MockArray":
+    def __pow__(self, other: Any) -> MockArray:
         return MockArray(0.5, self.shape, self.dtype)
 
-    def __rpow__(self, other: Any) -> "MockArray":
+    def __rpow__(self, other: Any) -> MockArray:
         return MockArray(0.5, self.shape, self.dtype)
 
-    def __matmul__(self, other: Any) -> "MockArray":
+    def __matmul__(self, other: Any) -> MockArray:
         return MockArray(0.5, self.shape, self.dtype)
 
-    def __gt__(self, other: Any) -> "MockArray":
+    def __gt__(self, other: Any) -> MockArray:
         return MockArray(True, self.shape, bool)
 
-    def __lt__(self, other: Any) -> "MockArray":
+    def __lt__(self, other: Any) -> MockArray:
         return MockArray(False, self.shape, bool)
 
-    def __ge__(self, other: Any) -> "MockArray":
+    def __ge__(self, other: Any) -> MockArray:
         return MockArray(True, self.shape, bool)
 
-    def __le__(self, other: Any) -> "MockArray":
+    def __le__(self, other: Any) -> MockArray:
         return MockArray(True, self.shape, bool)
 
-    def __eq__(self, other: Any) -> "MockArray":
+    def __eq__(self, other: Any) -> MockArray:
         return MockArray(True, self.shape, bool)
 
-    def __ne__(self, other: Any) -> "MockArray":
+    def __ne__(self, other: Any) -> MockArray:
         return MockArray(False, self.shape, bool)
 
-    def __neg__(self) -> "MockArray":
+    def __neg__(self) -> MockArray:
         return MockArray(-0.5, self.shape, self.dtype)
 
-    def __abs__(self) -> "MockArray":
+    def __abs__(self) -> MockArray:
         return MockArray(0.5, self.shape, self.dtype)
 
-    def __pos__(self) -> "MockArray":
+    def __pos__(self) -> MockArray:
         return self
 
     def __len__(self) -> int:
@@ -281,7 +305,12 @@ class MockArray:
         if self.shape:
             if isinstance(self._data, list):
                 return iter(self._data)
-            return iter([MockArray(0.5, self.shape[1:] if len(self.shape) > 1 else (), self.dtype) for _ in range(self.shape[0])])
+            return iter(
+                [
+                    MockArray(0.5, self.shape[1:] if len(self.shape) > 1 else (), self.dtype)
+                    for _ in range(self.shape[0])
+                ]
+            )
         return iter([self])
 
     def __bool__(self) -> bool:
@@ -302,19 +331,19 @@ class MockArray:
     def __contains__(self, item: Any) -> bool:
         return True
 
-    def __iadd__(self, other: Any) -> "MockArray":
+    def __iadd__(self, other: Any) -> MockArray:
         return self
 
-    def __isub__(self, other: Any) -> "MockArray":
+    def __isub__(self, other: Any) -> MockArray:
         return self
 
-    def __imul__(self, other: Any) -> "MockArray":
+    def __imul__(self, other: Any) -> MockArray:
         return self
 
-    def __itruediv__(self, other: Any) -> "MockArray":
+    def __itruediv__(self, other: Any) -> MockArray:
         return self
 
-    def __ifloordiv__(self, other: Any) -> "MockArray":
+    def __ifloordiv__(self, other: Any) -> MockArray:
         return self
 
 
@@ -324,13 +353,27 @@ def _create_mock_numpy() -> MagicMock:
     mock_np = MagicMock()
 
     # Array creation
-    mock_np.zeros = lambda shape, dtype=float: MockArray(0.0, shape if isinstance(shape, tuple) else (shape,), dtype)
-    mock_np.ones = lambda shape, dtype=float: MockArray(1.0, shape if isinstance(shape, tuple) else (shape,), dtype)
-    mock_np.empty = lambda shape, dtype=float: MockArray(0.0, shape if isinstance(shape, tuple) else (shape,), dtype)
-    mock_np.zeros_like = lambda a, dtype=None: MockArray(0.0, getattr(a, "shape", ()), dtype or float)
-    mock_np.ones_like = lambda a, dtype=None: MockArray(1.0, getattr(a, "shape", ()), dtype or float)
-    mock_np.empty_like = lambda a, dtype=None: MockArray(0.0, getattr(a, "shape", ()), dtype or float)
-    mock_np.full = lambda shape, fill_value, dtype=None: MockArray(fill_value, shape if isinstance(shape, tuple) else (shape,), dtype or float)
+    mock_np.zeros = lambda shape, dtype=float: MockArray(
+        0.0, shape if isinstance(shape, tuple) else (shape,), dtype
+    )
+    mock_np.ones = lambda shape, dtype=float: MockArray(
+        1.0, shape if isinstance(shape, tuple) else (shape,), dtype
+    )
+    mock_np.empty = lambda shape, dtype=float: MockArray(
+        0.0, shape if isinstance(shape, tuple) else (shape,), dtype
+    )
+    mock_np.zeros_like = lambda a, dtype=None: MockArray(
+        0.0, getattr(a, "shape", ()), dtype or float
+    )
+    mock_np.ones_like = lambda a, dtype=None: MockArray(
+        1.0, getattr(a, "shape", ()), dtype or float
+    )
+    mock_np.empty_like = lambda a, dtype=None: MockArray(
+        0.0, getattr(a, "shape", ()), dtype or float
+    )
+    mock_np.full = lambda shape, fill_value, dtype=None: MockArray(
+        fill_value, shape if isinstance(shape, tuple) else (shape,), dtype or float
+    )
 
     def _array(obj, dtype=None):
         if isinstance(obj, (list, tuple)):
@@ -339,19 +382,35 @@ def _create_mock_numpy() -> MagicMock:
 
     mock_np.array = _array
     mock_np.linspace = lambda a, b, n: MockArray(list(range(int(n))), (int(n),), float)
-    mock_np.arange = lambda *args: MockArray(list(range(args[0] if len(args) == 1 else args[1])), (args[0] if len(args) == 1 else args[1],), int)
-    mock_np.eye = lambda n: MockArray([[1 if i == j else 0 for j in range(n)] for i in range(n)], (n, n), float)
-    mock_np.concatenate = lambda arrays, axis=0: MockArray(0.5, (sum(len(a) for a in arrays),), float)
-    mock_np.stack = lambda arrays, axis=0: MockArray(0.5, (len(arrays), len(arrays[0]) if arrays else 0), float)
-    mock_np.vstack = lambda arrays: MockArray(0.5, (len(arrays), len(arrays[0]) if arrays else 0), float)
+    mock_np.arange = lambda *args: MockArray(
+        list(range(args[0] if len(args) == 1 else args[1])),
+        (args[0] if len(args) == 1 else args[1],),
+        int,
+    )
+    mock_np.eye = lambda n: MockArray(
+        [[1 if i == j else 0 for j in range(n)] for i in range(n)], (n, n), float
+    )
+    mock_np.concatenate = lambda arrays, axis=0: MockArray(
+        0.5, (sum(len(a) for a in arrays),), float
+    )
+    mock_np.stack = lambda arrays, axis=0: MockArray(
+        0.5, (len(arrays), len(arrays[0]) if arrays else 0), float
+    )
+    mock_np.vstack = lambda arrays: MockArray(
+        0.5, (len(arrays), len(arrays[0]) if arrays else 0), float
+    )
     mock_np.hstack = lambda arrays: MockArray(0.5, (sum(len(a) for a in arrays),), float)
     mock_np.transpose = lambda a, axes=None: MockArray(0.5, getattr(a, "shape", ()), float)
-    mock_np.reshape = lambda a, newshape: MockArray(0.5, newshape if isinstance(newshape, tuple) else (newshape,), float)
+    mock_np.reshape = lambda a, newshape: MockArray(
+        0.5, newshape if isinstance(newshape, tuple) else (newshape,), float
+    )
     mock_np.tile = lambda A, reps: MockArray(0.5, (1,), float)
     mock_np.repeat = lambda a, repeats, axis=None: MockArray(0.5, (1,), float)
 
     def _meshgrid(*xi, indexing="xy"):
-        return tuple(MockArray(0.5, (len(xi[0]), len(xi[1]) if len(xi) > 1 else 0), float) for _ in xi)
+        return tuple(
+            MockArray(0.5, (len(xi[0]), len(xi[1]) if len(xi) > 1 else 0), float) for _ in xi
+        )
 
     mock_np.meshgrid = _meshgrid
 
@@ -406,15 +465,29 @@ def _create_mock_numpy() -> MagicMock:
         return 1.0
 
     mock_np.sum = _sum
-    mock_np.mean = lambda a, axis=None, keepdims=False: MockArray(0.5, getattr(a, "shape", ()), float) if axis is not None else 0.5
-    mock_np.std = lambda a, axis=None, keepdims=False: MockArray(0.1, getattr(a, "shape", ()), float) if axis is not None else 0.1
-    mock_np.var = lambda a, axis=None, keepdims=False: MockArray(0.01, getattr(a, "shape", ()), float) if axis is not None else 0.01
-    mock_np.max = lambda a, axis=None, keepdims=False: MockArray(1.0, getattr(a, "shape", ()), float) if axis is not None else 1.0
-    mock_np.min = lambda a, axis=None, keepdims=False: MockArray(0.0, getattr(a, "shape", ()), float) if axis is not None else 0.0
+    mock_np.mean = lambda a, axis=None, keepdims=False: (
+        MockArray(0.5, getattr(a, "shape", ()), float) if axis is not None else 0.5
+    )
+    mock_np.std = lambda a, axis=None, keepdims=False: (
+        MockArray(0.1, getattr(a, "shape", ()), float) if axis is not None else 0.1
+    )
+    mock_np.var = lambda a, axis=None, keepdims=False: (
+        MockArray(0.01, getattr(a, "shape", ()), float) if axis is not None else 0.01
+    )
+    mock_np.max = lambda a, axis=None, keepdims=False: (
+        MockArray(1.0, getattr(a, "shape", ()), float) if axis is not None else 1.0
+    )
+    mock_np.min = lambda a, axis=None, keepdims=False: (
+        MockArray(0.0, getattr(a, "shape", ()), float) if axis is not None else 0.0
+    )
     mock_np.argmax = lambda a, axis=None: 0
     mock_np.argmin = lambda a, axis=None: 0
     mock_np.prod = lambda a, axis=None, keepdims=False: 1.0
-    mock_np.argsort = lambda a, axis=None: MockArray(list(range(len(a) if hasattr(a, "__len__") else 2)), (len(a) if hasattr(a, "__len__") else 2,), int)
+    mock_np.argsort = lambda a, axis=None: MockArray(
+        list(range(len(a) if hasattr(a, "__len__") else 2)),
+        (len(a) if hasattr(a, "__len__") else 2,),
+        int,
+    )
 
     # Logical
     mock_np.all = lambda a, axis=None, keepdims=False: True
@@ -429,15 +502,29 @@ def _create_mock_numpy() -> MagicMock:
     mock_np.gradient = lambda f, *args: MockArray(0.0, getattr(f, "shape", ()), float)
     mock_np.corrcoef = lambda x, y=None: MockArray([[1.0, 0.5], [0.5, 1.0]], (2, 2), float)
     mock_np.percentile = lambda a, q: 0.5
-    mock_np.histogram = lambda a, bins=10: (MockArray([1] * bins, (bins,), int), MockArray(list(range(bins + 1)), (bins + 1,), float))
-    mock_np.unique = lambda ar, return_counts=False: (MockArray([0, 1], (2,), int), MockArray([1, 1], (2,), int)) if return_counts else MockArray([0, 1], (2,), int)
+    mock_np.histogram = lambda a, bins=10: (
+        MockArray([1] * bins, (bins,), int),
+        MockArray(list(range(bins + 1)), (bins + 1,), float),
+    )
+    mock_np.unique = lambda ar, return_counts=False: (
+        (MockArray([0, 1], (2,), int), MockArray([1, 1], (2,), int))
+        if return_counts
+        else MockArray([0, 1], (2,), int)
+    )
 
     # Linear algebra
     mock_np.linalg = MagicMock()
-    mock_np.linalg.inv = lambda a: MockArray([[1.0, 0.0], [0.0, 1.0]], getattr(a, "shape", (2, 2)), float)
-    mock_np.linalg.pinv = lambda a: MockArray([[1.0, 0.0], [0.0, 1.0]], getattr(a, "shape", (2, 2)), float)
+    mock_np.linalg.inv = lambda a: MockArray(
+        [[1.0, 0.0], [0.0, 1.0]], getattr(a, "shape", (2, 2)), float
+    )
+    mock_np.linalg.pinv = lambda a: MockArray(
+        [[1.0, 0.0], [0.0, 1.0]], getattr(a, "shape", (2, 2)), float
+    )
     mock_np.linalg.det = lambda a: 1.0
-    mock_np.linalg.eig = lambda a: (MockArray([1.0], (1,), float), MockArray([[1.0]], (1, 1), float))
+    mock_np.linalg.eig = lambda a: (
+        MockArray([1.0], (1,), float),
+        MockArray([[1.0]], (1, 1), float),
+    )
     mock_np.linalg.solve = lambda a, b: MockArray(0.5, getattr(b, "shape", ()), float)
     mock_np.linalg.norm = lambda x, ord=None, axis=None, keepdims=False: 1.0
     mock_np.linalg.LinAlgError = type("LinAlgError", (Exception,), {})
@@ -462,7 +549,9 @@ def _create_mock_numpy() -> MagicMock:
 
     # Special functions
     mock_np.einsum = lambda *args, **kwargs: MockArray(0.5, (3, 3), float)
-    mock_np.cross = lambda a, b, axisa=-1, axisb=-1, axisc=-1, axis=None: MockArray([0.0, 0.0, 1.0], (3,), float)
+    mock_np.cross = lambda a, b, axisa=-1, axisb=-1, axisc=-1, axis=None: MockArray(
+        [0.0, 0.0, 1.0], (3,), float
+    )
     mock_np.dot = lambda a, b: MockArray(0.5, (), float)
 
     return mock_np
@@ -478,13 +567,7 @@ _MOCK_PLT = MagicMock()
 # Module-level imports (avoid UnboundLocalError in patch.object contexts)
 # =============================================================================
 
-from patterns.library.traffic_flow import (
-    TrafficFlowConfig,
-    TrafficFlowPattern,
-    TrafficModel,
-    FundamentalDiagram,
-    BoundaryCondition,
-)
+from patterns.core import Hypothesis
 from patterns.library.composite_mechanics import (
     CompositeMechanicsConfig,
     CompositeMechanicsPattern,
@@ -492,15 +575,20 @@ from patterns.library.composite_mechanics import (
     InclusionShape,
     LoadingType,
 )
-from patterns.library.land_surface import LandSurfaceConfig, LandSurfacePattern
-from patterns.library.herding import HerdingConfig, HerdingModel
-from patterns.library.surface_water import SurfaceWaterConfig, SurfaceWaterPattern
-from patterns.library.urban_growth import UrbanGrowthConfig, UrbanGrowthPattern
 from patterns.library.dsge import DSGEPattern
 from patterns.library.garch import GARCHPattern
+from patterns.library.herding import HerdingConfig, HerdingModel
 from patterns.library.input_output import InputOutputConfig, InputOutputModel
-from patterns.core import Hypothesis
-
+from patterns.library.land_surface import LandSurfaceConfig, LandSurfacePattern
+from patterns.library.surface_water import SurfaceWaterConfig, SurfaceWaterPattern
+from patterns.library.traffic_flow import (
+    BoundaryCondition,
+    FundamentalDiagram,
+    TrafficFlowConfig,
+    TrafficFlowPattern,
+    TrafficModel,
+)
+from patterns.library.urban_growth import UrbanGrowthConfig, UrbanGrowthPattern
 
 
 # =============================================================================
@@ -521,9 +609,11 @@ class TestTrafficFlowPattern:
 
     def test_run_happy_path_lwr(self) -> None:
         """Test LWR model run with mocked numpy and no-op steps."""
-        with patch("patterns.library.traffic_flow.np", _MOCK_NP), \
-             patch.object(TrafficFlowPattern, "_lwr_step"), \
-             patch.object(TrafficFlowPattern, "_ca_step"):
+        with (
+            patch("patterns.library.traffic_flow.np", _MOCK_NP),
+            patch.object(TrafficFlowPattern, "_lwr_step"),
+            patch.object(TrafficFlowPattern, "_ca_step"),
+        ):
             cfg = TrafficFlowConfig(
                 model=TrafficModel.LWR, n_cells=10, simulation_time=10, dt=5, output_interval=5
             )
@@ -537,17 +627,25 @@ class TestTrafficFlowPattern:
 
     def test_run_happy_path_ca(self) -> None:
         """Test CA model run with mocked numpy."""
+
         def _mock_ca_step(self):
             self.density = _MOCK_NP.ones(self.config.n_cells) * 20.0
             self.velocity = _MOCK_NP.ones(self.config.n_cells) * 60.0
             self.flux = _MOCK_NP.ones(self.config.n_cells) * 1200.0
 
-        with patch("patterns.library.traffic_flow.np", _MOCK_NP), \
-             patch.object(TrafficFlowPattern, "_lwr_step"), \
-             patch.object(TrafficFlowPattern, "_ca_step", _mock_ca_step):
+        with (
+            patch("patterns.library.traffic_flow.np", _MOCK_NP),
+            patch.object(TrafficFlowPattern, "_lwr_step"),
+            patch.object(TrafficFlowPattern, "_ca_step", _mock_ca_step),
+        ):
             cfg = TrafficFlowConfig(
-                model=TrafficModel.CA, n_cells=10, simulation_time=10, dt=5, output_interval=5,
-                n_lanes=1, road_length=0.1,
+                model=TrafficModel.CA,
+                n_cells=10,
+                simulation_time=10,
+                dt=5,
+                output_interval=5,
+                n_lanes=1,
+                road_length=0.1,
             )
             pattern = TrafficFlowPattern(cfg)
             result = pattern.run()
@@ -556,11 +654,13 @@ class TestTrafficFlowPattern:
 
     def test_run_error_handling_step_raises(self) -> None:
         """Test error propagation when simulation step fails."""
-        with patch("patterns.library.traffic_flow.np", _MOCK_NP), \
-             patch.object(TrafficFlowPattern, "_lwr_step", side_effect=RuntimeError("flux overflow")):
-            cfg = TrafficFlowConfig(
-                model=TrafficModel.LWR, n_cells=10, simulation_time=10, dt=5
-            )
+        with (
+            patch("patterns.library.traffic_flow.np", _MOCK_NP),
+            patch.object(
+                TrafficFlowPattern, "_lwr_step", side_effect=RuntimeError("flux overflow")
+            ),
+        ):
+            cfg = TrafficFlowConfig(model=TrafficModel.LWR, n_cells=10, simulation_time=10, dt=5)
             pattern = TrafficFlowPattern(cfg)
             with pytest.raises(RuntimeError, match="flux overflow"):
                 pattern.run()
@@ -569,7 +669,9 @@ class TestTrafficFlowPattern:
         """Test fundamental diagram analysis with mocked numpy."""
         with patch("patterns.library.traffic_flow.np", _MOCK_NP):
             cfg = TrafficFlowConfig(
-                model=TrafficModel.LWR, fundamental_diagram=FundamentalDiagram.GREENSHELDS, n_cells=5
+                model=TrafficModel.LWR,
+                fundamental_diagram=FundamentalDiagram.GREENSHELDS,
+                n_cells=5,
             )
             pattern = TrafficFlowPattern(cfg)
             densities = _MOCK_NP.array([0, 50, 100])
@@ -589,9 +691,7 @@ class TestTrafficFlowPattern:
         """Test all fundamental diagram variants."""
         with patch("patterns.library.traffic_flow.np", _MOCK_NP):
             fd = FundamentalDiagram[diagram]
-            cfg = TrafficFlowConfig(
-                model=TrafficModel.LWR, fundamental_diagram=fd, n_cells=5
-            )
+            cfg = TrafficFlowConfig(model=TrafficModel.LWR, fundamental_diagram=fd, n_cells=5)
             pattern = TrafficFlowPattern(cfg)
             densities = _MOCK_NP.array([0, 50])
             Q, v = pattern._fundamental_diagram(densities)
@@ -618,12 +718,22 @@ class TestCompositeMechanicsPattern:
 
     def test_run_happy_path(self) -> None:
         """Test run with mocked numpy and computation methods."""
-        with patch("patterns.library.composite_mechanics.np", _MOCK_NP), \
-             patch.object(CompositeMechanicsPattern, "_mori_tanaka", return_value=(_MOCK_NP.zeros((6, 6)), 1e10, 0.3)), \
-             patch.object(CompositeMechanicsPattern, "_rule_of_mixtures", return_value=(1e10, 0.3)), \
-             patch.object(CompositeMechanicsPattern, "_halpin_tsai", return_value=(1e10, 0.3)), \
-             patch.object(CompositeMechanicsPattern, "_self_consistent", return_value=(1e10, 0.3)), \
-             patch.object(CompositeMechanicsPattern, "_fea_homogenization", return_value=(_MOCK_NP.zeros((6, 6)), 1e10, 0.3)):
+        with (
+            patch("patterns.library.composite_mechanics.np", _MOCK_NP),
+            patch.object(
+                CompositeMechanicsPattern,
+                "_mori_tanaka",
+                return_value=(_MOCK_NP.zeros((6, 6)), 1e10, 0.3),
+            ),
+            patch.object(CompositeMechanicsPattern, "_rule_of_mixtures", return_value=(1e10, 0.3)),
+            patch.object(CompositeMechanicsPattern, "_halpin_tsai", return_value=(1e10, 0.3)),
+            patch.object(CompositeMechanicsPattern, "_self_consistent", return_value=(1e10, 0.3)),
+            patch.object(
+                CompositeMechanicsPattern,
+                "_fea_homogenization",
+                return_value=(_MOCK_NP.zeros((6, 6)), 1e10, 0.3),
+            ),
+        ):
             cfg = CompositeMechanicsConfig(
                 method=HomogenizationMethod.MORI_TANAKA, volume_fraction=0.3
             )
@@ -639,8 +749,10 @@ class TestCompositeMechanicsPattern:
         with patch("patterns.library.composite_mechanics.np", _MOCK_NP):
             cfg = CompositeMechanicsConfig(method=HomogenizationMethod.MORI_TANAKA)
             pattern = CompositeMechanicsPattern(cfg)
+
             class FakeMethod:
                 value = "unknown"
+
             pattern.config.method = FakeMethod()  # type: ignore[assignment]
             with pytest.raises(ValueError, match="Unknown method"):
                 pattern.run()
@@ -659,14 +771,22 @@ class TestCompositeMechanicsPattern:
         assert meta["id"] == "composite_mechanics"
         assert "parameters" in meta
 
-    @pytest.mark.parametrize("method", ["RULE_OF_MIXTURES", "MORI_TANAKA", "HALPIN_TSAI", "SELF_CONSISTENT"])
+    @pytest.mark.parametrize(
+        "method", ["RULE_OF_MIXTURES", "MORI_TANAKA", "HALPIN_TSAI", "SELF_CONSISTENT"]
+    )
     def test_run_various_methods(self, method: str) -> None:
         """Test run with different homogenization methods."""
-        with patch("patterns.library.composite_mechanics.np", _MOCK_NP), \
-             patch.object(CompositeMechanicsPattern, "_rule_of_mixtures", return_value=(1e10, 0.3)), \
-             patch.object(CompositeMechanicsPattern, "_mori_tanaka", return_value=(_MOCK_NP.zeros((6, 6)), 1e10, 0.3)), \
-             patch.object(CompositeMechanicsPattern, "_halpin_tsai", return_value=(1e10, 0.3)), \
-             patch.object(CompositeMechanicsPattern, "_self_consistent", return_value=(1e10, 0.3)):
+        with (
+            patch("patterns.library.composite_mechanics.np", _MOCK_NP),
+            patch.object(CompositeMechanicsPattern, "_rule_of_mixtures", return_value=(1e10, 0.3)),
+            patch.object(
+                CompositeMechanicsPattern,
+                "_mori_tanaka",
+                return_value=(_MOCK_NP.zeros((6, 6)), 1e10, 0.3),
+            ),
+            patch.object(CompositeMechanicsPattern, "_halpin_tsai", return_value=(1e10, 0.3)),
+            patch.object(CompositeMechanicsPattern, "_self_consistent", return_value=(1e10, 0.3)),
+        ):
             hm = HomogenizationMethod[method]
             cfg = CompositeMechanicsConfig(method=hm, volume_fraction=0.3)
             pattern = CompositeMechanicsPattern(cfg)
@@ -691,8 +811,10 @@ class TestLandSurfacePattern:
 
     def test_run_happy_path(self) -> None:
         """Test run with mocked numpy and no-op step."""
-        with patch("patterns.library.land_surface.np", _MOCK_NP), \
-             patch.object(LandSurfacePattern, "_step"):
+        with (
+            patch("patterns.library.land_surface.np", _MOCK_NP),
+            patch.object(LandSurfacePattern, "_step"),
+        ):
             cfg = LandSurfaceConfig(nx=5, ny=5, days=1, dt=3600, output_interval=1)
             pattern = LandSurfacePattern(cfg)
             result = pattern.run()
@@ -703,8 +825,10 @@ class TestLandSurfacePattern:
 
     def test_run_error_handling_step_raises(self) -> None:
         """Test error propagation when step fails."""
-        with patch("patterns.library.land_surface.np", _MOCK_NP), \
-             patch.object(LandSurfacePattern, "_step", side_effect=ValueError("energy imbalance")):
+        with (
+            patch("patterns.library.land_surface.np", _MOCK_NP),
+            patch.object(LandSurfacePattern, "_step", side_effect=ValueError("energy imbalance")),
+        ):
             cfg = LandSurfaceConfig(nx=5, ny=5, days=1, dt=3600)
             pattern = LandSurfacePattern(cfg)
             with pytest.raises(ValueError, match="energy imbalance"):
@@ -748,28 +872,46 @@ class TestHerdingPattern:
 
     def test_run_happy_path(self) -> None:
         """Test full run with mocked numpy and controlled simulate."""
-        with patch("patterns.library.herding.np", _MOCK_NP), \
-             patch.object(HerdingModel, "simulate", return_value={
-                 "final_magnetization": 0.8,
-                 "consensus_reached": True,
-                 "iterations": 5,
-                 "magnetization_history": [0.1, 0.8],
-                 "clusters": {"n_positive": 8, "n_negative": 2},
-                 "update_rule": "ising",
-             }), \
-             patch.object(HerdingModel, "information_cascade", return_value={
-                 "decisions": [1] * 10,
-                 "cascade_started": True,
-                 "correct_cascade": True,
-             }), \
-             patch.object(HerdingModel, "social_learning", return_value={
-                 "final_error": 0.01,
-                 "consensus_reached": True,
-             }), \
-             patch.object(HerdingModel, "phase_transition_analysis", return_value={
-                 "critical_temperature": 1.0,
-                 "ordered_phase": True,
-             }):
+        with (
+            patch("patterns.library.herding.np", _MOCK_NP),
+            patch.object(
+                HerdingModel,
+                "simulate",
+                return_value={
+                    "final_magnetization": 0.8,
+                    "consensus_reached": True,
+                    "iterations": 5,
+                    "magnetization_history": [0.1, 0.8],
+                    "clusters": {"n_positive": 8, "n_negative": 2},
+                    "update_rule": "ising",
+                },
+            ),
+            patch.object(
+                HerdingModel,
+                "information_cascade",
+                return_value={
+                    "decisions": [1] * 10,
+                    "cascade_started": True,
+                    "correct_cascade": True,
+                },
+            ),
+            patch.object(
+                HerdingModel,
+                "social_learning",
+                return_value={
+                    "final_error": 0.01,
+                    "consensus_reached": True,
+                },
+            ),
+            patch.object(
+                HerdingModel,
+                "phase_transition_analysis",
+                return_value={
+                    "critical_temperature": 1.0,
+                    "ordered_phase": True,
+                },
+            ),
+        ):
             cfg = HerdingConfig(n_agents=10, max_iterations=5)
             model = HerdingModel(cfg)
             result = model.run()
@@ -781,8 +923,10 @@ class TestHerdingPattern:
 
     def test_run_error_handling_simulate_raises(self) -> None:
         """Test error when simulate fails."""
-        with patch("patterns.library.herding.np", _MOCK_NP), \
-             patch.object(HerdingModel, "simulate", side_effect=RuntimeError("divergence")):
+        with (
+            patch("patterns.library.herding.np", _MOCK_NP),
+            patch.object(HerdingModel, "simulate", side_effect=RuntimeError("divergence")),
+        ):
             cfg = HerdingConfig(n_agents=10, max_iterations=5)
             model = HerdingModel(cfg)
             with pytest.raises(RuntimeError, match="divergence"):
@@ -830,8 +974,10 @@ class TestSurfaceWaterPattern:
 
     def test_run_happy_path(self) -> None:
         """Test run with mocked numpy and no-op step."""
-        with patch("patterns.library.surface_water.np", _MOCK_NP), \
-             patch.object(SurfaceWaterPattern, "_step"):
+        with (
+            patch("patterns.library.surface_water.np", _MOCK_NP),
+            patch.object(SurfaceWaterPattern, "_step"),
+        ):
             cfg = SurfaceWaterConfig(nx=10, ny=10, hours=1, dt=10, output_interval=1)
             pattern = SurfaceWaterPattern(cfg)
             result = pattern.run()
@@ -842,8 +988,10 @@ class TestSurfaceWaterPattern:
 
     def test_run_error_handling_step_raises(self) -> None:
         """Test error propagation when step fails."""
-        with patch("patterns.library.surface_water.np", _MOCK_NP), \
-             patch.object(SurfaceWaterPattern, "_step", side_effect=RuntimeError("CFL violation")):
+        with (
+            patch("patterns.library.surface_water.np", _MOCK_NP),
+            patch.object(SurfaceWaterPattern, "_step", side_effect=RuntimeError("CFL violation")),
+        ):
             cfg = SurfaceWaterConfig(nx=10, ny=10, hours=1, dt=10)
             pattern = SurfaceWaterPattern(cfg)
             with pytest.raises(RuntimeError, match="CFL violation"):
@@ -883,12 +1031,14 @@ class TestUrbanGrowthPattern:
 
     def test_run_happy_path(self) -> None:
         """Test run with mocked numpy and no-op growth methods."""
-        with patch("patterns.library.urban_growth.np", _MOCK_NP), \
-             patch.object(UrbanGrowthPattern, "_ca_spontaneous_growth"), \
-             patch.object(UrbanGrowthPattern, "_ca_diffusion"), \
-             patch.object(UrbanGrowthPattern, "_agent_relocation"), \
-             patch.object(UrbanGrowthPattern, "_land_use_transition"), \
-             patch.object(UrbanGrowthPattern, "_count_patches", return_value=1):
+        with (
+            patch("patterns.library.urban_growth.np", _MOCK_NP),
+            patch.object(UrbanGrowthPattern, "_ca_spontaneous_growth"),
+            patch.object(UrbanGrowthPattern, "_ca_diffusion"),
+            patch.object(UrbanGrowthPattern, "_agent_relocation"),
+            patch.object(UrbanGrowthPattern, "_land_use_transition"),
+            patch.object(UrbanGrowthPattern, "_count_patches", return_value=1),
+        ):
             cfg = UrbanGrowthConfig(width=10, height=10, n_steps=2)
             pattern = UrbanGrowthPattern(cfg)
             result = pattern.run()
@@ -898,8 +1048,14 @@ class TestUrbanGrowthPattern:
 
     def test_run_error_handling_growth_raises(self) -> None:
         """Test error propagation when CA growth fails."""
-        with patch("patterns.library.urban_growth.np", _MOCK_NP), \
-             patch.object(UrbanGrowthPattern, "_ca_spontaneous_growth", side_effect=RuntimeError("grid overflow")):
+        with (
+            patch("patterns.library.urban_growth.np", _MOCK_NP),
+            patch.object(
+                UrbanGrowthPattern,
+                "_ca_spontaneous_growth",
+                side_effect=RuntimeError("grid overflow"),
+            ),
+        ):
             cfg = UrbanGrowthConfig(width=10, height=10, n_steps=2)
             pattern = UrbanGrowthPattern(cfg)
             with pytest.raises(RuntimeError, match="grid overflow"):
@@ -949,22 +1105,26 @@ class TestDSGEPattern:
     @pytest.mark.asyncio
     async def test_run_rbc_success(self, pattern: Any, hypothesis: Any) -> None:
         """Test successful RBC model run with mocked internals."""
-        with patch.object(pattern, "_rbc_model", return_value={
-            "metrics": {
-                "output_volatility_pct": 1.5,
-                "consumption_volatility_pct": 1.0,
-                "investment_volatility_pct": 2.0,
-                "consumption_output_correlation": 0.8,
-                "investment_output_correlation": 0.9,
-                "impulse_response_max": 2.5,
-                "steady_state_output": 100.0,
-                "steady_state_consumption": 80.0,
-                "capital_share": 0.36,
-                "discount_factor": 0.99,
-                "model_type": "rbc",
+        with patch.object(
+            pattern,
+            "_rbc_model",
+            return_value={
+                "metrics": {
+                    "output_volatility_pct": 1.5,
+                    "consumption_volatility_pct": 1.0,
+                    "investment_volatility_pct": 2.0,
+                    "consumption_output_correlation": 0.8,
+                    "investment_output_correlation": 0.9,
+                    "impulse_response_max": 2.5,
+                    "steady_state_output": 100.0,
+                    "steady_state_consumption": 80.0,
+                    "capital_share": 0.36,
+                    "discount_factor": 0.99,
+                    "model_type": "rbc",
+                },
+                "logs": ["RBC simulation complete"],
             },
-            "logs": ["RBC simulation complete"],
-        }):
+        ):
             result = await pattern.run(hypothesis, {"model_type": "rbc", "periods": 10})
             assert result.status.value == "completed"
             assert result.confidence_score > 0
@@ -973,17 +1133,21 @@ class TestDSGEPattern:
     @pytest.mark.asyncio
     async def test_run_nk_success(self, pattern: Any, hypothesis: Any) -> None:
         """Test successful New Keynesian model run."""
-        with patch.object(pattern, "_new_keynesian", return_value={
-            "metrics": {
-                "output_volatility_pct": 1.2,
-                "inflation_volatility_pct": 0.8,
-                "interest_rate_volatility_pct": 0.5,
-                "avg_output_gap": 0.1,
-                "avg_inflation": 2.0,
-                "model_type": "new_keynesian",
+        with patch.object(
+            pattern,
+            "_new_keynesian",
+            return_value={
+                "metrics": {
+                    "output_volatility_pct": 1.2,
+                    "inflation_volatility_pct": 0.8,
+                    "interest_rate_volatility_pct": 0.5,
+                    "avg_output_gap": 0.1,
+                    "avg_inflation": 2.0,
+                    "model_type": "new_keynesian",
+                },
+                "logs": ["NK simulation complete"],
             },
-            "logs": ["NK simulation complete"],
-        }):
+        ):
             result = await pattern.run(hypothesis, {"model_type": "nk", "periods": 10})
             assert result.status.value == "completed"
 
@@ -1037,19 +1201,23 @@ class TestGARCHPattern:
     @pytest.mark.asyncio
     async def test_run_success(self, pattern: Any, hypothesis: Any) -> None:
         """Test successful GARCH simulation with mocked internals."""
-        with patch.object(pattern, "_simulate_garch", return_value={
-            "metrics": {
-                "mean_volatility": 0.02,
-                "max_volatility": 0.05,
-                "var_95": -0.03,
-                "cvar_95": -0.04,
-                "persistence": 0.95,
-                "half_life_periods": 13.5,
-                "annualized_volatility": 0.32,
-                "sharpe_ratio": 0.5,
+        with patch.object(
+            pattern,
+            "_simulate_garch",
+            return_value={
+                "metrics": {
+                    "mean_volatility": 0.02,
+                    "max_volatility": 0.05,
+                    "var_95": -0.03,
+                    "cvar_95": -0.04,
+                    "persistence": 0.95,
+                    "half_life_periods": 13.5,
+                    "annualized_volatility": 0.32,
+                    "sharpe_ratio": 0.5,
+                },
+                "logs": ["GARCH simulation complete"],
             },
-            "logs": ["GARCH simulation complete"],
-        }):
+        ):
             result = await pattern.run(hypothesis, {"periods": 100, "alpha": 0.1, "beta": 0.85})
             assert result.status.value == "completed"
             assert result.confidence_score > 0
@@ -1065,9 +1233,11 @@ class TestGARCHPattern:
 
     def test_calculate_confidence(self, pattern: Any) -> None:
         """Test confidence score calculation."""
-        score = pattern._calculate_confidence({
-            "metrics": {"persistence": 0.95, "mean_volatility": 0.02, "var_95": -0.03},
-        })
+        score = pattern._calculate_confidence(
+            {
+                "metrics": {"persistence": 0.95, "mean_volatility": 0.02, "var_95": -0.03},
+            }
+        )
         assert 0 <= score <= 0.9
 
     def test_get_results_metadata(self, pattern: Any) -> None:
@@ -1092,16 +1262,20 @@ class TestInputOutputPattern:
 
     def test_configure_and_init_happy_path(self) -> None:
         """Test model initialization with valid config."""
-        with patch("patterns.library.input_output.np", _MOCK_NP), \
-             patch("patterns.library.input_output.inv", lambda a: _MOCK_NP.linalg.inv(a)):
+        with (
+            patch("patterns.library.input_output.np", _MOCK_NP),
+            patch("patterns.library.input_output.inv", lambda a: _MOCK_NP.linalg.inv(a)),
+        ):
             cfg = InputOutputConfig(n_sectors=3)
             model = InputOutputModel(cfg)
             assert model.config == cfg
 
     def test_run_happy_path(self) -> None:
         """Test run with mocked numpy and linear algebra."""
-        with patch("patterns.library.input_output.np", _MOCK_NP), \
-             patch("patterns.library.input_output.inv", lambda a: _MOCK_NP.linalg.inv(a)):
+        with (
+            patch("patterns.library.input_output.np", _MOCK_NP),
+            patch("patterns.library.input_output.inv", lambda a: _MOCK_NP.linalg.inv(a)),
+        ):
             cfg = InputOutputConfig(n_sectors=3)
             model = InputOutputModel(cfg)
             result = model.run()
@@ -1113,11 +1287,18 @@ class TestInputOutputPattern:
 
     def test_run_error_handling_singular_matrix(self) -> None:
         """Test handling of singular matrix in inversion."""
-        with patch("patterns.library.input_output.np", _MOCK_NP), \
-             patch("patterns.library.input_output.inv", side_effect=_MOCK_NP.linalg.LinAlgError("singular")):
+        with (
+            patch("patterns.library.input_output.np", _MOCK_NP),
+            patch(
+                "patterns.library.input_output.inv",
+                side_effect=_MOCK_NP.linalg.LinAlgError("singular"),
+            ),
+        ):
             cfg = InputOutputConfig(n_sectors=3)
             model = InputOutputModel(cfg)
-            with patch("patterns.library.input_output.np.linalg.pinv", side_effect=Exception("pinv failed")):
+            with patch(
+                "patterns.library.input_output.np.linalg.pinv", side_effect=Exception("pinv failed")
+            ):
                 with pytest.raises(Exception, match="pinv failed"):
                     model.run()
 
@@ -1131,8 +1312,10 @@ class TestInputOutputPattern:
     @pytest.mark.parametrize("n_sectors", [3, 5, 7])
     def test_run_various_sizes(self, n_sectors: int) -> None:
         """Test run with different sector counts."""
-        with patch("patterns.library.input_output.np", _MOCK_NP), \
-             patch("patterns.library.input_output.inv", lambda a: _MOCK_NP.linalg.inv(a)):
+        with (
+            patch("patterns.library.input_output.np", _MOCK_NP),
+            patch("patterns.library.input_output.inv", lambda a: _MOCK_NP.linalg.inv(a)),
+        ):
             cfg = InputOutputConfig(n_sectors=n_sectors)
             model = InputOutputModel(cfg)
             result = model.run()

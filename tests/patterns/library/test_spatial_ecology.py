@@ -18,20 +18,21 @@ Covers:
 - run() integration
 - Edge cases: small grid, single species, boundary effects
 """
+
 from __future__ import annotations
 
 import sys
 from pathlib import Path
 from unittest.mock import patch
 
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 import numpy as np
 import pytest
 
-from src.patterns.library.spatial_ecology import SpatialEcologyPattern, SpatialEcologyConfig
 from src.patterns.core import Hypothesis, SimulationStatus
-
+from src.patterns.library.spatial_ecology import SpatialEcologyConfig, SpatialEcologyPattern
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -149,9 +150,7 @@ class TestParseConfig:
 class TestSimulate:
     async def test_fisher_kpp_simulation(self):
         pattern = SpatialEcologyPattern()
-        pattern.config = SpatialEcologyConfig(
-            grid_size=20, n_steps=100, model_type="fisher_kpp"
-        )
+        pattern.config = SpatialEcologyConfig(grid_size=20, n_steps=100, model_type="fisher_kpp")
         h = Hypothesis()
         result = await pattern._simulate(h)
         assert "metrics" in result
@@ -159,9 +158,7 @@ class TestSimulate:
 
     async def test_turing_simulation(self):
         pattern = SpatialEcologyPattern()
-        pattern.config = SpatialEcologyConfig(
-            grid_size=20, n_steps=100, model_type="turing"
-        )
+        pattern.config = SpatialEcologyConfig(grid_size=20, n_steps=100, model_type="turing")
         h = Hypothesis()
         result = await pattern._simulate(h)
         assert "metrics" in result
@@ -177,9 +174,7 @@ class TestSimulate:
 
     async def test_invasion_simulation(self):
         pattern = SpatialEcologyPattern()
-        pattern.config = SpatialEcologyConfig(
-            grid_size=20, n_steps=100, model_type="invasion"
-        )
+        pattern.config = SpatialEcologyConfig(grid_size=20, n_steps=100, model_type="invasion")
         h = Hypothesis()
         result = await pattern._simulate(h)
         assert "metrics" in result
@@ -201,7 +196,9 @@ class TestStepMethods:
 
     def test_turing_step(self):
         pattern = SpatialEcologyPattern()
-        pattern.config = SpatialEcologyConfig(grid_size=20, activator_diffusion=0.01, inhibitor_diffusion=0.5)
+        pattern.config = SpatialEcologyConfig(
+            grid_size=20, activator_diffusion=0.01, inhibitor_diffusion=0.5
+        )
         pattern.fields = [np.ones((20, 20)), np.ones((20, 20))]
         pattern._step_turing(1.0, 0.01)
         assert len(pattern.fields) == 2
@@ -209,10 +206,11 @@ class TestStepMethods:
     def test_competition_step(self):
         pattern = SpatialEcologyPattern()
         pattern.config = SpatialEcologyConfig(
-            grid_size=20, n_species=2,
+            grid_size=20,
+            n_species=2,
             growth_rates=[1.0, 1.0],
             carrying_capacities=[1.0, 1.0],
-            diffusion_coeffs=[0.1, 0.1]
+            diffusion_coeffs=[0.1, 0.1],
         )
         pattern.fields = [np.random.random((20, 20)), np.random.random((20, 20))]
         pattern._step_competition(1.0, 0.01)
@@ -252,21 +250,20 @@ class TestAnalyzeResults:
     def test_fisher_kpp_metrics(self):
         pattern = SpatialEcologyPattern()
         pattern.config = SpatialEcologyConfig(
-            model_type="fisher_kpp",
-            grid_size=20,
-            diffusion_coeffs=[0.1],
-            growth_rates=[1.0]
+            model_type="fisher_kpp", grid_size=20, diffusion_coeffs=[0.1], growth_rates=[1.0]
         )
         pattern.history = []
         for i in range(12):
-            pattern.history.append({
-                "time": float(i),
-                "total": 10.0 + i,
-                "mean": 0.1 + i * 0.02,
-                "max": 0.5 + i * 0.05,
-                "spread_radius": float(i * 2),
-                "wavelength": 0,
-            })
+            pattern.history.append(
+                {
+                    "time": float(i),
+                    "total": 10.0 + i,
+                    "mean": 0.1 + i * 0.02,
+                    "max": 0.5 + i * 0.05,
+                    "spread_radius": float(i * 2),
+                    "wavelength": 0,
+                }
+            )
         result = pattern._analyze_results()
         assert "wave_speed" in result["metrics"]
         assert "theoretical_wave_speed" in result["metrics"]
@@ -275,8 +272,22 @@ class TestAnalyzeResults:
         pattern = SpatialEcologyPattern()
         pattern.config = SpatialEcologyConfig(model_type="turing", grid_size=20)
         pattern.history = [
-            {"time": 0, "total": 10.0, "mean": 0.1, "max": 0.5, "spread_radius": 0, "wavelength": 5.0},
-            {"time": 1, "total": 10.0, "mean": 0.1, "max": 0.5, "spread_radius": 0, "wavelength": 5.0},
+            {
+                "time": 0,
+                "total": 10.0,
+                "mean": 0.1,
+                "max": 0.5,
+                "spread_radius": 0,
+                "wavelength": 5.0,
+            },
+            {
+                "time": 1,
+                "total": 10.0,
+                "mean": 0.1,
+                "max": 0.5,
+                "spread_radius": 0,
+                "wavelength": 5.0,
+            },
         ]
         result = pattern._analyze_results()
         assert "pattern_wavelength" in result["metrics"]

@@ -1,14 +1,16 @@
 """
 Tests for gene_regulatory pattern module.
 """
-import numpy as np
-import pytest
+
 import asyncio
 
+import numpy as np
+import pytest
+
 from src.patterns.library.gene_regulatory import (
-    GRNModel,
     GeneRegulatoryConfig,
     GeneRegulatoryPattern,
+    GRNModel,
 )
 
 
@@ -45,12 +47,14 @@ class TestCanSimulate:
     def test_can_simulate_gene(self):
         pattern = GeneRegulatoryPattern()
         from src.patterns.core import Hypothesis
+
         h = Hypothesis(title="gene regulatory network", description="transcription")
         assert pattern.can_simulate(h) is True
 
     def test_can_simulate_no_match(self):
         pattern = GeneRegulatoryPattern()
         from src.patterns.core import Hypothesis
+
         h = Hypothesis(title="weather forecast", description="")
         assert pattern.can_simulate(h) is False
 

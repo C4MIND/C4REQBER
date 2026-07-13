@@ -4,7 +4,6 @@ import numpy as np
 import pytest
 
 from src.patterns.library.spectral_estimation import (
-
     SpectralEstimationConfig,
     SpectralEstimationPattern,
     SpectralMethod,

@@ -2,7 +2,7 @@
 
 **Terminal-first. MCP-native. One command to discovery.**
 
-[![Tests](https://img.shields.io/badge/tests-9887%20collected-yellowgreen)]()
+[![Tests](https://img.shields.io/badge/tests-9906%20collected-yellowgreen)]()
 [![Lint](https://img.shields.io/badge/lint-41%20baseline%20%2B%20regression%20check-yellow)]()
 [![Typecheck](https://img.shields.io/badge/typecheck-0%20mypy%20errors-brightgreen)]()
 [![Version](https://img.shields.io/badge/version-5.6.0-magenta)]()
@@ -68,7 +68,7 @@ A cognitive exoskeleton for AI agents and humans.
 - **Kuhn Paradigm Shift Assessment**: 4-stage model, 5 values, iterative refinement
 - **TUI v9 command palette** (`:` key): fuzzy-match 35+ commands (settings, capabilities, history, language, debug)
 - **11 LLM providers**: OpenRouter, XAI, Mistral, Moonshot, DeepSeek, Liquid AI, NVIDIA NIM, YandexGPT, Ollama, LM Studio, MLX — auto-detected with depth-based routing
-- **43 active knowledge source adapters** = **33 literature** + **10 data/biological** (MultiSourceSearcher with circuit breaker, semantic dedup, domain-aware routing) — arXiv, PubMed, Crossref, Europe PMC, Semantic Scholar, OpenAlex, Zenodo, Figshare, NCBI E-utilities, PubChem, ChEMBL, Materials Project, AFLOW, Kaggle, UCI ML, Harvard Dataverse, re3data, STRING, ClinicalTrials.gov, GBIF, Allen Brain, USGS, CERN, USPTO, OpenReview, HuggingFace, OpenFDA, NASA Earthdata, CyberLeninka, Math-Net.Ru, DBLP, Datacite, DOAJ, Inspire-HEP, Europe PMC, and more + 40 TRIZ principles + **101+ simulation patterns + 38 simulation engine bridges** (5 internal GPU + 26 P1 open-source bridges + cloud delegates: FEniCSx, OpenFOAM, GROMACS, LAMMPS, MDAnalysis, PySCF, Psi4, Quantum ESPRESSO, Tellurium, NEURON, Brian2, Jaxley, COPASI, xarray, WRF, Mesa, SimPy, Rebound, AMUSE, MuJoCo, PyBullet, diffeqpy, Taichi, JAX MD, JAX-LaB, ModelingToolkit.jl, vast.ai, NVIDIA Brev)
+- **47 configured knowledge source integrations** (46 wired to `MultiSourceSearcher`; runtime-active subset depends on credentials and availability)
 
 **v5.4.0:** "Agent System + Git Hygiene + Code Audit" — main AI agent with Pydantic AI, skills, MCP bridge, persistent memory, sub-agents; 3 critical eval() sandboxes fixed; git secrets removed
 
@@ -76,7 +76,7 @@ A cognitive exoskeleton for AI agents and humans.
 
 **v5.6.0:** "Dead Code Cleanup + API Integration + Pydantic V2 + TUI v8 Polish" — removed 6 dead modules (r1/, skills/, arxiv_adapter, prior_art, dependencies_v6, v6_schemas); integrated 14 API keys into MultiSourceSearcher; Pydantic V1→V2 migration complete; citation verifier hardened against hallucinated theory names; TUI v8 mascot rewritten (Quantum→Cube) with theme-aware colors and S-rank jump animation; Go audit: go vet clean, staticcheck 0 warnings; 9908+ tests collected.
 
-**v9.13.0:** "TUI v9 Simulation Surface" — capabilities overlay (`Ctrl+Shift+C`) listing 38 engine bridges + 9 verifiers with per-platform status and install hints; `CardSimulation` kind rendered in the feed with engine/verdict/fallback-chain/install-hint; typed SSE decoder ready for backend's new `sim_started/sim_finished/sim_skipped` events; 4 new sim-specific achievements (Sim Explorer, Devil's Advocate, Fallback Chef, Cloud Native); command palette (`:`) fuzzy-matches 35+ commands; per-card expansion (Enter to see FullBody, Esc to collapse); adaptive layout (T0/T1/T2/T3); status bar (Ctrl+B); debug overlay (Ctrl+Shift+D); solarized-dark color profile; feed.jsonl persistence + resume on launch; 132 golden snapshots, 100% i18n parity across 7 languages via `regen_i18n.py`. 27 commits, +7302 lines, 0 critical bugs. TUI v9 merged on `main`; see `ARCHITECTURE_TUI_V9.md`.
+**v9.13.0:** "TUI v9 Simulation Surface" — capabilities overlay (`Ctrl+Shift+C`) listing 38 engine bridges + 9 verifiers with per-platform status and install hints; `CardSimulation` kind rendered in the feed with engine/verdict/fallback-chain/install-hint; typed SSE decoder ready for backend's new `sim_started/sim_finished/sim_skipped` events; 4 new sim-specific achievements (Sim Explorer, Devil's Advocate, Fallback Chef, Cloud Native); command palette (`:`) fuzzy-matches 35+ commands; per-card expansion (Enter to see FullBody, Esc to collapse); adaptive layout (T0/T1/T2/T3); status bar (Ctrl+B); debug overlay (Ctrl+Shift+D); solarized-dark color profile; feed.jsonl persistence + resume on launch; 132 golden snapshots, 100% i18n parity across 7 languages via `regen_i18n.py`. 27 commits, +7302 lines, 0 critical bugs. TUI v9 merged on `main`; see `src/tui/v9/ARCHITECTURE.md`.
 
 ## Output Formats (6, auto-detected)
 
@@ -91,7 +91,7 @@ A cognitive exoskeleton for AI agents and humans.
 
 ## Verification Backends (9 real + MathDetector)
 
-**Real (machine-checked when tool installed):** Lean4, Coq, Dafny, Agda, Z3/Hoare, Haskell, CVC5, TLA+, Alloy.  
+**Real (machine-checked when tool installed):** Lean4, Coq, Dafny, Agda, Z3/Hoare, Haskell, CVC5, TLA+, Alloy.
 **TLA+:** bounded models only — see [docs/VERIFICATION_BACKENDS.md](docs/VERIFICATION_BACKENDS.md).
 
 ```
@@ -252,7 +252,7 @@ Copy these into your `.env` file. Keys marked **Required** will disable the sour
 - **Closed-loop simulation** — Bayesian hypothesis tracker + adaptive experiment design + ensemble simulation + convergence detection
 - **Self-directed agenda** — Gap-driven / extension-driven / conflict-driven question generation with feasibility scoring
 - **Open-ended exploration** — Literature anomaly detection (IsolationForest) + surprise-driven question generation + formal framework extension
-- **Knowledge search** — 33+ source adapters (arXiv, PubMed, Crossref, Europe PMC, Semantic Scholar, OpenAlex, Zenodo, Figshare, NCBI, PubChem, ChEMBL, Materials Project, AFLOW, Kaggle, UCI ML, Harvard Dataverse, re3data, STRING, ClinicalTrials.gov, GBIF, Allen Brain, USGS, CERN, USPTO, OpenReview, HuggingFace, OpenFDA, NASA Earthdata, CyberLeninka, Math-Net.Ru, and more)
+- **Knowledge search** — 47 configured source integrations (arXiv, PubMed, Crossref, Europe PMC, Semantic Scholar, OpenAlex, Zenodo, Figshare, NCBI, PubChem, ChEMBL, Materials Project, AFLOW, Kaggle, UCI ML, Harvard Dataverse, re3data, STRING, ClinicalTrials.gov, GBIF, Allen Brain, USGS, CERN, USPTO, OpenReview, HuggingFace, OpenFDA, NASA Earthdata, CyberLeninka, Math-Net.Ru, and more)
 - **Python TUI** (blast tui) — Textual interface with real-time progress, chat, history, slash commands
 - **Go TUI v9** (src/tui/v9) — Bubble Tea v2 interface with 7-phase pipeline, C4 grid, sim surface (CardSimulation kind + capabilities overlay Ctrl+Shift+C), command palette `:`, debug overlay Ctrl+Shift+D, status bar Ctrl+B, 7-language i18n (100% parity), 7 color profiles (incl. solarized-dark), adaptive layout (T0/T1/T2/T3), 132 golden snapshots
 - **Falsification** — Domain-aware simulation + statistical tests with Bonferroni correction
@@ -293,13 +293,13 @@ All documentation lives in the repo — no separate docs site needed.
 | `CHANGELOG.md` | Full version history |
 | `TECHNICAL_DEBT_ROADMAP.md` | Deferred architectural fixes — when and why each debt item becomes payable |
 | `ARCHITECTURE_C4R.md` | C4R system architecture (cognitive, knowledge, simulation, verification) |
-| `ARCHITECTURE_TUI_V9.md` | Go TUI v9 architecture (Bubble Tea v2, cards package, sim surface, command palette, golden snapshots) |
+| `src/tui/v9/ARCHITECTURE.md` | Go TUI v9 architecture (Bubble Tea v2, cards package, sim surface, command palette, golden snapshots) |
 | `audit/TUI_V9_UNIFIED_PLAN_2026-06-11.md` | TUI v9 unified plan — 25 sections, 8 sprints, 27 design decisions, 13 backend contracts |
 | `INSTALL.md` | Full developer setup (Python + Go + engines + API keys) |
 | `QUICKSTART.md` | First discovery in 5 minutes |
 | `docs/onboarding/API_KEYS.md` | How to obtain every API key (registration links, pricing, rate limits) |
 | `docs/onboarding/ENGINES.md` | Installing all 38 simulation engines |
-| `docs/onboarding/TUI_V8.md` | Building and running the Go TUI |
+| `src/tui/v9/README.md` | Building and running the Go TUI v9 |
 | `docs/onboarding/SECRETS.md` | Secure team secrets sharing |
 | `docs/API.md` | REST API reference |
 | `docs/DESIGN.md` | Design system, visual identity, design tokens |
@@ -308,5 +308,5 @@ All documentation lives in the repo — no separate docs site needed.
 | `docs/current/C4_META_SEMANTIC_ISOMORPHISMS.md` | Semantic isomorphism theory |
 | `docs/current/UCOS_ARCHITECTURE.md` | UCOS meta-model architecture |
 | `formal-proofs/` | Lean4, Coq, Dafny, Agda, Hoare, TLA+ formal verification proofs |
-| `docs/MCP_REGISTRY.md` | MCP tool registry (21 tools, regenerated by `scripts/gen_mcp_registry.py`) |
+| `docs/mcp_registry.md` | MCP tool registry (21 tools, regenerated by `scripts/gen_mcp_registry.py`) |
 | `LICENSE` | AGPL-3.0 (open source) / Commercial License available |

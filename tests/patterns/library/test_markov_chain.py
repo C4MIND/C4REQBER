@@ -1,22 +1,23 @@
 """
 Tests for src/patterns/library/markov_chain.py
 """
+
 from __future__ import annotations
 
 import sys
 from pathlib import Path
+
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 import numpy as np
 import pytest
 
-from src.patterns.library.markov_chain import (
-    MarkovChainPattern,
-    MarkovChainConfig,
-)
 from src.patterns.core import Hypothesis, SimulationStatus
-
+from src.patterns.library.markov_chain import (
+    MarkovChainConfig,
+    MarkovChainPattern,
+)
 
 
 class TestMarkovChainConfig:
@@ -129,7 +130,14 @@ class TestSimulateMarkov:
 class TestCalculateConfidence:
     def test_high_confidence(self):
         pattern = MarkovChainPattern()
-        results = {"metrics": {"is_irreducible": True, "mixing_time": 10, "spectral_gap": 0.5, "tv_distance_final": 0.1}}
+        results = {
+            "metrics": {
+                "is_irreducible": True,
+                "mixing_time": 10,
+                "spectral_gap": 0.5,
+                "tv_distance_final": 0.1,
+            }
+        }
         confidence = pattern._calculate_confidence(results)
         assert confidence > 0.5
 

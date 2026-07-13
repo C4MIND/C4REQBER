@@ -8,11 +8,12 @@ Covers:
 - Convenience partials (retry_llm, retry_network, retry_db, retry_aggressive)
 - Edge cases: immediate success, all failures, custom exceptions, on_retry callback
 """
+
 from __future__ import annotations
-from pathlib import Path
 
 import sys
 import time
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 
@@ -24,6 +25,7 @@ if str(project_root / "src") not in sys.path:
     sys.path.insert(0, str(project_root / "src"))
 
 import pytest
+from tenacity import RetryError
 
 from src.utils.retry.core import RETRY_CONFIGS, CircuitBreakerOpen, RetryStrategy
 from src.utils.retry.policies import (
@@ -92,7 +94,9 @@ class TestCustomRetry:
         """Exceptions not in retryable list should fail immediately."""
         call_count = 0
 
-        @custom_retry(max_attempts=5, base_delay=0.01, max_jitter=0, retryable_exceptions=(ConnectionError,))
+        @custom_retry(
+            max_attempts=5, base_delay=0.01, max_jitter=0, retryable_exceptions=(ConnectionError,)
+        )
         def raise_value_error():
             nonlocal call_count
             call_count += 1
@@ -161,7 +165,9 @@ class TestCustomRetry:
         def track_sleep(delay):
             delays.append(delay)
 
-        @custom_retry(max_attempts=5, base_delay=1.0, max_delay=1.5, exponential_base=10.0, max_jitter=0)
+        @custom_retry(
+            max_attempts=5, base_delay=1.0, max_delay=1.5, exponential_base=10.0, max_jitter=0
+        )
         def always_fail():
             raise ConnectionError("fail")
 
@@ -348,7 +354,6 @@ class TestConveniencePartials:
         assert call_count == 2
 
     def test_retry_network_applies_correct_strategy(self):
-
         @retry_network()
         def call():
             return "data"
@@ -356,7 +361,6 @@ class TestConveniencePartials:
         assert call() == "data"
 
     def test_retry_db_applies_correct_strategy(self):
-
         @retry_db()
         def call():
             return "rows"
@@ -449,7 +453,7 @@ class TestRetryIfStatusCode:
             call_count += 1
             return MockResponse(429)
 
-        with pytest.raises(Exception):  # tenacity.RetryError
+        with pytest.raises(RetryError):
             api_call()
         assert call_count == 5  # stop_after_attempt(5)
 
@@ -484,7 +488,6 @@ class TestRetryIfStatusCode:
         assert call_count == 1
 
     def test_preserves_function_metadata(self):
-
         @retry_if_status_code((429,))
         def documented():
             """Docstring."""

@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/figuramax/c4reqber-tui-v9/cards"
@@ -67,4 +68,48 @@ func TestAppendCardNilFeedStoreDoesNotPanic(t *testing.T) {
 	m.feedStore = nil // simulate HOME-less environment
 	// Should not panic
 	m.appendCard(cards.Card{Kind: cards.KindHypothesis, Title: "nohome", Body: "x"})
+}
+
+func TestNewAppRestorePreservesIDsAndMouseZones(t *testing.T) {
+	tmp := t.TempDir()
+	t.Setenv("HOME", tmp)
+
+	original := NewAppFresh("http://test")
+	const persistedID = cards.ID(1_000_000)
+	original.appendCard(cards.Card{
+		ID:    persistedID,
+		Kind:  cards.KindHypothesis,
+		Title: "restored hypothesis",
+		Body:  "evidence",
+	})
+
+	restored := NewApp("http://test")
+	var found bool
+	for _, card := range restored.feed {
+		if card.Title == "restored hypothesis" {
+			found = true
+			if card.ID != persistedID {
+				t.Fatalf("restored card ID = %d, want %d", card.ID, persistedID)
+			}
+		}
+	}
+	if !found {
+		t.Fatal("persisted card was not restored")
+	}
+
+	wantZone := fmt.Sprintf("card-%d", persistedID)
+	var hasZone bool
+	for _, zone := range restored.zoneIDs {
+		if zone == wantZone {
+			hasZone = true
+		}
+	}
+	if !hasZone {
+		t.Fatalf("restored card mouse zone %q not rebuilt: %v", wantZone, restored.zoneIDs)
+	}
+
+	restored.appendCard(cards.Card{Kind: cards.KindPaper, Title: "new card"})
+	if got := restored.feed[len(restored.feed)-1].ID; got <= persistedID {
+		t.Fatalf("new card ID %d collided with restored allocator floor %d", got, persistedID)
+	}
 }

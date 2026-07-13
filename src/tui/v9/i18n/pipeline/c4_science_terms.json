@@ -655,14 +655,5 @@
     "de": "Abgeschlossen",
     "ar": "مكتمل",
     "hi": "पूर्ण"
-  },
-  "cancelled": {
-    "en": "cancelled",
-    "ru": "отменено",
-    "zh": "已取消",
-    "ja": "キャンセル",
-    "de": "abgebrochen",
-    "ar": "ملغى",
-    "hi": "रद्द"
   }
 }

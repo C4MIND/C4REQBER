@@ -1,4 +1,5 @@
 """C4REQBER L1 Causal Engine — Structural Causal Models."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -6,6 +7,19 @@ from typing import Any, Callable
 
 import networkx as nx
 import numpy as np
+
+
+def _nx_is_d_separator(
+    graph: nx.DiGraph,
+    x: set[str],
+    y: set[str],
+    z: set[str],
+) -> bool:
+    """Call the d-separation API across supported NetworkX releases."""
+    modern_api = getattr(nx, "is_d_separator", None)
+    if modern_api is not None:
+        return bool(modern_api(graph, x, y, z))
+    return bool(nx.d_separated(graph, x, y, z))
 
 
 @dataclass
@@ -141,9 +155,7 @@ class StructuralCausalModel:
         """All descendants of a node (transitive closure of children)."""
         return set(nx.descendants(self._dag, node))
 
-    def is_d_separated(
-        self, x: str, y: str, conditioning_set: set[str] | None = None
-    ) -> bool:
+    def is_d_separated(self, x: str, y: str, conditioning_set: set[str] | None = None) -> bool:
         """
         Check if X and Y are d-separated given a conditioning set Z.
 
@@ -151,7 +163,7 @@ class StructuralCausalModel:
         in Bayesian networks and causal DAGs.
         """
         z = conditioning_set or set()
-        return nx.algorithms.d_separation.d_separated(self._dag, {x}, {y}, z)
+        return _nx_is_d_separator(self._dag, {x}, {y}, z)
 
     def get_topological_order(self) -> list[str]:
         """Return variables in topological order (causal ordering)."""
@@ -370,6 +382,8 @@ class StructuralCausalModel:
 
 def _make_constant(value: float) -> Callable[..., float]:
     """Create a constant function for interventions."""
+
     def _const(*args: Any) -> float:
         return value
+
     return _const

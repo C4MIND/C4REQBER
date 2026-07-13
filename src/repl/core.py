@@ -21,12 +21,11 @@ if str(_src) not in sys.path:
 from adapters.ollama_adapter import LLMProvider
 from bibliography.manager import BibliographyManager
 from core.cdi_engine import CDIEngine, ContradictionType, PhysicalContradiction
+from data.database import PatternDatabase
 from export.manager import ExportManager
 from extractors.contradiction import ContradictionExtractor
 from projects.manager import ProjectManager
 from visualization.c4_viz import C4Visualizer
-
-from data.database import PatternDatabase
 
 
 class Style:

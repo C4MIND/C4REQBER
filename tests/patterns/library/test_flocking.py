@@ -16,18 +16,19 @@ Covers:
 - get_metadata()
 - Edge cases: different models, boundary conditions, obstacles
 """
+
 from __future__ import annotations
 
 import sys
 from pathlib import Path
+
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 import numpy as np
 import pytest
 
-from src.patterns.library.flocking import FlockingPattern, FlockingConfig, FlockingModel
-
+from src.patterns.library.flocking import FlockingConfig, FlockingModel, FlockingPattern
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -57,7 +58,7 @@ class TestFlockingConfig:
             model=FlockingModel.VICSEK,
             n_agents=100,
             space_size=(50.0, 50.0),
-            boundary_mode="reflective"
+            boundary_mode="reflective",
         )
         assert cfg.model == FlockingModel.VICSEK
         assert cfg.n_agents == 100
@@ -65,11 +66,7 @@ class TestFlockingConfig:
         assert cfg.boundary_mode == "reflective"
 
     def test_boids_weights(self):
-        cfg = FlockingConfig(
-            separation_weight=2.0,
-            alignment_weight=1.5,
-            cohesion_weight=0.5
-        )
+        cfg = FlockingConfig(separation_weight=2.0, alignment_weight=1.5, cohesion_weight=0.5)
         assert cfg.separation_weight == 2.0
         assert cfg.alignment_weight == 1.5
         assert cfg.cohesion_weight == 0.5
@@ -205,9 +202,7 @@ class TestCohesion:
 class TestAvoidObstacles:
     def test_obstacle_avoidance(self):
         cfg = FlockingConfig(
-            n_agents=1,
-            obstacle_positions=np.array([[5.0, 5.0]]),
-            obstacle_radius=2.0
+            n_agents=1, obstacle_positions=np.array([[5.0, 5.0]]), obstacle_radius=2.0
         )
         pattern = FlockingPattern(cfg)
         pattern.positions[0] = [5.0, 3.0]  # Close to obstacle
@@ -217,9 +212,7 @@ class TestAvoidObstacles:
 
     def test_no_avoidance_when_far(self):
         cfg = FlockingConfig(
-            n_agents=1,
-            obstacle_positions=np.array([[50.0, 50.0]]),
-            obstacle_radius=5.0
+            n_agents=1, obstacle_positions=np.array([[50.0, 50.0]]), obstacle_radius=5.0
         )
         pattern = FlockingPattern(cfg)
         pattern.positions[0] = [5.0, 5.0]
@@ -270,11 +263,7 @@ class TestVicsekStep:
 
     def test_noise_changes_direction(self):
         np.random.seed(42)
-        cfg = FlockingConfig(
-            model=FlockingModel.VICSEK,
-            n_agents=10,
-            noise_strength=0.5
-        )
+        cfg = FlockingConfig(model=FlockingModel.VICSEK, n_agents=10, noise_strength=0.5)
         pattern = FlockingPattern(cfg)
         vel_before = pattern.velocities.copy()
         pattern._vicsek_step()
@@ -357,7 +346,7 @@ class TestRun:
             n_steps=200,
             separation_weight=1.0,
             alignment_weight=2.0,
-            cohesion_weight=1.0
+            cohesion_weight=1.0,
         )
         pattern = FlockingPattern(cfg)
         result = pattern.run()
@@ -426,7 +415,7 @@ class TestEdgeCases:
             model=FlockingModel.VICSEK,
             n_agents=50,
             n_steps=100,
-            noise_strength=3.0  # Very high noise
+            noise_strength=3.0,  # Very high noise
         )
         pattern = FlockingPattern(cfg)
         result = pattern.run()
@@ -436,10 +425,7 @@ class TestEdgeCases:
     def test_zero_noise(self):
         """Zero noise should allow perfect alignment"""
         cfg = FlockingConfig(
-            model=FlockingModel.VICSEK,
-            n_agents=20,
-            n_steps=50,
-            noise_strength=0.0
+            model=FlockingModel.VICSEK, n_agents=20, n_steps=50, noise_strength=0.0
         )
         pattern = FlockingPattern(cfg)
         # Start with some alignment

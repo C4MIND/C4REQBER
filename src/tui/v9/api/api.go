@@ -96,7 +96,7 @@ func (c *Client) Health(ctx context.Context) error {
 	return nil
 }
 
-func (c *Client) CSRF() string { return c.csrf }
+func (c *Client) CSRF() string  { return c.csrf }
 func (c *Client) Token() string { return c.token }
 
 // Register creates a new user (idempotent — server returns 200/409/422 if exists).
@@ -375,13 +375,16 @@ func (c *Client) Stream(ctx context.Context, jobID string) (<-chan SSEEvent, fun
 			n, readErr := httpResp.Body.Read(buf)
 			if n > 0 {
 				pending += string(buf[:n])
+				if len(pending) > maxSSEPendingBytes {
+					return
+				}
 				for {
 					idx := indexOfSSEBoundary(pending)
 					if idx < 0 {
 						break
 					}
 					event := parseSSEEvent(pending[:idx])
-					pending = pending[idx+2:]
+					pending = pending[idx+sseBoundaryWidth(pending[idx:]):]
 					if event.Event != "" || event.Data != "" {
 						select {
 						case out <- event:
@@ -427,13 +430,25 @@ func flexibleToMap(raw *oapi.FlexibleObject) map[string]any {
 	return map[string]any(*raw)
 }
 
+const maxSSEPendingBytes = 1 << 20
+
 func indexOfSSEBoundary(s string) int {
-	for i := 0; i < len(s)-1; i++ {
-		if s[i] == '\n' && s[i+1] == '\n' {
-			return i
-		}
+	lf := strings.Index(s, "\n\n")
+	crlf := strings.Index(s, "\r\n\r\n")
+	if lf < 0 {
+		return crlf
 	}
-	return -1
+	if crlf >= 0 && crlf < lf {
+		return crlf
+	}
+	return lf
+}
+
+func sseBoundaryWidth(s string) int {
+	if strings.HasPrefix(s, "\r\n\r\n") {
+		return 4
+	}
+	return 2
 }
 
 func parseSSEEvent(block string) SSEEvent {
@@ -452,4 +467,3 @@ func parseSSEEvent(block string) SSEEvent {
 	}
 	return out
 }
-

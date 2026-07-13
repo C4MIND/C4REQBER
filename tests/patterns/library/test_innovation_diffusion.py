@@ -15,10 +15,12 @@ Covers:
 - get_metadata()
 - Edge cases: zero innovation, high imitation, network effects
 """
+
 from __future__ import annotations
 
 import sys
 from pathlib import Path
+
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
@@ -26,10 +28,9 @@ import numpy as np
 import pytest
 
 from src.patterns.library.innovation_diffusion import (
-
-    InnovationDiffusionPattern,
-    InnovationDiffusionConfig,
     DiffusionModel,
+    InnovationDiffusionConfig,
+    InnovationDiffusionPattern,
 )
 
 
@@ -102,24 +103,32 @@ class TestInnovationDiffusionPatternInit:
 
 class TestBuildNetwork:
     def test_complete_network(self):
-        cfg = InnovationDiffusionConfig(model=DiffusionModel.NETWORK, network_type="complete", n_agents=10)
+        cfg = InnovationDiffusionConfig(
+            model=DiffusionModel.NETWORK, network_type="complete", n_agents=10
+        )
         pattern = InnovationDiffusionPattern(cfg)
         assert pattern.network is not None
         assert pattern.network.shape == (10, 10)
 
     def test_small_world_network(self):
-        cfg = InnovationDiffusionConfig(model=DiffusionModel.NETWORK, network_type="small_world", n_agents=20)
+        cfg = InnovationDiffusionConfig(
+            model=DiffusionModel.NETWORK, network_type="small_world", n_agents=20
+        )
         pattern = InnovationDiffusionPattern(cfg)
         assert pattern.network is not None
         assert pattern.network.shape == (20, 20)
 
     def test_scale_free_network(self):
-        cfg = InnovationDiffusionConfig(model=DiffusionModel.NETWORK, network_type="scale_free", n_agents=20)
+        cfg = InnovationDiffusionConfig(
+            model=DiffusionModel.NETWORK, network_type="scale_free", n_agents=20
+        )
         pattern = InnovationDiffusionPattern(cfg)
         assert pattern.network is not None
 
     def test_random_network(self):
-        cfg = InnovationDiffusionConfig(model=DiffusionModel.NETWORK, network_type="random", n_agents=20)
+        cfg = InnovationDiffusionConfig(
+            model=DiffusionModel.NETWORK, network_type="random", n_agents=20
+        )
         pattern = InnovationDiffusionPattern(cfg)
         assert pattern.network is not None
 

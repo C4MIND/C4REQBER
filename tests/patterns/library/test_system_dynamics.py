@@ -22,17 +22,20 @@ Covers:
 - get_metadata()
 - Edge cases: zero stocks, single stock, invalid solver
 """
+
 from __future__ import annotations
 
 import sys
 from pathlib import Path
 from unittest.mock import patch
 
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 import numpy as np
 import pytest
 
+from src.patterns.core import Hypothesis, SimulationStatus
 from src.patterns.library.system_dynamics import (
     Flow,
     Stock,
@@ -40,7 +43,6 @@ from src.patterns.library.system_dynamics import (
     SystemDynamicsPattern,
     SystemType,
 )
-from src.patterns.core import Hypothesis, SimulationStatus
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -67,7 +69,9 @@ class TestStock:
         assert stock.unit == ""
 
     def test_custom_init(self):
-        stock = Stock(name="resources", initial_value=50.0, min_value=0.0, max_value=1000.0, unit="tons")
+        stock = Stock(
+            name="resources", initial_value=50.0, min_value=0.0, max_value=1000.0, unit="tons"
+        )
         assert stock.min_value == 0.0
         assert stock.max_value == 1000.0
         assert stock.unit == "tons"
@@ -75,7 +79,9 @@ class TestStock:
 
 class TestFlow:
     def test_init(self):
-        flow = Flow(name="growth", source=None, sink="population", rate_expression="0.1 * population")
+        flow = Flow(
+            name="growth", source=None, sink="population", rate_expression="0.1 * population"
+        )
         assert flow.name == "growth"
         assert flow.source is None
         assert flow.sink == "population"
@@ -205,7 +211,12 @@ class TestBuildModel:
 
     def test_epidemic(self):
         pattern = SystemDynamicsPattern()
-        h = Hypothesis(parameters={"model_type": "epidemic", "stocks": ["susceptible", "infected", "recovered"]})
+        h = Hypothesis(
+            parameters={
+                "model_type": "epidemic",
+                "stocks": ["susceptible", "infected", "recovered"],
+            }
+        )
         pattern._build_model(h)
         assert "susceptible" in pattern.stocks
         assert "infected" in pattern.stocks
@@ -222,11 +233,13 @@ class TestBuildModel:
 
     def test_custom_model(self):
         pattern = SystemDynamicsPattern()
-        h = Hypothesis(parameters={
-            "model_type": "custom",
-            "stocks": ["x"],
-            "flows": [{"name": "inflow", "source": None, "sink": "x", "expression": "1.0"}],
-        })
+        h = Hypothesis(
+            parameters={
+                "model_type": "custom",
+                "stocks": ["x"],
+                "flows": [{"name": "inflow", "source": None, "sink": "x", "expression": "1.0"}],
+            }
+        )
         pattern._build_model(h)
         assert "x" in pattern.stocks
         assert len(pattern.flows) == 1
@@ -286,7 +299,9 @@ class TestRunSimulation:
         pattern = SystemDynamicsPattern()
         pattern.stocks = {"population": Stock("population", 10.0)}
         pattern.flows = [Flow("growth", None, "population", "0.1 * population")]
-        cfg = SystemDynamicsConfig(t_end=10.0, dt=0.1, detect_events=True, threshold_crossings=[50.0])
+        cfg = SystemDynamicsConfig(
+            t_end=10.0, dt=0.1, detect_events=True, threshold_crossings=[50.0]
+        )
         solution = await pattern._run_simulation(cfg)
         assert solution.success is True
 
@@ -303,7 +318,9 @@ class TestSensitivityAnalysis:
         pattern.rng = np.random.default_rng(42)
         pattern.stocks = {"population": Stock("population", 100.0)}
         pattern.flows = [Flow("growth", None, "population", "0.1 * population")]
-        cfg = SystemDynamicsConfig(t_end=5.0, dt=0.5, sensitivity_analysis=True, n_sensitivity_runs=5)
+        cfg = SystemDynamicsConfig(
+            t_end=5.0, dt=0.5, sensitivity_analysis=True, n_sensitivity_runs=5
+        )
         result = await pattern._run_sensitivity_analysis(cfg)
         assert "population_sensitivity_mean" in result
         assert "population_sensitivity_std" in result
@@ -394,6 +411,7 @@ class TestCompileResults:
     def test_compiles_basic(self):
         pattern = SystemDynamicsPattern()
         pattern.stocks = {"population": Stock("population", 100.0)}
+
         # Mock solution
         class MockSolution:
             def __init__(self):
@@ -401,6 +419,7 @@ class TestCompileResults:
                 self.y = np.array([[100.0, 110.0, 120.0]])
                 self.success = True
                 self.nfev = 100
+
         solution = MockSolution()
         cfg = SystemDynamicsConfig()
         result = pattern._compile_results(solution, {}, {}, {}, cfg)

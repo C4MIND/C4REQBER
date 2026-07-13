@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Test single dissertation with new Quality Gates + PipelineConfig + UserProfile."""
+
 import os
 import sys
 
@@ -76,7 +77,7 @@ async def main():
     logger.info(f"Bibliography:    {len(record.bibliography)}")
 
     if record.quality_report:
-        logger.info(f"\nQuality Report:")
+        logger.info("\nQuality Report:")
         logger.info(f"  Grade:         {record.quality_report.grade}")
         logger.info(f"  Score:         {record.quality_report.overall_score}/100")
         logger.info(f"  All passed:    {record.quality_report.passed_all}")
@@ -84,12 +85,12 @@ async def main():
             status = "✅" if g.passed else "⚠️"
             logger.info(f"  {status} {g.step}: {g.message[:50]} (score: {g.score:.2f})")
         if record.quality_report.recommendations:
-            logger.info(f"  Recommendations:")
+            logger.info("  Recommendations:")
             for r in record.quality_report.recommendations:
                 logger.info(f"    - {r}")
 
     if record.gaps:
-        logger.info(f"\nTop gaps:")
+        logger.info("\nTop gaps:")
         for i, g in enumerate(record.gaps[:3], 1):
             logger.info(f"  {i}. {g.get('area', 'Unknown')[:60]}")
 

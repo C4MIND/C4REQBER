@@ -1,7 +1,8 @@
 """Tests for src/design/tokens.py — DesignTokens, ColorToken."""
+
 from __future__ import annotations
 
-from src.design.tokens import ColorToken, DesignTokens, ICONS, get_color_by_status
+from src.design.tokens import ICONS, ColorToken, DesignTokens, get_color_by_status
 
 
 class TestColorToken:

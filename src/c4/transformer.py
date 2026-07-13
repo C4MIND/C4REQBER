@@ -2,6 +2,7 @@
 C4REQBER: Domain Transformer
 Cross-domain isomorphism engine using structural fingerprinting.
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -24,6 +25,7 @@ except ImportError:
 
 class IsomorphismType(Enum):
     """IsomorphismType."""
+
     VERIFIED = "verified"
     PARTIAL = "partial"
     FAILED = "failed"
@@ -48,7 +50,7 @@ class DomainFingerprint:
             "constraints": sorted(self.constraints),
         }
         raw = json.dumps(data, sort_keys=True)
-        return hashlib.md5(raw.encode()).hexdigest()[:16]
+        return hashlib.sha256(raw.encode()).hexdigest()[:16]
 
     def __post_init__(self) -> None:
         if not self.spectral_hash:
@@ -143,9 +145,7 @@ class DomainTransformer:
             # Weighted combination: spectral captures graph topology, structural captures labels
             score = 0.6 * spectral_score + 0.4 * struct_score
             if score > best_result.confidence:
-                iso_type = (
-                    IsomorphismType.VERIFIED if score > 0.9 else IsomorphismType.PARTIAL
-                )
+                iso_type = IsomorphismType.VERIFIED if score > 0.9 else IsomorphismType.PARTIAL
                 best_result = IsomorphismResult(
                     source_domain=source.domain,
                     target_domain=target_domain,
@@ -160,9 +160,7 @@ class DomainTransformer:
 
         return best_result
 
-    def _spectral_embedding(
-        self, fp: DomainFingerprint, dim: int = 3
-    ) -> list[float] | None:
+    def _spectral_embedding(self, fp: DomainFingerprint, dim: int = 3) -> list[float] | None:
         """
         Compute spectral embedding of a domain fingerprint using graph Laplacian.
         Returns a flat list of eigenvector components or None if too small.
@@ -207,9 +205,7 @@ class DomainTransformer:
 
         # Take eigenvectors for smallest non-zero eigenvalues
         k = min(dim, n - 1)
-        embedding = (
-            eigvecs[:, 1 : k + 1].flatten().tolist()
-        )  # skip first (constant) eigenvector
+        embedding = eigvecs[:, 1 : k + 1].flatten().tolist()  # skip first (constant) eigenvector
         return embedding  # type: ignore[no-any-return]
 
     def _spectral_similarity(self, a: DomainFingerprint, b: DomainFingerprint) -> float:
@@ -279,19 +275,13 @@ class DomainTransformer:
         mapping = {}
         for ea in a.entities:
             for eb in b.entities:
-                if (
-                    ea.lower() == eb.lower()
-                    or ea.lower() in eb.lower()
-                    or eb.lower() in ea.lower()
-                ):
+                if ea.lower() == eb.lower() or ea.lower() in eb.lower() or eb.lower() in ea.lower():
                     mapping[ea] = eb
                     break
 
         return score, mapping
 
-    def _infer_c4_path(
-        self, start: C4State | None, end: C4State | None
-    ) -> list[str]:
+    def _infer_c4_path(self, start: C4State | None, end: C4State | None) -> list[str]:
         """Infer C4 operator path between states."""
         if start is None or end is None:
             return []
@@ -308,16 +298,12 @@ class DomainTransformer:
         """Search structural memory for similar fingerprints."""
         results = []
         for entry in self._structural_memory:
-            score, _ = self._structural_similarity(
-                fingerprint, entry.source_fingerprint
-            )
+            score, _ = self._structural_similarity(fingerprint, entry.source_fingerprint)
             if score >= min_confidence:
                 results.append(entry)
         return sorted(results, key=lambda e: e.result.confidence, reverse=True)
 
-    def fra_adapt(
-        self, source: DomainFingerprint, analog: IsomorphismResult
-    ) -> dict[str, Any]:
+    def fra_adapt(self, source: DomainFingerprint, analog: IsomorphismResult) -> dict[str, Any]:
         """
         FRA: Fingerprint → Route → Adapt
         Adapt a known solution to the current problem.

@@ -14,24 +14,25 @@ Covers:
 - get_metadata()
 - Edge cases: zero neurons, zero time, zero connection probability
 """
+
 from __future__ import annotations
 
 import sys
 from pathlib import Path
 from unittest.mock import patch
 
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 import numpy as np
 import pytest
 
+from src.patterns.core import Hypothesis, SimulationStatus
 from src.patterns.library.neural_network import (
     NeuralNetworkPattern,
     Neuron,
     NeuronModel,
 )
-from src.patterns.core import Hypothesis, SimulationStatus
-
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -135,7 +136,13 @@ class TestLIFSimulation:
     async def test_lif_default(self):
         pattern = NeuralNetworkPattern()
         h = Hypothesis(parameters={})
-        config = {"neuron_model": "leaky_integrate_fire", "num_neurons": 10, "simulation_time": 100.0, "dt": 0.1, "connection_prob": 0.1}
+        config = {
+            "neuron_model": "leaky_integrate_fire",
+            "num_neurons": 10,
+            "simulation_time": 100.0,
+            "dt": 0.1,
+            "connection_prob": 0.1,
+        }
         result = await pattern._lif_simulation(h, config)
         assert "metrics" in result
         assert "logs" in result
@@ -146,7 +153,13 @@ class TestLIFSimulation:
     async def test_lif_spikes_generated(self):
         pattern = NeuralNetworkPattern()
         h = Hypothesis(parameters={})
-        config = {"neuron_model": "leaky_integrate_fire", "num_neurons": 10, "simulation_time": 100.0, "dt": 0.1, "connection_prob": 0.5}
+        config = {
+            "neuron_model": "leaky_integrate_fire",
+            "num_neurons": 10,
+            "simulation_time": 100.0,
+            "dt": 0.1,
+            "connection_prob": 0.5,
+        }
         result = await pattern._lif_simulation(h, config)
         # With external input, some spikes should occur
         assert result["metrics"]["total_spikes"] >= 0
@@ -154,21 +167,37 @@ class TestLIFSimulation:
     async def test_lif_connections_created(self):
         pattern = NeuralNetworkPattern()
         h = Hypothesis(parameters={})
-        config = {"neuron_model": "leaky_integrate_fire", "num_neurons": 10, "simulation_time": 10.0, "dt": 0.1, "connection_prob": 0.5}
+        config = {
+            "neuron_model": "leaky_integrate_fire",
+            "num_neurons": 10,
+            "simulation_time": 10.0,
+            "dt": 0.1,
+            "connection_prob": 0.5,
+        }
         result = await pattern._lif_simulation(h, config)
         assert result["metrics"]["num_connections"] > 0
 
     async def test_lif_logs_present(self):
         pattern = NeuralNetworkPattern()
         h = Hypothesis(parameters={})
-        config = {"neuron_model": "leaky_integrate_fire", "num_neurons": 10, "simulation_time": 100.0}
+        config = {
+            "neuron_model": "leaky_integrate_fire",
+            "num_neurons": 10,
+            "simulation_time": 100.0,
+        }
         result = await pattern._lif_simulation(h, config)
         assert any("LIF" in log for log in result["logs"])
 
     async def test_lif_zero_connections(self):
         pattern = NeuralNetworkPattern()
         h = Hypothesis(parameters={})
-        config = {"neuron_model": "leaky_integrate_fire", "num_neurons": 10, "simulation_time": 100.0, "dt": 0.1, "connection_prob": 0.0}
+        config = {
+            "neuron_model": "leaky_integrate_fire",
+            "num_neurons": 10,
+            "simulation_time": 100.0,
+            "dt": 0.1,
+            "connection_prob": 0.0,
+        }
         result = await pattern._lif_simulation(h, config)
         assert result["metrics"]["num_connections"] == 0
 
@@ -183,7 +212,12 @@ class TestIzhikevichSimulation:
     async def test_izhikevich_default(self):
         pattern = NeuralNetworkPattern()
         h = Hypothesis(parameters={})
-        config = {"neuron_model": "izhikevich", "num_neurons": 10, "simulation_time": 100.0, "dt": 0.1}
+        config = {
+            "neuron_model": "izhikevich",
+            "num_neurons": 10,
+            "simulation_time": 100.0,
+            "dt": 0.1,
+        }
         result = await pattern._izhikevich_simulation(h, config)
         assert "metrics" in result
         assert "logs" in result
@@ -194,7 +228,12 @@ class TestIzhikevichSimulation:
     async def test_izhikevich_spikes(self):
         pattern = NeuralNetworkPattern()
         h = Hypothesis(parameters={})
-        config = {"neuron_model": "izhikevich", "num_neurons": 10, "simulation_time": 100.0, "dt": 0.1}
+        config = {
+            "neuron_model": "izhikevich",
+            "num_neurons": 10,
+            "simulation_time": 100.0,
+            "dt": 0.1,
+        }
         result = await pattern._izhikevich_simulation(h, config)
         assert result["metrics"]["total_spikes"] >= 0
 
@@ -272,7 +311,11 @@ class TestRun:
     async def test_run_lif(self):
         pattern = NeuralNetworkPattern()
         h = Hypothesis(title="Neural simulation", description="test")
-        config = {"neuron_model": "leaky_integrate_fire", "num_neurons": 10, "simulation_time": 100.0}
+        config = {
+            "neuron_model": "leaky_integrate_fire",
+            "num_neurons": 10,
+            "simulation_time": 100.0,
+        }
         result = await pattern.run(h, config)
         assert result.status == SimulationStatus.COMPLETED
         assert result.simulation_id.startswith("nn_")
@@ -289,7 +332,11 @@ class TestRun:
     async def test_run_logs_present(self):
         pattern = NeuralNetworkPattern()
         h = Hypothesis(title="Neural simulation", description="test")
-        config = {"neuron_model": "leaky_integrate_fire", "num_neurons": 10, "simulation_time": 100.0}
+        config = {
+            "neuron_model": "leaky_integrate_fire",
+            "num_neurons": 10,
+            "simulation_time": 100.0,
+        }
         result = await pattern.run(h, config)
         assert len(result.logs) > 0
 
@@ -325,7 +372,11 @@ class TestEdgeCases:
     async def test_single_neuron(self):
         pattern = NeuralNetworkPattern()
         h = Hypothesis(title="Neural simulation", description="test")
-        config = {"neuron_model": "leaky_integrate_fire", "num_neurons": 1, "simulation_time": 100.0}
+        config = {
+            "neuron_model": "leaky_integrate_fire",
+            "num_neurons": 1,
+            "simulation_time": 100.0,
+        }
         result = await pattern.run(h, config)
         assert result.status == SimulationStatus.COMPLETED
 
@@ -346,7 +397,12 @@ class TestEdgeCases:
     async def test_lif_no_spikes_low_input(self):
         pattern = NeuralNetworkPattern()
         h = Hypothesis(parameters={})
-        config = {"neuron_model": "leaky_integrate_fire", "num_neurons": 10, "simulation_time": 10.0, "dt": 0.1}
+        config = {
+            "neuron_model": "leaky_integrate_fire",
+            "num_neurons": 10,
+            "simulation_time": 10.0,
+            "dt": 0.1,
+        }
         result = await pattern._lif_simulation(h, config)
         # Should still produce valid metrics even with few/no spikes
         assert "avg_firing_rate_hz" in result["metrics"]
@@ -354,7 +410,12 @@ class TestEdgeCases:
     async def test_izhikevich_single_neuron(self):
         pattern = NeuralNetworkPattern()
         h = Hypothesis(parameters={})
-        config = {"neuron_model": "izhikevich", "num_neurons": 1, "simulation_time": 100.0, "dt": 0.1}
+        config = {
+            "neuron_model": "izhikevich",
+            "num_neurons": 1,
+            "simulation_time": 100.0,
+            "dt": 0.1,
+        }
         result = await pattern._izhikevich_simulation(h, config)
         assert result["metrics"]["num_neurons"] == 1
 

@@ -1,22 +1,23 @@
 """
 Tests for src/patterns/library/population_genetics.py
 """
+
 from __future__ import annotations
 
 import sys
 from pathlib import Path
+
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 import numpy as np
 import pytest
 
-from src.patterns.library.population_genetics import (
-    PopulationGeneticsPattern,
-    PopulationGeneticsConfig,
-)
 from src.patterns.core import Hypothesis, SimulationStatus
-
+from src.patterns.library.population_genetics import (
+    PopulationGeneticsConfig,
+    PopulationGeneticsPattern,
+)
 
 
 class TestPopulationGeneticsConfig:
@@ -97,27 +98,46 @@ class TestSimulateGenetics:
         pattern = PopulationGeneticsPattern()
         pattern.config = PopulationGeneticsConfig(N=50, n_generations=100, n_replicates=20)
         result = await pattern._simulate_genetics()
-        assert result["metrics"]["final_heterozygosity"] <= result["metrics"]["initial_heterozygosity"]
+        assert (
+            result["metrics"]["final_heterozygosity"] <= result["metrics"]["initial_heterozygosity"]
+        )
 
     async def test_counts_sum(self):
         pattern = PopulationGeneticsPattern()
         pattern.config = PopulationGeneticsConfig(N=50, n_generations=50, n_replicates=20)
         result = await pattern._simulate_genetics()
-        total = result["metrics"]["fixed_count"] + result["metrics"]["lost_count"] + result["metrics"]["polymorphic_count"]
+        total = (
+            result["metrics"]["fixed_count"]
+            + result["metrics"]["lost_count"]
+            + result["metrics"]["polymorphic_count"]
+        )
         assert total == 20
 
     async def test_selection_increases_fixation(self):
         pattern = PopulationGeneticsPattern()
-        pattern.config = PopulationGeneticsConfig(N=50, p0=0.1, n_generations=100, n_replicates=50, selection_coefficient=0.1)
+        pattern.config = PopulationGeneticsConfig(
+            N=50, p0=0.1, n_generations=100, n_replicates=50, selection_coefficient=0.1
+        )
         result = await pattern._simulate_genetics()
         # With positive selection, fixation prob should be higher than neutral
-        assert result["metrics"]["fixation_probability"] > result["metrics"]["expected_fixation_prob"] * 0.5
+        assert (
+            result["metrics"]["fixation_probability"]
+            > result["metrics"]["expected_fixation_prob"] * 0.5
+        )
 
 
 class TestCalculateConfidence:
     def test_high_confidence(self):
         pattern = PopulationGeneticsPattern()
-        results = {"metrics": {"fixation_probability": 0.5, "expected_fixation_prob": 0.5, "final_heterozygosity": 0.1, "initial_heterozygosity": 0.5, "effective_population": 100}}
+        results = {
+            "metrics": {
+                "fixation_probability": 0.5,
+                "expected_fixation_prob": 0.5,
+                "final_heterozygosity": 0.1,
+                "initial_heterozygosity": 0.5,
+                "effective_population": 100,
+            }
+        }
         confidence = pattern._calculate_confidence(results)
         assert confidence > 0.5
 

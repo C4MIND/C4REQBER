@@ -1,11 +1,11 @@
 """
 Tests for prospect_theory pattern module.
 """
+
 import numpy as np
 import pytest
 
 from src.patterns.library.prospect_theory import ProspectTheoryConfig, ProspectTheoryModel
-
 
 
 class TestConfig:

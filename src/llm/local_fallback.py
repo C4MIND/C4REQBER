@@ -5,12 +5,11 @@ from __future__ import annotations
 import logging
 
 
-
 logger = logging.getLogger(__name__)
 
 LOCAL_ENDPOINTS = [
-    "http://localhost:1234/v1",   # LM Studio
-    "http://localhost:11434/v1",   # Ollama
+    "http://localhost:1234/v1",  # LM Studio
+    "http://localhost:11434/v1",  # Ollama
 ]
 
 
@@ -22,6 +21,7 @@ async def try_local_llm(prompt: str, max_tokens: int = 1200) -> str:
     Cost is $0 for local providers but token usage is still tracked.
     """
     from src.llm.guarded_call import guarded_chat_completion
+
     for endpoint in LOCAL_ENDPOINTS:
         try:
             data = await guarded_chat_completion(

@@ -16,18 +16,19 @@ Covers:
 - get_metadata()
 - Edge cases: zero agents, high spreading rate, counter-rumor
 """
+
 from __future__ import annotations
 
 import sys
 from pathlib import Path
+
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 import numpy as np
 import pytest
 
-from src.patterns.library.rumor_spreading import RumorSpreadingPattern, RumorConfig, RumorModel
-
+from src.patterns.library.rumor_spreading import RumorConfig, RumorModel, RumorSpreadingPattern
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -169,7 +170,9 @@ class TestStateTransitions:
         assert pattern.states is not None
 
     def test_seiz_step_changes_states(self):
-        cfg = RumorConfig(model=RumorModel.SEIZ, n_agents=50, spreading_rate=1.0, skepticism_rate=0.5, dt=0.5)
+        cfg = RumorConfig(
+            model=RumorModel.SEIZ, n_agents=50, spreading_rate=1.0, skepticism_rate=0.5, dt=0.5
+        )
         pattern = RumorSpreadingPattern(cfg)
         pattern._seiz_step()
         assert pattern.states is not None
@@ -315,7 +318,12 @@ class TestEdgeCases:
         cfg = RumorConfig(n_agents=10, max_time=5.0)
         pattern = RumorSpreadingPattern(cfg)
         result = pattern.run()
-        assert result["final_state"]["ignorant"] + result["final_state"]["spreaders"] + result["final_state"]["stiflers"] == 10
+        assert (
+            result["final_state"]["ignorant"]
+            + result["final_state"]["spreaders"]
+            + result["final_state"]["stiflers"]
+            == 10
+        )
 
 
 if __name__ == "__main__":

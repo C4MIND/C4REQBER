@@ -1,11 +1,11 @@
 """
 Tests for herding pattern module.
 """
+
 import numpy as np
 import pytest
 
 from src.patterns.library.herding import HerdingConfig, HerdingModel
-
 
 
 class TestConfig:

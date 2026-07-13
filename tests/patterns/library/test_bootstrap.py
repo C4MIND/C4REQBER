@@ -1,22 +1,23 @@
 """
 Tests for src/patterns/library/bootstrap.py
 """
+
 from __future__ import annotations
 
 import sys
 from pathlib import Path
+
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 import numpy as np
 import pytest
 
-from src.patterns.library.bootstrap import (
-    BootstrapPattern,
-    BootstrapConfig,
-)
 from src.patterns.core import Hypothesis, SimulationStatus
-
+from src.patterns.library.bootstrap import (
+    BootstrapConfig,
+    BootstrapPattern,
+)
 
 
 class TestBootstrapConfig:
@@ -93,7 +94,9 @@ class TestSimulateBootstrap:
 
     async def test_median_statistic(self):
         pattern = BootstrapPattern()
-        pattern.config = BootstrapConfig(n_bootstrap=200, sample_size=50, statistic="median", seed=42)
+        pattern.config = BootstrapConfig(
+            n_bootstrap=200, sample_size=50, statistic="median", seed=42
+        )
         result = await pattern._simulate_bootstrap()
         assert result["metrics"]["statistic"] == "median"
 
@@ -106,14 +109,18 @@ class TestSimulateBootstrap:
 
     async def test_correlation_statistic(self):
         pattern = BootstrapPattern()
-        pattern.config = BootstrapConfig(n_bootstrap=200, sample_size=50, statistic="correlation", seed=42)
+        pattern.config = BootstrapConfig(
+            n_bootstrap=200, sample_size=50, statistic="correlation", seed=42
+        )
         result = await pattern._simulate_bootstrap()
         assert result["metrics"]["statistic"] == "correlation"
         assert result["metrics"]["true_value"] == pytest.approx(0.5, abs=0.2)
 
     async def test_ci_contains_true_value(self):
         pattern = BootstrapPattern()
-        pattern.config = BootstrapConfig(n_bootstrap=500, sample_size=100, statistic="mean", seed=42)
+        pattern.config = BootstrapConfig(
+            n_bootstrap=500, sample_size=100, statistic="mean", seed=42
+        )
         result = await pattern._simulate_bootstrap()
         assert result["metrics"]["coverage"] == 1.0
 
@@ -131,7 +138,9 @@ class TestSimulateBootstrap:
 
     async def test_bias_small(self):
         pattern = BootstrapPattern()
-        pattern.config = BootstrapConfig(n_bootstrap=500, sample_size=100, statistic="mean", seed=42)
+        pattern.config = BootstrapConfig(
+            n_bootstrap=500, sample_size=100, statistic="mean", seed=42
+        )
         result = await pattern._simulate_bootstrap()
         true_val = result["metrics"]["true_value"]
         assert abs(result["metrics"]["bias"]) < abs(true_val) * 0.2
@@ -140,7 +149,9 @@ class TestSimulateBootstrap:
 class TestCalculateConfidence:
     def test_high_confidence(self):
         pattern = BootstrapPattern()
-        results = {"metrics": {"coverage": 1.0, "bias": 0.01, "standard_error": 0.2, "n_bootstrap": 1000}}
+        results = {
+            "metrics": {"coverage": 1.0, "bias": 0.01, "standard_error": 0.2, "n_bootstrap": 1000}
+        }
         confidence = pattern._calculate_confidence(results)
         assert confidence > 0.5
 

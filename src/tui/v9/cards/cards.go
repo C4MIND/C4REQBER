@@ -19,6 +19,21 @@ func NextID() ID {
 	return ID(atomic.AddUint64(&nextID, 1))
 }
 
+// ReserveID advances the process-local allocator past a persisted ID so cards
+// appended after session restore cannot collide with restored mouse-zone IDs.
+func ReserveID(id ID) {
+	target := uint64(id)
+	for {
+		current := atomic.LoadUint64(&nextID)
+		if current >= target {
+			return
+		}
+		if atomic.CompareAndSwapUint64(&nextID, current, target) {
+			return
+		}
+	}
+}
+
 // Kind is the card type. CardSimulation is NEW in v9.13 (BE-SIM-01/02).
 type Kind int
 
@@ -80,17 +95,17 @@ const (
 	ActBookmark
 	ActUnbookmark
 	ActViewAbstract
-	ActOpenPlot        // NEW: sim card — open generated plot
-	ActInstallHint     // NEW: sim card — show conda install line
-	ActSelectFallback  // NEW: sim card — pick a fallback engine
+	ActOpenPlot       // NEW: sim card — open generated plot
+	ActInstallHint    // NEW: sim card — show conda install line
+	ActSelectFallback // NEW: sim card — pick a fallback engine
 )
 
 // Action is one row in a card's action strip.
 type Action struct {
-	Key    string     // single key, e.g. "y", "o", "i", "f"
-	Label  string     // "yank", "open", "install hint", "fallback"
+	Key    string // single key, e.g. "y", "o", "i", "f"
+	Label  string // "yank", "open", "install hint", "fallback"
 	Kind   ActionKind
-	Global bool       // if true, key works even when card is not focused
+	Global bool // if true, key works even when card is not focused
 }
 
 // MetaKV is a structured metadata key/value on a card. Replaces the
@@ -103,20 +118,20 @@ type MetaKV struct {
 // Card is one row in the feed. Replaces the old v9 Card struct.
 // Field-by-field migration from the v9 inline Card.
 type Card struct {
-	ID         ID
-	Kind       Kind
-	Title      string
-	Body       string       // short body (1-3 lines)
-	FullBody   string       // long body, only shown when expanded
-	Meta       []MetaKV     // structured metadata
-	Actions    []Action     // keymap hints, engine-aware
-	Time       time.Time
-	Progress   float64
-	Status     string
-	State      State
-	Bookmark   bool
-	ExpiresAt  time.Time
-	ZoneID     string       // bubblezone ID for mouse clicks
+	ID        ID
+	Kind      Kind
+	Title     string
+	Body      string   // short body (1-3 lines)
+	FullBody  string   // long body, only shown when expanded
+	Meta      []MetaKV // structured metadata
+	Actions   []Action // keymap hints, engine-aware
+	Time      time.Time
+	Progress  float64
+	Status    string
+	State     State
+	Bookmark  bool
+	ExpiresAt time.Time
+	ZoneID    string // bubblezone ID for mouse clicks
 
 	// Sim-specific fields (D-01). All zero-values for non-simulation cards.
 	Sim SimFields
@@ -125,19 +140,19 @@ type Card struct {
 // SimFields carries the structured simulation evidence for a CardSimulation.
 // Kept in a sub-struct so non-sim cards have a zero-cost Sim{} default.
 type SimFields struct {
-	Engine        string    // "openmm", "fenicsx", "newton", …
-	EngineTier    string    // "fast" | "slow" | "linux_only" | "unavailable"
-	EngineStatus  string    // "available" | "skipped" | "unavailable" | "delegated" | "budget_exceeded"
-	Domain        string    // "biology", "physics", …
-	Pattern       string    // "protein_folding"
+	Engine        string // "openmm", "fenicsx", "newton", …
+	EngineTier    string // "fast" | "slow" | "linux_only" | "unavailable"
+	EngineStatus  string // "available" | "skipped" | "unavailable" | "delegated" | "budget_exceeded"
+	Domain        string // "biology", "physics", …
+	Pattern       string // "protein_folding"
 	PatternsTried []PatternTry
 	Evidence      SimEvidence
-	Verdict       string    // "supports_hypothesis" | "refutes_hypothesis" | "inconclusive" | ""
-	InstallHint   string    // conda install line, if engine unavailable
+	Verdict       string // "supports_hypothesis" | "refutes_hypothesis" | "inconclusive" | ""
+	InstallHint   string // conda install line, if engine unavailable
 	CostUSD       float64
-	BackendHost   string    // "local" | "vastai:instance-12345"
+	BackendHost   string // "local" | "vastai:instance-12345"
 	ElapsedMS     int
-	HypothesisID  ID         // back-link to the CardHypothesis this evidence is for
+	HypothesisID  ID // back-link to the CardHypothesis this evidence is for
 }
 
 // PatternTry records one attempt in the fallback chain.
@@ -151,11 +166,11 @@ type PatternTry struct {
 // SimEvidence is the structured output of a sim. The TUI renders different
 // shapes depending on Type.
 type SimEvidence struct {
-	Type     string  // "scalar" | "series" | "image" | "verdict" | "table"
-	Value    any     // float64, []float64, "https://...", or a 2D [][]any
-	Unit     string  // "kcal/mol", "mV", "ms"
+	Type     string // "scalar" | "series" | "image" | "verdict" | "table"
+	Value    any    // float64, []float64, "https://...", or a 2D [][]any
+	Unit     string // "kcal/mol", "mV", "ms"
 	Caption  string
-	ImageURL string  // for plots
+	ImageURL string // for plots
 }
 
 // DefaultActionsFor returns the action set for a card kind, per §5.3 of the plan.

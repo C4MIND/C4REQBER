@@ -8,6 +8,7 @@ These tests verify that every adapter:
   4. Provides install_hint when engine is unavailable
   5. Integrates with PatternEngineMap and PatternRunnerV2
 """
+
 from __future__ import annotations
 
 import pytest
@@ -15,6 +16,7 @@ import pytest
 from src.simulations.base_adapter import BaseSimulationAdapter, SimStatus, SimulationResult
 from src.simulations.pattern_engine_map import EngineType, PatternEngineMap
 from src.simulations.runner_v2 import PatternRunnerV2
+
 
 # ---------------------------------------------------------------------------
 # List of all P1 adapter classes to test
@@ -58,6 +60,7 @@ _LEGACY_ADAPTERS = [
 # ---------------------------------------------------------------------------
 def _import_cls(mod_name: str, cls_name: str):
     import importlib
+
     mod = importlib.import_module(mod_name)
     return getattr(mod, cls_name)
 
@@ -122,17 +125,41 @@ def test_pattern_engine_map_category_aliases() -> None:
     assert mapper.get_engine("snn_unknown", metadata={"category": "snn"}) == "brian2"
     assert mapper.get_engine("planet", metadata={"category": "planetary_dynamics"}) == "rebound"
     # Existing pattern takes precedence over category
-    assert mapper.get_engine("molecular_dynamics", metadata={"category": "molecular_dynamics"}) == "torchsim"
+    assert (
+        mapper.get_engine("molecular_dynamics", metadata={"category": "molecular_dynamics"})
+        == "torchsim"
+    )
 
 
 def test_runner_v2_loads_all_p1_bridges() -> None:
     runner = PatternRunnerV2()
     for engine in [
-        "fenicsx", "openfoam", "gromacs", "lammps", "mdanalysis",
-        "pyscf", "psi4", "quantum_espresso", "tellurium", "neuron",
-        "brian2", "jaxley", "copasi", "xarray", "wrf", "mesa", "simpy",
-        "rebound", "amuse", "mujoco", "pybullet", "diffeqpy", "taichi",
-        "jax_md", "jax_lab", "modelingtoolkit",
+        "fenicsx",
+        "openfoam",
+        "gromacs",
+        "lammps",
+        "mdanalysis",
+        "pyscf",
+        "psi4",
+        "quantum_espresso",
+        "tellurium",
+        "neuron",
+        "brian2",
+        "jaxley",
+        "copasi",
+        "xarray",
+        "wrf",
+        "mesa",
+        "simpy",
+        "rebound",
+        "amuse",
+        "mujoco",
+        "pybullet",
+        "diffeqpy",
+        "taichi",
+        "jax_md",
+        "jax_lab",
+        "modelingtoolkit",
     ]:
         bridge = runner._get_bridge(engine)
         # Most will be None in CI because engines aren't installed,

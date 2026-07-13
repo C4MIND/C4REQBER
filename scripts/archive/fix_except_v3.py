@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Comprehensively replace 'except Exception' with specific exception types."""
+
 import os
 import re
 from pathlib import Path
@@ -125,6 +126,7 @@ DIR_DEFAULTS = {
     "memory": "(ValueError, KeyError, TypeError, Exception)",
 }
 
+
 def get_dir_default(filepath: Path) -> str:
     rel = filepath.relative_to(SRC_DIR)
     parts = rel.parts
@@ -133,18 +135,19 @@ def get_dir_default(filepath: Path) -> str:
         return DIR_DEFAULTS.get(first_dir, "Exception")
     return "Exception"
 
-def infer_from_body(body_lines: List[str]) -> Optional[str]:
-    body = '\n'.join(body_lines)
+
+def infer_from_body(body_lines: list[str]) -> str | None:
+    body = "\n".join(body_lines)
     candidates = set()
-    
+
     for pattern, exc_type in LINE_PATTERNS:
         if re.search(pattern, body, re.MULTILINE):
             if exc_type != "Exception":
                 candidates.add(exc_type)
-    
+
     if not candidates:
         return None
-    
+
     flat = set()
     for c in candidates:
         if c.startswith("(") and c.endswith(")"):
@@ -152,14 +155,15 @@ def infer_from_body(body_lines: List[str]) -> Optional[str]:
                 flat.add(part)
         else:
             flat.add(c)
-    
+
     sorted_candidates = sorted(flat)
-    
+
     if len(sorted_candidates) == 1:
         return sorted_candidates[0]
     return "(" + ", ".join(sorted_candidates) + ")"
 
-def find_prev_exceptions(lines: List[str], except_idx: int, except_indent: int) -> set:
+
+def find_prev_exceptions(lines: list[str], except_idx: int, except_indent: int) -> set:
     """Find exceptions already caught in earlier except blocks at same indent level."""
     prev_exceptions = set()
     for j in range(except_idx - 1, -1, -1):
@@ -168,158 +172,172 @@ def find_prev_exceptions(lines: List[str], except_idx: int, except_indent: int) 
             continue
         indent = len(line) - len(line.lstrip())
         stripped = line.strip()
-        
-        if indent < except_indent and (stripped.startswith('try:') or stripped.startswith('def ') or stripped.startswith('async def ') or stripped.startswith('class ')):
+
+        if indent < except_indent and (
+            stripped.startswith("try:")
+            or stripped.startswith("def ")
+            or stripped.startswith("async def ")
+            or stripped.startswith("class ")
+        ):
             break
-        
-        if indent == except_indent and stripped.startswith('except '):
-            match = re.match(r'\s*except\s+([^(]+?)(?:\s+as\s+\w+)?\s*:', line)
+
+        if indent == except_indent and stripped.startswith("except "):
+            match = re.match(r"\s*except\s+([^(]+?)(?:\s+as\s+\w+)?\s*:", line)
             if match:
                 exc_str = match.group(1).strip()
-                if exc_str.startswith('(') and exc_str.endswith(')'):
+                if exc_str.startswith("(") and exc_str.endswith(")"):
                     exc_str = exc_str[1:-1]
-                for e in exc_str.split(','):
+                for e in exc_str.split(","):
                     prev_exceptions.add(e.strip())
-        elif indent == except_indent and not stripped.startswith('except '):
+        elif indent == except_indent and not stripped.startswith("except "):
             break
-    
+
     return prev_exceptions
 
-def find_blocks(filepath: Path) -> List[Tuple[int, str, List[str]]]:
+
+def find_blocks(filepath: Path) -> list[tuple[int, str, list[str]]]:
     content = filepath.read_text()
-    lines = content.split('\n')
+    lines = content.split("\n")
     blocks = []
-    
+
     for i, line in enumerate(lines):
-        if 'except Exception' not in line:
+        if "except Exception" not in line:
             continue
-        
+
         indent = len(line) - len(line.lstrip())
         try_indent = indent
-        
+
         try_line = -1
         for j in range(i - 1, -1, -1):
             l = lines[j]
-            if l.strip() == 'try:' and len(l) - len(l.lstrip()) == try_indent:
+            if l.strip() == "try:" and len(l) - len(l.lstrip()) == try_indent:
                 try_line = j
                 break
-        
+
         if try_line == -1:
             continue
-        
+
         body_lines = []
         for j in range(try_line + 1, i):
             l = lines[j]
-            if l.strip() and not l.strip().startswith('#'):
+            if l.strip() and not l.strip().startswith("#"):
                 l_indent = len(l) - len(l.lstrip())
                 if l_indent > try_indent:
                     body_lines.append(l)
                 elif l_indent == try_indent:
                     break
-        
+
         blocks.append((i, line, body_lines))
-    
+
     return blocks
 
-def fix_file(filepath: Path) -> Tuple[int, int, int]:
+
+def fix_file(filepath: Path) -> tuple[int, int, int]:
     content = filepath.read_text()
-    lines = content.split('\n')
+    lines = content.split("\n")
     blocks = find_blocks(filepath)
-    
+
     inferred_fixed = 0
     default_fixed = 0
     skipped = 0
-    
+
     for line_idx, original_line, body_lines in blocks:
         inferred = infer_from_body(body_lines)
-        
+
         if inferred:
             new_exc = inferred
         else:
             new_exc = get_dir_default(filepath)
-        
+
         # Remove exceptions already caught in previous blocks
         indent = len(original_line) - len(original_line.lstrip())
         prev_exceptions = find_prev_exceptions(lines, line_idx, indent)
-        
+
         if new_exc != "Exception" and prev_exceptions:
-            if new_exc.startswith('(') and new_exc.endswith(')'):
-                current = [e.strip() for e in new_exc[1:-1].split(',')]
+            if new_exc.startswith("(") and new_exc.endswith(")"):
+                current = [e.strip() for e in new_exc[1:-1].split(",")]
             else:
                 current = [new_exc]
-            
+
             filtered = [e for e in current if e not in prev_exceptions]
-            
+
             if len(filtered) == 0:
                 new_exc = "Exception"
             elif len(filtered) == 1:
                 new_exc = filtered[0]
             else:
                 new_exc = "(" + ", ".join(filtered) + ")"
-        
+
         if new_exc == "Exception":
-            if 'except Exception:' in original_line and 'as e' not in original_line:
-                lines[line_idx] = original_line.replace('except Exception:', 'except Exception as e:')
+            if "except Exception:" in original_line and "as e" not in original_line:
+                lines[line_idx] = original_line.replace(
+                    "except Exception:", "except Exception as e:"
+                )
                 default_fixed += 1
             else:
                 skipped += 1
             continue
-        
+
         # Make replacement
-        if 'except Exception as e:' in original_line:
-            lines[line_idx] = original_line.replace('except Exception as e:', f'except {new_exc} as e:')
-        elif 'except Exception:' in original_line:
-            lines[line_idx] = original_line.replace('except Exception:', f'except {new_exc} as e:')
+        if "except Exception as e:" in original_line:
+            lines[line_idx] = original_line.replace(
+                "except Exception as e:", f"except {new_exc} as e:"
+            )
+        elif "except Exception:" in original_line:
+            lines[line_idx] = original_line.replace("except Exception:", f"except {new_exc} as e:")
         else:
-            match = re.match(r'(\s*)except Exception(\s+as\s+\w+)\s*:', original_line)
+            match = re.match(r"(\s*)except Exception(\s+as\s+\w+)\s*:", original_line)
             if match:
                 indent_str, alias = match.groups()
                 lines[line_idx] = f"{indent_str}except {new_exc}{alias}:"
             else:
                 skipped += 1
                 continue
-        
+
         if inferred:
             inferred_fixed += 1
         else:
             default_fixed += 1
-    
+
     if inferred_fixed + default_fixed > 0:
-        filepath.write_text('\n'.join(lines))
-    
+        filepath.write_text("\n".join(lines))
+
     return inferred_fixed, default_fixed, skipped
+
 
 def main():
     total_inferred = 0
     total_default = 0
     total_skipped = 0
     modified_files = []
-    
+
     for filepath in sorted(SRC_DIR.rglob("*.py")):
         rel_path = filepath.relative_to(PROJECT_DIR)
         path_str = str(rel_path)
-        
-        if '/test' in path_str or '__pycache__' in path_str or path_str.startswith('tests/'):
+
+        if "/test" in path_str or "__pycache__" in path_str or path_str.startswith("tests/"):
             continue
-        
+
         content = filepath.read_text()
-        if 'except Exception' not in content:
+        if "except Exception" not in content:
             continue
-        
+
         inferred, default, skipped = fix_file(filepath)
-        
+
         if inferred + default > 0:
-            print(f"Fixed {inferred+default} ({inferred} inferred, {default} default) in {rel_path} (skipped {skipped})")
+            print(
+                f"Fixed {inferred + default} ({inferred} inferred, {default} default) in {rel_path} (skipped {skipped})"
+            )
             total_inferred += inferred
             total_default += default
             total_skipped += skipped
             modified_files.append(filepath)
         elif skipped > 0:
             total_skipped += skipped
-    
+
     print(f"\nTotal: {total_inferred} inferred, {total_default} default, {total_skipped} skipped")
     print(f"Files modified: {len(modified_files)}")
-    
+
     print("\nVerifying syntax...")
     errors = []
     for filepath in modified_files:
@@ -327,11 +345,12 @@ def main():
         result = os.system(f"cd {PROJECT_DIR} && python3 -m py_compile {rel} > /dev/null 2>&1")
         if result != 0:
             errors.append(str(rel))
-    
+
     if errors:
         print(f"Syntax errors in: {', '.join(errors)}")
     else:
         print("All modified files compile successfully.")
+
 
 if __name__ == "__main__":
     main()

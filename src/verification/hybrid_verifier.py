@@ -28,6 +28,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class VerificationResult:
     """VerificationResult."""
+
     backend: str
     status: str  # verified | partial | failed | z3_fallback | timeout
     claim: str
@@ -53,20 +54,55 @@ class HybridVerifier:
     # Backend selection keywords
     BACKEND_RULES = {
         "z3": {
-            "patterns": [r"\d+(?:\.\d+)?\s*(?:%|mpa|mm|days|cells|k|ev|j|w|nm|μm|kg|hz)", r"[\d.]+%", r"Q\s*[≥>=]", r"probability\s*[≥>=]"],
-            "keywords": ["%", "mpa", "mm", "days", "cells", "concentration", "temperature", "pressure"],
+            "patterns": [
+                r"\d+(?:\.\d+)?\s*(?:%|mpa|mm|days|cells|k|ev|j|w|nm|μm|kg|hz)",
+                r"[\d.]+%",
+                r"Q\s*[≥>=]",
+                r"probability\s*[≥>=]",
+            ],
+            "keywords": [
+                "%",
+                "mpa",
+                "mm",
+                "days",
+                "cells",
+                "concentration",
+                "temperature",
+                "pressure",
+            ],
         },
         "dafny": {
             "patterns": [r"O\(n\^?\d*\)", r"algorithm", r"sort", r"complexity", r"method\s+\w+"],
-            "keywords": ["algorithm", "sort", "search", "complexity", "method", "loop", "invariant"],
+            "keywords": [
+                "algorithm",
+                "sort",
+                "search",
+                "complexity",
+                "method",
+                "loop",
+                "invariant",
+            ],
         },
         "coq": {
             "patterns": [r"protocol", r"deadlock", r"race", r"concurrent", r"message passing"],
-            "keywords": ["protocol", "deadlock", "race condition", "concurrent", "distributed", "consensus"],
+            "keywords": [
+                "protocol",
+                "deadlock",
+                "race condition",
+                "concurrent",
+                "distributed",
+                "consensus",
+            ],
         },
         "agda": {
             "patterns": [r"type\s+\w+", r"total\s+function", r"dependent", r"constructive"],
-            "keywords": ["type theory", "total function", "dependent type", "constructive", "intuitionistic"],
+            "keywords": [
+                "type theory",
+                "total function",
+                "dependent type",
+                "constructive",
+                "intuitionistic",
+            ],
         },
         "hoare": {
             "patterns": [r"precondition", r"postcondition", r"invariant", r"while\s+\("],
@@ -106,9 +142,12 @@ class HybridVerifier:
     @staticmethod
     def _check_executable(path: str) -> bool:
         import shutil
+
         return shutil.which(path) is not None
 
-    async def verify(self, hypothesis: dict[str, Any], context: dict[str, Any] | None = None) -> VerificationResult:
+    async def verify(
+        self, hypothesis: dict[str, Any], context: dict[str, Any] | None = None
+    ) -> VerificationResult:
         """Main entry: auto-select backend, generate proof, retry on error WITH timeout management."""
         import time
 
@@ -129,6 +168,7 @@ class HybridVerifier:
         ctx = context or {}
         if ctx.get("test_type") in ("ttest", "chi2", "ks", "correlation"):
             from src.verification.stats_validator import StatisticalValidator
+
             validator = StatisticalValidator()
             stat_result = await validator.verify(claim, context=ctx)
             elapsed_ms = (time.perf_counter() - t0) * 1000
@@ -156,11 +196,16 @@ class HybridVerifier:
         # Emit verification start event
         try:
             from src.infrastructure.events import event_bus
-            await event_bus.emit("verification_start", {
-                "backend": backend,
-                "claim": claim[:100],
-                "estimated_timeout": BACKEND_TIMEOUTS.get(backend, (30, 120))[1],
-            }, mode="turbo")
+
+            await event_bus.emit(
+                "verification_start",
+                {
+                    "backend": backend,
+                    "claim": claim[:100],
+                    "estimated_timeout": BACKEND_TIMEOUTS.get(backend, (30, 120))[1],
+                },
+                mode="turbo",
+            )
         except (ImportError, RuntimeError, ValueError):
             pass
 
@@ -191,15 +236,15 @@ class HybridVerifier:
         if backend == "cvc5":
             from src.verification.cvc5_client import CVC5Client
 
-            client = CVC5Client()
-            if client.is_available():
+            cvc5_client = CVC5Client()
+            if cvc5_client.is_available():
                 code = self._extract_embedded_code(claim, "cvc5")
                 if not code.strip():
                     smt = self.z3.formulate(hypothesis, backend="z3")
                     code = smt.get("theorem_statement", "") or smt.get("smt_code", "")
                 if not self._looks_like_smt(code):
                     code = "(set-logic ALL)\n(declare-const x Real)\n(check-sat)\n"
-                result = client.verify(code)
+                result = cvc5_client.verify(code)
                 elapsed_ms = (time.perf_counter() - t0) * 1000
                 vr = VerificationResult(
                     backend="cvc5",
@@ -217,11 +262,11 @@ class HybridVerifier:
         if backend == "tla":
             from src.verification.tla_client import TLAClient
 
-            client = TLAClient()
-            if client.is_available():
+            tla_client = TLAClient()
+            if tla_client.is_available():
                 code = self._extract_embedded_code(claim, "tla")
                 if code:
-                    result = client.verify(code)
+                    result = tla_client.verify(code)
                     elapsed_ms = (time.perf_counter() - t0) * 1000
                     vr = VerificationResult(
                         backend="tla",
@@ -239,11 +284,11 @@ class HybridVerifier:
         if backend == "alloy":
             from src.verification.alloy_client import AlloyClient
 
-            client = AlloyClient()
-            if client.is_available():
+            alloy_client = AlloyClient()
+            if alloy_client.is_available():
                 code = self._extract_embedded_code(claim, "alloy")
                 if code:
-                    result = client.verify(code)
+                    result = alloy_client.verify(code)
                     elapsed_ms = (time.perf_counter() - t0) * 1000
                     vr = VerificationResult(
                         backend="alloy",
@@ -265,13 +310,20 @@ class HybridVerifier:
         def on_progress(progress: Any) -> None:
             try:
                 from src.infrastructure.events import event_bus
-                asyncio.create_task(event_bus.emit("verification_progress", {
-                    "backend": progress.backend,
-                    "status": progress.status,
-                    "elapsed_seconds": round(progress.elapsed_seconds, 1),
-                    "percent_complete": round(progress.percent_complete, 1),
-                    "message": progress.message,
-                }, mode="turbo"))
+
+                asyncio.create_task(
+                    event_bus.emit(
+                        "verification_progress",
+                        {
+                            "backend": progress.backend,
+                            "status": progress.status,
+                            "elapsed_seconds": round(progress.elapsed_seconds, 1),
+                            "percent_complete": round(progress.percent_complete, 1),
+                            "message": progress.message,
+                        },
+                        mode="turbo",
+                    )
+                )
             except (ImportError, RuntimeError):
                 pass
 
@@ -320,10 +372,15 @@ class HybridVerifier:
                     status="verified",
                     claim=claim[:200],
                     proof_code=proof_code,
-                    proof_text=f"Proof verified by {backend} compiler in {VerificationTimeoutManager.format_elapsed(total_ms/1000)}.",
+                    proof_text=f"Proof verified by {backend} compiler in {VerificationTimeoutManager.format_elapsed(total_ms / 1000)}.",
                     iterations=attempt,
                     execution_time_ms=total_ms,
-                    timing_info={"backend": backend, "elapsed_ms": int(total_ms), "attempts": attempt, "was_killed": False},
+                    timing_info={
+                        "backend": backend,
+                        "elapsed_ms": int(total_ms),
+                        "attempts": attempt,
+                        "was_killed": False,
+                    },
                 )
                 self._cache[cache_key] = vr
                 return vr
@@ -339,7 +396,12 @@ class HybridVerifier:
 
             # Parse error and retry
             error_category = self._categorize_error(compile_result["error"], backend)
-            logger.warning("Compile error (attempt %d): %s — %s", attempt, error_category, compile_result["error"][:100])
+            logger.warning(
+                "Compile error (attempt %d): %s — %s",
+                attempt,
+                error_category,
+                compile_result["error"][:100],
+            )
 
             fixed = await self.reasoner.fix_error(proof_code, compile_result["error"], backend)
             if fixed and not fixed.startswith("[Error"):
@@ -374,7 +436,9 @@ class HybridVerifier:
     def _backend_score(self, claim_lower: str, backend: str) -> int:
         rules = self.BACKEND_RULES.get(backend, {})
         score = sum(1 for kw in rules.get("keywords", []) if kw in claim_lower)
-        score += sum(2 for p in rules.get("patterns", []) if re.search(p, claim_lower, re.IGNORECASE))
+        score += sum(
+            2 for p in rules.get("patterns", []) if re.search(p, claim_lower, re.IGNORECASE)
+        )
         return score
 
     def _select_backend(self, claim: str, preferred: list[str] | None = None) -> str:
@@ -413,7 +477,13 @@ class HybridVerifier:
             "physics": ["quantum", "thermodynamic", "particle", "field", "relativity"],
             "biology": ["cell", "gene", "protein", "organism", "bacterial", "neural"],
             "chemistry": ["molecule", "reaction", "catalyst", "polymer", "synthesis"],
-            "computer_science": ["algorithm", "complexity", "graph", "neural network", "optimization"],
+            "computer_science": [
+                "algorithm",
+                "complexity",
+                "graph",
+                "neural network",
+                "optimization",
+            ],
             "mathematics": ["theorem", "proof", "topology", "algebra", "number theory"],
             "engineering": ["mechanical", "electrical", "civil", "aerospace", "material"],
         }
@@ -524,7 +594,8 @@ class HybridVerifier:
         """Compile Agda code."""
         # Extract module name from first line: "module Name where"
         import re
-        match = re.match(r'module\s+([\w.]+)', code.strip())
+
+        match = re.match(r"module\s+([\w.]+)", code.strip())
         module_name = match.group(1) if match else "Main"
 
         # Agda requires filename path to match module name dots
@@ -599,6 +670,7 @@ class HybridVerifier:
     def _compile_hoare(self, code: str) -> dict[str, Any]:
         """Verify Hoare triple via Z3-based weakest-precondition calculus."""
         from src.verification.hoare_verifier import HoareVerifier
+
         hv = HoareVerifier()
         result = hv.verify(code)
         if result.valid:
@@ -608,6 +680,7 @@ class HybridVerifier:
 
     def _compile_haskell_typecheck(self, code: str) -> dict[str, Any]:
         from src.verification.haskell_bridge import verify_haskell_typecheck
+
         result = verify_haskell_typecheck(code)
         if result.get("status") == "passed":
             return {"status": "success", "error": ""}
@@ -618,13 +691,17 @@ class HybridVerifier:
 
     def _compile_haskell_quickcheck(self, code: str) -> dict[str, Any]:
         from src.verification.haskell_bridge import verify_haskell_quickcheck
+
         result = verify_haskell_quickcheck(code)
         if result.get("status") == "passed":
             return {"status": "success", "error": ""}
         if result.get("status") == "unavailable":
             return {"status": "not_installed", "error": result.get("error", "GHC not found")}
         if result.get("status") == "skipped":
-            return {"status": "incomplete", "error": result.get("message", "No QuickCheck properties")}
+            return {
+                "status": "incomplete",
+                "error": result.get("message", "No QuickCheck properties"),
+            }
         err = result.get("error") or result.get("message") or "Haskell QuickCheck failed"
         return {"status": "error", "error": str(err)}
 
@@ -647,9 +724,12 @@ class HybridVerifier:
 
         return "unknown_error"
 
-    def _z3_fallback(self, hypothesis: dict, claim: str, reason: str, t0: float) -> VerificationResult:
+    def _z3_fallback(
+        self, hypothesis: dict, claim: str, reason: str, t0: float
+    ) -> VerificationResult:
         """Fall back to Z3 for numerical constraint checking."""
         import time
+
         result = self.z3.formulate(hypothesis, backend="z3")
         return VerificationResult(
             backend="z3",
@@ -664,4 +744,5 @@ class HybridVerifier:
     def _hash_claim(self, claim: str) -> str:
         """Hash claim for caching."""
         import hashlib
+
         return hashlib.sha256(claim.encode()).hexdigest()[:16]

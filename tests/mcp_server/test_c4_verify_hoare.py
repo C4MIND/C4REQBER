@@ -1,7 +1,9 @@
 """MCP c4_verify must handle HoareResult dataclass (not dict)."""
+
 from __future__ import annotations
 
 import pytest
+
 
 z3 = pytest.importorskip("z3")
 

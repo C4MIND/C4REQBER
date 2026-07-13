@@ -1,15 +1,17 @@
 """
 Tests for maxwell_fdtd pattern module.
 """
+
+import asyncio
+
 import numpy as np
 import pytest
-import asyncio
 
 from src.patterns.library.maxwell_fdtd import (
     BoundaryCondition,
-    SourceType,
     FDTDConfig,
     MaxwellFDTDPattern,
+    SourceType,
 )
 
 
@@ -50,12 +52,14 @@ class TestCanSimulate:
     def test_can_simulate_fdtd(self):
         pattern = MaxwellFDTDPattern()
         from src.patterns.core import Hypothesis
+
         h = Hypothesis(title="fdtd simulation", description="electromagnetic wave")
         assert pattern.can_simulate(h) is True
 
     def test_can_simulate_no_match(self):
         pattern = MaxwellFDTDPattern()
         from src.patterns.core import Hypothesis
+
         h = Hypothesis(title="weather forecast", description="")
         assert pattern.can_simulate(h) is False
 
@@ -77,6 +81,7 @@ class TestFDTD2D:
     async def test_fdtd_2d(self):
         pattern = MaxwellFDTDPattern()
         from src.patterns.core import Hypothesis
+
         h = Hypothesis(title="test", description="test")
         cfg = FDTDConfig(nx=50, ny=50, nz=1, n_steps=100, source_position=(25, 25, 0))
         result = await pattern._fdtd_2d(h, cfg)
@@ -87,6 +92,7 @@ class TestFDTD2D:
     async def test_fdtd_2d_fields(self):
         pattern = MaxwellFDTDPattern()
         from src.patterns.core import Hypothesis
+
         h = Hypothesis(title="test", description="test")
         cfg = FDTDConfig(nx=50, ny=50, nz=1, n_steps=50, source_position=(25, 25, 0))
         result = await pattern._fdtd_2d(h, cfg)
@@ -98,6 +104,7 @@ class TestFDTD3D:
     async def test_fdtd_3d(self):
         pattern = MaxwellFDTDPattern()
         from src.patterns.core import Hypothesis
+
         h = Hypothesis(title="test", description="test")
         cfg = FDTDConfig(nx=20, ny=20, nz=20, n_steps=50, source_position=(10, 10, 10))
         result = await pattern._fdtd_3d(h, cfg)
@@ -137,6 +144,7 @@ class TestRun:
     async def test_run_2d(self):
         pattern = MaxwellFDTDPattern()
         from src.patterns.core import Hypothesis
+
         h = Hypothesis(title="test", description="test")
         result = await pattern.run(
             hypothesis=h,
@@ -148,6 +156,7 @@ class TestRun:
     async def test_run_3d(self):
         pattern = MaxwellFDTDPattern()
         from src.patterns.core import Hypothesis
+
         h = Hypothesis(title="test", description="test")
         result = await pattern.run(
             hypothesis=h,
@@ -159,7 +168,9 @@ class TestRun:
 class TestEdgeCases:
     def test_confidence(self):
         pattern = MaxwellFDTDPattern()
-        results = {"metrics": {"courant_number": 0.5, "max_ez": 1.0, "n_steps": 500, "wavelength": 0.3}}
+        results = {
+            "metrics": {"courant_number": 0.5, "max_ez": 1.0, "n_steps": 500, "wavelength": 0.3}
+        }
         score = pattern._calculate_confidence(results)
         assert 0 <= score <= 0.85
 
@@ -167,7 +178,11 @@ class TestEdgeCases:
         pattern = MaxwellFDTDPattern()
         from src.patterns.core import Hypothesis
 
-        h = Hypothesis(title="test", description="test", parameters={"dimensions": "2d", "grid_size": 100, "n_steps": 500})
+        h = Hypothesis(
+            title="test",
+            description="test",
+            parameters={"dimensions": "2d", "grid_size": 100, "n_steps": 500},
+        )
         resources = pattern.estimate_resources(h)
         assert "cpu_cores" in resources
         assert "memory_gb" in resources

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Add minimal docstrings to public functions/classes in src/ that are missing them."""
+
 from __future__ import annotations
 
 import ast
@@ -63,7 +64,7 @@ def snake_to_title(name: str) -> str:
 
     for prefix, replacement in PREFIX_MAP.items():
         if normalized.startswith(prefix) and len(normalized) > len(prefix):
-            rest = normalized[len(prefix):].replace("_", " ")
+            rest = normalized[len(prefix) :].replace("_", " ")
             return f"{replacement} {rest}."
 
     title = normalized.replace("_", " ")
@@ -95,7 +96,7 @@ def count_body_lines(node: ast.AST) -> int:
 
 def get_first_real_body_lineno(node: ast.AST) -> int:
     """Get the 1-indexed line of the first real body content.
-    
+
     Handles decorated functions/classes by returning the decorator's line
     instead of the definition line.
     """
@@ -159,11 +160,11 @@ def iter_py_files(root: Path) -> Iterator[Path]:
 
 def insert_docstring(filepath: Path, nodes: list[tuple[ast.AST, str]]) -> int:
     """Insert docstrings into a file. Returns number of docstrings added."""
-    with open(filepath, "r") as f:
+    with open(filepath) as f:
         lines = f.readlines()
 
     edits: list[tuple[int, str]] = []
-    for node, kind in nodes:
+    for node, _kind in nodes:
         body = getattr(node, "body", [])
         if not body:
             continue
@@ -176,7 +177,7 @@ def insert_docstring(filepath: Path, nodes: list[tuple[ast.AST, str]]) -> int:
 
         name = node.name
         docstring_text = snake_to_title(name)
-        doc_line = f"{' ' * indent_level}\"\"\"{docstring_text}\"\"\"\n"
+        doc_line = f'{" " * indent_level}"""{docstring_text}"""\n'
 
         edits.append((insert_at, doc_line))
 

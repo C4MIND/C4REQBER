@@ -6,7 +6,6 @@ import pytest
 from src.patterns.library.sea_ice import SeaIceConfig, SeaIcePattern
 
 
-
 class TestSeaIceConfig:
     def test_default_values(self):
         cfg = SeaIceConfig()

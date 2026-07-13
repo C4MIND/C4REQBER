@@ -18,17 +18,20 @@ Covers:
 - get_metadata()
 - Edge cases: empty components, zero tolerance, extreme temperatures
 """
+
 from __future__ import annotations
 
 import sys
 from pathlib import Path
 from unittest.mock import patch
 
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 import numpy as np
 import pytest
 
+from src.patterns.core import Hypothesis, SimulationStatus
 from src.patterns.library.circuit_simulation import (
     AnalysisType,
     CircuitConfig,
@@ -36,8 +39,6 @@ from src.patterns.library.circuit_simulation import (
     Component,
     ComponentType,
 )
-from src.patterns.core import Hypothesis, SimulationStatus
-
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -204,12 +205,14 @@ class TestParseConfig:
 
     def test_custom_parsing(self):
         pattern = CircuitSimulationPattern()
-        cfg = pattern._parse_config({
-            "analysis_type": "ac",
-            "t_stop": 1e-2,
-            "temperature": 85.0,
-            "monte_carlo_runs": 10,
-        })
+        cfg = pattern._parse_config(
+            {
+                "analysis_type": "ac",
+                "t_stop": 1e-2,
+                "temperature": 85.0,
+                "monte_carlo_runs": 10,
+            }
+        )
         assert cfg.analysis_type == AnalysisType.AC
         assert cfg.t_stop == 1e-2
         assert cfg.temperature == 85.0
@@ -487,7 +490,9 @@ class TestRun:
     async def test_run_failure_handling(self):
         pattern = CircuitSimulationPattern()
         h = Hypothesis(title="Circuit", description="test")
-        with patch.object(pattern.builder, "build_from_params", side_effect=ValueError("test error")):
+        with patch.object(
+            pattern.builder, "build_from_params", side_effect=ValueError("test error")
+        ):
             result = await pattern.run(h, {"circuit_type": "rc_filter"})
             assert result.status == SimulationStatus.FAILED
             assert "test error" in result.error_message

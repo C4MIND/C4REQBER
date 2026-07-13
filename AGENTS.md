@@ -53,7 +53,7 @@ Updated during 2026-05-19 + 2026-05-21 + 2026-06-03 (Kimi Code CLI audit + v5.6.
 - **Hoare logic verifier** (`src/verification/hoare_verifier.py`) — Z3-based WP calculus, full while+invariant support
 - **LLM Prover** (`src/verification/llm_prover.py`) — iterative LLM→compile→error→fix loop for 6 languages
 - **TUI v9** (Go Bubble Tea v2, sim surface: `CardSimulation` kind + capabilities overlay Ctrl+Shift+C listing 38 engine bridges + 9 verifiers with per-platform status and install hints, command palette `:`, debug overlay Ctrl+Shift+D, status bar Ctrl+B, per-card expansion Enter/Esc, 7-language i18n at 100% parity, 7 color profiles including solarized-dark, adaptive layout T0/T1/T2/T3, feed.jsonl persistence + resume on launch, 132 golden snapshots) — 0 critical bugs, 27 atomic commits, +7302 lines. **Merged on `feat/production-upgrade` branch (round 5 audit landed).**
-- **CLI** (blast commands) — 14 commands + 7 social subcommands
+- **CLI** — 24 top-level `blast` commands
 - **Agent system** (Pydantic AI, 11 skills, MCP bridge, memory, sub-agents, `/preprint`, LangGraph executor, FastMCP external tool discovery, ChromaDB memory)
 - **TRIZ** (40 principles, contradiction matrix) — semantic C4 mapping
 - **9 real verification backends** (Lean4, Coq, Dafny, Agda, Z3/Hoare, Haskell, CVC5, TLA+, Alloy)
@@ -64,7 +64,7 @@ Updated during 2026-05-19 + 2026-05-21 + 2026-06-03 (Kimi Code CLI audit + v5.6.
 - **Self-directed agenda** (generator, feasibility, priority, progress, TUI screen shift+a)
 - **Open-ended exploration** (anomaly detector, surprise-driven questions, formal extender)
 - **7/7 metamodels** (IMPACT, COMPASS, UCOS, QZRF, FRA, Matrix Dream, TOTE)
-- **43 active knowledge source adapters** (MultiSourceSearcher with circuit breaker, semantic dedup, domain boost) = **33 literature adapters** (arXiv, PubMed, Crossref, Europe PMC, Semantic Scholar, OpenAlex, Zenodo, Figshare, NCBI E-utilities, DOAJ, Inspire-HEP, DBLP, Datacite, etc.) + **10 data/biological adapters** (PubChem, ChEMBL, Materials Project, AFLOW, Kaggle, UCI ML, Harvard Dataverse, re3data, STRING, ClinicalTrials.gov, GBIF, Allen Brain, USGS, CERN, USPTO, OpenReview, HuggingFace, OpenFDA, NASA Earthdata, CyberLeninka, Math-Net.Ru). Truth source: `_truths.json`
+- **47 configured knowledge source integrations** (46 wired to `MultiSourceSearcher`; runtime-active subset depends on credentials and availability). Truth source: `_truths.json`.
 - **15 installable scientific packages** — auto-detected, 10 native + 5 isolated Python 3.12 envs
 - **REPL** — 100% real (project/task models implemented)
 - **v8 API** — fully functional aggregator router (discovery, knowledge, newton, social, verification, novelty, news)
@@ -73,7 +73,7 @@ Updated during 2026-05-19 + 2026-05-21 + 2026-06-03 (Kimi Code CLI audit + v5.6.
 - **Security**: JWT+HMAC auth, CSRF hardened, subprocess injection blocked, prompt injection fail-closed, path traversal blocked, pip allow-list, MATLAB sandbox, 0 CRITICAL/HIGH findings
 - **Code quality**: 0 ruff lint errors across entire `src/`, `__import__` antipatterns removed, importlib for dynamic loading
 - **Type safety**: 56 mypy baseline errors (regression-gated; no new errors in CI) (559→508→0 after 3 audit rounds)
-- **Tests**: 9887+ collected (Python), 485+ passed core suites, 1 flaky Monte Carlo. Go TUI: 8/8 packages pass, staticcheck clean.
+- **Tests**: 9,906 collected (Python), 485+ passed core suites, 1 flaky Monte Carlo. Go TUI: 8/8 packages pass, staticcheck clean.
 - **Pydantic V2 migration** — `ConfigDict`, `field_validator`, `min_length/max_length` across all models
 - **Citation verifier** — hallucination detection for fake theory names ("Recursive Harmonic", "Pantheon Theory", "UCH-HSTR")
 - **Cost tracker** — resets per `solve()` call, prevents cumulative inflation
@@ -127,7 +127,7 @@ Updated during 2026-05-19 + 2026-05-21 + 2026-06-03 (Kimi Code CLI audit + v5.6.
 
 ## What is this?
 
-**c4reqber** is a terminal-first scientific discovery pipeline with C4 state-space navigation layer. 27 Z₃³ states, 10 verification backends + MathDetector (Categories A/B/C) + guardrails, 6 virtual biology simulators, experimental protocol generator, simulation config (GPU/CPU/off), 6 output formats with auto-detection, 12 auto-detected LLM providers (MLX/LM Studio/Ollama/OpenRouter/DeepSeek/XAI/Mistral/Moonshot/Liquid/NVIDIA/YandexGPT), MLX-LM local ($0/MTok), file/OCR workflow, Live Intelligence Feed, 7-language i18n, **21 MCP tools** (all verified working post-audit), 16 TUI shortcuts, 11 slash commands, **1 main AI Agent** (skills, MCP, memory, sub-agents, Pydantic AI, `/preprint`), **Social Publishing module** (Zenodo/arXiv/Reddit/Discord/Slack/Telegram/ORCID — 9 platforms, BYOK), 14 CLI commands, 5 WASM plugins. **TUI v9** (v9.13.0) adds: simulation surface with 38 engine bridges + 9 verifiers (capabilities overlay Ctrl+Shift+C), CardSimulation kind in the feed, typed SSE decoder for `sim_started/sim_finished/sim_skipped` events, command palette `:`, debug overlay Ctrl+Shift+D, status bar Ctrl+B, per-card expansion Enter/Esc, 7 color profiles including solarized-dark, adaptive layout T0/T1/T2/T3, feed.jsonl persistence + resume on launch, 132 golden snapshots. **Security hardened**: auth bypass fixed, prompt injection fail-closed with nonce delimiters + HTML entity decoding + LaTeX escaping, subprocess shell-injection blocked, path traversal protected, SSRF protection on paper IDs, symlink guards, Agda module validation, rate-limiter token leak fixed, all 16 CRITICAL + 34 HIGH + 55 MEDIUM + 14 LOW findings resolved (Round 4 audit).
+**c4reqber** is a terminal-first scientific discovery pipeline with C4 state-space navigation layer. 27 Z₃³ states, 9 verification backends + MathDetector (Categories A/B/C) + guardrails, 6 virtual biology simulators, experimental protocol generator, simulation config (GPU/CPU/off), 6 output formats with auto-detection, 11 configured LLM providers (MLX/LM Studio/Ollama/OpenRouter/DeepSeek/XAI/Mistral/Moonshot/Liquid/NVIDIA/YandexGPT), MLX-LM local ($0/MTok), file/OCR workflow, Live Intelligence Feed, 7-language i18n, **21 MCP tools** (all verified working post-audit), 16 TUI shortcuts, 11 slash commands, **1 main AI Agent** (skills, MCP, memory, sub-agents, Pydantic AI, `/preprint`), **Social Publishing module** (Zenodo/arXiv/Reddit/Discord/Slack/Telegram/ORCID — 9 platforms, BYOK), 24 CLI commands, 5 WASM plugins. **TUI v9** (v9.13.0) adds: simulation surface with 38 engine bridges + 9 verifiers (capabilities overlay Ctrl+Shift+C), CardSimulation kind in the feed, typed SSE decoder for `sim_started/sim_finished/sim_skipped` events, command palette `:`, debug overlay Ctrl+Shift+D, status bar Ctrl+B, per-card expansion Enter/Esc, 7 color profiles including solarized-dark, adaptive layout T0/T1/T2/T3, feed.jsonl persistence + resume on launch, 132 golden snapshots. **Security hardened**: auth bypass fixed, prompt injection fail-closed with nonce delimiters + HTML entity decoding + LaTeX escaping, subprocess shell-injection blocked, path traversal protected, SSRF protection on paper IDs, symlink guards, Agda module validation, rate-limiter token leak fixed, all 16 CRITICAL + 34 HIGH + 55 MEDIUM + 14 LOW findings resolved (Round 4 audit).
 
 ---
 
@@ -184,7 +184,7 @@ blast serve --mcp    # Start MCP server via stdio
 ```bash
 make dev            # Full stack (backend + frontend)
 make backend        # FastAPI on :8000
-make test           # All tests (2,730+ collected, 1,400+ pass)
+make test           # Full test suite (9,905 tests currently collected)
 make test-backend   # Python tests only
 make lint           # ruff + ESLint
 make typecheck      # mypy + tsc
@@ -201,7 +201,7 @@ When `blast serve --mcp` is running, 21 tools are available with synchronized JS
 | Tool | Description |
 |------|-------------|
 | `c4_solve` | Run 12-stage discovery pipeline (HIL) |
-| `c4_search` | Search across 33+ knowledge sources |
+| `c4_search` | Search across 47 configured knowledge sources |
 | `c4_triz` | TRIZ contradiction resolution (4 modes) |
 | `c4_fingerprint` | C4 Z₃³ state classification |
 | `c4_verify` | Formal proof verification (Lean4/Coq/Dafny/Agda/Z3/Hoare) — direct proof check |
@@ -264,7 +264,7 @@ c4reqber/
 │   ├── simulations/            # 101+ patterns + 38 engine bridges (5 internal + 26 P1 bridges + 6 virtual bio)
 │   │   ├── newton_bridge.py    # Newton Physics (mlx-env Python 3.11+)
 │   │   └── domain_selector.py # Domain-specific simulation patterns
-│   ├── knowledge/              # 33+ sources via orchestrator.py
+│   ├── knowledge/              # 47 configured sources via orchestrator.py
 │   │   └── multi_source.py   # Backward-compat shim (→ orchestrator)
 │   ├── publishing/             # Dissertation + preprint submission
 │   │   ├── dissertation.py    # LLM-powered dissertation generator
@@ -286,7 +286,7 @@ c4reqber/
 │   ├── batch_v6/              # Sleep paradigm (ALREADY_SHIFTED)
 │   ├── batch_v7/              # Language gene transfer (SHIFTED, 66.67%)
 │   └── batch_v5/exports/      # Generated papers, verification reports
-├── tests/                      # 2,730+ collected tests (1,400+ pass)
+├── tests/                      # 9,905 collected Python tests
 ├── docs/                       # Architecture, PRD, completion reports
 ├── .env.example              # Template for API keys
 ├── requirements.txt            # Python dependencies
@@ -339,7 +339,7 @@ Layer 3: Core Engines — C4 (6 operators, Z₃³, 27 states, Theorem 11: undire
          Auto-selector — keyword + complexity + domain → plugin selection
 Layer 4: Cognitive — Causal, Bayesian, System Dynamics, Decision, Discovery,
          Literature Intel, Experimental, Meta (8 layers)
-Layer 5: Knowledge + Verification — 33+ sources (orchestrator.py), 38 simulation engine bridges, Lean4/Coq/Dafny
+Layer 5: Knowledge + Verification — 47 configured sources (orchestrator.py), 38 simulation engine bridges, Lean4/Coq/Dafny
 ```
 
 ---
@@ -366,13 +366,13 @@ Layer 5: Knowledge + Verification — 33+ sources (orchestrator.py), 38 simulati
 | Micro-features | **17 integrated**: C4 Layer Stream, CogLoad Modes, Alert Taxonomy, Depth Ladder, Formal Citations, Cost Router, Live Verification Injection, Stratified Blocks, PATH.toml, Hypothesis Sandbox, Gated Pipeline, State Replay, Proof Graph, Graph History, Structured Input, Cube Navigator, Dashboard |
 | TUI shortcuts | 20: Tab/Enter/L/A/B/D/T/R/V/I/F/G/M/P/Q/1-5 + ←↑↓→ — ALL wired to live panels (alert, budget, depth, article, proof, cube nav, feed, thinking, GPU, modules, plugins, export) |
 | Slash commands | `/models` `/council` `/connect` `/api` `/test` `/profile` `/plugins` `/debug` `/config` `/help` `/sim` — 11 total |
-| Knowledge sources | 33+ active, 37+ total registered (orchestrator.py; includes BibSonomy REST API) |
+| Knowledge sources | 47 configured; 46 wired |
 | Simulation patterns | 101+ (CPU fluid: Navier-Stokes Euler solver) |
 | Physics engines | 5 internal (Newton, TorchSim, JaxSim, Schr, vast.ai) + 26 P1 bridges (FEniCSx, OpenFOAM, GROMACS, LAMMPS, MDAnalysis, PySCF, Psi4, QE, Tellurium, NEURON, Brian2, Jaxley, COPASI, xarray, WRF, Mesa, SimPy, Rebound, AMUSE, MuJoCo, PyBullet, diffeqpy, Taichi, JAX MD, JAX-LaB, ModelingToolkit.jl) + 6 Virtual Biology + MirrorFish + MATLAB |
-| LLM providers | 11 auto-detected: MLX, LM Studio, Ollama, OpenRouter, DeepSeek, XAI, Mistral, Moonshot, Liquid AI, NVIDIA NIM, YandexGPT. Model-per-stage + depth-based routing (C1 cheap, C3 premium). |
+| LLM providers | 11 configured (cloud + local); runtime availability varies |
 | Architecture | Saga (238 lines), CQRS (167 lines), Event Sourcing (297 lines) — fully implemented, wired into BasePipeline + HILDiscoveryPipeline. ChromaDB vector store (4 collections) caching knowledge search + agent memory + paper embeddings. FastMCP client bridge for external MCP server discovery. LangGraph executor in AgentCore for graph-based processing. |
 | WASM runtime | `blast wasm-load/list` CLI + stub mode (wasmtime optional) |
-| CLI commands | 19: auto, solve, turbo, flash, turbofactory, analyze, serve, agent, modes, tui, wasm-load, wasm-list, wasm-execute, models, config, social, integrations, packages, soul/policy/qa/guardian |
+| CLI commands | 24 top-level `blast` commands |
 | Pipeline architecture | `BasePipeline` → HILDiscoveryPipeline + UniversalSolvePipeline. `PluginStageRouter` A-G. Progressive streaming via ProgressEmitter. |
 | Export formats | Markdown, JSON, BibTeX, LaTeX (.tex+.bib), HTML dashboard |
 | Security | Prompt sanitizer (19 patterns), credential guard (16 regex), C4Result TypedDict enforcement |
@@ -609,7 +609,7 @@ Step 2.6: C4 Observer (meta-cognitive framing)
 Step 3-4: UCOS 4-Layer Analysis
 Step 4.5: QZRF 14 Operators
 Step 4.6: Matrix Dream (72 patterns)
-Step 4.7: Multi-Source Search (33+ sources via orchestrator.py)
+Step 4.7: Multi-Source Search (47 configured sources via orchestrator.py)
 Step 5:   GapMiner (3-layer text analysis)
 Step 5.1: Contradiction Mining
 Step 5.3: AlreadyShiftedDetector (HARD GATE, iterative — re-checks per refinement, subtractive confidence)
@@ -676,6 +676,6 @@ Step 8.5: Formal Verification (summary)
 
 ---
 
-**Citation**: Selyutin I., Kovalev N.I. (2026). *c4reqber v5.4.0: Cognitive Exoskeleton for AI Agents.*  
-**License**: AGPL-3.0 (open-source) / Commercial License available  
+**Citation**: Selyutin I., Kovalev N.I. (2026). *c4reqber v5.4.0: Cognitive Exoskeleton for AI Agents.*
+**License**: AGPL-3.0 (open-source) / Commercial License available
 **Discovery Clause**: Mandatory citation in every generated paper

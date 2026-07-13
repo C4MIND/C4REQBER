@@ -1,16 +1,16 @@
 """
 Tests for traffic_flow pattern module.
 """
+
 import numpy as np
 import pytest
 
 from src.patterns.library.traffic_flow import (
-
-    TrafficModel,
-    FundamentalDiagram,
     BoundaryCondition,
+    FundamentalDiagram,
     TrafficFlowConfig,
     TrafficFlowPattern,
+    TrafficModel,
 )
 
 
@@ -114,7 +114,9 @@ class TestLWRStep:
 
 class TestCAStep:
     def test_ca_step(self):
-        cfg = TrafficFlowConfig(model=TrafficModel.CA, n_cells=20, simulation_time=30, n_lanes=1, road_length=0.1)
+        cfg = TrafficFlowConfig(
+            model=TrafficModel.CA, n_cells=20, simulation_time=30, n_lanes=1, road_length=0.1
+        )
         pattern = TrafficFlowPattern(cfg)
         n_vehicles_before = len(pattern.vehicles)
         pattern._ca_step()
@@ -142,7 +144,12 @@ class TestRun:
 
     def test_run_ca(self):
         cfg = TrafficFlowConfig(
-            model=TrafficModel.CA, n_cells=20, simulation_time=30, output_interval=10, n_lanes=1, road_length=0.1
+            model=TrafficModel.CA,
+            n_cells=20,
+            simulation_time=30,
+            output_interval=10,
+            n_lanes=1,
+            road_length=0.1,
         )
         pattern = TrafficFlowPattern(cfg)
         result = pattern.run()
@@ -151,7 +158,12 @@ class TestRun:
 
     def test_run_hybrid(self):
         cfg = TrafficFlowConfig(
-            model=TrafficModel.HYBRID, n_cells=20, simulation_time=30, output_interval=10, n_lanes=1, road_length=0.1
+            model=TrafficModel.HYBRID,
+            n_cells=20,
+            simulation_time=30,
+            output_interval=10,
+            n_lanes=1,
+            road_length=0.1,
         )
         pattern = TrafficFlowPattern(cfg)
         result = pattern.run()
@@ -192,7 +204,12 @@ class TestEdgeCases:
 
     def test_closed_boundary(self):
         cfg = TrafficFlowConfig(
-            model=TrafficModel.CA, bc_type=BoundaryCondition.CLOSED, n_cells=20, simulation_time=30, n_lanes=1, road_length=0.1
+            model=TrafficModel.CA,
+            bc_type=BoundaryCondition.CLOSED,
+            n_cells=20,
+            simulation_time=30,
+            n_lanes=1,
+            road_length=0.1,
         )
         pattern = TrafficFlowPattern(cfg)
         result = pattern.run()

@@ -1,15 +1,17 @@
-# TURBO-CDI v8.0 - Production Dockerfile (Backend)
+# c4reqber 5.6.0 - Production API image
 FROM python:3.11-slim
 
-LABEL version="8.0.0"
-LABEL description="TURBO-CDI API Server"
-LABEL maintainer="TURBO-CDI Team"
+LABEL version="5.6.0"
+LABEL description="c4reqber API Server"
+LABEL maintainer="c4reqber Contributors"
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     curl \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && groupadd --system c4reqber \
+    && useradd --system --gid c4reqber --home-dir /app c4reqber
 
 WORKDIR /app
 
@@ -23,9 +25,10 @@ COPY src/ ./src/
 COPY migrations/ ./migrations/
 COPY alembic.ini .
 COPY pyproject.toml .
+RUN mkdir -p /app/data \
+    && chown -R c4reqber:c4reqber /app
 
 # Environment
-ENV JWT_SECRET=${JWT_SECRET}
 ENV ENV="production"
 ENV API_PORT=8000
 ENV API_HOST="0.0.0.0"
@@ -39,4 +42,5 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8000/api/v1/health || exit 1
 
 # Run
+USER c4reqber
 CMD ["uvicorn", "src.api.server:app", "--host", "0.0.0.0", "--port", "8000"]

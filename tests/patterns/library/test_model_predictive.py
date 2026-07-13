@@ -3,6 +3,7 @@ Tests for src/patterns/library/model_predictive.py
 
 Covers: MPCConfig, ActiveSetSolver, ModelPredictivePattern
 """
+
 from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
@@ -11,10 +12,9 @@ import numpy as np
 import pytest
 
 from src.patterns.library.model_predictive import (
-
     ActiveSetSolver,
-    MPCConfig,
     ModelPredictivePattern,
+    MPCConfig,
     QPSolver,
     SystemType,
 )
@@ -104,10 +104,7 @@ class TestActiveSetSolver:
         lb = np.array([-np.inf])
         ub = np.array([np.inf])
         x, feasible = solver.solve(
-            H, g,
-            np.zeros((0, 1)), np.zeros(0),
-            np.zeros((0, 1)), np.zeros(0),
-            lb, ub
+            H, g, np.zeros((0, 1)), np.zeros(0), np.zeros((0, 1)), np.zeros(0), lb, ub
         )
         assert bool(feasible) is True
         assert x[0] == pytest.approx(-2.0, abs=1e-2)
@@ -119,10 +116,7 @@ class TestActiveSetSolver:
         lb = np.array([1.0])
         ub = np.array([np.inf])
         x, feasible = solver.solve(
-            H, g,
-            np.zeros((0, 1)), np.zeros(0),
-            np.zeros((0, 1)), np.zeros(0),
-            lb, ub
+            H, g, np.zeros((0, 1)), np.zeros(0), np.zeros((0, 1)), np.zeros(0), lb, ub
         )
         assert bool(feasible) is True
         assert x[0] >= 1.0 - 1e-4
@@ -134,10 +128,7 @@ class TestActiveSetSolver:
         lb = np.array([-10.0, -10.0])
         ub = np.array([10.0, 10.0])
         x, feasible = solver.solve(
-            H, g,
-            np.zeros((0, 2)), np.zeros(0),
-            np.zeros((0, 2)), np.zeros(0),
-            lb, ub
+            H, g, np.zeros((0, 2)), np.zeros(0), np.zeros((0, 2)), np.zeros(0), lb, ub
         )
         assert bool(feasible) is True
         assert x[0] == pytest.approx(-1.0, abs=1e-2)
@@ -151,12 +142,7 @@ class TestActiveSetSolver:
         b_ineq = np.array([1.0])
         lb = np.array([-10.0, -10.0])
         ub = np.array([10.0, 10.0])
-        x, feasible = solver.solve(
-            H, g,
-            np.zeros((0, 2)), np.zeros(0),
-            A_ineq, b_ineq,
-            lb, ub
-        )
+        x, feasible = solver.solve(H, g, np.zeros((0, 2)), np.zeros(0), A_ineq, b_ineq, lb, ub)
         assert bool(feasible) is True
         assert x[0] + x[1] <= 1.0 + 1e-4
 

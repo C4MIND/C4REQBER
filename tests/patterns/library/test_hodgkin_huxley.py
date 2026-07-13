@@ -18,24 +18,25 @@ Covers:
 - get_metadata()
 - Edge cases: zero stimulus, various stimulus types, edge voltages
 """
+
 from __future__ import annotations
 
 import sys
 from pathlib import Path
 from unittest.mock import patch
 
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 import numpy as np
 import pytest
 
+from src.patterns.core import Hypothesis, SimulationStatus
 from src.patterns.library.hodgkin_huxley import (
-    HodgkinHuxleyPattern,
     HHConfig,
+    HodgkinHuxleyPattern,
     StimulusType,
 )
-from src.patterns.core import Hypothesis, SimulationStatus
-
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -224,7 +225,9 @@ class TestGatingRates:
 class TestGetStimulus:
     def test_step_stimulus(self):
         pattern = HodgkinHuxleyPattern()
-        pattern.config = HHConfig(stim_type=StimulusType.STEP, stim_start=5.0, stim_end=30.0, I_inj=10.0)
+        pattern.config = HHConfig(
+            stim_type=StimulusType.STEP, stim_start=5.0, stim_end=30.0, I_inj=10.0
+        )
         assert pattern._get_stimulus(0.0) == 0.0
         assert pattern._get_stimulus(5.0) == 10.0
         assert pattern._get_stimulus(15.0) == 10.0
@@ -232,21 +235,27 @@ class TestGetStimulus:
 
     def test_ramp_stimulus(self):
         pattern = HodgkinHuxleyPattern()
-        pattern.config = HHConfig(stim_type=StimulusType.RAMP, stim_start=5.0, stim_end=25.0, I_inj=10.0)
+        pattern.config = HHConfig(
+            stim_type=StimulusType.RAMP, stim_start=5.0, stim_end=25.0, I_inj=10.0
+        )
         assert pattern._get_stimulus(0.0) == 0.0
         assert pattern._get_stimulus(5.0) == pytest.approx(0.0, abs=0.01)
         assert pattern._get_stimulus(15.0) == pytest.approx(5.0, abs=0.01)
 
     def test_pulse_stimulus(self):
         pattern = HodgkinHuxleyPattern()
-        pattern.config = HHConfig(stim_type=StimulusType.PULSE, stim_start=5.0, stim_end=30.0, I_inj=10.0)
+        pattern.config = HHConfig(
+            stim_type=StimulusType.PULSE, stim_start=5.0, stim_end=30.0, I_inj=10.0
+        )
         assert pattern._get_stimulus(0.0) == 0.0
         assert pattern._get_stimulus(5.5) == 10.0  # During 1ms pulse
         assert pattern._get_stimulus(6.0) == 0.0  # After 1ms pulse ends
 
     def test_sinusoidal_stimulus(self):
         pattern = HodgkinHuxleyPattern()
-        pattern.config = HHConfig(stim_type=StimulusType.SINUSOIDAL, stim_start=5.0, stim_end=30.0, I_inj=10.0)
+        pattern.config = HHConfig(
+            stim_type=StimulusType.SINUSOIDAL, stim_start=5.0, stim_end=30.0, I_inj=10.0
+        )
         stim = pattern._get_stimulus(10.0)
         assert -10.0 <= stim <= 10.0
 

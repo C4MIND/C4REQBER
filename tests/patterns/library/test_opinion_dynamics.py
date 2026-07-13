@@ -12,10 +12,12 @@ Covers:
 - get_metadata()
 - Edge cases: different models, network structures, stubborn agents
 """
+
 from __future__ import annotations
 
 import sys
 from pathlib import Path
+
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
@@ -23,9 +25,8 @@ import numpy as np
 import pytest
 
 from src.patterns.library.opinion_dynamics import (
-
-    OpinionDynamicsPattern,
     OpinionDynamicsConfig,
+    OpinionDynamicsPattern,
     OpinionModel,
     _build_network,
 )
@@ -55,10 +56,7 @@ class TestOpinionDynamicsConfig:
 
     def test_custom_init(self):
         cfg = OpinionDynamicsConfig(
-            model=OpinionModel.DEGROOT,
-            n_agents=50,
-            n_issues=2,
-            network_type="ring"
+            model=OpinionModel.DEGROOT, n_agents=50, n_issues=2, network_type="ring"
         )
         assert cfg.model == OpinionModel.DEGROOT
         assert cfg.n_agents == 50
@@ -175,9 +173,7 @@ class TestHKStep:
     def test_bounded_confidence(self):
         """HK model respects confidence bound"""
         cfg = OpinionDynamicsConfig(
-            model=OpinionModel.HEGSELMANN_KRAUSE,
-            n_agents=50,
-            confidence_bound=0.3
+            model=OpinionModel.HEGSELMANN_KRAUSE, n_agents=50, confidence_bound=0.3
         )
         pattern = OpinionDynamicsPattern(cfg)
 
@@ -193,7 +189,7 @@ class TestHKStep:
             model=OpinionModel.HEGSELMANN_KRAUSE,
             n_agents=2,
             confidence_bound=0.1,
-            initial_distribution="uniform"
+            initial_distribution="uniform",
         )
         pattern = OpinionDynamicsPattern(cfg)
         # Force far apart opinions
@@ -213,7 +209,7 @@ class TestFJStep:
         cfg = OpinionDynamicsConfig(
             model=OpinionModel.FRIEDKIN_JOHNSEN,
             n_agents=10,
-            stubbornness=[0.9] * 10  # Very stubborn
+            stubbornness=[0.9] * 10,  # Very stubborn
         )
         pattern = OpinionDynamicsPattern(cfg)
         initial = pattern.initial_opinions.copy()
@@ -287,10 +283,7 @@ class TestRun:
     def test_consensus_degroot_complete(self):
         """DeGroot on complete graph should reach consensus"""
         cfg = OpinionDynamicsConfig(
-            model=OpinionModel.DEGROOT,
-            n_agents=50,
-            network_type="complete",
-            max_iterations=500
+            model=OpinionModel.DEGROOT, n_agents=50, network_type="complete", max_iterations=500
         )
         pattern = OpinionDynamicsPattern(cfg)
         result = pattern.run()
@@ -304,7 +297,7 @@ class TestRun:
             n_agents=100,
             initial_distribution="polarized",
             confidence_bound=0.3,
-            max_iterations=500
+            max_iterations=500,
         )
         pattern = OpinionDynamicsPattern(cfg)
         result = pattern.run()
@@ -379,7 +372,7 @@ class TestEdgeCases:
         cfg = OpinionDynamicsConfig(
             model=OpinionModel.HEGSELMANN_KRAUSE,
             n_agents=50,
-            confidence_bound=10.0  # Larger than opinion range
+            confidence_bound=10.0,  # Larger than opinion range
         )
         pattern = OpinionDynamicsPattern(cfg)
         result = pattern.run()
@@ -391,7 +384,7 @@ class TestEdgeCases:
         cfg = OpinionDynamicsConfig(
             model=OpinionModel.HEGSELMANN_KRAUSE,
             n_agents=50,
-            confidence_bound=0.01  # Very small
+            confidence_bound=0.01,  # Very small
         )
         pattern = OpinionDynamicsPattern(cfg)
         result = pattern.run()
@@ -401,10 +394,7 @@ class TestEdgeCases:
     def test_different_network_types(self):
         for net_type in ["complete", "ring", "random", "scale_free", "small_world"]:
             cfg = OpinionDynamicsConfig(
-                model=OpinionModel.DEGROOT,
-                n_agents=30,
-                network_type=net_type,
-                max_iterations=50
+                model=OpinionModel.DEGROOT, n_agents=30, network_type=net_type, max_iterations=50
             )
             pattern = OpinionDynamicsPattern(cfg)
             result = pattern.run()

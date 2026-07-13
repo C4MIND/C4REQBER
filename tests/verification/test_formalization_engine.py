@@ -1,4 +1,5 @@
 """Tests for FormalizationEngine."""
+
 from __future__ import annotations
 
 import json
@@ -11,7 +12,6 @@ from src.verification.formalization_engine import (
     FormalizationResult,
     _sanitize_for_prompt,
 )
-
 
 
 class TestSanitizeForPrompt:
@@ -60,17 +60,21 @@ class TestFormalizationEngine:
     async def test_formalize_success(self) -> None:
         engine = FormalizationEngine()
         mock_response = MagicMock()
-        mock_response.content = json.dumps({
-            "theorem_statement": "forall n : Nat, n + 0 = n",
-            "assumptions": ["n is a natural number"],
-            "domain": "mathematics",
-            "formalizability_score": 0.9,
-        })
+        mock_response.content = json.dumps(
+            {
+                "theorem_statement": "forall n : Nat, n + 0 = n",
+                "assumptions": ["n is a natural number"],
+                "domain": "mathematics",
+                "formalizability_score": 0.9,
+            }
+        )
 
         with patch.object(
             engine._router, "generate_for_stage", new_callable=AsyncMock, return_value=mock_response
         ):
-            result = await engine.formalize({"text": "Adding zero to a number gives the same number"})
+            result = await engine.formalize(
+                {"text": "Adding zero to a number gives the same number"}
+            )
 
         assert result.formalizability_score == 0.9
         assert result.theorem_statement == "forall n : Nat, n + 0 = n"
@@ -81,13 +85,15 @@ class TestFormalizationEngine:
     async def test_formalize_not_formalizable(self) -> None:
         engine = FormalizationEngine()
         mock_response = MagicMock()
-        mock_response.content = json.dumps({
-            "theorem_statement": "",
-            "assumptions": [],
-            "domain": "",
-            "formalizability_score": 0.1,
-            "not_formalizable_reason": "Too vague",
-        })
+        mock_response.content = json.dumps(
+            {
+                "theorem_statement": "",
+                "assumptions": [],
+                "domain": "",
+                "formalizability_score": 0.1,
+                "not_formalizable_reason": "Too vague",
+            }
+        )
 
         with patch.object(
             engine._router, "generate_for_stage", new_callable=AsyncMock, return_value=mock_response
@@ -116,7 +122,10 @@ class TestFormalizationEngine:
     async def test_formalize_llm_error(self) -> None:
         engine = FormalizationEngine()
         with patch.object(
-            engine._router, "generate_for_stage", new_callable=AsyncMock, side_effect=RuntimeError("API down")
+            engine._router,
+            "generate_for_stage",
+            new_callable=AsyncMock,
+            side_effect=RuntimeError("API down"),
         ):
             result = await engine.formalize({"text": "test"})
 
@@ -127,12 +136,14 @@ class TestFormalizationEngine:
     async def test_formalize_with_evidence(self) -> None:
         engine = FormalizationEngine()
         mock_response = MagicMock()
-        mock_response.content = json.dumps({
-            "theorem_statement": "T",
-            "assumptions": [],
-            "domain": "physics",
-            "formalizability_score": 0.8,
-        })
+        mock_response.content = json.dumps(
+            {
+                "theorem_statement": "T",
+                "assumptions": [],
+                "domain": "physics",
+                "formalizability_score": 0.8,
+            }
+        )
 
         with patch.object(
             engine._router, "generate_for_stage", new_callable=AsyncMock, return_value=mock_response

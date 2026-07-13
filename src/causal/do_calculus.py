@@ -1,9 +1,10 @@
 """C4REQBER L1 Causal Engine — Pearl's do-calculus (3 rules)."""
+
 from __future__ import annotations
 
 import networkx as nx
 
-from .scm import StructuralCausalModel
+from .scm import StructuralCausalModel, _nx_is_d_separator
 
 
 class DoCalculus:
@@ -30,11 +31,9 @@ class DoCalculus:
                 g.remove_edge(parent, node)
         return g
 
-    def _is_d_separated(
-        self, g: nx.DiGraph, x: set[str], y: set[str], z: set[str]
-    ) -> bool:
+    def _is_d_separated(self, g: nx.DiGraph, x: set[str], y: set[str], z: set[str]) -> bool:
         """Check d-separation in a given graph."""
-        return nx.algorithms.d_separation.d_separated(g, x, y, z)
+        return _nx_is_d_separator(g, x, y, z)
 
     def rule1_insertion_deletion(
         self,
@@ -184,9 +183,7 @@ class DoCalculus:
             if backdoor_zy is None:
                 continue
 
-            if treatment in backdoor_zy or self._can_block_with_x(
-                candidate, outcome, treatment
-            ):
+            if treatment in backdoor_zy or self._can_block_with_x(candidate, outcome, treatment):
                 return {candidate}
 
         return None
@@ -230,11 +227,11 @@ class DoCalculus:
         """
         g_do_x = self._mutilated_graph({treatment})
 
-        if nx.algorithms.d_separation.d_separated(g_do_x, {outcome}, {treatment}, set()):
+        if _nx_is_d_separator(g_do_x, {outcome}, {treatment}, set()):
             return True
 
         for node in set(self.scm.nodes) - {treatment, outcome}:
-            if nx.algorithms.d_separation.d_separated(g_do_x, {outcome}, {node}, {treatment}):
+            if _nx_is_d_separator(g_do_x, {outcome}, {node}, {treatment}):
                 return True
 
         return False
@@ -301,14 +298,20 @@ class DoCalculus:
             if not treatment_vals or not outcome_vals:
                 return None
 
-            treated_outcomes = [o for t, o in zip(treatment_vals, outcome_vals, strict=False) if t >= 0.5]
-            control_outcomes = [o for t, o in zip(treatment_vals, outcome_vals, strict=False) if t < 0.5]
+            treated_outcomes = [
+                o for t, o in zip(treatment_vals, outcome_vals, strict=False) if t >= 0.5
+            ]
+            control_outcomes = [
+                o for t, o in zip(treatment_vals, outcome_vals, strict=False) if t < 0.5
+            ]
 
             if not treated_outcomes or not control_outcomes:
                 return None
 
-            return float(sum(treated_outcomes) / len(treated_outcomes) -
-                        sum(control_outcomes) / len(control_outcomes))
+            return float(
+                sum(treated_outcomes) / len(treated_outcomes)
+                - sum(control_outcomes) / len(control_outcomes)
+            )
 
         return None
 

@@ -1,9 +1,11 @@
 """End-to-end integration tests with real installed verifier binaries."""
+
 from __future__ import annotations
 
 import pytest
 
 from src.config.paths import load_verifiers_env
+
 
 load_verifiers_env()
 
@@ -24,7 +26,9 @@ class TestRealVerifierBackends:
         client = CVC5Client()
         if not client.test_connection():
             pytest.skip("cvc5 not installed")
-        assert client.verify("(declare-const x Int)\n(assert (> x 0))\n(check-sat)\n")["valid"] is True
+        assert (
+            client.verify("(declare-const x Int)\n(assert (> x 0))\n(check-sat)\n")["valid"] is True
+        )
 
     def test_tla_live(self) -> None:
         from src.verification.tla_client import TLAClient

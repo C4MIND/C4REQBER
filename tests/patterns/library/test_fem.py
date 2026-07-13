@@ -15,25 +15,26 @@ Covers:
 - get_metadata()
 - Edge cases: zero elements, negative load, missing params
 """
+
 from __future__ import annotations
 
 import sys
 from pathlib import Path
 from unittest.mock import patch
 
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 import numpy as np
 import pytest
 
+from src.patterns.core import Hypothesis, SimulationStatus
 from src.patterns.library.fem import (
     Element,
     ElementType,
     FEMPattern,
     Node,
 )
-from src.patterns.core import Hypothesis, SimulationStatus
-
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -147,7 +148,13 @@ class TestTruss1D:
     async def test_truss_default(self):
         pattern = FEMPattern()
         h = Hypothesis(parameters={"length": 10.0})
-        config = {"element_type": "truss_1d", "num_elements": 10, "youngs_modulus": 200e9, "area": 0.01, "load": 1000.0}
+        config = {
+            "element_type": "truss_1d",
+            "num_elements": 10,
+            "youngs_modulus": 200e9,
+            "area": 0.01,
+            "load": 1000.0,
+        }
         result = await pattern._truss_1d(h, config)
         assert "metrics" in result
         assert "logs" in result
@@ -159,7 +166,13 @@ class TestTruss1D:
     async def test_truss_with_custom_length(self):
         pattern = FEMPattern()
         h = Hypothesis(parameters={"length": 5.0})
-        config = {"element_type": "truss_1d", "num_elements": 5, "youngs_modulus": 200e9, "area": 0.01, "load": 1000.0}
+        config = {
+            "element_type": "truss_1d",
+            "num_elements": 5,
+            "youngs_modulus": 200e9,
+            "area": 0.01,
+            "load": 1000.0,
+        }
         result = await pattern._truss_1d(h, config)
         assert result["metrics"]["num_nodes"] == 6
 
@@ -203,7 +216,12 @@ class TestBeam1D:
     async def test_beam_default(self):
         pattern = FEMPattern()
         h = Hypothesis(parameters={"length": 10.0, "width": 0.1, "height": 0.2})
-        config = {"element_type": "beam_1d", "num_elements": 10, "youngs_modulus": 200e9, "load": 1000.0}
+        config = {
+            "element_type": "beam_1d",
+            "num_elements": 10,
+            "youngs_modulus": 200e9,
+            "load": 1000.0,
+        }
         result = await pattern._beam_1d(h, config)
         assert "metrics" in result
         assert "logs" in result
@@ -287,7 +305,14 @@ class TestCalculateConfidence:
 
     def test_fallback_note_reduces_confidence(self):
         pattern = FEMPattern()
-        results = {"metrics": {"max_deflection": 0.01, "max_stress": 100e6, "num_elements": 10, "note": "simplified"}}
+        results = {
+            "metrics": {
+                "max_deflection": 0.01,
+                "max_stress": 100e6,
+                "num_elements": 10,
+                "note": "simplified",
+            }
+        }
         confidence = pattern._calculate_confidence(results)
         # Note reduces confidence by 0.2
         assert confidence < 0.9

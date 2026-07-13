@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 
 class DiscoveryAgent:
     """DiscoveryAgent."""
+
     def __init__(self) -> None:
         self.discoveries = []
         self.cycle_count = 0
@@ -42,14 +43,17 @@ class DiscoveryAgent:
         problem = await self.select_problem()
         self.cycle_count += 1
         try:
-            import httpx
             import os
+
+            import httpx
+
             headers: dict[str, str] = {}
             jwt_secret = os.getenv("JWT_SECRET", "")
             if jwt_secret:
                 import jwt
-                headers["Authorization"] = (
-                    "Bearer " + jwt.encode({"sub": "discovery-agent"}, jwt_secret, algorithm="HS256")
+
+                headers["Authorization"] = "Bearer " + jwt.encode(
+                    {"sub": "discovery-agent"}, jwt_secret, algorithm="HS256"
                 )
             async with httpx.AsyncClient(timeout=300) as c:
                 r = await c.post(
@@ -57,7 +61,7 @@ class DiscoveryAgent:
                     json={"problem": problem, "domain": "science"},
                     headers=headers,
                 )
-                return r.json()# type: ignore[no-any-return]
+                return r.json()  # type: ignore[no-any-return]
         except (TimeoutError, ImportError, TypeError, httpx.HTTPError, json.JSONDecodeError) as e:
             logger.warning("discovery request failed for problem=%r: %s", problem, e)
             return {"status": "error", "problem": problem}
@@ -66,12 +70,20 @@ class DiscoveryAgent:
         """Run forever."""
         for _ in range(max_cycles):
             result = await self.run_cycle()
-            self.discoveries.append({"cycle": self.cycle_count, "problem": result.get("problem",""), "timestamp": datetime.now().isoformat(), "result": result})
+            self.discoveries.append(
+                {
+                    "cycle": self.cycle_count,
+                    "problem": result.get("problem", ""),
+                    "timestamp": datetime.now().isoformat(),
+                    "result": result,
+                }
+            )
             os.makedirs("discovery/agent_loop", exist_ok=True)
             with open(f"discovery/agent_loop/cycle_{self.cycle_count}.json", "w") as f:
                 json.dump(result, f, indent=2, default=str)
             await asyncio.sleep(5)
         return self.discoveries
+
 
 if __name__ == "__main__":
     agent = DiscoveryAgent()

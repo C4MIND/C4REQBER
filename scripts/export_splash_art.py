@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Export TUI v9 splash ASCII art → landing/js/splash-art.js (single source: v8 assets)."""
+"""Export TUI v9 splash ASCII art to the landing page."""
 
 from __future__ import annotations
 
@@ -8,7 +8,6 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-GREEN_CUBE = ROOT / "src/tui/v8/splash/green_cube.txt"
 EMBEDDED = ROOT / "src/tui/v9/v8_art_embedded.go"
 OUT = ROOT / "landing/js/splash-art.js"
 
@@ -79,7 +78,7 @@ def normalize_c4r_left_wall(text: str) -> str:
 
 def main() -> None:
     go_src = EMBEDDED.read_text(encoding="utf-8", errors="replace")
-    green = GREEN_CUBE.read_text(encoding="utf-8").strip("\n")
+    green = extract_go_const("v8GreenCubeRaw", go_src).strip("\n")
     big_c4r = normalize_c4r_left_wall(extract_go_const("v8BigC4R", go_src).strip("\n"))
     crystal_raw = extract_go_var("v8RawANSISmall", go_src)
     crystal = "\n".join(ANSI_RE.sub("", line) for line in crystal_raw.splitlines()).strip("\n")

@@ -17,24 +17,25 @@ Covers:
 - get_metadata()
 - Edge cases: zero regions, minimal t_max, no stimulation
 """
+
 from __future__ import annotations
 
 import sys
 from pathlib import Path
 from unittest.mock import patch
 
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 import numpy as np
 import pytest
 
+from src.patterns.core import Hypothesis, SimulationStatus
 from src.patterns.library.connectome import (
     ConnectomeConfig,
     ConnectomePattern,
     NetworkModel,
 )
-from src.patterns.core import Hypothesis, SimulationStatus
-
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -166,12 +167,14 @@ class TestParseConfig:
 
     def test_custom_parsing(self):
         pattern = ConnectomePattern()
-        cfg = pattern._parse_config({
-            "num_regions": 20,
-            "model": "wilson_cowan",
-            "coupling_strength": 0.8,
-            "t_max": 10.0,
-        })
+        cfg = pattern._parse_config(
+            {
+                "num_regions": 20,
+                "model": "wilson_cowan",
+                "coupling_strength": 0.8,
+                "t_max": 10.0,
+            }
+        )
         assert cfg.num_regions == 20
         assert cfg.model == NetworkModel.WILSON_COWAN
         assert cfg.coupling_strength == 0.8
@@ -478,14 +481,26 @@ class TestEdgeCases:
     async def test_zero_coupling(self):
         pattern = ConnectomePattern()
         h = Hypothesis(title="Brain", description="test")
-        config = {"num_regions": 10, "coupling_strength": 0.0, "t_max": 0.2, "dt": 0.01, "transient": 0.05}
+        config = {
+            "num_regions": 10,
+            "coupling_strength": 0.0,
+            "t_max": 0.2,
+            "dt": 0.01,
+            "transient": 0.05,
+        }
         result = await pattern.run(h, config)
         assert result.status == SimulationStatus.COMPLETED
 
     async def test_high_noise(self):
         pattern = ConnectomePattern()
         h = Hypothesis(title="Brain", description="test")
-        config = {"num_regions": 10, "noise_level": 1.0, "t_max": 0.2, "dt": 0.01, "transient": 0.05}
+        config = {
+            "num_regions": 10,
+            "noise_level": 1.0,
+            "t_max": 0.2,
+            "dt": 0.01,
+            "transient": 0.05,
+        }
         result = await pattern.run(h, config)
         assert result.status == SimulationStatus.COMPLETED
 

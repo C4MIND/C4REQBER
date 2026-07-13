@@ -1,4 +1,5 @@
 """Tests for closed-loop simulation module."""
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, patch
@@ -7,8 +8,8 @@ import pytest
 
 from src.discovery.closed_loop.bayesian_tracker import BayesianHypothesisTracker
 from src.discovery.closed_loop.convergence import ConvergenceChecker
-from src.discovery.closed_loop.experiment_designer import ExperimentDesigner
 from src.discovery.closed_loop.ensemble_runner import EnsembleRunner
+from src.discovery.closed_loop.experiment_designer import ExperimentDesigner
 from src.discovery.closed_loop.orchestrator import ClosedLoopOrchestrator
 from src.discovery.closed_loop.refiner import HypothesisRefiner
 
@@ -87,6 +88,7 @@ class TestEnsembleRunner:
     @pytest.mark.anyio(backend="asyncio")
     async def test_run_ensemble(self) -> None:
         from src.discovery.closed_loop.experiment_designer import ExperimentDesign
+
         runner = EnsembleRunner()
         design = ExperimentDesign(
             simulator="test",

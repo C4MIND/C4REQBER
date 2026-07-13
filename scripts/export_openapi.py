@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """Export FastAPI OpenAPI schema and validate TUI v9 contract."""
+
 from __future__ import annotations
 
 import json
 import sys
 from pathlib import Path
+
 
 ROOT = Path(__file__).resolve().parents[1]
 # Project root must be on sys.path so 'src' is importable as a package.

@@ -1,11 +1,11 @@
 """
 Tests for economic_growth pattern module.
 """
+
 import numpy as np
 import pytest
 
 from src.patterns.library.economic_growth import EconomicGrowthConfig, EconomicGrowthModel
-
 
 
 class TestConfig:

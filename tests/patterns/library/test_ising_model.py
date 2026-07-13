@@ -19,20 +19,21 @@ Covers:
 - get_metadata()
 - Edge cases: single lattice site, high/low temperature, zero field
 """
+
 from __future__ import annotations
 
 import sys
 from pathlib import Path
 from unittest.mock import patch
 
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 import numpy as np
 import pytest
 
-from src.patterns.library.ising_model import IsingModelPattern, IsingConfig, Algorithm
 from src.patterns.core import Hypothesis, SimulationStatus
-
+from src.patterns.library.ising_model import Algorithm, IsingConfig, IsingModelPattern
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -158,7 +159,9 @@ class TestParseConfig:
 class TestSimulate:
     async def test_metropolis_simulation(self):
         pattern = IsingModelPattern()
-        pattern.config = IsingConfig(lattice_size=8, n_sweeps=100, thermalization=10, algorithm="metropolis")
+        pattern.config = IsingConfig(
+            lattice_size=8, n_sweeps=100, thermalization=10, algorithm="metropolis"
+        )
         h = Hypothesis()
         result = await pattern._simulate(h)
         assert "metrics" in result
@@ -166,14 +169,18 @@ class TestSimulate:
 
     async def test_wolff_simulation(self):
         pattern = IsingModelPattern()
-        pattern.config = IsingConfig(lattice_size=8, n_sweeps=100, thermalization=10, algorithm="wolff")
+        pattern.config = IsingConfig(
+            lattice_size=8, n_sweeps=100, thermalization=10, algorithm="wolff"
+        )
         h = Hypothesis()
         result = await pattern._simulate(h)
         assert "metrics" in result
 
     async def test_swendsen_wang_simulation(self):
         pattern = IsingModelPattern()
-        pattern.config = IsingConfig(lattice_size=8, n_sweeps=100, thermalization=10, algorithm="swendsen_wang")
+        pattern.config = IsingConfig(
+            lattice_size=8, n_sweeps=100, thermalization=10, algorithm="swendsen_wang"
+        )
         h = Hypothesis()
         result = await pattern._simulate(h)
         assert "metrics" in result

@@ -1,4 +1,5 @@
 """Tests for src.data.orchestrator — auto-data-retrieval for causal discovery."""
+
 from __future__ import annotations
 
 import asyncio
@@ -8,7 +9,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pandas as pd
 import pytest
 
-from src.data.orchestrator import DataOrchestrator, DOMAIN_DATA_SOURCES, get_dataframe_for_hypothesis
+from src.data.orchestrator import (
+    DOMAIN_DATA_SOURCES,
+    DataOrchestrator,
+    get_dataframe_for_hypothesis,
+)
 
 
 class TestDomainMapping:
@@ -81,7 +86,10 @@ class TestFlattenDict:
 class TestFindCsvUrl:
     def test_find_csv_in_flat_dict(self):
         orch = DataOrchestrator()
-        assert orch._find_csv_url_in_dict({"url": "https://example.com/data.csv"}) == "https://example.com/data.csv"
+        assert (
+            orch._find_csv_url_in_dict({"url": "https://example.com/data.csv"})
+            == "https://example.com/data.csv"
+        )
 
     def test_find_csv_in_nested_dict(self):
         orch = DataOrchestrator()
@@ -155,7 +163,9 @@ class TestDownloadCsv:
     @pytest.mark.anyio(backend="asyncio")
     async def test_download_csv_failure_returns_none(self):
         orch = DataOrchestrator()
-        with patch("httpx.AsyncClient.get", new_callable=AsyncMock, side_effect=Exception("network")):
+        with patch(
+            "httpx.AsyncClient.get", new_callable=AsyncMock, side_effect=Exception("network")
+        ):
             df = await orch._download_csv("https://example.com/data.csv")
             assert df is None
 

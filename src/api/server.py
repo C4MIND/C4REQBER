@@ -20,9 +20,12 @@ try:
     _env_path = _root / ".env"
     if _env_path.exists():
         load_dotenv(_env_path)
-    _dontredact_path = _root / ".env.dontredact"
-    if _dontredact_path.exists():
-        load_dotenv(_dontredact_path, override=True)
+    # Maintainer-only local override. It is intentionally retained for the
+    # existing development workflow, but production must use injected secrets.
+    if os.getenv("ENV", "development").lower() != "production":
+        _local_override_path = _root / ".env.dontredact"
+        if _local_override_path.exists():
+            load_dotenv(_local_override_path, override=True)
 except ImportError:
     pass
 
@@ -99,8 +102,7 @@ register_error_handlers(app)
 # Add request ID middleware for structured logging
 app.middleware("http")(get_request_id_middleware())
 
-# CORS is mounted once, inside setup_security_middleware (it previously also ran
-# via a second, byte-identical setup_cors(app) call — the duplicate is removed).
+# CORS and the remaining security middleware are mounted exactly once here.
 setup_security_middleware(app)
 
 logger.info("api_server_initializing", env=_env, version=__version__)

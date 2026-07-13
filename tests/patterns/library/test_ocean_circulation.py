@@ -6,7 +6,6 @@ import pytest
 from src.patterns.library.ocean_circulation import OceanCirculationConfig, OceanCirculationPattern
 
 
-
 class TestOceanCirculationConfig:
     def test_default_values(self):
         cfg = OceanCirculationConfig()

@@ -14,24 +14,25 @@ Covers:
 - run() async integration
 - Edge cases: empty entities, unstable queue
 """
+
 from __future__ import annotations
 
 import sys
 from pathlib import Path
+
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 import numpy as np
 import pytest
 
+from src.patterns.core import Hypothesis, SimulationStatus
 from src.patterns.library.discrete_event import (
     DiscreteEventPattern,
+    Entity,
     QueueDiscipline,
     Resource,
-    Entity,
 )
-from src.patterns.core import Hypothesis, SimulationStatus
-
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -273,12 +274,15 @@ class TestRun:
     async def test_run_with_config(self):
         pattern = DiscreteEventPattern()
         h = Hypothesis(title="Queue analysis", description="server capacity")
-        result = await pattern.run(h, {
-            "simulation_time": 100.0,
-            "arrival_rate": 2.0,
-            "num_servers": 2,
-            "service_rate": 3.0,
-        })
+        result = await pattern.run(
+            h,
+            {
+                "simulation_time": 100.0,
+                "arrival_rate": 2.0,
+                "num_servers": 2,
+                "service_rate": 3.0,
+            },
+        )
         assert result.status == SimulationStatus.COMPLETED
 
     async def test_metrics_present(self):

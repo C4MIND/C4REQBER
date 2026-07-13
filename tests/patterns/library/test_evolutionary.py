@@ -16,20 +16,21 @@ Covers:
 - run() integration
 - Edge cases: neutral evolution, strong selection, small population
 """
+
 from __future__ import annotations
 
 import sys
 from pathlib import Path
 from unittest.mock import patch
 
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 import numpy as np
 import pytest
 
-from src.patterns.library.evolutionary import EvolutionaryPattern, EvolutionaryConfig
 from src.patterns.core import Hypothesis, SimulationStatus
-
+from src.patterns.library.evolutionary import EvolutionaryConfig, EvolutionaryPattern
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -127,7 +128,9 @@ class TestParseConfig:
 
     def test_custom_parsing(self):
         pattern = EvolutionaryPattern()
-        cfg = pattern._parse_config({"model_type": "wright_fisher", "N": 200, "selection_strength": 2.0})
+        cfg = pattern._parse_config(
+            {"model_type": "wright_fisher", "N": 200, "selection_strength": 2.0}
+        )
         assert cfg.model_type == "wright_fisher"
         assert cfg.N == 200
         assert cfg.selection_strength == 2.0
@@ -142,7 +145,9 @@ class TestParseConfig:
 class TestSimulate:
     async def test_moran_simulation(self):
         pattern = EvolutionaryPattern()
-        pattern.config = EvolutionaryConfig(model_type="moran", N=50, n_generations=100, n_realizations=10)
+        pattern.config = EvolutionaryConfig(
+            model_type="moran", N=50, n_generations=100, n_realizations=10
+        )
         pattern.rng = np.random.default_rng(42)
         h = Hypothesis()
         result = await pattern._simulate(h)
@@ -151,7 +156,9 @@ class TestSimulate:
 
     async def test_wright_fisher_simulation(self):
         pattern = EvolutionaryPattern()
-        pattern.config = EvolutionaryConfig(model_type="wright_fisher", N=50, n_generations=100, n_realizations=10)
+        pattern.config = EvolutionaryConfig(
+            model_type="wright_fisher", N=50, n_generations=100, n_realizations=10
+        )
         pattern.rng = np.random.default_rng(42)
         h = Hypothesis()
         result = await pattern._simulate(h)
@@ -159,7 +166,9 @@ class TestSimulate:
 
     async def test_replicator_simulation(self):
         pattern = EvolutionaryPattern()
-        pattern.config = EvolutionaryConfig(model_type="replicator", n_generations=100, n_realizations=10)
+        pattern.config = EvolutionaryConfig(
+            model_type="replicator", n_generations=100, n_realizations=10
+        )
         pattern.rng = np.random.default_rng(42)
         h = Hypothesis()
         result = await pattern._simulate(h)
@@ -175,7 +184,9 @@ class TestRunMoran:
     def test_moran_trajectory_length(self):
         pattern = EvolutionaryPattern()
         pattern.rng = np.random.default_rng(42)
-        pattern.config = EvolutionaryConfig(model_type="moran", N=50, n_generations=100, mutation_rate=0)
+        pattern.config = EvolutionaryConfig(
+            model_type="moran", N=50, n_generations=100, mutation_rate=0
+        )
         trajectory, fix_data = pattern._run_moran()
         assert len(trajectory) <= 101  # n_generations + 1
         assert "fixation_time" in fix_data
@@ -184,7 +195,9 @@ class TestRunMoran:
     def test_moran_with_mutation(self):
         pattern = EvolutionaryPattern()
         pattern.rng = np.random.default_rng(42)
-        pattern.config = EvolutionaryConfig(model_type="moran", N=50, n_generations=100, mutation_rate=0.01)
+        pattern.config = EvolutionaryConfig(
+            model_type="moran", N=50, n_generations=100, mutation_rate=0.01
+        )
         trajectory, fix_data = pattern._run_moran()
         # With mutation, may not fix
         assert len(trajectory) > 0
@@ -199,7 +212,9 @@ class TestRunWrightFisher:
     def test_wf_trajectory_length(self):
         pattern = EvolutionaryPattern()
         pattern.rng = np.random.default_rng(42)
-        pattern.config = EvolutionaryConfig(model_type="wright_fisher", N=50, n_generations=100, mutation_rate=0)
+        pattern.config = EvolutionaryConfig(
+            model_type="wright_fisher", N=50, n_generations=100, mutation_rate=0
+        )
         trajectory, fix_data = pattern._run_wright_fisher()
         assert len(trajectory) <= 101
         assert "fixation_time" in fix_data
@@ -264,7 +279,9 @@ class TestCalculateConfidence:
     def test_high_confidence(self):
         pattern = EvolutionaryPattern()
         pattern.config = EvolutionaryConfig(n_realizations=100)
-        results = {"metrics": {"n_realizations": 100, "fixation_error": 0.02, "mean_fixation_time": 50.0}}
+        results = {
+            "metrics": {"n_realizations": 100, "fixation_error": 0.02, "mean_fixation_time": 50.0}
+        }
         confidence = pattern._calculate_confidence(results)
         assert confidence > 0.5
 
@@ -310,7 +327,12 @@ class TestRun:
     async def test_run_wright_fisher(self):
         pattern = EvolutionaryPattern()
         h = Hypothesis(title="Evolution", description="Wright-Fisher")
-        config = {"model_type": "wright_fisher", "N": 50, "n_generations": 100, "n_realizations": 10}
+        config = {
+            "model_type": "wright_fisher",
+            "N": 50,
+            "n_generations": 100,
+            "n_realizations": 10,
+        }
         result = await pattern.run(h, config)
         assert result.status == SimulationStatus.COMPLETED
 

@@ -18,12 +18,14 @@ of them is skipped rather than failed. Anything else — a SyntaxError, a
 TypeError at class-construction time, a missing first-party module, a
 NameError — is a real breakage and fails the test.
 """
+
 from __future__ import annotations
 
 import json
 import pathlib
 import subprocess
 import sys
+
 
 _REPO = pathlib.Path(__file__).resolve().parent.parent
 

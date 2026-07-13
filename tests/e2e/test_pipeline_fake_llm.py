@@ -18,6 +18,7 @@ sys.modules is polluted by other tests (something clobbers the
 state. (The app itself is fine — a live `blast solve` and this test run
 standalone both work; the breakage is purely test-ordering global state.)
 """
+
 from __future__ import annotations
 
 import json
@@ -27,6 +28,7 @@ import subprocess
 import sys
 
 import pytest
+
 
 # Opt-in only. This runs the full 10-step pipeline in a subprocess (~40s
 # locally, and slower on constrained CI runners — enough to blow the default
@@ -94,7 +96,9 @@ def test_pipeline_streams_to_completion_with_fake_llm(tmp_path):
     out = tmp_path / "result.json"
     proc = subprocess.run(
         [sys.executable, "-c", _RUN, str(_REPO), str(out)],
-        capture_output=True, text=True, timeout=180,
+        capture_output=True,
+        text=True,
+        timeout=180,
     )
     assert out.exists(), (
         f"pipeline subprocess produced no result (rc={proc.returncode}):\n"
@@ -114,6 +118,7 @@ def test_pipeline_streams_to_completion_with_fake_llm(tmp_path):
     assert "final_solution" in res["result_keys"] or "confidence" in res["result_keys"], (
         f"final result missing expected keys; got: {res['result_keys'][:12]}"
     )
+
 
 # NOTE: we intentionally do NOT assert that every LLM-driven step *succeeds*.
 # A generic fake returns plain text while some steps (e.g. mp_rotation) expect

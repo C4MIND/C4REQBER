@@ -4,7 +4,6 @@ import numpy as np
 import pytest
 
 from src.patterns.library.composite_mechanics import (
-
     CompositeMechanicsConfig,
     CompositeMechanicsPattern,
     HomogenizationMethod,
@@ -151,9 +150,7 @@ class TestCompositeMechanicsPattern:
         assert result["method"] == "self_consistent"
 
     def test_run_fea_based(self):
-        config = CompositeMechanicsConfig(
-            method=HomogenizationMethod.FEA_BASED, mesh_size=20
-        )
+        config = CompositeMechanicsConfig(method=HomogenizationMethod.FEA_BASED, mesh_size=20)
         pattern = CompositeMechanicsPattern(config)
         result = pattern.run()
         assert result["method"] == "fea_based"

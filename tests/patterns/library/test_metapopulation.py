@@ -1,15 +1,17 @@
 """
 Tests for metapopulation pattern module.
 """
-import numpy as np
-import pytest
+
 import asyncio
 
+import numpy as np
+import pytest
+
 from src.patterns.library.metapopulation import (
-    MetapopulationModel,
-    Patch,
     MetapopulationConfig,
+    MetapopulationModel,
     MetapopulationPattern,
+    Patch,
 )
 
 
@@ -55,12 +57,14 @@ class TestCanSimulate:
     def test_can_simulate_fragmentation(self):
         pattern = MetapopulationPattern()
         from src.patterns.core import Hypothesis
+
         h = Hypothesis(title="fragmentation effects", description="patch dynamics")
         assert pattern.can_simulate(h) is True
 
     def test_can_simulate_no_match(self):
         pattern = MetapopulationPattern()
         from src.patterns.core import Hypothesis
+
         h = Hypothesis(title="quantum mechanics", description="wave function")
         assert pattern.can_simulate(h) is False
 
@@ -189,7 +193,9 @@ class TestEdgeCases:
         pattern = MetapopulationPattern()
         from src.patterns.core import Hypothesis
 
-        h = Hypothesis(title="test", description="test", parameters={"num_patches": 20, "years": 100})
+        h = Hypothesis(
+            title="test", description="test", parameters={"num_patches": 20, "years": 100}
+        )
         resources = pattern.estimate_resources(h)
         assert "cpu_cores" in resources
         assert "memory_gb" in resources

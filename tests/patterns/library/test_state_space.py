@@ -1,15 +1,16 @@
 """
 Tests for state_space pattern module.
 """
+
 import numpy as np
 import pytest
 
 from src.patterns.library.state_space import (
     ControlMethod,
-    SystemType,
     StateSpaceConfig,
     StateSpaceController,
     StateSpacePattern,
+    SystemType,
 )
 
 
@@ -51,9 +52,7 @@ class TestConfig:
         B = np.array([[0.0], [1.0]])
         C = np.array([[1.0, 0.0]])
         D = np.array([[0.0]])
-        cfg = StateSpaceConfig(
-            system_type=SystemType.CUSTOM, A=A, B=B, C=C, D=D
-        )
+        cfg = StateSpaceConfig(system_type=SystemType.CUSTOM, A=A, B=B, C=C, D=D)
         assert np.array_equal(cfg.A, A)
         assert np.array_equal(cfg.B, B)
 

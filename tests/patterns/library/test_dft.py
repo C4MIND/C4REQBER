@@ -1,11 +1,13 @@
 """
 Tests for dft pattern module.
 """
-import numpy as np
-import pytest
+
 import asyncio
 
-from src.patterns.library.dft import DFTFunctional, BasisSet, DFTConfig, DFTPattern
+import numpy as np
+import pytest
+
+from src.patterns.library.dft import BasisSet, DFTConfig, DFTFunctional, DFTPattern
 
 
 class TestEnums:
@@ -44,12 +46,14 @@ class TestCanSimulate:
     def test_can_simulate_dft(self):
         pattern = DFTPattern()
         from src.patterns.core import Hypothesis
+
         h = Hypothesis(title="density functional theory", description="electronic structure")
         assert pattern.can_simulate(h) is True
 
     def test_can_simulate_no_match(self):
         pattern = DFTPattern()
         from src.patterns.core import Hypothesis
+
         h = Hypothesis(title="weather forecast", description="")
         assert pattern.can_simulate(h) is False
 
@@ -142,6 +146,7 @@ class TestKohnSham:
     async def test_kohn_sham_solve(self):
         pattern = DFTPattern()
         from src.patterns.core import Hypothesis
+
         h = Hypothesis(title="test", description="test")
         cfg = DFTConfig(n_electrons=2, n_grid=50, max_scf_iter=20)
         result = await pattern._kohn_sham_solve(h, cfg)
@@ -153,6 +158,7 @@ class TestKohnSham:
     async def test_kohn_sham_convergence(self):
         pattern = DFTPattern()
         from src.patterns.core import Hypothesis
+
         h = Hypothesis(title="test", description="test")
         cfg = DFTConfig(n_electrons=2, n_grid=50, max_scf_iter=50, scf_tolerance=1e-4)
         result = await pattern._kohn_sham_solve(h, cfg)
@@ -164,6 +170,7 @@ class TestRun:
     async def test_run(self):
         pattern = DFTPattern()
         from src.patterns.core import Hypothesis
+
         h = Hypothesis(title="test", description="test")
         result = await pattern.run(
             hypothesis=h,
@@ -175,7 +182,14 @@ class TestRun:
 class TestEdgeCases:
     def test_confidence(self):
         pattern = DFTPattern()
-        results = {"metrics": {"scf_converged": 1, "final_density_residual": 1e-9, "total_energy": 10.0, "homo_lumo_gap": 0.5}}
+        results = {
+            "metrics": {
+                "scf_converged": 1,
+                "final_density_residual": 1e-9,
+                "total_energy": 10.0,
+                "homo_lumo_gap": 0.5,
+            }
+        }
         score = pattern._calculate_confidence(results)
         assert 0 <= score <= 0.85
 
@@ -183,7 +197,9 @@ class TestEdgeCases:
         pattern = DFTPattern()
         from src.patterns.core import Hypothesis
 
-        h = Hypothesis(title="test", description="test", parameters={"n_grid": 100, "max_scf_iter": 100})
+        h = Hypothesis(
+            title="test", description="test", parameters={"n_grid": 100, "max_scf_iter": 100}
+        )
         resources = pattern.estimate_resources(h)
         assert "cpu_cores" in resources
         assert "memory_gb" in resources

@@ -1,6 +1,7 @@
 """
 C4REQBER: Structural Memory Bank — Core Classes
 """
+
 from __future__ import annotations
 
 
@@ -22,7 +23,7 @@ from typing import Any
 from src.c4.transformer import DomainFingerprint, IsomorphismResult
 
 
-DB_PATH = Path(__file__).parent.parent.parent.parent / "data" / "structural_memory.db"
+DB_PATH = Path(__file__).resolve().parents[2] / "data" / "structural_memory.db"
 DB_PATH.parent.mkdir(parents=True, exist_ok=True)
 
 SCHEMA_SQL = """
@@ -148,9 +149,7 @@ class StructuralMemoryBank:
             conn.commit()
             # Migration: add user_id column if missing (SQLite < 3.35 can't drop columns)
             try:
-                conn.execute(
-                    "ALTER TABLE validation_experiments ADD COLUMN user_id TEXT"
-                )
+                conn.execute("ALTER TABLE validation_experiments ADD COLUMN user_id TEXT")
                 conn.commit()
             except sqlite3.OperationalError:
                 pass  # Column already exists
@@ -166,7 +165,7 @@ class StructuralMemoryBank:
     def _fingerprint_id(self, fp: DomainFingerprint) -> str:
         """Deterministic ID for fingerprint."""
         raw = f"{fp.domain}:{fp.spectral_hash}"
-        return hashlib.md5(raw.encode()).hexdigest()[:16]
+        return hashlib.sha256(raw.encode()).hexdigest()[:16]
 
     def store_fingerprint(self, fp: DomainFingerprint) -> str:
         """Store a fingerprint, return its ID."""
@@ -182,9 +181,7 @@ class StructuralMemoryBank:
                     json.dumps(fp.entities),
                     json.dumps(fp.relations),
                     json.dumps(fp.constraints),
-                    f"{fp.c4_state.T},{fp.c4_state.S},{fp.c4_state.A}"
-                    if fp.c4_state
-                    else None,
+                    f"{fp.c4_state.T},{fp.c4_state.S},{fp.c4_state.A}" if fp.c4_state else None,
                     fp.spectral_hash,
                     time.time(),
                 ),
@@ -192,9 +189,7 @@ class StructuralMemoryBank:
             conn.commit()
         return fp_id
 
-    def store_isomorphism(
-        self, source_fp: DomainFingerprint, result: IsomorphismResult
-    ) -> str:
+    def store_isomorphism(self, source_fp: DomainFingerprint, result: IsomorphismResult) -> str:
         """Store an isomorphism result."""
         source_id = self.store_fingerprint(source_fp)
         target_id = None
@@ -209,7 +204,7 @@ class StructuralMemoryBank:
             )
             target_id = self.store_fingerprint(target_fp)
 
-        iso_id = hashlib.md5(
+        iso_id = hashlib.sha256(
             f"{source_id}:{result.target_domain}:{time.time()}".encode()
         ).hexdigest()[:16]
 
@@ -306,8 +301,7 @@ class StructuralMemoryBank:
                 "SELECT COUNT(*) FROM isomorphisms WHERE iso_type = 'failed'"
             ).fetchone()[0]
             avg_confidence = (
-                conn.execute("SELECT AVG(confidence) FROM isomorphisms").fetchone()[0]
-                or 0.0
+                conn.execute("SELECT AVG(confidence) FROM isomorphisms").fetchone()[0] or 0.0
             )
 
             return {
@@ -331,9 +325,7 @@ class StructuralMemoryBank:
             "confidence": row["confidence"],
             "iso_type": row["iso_type"],
             "path": json.loads(row["path"]),
-            "qzrf_operators": json.loads(row["qzrf_operators"])
-            if row["qzrf_operators"]
-            else [],
+            "qzrf_operators": json.loads(row["qzrf_operators"]) if row["qzrf_operators"] else [],
             "description": row["description"],
             "timestamp": row["timestamp"],
             "validation_result": row["validation_result"],

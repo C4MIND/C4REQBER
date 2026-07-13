@@ -17,20 +17,22 @@ Covers:
 - run() async integration
 - Edge cases: different survival types, demographic transitions
 """
+
 from __future__ import annotations
 
 import sys
 from pathlib import Path
 
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
+
+import asyncio
 
 import numpy as np
 import pytest
-import asyncio
 
-from src.patterns.library.age_structured import AgeStructuredPattern, AgeStructuredConfig
 from src.patterns.core import Hypothesis, SimulationStatus
-
+from src.patterns.library.age_structured import AgeStructuredConfig, AgeStructuredPattern
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -50,12 +52,7 @@ class TestAgeStructuredConfig:
         assert cfg.survival_type == "type1"
 
     def test_custom_init(self):
-        cfg = AgeStructuredConfig(
-            max_age=80,
-            age_groups=16,
-            t_max=50.0,
-            birth_rate=0.03
-        )
+        cfg = AgeStructuredConfig(max_age=80, age_groups=16, t_max=50.0, birth_rate=0.03)
         assert cfg.max_age == 80
         assert cfg.age_groups == 16
         assert cfg.t_max == 50.0
@@ -130,11 +127,7 @@ class TestParseConfig:
 
     def test_custom_parsing(self):
         pattern = AgeStructuredPattern()
-        cfg = pattern._parse_config({
-            "max_age": 80,
-            "age_groups": 16,
-            "birth_rate": 0.03
-        })
+        cfg = pattern._parse_config({"max_age": 80, "age_groups": 16, "birth_rate": 0.03})
         assert cfg.max_age == 80
         assert cfg.age_groups == 16
         assert cfg.birth_rate == 0.03
@@ -272,15 +265,11 @@ class TestUpdatePopulation:
 
         # Ages should progress (shifted)
         assert pattern.population[1] == 100  # Previous group 0
-        assert pattern.population[2] == 80   # Previous group 1
+        assert pattern.population[2] == 80  # Previous group 1
 
     def test_carrying_capacity_regulation(self):
         pattern = AgeStructuredPattern()
-        pattern.config = AgeStructuredConfig(
-            age_groups=5,
-            carrying_capacity=100,
-            birth_rate=0.1
-        )
+        pattern.config = AgeStructuredConfig(age_groups=5, carrying_capacity=100, birth_rate=0.1)
         # Start at carrying capacity
         pattern.population = np.array([50, 30, 15, 4, 1], dtype=float)
         pattern.fertility_rates = np.array([0, 0.5, 0.5, 0.1, 0])
@@ -340,10 +329,24 @@ class TestAnalyzeResults:
         pattern = AgeStructuredPattern()
         pattern.config = AgeStructuredConfig(max_age=100)
         pattern.history = [
-            {"time": 0, "total_population": 1000, "mean_age": 30, "dependency_ratio": 0.5,
-             "young": 300, "working": 600, "old": 100},
-            {"time": 50, "total_population": 1500, "mean_age": 35, "dependency_ratio": 0.6,
-             "young": 400, "working": 700, "old": 200},
+            {
+                "time": 0,
+                "total_population": 1000,
+                "mean_age": 30,
+                "dependency_ratio": 0.5,
+                "young": 300,
+                "working": 600,
+                "old": 100,
+            },
+            {
+                "time": 50,
+                "total_population": 1500,
+                "mean_age": 35,
+                "dependency_ratio": 0.6,
+                "young": 400,
+                "working": 700,
+                "old": 200,
+            },
         ]
 
         result = pattern._analyze_results()
@@ -358,10 +361,24 @@ class TestAnalyzeResults:
         pattern = AgeStructuredPattern()
         pattern.config = AgeStructuredConfig(max_age=100)
         pattern.history = [
-            {"time": 0, "total_population": 1000, "mean_age": 30, "dependency_ratio": 0.5,
-             "young": 300, "working": 600, "old": 100},
-            {"time": 50, "total_population": 2000, "mean_age": 35, "dependency_ratio": 0.6,
-             "young": 400, "working": 700, "old": 200},
+            {
+                "time": 0,
+                "total_population": 1000,
+                "mean_age": 30,
+                "dependency_ratio": 0.5,
+                "young": 300,
+                "working": 600,
+                "old": 100,
+            },
+            {
+                "time": 50,
+                "total_population": 2000,
+                "mean_age": 35,
+                "dependency_ratio": 0.6,
+                "young": 400,
+                "working": 700,
+                "old": 200,
+            },
         ]
 
         result = pattern._analyze_results()
@@ -380,12 +397,7 @@ class TestCalculateConfidence:
     def test_high_confidence(self):
         pattern = AgeStructuredPattern()
         pattern.config = AgeStructuredConfig(t_max=100, age_groups=20)
-        results = {
-            "metrics": {
-                "growth_rate": 0.01,
-                "young_pct_change": 5.0
-            }
-        }
+        results = {"metrics": {"growth_rate": 0.01, "young_pct_change": 5.0}}
         confidence = pattern._calculate_confidence(results)
         assert confidence > 0.5
 

@@ -12,10 +12,12 @@ Covers:
 - Error handling: invalid matrix dimensions, missing params
 - Edge cases: zero steps, custom initial state, empty hypothesis
 """
+
 from __future__ import annotations
 
 import sys
 from pathlib import Path
+
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
@@ -23,7 +25,6 @@ import numpy as np
 import pytest
 
 from src.patterns.library.kalman_filter import (
-
     ExtendedKF,
     FilterType,
     KalmanFilterConfig,

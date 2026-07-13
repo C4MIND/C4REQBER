@@ -16,23 +16,25 @@ Covers:
 - run() integration (success and failure)
 - Edge cases: empty grids, invalid inputs, boundary conditions, all occupied, no occupied
 """
+
 from __future__ import annotations
 
 import sys
 from pathlib import Path
 from unittest.mock import patch
 
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 import numpy as np
 import pytest
 
+from src.patterns.core import Hypothesis, SimulationStatus
 from src.patterns.library.percolation import (
     PercolationConfig,
     PercolationPattern,
     UnionFind,
 )
-from src.patterns.core import Hypothesis, SimulationStatus
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -478,8 +480,18 @@ class TestAnalyzeResults:
         pattern = PercolationPattern()
         pattern.config = PercolationConfig(lattice_size=10, dimension=2, n_realizations=10)
         pattern.results_by_p = {
-            0.4: {"percolation_prob": 0.0, "percolation_std": 0.0, "max_cluster_size": 0.1, "avg_cluster_size": 5.0},
-            0.6: {"percolation_prob": 1.0, "percolation_std": 0.0, "max_cluster_size": 0.8, "avg_cluster_size": 50.0},
+            0.4: {
+                "percolation_prob": 0.0,
+                "percolation_std": 0.0,
+                "max_cluster_size": 0.1,
+                "avg_cluster_size": 5.0,
+            },
+            0.6: {
+                "percolation_prob": 1.0,
+                "percolation_std": 0.0,
+                "max_cluster_size": 0.8,
+                "avg_cluster_size": 50.0,
+            },
         }
         result = pattern._analyze_results()
         assert "percolation_threshold" in result["metrics"]
@@ -494,8 +506,18 @@ class TestAnalyzeResults:
         pattern = PercolationPattern()
         pattern.config = PercolationConfig(lattice_size=10, dimension=2)
         pattern.results_by_p = {
-            0.5: {"percolation_prob": 0.3, "percolation_std": 0.0, "max_cluster_size": 0.2, "avg_cluster_size": 5.0},
-            0.6: {"percolation_prob": 0.7, "percolation_std": 0.0, "max_cluster_size": 0.5, "avg_cluster_size": 20.0},
+            0.5: {
+                "percolation_prob": 0.3,
+                "percolation_std": 0.0,
+                "max_cluster_size": 0.2,
+                "avg_cluster_size": 5.0,
+            },
+            0.6: {
+                "percolation_prob": 0.7,
+                "percolation_std": 0.0,
+                "max_cluster_size": 0.5,
+                "avg_cluster_size": 20.0,
+            },
         }
         result = pattern._analyze_results()
         threshold = result["metrics"]["percolation_threshold"]
@@ -505,8 +527,18 @@ class TestAnalyzeResults:
         pattern = PercolationPattern()
         pattern.config = PercolationConfig(lattice_size=10, dimension=2)
         pattern.results_by_p = {
-            0.3: {"percolation_prob": 0.0, "percolation_std": 0.0, "max_cluster_size": 0.1, "avg_cluster_size": 5.0},
-            0.7: {"percolation_prob": 0.0, "percolation_std": 0.0, "max_cluster_size": 0.1, "avg_cluster_size": 5.0},
+            0.3: {
+                "percolation_prob": 0.0,
+                "percolation_std": 0.0,
+                "max_cluster_size": 0.1,
+                "avg_cluster_size": 5.0,
+            },
+            0.7: {
+                "percolation_prob": 0.0,
+                "percolation_std": 0.0,
+                "max_cluster_size": 0.1,
+                "avg_cluster_size": 5.0,
+            },
         }
         result = pattern._analyze_results()
         threshold = result["metrics"]["percolation_threshold"]
@@ -516,8 +548,18 @@ class TestAnalyzeResults:
         pattern = PercolationPattern()
         pattern.config = PercolationConfig(lattice_size=5, dimension=3)
         pattern.results_by_p = {
-            0.2: {"percolation_prob": 0.0, "percolation_std": 0.0, "max_cluster_size": 0.05, "avg_cluster_size": 3.0},
-            0.4: {"percolation_prob": 1.0, "percolation_std": 0.0, "max_cluster_size": 0.6, "avg_cluster_size": 30.0},
+            0.2: {
+                "percolation_prob": 0.0,
+                "percolation_std": 0.0,
+                "max_cluster_size": 0.05,
+                "avg_cluster_size": 3.0,
+            },
+            0.4: {
+                "percolation_prob": 1.0,
+                "percolation_std": 0.0,
+                "max_cluster_size": 0.6,
+                "avg_cluster_size": 30.0,
+            },
         }
         result = pattern._analyze_results()
         assert result["metrics"]["dimension"] == 3
@@ -656,7 +698,9 @@ class TestRun:
         pattern = PercolationPattern()
         h = Hypothesis(title="Percolation", description="test")
         with patch.object(pattern, "_simulate", side_effect=ValueError("test error")):
-            result = await pattern.run(h, {"lattice_size": 10, "n_realizations": 5, "n_p_values": 3})
+            result = await pattern.run(
+                h, {"lattice_size": 10, "n_realizations": 5, "n_p_values": 3}
+            )
             assert result.status == SimulationStatus.FAILED
             assert "test error" in result.error_message
 
@@ -666,6 +710,7 @@ class TestRun:
         config = {"lattice_size": 10, "n_realizations": 5, "n_p_values": 3}
         result = await pattern.run(h, config)
         from src.patterns.core import ValidationLevel
+
         assert result.validation_level == ValidationLevel.MONTE_CARLO
 
 
@@ -723,14 +768,25 @@ class TestEdgeCases:
         pattern = PercolationPattern()
         pattern.config = PercolationConfig(lattice_size=10, n_realizations=2, n_p_values=2)
         pattern.results_by_p = {
-            0.0: {"percolation_prob": 0.0, "percolation_std": 0.0, "max_cluster_size": 0.0, "avg_cluster_size": 0.0},
-            1.0: {"percolation_prob": 1.0, "percolation_std": 0.0, "max_cluster_size": 1.0, "avg_cluster_size": 100.0},
+            0.0: {
+                "percolation_prob": 0.0,
+                "percolation_std": 0.0,
+                "max_cluster_size": 0.0,
+                "avg_cluster_size": 0.0,
+            },
+            1.0: {
+                "percolation_prob": 1.0,
+                "percolation_std": 0.0,
+                "max_cluster_size": 1.0,
+                "avg_cluster_size": 100.0,
+            },
         }
         result = pattern._analyze_results()
         assert result["metrics"]["percolation_threshold"] is not None
 
     def test_run_minimal_lattice(self):
         import asyncio
+
         pattern = PercolationPattern()
         h = Hypothesis(title="Percolation", description="test")
         config = {"lattice_size": 2, "n_realizations": 2, "n_p_values": 2}

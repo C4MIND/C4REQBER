@@ -1,22 +1,23 @@
 """
 Tests for src/patterns/library/spring_mass.py
 """
+
 from __future__ import annotations
 
 import sys
 from pathlib import Path
+
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 import numpy as np
 import pytest
 
-from src.patterns.library.spring_mass import (
-    SpringMassPattern,
-    SpringMassConfig,
-)
 from src.patterns.core import Hypothesis, SimulationStatus
-
+from src.patterns.library.spring_mass import (
+    SpringMassConfig,
+    SpringMassPattern,
+)
 
 
 class TestSpringMassConfig:
@@ -114,7 +115,14 @@ class TestSimulateSpringMass:
 class TestCalculateConfidence:
     def test_high_confidence(self):
         pattern = SpringMassPattern()
-        results = {"metrics": {"energy_drift": 0.001, "fundamental_frequency": 0.5, "frequency_ratio": 2.0, "max_displacement": 1.0}}
+        results = {
+            "metrics": {
+                "energy_drift": 0.001,
+                "fundamental_frequency": 0.5,
+                "frequency_ratio": 2.0,
+                "max_displacement": 1.0,
+            }
+        }
         confidence = pattern._calculate_confidence(results)
         assert confidence > 0.5
 

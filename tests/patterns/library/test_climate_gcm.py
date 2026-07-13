@@ -13,10 +13,12 @@ Covers:
 - Physics schemes: radiation, convection, precipitation
 - Edge cases: zero days, small grid, disabled physics
 """
+
 from __future__ import annotations
 
 import sys
 from pathlib import Path
+
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
@@ -24,7 +26,6 @@ import numpy as np
 import pytest
 
 from src.patterns.library.climate_gcm import ClimateGCMPattern, GCMConfig
-
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -222,7 +223,9 @@ class TestTimeStepping:
 
     def test_step_with_disabled_physics(self):
         cfg = GCMConfig(
-            n_lat=8, n_lon=16, n_levels=4,
+            n_lat=8,
+            n_lon=16,
+            n_levels=4,
             enable_radiation=False,
             enable_convection=False,
             enable_precipitation=False,
@@ -377,9 +380,7 @@ class TestEdgeCases:
         assert "mean_temperature_timeseries" in result
 
     def test_output_interval(self):
-        cfg = GCMConfig(
-            n_lat=8, n_lon=16, n_levels=4, days=1, dt=600.0, output_interval=1
-        )
+        cfg = GCMConfig(n_lat=8, n_lon=16, n_levels=4, days=1, dt=600.0, output_interval=1)
         gcm = ClimateGCMPattern(cfg)
         result = gcm.run()
         # More frequent output means more time points

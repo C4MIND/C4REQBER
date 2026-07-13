@@ -7,15 +7,17 @@ heavy optional dependencies (mlx, z3, torch, etc.).
 Usage: python3 scripts/gen_truths.py [--check]
   --check  only verify existing _truths.json is up to date, exit non-zero if stale
 """
+
 from __future__ import annotations
 
 import argparse
+import ast
 import json
 import os
 import re
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 
 
@@ -58,6 +60,7 @@ def count_mcp_tools() -> int:
     Matches only decorators: must start with `@server.tool` followed by `(`, optionally
     with a name argument. Excludes comment lines.
     """
+
     def count_real_decorators(text: str) -> int:
         count = 0
         for line in text.splitlines():
@@ -82,35 +85,86 @@ def count_cli_commands() -> int:
     return len(re.findall(r"^@app\.command\(", src, re.MULTILINE))
 
 
-def count_knowledge_sources() -> int:
-    """Count non-base, non-private source modules in src/knowledge/sources/."""
-    out = sh([
-        "find", "src/knowledge/sources",
-        "-name", "*.py",
-        "-not", "-name", "__init__.py",
-        "-not", "-name", "_*.py",
-        "-not", "-name", "base*.py",
-        "-not", "-name", "extra_adapters.py",
-        "-not", "-name", "p6_adapters.py",
-        "-not", "-name", "base_p6.py",
-    ])
-    return len([l for l in out.strip().splitlines() if l])
+def _dict_keys_from_assignment(path: Path, name: str) -> set[str]:
+    """Read string keys from a top-level dict assignment without importing it."""
+    tree = ast.parse(path.read_text())
+    for node in tree.body:
+        target: ast.expr | None = None
+        if isinstance(node, ast.Assign) and len(node.targets) == 1:
+            target = node.targets[0]
+        elif isinstance(node, ast.AnnAssign):
+            target = node.target
+        if isinstance(target, ast.Name) and target.id == name and isinstance(node.value, ast.Dict):
+            return {
+                key.value
+                for key in node.value.keys
+                if isinstance(key, ast.Constant) and isinstance(key.value, str)
+            }
+    raise RuntimeError(f"could not find dict assignment {name} in {path}")
+
+
+def count_knowledge_sources() -> tuple[int, int]:
+    """Count configured sources and sources wired to concrete adapters.
+
+    SOURCE_REGISTRY is the public source inventory. The orchestrator adapter map
+    is checked separately because a configured source may be intentionally
+    disabled while keeping its metadata.
+    """
+    registry = _dict_keys_from_assignment(REPO / "src/knowledge/config.py", "SOURCE_REGISTRY")
+    tree = ast.parse((REPO / "src/knowledge/orchestrator.py").read_text())
+    adapter_keys: set[str] = set()
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Assign):
+            continue
+        if not any(
+            isinstance(target, ast.Name) and target.id == "adapter_map" for target in node.targets
+        ):
+            continue
+        if not isinstance(node.value, ast.Call) or len(node.value.args) < 2:
+            continue
+        mapping = node.value.args[1]
+        if isinstance(mapping, ast.Dict):
+            adapter_keys = {
+                key.value
+                for key in mapping.keys
+                if isinstance(key, ast.Constant) and isinstance(key.value, str)
+            }
+            break
+    if not adapter_keys:
+        raise RuntimeError("could not find orchestrator adapter_map")
+    return len(registry), len(registry & adapter_keys)
 
 
 def count_simulation_engines() -> int:
     """Count simulation engine adapter modules."""
-    out = sh([
-        "find", "src/simulations",
-        "-name", "*_bridge.py",
-        "-not", "-name", "base_adapter.py",
-    ])
+    out = sh(
+        [
+            "find",
+            "src/simulations",
+            "-name",
+            "*_bridge.py",
+            "-not",
+            "-name",
+            "base_adapter.py",
+        ]
+    )
     return len([l for l in out.strip().splitlines() if l])
 
 
 def count_llm_providers() -> int:
-    """Count BaseLLMClient subclasses across src/llm/."""
-    out = sh(["grep", "-rE", r"class \w+(Client|Provider)\(.*BaseLLMClient\)", "src/llm/", "--include=*.py"])
-    return len([l for l in out.strip().splitlines() if l])
+    """Count configured providers, excluding the AUTO routing sentinel."""
+    tree = ast.parse((REPO / "src/llm/config.py").read_text())
+    provider_class = next(
+        node for node in tree.body if isinstance(node, ast.ClassDef) and node.name == "LLMProvider"
+    )
+    return sum(
+        1
+        for node in provider_class.body
+        if isinstance(node, ast.Assign)
+        and len(node.targets) == 1
+        and isinstance(node.targets[0], ast.Name)
+        and node.targets[0].id != "AUTO"
+    )
 
 
 REAL_VERIFIER_BRIDGES: tuple[str, ...] = (
@@ -129,7 +183,11 @@ GUARD_STUB_BACKENDS: tuple[str, ...] = ()
 
 def count_mypy_baseline() -> int:
     """Count mypy errors (0 = clean). Falls back to baseline file if mypy unavailable."""
-    for name in ("MYPY_BASELINE_2026-07-12.txt", "MYPY_BASELINE_2026-06-29.txt", "MYPY_BASELINE_2026-06-22.txt"):
+    for name in (
+        "MYPY_BASELINE_2026-07-12.txt",
+        "MYPY_BASELINE_2026-06-29.txt",
+        "MYPY_BASELINE_2026-06-22.txt",
+    ):
         baseline = REPO / "archive/audits" / name
         if baseline.exists():
             count = sum(1 for line in baseline.read_text().splitlines() if line.startswith("src/"))
@@ -180,12 +238,15 @@ def read_tui_version() -> str:
 
 def build_truths() -> dict:
     if os.environ.get("CI_TRUTHS_SKIP_PYTHON") == "1" and TRUTHS_FILE.exists():
-        tests_collected = json.loads(TRUTHS_FILE.read_text()).get("python", {}).get("tests_collected", 0)
+        tests_collected = (
+            json.loads(TRUTHS_FILE.read_text()).get("python", {}).get("tests_collected", 0)
+        )
     else:
         tests_collected = count_py_tests()
+    knowledge_sources, wired_knowledge_sources = count_knowledge_sources()
     return {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "generated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "generated_at": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "version_backend": read_version(),
         "version_tui": read_tui_version(),
         "git_head": git_head(),
@@ -204,8 +265,12 @@ def build_truths() -> dict:
             "commands": count_cli_commands(),
         },
         "knowledge": {
-            "sources": count_knowledge_sources(),
-            "footnote": "33 literature adapters + 10 data/biological = 43 total adapters in README",
+            "sources": knowledge_sources,
+            "wired": wired_knowledge_sources,
+            "footnote": (
+                "SOURCE_REGISTRY entries; wired is the registry/adapter-map intersection. "
+                "Runtime-active count depends on credentials and source availability."
+            ),
         },
         "simulations": {
             "engines": count_simulation_engines(),
@@ -213,7 +278,10 @@ def build_truths() -> dict:
         },
         "llm": {
             "providers": count_llm_providers(),
-            "footnote": "auto-detected at runtime: OpenRouter, XAI, Mistral, Moonshot, DeepSeek, Liquid, NVIDIA NIM, YandexGPT, Ollama, LM Studio, MLX",
+            "footnote": (
+                "Configured providers excluding AUTO: OpenRouter, XAI, Mistral, Moonshot, "
+                "DeepSeek, Liquid, NVIDIA NIM, YandexGPT, Ollama, LM Studio, MLX."
+            ),
         },
         "verifiers": count_verifiers(),
         "quality": {
@@ -225,8 +293,9 @@ def build_truths() -> dict:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--check", action="store_true",
-                        help="verify _truths.json is up to date, exit 1 if stale")
+    parser.add_argument(
+        "--check", action="store_true", help="verify _truths.json is up to date, exit 1 if stale"
+    )
     args = parser.parse_args()
 
     try:
@@ -241,8 +310,19 @@ def main() -> int:
             return 1
         existing = json.loads(TRUTHS_FILE.read_text())
         # Compare key metric fields (ignore generated_at, git_head)
-        keys = ["python", "go", "mcp", "cli", "knowledge", "simulations", "llm", "verifiers",
-                "quality", "version_backend", "version_tui"]
+        keys = [
+            "python",
+            "go",
+            "mcp",
+            "cli",
+            "knowledge",
+            "simulations",
+            "llm",
+            "verifiers",
+            "quality",
+            "version_backend",
+            "version_tui",
+        ]
         if os.environ.get("CI_TRUTHS_SKIP_PYTHON") == "1":
             keys.remove("python")
         for key in keys:

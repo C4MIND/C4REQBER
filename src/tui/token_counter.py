@@ -2,8 +2,8 @@
 # Copyright (c) 2026 c4reqber Contributors
 from __future__ import annotations
 
-
 from typing import Any
+
 
 _TOKEN_ENC: Any = None
 try:

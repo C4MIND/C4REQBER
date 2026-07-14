@@ -16,10 +16,10 @@ logger = logging.getLogger(__name__)
 
 
 async def c4_solve(problem: str, domain: str = "science") -> dict[str, Any]:
-    """Run 12-stage discovery pipeline with observer, final verifier, redundant gates.
+    """Run 7-phase HIL discovery pipeline (phases A→G) with quality gates.
 
-    Features: iterative paradigm detection, competing hypotheses, self-healing imports.
-    Uses C4 cognitive engine + TRIZ + simulations.
+    Uses HILDiscoveryPipeline: literature → gaps → hypotheses → simulation →
+    verification → dissertation → quality control.
     """
     try:
         if not HAS_TOOLS:

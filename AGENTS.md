@@ -202,7 +202,7 @@ When `blast serve --mcp` is running, 21 tools are available with synchronized JS
 
 | Tool | Description |
 |------|-------------|
-| `c4_solve` | Run 12-stage discovery pipeline (HIL) |
+| `c4_solve` | Run 7-phase HIL discovery pipeline (phases A→G) |
 | `c4_search` | Search across 47 configured knowledge sources |
 | `c4_triz` | TRIZ contradiction resolution (4 modes) |
 | `c4_fingerprint` | C4 Z₃³ state classification |

@@ -28,7 +28,7 @@
 | 15 | `c4_search` | `query: str, sources: list[str] \| None=None` | Search the configured knowledge sources via the orchestrator. |
 | 16 | `c4_simulate` | `pattern_id: str, hypothesis: dict[str, Any]` | Run physics simulation via PatternRunnerV2 (pattern_id selects engine). |
 | 17 | `c4_social` | `action: str, draft_id: str='', platform: str=''` | Social publishing — preprint upload, post to platforms, health check. |
-| 18 | `c4_solve` | `problem: str, domain: str='science'` | Run 12-stage discovery pipeline with observer, final verifier, redundant gates. |
+| 18 | `c4_solve` | `problem: str, domain: str='science'` | Run 7-phase HIL discovery pipeline (phases A→G). |
 | 19 | `c4_transfer` | `problem: str, source_domain: str, target_domain: str` | Execute cross-domain structural isomorphism transfer. |
 | 20 | `c4_triz` | `improving: int=1, worsening: int=2, mode: str='matrix', problem: str=''` | Resolve contradiction using TRIZ tools. |
 | 21 | `c4_verify` | `code: str, language: str \| None=None` | Verify formal proof in lean4, coq, dafny, agda, z3, hoare, cvc5, tla, or alloy. |

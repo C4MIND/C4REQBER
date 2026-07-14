@@ -67,7 +67,7 @@ make format            # black + prettier
 ## Architecture
 
 - **5 layers**: TUI/CLI/MCP → API (FastAPI) → Core Engines → Cognitive → Knowledge/Verification
-- **Pipeline**: 12-stage HILDiscoveryPipeline with PluginStageRouter A-G
+- **Pipeline**: 7-phase HILDiscoveryPipeline (A→G) with PluginStageRouter
 - **Verification**: 10 backends with guardrails (complexity pre-flight, memory caps, hang detection)
 - **Output**: 6 formats with auto-detection (dissertation, article, whitepaper, blueprint, code, verification_report)
 

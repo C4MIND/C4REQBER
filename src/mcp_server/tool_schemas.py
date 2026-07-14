@@ -43,7 +43,7 @@ INPUT_SCHEMAS = {
         "type": "object",
         "properties": {
             "problem": _p(
-                "Problem statement to solve via 12-stage discovery pipeline", typ="string"
+                "Problem statement to solve via 7-phase HIL discovery pipeline (A→G)", typ="string"
             ),
             "domain": _p("Scientific domain (default: science)", typ="string", default="science"),
         },

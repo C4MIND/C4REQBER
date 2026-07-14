@@ -36,6 +36,17 @@ blast serve --mcp                   # MCP server for AI agents (21 tools)
 
 **Docker (optional API only):** [docs/INSTALL.md](docs/INSTALL.md) · `docker compose -f docker-compose.release.yml up -d`
 
+## Pipeline modes
+
+| Command / MCP tool | Engine | Structure |
+|--------------------|--------|-----------|
+| `blast turbo`, `c4_solve` | HILDiscoveryPipeline | **7 phases A→G** (cognitive framing → knowledge → gaps → agents → sim/verify → dissertation → quality) |
+| `blast solve`, `blast_solve` | UniversalSolvePipeline | **Up to 12 stages** in deep-work mode (strategic artifacts: PRD, blueprint, code) |
+| `blast flash` | Quick LLM path | Fast answer, optional USP analysis |
+| `blast auto` | Mode router | Picks solve / turbo / flash / turbofactory |
+
+The landing **Data Flow** diagram shows **7 user-facing stages** — the same shape as the 7-phase HIL pipeline.
+
 ## Verified pipeline outputs (July 2026)
 
 Six **research proposals** from end-to-end `blast turbo` runs (400–500 literature sources, gap analysis, simulation, quality gates). Full index: [`discoveries/humanity_mission_2026-07-09/README.md`](discoveries/humanity_mission_2026-07-09/README.md).

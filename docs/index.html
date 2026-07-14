@@ -543,7 +543,7 @@ body{overflow-x:hidden}
     <div class="section-header">
       <span class="section-label">Data Flow</span>
       <h2 class="section-title">From Question to Discovery</h2>
-      <p class="section-desc">7 stages. Each transforms, validates, and enriches. No black boxes.</p>
+      <p class="section-desc">7 stages from question to discovery — maps to the 7-phase HIL pipeline (A→G). No black boxes.</p>
     </div>
     <div class="flow-section" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:16px;margin-top:32px">
       <div class="flow-step" style="text-align:center;padding:24px 16px;background:var(--bg-3);border-radius:var(--radius);border:1px solid rgba(255,255,255,.06);position:relative">
@@ -628,7 +628,7 @@ body{overflow-x:hidden}
     </div>
     <div id="panel-code" class="gallery-panel" role="tabpanel" aria-labelledby="tab-code" style="display:none;background:var(--bg-3);border-radius:var(--radius);padding:24px;font-family:var(--mono);font-size:13px;line-height:1.8;border:1px solid rgba(255,255,255,.06)">
       <div style="color:var(--tui-primary)">def</div> <div style="display:inline;color:var(--primary)">run_discovery</div>(query: str) -> C4Result:</div>
-      <div>    <div style="color:var(--fg-3)">"""Run 12-stage discovery pipeline."""</div></div>
+      <div>    <div style="color:var(--fg-3)">"""Run 7-phase HIL discovery pipeline (A→G)."""</div></div>
       <div>    state = c4.fingerprint(query)</div>
       <div>    gaps = knowledge.search(query, sources=33)</div>
       <div>    <div style="color:var(--tui-primary)">return</div> pipeline.run(state, gaps)</div>
@@ -731,7 +731,7 @@ body{overflow-x:hidden}
       <p class="section-desc">JSON Schema compliant. stdio JSON-RPC. Claude, Cursor, Cline, Continue.dev.</p>
     </div>
     <div class="mcp-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:24px">
-      <div class="feature-card" style="padding:20px"><h4 style="font-size:14px;margin-bottom:4px">c4_solve</h4><p style="font-size:12px;color:var(--fg-3)">12-stage discovery pipeline</p></div>
+      <div class="feature-card" style="padding:20px"><h4 style="font-size:14px;margin-bottom:4px">c4_solve</h4><p style="font-size:12px;color:var(--fg-3)">7-phase HIL discovery pipeline (A→G)</p></div>
       <div class="feature-card" style="padding:20px"><h4 style="font-size:14px;margin-bottom:4px">c4_search</h4><p style="font-size:12px;color:var(--fg-3)">47 configured knowledge sources</p></div>
       <div class="feature-card" style="padding:20px"><h4 style="font-size:14px;margin-bottom:4px">c4_triz</h4><p style="font-size:12px;color:var(--fg-3)">Contradiction resolution</p></div>
       <div class="feature-card" style="padding:20px"><h4 style="font-size:14px;margin-bottom:4px">c4_fingerprint</h4><p style="font-size:12px;color:var(--fg-3)">Z₃³ state classification</p></div>

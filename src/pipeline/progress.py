@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class PipelineProgress:
     """Progress event emitted during pipeline execution."""
+
     stage: str
     step: int
     total_steps: int
@@ -120,7 +121,8 @@ class ProgressEmitter:
         return len(self._subscribers)
 
 
-# 12-step pipeline stage definitions (from AGENTS.md)
+# Progress taxonomy for UniversalSolvePipeline (blast solve) — up to 12 stages in deep-work mode.
+# HILDiscoveryPipeline (blast turbo / c4_solve) runs 7 phases A→G; see hil_pipeline.py.
 PIPELINE_12_STAGES: list[dict[str, str]] = [
     {"step": 1, "stage": "C4 Navigation", "short": "C4"},
     {"step": 2, "stage": "TRIZ Contradiction", "short": "TRIZ"},

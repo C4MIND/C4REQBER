@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/abduction/knowledge.py
+# hypothesis_version: 6.141.1
+
+[0.5, 1.0, 'available', 'depth', 'domain', 'domains_labeled', 'edges', 'match_count', 'metadata', 'neighbor_count', 'neighbors', 'node_id', 'nodes', 'tags']

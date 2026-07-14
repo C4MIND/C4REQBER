@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/llm/falsifiability.py
+# hypothesis_version: 6.141.1
+
+[0.3, 0.4, 0.7, 300, '*', '-', 'If', 'Not specified', 'analysis', 'apparatus', 'array', 'confidence_if_passed', 'controls', 'criteria', 'difficulty', 'easy', 'enum', 'estimated_cost', 'experiment_type', 'falsifiability_score', 'feasibility_score', 'general', 'hard', 'items', 'key_challenges', 'measurement', 'medium', 'method', 'number', 'object', 'procedure', 'properties', 'required', 'sample_size', 'specificity_score', 'statement', 'string', 'summary', 'threshold', 'time_to_test', 'timeline', 'title', 'type', '•']

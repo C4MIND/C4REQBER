@@ -1,0 +1,243 @@
+# TURBO-CDI v4.0 Configuration
+# C4-TRIZ Bridge Mappings
+
+# Each C4 operator maps to TRIZ principles it conceptually activates
+# Format: operator_name -> list of principle numbers
+
+mappings:
+  # Temporal operators (Time axis)
+  tau+:
+    principles: [10, 19, 20, 21]
+    reasoning: "Temporal forward enables Prior Action, Periodic Action, Continuity, and Rushing Through"
+    
+  tau-:
+    principles: [9, 22, 34]
+    reasoning: "Temporal backward enables Prior Counteraction, turning harm into benefit, and rejecting/regenerating"
+    
+  tau_sigma:
+    principles: [5, 7, 19]
+    reasoning: "Temporal abstraction enables Merging, Nesting, and Periodic Action"
+    
+  tau_delta:
+    principles: [8, 12, 36]
+    reasoning: "Temporal jump enables Counterweight, Equipotentiality, and Thermal Expansion"
+    
+  tau_rho:
+    principles: [23, 25]
+    reasoning: "Temporal perspective shift enables Feedback and Self-Service"
+    
+  # Scale operators (Scale axis)
+  sigma:
+    principles: [1, 3, 17, 31]
+    reasoning: "Abstraction enables Segmentation, Local Quality, Dimensional Change, and Porous Materials"
+    
+  sigma_iota:
+    principles: [6, 26, 33]
+    reasoning: "Abstract integration enables Universality, Copying, and Homogeneity"
+    
+  lambda_sigma:
+    principles: [2, 28, 30]
+    reasoning: "Scaled abstraction enables Extraction, Mechanics Substitution, and Flexible Membranes"
+    
+  kappa_sigma:
+    principles: [14, 39]
+    reasoning: "Abstract complement enables Spheroidality and Composite Materials"
+    
+  sigma_phi:
+    principles: [4, 15, 32]
+    reasoning: "Composed abstraction enables Asymmetry, Dynamics, and Color Change"
+    
+  # Transformation operators
+  delta:
+    principles: [13, 18, 28]
+    reasoning: "Temporal transformation enables Inversion, Mechanical Vibration, and Mechanics Substitution"
+    
+  delta_iota:
+    principles: [24, 29]
+    reasoning: "Transformed integration enables Mediator and Pneumatics/Hydraulics"
+    
+  delta_phi:
+    principles: [11, 35]
+    reasoning: "Composed transformation enables Cushion and Phase Transitions"
+    
+  # Perspective operators (Agency axis)
+  rho:
+    principles: [16, 27]
+    reasoning: "Perspective shift enables Partial Action and Cheap Short-Living"
+    
+  rho_tau:
+    principles: [21, 37]
+    reasoning: "Temporal perspective enables Rushing Through and Strong Oxidants"
+    
+  rho_iota:
+    principles: [25, 26]
+    reasoning: "Integrated perspective enables Self-Service and Copying"
+    
+  rho_phi:
+    principles: [38]
+    reasoning: "Composed perspective enables Inert Environment"
+    
+  # Integration operators
+  iota:
+    principles: [5, 6, 24]
+    reasoning: "Integration enables Merging, Universality, and Mediator"
+    
+  lambda+:
+    principles: [17, 39]
+    reasoning: "Scale up enables Dimensional Change and Composite Materials"
+    
+  lambda-:
+    principles: [7]
+    reasoning: "Scale down enables Nesting"
+    
+  iota_lambda:
+    principles: [3, 33]
+    reasoning: "Integrated scaling enables Local Quality and Homogeneity"
+    
+  lambda_iota:
+    principles: [29, 30]
+    reasoning: "Scaled integration enables Pneumatics and Flexible Membranes"
+    
+  kappa+:
+    principles: [8, 12]
+    reasoning: "Complement expansion enables Counterweight and Equipotentiality"
+    
+  kappa-:
+    principles: [9]
+    reasoning: "Complement contraction enables Prior Counteraction"
+    
+  lambda_kappa:
+    principles: [36]
+    reasoning: "Scaled complement enables Thermal Expansion"
+    
+  # Composition operators (phi series)
+  kappa_phi:
+    principles: [37, 38]
+    reasoning: "Composed complement enables Strong Oxidants and Inert Environment"
+    
+  mu_phi:
+    principles: [22, 35]
+    reasoning: "Meta-composition enables turning Harm into Benefit and Phase Transitions"
+
+# Reverse mappings (auto-generated from above)
+# TRIZ principle -> C4 operators that activate it
+
+reverse_mappings:
+  1: ["sigma"]                           # Segmentation
+  2: ["lambda_sigma"]                    # Extraction
+  3: ["sigma", "iota_lambda"]            # Local Quality
+  4: ["sigma_phi"]                       # Asymmetry
+  5: ["tau_sigma", "iota"]               # Merging
+  6: ["sigma_iota", "iota"]              # Universality
+  7: ["tau_sigma", "lambda-"]            # Nesting
+  8: ["tau_delta", "kappa+", "kappa_sigma"]  # Counterweight
+  9: ["tau-", "kappa-"]                  # Prior Counteraction
+  10: ["tau+"]                           # Prior Action
+  11: ["delta_phi"]                      # Cushion
+  12: ["tau_delta", "kappa+"]            # Equipotentiality
+  13: ["delta"]                          # Inversion
+  14: ["kappa_sigma"]                    # Spheroidality
+  15: ["sigma_phi"]                      # Dynamics
+  16: ["rho"]                            # Partial/Excessive Action
+  17: ["sigma", "lambda+", "lambda_sigma"]  # Dimensional Change
+  18: ["delta"]                          # Mechanical Vibration
+  19: ["tau+", "tau_sigma"]              # Periodic Action
+  20: ["tau+"]                           # Continuity
+  21: ["tau+", "rho_tau"]                # Rushing Through
+  22: ["tau-", "mu_phi"]                 # Turn Harm into Benefit
+  23: ["tau_rho", "productivity"]        # Feedback
+  24: ["iota", "delta_iota"]             # Mediator
+  25: ["tau_rho", "rho_iota"]            # Self-Service
+  26: ["sigma_iota", "rho_iota"]         # Copying
+  27: ["rho"]                            # Cheap Short-Living
+  28: ["lambda_sigma", "delta"]          # Mechanics Substitution
+  29: ["tau_delta", "lambda_iota", "delta_iota"]  # Pneumatics/Hydraulics
+  30: ["lambda_sigma", "lambda_iota"]    # Flexible Membranes
+  31: ["sigma"]                          # Porous Materials
+  32: ["sigma_phi"]                      # Color Change
+  33: ["sigma_iota", "iota_lambda"]      # Homogeneity
+  34: ["tau-"]                           # Rejecting/Regenerating
+  35: ["tau-", "productivity", "delta_phi", "mu_phi", "automation", "temperature"]  # Phase Transitions
+  36: ["tau_delta", "lambda_kappa"]      # Thermal Expansion
+  37: ["rho_tau", "kappa_phi"]           # Strong Oxidants
+  38: ["kappa_phi", "rho_phi", "temperature"]  # Inert Environment
+  39: ["lambda+", "kappa_sigma"]         # Composite Materials
+
+# Contradiction matrix
+# Format: (parameter_to_improve, parameter_that_worsens) -> recommended principles
+
+contradictions:
+  speed_vs_accuracy:
+    improve: "speed"
+    worsen: "accuracy"
+    principles: [11, 16, 23, 28]
+    c4_operators: ["delta_phi", "rho", "tau_rho", "lambda_sigma", "delta"]
+    
+  speed_vs_reliability:
+    improve: "speed"
+    worsen: "reliability"
+    principles: [11, 21, 23, 35]
+    
+  strength_vs_weight:
+    improve: "strength"
+    worsen: "weight"
+    principles: [1, 8, 15, 29, 40]
+    
+  power_vs_size:
+    improve: "power"
+    worsen: "size"
+    principles: [1, 15, 17, 29]
+    
+  complexity_vs_ease:
+    improve: "complexity"
+    worsen: "ease_of_use"
+    principles: [1, 6, 26, 32]
+    
+  productivity_vs_precision:
+    improve: "productivity"
+    worsen: "precision"
+    principles: [16, 19, 23, 35]
+    
+  energy_vs_speed:
+    improve: "energy_efficiency"
+    worsen: "speed"
+    principles: [19, 20, 22, 35]
+    
+  temperature_vs_reliability:
+    improve: "temperature"
+    worsen: "reliability"
+    principles: [2, 3, 35, 38]
+    
+  automation_vs_adaptability:
+    improve: "automation"
+    worsen: "adaptability"
+    principles: [15, 23, 25, 35]
+    
+  speed_vs_battery_life:
+    improve: "speed"
+    worsen: "battery_life"
+    principles: [19, 23, 28, 35]
+    
+  cost_vs_performance:
+    improve: "performance"
+    worsen: "cost"
+    principles: [6, 27, 28, 29]
+    
+  security_vs_convenience:
+    improve: "security"
+    worsen: "convenience"
+    principles: [3, 11, 23, 32]
+    
+  features_vs_simplicity:
+    improve: "features"
+    worsen: "simplicity"
+    principles: [1, 3, 6, 26]
+
+# Metadata
+metadata:
+  version: "4.0"
+  total_operators: 27
+  total_principles: 40
+  mapping_type: "heuristic"
+  last_updated: "2026-04-11"
+  notes: "These mappings represent conceptual bridges between C4 operators and TRIZ principles. They are heuristics, not formally proven mappings."

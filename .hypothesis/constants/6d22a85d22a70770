@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/api/routers/graph.py
+# hypothesis_version: 6.141.1
+
+[100, 500, 2000, '/central', '/edges', '/graph', '/nodes', '/stats', 'centrality', 'graph', 'node_id']

@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/metamodels/impact.py
+# hypothesis_version: 6.141.1
+
+[0.0, 0.75, 'How do they relate?', 'Who is affected?', 'addresses', 'analyze', 'baseline', 'bottlenecks', 'boundary_condition', 'completed', 'confidence', 'constraints', 'contradictions', 'core_problem', 'create', 'domain_hint', 'domains', 'edge_cases', 'effective', 'elegant', 'entities', 'environment', 'feasible', 'feedback_loop', 'from', 'general', 'identify', 'leverage_points', 'map', 'optimistic', 'pending', 'pessimistic', 'predict', 'previous_phases', 'problem', 'problem_statement', 'prompt', 'questions', 'realistic', 'relations', 'resources', 'running', 'scenarios', 'solution_a', 'solution_b', 'solutions', 'stakeholders', 'success_criteria', 'synthesis_method', 'system', 'test', 'to', 'type', 'user', 'validation_plan']

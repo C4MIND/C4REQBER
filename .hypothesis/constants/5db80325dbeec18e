@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/patterns/library/system_dynamics/solver.py
+# hypothesis_version: 6.141.1
+
+['events', 'threshold_crossing', 'threshold_index', 'time', 'type']

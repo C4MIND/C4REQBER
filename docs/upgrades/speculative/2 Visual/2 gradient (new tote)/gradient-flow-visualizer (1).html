@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GRADIENT - Универсальный Алгоритм Трансформации</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #0f0f0f 100%);
+            color: #ffffff;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1600px;
+            height: 100vh;
+            padding: 20px;
+            position: relative;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            animation: fadeIn 2s;
+        }
+
+        .header h1 {
+            font-size: 16px;
+            letter-spacing: 5px;
+            font-weight: 300;
+            color: #ffffff;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        .header .subtitle {
+            font-size: 11px;
+            letter-spacing: 2px;
+            color: #888;
+        }
+
+        /* Control Bar */
+        .control-bar {
+            position: absolute;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 15px 25px;
+            border-radius: 50px;
+            z-index: 1000;
+        }
+
+        .timer {
+            font-size: 18px;
+            font-weight: 200;
+            color: #64ff96;
+            min-width: 80px;
+            text-align: center;
+            font-family: 'Courier New', monospace;
+        }
+
+        .control-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            padding: 8px 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 12px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.4);
+            transform: scale(1.05);
+        }
+
+        .control-btn.active {
+            background: rgba(100, 255, 150, 0.2);
+            border-color: #64ff96;
+            color: #64ff96;
+        }
+
+        .control-btn svg {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+        }
+
+        .speed-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .speed-display {
+            font-size: 12px;
+            color: #888;
+            min-width: 30px;
+            text-align: center;
+        }
+
+        .divider {
+            width: 1px;
+            height: 30px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Main Canvas */
+        #canvas {
+            width: 100%;
+            height: calc(100vh - 160px);
+            position: relative;
+            margin-top: 140px;
+        }
+
+        /* Info Panels */
+        .info-panel {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            animation: fadeIn 3s;
+            pointer-events: none;
+            border-radius: 10px;
+        }
+
+        .info-panel.left {
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 220px;
+        }
+
+        .info-panel.right {
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 220px;
+        }
+
+        .info-panel.bottom {
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 700px;
+            max-width: 90%;
+            text-align: center;
+        }
+
+        .info-panel h3 {
+            font-size: 11px;
+            letter-spacing: 2px;
+            color: #aaa;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            font-weight: 400;
+        }
+
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.03);
+            border-left: 2px solid #64ff96;
+            border-radius: 3px;
+        }
+
+        .metric-label {
+            color: #aaa;
+            font-size: 11px;
+        }
+
+        .metric-value {
+            color: #64ff96;
+            font-weight: 500;
+            font-size: 12px;
+        }
+
+        /* Phase Indicator */
+        .phase-indicator {
+            position: absolute;
+            top: 150px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 15px 30px;
+            border-radius: 30px;
+            border: 1px solid rgba(100, 255, 150, 0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        .phase-number {
+            font-size: 14px;
+            color: #64ff96;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .current-phase {
+            font-size: 20px;
+            letter-spacing: 3px;
+            color: #64ff96;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            font-weight: 300;
+        }
+
+        .phase-description {
+            font-size: 11px;
+            color: #aaa;
+            letter-spacing: 1px;
+            max-width: 400px;
+            margin: 0 auto;
+            line-height: 1.4;
+        }
+
+        /* Phase Navigator */
+        .phase-navigator {
+            position: absolute;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px;
+            border-radius: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .phase-nav-btn {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #666;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .phase-nav-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            transform: scale(1.1);
+        }
+
+        .phase-nav-btn.active {
+            background: rgba(100, 255, 150, 0.3);
+            border-color: #64ff96;
+            color: #64ff96;
+        }
+
+        /* Legend */
+        .legend {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            font-size: 11px;
+            border-radius: 8px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 8px 0;
+        }
+
+        .legend-color {
+            width: 24px;
+            height: 3px;
+            margin-right: 10px;
+            border-radius: 2px;
+        }
+
+        /* Detailed Info Panel */
+        .detailed-info {
+            position: absolute;
+            right: 20px;
+            bottom: 140px;
+            width: 300px;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .detailed-info h4 {
+            font-size: 12px;
+            color: #64ff96;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .detailed-info p {
+            font-size: 11px;
+            color: #aaa;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+
+        .formula-box {
+            background: rgba(100, 255, 150, 0.1);
+            border: 1px solid rgba(100, 255, 150, 0.3);
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            color: #64ff96;
+            text-align: center;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.8; }
+            50% { opacity: 1; }
+        }
+
+        /* Scrollbar Styling */
+        .detailed-info::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .detailed-info::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .detailed-info::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .info-panel.left, .info-panel.right, .detailed-info {
+                display: none;
+            }
+            
+            .control-bar {
+                scale: 0.8;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>G.R.A.D.I.E.N.T</h1>
+            <div class="subtitle">Градиентный Резонансный Алгоритм Динамической Интеграции и Эволюции Нелинейных Трансформаций</div>
+        </div>
+
+        <div class="control-bar">
+            <div class="timer" id="timer">00:00</div>
+            <div class="divider"></div>
+            <button class="control-btn" id="play-btn" onclick="togglePlay()">
+                <span id="play-icon">▶</span>
+                <span id="play-text">Старт</span>
+            </button>
+            <button class="control-btn" onclick="resetAnimation()">
+                ↺ Сброс
+            </button>
+            <div class="divider"></div>
+            <div class="speed-control">
+                <button class="control-btn" onclick="changeSpeed(-0.5)">−</button>
+                <span class="speed-display" id="speed-display">1.0×</span>
+                <button class="control-btn" onclick="changeSpeed(0.5)">+</button>
+            </div>
+        </div>
+
+        <div class="phase-indicator">
+            <div class="phase-number" id="phase-number">Фаза 1 из 8</div>
+            <div class="current-phase" id="current-phase">ИНИЦИАЛИЗАЦИЯ</div>
+            <div class="phase-description" id="phase-description">Подготовка системы к трансформации</div>
+        </div>
+
+        <canvas id="canvas"></canvas>
+
+        <div class="phase-navigator">
+            <div class="phase-nav-btn" onclick="jumpToPhase(0)" id="phase-btn-0">1</div>
+            <div class="phase-nav-btn" onclick="jumpToPhase(1)" id="phase-btn-1">2</div>
+            <div class="phase-nav-btn" onclick="jumpToPhase(2)" id="phase-btn-2">3</div>
+            <div class="phase-nav-btn" onclick="jumpToPhase(3)" id="phase-btn-3">4</div>
+            <div class="phase-nav-btn" onclick="jumpToPhase(4)" id="phase-btn-4">5</div>
+            <div class="phase-nav-btn" onclick="jumpToPhase(5)" id="phase-btn-5">6</div>
+            <div class="phase-nav-btn" onclick="jumpToPhase(6)" id="phase-btn-6">7</div>
+            <div class="phase-nav-btn" onclick="jumpToPhase(7)" id="phase-btn-7">8</div>
+        </div>
+
+        <div class="info-panel left">
+            <h3>Входные параметры</h3>
+            <div class="metric">
+                <span class="metric-label">Градиент</span>
+                <span class="metric-value" id="gradient">0.00</span>
+            </div>
+            <div class="metric">
+                <span class="metric-label">Пластичность</span>
+                <span class="metric-value" id="plasticity">0.00</span>
+            </div>
+            <div class="metric">
+                <span class="metric-label">Энтропия</span>
+                <span class="metric-value" id="entropy">0.00</span>
+            </div>
+            <div class="metric">
+                <span class="metric-label">Инерция</span>
+                <span class="metric-value" id="inertia">0.00</span>
+            </div>
+        </div>
+
+        <div class="info-panel right">
+            <h3>Состояние системы</h3>
+            <div class="metric">
+                <span class="metric-label">Резонанс</span>
+                <span class="metric-value" id="resonance">0.00</span>
+            </div>
+            <div class="metric">
+                <span class="metric-label">Когерентность</span>
+                <span class="metric-value" id="coherence">0.00</span>
+            </div>
+            <div class="metric">
+                <span class="metric-label">Прогресс фазы</span>
+                <span class="metric-value" id="progress">0%</span>
+            </div>
+            <div class="metric">
+                <span class="metric-label">Общий цикл</span>
+                <span class="metric-value" id="cycle">1</span>
+            </div>
+        </div>
+
+        <div class="info-panel bottom">
+            <h3>Активная формула трансформации</h3>
+            <div id="active-formula" style="font-family: 'Courier New', monospace; color: #64ff96; margin-top: 15px; font-size: 14px;">
+                Ψ(t) = GRADIENT × RESONANCE × TIME
+            </div>
+        </div>
+
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background: #64ff96;"></div>
+                <span>Активный процесс</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #4a9eff;"></div>
+                <span>Обратная связь</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #ffaa00;"></div>
+                <span>Центральное ядро</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: rgba(255,255,255,0.2);"></div>
+                <span>Поток данных</span>
+            </div>
+        </div>
+
+        <div class="detailed-info">
+            <h4 id="detail-title">О фазе</h4>
+            <p id="detail-description">
+                Выберите фазу для детального описания процесса трансформации.
+            </p>
+            <div class="formula-box" id="detail-formula">
+                Ψ = ∫ Gradient dt
+            </div>
+            <p id="detail-explanation">
+                Каждая фаза имеет свою уникальную роль в общем алгоритме трансформации.
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Canvas setup
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Set canvas size
+        canvas.width = canvas.offsetWidth;
+        canvas.height = canvas.offsetHeight;
+        const width = canvas.width;
+        const height = canvas.height;
+
+        // Algorithm phases with detailed descriptions
+        const phases = [
+            {
+                name: 'СКАНИРОВАНИЕ',
+                shortDesc: 'Анализ текущего состояния системы',
+                duration: 3000,
+                formula: 'ΔS = |Current - Target|',
+                detailedDesc: 'Система производит полное сканирование текущего состояния, определяя все параметры и их отклонения от целевых значений. Создаётся карта пространства состояний.',
+                explanation: 'На этой фазе важно не пропустить ни одного значимого параметра. Качество сканирования определяет успех всей трансформации.'
+            },
+            {
+                name: 'ДИАГНОСТИКА',
+                shortDesc: 'Определение градиента изменения',
+                duration: 2500,
+                formula: '∇Ψ = ∂Ψ/∂x + ∂Ψ/∂y + ∂Ψ/∂t',
+                detailedDesc: 'Вычисляется градиент трансформационного поля — вектор, указывающий направление максимального изменения. Анализируются все измерения пространства.',
+                explanation: 'Градиент показывает кратчайший путь к цели. Чем точнее диагностика, тем эффективнее будет трансформация.'
+            },
+            {
+                name: 'РЕЗОНАНС',
+                shortDesc: 'Настройка на частоту системы',
+                duration: 3000,
+                formula: 'R = cos(φ_agent - φ_system)',
+                detailedDesc: 'Происходит синхронизация частот агента изменения и системы. Устанавливается резонансная связь, многократно усиливающая эффект воздействия.',
+                explanation: 'Без резонанса даже мощное воздействие может быть неэффективным. Резонанс — ключ к минимальным затратам энергии.'
+            },
+            {
+                name: 'ВЫБОР ОПЕРАТОРА',
+                shortDesc: 'Определение оптимального воздействия',
+                duration: 2000,
+                formula: 'Op = argmax(Effect/Cost)',
+                detailedDesc: 'Из универсального набора операторов выбирается оптимальный для данной ситуации. Оценивается соотношение ожидаемого эффекта к затратам.',
+                explanation: 'Каждый оператор имеет свою специализацию. Правильный выбор может ускорить трансформацию в разы.'
+            },
+            {
+                name: 'ТРАНСФОРМАЦИЯ',
+                shortDesc: 'Применение выбранного оператора',
+                duration: 3500,
+                formula: 'S(t+1) = Op(S(t)) × Resonance',
+                detailedDesc: 'Выбранный оператор применяется к системе с учётом установленного резонанса. Система переходит в новое состояние через управляемое воздействие.',
+                explanation: 'Это момент истины — здесь происходит реальное изменение. Успех зависит от точности предыдущих фаз.'
+            },
+            {
+                name: 'ИНТЕГРАЦИЯ',
+                shortDesc: 'Встраивание изменений в систему',
+                duration: 2500,
+                formula: 'S_new = S_old + ΔS × Plasticity',
+                detailedDesc: 'Новое состояние интегрируется в существующую структуру системы. Происходит согласование с контекстом и окружением.',
+                explanation: 'Изменение должно стать органичной частью системы, иначе произойдёт отторжение или откат.'
+            },
+            {
+                name: 'ПРОВЕРКА',
+                shortDesc: 'Оценка достижения цели',
+                duration: 2000,
+                formula: 'Success = |S_new - Target| < ε',
+                detailedDesc: 'Производится измерение нового состояния и сравнение с целевым. Определяется успешность трансформации и необходимость корректировок.',
+                explanation: 'Честная оценка результата позволяет либо завершить процесс, либо запустить новый цикл с учётом полученного опыта.'
+            },
+            {
+                name: 'СТАБИЛИЗАЦИЯ',
+                shortDesc: 'Закрепление нового состояния',
+                duration: 2500,
+                formula: 'Stability = 1 / (Decay × Noise)',
+                detailedDesc: 'Новое состояние кристаллизуется, создаются механизмы поддержания и защиты от откатов. Формируются новые привычки и паттерны.',
+                explanation: 'Без стабилизации система может вернуться в прежнее состояние. Это финальная и критически важная фаза.'
+            }
+        ];
+
+        // State
+        let currentPhaseIndex = 0;
+        let phaseProgress = 0;
+        let time = 0;
+        let isPlaying = false;
+        let speed = 1.0;
+        let totalSeconds = 0;
+        let cycleCount = 1;
+        let nodes = [];
+        let connections = [];
+
+        // Initialize nodes (algorithm steps)
+        function initNodes() {
+            const centerX = width / 2;
+            const centerY = height / 2;
+            const radius = Math.min(width, height) * 0.28;
+            
+            nodes = [];
+            for (let i = 0; i < phases.length; i++) {
+                const angle = (i / phases.length) * Math.PI * 2 - Math.PI / 2;
+                nodes.push({
+                    x: centerX + Math.cos(angle) * radius,
+                    y: centerY + Math.sin(angle) * radius,
+                    phase: phases[i],
+                    index: i,
+                    active: false,
+                    pulsePhase: 0,
+                    labelX: centerX + Math.cos(angle) * (radius + 50),
+                    labelY: centerY + Math.sin(angle) * (radius + 50)
+                });
+            }
+
+            // Add central hub
+            nodes.push({
+                x: centerX,
+                y: centerY,
+                phase: { name: 'ЯДРО', shortDesc: 'Центр управления' },
+                isHub: true,
+                pulsePhase: 0
+            });
+        }
+
+        // Initialize connections
+        function initConnections() {
+            connections = [];
+            
+            // Sequential connections
+            for (let i = 0; i < phases.length; i++) {
+                const next = (i + 1) % phases.length;
+                connections.push({
+                    from: nodes[i],
+                    to: nodes[next],
+                    type: 'sequential',
+                    particles: []
+                });
+            }
+
+            // Hub connections
+            const hub = nodes[nodes.length - 1];
+            for (let i = 0; i < phases.length; i++) {
+                connections.push({
+                    from: hub,
+                    to: nodes[i],
+                    type: 'control',
+                    particles: []
+                });
+            }
+
+            // Feedback loops
+            connections.push({
+                from: nodes[6], // ПРОВЕРКА
+                to: nodes[2], // РЕЗОНАНС
+                type: 'feedback',
+                particles: []
+            });
+
+            connections.push({
+                from: nodes[5], // ИНТЕГРАЦИЯ
+                to: nodes[0], // СКАНИРОВАНИЕ
+                type: 'feedback',
+                particles: []
+            });
+        }
+
+        // Timer update
+        function updateTimer() {
+            if (isPlaying) {
+                totalSeconds += 1/60 * speed;
+                const minutes = Math.floor(totalSeconds / 60);
+                const seconds = Math.floor(totalSeconds % 60);
+                document.getElementById('timer').textContent = 
+                    `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }
+        }
+
+        // Play/Pause control
+        function togglePlay() {
+            isPlaying = !isPlaying;
+            const btn = document.getElementById('play-btn');
+            const icon = document.getElementById('play-icon');
+            const text = document.getElementById('play-text');
+            
+            if (isPlaying) {
+                btn.classList.add('active');
+                icon.textContent = '❚❚';
+                text.textContent = 'Пауза';
+            } else {
+                btn.classList.remove('active');
+                icon.textContent = '▶';
+                text.textContent = 'Старт';
+            }
+        }
+
+        // Reset animation
+        function resetAnimation() {
+            isPlaying = false;
+            currentPhaseIndex = 0;
+            phaseProgress = 0;
+            totalSeconds = 0;
+            cycleCount = 1;
+            time = 0;
+            
+            document.getElementById('timer').textContent = '00:00';
+            document.getElementById('play-icon').textContent = '▶';
+            document.getElementById('play-text').textContent = 'Старт';
+            document.getElementById('play-btn').classList.remove('active');
+            
+            updatePhaseDisplay();
+        }
+
+        // Speed control
+        function changeSpeed(delta) {
+            speed = Math.max(0.5, Math.min(3.0, speed + delta));
+            document.getElementById('speed-display').textContent = speed.toFixed(1) + '×';
+        }
+
+        // Jump to phase
+        function jumpToPhase(index) {
+            currentPhaseIndex = index;
+            phaseProgress = 0;
+            updatePhaseDisplay();
+        }
+
+        // Update phase display
+        function updatePhaseDisplay() {
+            const currentPhase = phases[currentPhaseIndex];
+            
+            // Update phase indicator
+            document.getElementById('phase-number').textContent = `Фаза ${currentPhaseIndex + 1} из ${phases.length}`;
+            document.getElementById('current-phase').textContent = currentPhase.name;
+            document.getElementById('phase-description').textContent = currentPhase.shortDesc;
+            
+            // Update active formula
+            document.getElementById('active-formula').textContent = currentPhase.formula;
+            
+            // Update detailed info
+            document.getElementById('detail-title').textContent = `Фаза ${currentPhaseIndex + 1}: ${currentPhase.name}`;
+            document.getElementById('detail-description').textContent = currentPhase.detailedDesc;
+            document.getElementById('detail-formula').textContent = currentPhase.formula;
+            document.getElementById('detail-explanation').textContent = currentPhase.explanation;
+            
+            // Update navigation buttons
+            for (let i = 0; i < phases.length; i++) {
+                const btn = document.getElementById(`phase-btn-${i}`);
+                if (btn) {
+                    btn.classList.toggle('active', i === currentPhaseIndex);
+                }
+            }
+            
+            // Update node states
+            nodes.forEach((node, i) => {
+                node.active = (i === currentPhaseIndex);
+            });
+        }
+
+        // Update phase
+        function updatePhase() {
+            if (!isPlaying) return;
+            
+            phaseProgress += speed / 60; // 60 fps
+            
+            const currentPhase = phases[currentPhaseIndex];
+            const progressPercent = (phaseProgress * 1000) / currentPhase.duration * 100;
+            
+            document.getElementById('progress').textContent = Math.min(100, Math.round(progressPercent)) + '%';
+            
+            // Progress to next phase
+            if (progressPercent >= 100) {
+                currentPhaseIndex = (currentPhaseIndex + 1) % phases.length;
+                phaseProgress = 0;
+                
+                // Update cycle count
+                if (currentPhaseIndex === 0) {
+                    cycleCount++;
+                    document.getElementById('cycle').textContent = cycleCount.toString();
+                }
+                
+                updatePhaseDisplay();
+                
+                // Add particles to connections
+                const activeConnection = connections[currentPhaseIndex];
+                if (activeConnection) {
+                    for (let i = 0; i < 3; i++) {
+                        activeConnection.particles.push(createFlowParticle(activeConnection));
+                    }
+                }
+            }
+        }
+
+        // Create flow particle
+        function createFlowParticle(connection) {
+            return {
+                connection: connection,
+                progress: 0,
+                speed: 0.008 + Math.random() * 0.004,
+                size: 2 + Math.random() * 2,
+                opacity: 0.8 + Math.random() * 0.2
+            };
+        }
+
+        // Update metrics
+        function updateMetrics() {
+            const gradient = (Math.sin(time * 0.02) + 1) * 0.5;
+            const plasticity = (Math.sin(time * 0.03 + 1) + 1) * 0.5;
+            const entropy = (Math.sin(time * 0.025 + 2) + 1) * 0.5;
+            const inertia = (Math.sin(time * 0.018 + 3) + 1) * 0.5;
+            const resonance = (Math.sin(time * 0.015) + 1) * 0.5;
+            const coherence = gradient * plasticity * (1 - entropy) * resonance;
+            
+            document.getElementById('gradient').textContent = gradient.toFixed(2);
+            document.getElementById('plasticity').textContent = plasticity.toFixed(2);
+            document.getElementById('entropy').textContent = entropy.toFixed(2);
+            document.getElementById('inertia').textContent = inertia.toFixed(2);
+            document.getElementById('resonance').textContent = resonance.toFixed(2);
+            document.getElementById('coherence').textContent = coherence.toFixed(2);
+        }
+
+        // Draw functions
+        function drawNode(node) {
+            const isActive = node.active || node.isHub;
+            node.pulsePhase += isActive ? 0.1 : 0.02;
+            
+            const pulse = Math.sin(node.pulsePhase) * 0.3 + 0.7;
+            const size = node.isHub ? 25 : 20;
+            const actualSize = size * (isActive ? pulse * 1.2 : 1);
+            
+            // Outer glow
+            if (isActive) {
+                const gradient = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, actualSize * 3);
+                gradient.addColorStop(0, node.isHub ? 'rgba(255, 170, 0, 0.4)' : 'rgba(100, 255, 150, 0.4)');
+                gradient.addColorStop(1, 'rgba(100, 255, 150, 0)');
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, actualSize * 3, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+            // Node circle
+            ctx.strokeStyle = node.isHub ? '#ffaa00' : (isActive ? '#64ff96' : '#444');
+            ctx.lineWidth = isActive ? 3 : 2;
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, actualSize, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            // Inner fill
+            ctx.fillStyle = node.isHub ? 'rgba(255, 170, 0, 0.15)' : (isActive ? 'rgba(100, 255, 150, 0.15)' : 'rgba(0, 0, 0, 0.5)');
+            ctx.fill();
+            
+            // Node number or hub icon
+            ctx.fillStyle = isActive ? '#64ff96' : '#888';
+            ctx.font = node.isHub ? 'bold 14px Inter' : 'bold 14px Inter';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            if (node.isHub) {
+                ctx.fillText('⬢', node.x, node.y);
+            } else {
+                ctx.fillText((node.index + 1).toString(), node.x, node.y);
+            }
+            
+            // Labels (outside the circle)
+            if (!node.isHub && node.labelX) {
+                ctx.fillStyle = isActive ? '#64ff96' : '#666';
+                ctx.font = isActive ? 'bold 11px Inter' : '10px Inter';
+                ctx.textAlign = 'center';
+                ctx.fillText(node.phase.name, node.labelX, node.labelY);
+            }
+        }
+
+        function drawConnection(conn) {
+            const dx = conn.to.x - conn.from.x;
+            const dy = conn.to.y - conn.from.y;
+            
+            // Connection line
+            ctx.strokeStyle = conn.type === 'feedback' ? 'rgba(74, 158, 255, 0.3)' : 
+                             conn.type === 'control' ? 'rgba(255, 170, 0, 0.08)' : 
+                             'rgba(100, 255, 150, 0.25)';
+            ctx.lineWidth = conn.type === 'control' ? 0.5 : (conn.type === 'feedback' ? 2 : 1.5);
+            
+            ctx.beginPath();
+            ctx.moveTo(conn.from.x, conn.from.y);
+            
+            if (conn.type === 'feedback') {
+                // Curved feedback line
+                const controlX = (conn.from.x + conn.to.x) / 2 + dy * 0.5;
+                const controlY = (conn.from.y + conn.to.y) / 2 - dx * 0.5;
+                ctx.quadraticCurveTo(controlX, controlY, conn.to.x, conn.to.y);
+            } else {
+                ctx.lineTo(conn.to.x, conn.to.y);
+            }
+            
+            ctx.stroke();
+            
+            // Draw arrow
+            if (conn.type !== 'control') {
+                const angle = Math.atan2(dy, dx);
+                const arrowSize = 10;
+                const arrowX = conn.to.x - Math.cos(angle) * 25;
+                const arrowY = conn.to.y - Math.sin(angle) * 25;
+                
+                ctx.save();
+                ctx.translate(arrowX, arrowY);
+                ctx.rotate(angle);
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(-arrowSize, -arrowSize/2);
+                ctx.lineTo(-arrowSize, arrowSize/2);
+                ctx.closePath();
+                ctx.fillStyle = conn.type === 'feedback' ? '#4a9eff' : '#64ff96';
+                ctx.fill();
+                ctx.restore();
+            }
+            
+            // Update and draw particles
+            conn.particles = conn.particles.filter(particle => {
+                particle.progress += particle.speed * speed;
+                
+                if (particle.progress > 1) {
+                    return false;
+                }
+                
+                // Calculate particle position
+                let x, y;
+                if (conn.type === 'feedback') {
+                    const t = particle.progress;
+                    const controlX = (conn.from.x + conn.to.x) / 2 + dy * 0.5;
+                    const controlY = (conn.from.y + conn.to.y) / 2 - dx * 0.5;
+                    x = (1-t)*(1-t)*conn.from.x + 2*(1-t)*t*controlX + t*t*conn.to.x;
+                    y = (1-t)*(1-t)*conn.from.y + 2*(1-t)*t*controlY + t*t*conn.to.y;
+                } else {
+                    x = conn.from.x + dx * particle.progress;
+                    y = conn.from.y + dy * particle.progress;
+                }
+                
+                // Draw particle
+                ctx.fillStyle = conn.type === 'feedback' ? `rgba(74, 158, 255, ${particle.opacity})` :
+                                conn.type === 'control' ? `rgba(255, 170, 0, ${particle.opacity * 0.5})` :
+                                `rgba(100, 255, 150, ${particle.opacity})`;
+                ctx.beginPath();
+                ctx.arc(x, y, particle.size, 0, Math.PI * 2);
+                ctx.fill();
+                
+                return true;
+            });
+        }
+
+        function drawGrid() {
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.02)';
+            ctx.lineWidth = 0.5;
+            
+            const gridSize = 50;
+            
+            for (let x = 0; x < width; x += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, height);
+                ctx.stroke();
+            }
+            
+            for (let y = 0; y < height; y += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(width, y);
+                ctx.stroke();
+            }
+        }
+
+        function drawProgressArc() {
+            const centerX = width / 2;
+            const centerY = height / 2;
+            const radius = Math.min(width, height) * 0.33;
+            
+            const startAngle = -Math.PI / 2;
+            const currentAngle = startAngle + (currentPhaseIndex / phases.length) * Math.PI * 2;
+            const progressAngle = currentAngle + (phaseProgress * 1000 / phases[currentPhaseIndex].duration) * (Math.PI * 2 / phases.length);
+            
+            // Background arc
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            // Progress arc
+            const gradient = ctx.createLinearGradient(0, 0, width, height);
+            gradient.addColorStop(0, '#64ff96');
+            gradient.addColorStop(1, '#4a9eff');
+            ctx.strokeStyle = gradient;
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, startAngle, progressAngle);
+            ctx.stroke();
+            
+            // Current position indicator
+            ctx.fillStyle = '#64ff96';
+            ctx.beginPath();
+            ctx.arc(
+                centerX + Math.cos(progressAngle) * radius,
+                centerY + Math.sin(progressAngle) * radius,
+                6,
+                0,
+                Math.PI * 2
+            );
+            ctx.fill();
+        }
+
+        // Main render loop
+        function render() {
+            // Clear canvas
+            ctx.fillStyle = 'rgba(10, 10, 10, 0.05)';
+            ctx.fillRect(0, 0, width, height);
+            
+            // Draw elements
+            drawGrid();
+            drawProgressArc();
+            
+            // Draw connections first
+            connections.forEach(conn => drawConnection(conn));
+            
+            // Draw nodes on top
+            nodes.forEach(node => drawNode(node));
+            
+            // Update state
+            updatePhase();
+            updateMetrics();
+            updateTimer();
+            time++;
+            
+            requestAnimationFrame(render);
+        }
+
+        // Initialize
+        initNodes();
+        initConnections();
+        updatePhaseDisplay();
+        
+        // Add particles periodically
+        setInterval(() => {
+            if (isPlaying) {
+                connections.forEach(conn => {
+                    if (Math.random() < 0.1) {
+                        conn.particles.push(createFlowParticle(conn));
+                    }
+                });
+            }
+        }, 500);
+
+        // Start animation
+        render();
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+            initNodes();
+            initConnections();
+        });
+    </script>
+</body>
+</html>

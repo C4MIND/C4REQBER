@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/api/v6_routers/c4_v6.py
+# hypothesis_version: 6.141.1
+
+[400, '/c4', '/navigate', '/observer', '/qzrf/pipeline', '/qzrf/recommend', '/states', 'agency', 'c4_state', 'c4_target', 'coords', 'description', 'from', 'from_state', 'general', 'id', 'label', 'name', 'name_ru', 'operator', 'operators', 'path_length', 'phase', 'pipeline', 'scale', 'start_state', 'target_coords', 'target_state', 'time', 'to', 'to_state', 'transitions', 'v6-c4']

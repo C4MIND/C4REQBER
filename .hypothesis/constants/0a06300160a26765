@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/agents/pipeline/steps/step_04_mp_rotation.py
+# hypothesis_version: 6.141.1
+
+[0.0, 0.05, 0.5, 0.7, 0.95, 500, 1000, '*', '-', 'completed', 'consensus_score', 'content', 'error', 'mp_rotation', 'perspectives', 'turbo_cdi.pipeline']

@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/api/middleware/security.py
+# hypothesis_version: 6.141.1
+
+[b'1; mode=block', b'Content-Security-Policy', b'DENY', b'Permissions-Policy', b'Referrer-Policy', b'Strict-Transport-Security', b'X-Content-Type-Options', b'X-Frame-Options', b'X-XSS-Protection', b'camera=(), microphone=(), geolocation=()', b'max-age=31536000; includeSubDomains', b'nosniff', b'strict-origin-when-cross-origin', 300, 401, 403, 429, 600, '*', ',', '/api/', '/docs', '/health', '/health/live', '/health/ready', '/openapi.json', '/redoc', '60', 'ALLOWED_ORIGINS', 'API_KEYS', 'Authorization', 'Content-Type', 'DELETE', 'ENV', 'GET', 'Invalid API key', 'OPTIONS', 'PATCH', 'POST', 'PUT', 'RATE_LIMIT_RPM', 'Retry-After', 'X-API-Key', 'X-Forwarded-For', 'X-RateLimit-Limit', 'X-Request-ID', 'X-Trace-ID', 'detail', 'headers', 'http', 'http.response.start', 'production', 'type', 'unknown']

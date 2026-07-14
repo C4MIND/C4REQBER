@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/api/v6_routers/plugins_v6.py
+# hypothesis_version: 6.141.1
+
+[404, '/installed', '/plugins', '/select', '/{plugin_id}/install', '/{plugin_id}/run', 'Plugin not found', 'installed', 'plugin_id', 'problem', 'result', 'selected_plugins', 'status', 'uninstalled', 'v6-plugins']

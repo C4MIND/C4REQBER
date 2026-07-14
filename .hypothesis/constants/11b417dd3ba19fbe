@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/abduction/scoring.py
+# hypothesis_version: 6.141.1
+
+[0.0, 0.1, 0.15, 0.25, 0.45, 0.5, 1.0, 3.0, 100.0, 'coherence_diff', 'description_1', 'description_2', 'hypothesis_1', 'hypothesis_2', 'likelihood_diff', 'overall_diff', 'predictive_diff', 'simplicity_diff', 'winner']

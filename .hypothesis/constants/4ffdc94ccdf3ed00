@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/patterns/library/enzyme_kinetics/pattern.py
+# hypothesis_version: 6.141.1
+
+[0.0, 0.01, 0.1, 0.2, 0.25, 0.3, 0.5, 0.95, 1.0, 10.0, 50.0, 100.0, 1000.0, 10000.0, 100, 10000, 'E0', 'ES0', 'Enzyme Kinetics', 'Hill coefficient', 'I0', 'Kd', 'Ki', 'Kinetic model type', 'Km', 'L', 'P0', 'S0', 'Vmax', 'allosteric', 'biochemical', 'biology', 'briggs_haldane', 'c', 'catalysis', 'category', 'cooperative', 'cpu_cores', 'cyp', 'default', 'description', 'dt', 'enzyme', 'enzyme_kinetics', 'final_product', 'fitted_Km', 'float', 'gpu_required', 'hill', 'id', 'inhibition', 'input_Km', 'k1', 'k2', 'k_1', 'kinetics', 'km', 'logs', 'max', 'memory_gb', 'menten', 'metabolism', 'metrics', 'michaelis', 'michaelis_menten', 'min', 'model', 'mwc', 'n', 'name', 'num_points', 'options', 'parameters', 'pathway', 'product', 'reaction rate', 'reaction_extent', 'references', 'select', 'substrate', 't_max', 'type', 'vmax']

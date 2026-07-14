@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/graph/operations/__init__.py
+# hypothesis_version: 6.141.1
+
+['add_analogy', 'add_citation', 'add_derivation', 'add_discovery', 'add_edge', 'add_experiment_node', 'add_operator_node', 'add_project', 'add_reference', 'add_transformation']

@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/core/logging.py
+# hypothesis_version: 6.141.1
+
+['0.1', '016x', '032x', 'ENABLE_OPENTELEMETRY', 'ENV', 'ENVIRONMENT', 'INFO', 'LOG_FORMAT', 'LOG_LEVEL', 'SENTRY_DSN', 'SENTRY_PROFILES_RATE', 'SENTRY_TRACES_RATE', 'X-Request-ID', 'api.request', 'asyncio', 'console', 'development', 'env', 'false', 'http_request', 'httpx', 'iso', 'json', 'processors', 'request_id', 'span_id', 'trace_id', 'true', 'urllib3']

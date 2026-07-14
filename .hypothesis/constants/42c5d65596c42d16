@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/metamodels/qzrf/operators.py
+# hypothesis_version: 6.141.1
+
+['Annealing', 'Branching', 'Cross-Linking', 'Crystallization', 'Dimensional Lift', 'Eigenmode Extraction', 'Gradient Step', 'Graph Weave', 'Harmonization', 'Parametric Sweep', 'Projection', 'QZ-01', 'QZ-02', 'QZ-03', 'QZ-04', 'QZ-05', 'QZ-06', 'QZ-07', 'QZ-08', 'QZ-09', 'QZ-10', 'QZ-11', 'QZ-12', 'QZ-13', 'QZ-14', 'Resonance Tuning', 'Space Folding', 'Synthesis', 'divergence', 'integration', 'modulation', 'network', 'topology', 'Ветвление', 'Гармонизация', 'Градиентный шаг', 'Кристаллизация', 'Отжиг', 'Плетение графа', 'Подъём размерности', 'Проекция', 'Свёртка пространства', 'Синтез']

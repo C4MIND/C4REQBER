@@ -1,0 +1,17 @@
+name: Proto Check
+on:
+  push:
+    paths: ['proto/**']
+  pull_request:
+    paths: ['proto/**']
+
+jobs:
+  proto:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: bufbuild/buf-setup-action@v1
+      - uses: bufbuild/buf-lint-action@v1
+      - uses: bufbuild/buf-breaking-action@v1
+        with:
+          against: 'https://github.com/${{ github.repository }}.git#branch=main'

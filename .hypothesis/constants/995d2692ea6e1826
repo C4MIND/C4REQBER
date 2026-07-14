@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/api/routers/validations.py
+# hypothesis_version: 6.141.1
+
+[404, '/validations', '/{validation_id}', 'completed', 'completed_at', 'conclusion', 'data', 'draft', 'experiment', 'hypothesis_id', 'id', 'method', 'name', 'notes', 'observation', 'observations', 'running', 'simulation', 'started_at', 'status', 'success', 'timestamp', 'user_id', 'validations']

@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/patterns/library/mantle_convection.py
+# hypothesis_version: 6.141.1
+
+[-3.0, -2.0, -0.5, 0.0, 1e-07, 1e-06, 0.001, 0.1, 0.2, 0.5, 0.8, 1.0, 4.0, 10.0, 1000.0, 1000000.0, 100, 1000, '6.0.0', 'Geodynamics', 'Mantle Convection', 'Mantle Physics', 'O(N³)', 'ON_DEMAND', 'Prandtl_number', 'Ra', 'Rayleigh number', 'Rayleigh_number', 'T', 'Vertical resolution', '__main__', 'accuracy', 'aspect_ratio', 'assumptions', 'category', 'config', 'default', 'description', 'domain', 'final_nusselt', 'final_state', 'float', 'grid', 'hours to days', 'id', 'ij', 'int', 'internal_heating', 'mantle_convection', 'max_temperature', 'max_time', 'mean_temperature', 'min_temperature', 'name', 'nusselt', 'nusselt_number', 'nx', 'ny', 'nz', 'parameters', 'rms_velocity', 'temperature', 'time', 'type', 'typical_runtime', 'u_rms', 'velocity_rms', 'version', 'viscous_dissipation', 'w_max']

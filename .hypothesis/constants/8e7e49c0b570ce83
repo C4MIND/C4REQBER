@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/api/v6_routers/patterns_v6.py
+# hypothesis_version: 6.141.1
+
+[404, '/patterns', '/{pattern_id}', '/{pattern_id}/run', 'description', 'domain', 'hypothesis', 'id', 'name', 'params', 'patterns', 'total', 'unknown', 'v6-patterns']

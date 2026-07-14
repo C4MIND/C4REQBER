@@ -1,0 +1,111 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Cache pip packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Verify backend imports
+        run: |
+          PYTHONPATH=src python -c "from src.api.server import app; print('Backend OK')"
+
+      - name: Build backend artifact
+        run: |
+          mkdir -p dist
+          tar czf dist/backend.tar.gz src/ requirements.txt pyproject.toml
+
+      - name: Upload backend artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-artifact
+          path: dist/backend.tar.gz
+
+  build-landing:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Package landing static site
+        run: |
+          mkdir -p dist
+          tar czf dist/landing.tar.gz landing/
+
+      - name: Upload landing artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: landing-artifact
+          path: dist/landing.tar.gz
+
+  build-tui:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+
+      - name: Build TUI v9 binary
+        working-directory: src/tui/v9
+        run: |
+          go build -o ../../../dist/c4tui-v9 ./cmd/c4tui-v9
+
+      - name: Upload TUI artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tui-artifact
+          path: dist/c4tui-v9
+
+  verify-artifacts:
+    runs-on: ubuntu-latest
+    needs: [build-backend, build-landing, build-tui]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download backend artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: backend-artifact
+          path: dist/
+
+      - name: Download landing artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: landing-artifact
+          path: dist/
+
+      - name: Download TUI artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: tui-artifact
+          path: dist/
+
+      - name: Verify artifacts exist
+        run: |
+          test -f dist/backend.tar.gz && echo "Backend artifact OK"
+          test -f dist/landing.tar.gz && echo "Landing artifact OK"
+          test -f dist/c4tui-v9 && echo "TUI artifact OK"

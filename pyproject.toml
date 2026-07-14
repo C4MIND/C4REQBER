@@ -1,0 +1,208 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "c4reqber"
+version = "5.7.1"
+description = "Cognitive exoskeleton for AI agents — MCP-native discovery pipeline"
+readme = "README.md"
+license = { text = "AGPL-3.0" }
+requires-python = ">=3.11"
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+    "openai>=1.0.0",
+    "tenacity>=8.0.0",
+    "anthropic",
+    "pyjwt>=2.13.0",
+    "bcrypt",
+    "cachetools>=5.0.0",
+    "prompt-toolkit>=3.0.0",
+    "structlog",
+    "httpx",
+    "fastapi",
+    "uvicorn",
+    "pydantic>=2.0.0",
+    "pydantic-settings>=2.14.2",
+    "rich>=13.0.0",
+    "textual>=0.40.0",
+    "typer>=0.9.0",
+    "click",
+    "jinja2",
+    "markdown",
+    "toml",
+    "pyyaml>=6.0.0",
+    "jsonschema",
+    "anyio>=4.0.0",
+    "mcp",
+    "aiofiles",
+    "beautifulsoup4",
+    "feedparser>=6.0.0",
+    "biopython>=1.81",
+    "python-dotenv>=1.0.0",
+    "python-multipart>=0.0.31",
+    "numpy>=1.24.0",
+    "pandas>=2.0.0",
+    "scipy>=1.10.0",
+    "scikit-learn>=1.3.0",
+    "networkx>=3.0",
+    "z3-solver>=4.16.0.0",
+    "cryptography>=48.0.1",
+    "wasmtime>=14.0.0",
+    "pydantic-ai>=0.8.0,<2.0.0",
+    "prometheus-client>=0.25.0",
+    "redis>=5.0.0",
+    "asyncpg",
+    "sqlalchemy>=2.0.0",
+    "alembic>=1.12.0",
+    "psycopg2-binary>=2.9.0",
+]
+
+[project.optional-dependencies]
+science = [
+    "gensim",
+    "matplotlib",
+    "plotly",
+    "sentence-transformers",
+]
+dev = [
+    "pytest",
+    "pytest-asyncio",
+    "pytest-timeout",
+    "ruff",
+    "mypy",
+    "build",
+    "twine",
+    "pre-commit",
+    "detect-secrets",
+]
+
+[tool.hatch.build.targets.wheel]
+# Imports use the `src.` prefix (and PYTHONPATH=src in pytest.ini); ship the
+# package as `src` so `import src.X` resolves after install.
+packages = ["src"]
+
+[project.scripts]
+c4reqber = "src.cli.blast_app:app"
+blast = "src.cli.blast_app:app"
+
+[project.urls]
+Homepage = "https://c4reqber.org"
+Repository = "https://gitlab.com/cognitive-functors/turbo-cdi"
+Documentation = "https://c4reqber.org/docs/"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "W", "UP"]
+ignore = ["E402", "E722", "F401", "F841", "E741", "E501", "UP035", "B008"]
+fixable = ["ALL"]
+
+[tool.ruff.lint.isort]
+lines-after-imports = 2
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = false
+warn_unused_configs = true
+disallow_untyped_defs = false
+ignore_missing_imports = true
+warn_unreachable = true
+show_error_codes = true
+exclude = ["tests/", "archive/", "wasm/", "alembic/", "scripts/", "fix_.*\\.py$", "split_patterns\\.py$", "test-ws-client\\.py$"]
+
+[[tool.mypy.overrides]]
+module = ["src.patterns.library.*", "src.patterns.*"]
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = ["src.simulations.*"]
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = ["src.mcp_server.*"]
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = ["src.agents.soul", "src.agents.policy", "src.agents.qa"]
+ignore_errors = false
+disallow_untyped_defs = true
+warn_return_any = true
+
+# Legacy agents — deferred type fix
+[[tool.mypy.overrides]]
+module = ["src.agents.functors.*", "src.agents.functor_orchestrator", "src.agents.discovery.*", "src.agents.discovery_agent", "src.agents.discovery_loop", "src.agents.mp_llm_generator", "src.agents.orchestrator", "src.agents.paradigm_coordinator", "src.agents.pipeline.*"]
+ignore_errors = true
+
+[tool.ruff.lint.per-file-ignores]
+"archive/**" = ["ALL"]
+"tests/**" = ["E501", "E731", "UP017"]
+"src/llm/local_client.py" = ["E501"]
+"src/api/server.py" = ["E501"]
+"src/conceptual_blending/router.py" = ["B008"]
+"src/temporal_kg/router.py" = ["B008"]
+# Audit 2026-06-22: these files use try/except imports as availability
+# probes for optional deps (HAS_FOO flag pattern). The import IS used —
+# just only by the except clause catching ImportError.
+"src/analogy/structural.py" = ["F401"]
+"src/analogy/utils.py" = ["F401"]
+"src/api/lifespan.py" = ["F401"]
+"src/auth/web3.py" = ["F401"]
+"src/c4/invariant_engine.py" = ["F401"]
+"src/c4/neural_classifier/neural_fingerprint.py" = ["F401"]
+"src/cli/blast_app.py" = ["F401"]
+"src/conceptual_blending/__init__.py" = ["F401"]
+"src/config/variants/__init__.py" = ["F401"]
+"src/graph/operations/core.py" = ["F401"]
+"src/graph/operations/mutations.py" = ["F401"]
+"src/graph/operations/utils.py" = ["F401"]
+"src/integrations/scientific_bridges.py" = ["F401"]
+"src/knowledge/chroma_store.py" = ["F401"]
+"src/knowledge/sources/__init__.py" = ["F401"]
+"src/llm/__init__.py" = ["F401"]
+"src/llm/local/core.py" = ["F401"]
+"src/llm/providers/mlx_provider.py" = ["F401"]
+"src/mcp_server/fastmcp_bridge.py" = ["F401"]
+"src/mcp_server/server.py" = ["F401"]
+"src/patterns/library/circuit_simulation/core.py" = ["F401"]
+"src/patterns/library/circuit_simulation/pattern.py" = ["F401"]
+"src/patterns/library/kalman_filter/__init__.py" = ["F401"]
+"src/patterns/library/rigid_body.py" = ["F401"]
+"src/patterns/resource_estimator.py" = ["F401"]
+"src/system_dynamics/simulator.py" = ["F401"]
+"src/utils/retry/core.py" = ["F401"]
+# Legacy agents — cleanup deferred
+"src/agents/discovery/**" = ["F401", "F841"]
+"src/agents/discovery_agent.py" = ["F401"]
+"src/agents/discovery_loop.py" = ["F841"]
+"src/agents/functor_orchestrator.py" = ["F401"]
+"src/agents/functors/**" = ["F401"]
+"src/agents/mp_llm_generator.py" = ["F401"]
+"src/agents/orchestrator.py" = ["F401"]
+"src/agents/paradigm_coordinator.py" = ["F401", "F841"]
+"src/agents/pipeline.py" = ["F401"]
+"src/agents/pipeline/steps/step_05b_cross_domain_transfer.py" = ["F401"]
+"src/agents/pipeline/steps/step_08_synthesis.py" = ["F841"]
+
+[tool.coverage.run]
+source = ["src"]
+branch = true
+
+[tool.coverage.report]
+fail_under = 60
+show_missing = true

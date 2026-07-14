@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/patterns/library/model_predictive/config.py
+# hypothesis_version: 6.141.1
+
+[0.0, 1e-06, 0.05, 0.08, 0.1, 0.5, 0.88, 0.9, 0.92, 0.95, 1.0, 9.81, 100, 1000, 'constant']

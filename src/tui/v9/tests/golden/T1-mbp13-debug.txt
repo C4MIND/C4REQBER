@@ -1,0 +1,24 @@
+🔧 Debug Overlay (Ctrl+Shift+D to close)
+
+Viewport
+  size:     144 × 40
+  tick:     0  (target rate 60 fps)
+
+Connection
+  state:    ?
+  last:     (none this session)
+
+Feed
+  cards:    1  (bookmarks: 0)
+  zones:    1
+  mode:     ▶ following
+  focused:  (last card)
+
+Sims
+  this run: 3
+  total:    0 CardSimulation in feed
+  cost:     $0.0500 (this session)
+  caps:     ⏚ 2/3 engines
+
+Memory
+  est:      ~0 KB (feed × ~200 bytes/card)

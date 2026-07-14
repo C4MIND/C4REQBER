@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/patterns/library/system_dynamics/models.py
+# hypothesis_version: 6.141.1
+
+[0.0, 10.0, 100.0, 990.0, 'I0', 'R0', 'S0', '__builtins__', 'death', 'expression', 'flow_1', 'flow_2', 'flows', 'growth', 'infected', 'infection', 'name', 'np', 'outflow', 'population', 'predation', 'predator_death', 'predator_growth', 'predator_initial', 'predators', 'prey', 'prey_growth', 'prey_initial', 'recovered', 'recovery', 'sink', 'source', 'susceptible', 't']

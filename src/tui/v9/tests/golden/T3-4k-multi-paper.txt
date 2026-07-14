@@ -1,0 +1,59 @@
+1;36m[m1;32mDISCOVERm1;36m]m  ● C4REQBER v9  F<1,1,0>  [en]  DeepSeek  $0.0000  <CLOCK>                                                                                                             DISCOVER
+ │ 1;36m▣ Session statusm  [░░░░░░░░░░░░░░░░░░░░]
+ │  90mDiscover  •  C2  •  default  •  en  •  0 discoveries  •  1 languagesm
+ │  90mticks=0  runs=0  ok=0  fail=0  abort=0  cost=$0.0000  apis=0  errs=0m
+ │ 1;36m▣ Keyboard shortcutsm  [░░░░░░░░░░░░░░░░░░░░]
+ │  90mEnter  Run   ?  Help   Ctrl+C  Quitm
+ │  90mTab  Cycle mode   L  Lang   Ctrl+Y  Cycle tierm
+ │  90mCtrl+Shift+P  Cycle color profile (6 modes)   Ctrl+,  Settings   Ctrl+T  Telemetrym
+ │ 1;36m▣ Mode variantsm  [░░░░░░░░░░░░░░░░░░░░]
+ │  90m▶ Discover   —  multi-paper discovery with C4 paradigm-shift gatem
+ │  90m▶ Flash      —  quick answer with optional USP cognitive analysism
+ │  90m▶ Turbo      —  paradigm-shift research proposal with full pipelinem
+ │  90m▶ Factory    —  parallel pipeline factory (5-100 parallel jobs)m
+ │ 1;36m▣ Achievementsm  [░░░░░░░░░░░░░░░░░░░░]
+ │  90mFirst discovery, 5 discoveries, multi-paper shift, S-rank quality, fast turnaround. Keep going to unlock them all.m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ │ 90mReady for your first discoverym
+ │  37mType a question above and press Enterm
+ │ 1;36m▣ Dm  [█████████████▌░░░░░░]
+ │  90mscoring hypothesesm
+ │ 1;32m✦ Hypothesis  NEWm
+ │  37mguides with GC content <40% have higher off-target ratesm
+ │  90m↳ novelty: 0.87m
+ │  90m↳ source: openmmm
+ │ 1;34m📚 CRISPR off-target reviewm
+ │  37mNature 2024 · citations 142m
+ │  90mdoi: 10.1038/nature.2024.001m
+ │ 1;34m📚 Guide RNA design principlesm
+ │  37mCell 2023 · citations 87m
+ │  90mdoi: 10.1016/j.cell.2023.04.012m
+ │ 1;34m📚 Off-target cleavage mechanismsm
+ │  37mScience 2024 · citations 63m
+ │  90mdoi: 10.1126/science.adi1234m
+
+
+
+
+
+
+
+
+                                                                                                                                                                                  90m90m? ?m  ·  ▶ follow  ·  ▣ 6/6m
+40m37m❯ mm40m38;5;240;40m  1 mm40m7mdmm40m38;5;240mesign a CRISPR guide RNA with minimal off-targets in T-cellsmm40m                                                                                                                                                         m
+38;5;240m37m❯ mm30m m
+38;5;240m37m❯ mm30m m
+ ▶ READY                                                                                                                                                                               [Enter] Run  [?] Help  [Ctrl+C] Quit

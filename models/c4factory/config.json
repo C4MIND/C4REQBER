@@ -1,0 +1,5 @@
+{
+  "base_model": "microsoft/mdeberta-v3-base",
+  "hidden_size": 768,
+  "architecture": "C4ClassifierModel"
+}

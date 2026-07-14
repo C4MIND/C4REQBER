@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/llm/providers/openrouter.py
+# hypothesis_version: 6.141.1
+
+[0.7, 60.0, 1000, 2000, 'OPENROUTER_API_KEY', 'max_tokens', 'messages', 'model', 'temperature']

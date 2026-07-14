@@ -1,0 +1,243 @@
+{
+  "id": null,
+  "uid": "turbo-cdi-overview",
+  "title": "TURBO-CDI Minimal",
+  "tags": [
+    "turbo-cdi",
+    "c4",
+    "monitoring",
+    "llm",
+    "simulation",
+    "verification"
+  ],
+  "timezone": "browser",
+  "refresh": "30s",
+  "schemaVersion": 38,
+  "version": 1,
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "LLM Costs Over Time",
+      "type": "timeseries",
+      "description": "Cumulative and per-model LLM API costs",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "rate(llm_cost_usd_total[5m])",
+          "legendFormat": "Cost Rate ($/s) - {{model}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          }
+        },
+        {
+          "refId": "A",
+          "expr": "llm_cost_usd_total",
+          "legendFormat": "Total Cost - {{model}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          }
+        },
+        {
+          "refId": "A",
+          "expr": "sum(llm_cost_usd_total) by (provider)",
+          "legendFormat": "Total Cost by Provider",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "USD",
+          "decimals": 4,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 10
+              }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 2,
+      "title": "Simulation Performance by Engine",
+      "type": "timeseries",
+      "description": "Execution time for different physics simulation engines",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 16
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.50, simulation_execution_time_ms)",
+          "legendFormat": "p50 - {{engine_type}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          }
+        },
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.90, simulation_execution_time_ms)",
+          "legendFormat": "p90 - {{engine_type}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          }
+        },
+        {
+          "refId": "A",
+          "expr": "rate(simulations_total[5m])",
+          "legendFormat": "Simulations Rate - {{engine_type}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "decimals": 0
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 3,
+      "title": "Verification Success Rate by Backend",
+      "type": "timeseries",
+      "description": "Success rate of formal verification by backend (Lean4, Coq, Dafny, etc.)",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 24
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "rate(verifications_verified_total[5m]) / rate(verifications_total[5m]) * 100",
+          "legendFormat": "Success Rate % - {{backend}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          }
+        },
+        {
+          "refId": "A",
+          "expr": "verification_success_rate",
+          "legendFormat": "Current Success Rate - {{backend}}",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "decimals": 1,
+          "min": 0,
+          "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 70
+              },
+              {
+                "color": "green",
+                "value": 90
+              }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 4,
+      "title": "Cache Hit Rate",
+      "type": "stat",
+      "description": "Prompt caching hit rate (target >80%)",
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 32
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "cache_hit_rate * 100",
+          "legendFormat": "Cache Hit Rate",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus"
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "decimals": 1,
+          "min": 0,
+          "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 60
+              },
+              {
+                "color": "green",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    }
+  ]
+}

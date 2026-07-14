@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="../js/site-base.js"></script>
+<title>Showcase — c4reqber</title>
+<meta name="description" content="See c4reqber in action: blast turbo demos, TUI v9 snapshots, and verified July 2026 research proposals.">
+<meta property="og:title" content="Showcase — c4reqber">
+<meta property="og:type" content="website">
+<link rel="canonical" href="https://c4reqber.org/showcase/">
+<meta name="theme-color" content="#0F1117">
+<link rel="stylesheet" href="../css/main.css">
+<style>
+.showcase-hero{text-align:center;padding:120px 24px 60px}
+.showcase-hero h1{font-size:clamp(36px,6vw,64px);font-weight:800;margin-bottom:16px}
+.demo-steps{max-width:800px;margin:0 auto;padding:0 24px}
+.demo-step{display:flex;gap:24px;margin-bottom:48px}
+.demo-step-num{flex-shrink:0;width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--accent));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;color:#fff}
+.demo-step-content{flex:1}
+.demo-step-content h3{font-size:20px;font-weight:700;margin-bottom:8px;color:var(--fg)}
+.demo-step-content p{color:var(--fg-2);line-height:1.7;margin-bottom:12px}
+.demo-frame{background:var(--bg-2);border:1px solid rgba(255,255,255,.06);border-radius:var(--radius);padding:20px;font-family:var(--mono);font-size:13px;color:var(--fg-2);overflow-x:auto}
+.demo-frame .prompt{color:var(--primary)}
+.demo-frame .output{color:var(--fg-3)}
+.showcase-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:24px;max-width:1100px;margin:0 auto;padding:0 24px}
+.showcase-card{background:var(--bg-2);border:1px solid rgba(255,255,255,.06);border-radius:var(--radius);padding:28px;transition:all .3s}
+.showcase-card:hover{border-color:rgba(78,205,196,.2);transform:translateY(-2px)}
+.showcase-card .tag{display:inline-block;background:rgba(78,205,196,.12);color:var(--primary);padding:3px 12px;border-radius:100px;font-size:12px;font-weight:600;margin-bottom:14px}
+.showcase-card h3{font-size:18px;font-weight:700;margin-bottom:10px;color:var(--fg)}
+.showcase-card p{color:var(--fg-2);font-size:14px;line-height:1.7;margin:0}
+.showcase-card .meta{display:flex;gap:16px;margin-top:16px;font-size:12px;color:var(--fg-3)}
+.breadcrumb{display:flex;gap:8px;align-items:center;font-size:13px;color:var(--fg-3);margin-bottom:24px}
+.breadcrumb a{color:var(--fg-3);text-decoration:none}
+.breadcrumb a:hover{color:var(--primary)}
+.tui-gallery{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px}
+.tui-gallery a{border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,.08)}
+.tui-gallery img{width:100%;display:block}
+@media(max-width:600px){.demo-step{flex-direction:column;gap:12px}}
+[data-theme="light"] .showcase-card,[data-theme="light"] .demo-frame{background:#fff;border-color:rgba(0,0,0,.08)}
+</style>
+</head>
+<body data-page-title="page_title_showcase" data-meta-desc="meta_desc_showcase">
+<div id="site-header"></div>
+<main>
+<section class="hero" style="min-height:45vh;padding-top:100px">
+  <div class="hero-bg"></div>
+  <div class="container" style="text-align:center;position:relative;z-index:2">
+    <div class="badge"><span class="dot"></span> <span data-i18n="badge_live_demos">Live Demos</span></div>
+    <h1 style="font-size:clamp(36px,6vw,64px);margin-bottom:16px"><span class="gradient-text" data-i18n="show_title">Showcase</span></h1>
+    <p class="hero-sub" style="max-width:700px;margin:0 auto 32px" data-i18n="show_sub">See c4reqber in action. Real queries, real discoveries, real visualizations.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="demo-steps">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a href="../" data-i18n="breadcrumb_home">Home</a> <span>/</span> <span data-i18n="breadcrumb_showcase">Showcase</span>
+    </nav>
+    <h2 style="font-size:28px;font-weight:800;margin-bottom:40px;color:var(--accent)" data-i18n="show_demo_title">Turbo-CDI Demo</h2>
+
+    <div class="demo-step">
+      <div class="demo-step-num" aria-hidden="true">1</div>
+      <div class="demo-step-content">
+        <h3 data-i18n="show_step1_title">Launch the TUI</h3>
+        <p data-i18n="show_step1_desc">Open the cockpit — active problems, engine status, and recent discoveries at a glance.</p>
+        <div class="demo-frame" role="img" aria-label="Terminal: blast tui">
+<span class="prompt">$</span> blast tui<br>
+<span class="output">Active Problems: 3 | Engines: 38 | Sources: 51</span><br>
+<span class="output">Last discovery: 2 min ago</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="demo-step">
+      <div class="demo-step-num" aria-hidden="true">2</div>
+      <div class="demo-step-content">
+        <h3 data-i18n="show_step2_title">Run blast turbo</h3>
+        <p data-i18n="show_step2_desc">One command triggers the full HIL pipeline: search, gaps, simulation, verification, dissertation.</p>
+        <div class="demo-frame" role="img" aria-label="Terminal: blast turbo">
+<span class="prompt">$</span> blast turbo "marine cloud brightening geoengineering"<br>
+<span class="output">[1/12] C4 navigation · [4/12] Multi-source search (447 papers)</span><br>
+<span class="output">[7/12] Simulation · [8/12] Lean4 verify · [12/12] Dissertation A+ 98</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="demo-step">
+      <div class="demo-step-num" aria-hidden="true">3</div>
+      <div class="demo-step-content">
+        <h3 data-i18n="show_step3_title">Review gated output</h3>
+        <p data-i18n="show_step3_desc">Quality gates block slop. Only prose that passes word-count and placeholder checks is saved.</p>
+        <div class="demo-frame" role="img" aria-label="Terminal: quality gate passed">
+<span class="output">QualityGate: words=5083 ✓ placeholders=0 ✓ citations=verified</span><br>
+<span class="output">Saved: discoveries/files/01_marine_cloud_brightening.md</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top:60px;padding-top:40px;border-top:1px solid rgba(255,255,255,.06);max-width:1100px;margin-left:auto;margin-right:auto;padding-left:24px;padding-right:24px">
+    <h2 style="font-size:24px;font-weight:800;margin-bottom:12px;text-align:center"><span data-i18n="show_tui_title">TUI v9 — The Cockpit</span></h2>
+    <p style="text-align:center;color:var(--fg-3);font-size:14px;margin-bottom:32px" data-i18n="show_tui_sub">Golden snapshots from the July 2026 mission · <a href="../discoveries/index.html" style="color:var(--primary)">Full gallery →</a></p>
+    <div class="tui-gallery">
+      <a href="../assets/mission/02_tui_v9_hypothesis_card.png"><img src="../assets/mission/02_tui_v9_hypothesis_card.png" alt="Hypothesis card" loading="lazy" width="800" height="450"></a>
+      <a href="../assets/mission/03_tui_v9_simulation_card.png"><img src="../assets/mission/03_tui_v9_simulation_card.png" alt="Simulation card" loading="lazy" width="800" height="450"></a>
+      <a href="../assets/mission/04_tui_v9_capabilities_overlay.png"><img src="../assets/mission/04_tui_v9_capabilities_overlay.png" alt="Capabilities overlay" loading="lazy" width="800" height="450"></a>
+    </div>
+  </div>
+</section>
+
+<section class="section section-dark">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-label" data-i18n="show_verified_label">July 2026</span>
+      <h2 class="section-title" data-i18n="show_verified_title">Verified pipeline outputs</h2>
+      <p class="section-desc" data-i18n="show_verified_desc">Six blast turbo research proposals — literature, gaps, simulation, quality gates. <a href="../discoveries/index.html" style="color:var(--primary)">Full gallery with video →</a></p>
+      <p class="section-desc" style="font-size:13px;color:#fcd34d;margin-top:8px" data-i18n="show_verified_disclaimer">Hypotheses only — not peer-reviewed. Each file carries an epistemic disclaimer.</p>
+    </div>
+    <div class="showcase-grid">
+      <article class="showcase-card"><span class="tag">Climate · 5,083 w</span><h3 data-i18n="disc_card_climate">Marine cloud brightening</h3><p data-i18n="disc_card_climate_desc">Geoengineering research proposal.</p><div class="meta"><span>A+ 98</span><span><a href="../discoveries/files/01_marine_cloud_brightening.md" style="color:var(--primary)" data-i18n="show_read">Read →</a></span></div></article>
+      <article class="showcase-card"><span class="tag">Energy · 4,859 w</span><h3 data-i18n="disc_card_fusion">Compact fusion reactors</h3><p data-i18n="disc_card_fusion_desc">Distributed clean energy pathway.</p><div class="meta"><span>A+ 98</span><span><a href="../discoveries/files/02_compact_fusion.md" style="color:var(--primary)" data-i18n="show_read">Read →</a></span></div></article>
+      <article class="showcase-card"><span class="tag">Biology · 4,564 w</span><h3 data-i18n="disc_card_aging">Epigenetic aging reversal</h3><p data-i18n="disc_card_aging_desc">Metabolic reprogramming hypotheses.</p><div class="meta"><span>A+ 98</span><span><a href="../discoveries/files/04_epigenetic_aging.md" style="color:var(--primary)" data-i18n="show_read">Read →</a></span></div></article>
+      <article class="showcase-card"><span class="tag">Medicine · 5,058 w</span><h3 data-i18n="disc_card_amr">AMR phage–CRISPR cocktail</h3><p data-i18n="disc_card_amr_desc">Engineered phage + CRISPR hypotheses.</p><div class="meta"><span>A+ 98</span><span><a href="../discoveries/files/05_amr_phage_crispr.md" style="color:var(--primary)" data-i18n="show_read">Read →</a></span></div></article>
+      <article class="showcase-card"><span class="tag">Agriculture · 5,102 w</span><h3 data-i18n="disc_card_soil">Soil carbon sequestration</h3><p data-i18n="disc_card_soil_desc">Regenerative agriculture hypotheses.</p><div class="meta"><span>A+ 98</span><span><a href="../discoveries/files/06_soil_carbon.md" style="color:var(--primary)" data-i18n="show_read">Read →</a></span></div></article>
+      <article class="showcase-card"><span class="tag">Environment · 5,395 w</span><h3 data-i18n="disc_card_plastic">Ocean plastic bioremediation</h3><p data-i18n="disc_card_plastic_desc">Microbial/enzyme remediation v2.</p><div class="meta"><span>A+ 98</span><span><a href="../discoveries/files/08_ocean_plastic_v2.md" style="color:var(--primary)" data-i18n="show_read">Read →</a></span></div></article>
+    </div>
+  </div>
+</section>
+</main>
+<div id="site-footer"></div>
+<script src="../js/components.js"></script>
+<script src="../js/main.js"></script>
+</body>
+</html>

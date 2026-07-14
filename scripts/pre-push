@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# pre-push hook — runs scripts/preflight.sh before `git push` to GitLab.
+# Install with: ln -sf ../../scripts/pre-push .git/hooks/pre-push
+#               (or copy this file to .git/hooks/pre-push)
+#
+# Skip with: git push --no-verify
+set -e
+
+REPO_ROOT="$( git rev-parse --show-toplevel )"
+PREFLIGHT="$REPO_ROOT/scripts/preflight.sh"
+
+if [ ! -x "$PREFLIGHT" ]; then
+  echo "preflight.sh not found or not executable at $PREFLIGHT" >&2
+  echo "Either create it or remove this hook." >&2
+  exit 1
+fi
+
+echo "╔════════════════════════════════════════╗"
+echo "║ pre-push: running preflight checks     ║"
+echo "╚════════════════════════════════════════╝"
+"$PREFLIGHT" --no-race
+
+echo
+echo "✓ preflight passed — proceeding with push"

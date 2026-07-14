@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/patterns/library/pid_tuning/config.py
+# hypothesis_version: 6.141.1
+
+[-10.0, 0.01, 0.1, 0.5, 1.0, 10.0, 2000, 5000, 'auto_tune_relay', 'auto_tune_step', 'cohen_coon', 'ideal', 'manual', 'parallel', 'series', 'ziegler_nichols']

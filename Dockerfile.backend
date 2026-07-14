@@ -1,0 +1,44 @@
+# c4reqber 5.6.0 - Production API image
+FROM python:3.11-slim
+
+LABEL version="5.6.0"
+LABEL description="c4reqber API Server"
+LABEL maintainer="c4reqber Contributors"
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    curl \
+    && rm -rf /var/lib/apt/lists/* \
+    && groupadd --system c4reqber \
+    && useradd --system --gid c4reqber --home-dir /app c4reqber
+
+WORKDIR /app
+
+# Copy slim API requirements (committed; checked in test-backend)
+COPY requirements-docker.txt .
+RUN pip install --upgrade pip uv \
+    && uv pip install --system --no-cache -r requirements-docker.txt
+
+# Copy source (per-file ownership — avoids OOM from chown -R /app in Kaniko)
+COPY --chown=c4reqber:c4reqber src/ ./src/
+COPY --chown=c4reqber:c4reqber migrations/ ./migrations/
+COPY --chown=c4reqber:c4reqber alembic.ini pyproject.toml ./
+RUN mkdir -p /app/data && chown c4reqber:c4reqber /app/data
+
+# Environment
+ENV ENV="production"
+ENV API_PORT=8000
+ENV API_HOST="0.0.0.0"
+ENV PYTHONUNBUFFERED=1
+
+# Expose ports
+EXPOSE 8000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8000/api/v1/health || exit 1
+
+# Run
+USER c4reqber
+CMD ["uvicorn", "src.api.server:app", "--host", "0.0.0.0", "--port", "8000"]

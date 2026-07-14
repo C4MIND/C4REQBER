@@ -1,0 +1,33 @@
+name: WASM Build
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - 'wasm/**'
+      - '.github/workflows/wasm.yml'
+  pull_request:
+    paths:
+      - 'wasm/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-action@stable
+
+      - name: Install wasm-pack
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
+      - name: Build WASM
+        working-directory: ./wasm
+        run: wasm-pack build --target web
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wasm-package
+          path: wasm/pkg/

@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/paradigm/router.py
+# hypothesis_version: 6.141.1
+
+[0.0, 1.0, 365, 400, '*', '/anomalies', '/detect', '/fields', '/temporal/{field}', '/v7/paradigm', 'Time window in days', 'added', 'analysis', 'anomalies', 'anomaly', 'anomaly_count', 'citations_affected', 'count', 'description', 'field', 'fields', 'first_detected', 'id', 'paradigm', 'severity', 'status', 'summaries']

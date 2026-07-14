@@ -1,0 +1,25 @@
+name: Bug Report
+description: Report a bug in TURBO-CDI
+labels: [bug]
+body:
+  - type: textarea
+    attributes:
+      label: Describe the bug
+      description: A clear description of what the bug is.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Go to '...'
+        2. Click on '...'
+        3. See error
+  - type: input
+    attributes:
+      label: TURBO-CDI version
+      placeholder: e.g., v7.0.0
+  - type: input
+    attributes:
+      label: Python version
+      placeholder: e.g., 3.11.0

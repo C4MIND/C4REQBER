@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/patterns/library/innovation_diffusion.py
+# hypothesis_version: 6.141.1
+
+[-1.5, 0.0, 0.002, 0.01, 0.03, 0.05, 0.1, 0.3, 0.38, 0.4, 0.5, 0.8, 0.9, 0.99, 1.0, 10.0, 1000000.0, 100, 500, 1000, 10000, '  Time to 50%: N/A', '6.0.0', 'EXTENDED', 'Innovation Diffusion', 'Marketing', 'No repeat purchases', 'O(T) or O(T·N·⟨k⟩)', 'Policy', '__main__', 'accuracy', 'adoption_rate', 'assumptions', 'bass', 'bass_parameters', 'category', 'complete', 'config', 'cumulative', 'default', 'description', 'domain', 'enum', 'final_adopters', 'final_penetration', 'float', 'fraction', 'generalized_bass', 'history', 'id', 'innovation_diffusion', 'interpretation', 'm_peak', 'market_size', 'max_time', 'model', 'multigen', 'name', 'network', 'options', 'p', 'parameters', 'peak', 'q', 'q_p_ratio', 'random', 'rate', 'scale_free', 'small_world', 't_50', 't_star', 'theoretical', 'time', 'type', 'typical_runtime', 'version']

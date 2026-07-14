@@ -1,0 +1,1614 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Трансформационный Гиперкуб 7D - Финальная версия</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a0a2a 50%, #0a1a1a 100%);
+            color: #ffffff;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+        }
+
+        .container {
+            width: 100%;
+            height: 100vh;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        .header {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            z-index: 1000;
+        }
+
+        .header h1 {
+            font-size: 18px;
+            letter-spacing: 6px;
+            font-weight: 300;
+            color: #ffffff;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            text-shadow: 0 0 20px rgba(100, 255, 200, 0.5);
+        }
+
+        .header .subtitle {
+            font-size: 11px;
+            letter-spacing: 2px;
+            color: #888;
+        }
+
+        /* Canvas */
+        #canvas {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        /* Control Panels */
+        .control-panel {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(100, 255, 200, 0.2);
+            border-radius: 12px;
+            padding: 20px;
+            z-index: 100;
+            animation: fadeIn 0.5s;
+        }
+
+        .panel-left {
+            left: 20px;
+            top: 100px;
+            width: 250px;
+            max-height: calc(100vh - 250px);
+            overflow-y: auto;
+        }
+
+        .panel-right {
+            right: 20px;
+            top: 100px;
+            width: 250px;
+            max-height: calc(100vh - 250px);
+            overflow-y: auto;
+        }
+
+        .panel-phases {
+            right: 20px;
+            bottom: 20px;
+            width: 320px;
+            padding: 15px 20px;
+        }
+
+        .panel-title {
+            font-size: 12px;
+            letter-spacing: 2px;
+            color: #64ffc8;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            font-weight: 400;
+        }
+
+        /* Dimension Selectors */
+        .dimension-selector {
+            margin: 15px 0;
+        }
+
+        .dimension-label {
+            font-size: 11px;
+            color: #aaa;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .dimension-value {
+            color: #64ffc8;
+            font-weight: 500;
+        }
+
+        .dimension-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 5px;
+            margin-top: 5px;
+        }
+
+        .dimension-grid.grid-3 {
+            grid-template-columns: repeat(3, 1fr);
+        }
+
+        .dimension-grid.grid-2 {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .dimension-btn {
+            padding: 6px 4px;
+            background: rgba(100, 255, 200, 0.05);
+            border: 1px solid rgba(100, 255, 200, 0.2);
+            color: #666;
+            font-size: 9px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            border-radius: 4px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .dimension-btn:hover {
+            background: rgba(100, 255, 200, 0.15);
+            color: #aaa;
+            transform: translateY(-1px);
+        }
+
+        .dimension-btn.active {
+            background: rgba(100, 255, 200, 0.3);
+            border-color: #64ffc8;
+            color: #64ffc8;
+            box-shadow: 0 0 10px rgba(100, 255, 200, 0.4);
+            animation: activePulse 0.5s;
+        }
+
+        /* Sliders */
+        .slider-container {
+            margin: 15px 0;
+        }
+
+        .slider {
+            width: 100%;
+            height: 4px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: rgba(255, 255, 255, 0.1);
+            outline: none;
+            border-radius: 2px;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 12px;
+            height: 12px;
+            background: #64ffc8;
+            cursor: pointer;
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(100, 255, 200, 0.5);
+        }
+
+        .slider::-moz-range-thumb {
+            width: 12px;
+            height: 12px;
+            background: #64ffc8;
+            cursor: pointer;
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(100, 255, 200, 0.5);
+        }
+
+        /* Phase Circle Visualization */
+        .phase-circle {
+            position: relative;
+            width: 280px;
+            height: 280px;
+            margin: 0 auto;
+        }
+
+        .phase-circle-svg {
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg);
+        }
+
+        .phase-labels {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .phase-label {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid rgba(100, 255, 200, 0.3);
+        }
+
+        .phase-label:hover {
+            transform: scale(1.2);
+            border-color: #64ffc8;
+        }
+
+        .phase-label.active {
+            background: rgba(100, 255, 200, 0.3);
+            border-color: #64ffc8;
+            color: #fff;
+            box-shadow: 0 0 20px rgba(100, 255, 200, 0.6);
+            animation: pulse 2s infinite;
+        }
+
+        .phase-label.completed {
+            background: rgba(100, 255, 200, 0.15);
+            border-color: rgba(100, 255, 200, 0.5);
+            color: #64ffc8;
+        }
+
+        /* Metrics */
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.03);
+            border-left: 2px solid #64ffc8;
+            border-radius: 3px;
+        }
+
+        .metric-label {
+            color: #aaa;
+            font-size: 11px;
+        }
+
+        .metric-value {
+            color: #64ffc8;
+            font-weight: 500;
+            font-size: 12px;
+        }
+
+        /* Progress Bar */
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #64ffc8, #4a9eff);
+            border-radius: 2px;
+            transition: width 0.5s ease;
+            box-shadow: 0 0 10px rgba(100, 255, 200, 0.5);
+        }
+
+        /* Operator Buttons */
+        .operator-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin: 15px 0;
+        }
+
+        .operator-btn {
+            padding: 10px 5px;
+            background: rgba(74, 158, 255, 0.05);
+            border: 1px solid rgba(74, 158, 255, 0.3);
+            color: #4a9eff;
+            font-size: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            border-radius: 6px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .operator-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: radial-gradient(circle, rgba(74, 158, 255, 0.4), transparent);
+            transform: translate(-50%, -50%);
+            transition: width 0.3s, height 0.3s;
+            border-radius: 50%;
+        }
+
+        .operator-btn:hover::before {
+            width: 100px;
+            height: 100px;
+        }
+
+        .operator-btn:hover {
+            background: rgba(74, 158, 255, 0.15);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(74, 158, 255, 0.3);
+        }
+
+        .operator-btn.active {
+            background: rgba(74, 158, 255, 0.3);
+            color: #fff;
+            border-color: #4a9eff;
+            animation: operatorPulse 1s;
+        }
+
+        /* Navigation Controls */
+        .nav-controls {
+            position: absolute;
+            top: 50%;
+            right: 290px;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 100;
+        }
+
+        .nav-btn {
+            width: 40px;
+            height: 40px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid rgba(100, 255, 200, 0.3);
+            border-radius: 50%;
+            color: #64ffc8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 18px;
+        }
+
+        .nav-btn:hover {
+            background: rgba(100, 255, 200, 0.1);
+            transform: scale(1.1);
+            box-shadow: 0 0 20px rgba(100, 255, 200, 0.4);
+        }
+
+        /* Mode Toggle */
+        .mode-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 1000;
+        }
+
+        .mode-btn {
+            padding: 8px 15px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid rgba(100, 255, 200, 0.3);
+            color: #666;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-radius: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .mode-btn:hover {
+            background: rgba(100, 255, 200, 0.1);
+            color: #aaa;
+        }
+
+        .mode-btn.active {
+            background: rgba(100, 255, 200, 0.2);
+            color: #64ffc8;
+            border-color: #64ffc8;
+        }
+
+        /* Domain Selector */
+        .domain-selector {
+            position: absolute;
+            left: 20px;
+            bottom: 20px;
+            background: rgba(0, 0, 0, 0.85);
+            border: 1px solid rgba(100, 255, 200, 0.2);
+            border-radius: 8px;
+            padding: 15px;
+            z-index: 100;
+            max-width: 300px;
+        }
+
+        .domain-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 5px;
+            margin-top: 10px;
+        }
+
+        .domain-btn {
+            padding: 5px;
+            background: rgba(150, 100, 255, 0.05);
+            border: 1px solid rgba(150, 100, 255, 0.2);
+            color: #9664ff;
+            font-size: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            border-radius: 4px;
+        }
+
+        .domain-btn:hover {
+            background: rgba(150, 100, 255, 0.15);
+            transform: translateY(-1px);
+        }
+
+        .domain-btn.active {
+            background: rgba(150, 100, 255, 0.3);
+            border-color: #9664ff;
+            color: #fff;
+        }
+
+        /* Object Selector */
+        .object-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 5px;
+            margin-top: 10px;
+        }
+
+        .object-btn {
+            padding: 6px 4px;
+            background: rgba(255, 170, 0, 0.05);
+            border: 1px solid rgba(255, 170, 0, 0.2);
+            color: #ffaa00;
+            font-size: 9px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            border-radius: 4px;
+        }
+
+        .object-btn:hover {
+            background: rgba(255, 170, 0, 0.15);
+            transform: translateY(-1px);
+        }
+
+        .object-btn.active {
+            background: rgba(255, 170, 0, 0.3);
+            border-color: #ffaa00;
+            color: #fff;
+        }
+
+        /* Info Display */
+        .info-display {
+            position: absolute;
+            top: 70px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            border: 1px solid rgba(100, 255, 200, 0.3);
+            border-radius: 25px;
+            padding: 10px 20px;
+            z-index: 90;
+            font-size: 11px;
+            color: #aaa;
+            min-width: 400px;
+            text-align: center;
+            display: none;
+        }
+
+        .info-display.visible {
+            display: block;
+            animation: slideDown 0.3s;
+        }
+
+        .info-display .coord-item {
+            display: inline-block;
+            margin: 0 5px;
+            padding: 2px 6px;
+            background: rgba(100, 255, 200, 0.1);
+            border-radius: 3px;
+            color: #64ffc8;
+        }
+
+        /* Visual Feedback */
+        .visual-feedback {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 24px;
+            color: #64ffc8;
+            font-weight: 300;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 2000;
+            text-shadow: 0 0 20px rgba(100, 255, 200, 0.8);
+        }
+
+        .visual-feedback.show {
+            animation: feedbackPulse 1s ease-out;
+        }
+
+        /* Animations */
+        @keyframes pulse {
+            0%, 100% { 
+                box-shadow: 0 0 20px rgba(100, 255, 200, 0.6);
+                transform: scale(1);
+            }
+            50% { 
+                box-shadow: 0 0 30px rgba(100, 255, 200, 0.8);
+                transform: scale(1.05);
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideDown {
+            from { 
+                opacity: 0;
+                transform: translateX(-50%) translateY(-20px);
+            }
+            to { 
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+
+        @keyframes operatorPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes activePulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 rgba(100, 255, 200, 0.4); }
+            50% { transform: scale(1.05); box-shadow: 0 0 20px rgba(100, 255, 200, 0.6); }
+            100% { transform: scale(1); box-shadow: 0 0 10px rgba(100, 255, 200, 0.4); }
+        }
+
+        @keyframes feedbackPulse {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+            50% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+            100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
+        }
+
+        /* Stats Panel */
+        .stats-panel {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.85);
+            border: 1px solid rgba(100, 255, 200, 0.2);
+            border-radius: 25px;
+            padding: 10px 30px;
+            z-index: 100;
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-value {
+            color: #64ffc8;
+            font-size: 16px;
+            font-weight: 300;
+            margin-top: 3px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .panel-left, .panel-right, .domain-selector {
+                display: none;
+            }
+            
+            .panel-phases {
+                width: 95%;
+                right: 2.5%;
+            }
+            
+            .header h1 {
+                font-size: 14px;
+                letter-spacing: 3px;
+            }
+
+            .nav-controls {
+                right: 10px;
+            }
+
+            .stats-panel {
+                gap: 15px;
+                padding: 10px 20px;
+            }
+        }
+
+        /* Scrollbar styling */
+        .control-panel::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .control-panel::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .control-panel::-webkit-scrollbar-thumb {
+            background: rgba(100, 255, 200, 0.2);
+            border-radius: 2px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>ТРАНСФОРМАЦИОННЫЙ ГИПЕРКУБ 7D</h1>
+            <div class="subtitle">Универсальное пространство трансформаций</div>
+        </div>
+
+        <div class="mode-toggle">
+            <button class="mode-btn active" data-mode="explore">Исследование</button>
+            <button class="mode-btn" data-mode="learn">Обучение</button>
+            <button class="mode-btn" data-mode="transform">Трансформация</button>
+        </div>
+
+        <canvas id="canvas"></canvas>
+
+        <!-- Visual Feedback -->
+        <div class="visual-feedback" id="visual-feedback"></div>
+
+        <!-- Info Display -->
+        <div class="info-display" id="info-display">
+            <span id="info-text">
+                Координаты: 
+                <span class="coord-item">L:1</span>
+                <span class="coord-item">P:3</span>
+                <span class="coord-item">Ψ:0.5</span>
+                <span class="coord-item">Ω:0.5</span>
+                <span class="coord-item">Δ:0.5</span>
+                <span class="coord-item">Op:-</span>
+                <span class="coord-item">Ob:-</span>
+                <span class="coord-item">M:2</span>
+                <span class="coord-item">D:2</span>
+            </span>
+        </div>
+
+        <!-- Left Panel - Dimensions -->
+        <div class="control-panel panel-left">
+            <div class="panel-title">ИЗМЕРЕНИЯ ГИПЕРКУБА</div>
+            
+            <div class="dimension-selector">
+                <div class="dimension-label">
+                    <span>1. Уровень</span>
+                    <span class="dimension-value" id="level-value">Контекст</span>
+                </div>
+                <div class="dimension-grid grid-3">
+                    <button class="dimension-btn active" data-dim="level" data-value="1" title="Контекст">К</button>
+                    <button class="dimension-btn" data-dim="level" data-value="2" title="Операции">О</button>
+                    <button class="dimension-btn" data-dim="level" data-value="3" title="Механика">М</button>
+                    <button class="dimension-btn" data-dim="level" data-value="4" title="Принципы">П</button>
+                    <button class="dimension-btn" data-dim="level" data-value="5" title="Айдентика">А</button>
+                    <button class="dimension-btn" data-dim="level" data-value="6" title="Социум">С¹</button>
+                    <button class="dimension-btn" data-dim="level" data-value="7" title="Синергия">С²</button>
+                </div>
+            </div>
+
+            <div class="dimension-selector">
+                <div class="dimension-label">
+                    <span>3. Поле (ΨΩΔ)</span>
+                    <span class="dimension-value" id="field-value">Баланс</span>
+                </div>
+                <div class="slider-container">
+                    <div class="dimension-label">
+                        <span>Ψ Потенциал</span>
+                        <span class="dimension-value" id="psi-val">0.50</span>
+                    </div>
+                    <input type="range" class="slider" id="psi-slider" min="0" max="100" value="50">
+                </div>
+                <div class="slider-container">
+                    <div class="dimension-label">
+                        <span>Ω Актуальность</span>
+                        <span class="dimension-value" id="omega-val">0.50</span>
+                    </div>
+                    <input type="range" class="slider" id="omega-slider" min="0" max="100" value="50">
+                </div>
+                <div class="slider-container">
+                    <div class="dimension-label">
+                        <span>Δ Градиент</span>
+                        <span class="dimension-value" id="delta-val">0.50</span>
+                    </div>
+                    <input type="range" class="slider" id="delta-slider" min="0" max="100" value="50">
+                </div>
+            </div>
+
+            <div class="dimension-selector">
+                <div class="dimension-label">
+                    <span>5. Объект</span>
+                    <span class="dimension-value" id="object-value">-</span>
+                </div>
+                <div class="object-grid">
+                    <button class="object-btn" data-dim="object" data-value="1" title="Структура">СТР</button>
+                    <button class="object-btn" data-dim="object" data-value="2" title="Содержание">СОД</button>
+                    <button class="object-btn" data-dim="object" data-value="3" title="Процесс">ПРЦ</button>
+                    <button class="object-btn" data-dim="object" data-value="4" title="Отношения">ОТН</button>
+                    <button class="object-btn" data-dim="object" data-value="5" title="Состояние">СОС</button>
+                    <button class="object-btn" data-dim="object" data-value="6" title="Материя">МАТ</button>
+                    <button class="object-btn" data-dim="object" data-value="7" title="Информация">ИНФ</button>
+                    <button class="object-btn" data-dim="object" data-value="8" title="Энергия">ЭНР</button>
+                </div>
+            </div>
+
+            <div class="dimension-selector">
+                <div class="dimension-label">
+                    <span>6. Режим</span>
+                    <span class="dimension-value" id="mode-value">Постепенный</span>
+                </div>
+                <div class="dimension-grid grid-3">
+                    <button class="dimension-btn" data-dim="mode" data-value="1" title="Мгновенный">МГН</button>
+                    <button class="dimension-btn active" data-dim="mode" data-value="2" title="Постепенный">ПСТ</button>
+                    <button class="dimension-btn" data-dim="mode" data-value="3" title="Циклический">ЦКЛ</button>
+                    <button class="dimension-btn" data-dim="mode" data-value="4" title="Каскадный">КСК</button>
+                    <button class="dimension-btn" data-dim="mode" data-value="5" title="Квантовый">КВН</button>
+                    <button class="dimension-btn" data-dim="mode" data-value="6" title="Волновой">ВЛН</button>
+                    <button class="dimension-btn" data-dim="mode" data-value="7" title="Сетевой">СТВ</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel - Operators -->
+        <div class="control-panel panel-right">
+            <div class="panel-title">4. ОПЕРАТОРЫ [20]</div>
+            
+            <div class="operator-grid">
+                <button class="operator-btn" data-op="detect" title="Обнаружить">Detect</button>
+                <button class="operator-btn" data-op="scan" title="Сканировать">Scan</button>
+                <button class="operator-btn" data-op="focus" title="Фокусировать">Focus</button>
+                <button class="operator-btn" data-op="track" title="Отследить">Track</button>
+                <button class="operator-btn" data-op="parse" title="Разобрать">Parse</button>
+                <button class="operator-btn" data-op="filter" title="Фильтровать">Filter</button>
+                <button class="operator-btn" data-op="compress" title="Сжать">Compress</button>
+                <button class="operator-btn" data-op="expand" title="Развернуть">Expand</button>
+                <button class="operator-btn" data-op="amplify" title="Усилить">Amplify</button>
+                <button class="operator-btn" data-op="attenuate" title="Ослабить">Attenuate</button>
+                <button class="operator-btn" data-op="tune" title="Настроить">Tune</button>
+                <button class="operator-btn" data-op="shift" title="Сдвинуть">Shift</button>
+                <button class="operator-btn" data-op="connect" title="Связать">Connect</button>
+                <button class="operator-btn" data-op="separate" title="Разделить">Separate</button>
+                <button class="operator-btn" data-op="layer" title="Наслоить">Layer</button>
+                <button class="operator-btn" data-op="crystallize" title="Кристаллизовать">Crystal</button>
+                <button class="operator-btn" data-op="channel" title="Направить">Channel</button>
+                <button class="operator-btn" data-op="block" title="Блокировать">Block</button>
+                <button class="operator-btn" data-op="cycle" title="Зациклить">Cycle</button>
+                <button class="operator-btn" data-op="pulse" title="Импульс">Pulse</button>
+            </div>
+
+            <div class="panel-title" style="margin-top: 20px;">МЕТРИКИ</div>
+            <div class="metric">
+                <span class="metric-label">Резонанс</span>
+                <span class="metric-value" id="resonance">0.75</span>
+            </div>
+            <div class="metric">
+                <span class="metric-label">Энтропия</span>
+                <span class="metric-value" id="entropy">0.23</span>
+            </div>
+            <div class="metric">
+                <span class="metric-label">Когерентность</span>
+                <span class="metric-value" id="coherence">0.67</span>
+            </div>
+            <div class="metric">
+                <span class="metric-label">Пластичность</span>
+                <span class="metric-value" id="plasticity">0.82</span>
+            </div>
+            <div class="metric">
+                <span class="metric-label">Прогресс</span>
+                <span class="metric-value" id="progress">37.5%</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-bar" style="width: 37.5%"></div>
+            </div>
+        </div>
+
+        <!-- Phases Panel (moved to right bottom) -->
+        <div class="control-panel panel-phases">
+            <div class="panel-title">2. ФАЗЫ ТРАНСФОРМАЦИИ [8]</div>
+            <div class="phase-circle">
+                <svg class="phase-circle-svg">
+                    <!-- Background circle -->
+                    <circle cx="140" cy="140" r="100" fill="none" stroke="rgba(100, 255, 200, 0.1)" stroke-width="2"/>
+                    <!-- Progress arc -->
+                    <path id="phase-progress" d="" fill="none" stroke="url(#phase-gradient)" stroke-width="4" stroke-linecap="round"/>
+                    <!-- Gradient definition -->
+                    <defs>
+                        <linearGradient id="phase-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#64ffc8;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#4a9eff;stop-opacity:1" />
+                        </linearGradient>
+                    </defs>
+                </svg>
+                <div class="phase-labels">
+                    <!-- Phase labels will be positioned by JavaScript -->
+                </div>
+            </div>
+            <div class="dimension-label" style="margin-top: 15px; text-align: center;">
+                <span>Текущая фаза: <span style="color: #64ffc8;" id="current-phase-name">Моделирование</span></span>
+                <br>
+                <span class="dimension-value" id="phase-description" style="font-size: 10px;">Построение целевого состояния</span>
+            </div>
+        </div>
+
+        <!-- Domain Selector -->
+        <div class="domain-selector">
+            <div class="panel-title">7. ДОМЕНЫ [48]</div>
+            <div class="dimension-label">
+                <span>Активный домен:</span>
+                <span class="dimension-value" id="domain-value">Психология</span>
+            </div>
+            <div class="domain-grid">
+                <button class="domain-btn" data-domain="1" title="Философия">ФИЛ</button>
+                <button class="domain-btn active" data-domain="2" title="Психология">ПСИ</button>
+                <button class="domain-btn" data-domain="3" title="Социология">СОЦ</button>
+                <button class="domain-btn" data-domain="4" title="История">ИСТ</button>
+                <button class="domain-btn" data-domain="5" title="Конфликтология">КОН</button>
+                <button class="domain-btn" data-domain="6" title="Бизнес">БИЗ</button>
+                <button class="domain-btn" data-domain="7" title="Искусство">ИСК</button>
+                <button class="domain-btn" data-domain="8" title="Наука">НАУ</button>
+                <button class="domain-btn" data-domain="9" title="Технологии">ТЕХ</button>
+                <button class="domain-btn" data-domain="10" title="Медицина">МЕД</button>
+                <button class="domain-btn" data-domain="11" title="Образование">ОБР</button>
+                <button class="domain-btn" data-domain="12" title="Экология">ЭКО</button>
+            </div>
+        </div>
+
+        <!-- Stats Panel -->
+        <div class="stats-panel">
+            <div class="stat-item">
+                <div class="stat-label">Измерений</div>
+                <div class="stat-value" id="active-dimensions">3/7</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Резонанс</div>
+                <div class="stat-value" id="resonance-stat">75%</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">Скорость</div>
+                <div class="stat-value" id="speed">1.0×</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">FPS</div>
+                <div class="stat-value" id="fps">60</div>
+            </div>
+        </div>
+
+        <!-- Navigation Controls -->
+        <div class="nav-controls">
+            <button class="nav-btn" id="rotate-up" title="Вращать вверх">↑</button>
+            <button class="nav-btn" id="rotate-left" title="Вращать влево">←</button>
+            <button class="nav-btn" id="rotate-right" title="Вращать вправо">→</button>
+            <button class="nav-btn" id="rotate-down" title="Вращать вниз">↓</button>
+            <button class="nav-btn" id="zoom-in" title="Приблизить">+</button>
+            <button class="nav-btn" id="zoom-out" title="Отдалить">−</button>
+            <button class="nav-btn" id="reset-view" title="Сбросить вид">⟲</button>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        const state = {
+            hypercube: {
+                level: 1,
+                phase: 3,
+                field: { psi: 0.5, omega: 0.5, delta: 0.5 },
+                operator: null,
+                object: null,
+                mode: 2,
+                domain: 2,
+                rotation: { x: 0, y: 0, z: 0, w: 0 },
+                scale: 1,
+                autoRotate: true
+            },
+            mode: 'explore',
+            metrics: {
+                resonance: 0.75,
+                entropy: 0.23,
+                coherence: 0.67,
+                plasticity: 0.82,
+                progress: 37.5
+            },
+            animation: {
+                time: 0,
+                speed: 1
+            },
+            vertices: [],
+            edges: [],
+            particles: [],
+            lastChange: null
+        };
+
+        // Canvas setup
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        // Initialize phase circle
+        function initPhaseCircle() {
+            const phaseLabels = document.querySelector('.phase-labels');
+            const phases = [
+                {id: 'СК', name: 'Сканирование', desc: 'Анализ текущего состояния'},
+                {id: 'ДГ', name: 'Диагностика', desc: 'Определение проблем'},
+                {id: 'МД', name: 'Моделирование', desc: 'Построение целевого состояния'},
+                {id: 'РЗ', name: 'Резонанс', desc: 'Настройка на систему'},
+                {id: 'ТР', name: 'Трансформация', desc: 'Реализация изменений'},
+                {id: 'ИН', name: 'Интеграция', desc: 'Встраивание изменений'},
+                {id: 'ПР', name: 'Проверка', desc: 'Оценка результатов'},
+                {id: 'СТ', name: 'Стабилизация', desc: 'Закрепление состояния'}
+            ];
+            
+            phases.forEach((phase, index) => {
+                const angle = (Math.PI * 2 / 8) * index - Math.PI / 2;
+                const x = 140 + Math.cos(angle) * 100 - 15;
+                const y = 140 + Math.sin(angle) * 100 - 15;
+                
+                const label = document.createElement('div');
+                label.className = 'phase-label';
+                label.dataset.phase = index + 1;
+                label.title = phase.name;
+                label.textContent = phase.id;
+                label.style.left = x + 'px';
+                label.style.top = y + 'px';
+                
+                if (index < state.hypercube.phase - 1) {
+                    label.classList.add('completed');
+                } else if (index === state.hypercube.phase - 1) {
+                    label.classList.add('active');
+                }
+                
+                label.addEventListener('click', function() {
+                    selectPhase(index + 1, phase);
+                });
+                
+                phaseLabels.appendChild(label);
+            });
+            
+            updatePhaseProgress();
+        }
+
+        function selectPhase(phaseNum, phaseData) {
+            state.hypercube.phase = phaseNum;
+            
+            // Update labels
+            document.querySelectorAll('.phase-label').forEach((label, index) => {
+                label.classList.remove('active', 'completed');
+                if (index < phaseNum - 1) {
+                    label.classList.add('completed');
+                } else if (index === phaseNum - 1) {
+                    label.classList.add('active');
+                }
+            });
+            
+            // Update text
+            if (phaseData) {
+                document.getElementById('current-phase-name').textContent = phaseData.name;
+                document.getElementById('phase-description').textContent = phaseData.desc;
+            }
+            
+            updatePhaseProgress();
+            showFeedback(`Фаза: ${phaseData ? phaseData.name : phaseNum}`);
+        }
+
+        function updatePhaseProgress() {
+            const progress = (state.hypercube.phase - 1) / 8;
+            const angle = progress * Math.PI * 2;
+            const x = 140 + Math.cos(-Math.PI / 2 + angle) * 100;
+            const y = 140 + Math.sin(-Math.PI / 2 + angle) * 100;
+            
+            const largeArc = angle > Math.PI ? 1 : 0;
+            const path = `M 140 40 A 100 100 0 ${largeArc} 1 ${x} ${y}`;
+            
+            document.getElementById('phase-progress').setAttribute('d', path);
+        }
+
+        // Generate 7D hypercube structure
+        function generateHypercube() {
+            state.vertices = [];
+            for (let i = 0; i < 128; i++) {
+                const vertex = [];
+                for (let d = 0; d < 7; d++) {
+                    vertex.push((i >> d) & 1 ? 1 : -1);
+                }
+                state.vertices.push(vertex);
+            }
+            
+            state.edges = [];
+            for (let i = 0; i < 128; i++) {
+                for (let j = i + 1; j < 128; j++) {
+                    let diff = 0;
+                    for (let d = 0; d < 7; d++) {
+                        if (state.vertices[i][d] !== state.vertices[j][d]) diff++;
+                    }
+                    if (diff === 1) {
+                        state.edges.push([i, j]);
+                    }
+                }
+            }
+        }
+
+        // 7D to 2D projection
+        function project7DTo2D(vertex) {
+            let rotated = [...vertex];
+            const h = state.hypercube;
+            
+            // Apply dimension-specific transformations based on active selections
+            rotated[0] *= (h.level / 7); // Level dimension affects X
+            rotated[1] *= (h.phase / 8); // Phase dimension affects Y
+            rotated[2] *= h.field.psi; // Psi field affects Z
+            rotated[3] *= h.field.omega; // Omega field affects 4th dimension
+            rotated[4] *= h.field.delta; // Delta field affects 5th dimension
+            if (h.object) rotated[5] *= (h.object / 8); // Object affects 6th dimension
+            rotated[6] *= (h.mode / 7); // Mode affects 7th dimension
+            
+            // Rotation
+            const angleY = h.rotation.y * 0.01;
+            const angleX = h.rotation.x * 0.01;
+            
+            for (let i = 0; i < 6; i++) {
+                const temp = rotated[i] * Math.cos(angleY) - rotated[i+1] * Math.sin(angleY);
+                rotated[i+1] = rotated[i] * Math.sin(angleY) + rotated[i+1] * Math.cos(angleY);
+                rotated[i] = temp;
+            }
+            
+            if (rotated.length > 2) {
+                const temp = rotated[0] * Math.cos(angleX) - rotated[2] * Math.sin(angleX);
+                rotated[2] = rotated[0] * Math.sin(angleX) + rotated[2] * Math.cos(angleX);
+                rotated[0] = temp;
+            }
+            
+            // Project to 2D
+            const scale = 100 * h.scale;
+            const x = rotated[0] * scale + rotated[2] * scale * 0.3 + rotated[4] * scale * 0.1;
+            const y = rotated[1] * scale + rotated[3] * scale * 0.3 + rotated[5] * scale * 0.1;
+            
+            return {
+                x: x + canvas.width / 2,
+                y: y + canvas.height / 2
+            };
+        }
+
+        // Visual feedback
+        function showFeedback(text) {
+            const feedback = document.getElementById('visual-feedback');
+            feedback.textContent = text;
+            feedback.classList.add('show');
+            setTimeout(() => {
+                feedback.classList.remove('show');
+            }, 1000);
+        }
+
+        // Update info display
+        function updateInfoDisplay() {
+            const h = state.hypercube;
+            const opName = h.operator ? h.operator.toUpperCase() : '-';
+            const objNames = ['', 'СТР', 'СОД', 'ПРЦ', 'ОТН', 'СОС', 'МАТ', 'ИНФ', 'ЭНР'];
+            const objName = h.object ? objNames[h.object] : '-';
+            
+            document.getElementById('info-text').innerHTML = `
+                Координаты: 
+                <span class="coord-item">L:${h.level}</span>
+                <span class="coord-item">P:${h.phase}</span>
+                <span class="coord-item">Ψ:${h.field.psi.toFixed(1)}</span>
+                <span class="coord-item">Ω:${h.field.omega.toFixed(1)}</span>
+                <span class="coord-item">Δ:${h.field.delta.toFixed(1)}</span>
+                <span class="coord-item">Op:${opName}</span>
+                <span class="coord-item">Ob:${objName}</span>
+                <span class="coord-item">M:${h.mode}</span>
+                <span class="coord-item">D:${h.domain}</span>
+            `;
+            
+            // Update active dimensions count
+            let activeDims = 0;
+            if (h.level !== 1) activeDims++;
+            if (h.phase !== 1) activeDims++;
+            if (h.field.psi !== 0.5 || h.field.omega !== 0.5 || h.field.delta !== 0.5) activeDims++;
+            if (h.operator) activeDims++;
+            if (h.object) activeDims++;
+            if (h.mode !== 1) activeDims++;
+            if (h.domain !== 1) activeDims++;
+            
+            document.getElementById('active-dimensions').textContent = `${activeDims}/7`;
+        }
+
+        // Draw functions
+        function drawGrid() {
+            const gridSize = 50;
+            ctx.strokeStyle = 'rgba(100, 255, 200, 0.02)';
+            ctx.lineWidth = 1;
+            
+            for (let x = 0; x < canvas.width; x += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+            
+            for (let y = 0; y < canvas.height; y += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+        }
+
+        function drawField() {
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const field = state.hypercube.field;
+            
+            // Draw pulsing fields
+            const time = state.animation.time * 0.001;
+            
+            ctx.strokeStyle = `rgba(150, 100, 255, ${field.psi * 0.3})`;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 150 * field.psi * (1 + Math.sin(time) * 0.1), 0, Math.PI * 2);
+            ctx.stroke();
+            
+            ctx.strokeStyle = `rgba(74, 158, 255, ${field.omega * 0.3})`;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 200 * field.omega * (1 + Math.cos(time * 1.2) * 0.1), 0, Math.PI * 2);
+            ctx.stroke();
+            
+            ctx.strokeStyle = `rgba(100, 255, 200, ${field.delta * 0.3})`;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 250 * field.delta * (1 + Math.sin(time * 0.8) * 0.1), 0, Math.PI * 2);
+            ctx.stroke();
+        }
+
+        function drawHypercube() {
+            const h = state.hypercube;
+            
+            // Color based on active dimensions
+            const baseHue = (h.level / 7) * 60 + 160;
+            const saturation = 50 + (h.phase / 8) * 20;
+            const lightness = 40 + (h.field.psi + h.field.omega + h.field.delta) * 10;
+            
+            // Draw edges with dynamic color
+            ctx.strokeStyle = `hsla(${baseHue}, ${saturation}%, ${lightness}%, 0.15)`;
+            ctx.lineWidth = 0.5;
+            
+            state.edges.forEach(edge => {
+                const p1 = project7DTo2D(state.vertices[edge[0]]);
+                const p2 = project7DTo2D(state.vertices[edge[1]]);
+                
+                ctx.beginPath();
+                ctx.moveTo(p1.x, p1.y);
+                ctx.lineTo(p2.x, p2.y);
+                ctx.stroke();
+            });
+            
+            // Draw vertices
+            state.vertices.forEach((vertex, index) => {
+                const p = project7DTo2D(vertex);
+                
+                // Highlight based on current level
+                const vertexLevel = Math.floor(index / 18) + 1;
+                const isActive = vertexLevel === h.level;
+                const size = isActive ? 3 : 2;
+                
+                // Color based on domain
+                const domainHue = (h.domain / 12) * 360;
+                ctx.fillStyle = isActive ? 
+                    `hsla(${domainHue}, 70%, 60%, 0.9)` : 
+                    `hsla(${baseHue}, 50%, 50%, 0.4)`;
+                
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, size, 0, Math.PI * 2);
+                ctx.fill();
+                
+                if (isActive && h.operator) {
+                    // Show operator effect
+                    ctx.strokeStyle = '#4a9eff';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, 8, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
+            });
+        }
+
+        function drawParticles() {
+            // Add particles when changes occur
+            if (state.lastChange && Date.now() - state.lastChange < 500) {
+                for (let i = 0; i < 3; i++) {
+                    state.particles.push({
+                        x: Math.random() * canvas.width,
+                        y: Math.random() * canvas.height,
+                        vx: (Math.random() - 0.5) * 4,
+                        vy: (Math.random() - 0.5) * 4,
+                        life: 1,
+                        color: '#64ffc8'
+                    });
+                }
+            }
+            
+            // Update and draw particles
+            state.particles = state.particles.filter(p => {
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vx *= 0.98;
+                p.vy *= 0.98;
+                p.life -= 0.02;
+                
+                if (p.life > 0) {
+                    ctx.fillStyle = p.color + Math.floor(p.life * 255).toString(16).padStart(2, '0');
+                    ctx.fillRect(p.x, p.y, 2, 2);
+                    return true;
+                }
+                return false;
+            });
+        }
+
+        // Main draw function
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            drawGrid();
+            drawField();
+            drawHypercube();
+            drawParticles();
+        }
+
+        // Update metrics
+        function updateMetrics() {
+            const time = state.animation.time * 0.001;
+            const h = state.hypercube;
+            
+            const resonance = 0.5 + Math.sin(time * 0.4) * 0.3 + h.field.psi * 0.2;
+            const entropy = 0.2 + Math.cos(time * 0.6) * 0.15 + (1 - h.field.omega) * 0.15;
+            const coherence = h.field.psi * h.field.omega * (1 - entropy);
+            const plasticity = 0.7 + Math.sin(time * 0.3) * 0.2 + h.field.delta * 0.1;
+            const progress = ((h.phase - 1) / 8 + resonance * 0.1) * 100;
+            
+            state.metrics = {
+                resonance: Math.min(1, Math.max(0, resonance)),
+                entropy: Math.min(1, Math.max(0, entropy)),
+                coherence: Math.min(1, Math.max(0, coherence)),
+                plasticity: Math.min(1, Math.max(0, plasticity)),
+                progress: Math.min(100, Math.max(0, progress))
+            };
+            
+            // Update UI
+            document.getElementById('resonance').textContent = state.metrics.resonance.toFixed(2);
+            document.getElementById('entropy').textContent = state.metrics.entropy.toFixed(2);
+            document.getElementById('coherence').textContent = state.metrics.coherence.toFixed(2);
+            document.getElementById('plasticity').textContent = state.metrics.plasticity.toFixed(2);
+            document.getElementById('progress').textContent = state.metrics.progress.toFixed(1) + '%';
+            document.getElementById('progress-bar').style.width = state.metrics.progress + '%';
+            document.getElementById('resonance-stat').textContent = Math.floor(state.metrics.resonance * 100) + '%';
+        }
+
+        // FPS counter
+        let fps = 60;
+        let lastTime = performance.now();
+        let frameCount = 0;
+
+        function updateFPS() {
+            frameCount++;
+            const currentTime = performance.now();
+            if (currentTime >= lastTime + 1000) {
+                fps = frameCount;
+                frameCount = 0;
+                lastTime = currentTime;
+                document.getElementById('fps').textContent = fps;
+                document.getElementById('speed').textContent = state.animation.speed.toFixed(1) + '×';
+            }
+        }
+
+        // Animation loop
+        function animate() {
+            state.animation.time += 16 * state.animation.speed;
+            
+            if (state.hypercube.autoRotate && state.mode === 'explore') {
+                state.hypercube.rotation.y += 0.5 * state.animation.speed;
+                state.hypercube.rotation.x += 0.3 * state.animation.speed;
+            }
+            
+            // Smooth field animation
+            const targetPsi = parseFloat(document.getElementById('psi-slider').value) / 100;
+            const targetOmega = parseFloat(document.getElementById('omega-slider').value) / 100;
+            const targetDelta = parseFloat(document.getElementById('delta-slider').value) / 100;
+            
+            state.hypercube.field.psi += (targetPsi - state.hypercube.field.psi) * 0.1;
+            state.hypercube.field.omega += (targetOmega - state.hypercube.field.omega) * 0.1;
+            state.hypercube.field.delta += (targetDelta - state.hypercube.field.delta) * 0.1;
+            
+            document.getElementById('psi-val').textContent = state.hypercube.field.psi.toFixed(2);
+            document.getElementById('omega-val').textContent = state.hypercube.field.omega.toFixed(2);
+            document.getElementById('delta-val').textContent = state.hypercube.field.delta.toFixed(2);
+            
+            updateMetrics();
+            updateInfoDisplay();
+            updateFPS();
+            draw();
+            
+            requestAnimationFrame(animate);
+        }
+
+        // Event handlers
+        function setupEventHandlers() {
+            // Dimension buttons
+            document.querySelectorAll('[data-dim]').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const dim = this.dataset.dim;
+                    const value = parseInt(this.dataset.value);
+                    
+                    this.parentElement.querySelectorAll('.dimension-btn, .object-btn').forEach(b => {
+                        b.classList.remove('active');
+                    });
+                    this.classList.add('active');
+                    
+                    if (dim === 'level') {
+                        state.hypercube.level = value;
+                        const levels = ['', 'Контекст', 'Операции', 'Механика', 'Принципы', 'Айдентика', 'Социум', 'Синергия'];
+                        document.getElementById('level-value').textContent = levels[value];
+                        showFeedback(`Уровень: ${levels[value]}`);
+                    } else if (dim === 'mode') {
+                        state.hypercube.mode = value;
+                        const modes = ['', 'Мгновенный', 'Постепенный', 'Циклический', 'Каскадный', 'Квантовый', 'Волновой', 'Сетевой'];
+                        document.getElementById('mode-value').textContent = modes[value];
+                        showFeedback(`Режим: ${modes[value]}`);
+                    } else if (dim === 'object') {
+                        state.hypercube.object = value;
+                        const objects = ['', 'Структура', 'Содержание', 'Процесс', 'Отношения', 'Состояние', 'Материя', 'Информация', 'Энергия'];
+                        document.getElementById('object-value').textContent = objects[value];
+                        showFeedback(`Объект: ${objects[value]}`);
+                    }
+                    
+                    state.lastChange = Date.now();
+                });
+            });
+            
+            // Field sliders
+            ['psi', 'omega', 'delta'].forEach(field => {
+                const slider = document.getElementById(`${field}-slider`);
+                slider.addEventListener('input', function() {
+                    state.lastChange = Date.now();
+                });
+            });
+            
+            // Operator buttons
+            document.querySelectorAll('.operator-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    if (this.classList.contains('active')) {
+                        this.classList.remove('active');
+                        state.hypercube.operator = null;
+                    } else {
+                        document.querySelectorAll('.operator-btn').forEach(b => b.classList.remove('active'));
+                        this.classList.add('active');
+                        state.hypercube.operator = this.dataset.op;
+                        showFeedback(`Оператор: ${this.title}`);
+                    }
+                    state.lastChange = Date.now();
+                });
+            });
+            
+            // Domain buttons
+            document.querySelectorAll('.domain-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.domain-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    state.hypercube.domain = parseInt(this.dataset.domain);
+                    document.getElementById('domain-value').textContent = this.title;
+                    showFeedback(`Домен: ${this.title}`);
+                    state.lastChange = Date.now();
+                });
+            });
+            
+            // Navigation
+            document.getElementById('rotate-up').addEventListener('click', () => {
+                state.hypercube.rotation.x -= 10;
+            });
+            document.getElementById('rotate-down').addEventListener('click', () => {
+                state.hypercube.rotation.x += 10;
+            });
+            document.getElementById('rotate-left').addEventListener('click', () => {
+                state.hypercube.rotation.y -= 10;
+            });
+            document.getElementById('rotate-right').addEventListener('click', () => {
+                state.hypercube.rotation.y += 10;
+            });
+            document.getElementById('zoom-in').addEventListener('click', () => {
+                state.hypercube.scale = Math.min(3, state.hypercube.scale * 1.2);
+            });
+            document.getElementById('zoom-out').addEventListener('click', () => {
+                state.hypercube.scale = Math.max(0.3, state.hypercube.scale * 0.8);
+            });
+            document.getElementById('reset-view').addEventListener('click', () => {
+                state.hypercube.rotation = { x: 0, y: 0, z: 0, w: 0 };
+                state.hypercube.scale = 1;
+                showFeedback('Вид сброшен');
+            });
+            
+            // Mode toggles
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    state.mode = this.dataset.mode;
+                    
+                    if (this.dataset.mode === 'transform') {
+                        document.getElementById('info-display').classList.add('visible');
+                        state.hypercube.autoRotate = false;
+                    } else {
+                        document.getElementById('info-display').classList.remove('visible');
+                        state.hypercube.autoRotate = this.dataset.mode === 'explore';
+                    }
+                    
+                    showFeedback(`Режим: ${this.textContent}`);
+                });
+            });
+            
+            // Mouse interaction
+            let isDragging = false;
+            let lastMouseX = 0;
+            let lastMouseY = 0;
+            
+            canvas.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                lastMouseX = e.clientX;
+                lastMouseY = e.clientY;
+                state.hypercube.autoRotate = false;
+            });
+            
+            canvas.addEventListener('mousemove', (e) => {
+                if (isDragging) {
+                    const deltaX = e.clientX - lastMouseX;
+                    const deltaY = e.clientY - lastMouseY;
+                    
+                    state.hypercube.rotation.y += deltaX * 0.5;
+                    state.hypercube.rotation.x += deltaY * 0.5;
+                    
+                    lastMouseX = e.clientX;
+                    lastMouseY = e.clientY;
+                }
+            });
+            
+            canvas.addEventListener('mouseup', () => {
+                isDragging = false;
+                if (state.mode === 'explore') {
+                    setTimeout(() => {
+                        state.hypercube.autoRotate = true;
+                    }, 3000);
+                }
+            });
+            
+            canvas.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                const delta = e.deltaY > 0 ? 0.9 : 1.1;
+                state.hypercube.scale = Math.min(3, Math.max(0.3, state.hypercube.scale * delta));
+            });
+            
+            // Touch support
+            let touchStartX = 0;
+            let touchStartY = 0;
+            
+            canvas.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                touchStartX = e.touches[0].clientX;
+                touchStartY = e.touches[0].clientY;
+                state.hypercube.autoRotate = false;
+            });
+            
+            canvas.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+                const deltaX = e.touches[0].clientX - touchStartX;
+                const deltaY = e.touches[0].clientY - touchStartY;
+                
+                state.hypercube.rotation.y += deltaX * 0.5;
+                state.hypercube.rotation.x += deltaY * 0.5;
+                
+                touchStartX = e.touches[0].clientX;
+                touchStartY = e.touches[0].clientY;
+            });
+            
+            // Keyboard shortcuts
+            document.addEventListener('keydown', (e) => {
+                switch(e.key) {
+                    case 'ArrowUp':
+                        state.hypercube.rotation.x -= 10;
+                        break;
+                    case 'ArrowDown':
+                        state.hypercube.rotation.x += 10;
+                        break;
+                    case 'ArrowLeft':
+                        state.hypercube.rotation.y -= 10;
+                        break;
+                    case 'ArrowRight':
+                        state.hypercube.rotation.y += 10;
+                        break;
+                    case '+':
+                    case '=':
+                        state.hypercube.scale = Math.min(3, state.hypercube.scale * 1.1);
+                        break;
+                    case '-':
+                        state.hypercube.scale = Math.max(0.3, state.hypercube.scale * 0.9);
+                        break;
+                    case ' ':
+                        e.preventDefault();
+                        state.hypercube.autoRotate = !state.hypercube.autoRotate;
+                        showFeedback(state.hypercube.autoRotate ? 'Авторотация вкл' : 'Авторотация выкл');
+                        break;
+                    case 'r':
+                    case 'R':
+                        state.hypercube.rotation = { x: 0, y: 0, z: 0, w: 0 };
+                        state.hypercube.scale = 1;
+                        showFeedback('Вид сброшен');
+                        break;
+                }
+            });
+        }
+
+        // Initialize
+        function init() {
+            console.log('Initializing Hypercube 7D v2...');
+            
+            generateHypercube();
+            initPhaseCircle();
+            setupEventHandlers();
+            
+            if (state.mode === 'transform') {
+                document.getElementById('info-display').classList.add('visible');
+            }
+            
+            animate();
+            
+            console.log('Hypercube 7D ready!');
+        }
+
+        // Start
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+    </script>
+</body>
+</html>

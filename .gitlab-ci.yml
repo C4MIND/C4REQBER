@@ -1,0 +1,318 @@
+# c4reqber CI — Mac Colima self-hosted runner
+# Concurrency: resource_group serializes jobs across pipelines (prevents OOM).
+# See docs/CI_RUNNER.md for failure-mode matrix.
+
+workflow:
+  auto_cancel:
+    on_new_commit: interruptible
+  rules:
+    # Single Mac runner: skip MR pipelines to avoid resource_group deadlock with main.
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      when: never
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_COMMIT_BRANCH == "develop"
+    - if: $CI_COMMIT_TAG
+
+stages:
+  - test
+  - build
+  - deploy
+
+default:
+  tags: [docker, c4reqber]
+  interruptible: true
+
+# Hidden anchor — resource_group is NOT valid in default: (GitLab rejects it).
+.mac-colima:
+  tags: [docker, c4reqber]
+  interruptible: true
+  resource_group: mac-colima-v2
+
+variables:
+  PYTHON_VERSION: "3.11"
+  NODE_VERSION: "20"
+  DOCKER_DRIVER: overlay2
+  KANIKO_IMAGE: "gcr.io/kaniko-project/executor:v1.23.2-debug"
+  API_DOCKERFILE: "Dockerfile.backend"
+
+# ═══════════════════════════════════════════════════════════════
+# TEST JOBS
+# ═══════════════════════════════════════════════════════════════
+
+.test-backend-base:
+  extends: .mac-colima
+  stage: test
+  image: python:3.11-slim
+  cache:
+    key: pip-${CI_COMMIT_REF_SLUG}
+    paths:
+      - .cache/pip
+  before_script:
+    - bash scripts/ci/setup_python.sh
+  variables:
+    DATABASE_URL: "sqlite:///tmp/test.db"
+    CACHE_BACKEND: "memory"
+    JWT_SECRET: "ci-fake-jwt-for-pytest-only-not-production"  # pragma: allowlist secret
+    DEV_MODE: "1"
+    PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+
+test-backend-checks:
+  extends: .test-backend-base
+  script:
+    - ruff check src tests scripts --exclude scripts/archive --exclude scripts/build_de_i18n.py --exclude scripts/build_hi_i18n.py
+    - mypy src --no-error-summary
+    - CI_TRUTHS_SKIP_PYTHON=1 python3 scripts/gen_truths.py --check
+    - python3 scripts/sync_truths_to_docs.py --check
+    - python3 scripts/gen_mcp_registry.py --check
+    - python3 scripts/check_i18n_parity.py
+    - sh scripts/ci/check_docker_requirements.sh
+    - PYTHONPATH=. pytest tests/mcp_server/ tests/utils/ tests/publishing/ tests/patterns/test_topic_router.py -v --tb=short
+
+security-checks:
+  extends: .mac-colima
+  stage: test
+  image: python:3.11-slim
+  before_script:
+    - pip install --no-cache-dir uv pip-audit bandit
+  script:
+    - uv export --no-dev --no-emit-project --no-hashes --output-file /tmp/c4reqber-audit.txt
+    - pip-audit --requirement /tmp/c4reqber-audit.txt --no-deps --disable-pip --progress-spinner off
+    - bandit -q -r src -x src/tui,src/frontend -lll
+
+test-backend-suite:
+  extends: .test-backend-base
+  needs: [test-backend-checks]
+  retry:
+    max: 2
+    when:
+      - script_failure
+      - runner_system_failure
+  script:
+    - PYTHONPATH=. pytest tests/verification/ tests/discovery/ tests/api/ tests/knowledge/ -v --tb=short -m "not slow" --timeout=180 --ignore=tests/knowledge/test_data_sources.py --junitxml=report.xml
+  artifacts:
+    when: always
+    reports:
+      junit: report.xml
+    paths:
+      - report.xml
+
+verify-backends-smoke:
+  extends: .test-backend-base
+  stage: test
+  allow_failure: true
+  script:
+    - >
+      PYTHONPATH=. python3 scripts/verify_backends_smoke.py
+      || echo "SKIP smoke — cvc5/tla/alloy not on runner"
+
+tui-v9-test:
+  extends: .mac-colima
+  stage: test
+  image: golang:1.26
+  before_script:
+    - cd src/tui/v9
+  script:
+    - go vet ./...
+    - go build ./...
+    - go test ./... -count=1 -race
+  artifacts:
+    when: on_failure
+    expire_in: 7 days
+    paths:
+      - src/tui/v9/*.test
+
+# ═══════════════════════════════════════════════════════════════
+# BUILD JOBS
+# ═══════════════════════════════════════════════════════════════
+
+build-api:
+  extends: .mac-colima
+  stage: build
+  timeout: 3h
+  interruptible: false
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
+      - script_failure
+  image:
+    name: ${KANIKO_IMAGE}
+    entrypoint: [""]
+  variables:
+    DOCKER_CONFIG: /kaniko/.docker
+    DOCKERFILE: ${API_DOCKERFILE}
+  needs:
+    - job: test-backend-checks
+    - job: test-backend-suite
+    - job: security-checks
+    - job: tui-v9-test
+  before_script:
+    - chmod +x scripts/ci/build_api_image.sh
+  script:
+    - sh scripts/ci/build_api_image.sh
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_COMMIT_BRANCH == "develop"
+
+# ═══════════════════════════════════════════════════════════════
+# DEPLOY JOBS
+# ═══════════════════════════════════════════════════════════════
+
+deploy-staging:
+  extends: .mac-colima
+  stage: deploy
+  image: alpine:latest
+  needs:
+    - build-api
+  script:
+    - echo "Deploy to staging environment"
+    - echo "docker-compose -f docker-compose.yml up -d"
+  environment:
+    name: staging
+    url: https://staging.turbo-cdi.org
+  only:
+    - develop
+
+deploy-production:
+  extends: .mac-colima
+  stage: deploy
+  interruptible: false
+  image: alpine:3.20
+  needs:
+    - job: build-api
+  variables:
+    CI_REGISTRY_IMAGE: registry.gitlab.com/cognitive-functors/c4reqber
+    API_IMAGE_TAG: latest
+  before_script:
+    - apk add --no-cache curl
+    - chmod +x scripts/ci/verify_release.sh
+  script:
+    - sh scripts/ci/verify_release.sh
+  environment:
+    name: production
+    url: https://gitlab.com/cognitive-functors/c4reqber/container_registry
+    deployment_tier: production
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: on_success
+
+# ═══════════════════════════════════════════════════════════════
+# TUI v9 — path-filtered binary artifact
+# ═══════════════════════════════════════════════════════════════
+
+tui-v9:build:
+  extends: .mac-colima
+  stage: build
+  image: golang:1.26
+  allow_failure: true
+  before_script:
+    - cd src/tui/v9
+    - go mod download
+  script:
+    - go build -ldflags="-s -w" -o ../../bin/c4tui-v9-${CI_COMMIT_REF_SLUG} ./cmd/c4tui-v9
+    - go build -ldflags="-s -w" -o ../../bin/c4tui-v9 ./cmd/c4tui-v9
+  artifacts:
+    when: always
+    paths:
+      - bin/c4tui-v9
+      - bin/c4tui-v9-${CI_COMMIT_REF_SLUG}
+    expire_in: 30 days
+  needs:
+    - job: tui-v9-test
+  rules:
+    - changes:
+        - src/tui/v9/**/*
+
+# ═══════════════════════════════════════════════════════════════
+# RELEASE — TUI v9 (manual: on git tag like v9.0.0)
+# ═══════════════════════════════════════════════════════════════
+
+tui-v9:release:
+  extends: .mac-colima
+  stage: deploy
+  image: golang:1.26
+  before_script:
+    - cd src/tui/v9
+    - go mod download
+  script:
+    - go build -ldflags="-s -w" -o /tmp/c4tui-v9-${CI_COMMIT_REF_NAME}-linux-amd64 ./cmd/c4tui-v9
+    - GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w" -o /tmp/c4tui-v9-${CI_COMMIT_REF_NAME}-darwin-arm64 ./cmd/c4tui-v9
+    - GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o /tmp/c4tui-v9-${CI_COMMIT_REF_NAME}-windows-amd64.exe ./cmd/c4tui-v9
+  artifacts:
+    name: "c4tui-v9-${CI_COMMIT_REF_NAME}"
+    paths:
+      - /tmp/c4tui-v9-*
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^v9\..*/
+  allow_failure: true
+
+# GitLab Pages — static site (landing/) only; web-v2 removed 2026-07-12
+
+pages:
+  extends: .mac-colima
+  stage: deploy
+  image: alpine:latest
+  script:
+    - mkdir -p public
+    - cp -r landing/. public/
+    - mkdir -p public/repo-discoveries
+    - cp -r discoveries/humanity_mission_2026-07-09/. public/repo-discoveries/ 2>/dev/null || true
+  artifacts:
+    paths:
+      - public
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+  needs: []
+
+# ═══════════════════════════════════════════════════════════════
+# PyPI PUBLISH (GitLab-native)
+# ═══════════════════════════════════════════════════════════════
+
+pypi-publish-test:
+  extends: .mac-colima
+  stage: deploy
+  image: python:3.11-slim
+  before_script:
+    - bash scripts/ci/setup_python.sh
+    - pip install build twine
+  script:
+    - python -m build
+    - twine check dist/*
+    - twine upload --repository testpypi dist/*
+  variables:
+    TWINE_USERNAME: __token__
+    TWINE_PASSWORD: $TEST_PYPI_API_TOKEN
+  rules:
+    - if: $CI_PIPELINE_SOURCE =~ /(web|api)/
+      when: manual
+      allow_failure: true
+  needs:
+    - test-backend-checks
+    - test-backend-suite
+  artifacts:
+    paths:
+      - dist/
+
+pypi-publish-prod:
+  extends: .mac-colima
+  stage: deploy
+  image: python:3.11-slim
+  before_script:
+    - bash scripts/ci/setup_python.sh
+    - pip install build twine
+  script:
+    - python -m build
+    - twine check dist/*
+    - twine upload dist/*
+  variables:
+    TWINE_USERNAME: __token__
+    TWINE_PASSWORD: $PYPI_API_TOKEN
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/
+  needs:
+    - test-backend-checks
+    - test-backend-suite
+  artifacts:
+    paths:
+      - dist/

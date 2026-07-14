@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/patterns/library/portfolio_optimization.py
+# hypothesis_version: 6.141.1
+
+[-1.0, 0.0, 0.001, 0.01, 0.02, 0.03, 0.05, 0.12, 0.15, 0.2, 0.3, 0.35, 0.5, 0.7, 0.8, 0.95, 1.0, 1.01, 2.0, 100, 252, 1952, '=', 'Asset Allocation', 'RUNNING UNIT TESTS', 'SLSQP', '__main__', 'allow_short', 'applications', 'asset_allocation', 'asset_statistics', 'assets', 'author', 'bl_expected_returns', 'black_litterman', 'category', 'confidence', 'description', 'efficient_frontier', 'eq', 'equilibrium_returns', 'expected_return', 'expected_returns', 'fun', 'ignore', 'markowitz', 'maximum_sharpe', 'method', 'minimum_variance', 'model_type', 'name', 'names', 'optimal_weights', 'outputs', 'parameters', 'pattern_id', 'pension_funds', 'returns', 'risk', 'risk_aversion', 'risk_contributions', 'risk_parity', 'risks', 'sharpe_ratio', 'sharpe_ratios', 'target_return', 'type', 'view', 'volatilities', 'wealth_management', 'weights', 'year']

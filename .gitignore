@@ -1,0 +1,347 @@
+# c4reqber GitIgnore
+# ==================
+
+# Local key backups (user-added 2026-06-10)
+archive/*.rtf
+!archive/README.md
+!archive/audits/
+!archive/plans/
+!archive/site/
+!archive/legacy/
+!archive/harness/
+!archive/tests/
+
+# Internal probe artefacts (never publish)
+MiniM-M3-Artefacts/
+
+# Maintainer-only docs (not for end users / public GitLab)
+docs/PYPI_PUBLISH.md
+PRODUCTION_UPGRADE_PLAN.md
+REWORK_PLAN.md
+plan.md
+WHITEPAPER.md
+.cursor/
+
+
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+config/secrets/
+
+# API Keys & Tokens
+*api_key*
+!docs/API_KEYS.md
+*apikey*
+# Removed: *token* was too broad, use specific rules
+*secret*
+!scripts/k8s-init-secrets.sh
+# Audit 2026-06-22: .secrets.baseline is the detect-secrets reference
+# file (what counts as 'known false positives'). Without this exception
+# the blanket *secret* rule silently drops the file and every developer
+# gets a fresh scan with 103 'new' findings, breaking pre-commit.
+!.secrets.baseline
+openrouter_key.txt
+ollama_config.yaml
+# Credential dumps (a .tex secrets dump leaked past the rules once — see
+# ARCHITECTURE_AUDIT.md §0). Belt-and-braces; the real guard is gitleaks.
+*value-keys*
+archive/harness/value-keys.*
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environments
+.venv/
+.ci-venv/
+venv/
+ENV/
+env/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+log/
+
+# Databases & Runtime Data
+*.db
+*.sqlite
+*.sqlite3
+/data/
+!data/.gitkeep
+
+# Vector Stores (Large Files)
+vectors/
+chroma_db/
+*.chromadb
+
+# Cache
+.cache/
+.ruff_cache/
+.pytest_cache/
+.mypy_cache/
+.hypothesis/
+
+# Node.js / Frontend
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# Build outputs
+dist/
+build/
+gen/
+*.tsbuildinfo
+
+# Testing
+coverage/
+htmlcov/
+.coverage
+.tox/
+
+# Docker volumes
+postgres_data/
+redis_data/
+
+# Temporary files
+tmp/
+tmp*/
+temp/
+smoke2/
+*.tmp
+
+# Model files (large) — but keep tracked config/source under models/
+models/
+!models/**/*.json
+*.pkl
+*.h5
+*.onnx
+*.pt
+*.pth
+*.gguf
+*.safetensors
+
+# Documentation builds
+docs/_build/
+site/
+
+# TUI v9 build artifacts (binaries rebuilt via `make -C src/tui/v9` or packaging)
+src/tui/v9/c4tui-v9
+src/tui/v9/bin/c4tui-v9
+src/tui/v9/bin/c4tui-v9-*
+
+# Local agent/tool session state (Claude Desktop, repowise/kilo, MCP inspectors)
+.claude/
+.repowise/
+.mcp.json
+.kilo/
+docs-site/
+
+# Archive — exclude historical reports
+archive/v8-reports/
+archive/audits/*.md
+archive/planning/*.md
+archive/web-v2/
+archive/web-20260505/
+archive/old-ui/
+
+# Large data files
+*.dump
+
+# Rust WASM build artifacts
+wasm/plugins/target/
+
+# Legacy frontend (superseded by web-v2/)
+web/
+
+# Archive — keep roadmap, hide competitive intel & plans
+archive/plans/c4reqber_competitive_intelligence_report/
+archive/plans/c4reqber_microfeatures_competitive_analysis.md
+archive/plans/c4reqber_PRD_v6.0.0.md
+archive/plans/BACKEND_COMPLETION_PLAN.md
+archive/plans/BUSINESS_ANALYSIS.md
+archive/plans/COMPETITOR_ANALYSIS.md
+archive/plans/council_verification_debate.md
+archive/plans/INTERFACE_AUDIT_REPORT.md
+archive/plans/MEGA_PLAN_v7.md
+archive/plans/MISSING_FEATURES_FIXES.md
+archive/plans/PATTERNS_PLUGINS_PLAN.md
+archive/plans/PLAN_FOR_FINAL_IMPLEMENTATION.md
+archive/plans/PROGRADE_PLAN_v7.md
+
+# Internal working docs — not for public repo
+docs/archive/
+docs/audit/
+docs/drafts/
+docs/launch/
+docs/check-this-out/
+docs/planning/
+docs/OVERNIGHT_RELEASE_PLAN.md
+docs/SPEED_SWARM_PRO_DEV_PLAN.md
+docs/report.md
+docs/design-system/*_PLAN*.md
+
+# Root internal plans / reports (never publish)
+ARCHITECTURE_AUDIT.md
+MERGE_PLAN.md
+REORG_ANALYSIS.md
+OBSERVER_POSITION_ROADMAP.md
+README_HUMANIITY_SAVING_DISCOVERIES.md
+report.md
+test_upload.md
+test_upload.txt
+research/
+
+# Archive harness (internal guides + screenshots)
+archive/harness/
+
+# Kilo CLI workspace
+.kilo/
+
+# White papers & marketing reports — internal, not for public repo
+WHITEPAPER.md
+*.WHITEPAPER.md
+MARKET_REPORT*.md
+MARKETING_REPORT*.md
+
+# Audit & planning artifacts (internal only)
+AUDIT*.md
+CODEBASE_AUDIT.md
+CODE_REVIEW_REPORT.md
+PLAN*.md
+PRODUCTION_UPGRADE_PLAN.md
+PRODUCTION_UPGRADE_PLAN*.md
+PRD*.md
+REMAINING*.md
+TECHNICAL_DEBT*.md
+C4REQBER_REMEDIATION_PLAN*.md
+
+# Audit directories
+audit/
+archive/audit/
+archive/audits/
+
+# Assets (generated / large files)
+assets/
+!landing/assets/
+!landing/assets/**
+
+# Generated / temp files
+bin/
+*.txt
+!requirements.txt
+!requirements-docker.txt
+!README.txt
+# TUI v9 golden-snapshot fixtures are committed test data, not temp .txt files.
+# Without this exception the blanket *.txt rule silently dropped 102 of the 132
+# fixtures, leaving TestGoldenSnapshotsAll red on every clean checkout.
+!src/tui/v9/tests/golden/*.txt
+# Audit 2026-06-22: mypy baseline (61 pre-existing errors) is committed
+# tooling data, not a temp .txt. Without this the blanket *.txt rule
+# silently drops it and scripts/check_mypy_regression.py reports 0 baseline.
+!archive/audits/MYPY_BASELINE_*.txt
+
+# Audit 2026-06-22: openapi/fastapi.json is generated by
+# 'make openapi-export' (scripts/export_openapi.py). It's a 167KB
+# snapshot of app.openapi() — useful for diffs but bloats history on
+# every route change. The TUI contract (openapi/tui-v9.yaml) is the
+# hand-maintained source of truth and stays tracked.
+openapi/fastapi.json
+
+# Archive backups & temp docs
+archive/*.backup
+archive/*.md
+!archive/README.md
+!archive/LICENSE-COMMERCIAL.md
+!archive/TURBO_*.md
+!archive/FUNCGRADE_*.md
+!archive/big-problems.md
+!archive/harness/*.md
+
+# Kilo CLI configs
+.kilo/node_modules/
+
+# Exports & generated artifacts (keep README)
+exports/*
+!exports/.gitkeep
+
+# Dissertations & discovery outputs (keep README)
+dissertations/*
+!dissertations/README.md
+discovery/*
+!discovery/README.md
+
+# Dead code (already removed, keep in ignore) — but don't drop tracked source
+migrations/
+!migrations/*.sql
+# alembic/ — tracked (migrations live in alembic/versions/)
+structural_memory/
+
+# Legacy / experimental
+proto/
+# K8s: track manifests, ignore live secrets only (see k8s/secrets.yaml below)
+k8s/secrets.yaml
+
+# Legacy engine trees (local only, never commit)
+v6/
+v7/
+
+# Specific to c4reqber
+src/payments/
+.env.development
+.env.dontredact
+.v8_discovery.db
+v8_discovery.db
+*.session.sql
+*.db-shm
+*.db-wal
+
+# Backup files
+*.bak
+docs/*.backup.*
+docs/design-system/*-backup.*
+
+# Runtime artifacts
+discoveries_run.json
+
+# Mission session artifacts — curated outputs live in discoveries/humanity_mission_2026-07-09/
+reports/
+docs/screenshots/*.txt
+docs/LM_STUDIO_RECOVERY.md
+docs/LOCAL_LLM_STACK.md
+
+# Go coverage artifacts
+coverage.out

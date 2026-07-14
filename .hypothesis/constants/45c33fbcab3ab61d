@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/api/rate_limiter.py
+# hypothesis_version: 6.141.1
+
+[100, 1000, 3600, 10000, 100000, 'basic', 'enterprise', 'free', 'pro']

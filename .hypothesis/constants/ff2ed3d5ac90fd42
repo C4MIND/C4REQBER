@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/agents/pipeline/steps/step_05_qzrf.py
+# hypothesis_version: 6.141.1
+
+[1000, 'completed', 'error', 'id', 'name', 'operator_details', 'operators', 'phase']

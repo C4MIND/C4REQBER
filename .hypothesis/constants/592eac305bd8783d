@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/patterns/library/dsge.py
+# hypothesis_version: 6.141.1
+
+[0.001, 0.005, 0.01, 0.025, 0.1, 0.2, 0.3, 0.36, 0.5, 0.9, 0.95, 0.99, 0.999, 1.0, 1.5, 2.0, 10.0, 100, 200, 1000, 'DSGE Model', 'DSGE model type', 'avg_inflation', 'avg_output_gap', 'business cycle', 'capital_share', 'consumption', 'cpu_cores', 'depreciation', 'discount_factor', 'dsge', 'dynamic stochastic', 'economic fluctuation', 'economics', 'fiscal policy', 'float', 'general equilibrium', 'gpu_required', 'impulse response', 'impulse_response_max', 'int', 'investment', 'logs', 'macroeconomic', 'memory_gb', 'metrics', 'model_type', 'monetary policy', 'new keynesian', 'new_keynesian', 'nk', 'output gap', 'periods', 'productivity shock', 'rbc', 'real business cycle', 'risk_aversion', 'select', 'shock_std', 'steady_state_output', 'technology shock']

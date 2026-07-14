@@ -1,0 +1,410 @@
+{
+  "predictions": [
+    {
+      "confidence": 0.8,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": false
+    },
+    {
+      "confidence": 0.5,
+      "actual": false
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": false
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": false
+    },
+    {
+      "confidence": 0.5,
+      "actual": false
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": false
+    },
+    {
+      "confidence": 0.5,
+      "actual": false
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": false
+    },
+    {
+      "confidence": 0.5,
+      "actual": false
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": false
+    },
+    {
+      "confidence": 0.5,
+      "actual": false
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": false
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": false
+    },
+    {
+      "confidence": 0.5,
+      "actual": false
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": false
+    },
+    {
+      "confidence": 0.5,
+      "actual": false
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": false
+    },
+    {
+      "confidence": 0.5,
+      "actual": false
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": false
+    },
+    {
+      "confidence": 0.5,
+      "actual": false
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": false
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": false
+    },
+    {
+      "confidence": 0.5,
+      "actual": false
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": false
+    },
+    {
+      "confidence": 0.5,
+      "actual": false
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": false
+    },
+    {
+      "confidence": 0.5,
+      "actual": false
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": false
+    },
+    {
+      "confidence": 0.5,
+      "actual": false
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": false
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": false
+    },
+    {
+      "confidence": 0.5,
+      "actual": false
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": false
+    },
+    {
+      "confidence": 0.5,
+      "actual": false
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    },
+    {
+      "confidence": 0.5,
+      "actual": false
+    },
+    {
+      "confidence": 0.5,
+      "actual": false
+    },
+    {
+      "confidence": 0.5,
+      "actual": true
+    }
+  ],
+  "brier_score": 0.24792079207920792,
+  "total_predictions": 101
+}

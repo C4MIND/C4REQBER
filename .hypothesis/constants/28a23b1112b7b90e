@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/patterns/library/kalman_filter/config.py
+# hypothesis_version: 6.141.1
+
+[0.0, 0.001, 0.01, 0.1, 0.5, 1.0, 2.0, 1000, 'constant_velocity', 'custom', 'ekf', 'enkf', 'kf', 'nonlinear_pendulum', 'robot_localization', 'ukf']

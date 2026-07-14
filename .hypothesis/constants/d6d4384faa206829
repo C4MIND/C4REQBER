@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/abduction/models.py
+# hypothesis_version: 6.141.1
+
+[0.0, 0.15, 0.25, 0.45, 1.0, 'Domain description', 'Domain identifier', 'Sample templates', 'general']

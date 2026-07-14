@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/patterns/library/slam/pattern.py
+# hypothesis_version: 6.141.1
+
+[5.0, 500, '6.0.0', 'EXTENDED', 'Gaussian noise', 'Mapping', 'Robotics', 'SLAM', 'Static environment', 'accuracy', 'assumptions', 'category', 'default', 'description', 'domain', 'ekf_slam', 'enum', 'fast_slam', 'float', 'id', 'int', 'lawn_mower', 'n_landmarks', 'name', 'options', 'parameters', 'pose_graph', 'random', 'seconds to minutes', 'sensor_range', 'simulation_steps', 'slam', 'slam_type', 'spiral', 'trajectory_type', 'type', 'typical_runtime', 'version']

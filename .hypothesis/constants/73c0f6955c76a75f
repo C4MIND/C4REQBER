@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/patents/__init__.py
+# hypothesis_version: 6.141.1
+
+['Patent', 'PatentSearchClient', 'get_patent_client']

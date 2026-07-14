@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/patterns/library/land_use.py
+# hypothesis_version: 6.141.1
+
+[-0.3, 0.0, 1e-10, 0.0001, 0.1, 0.5, 0.95, 1.0, 100, 200, 300, 500, 1000, 1500, 2000, 5000, '6.0.0', 'EXTENDED', 'Land Use', 'O(I·N²·T)', 'Perfect information', 'Real Estate', 'Transportation', 'Urban Planning', '__main__', 'accessibility_weight', 'accuracy', 'agglomeration_weight', 'allocation', 'assumptions', 'category', 'commercial', 'config', 'convergence', 'default', 'demand', 'description', 'domain', 'dominant_types', 'final_change', 'float', 'green', 'history', 'id', 'industrial', 'int', 'iterations', 'land_rent', 'land_use', 'land_use_types', 'max_iterations', 'mean_diversity', 'mean_rent', 'n_zones', 'name', 'parameters', 'rent_variance', 'residential', 'seconds', 'segregation_index', 'spatial_statistics', 'type', 'type_by_zone', 'type_totals', 'typical_runtime', 'utilities', 'version', 'zoning_compliance']

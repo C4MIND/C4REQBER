@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/patterns/library/inverse_kinematics/config.py
+# hypothesis_version: 6.141.1
+
+[0.0, 1e-06, 0.1, 0.3, 0.4, 0.4318, 0.5, 1.0, 1000, 'ccd', 'custom', 'damped_least_squares', 'fabrik', 'jacobian_nullspace', 'jacobian_transpose', 'planar_2r', 'planar_3r', 'puma_560', 'scara']

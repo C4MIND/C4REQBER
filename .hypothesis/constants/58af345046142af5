@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/api/v6_routers/__init__.py
+# hypothesis_version: 6.141.1
+
+['c4_v6', 'experiments_v6', 'factory_v6', 'federated_v6', 'isomorphism_v6', 'llm_v6', 'memory_v6', 'metamodels_v6', 'mp_v6', 'patterns_v6', 'plugins_v6', 'search_v6', 'solve_v6', 'tools_v6']

@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/patterns/library/overlapping_generations.py
+# hypothesis_version: 6.141.1
+
+[0.01, 0.1, 0.15, 0.3, 0.33, 0.5, 0.7, 0.96, 0.99, 1.0, 1.01, 2.0, -1000, 1965, '=', 'Macroeconomics', 'Peter Diamond', 'RUNNING UNIT TESTS', '__main__', 'alpha', 'applications', 'author', 'beta', 'capital', 'category', 'consumption_old', 'consumption_young', 'convergence_period', 'delta', 'description', 'fiscal_policy', 'gamma', 'generational_equity', 'generations', 'golden_rule_r', 'inf', 'interest_rates', 'k_ss', 'n_bar', 'name', 'net_accounts', 'output', 'outputs', 'parameters', 'pattern_id', 'pension_policy', 'policy_analysis', 'r_ss', 'savings', 'steady_state', 'steady_state_r', 'tau', 'transition', 'w_ss', 'wages', 'welfare_analysis', 'welfare_gain_payg', 'y_ss', 'year']

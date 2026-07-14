@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/adapters/pubmed_adapter.py
+# hypothesis_version: 6.141.1
+
+[0.0, 0.34, 0.4, 100, ' et al.', '%Y/%m/%d', ',', './/AbstractText', './/ArticleTitle', './/Author', './/Journal/Title', './/PMID', './/PubDate', './/PubmedArticle', 'Abstract', 'Author', 'Date of Publication', 'ForeName', 'Journal', 'LastName', 'MeSH Terms', 'Month', 'Publication Type', 'Title', 'Year', 'ab', 'api_key', 'au', 'db', 'dp', 'esearchresult', 'id', 'idlist', 'json', 'mh', 'pt', 'pub_date', 'pubmed', 'relevance', 'retmax', 'retmode', 'sort', 'ta', 'term', 'ti', 'xml']

@@ -1,0 +1,39 @@
+1;36m[m1;32mDISCOVERm1;36m]m  ● C4REQBER v9  F<1,1,0>  [en]  DeepSeek  $0.0000  <CLOCK>                                 DISCOVER
+ │ 1;36m▣ Session statusm  [░░░░░░░░░░░░░░░░░░░░]
+ │  90mDiscover  •  C2  •  default  •  en  •  0 discoveries  •  1 languagesm
+ │  90mticks=0  runs=0  ok=0  fail=0  abort=0  cost=$0.0000  apis=0  errs=0m
+ │ 1;36m▣ Keyboard shortcutsm  [░░░░░░░░░░░░░░░░░░░░]
+ │  90mEnter  Run   ?  Help   Ctrl+C  Quitm
+ │  90mTab  Cycle mode   L  Lang   Ctrl+Y  Cycle tierm
+ │  90mCtrl+Shift+P  Cycle color profile (6 modes)   Ctrl+,  Settings   Ctrl+T  Telemetrym
+ │ 1;36m▣ Mode variantsm  [░░░░░░░░░░░░░░░░░░░░]
+ │  90m▶ Discover   —  multi-paper discovery with C4 paradigm-shift gatem
+ │  90m▶ Flash      —  quick answer with optional USP cognitive analysism
+ │  90m▶ Turbo      —  paradigm-shift research proposal with full pipelinem
+ │  90m▶ Factory    —  parallel pipeline factory (5-100 parallel jobs)m
+ │ 1;36m▣ Achievementsm  [░░░░░░░░░░░░░░░░░░░░]
+ │  90mFirst discovery, 5 discoveries, multi-paper shift, S-rank quality, fast turnaround. Keep going to unlock them all.m
+
+
+
+
+
+
+
+
+ │ 90mReady for your first discoverym
+ │  37mType a question above and press Enterm
+ │ 1;32m✦ Bookmarked insight  NEWm
+ │  37mImportantm
+
+
+
+
+
+
+
+                                                                                                      90m90m? ?m  ·  ▶ follow  ·  ▣ 2/2m
+40m37m❯ mm40m38;5;240;40m  1 mm40m7mdmm40m38;5;240mesign a CRISPR guide RNA with minimal off-targets in T-cellsmm40m                                                                             m
+38;5;240m37m❯ mm30m m
+38;5;240m37m❯ mm30m m
+ ▶ READY                                                                                                   [Enter] Run  [?] Help  [Ctrl+C] Quit

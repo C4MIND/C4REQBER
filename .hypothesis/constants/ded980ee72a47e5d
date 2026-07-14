@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/graph/view/renderers.py
+# hypothesis_version: 6.141.1
+
+[0.0, 0.01, 0.1, 10.0, -100, 100, 5000, '...', '?', 'No nodes to display.', '_apply_force_layout', '_create_graph_node', 'citation_count', 'confidence_score', 'default', 'hypothesis', 'metadata', 'name', 'node_type', 'problem', 'render_ascii_preview', 'title', 'unknown', '·', '─']

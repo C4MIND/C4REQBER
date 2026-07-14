@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/api/v6_routers/search_v6.py
+# hypothesis_version: 6.141.1
+
+[400, '/prior-art', '/search', '/source/{source}', 'arxiv', 'patents', 'pubmed', 'semantic_scholar', 'v6-search']

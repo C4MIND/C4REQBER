@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleDevelopmentRegion</key>
+  <string>en</string>
+  <key>CFBundleExecutable</key>
+  <string>blast</string>
+  <key>CFBundleIdentifier</key>
+  <string>org.c4reqber.desktop</string>
+  <key>CFBundleInfoDictionaryVersion</key>
+  <string>6.0</string>
+  <key>CFBundleName</key>
+  <string>C4REQBER</string>
+  <key>CFBundleDisplayName</key>
+  <string>C4REQBER</string>
+  <key>CFBundlePackageType</key>
+  <string>APPL</string>
+  <key>CFBundleShortVersionString</key>
+  <string>9.13.0</string>
+  <key>CFBundleVersion</key>
+  <string>913</string>
+  <key>LSMinimumSystemVersion</key>
+  <string>12.0</string>
+  <key>NSHighResolutionCapable</key>
+  <true/>
+  <key>LSUIElement</key>
+  <false/>
+  <key>LSApplicationCategoryType</key>
+  <string>public.app-category.developer-tools</string>
+  <key>CFBundleCopyright</key>
+  <string>(c) 2026 c4reqber · GitLab cognitive-functors/turbo-cdi</string>
+  <key>NSHumanReadableCopyright</key>
+  <string>C4REQBER is open-source under the project's license. See https://c4reqber.org for details.</string>
+  <key>NSPrincipalClass</key>
+  <string>NSApplication</string>
+  <key>NSRequiresAquaSystemAppearance</key>
+  <false/>
+  <!-- CFBundleIconFile is left empty until a real .icns asset is produced.
+       macOS will show a generic icon; building a proper .icns from
+       packaging/desktop/mac/icon-source.png is tracked separately. -->
+  <key>CFBundleIconFile</key>
+  <string></string>
+</dict>
+</plist>

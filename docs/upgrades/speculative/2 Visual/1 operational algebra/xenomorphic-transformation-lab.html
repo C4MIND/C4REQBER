@@ -1,0 +1,1160 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ксеноморфная Лаборатория Трансформаций</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #0a0a0a;
+            color: #ffffff;
+            overflow: hidden;
+            position: relative;
+        }
+
+        #canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .interface {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        .interface > * {
+            pointer-events: auto;
+        }
+
+        /* Header */
+        .header {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            opacity: 0;
+            animation: fadeIn 2s forwards;
+        }
+
+        .header h1 {
+            font-size: 14px;
+            letter-spacing: 4px;
+            font-weight: 300;
+            color: #ffffff;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+        }
+
+        .header .subtitle {
+            font-size: 10px;
+            letter-spacing: 2px;
+            color: #666;
+        }
+
+        /* Mode Selector */
+        .mode-selector {
+            position: absolute;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+            opacity: 0;
+            animation: fadeIn 2s 0.5s forwards;
+        }
+
+        .mode-btn {
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #666;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 11px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .mode-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .mode-btn.active {
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+            border-color: #fff;
+        }
+
+        .mode-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: radial-gradient(circle, rgba(255,255,255,0.3), transparent);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .mode-btn.active::before {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Control Panel */
+        .control-panel {
+            position: absolute;
+            left: 30px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 280px;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            opacity: 0;
+            animation: slideInLeft 1s 1s forwards;
+        }
+
+        .control-panel h2 {
+            font-size: 11px;
+            letter-spacing: 2px;
+            margin-bottom: 20px;
+            color: #888;
+            text-transform: uppercase;
+            font-weight: 400;
+        }
+
+        .operator-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-bottom: 30px;
+        }
+
+        .operator {
+            aspect-ratio: 1;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            font-size: 10px;
+            color: #666;
+        }
+
+        .operator:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.3);
+            color: #fff;
+            transform: scale(1.1);
+        }
+
+        .operator.active {
+            background: rgba(100, 255, 150, 0.2);
+            border-color: #64ff96;
+            color: #64ff96;
+        }
+
+        .operator .tooltip {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: #fff;
+            padding: 5px 10px;
+            font-size: 10px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+            margin-bottom: 5px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .operator:hover .tooltip {
+            opacity: 1;
+        }
+
+        /* Parameters */
+        .parameters {
+            margin-top: 30px;
+        }
+
+        .parameter {
+            margin-bottom: 20px;
+        }
+
+        .parameter label {
+            display: block;
+            font-size: 10px;
+            color: #888;
+            margin-bottom: 8px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .parameter input[type="range"] {
+            width: 100%;
+            -webkit-appearance: none;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.1);
+            outline: none;
+        }
+
+        .parameter input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 12px;
+            height: 12px;
+            background: #fff;
+            cursor: pointer;
+            border-radius: 50%;
+        }
+
+        .parameter .value {
+            float: right;
+            font-size: 10px;
+            color: #64ff96;
+        }
+
+        /* Info Panel */
+        .info-panel {
+            position: absolute;
+            right: 30px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 300px;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            opacity: 0;
+            animation: slideInRight 1s 1.2s forwards;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
+        .info-panel h3 {
+            font-size: 11px;
+            letter-spacing: 2px;
+            margin-bottom: 15px;
+            color: #888;
+            text-transform: uppercase;
+            font-weight: 400;
+        }
+
+        .info-content {
+            font-size: 12px;
+            line-height: 1.6;
+            color: #aaa;
+        }
+
+        .info-content .formula {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 10px;
+            margin: 15px 0;
+            border-left: 2px solid #64ff96;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            color: #64ff96;
+        }
+
+        .info-content .insight {
+            background: rgba(100, 255, 150, 0.1);
+            padding: 10px;
+            margin: 15px 0;
+            border: 1px solid rgba(100, 255, 150, 0.3);
+            font-size: 11px;
+        }
+
+        /* Resonance Indicator */
+        .resonance-indicator {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            opacity: 0;
+            animation: fadeIn 2s 1.5s forwards;
+        }
+
+        .resonance-value {
+            font-size: 48px;
+            font-weight: 100;
+            color: #fff;
+            margin-bottom: 5px;
+            text-shadow: 0 0 20px rgba(100, 255, 150, 0.5);
+        }
+
+        .resonance-label {
+            font-size: 10px;
+            letter-spacing: 2px;
+            color: #666;
+            text-transform: uppercase;
+        }
+
+        /* State Display */
+        .state-display {
+            position: absolute;
+            top: 140px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 40px;
+            opacity: 0;
+            animation: fadeIn 2s 2s forwards;
+        }
+
+        .state-item {
+            text-align: center;
+        }
+
+        .state-value {
+            font-size: 24px;
+            font-weight: 200;
+            color: #64ff96;
+            margin-bottom: 5px;
+        }
+
+        .state-label {
+            font-size: 9px;
+            letter-spacing: 1px;
+            color: #666;
+            text-transform: uppercase;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideInLeft {
+            to {
+                opacity: 1;
+                transform: translateY(-50%) translateX(0);
+            }
+            from {
+                transform: translateY(-50%) translateX(-20px);
+            }
+        }
+
+        @keyframes slideInRight {
+            to {
+                opacity: 1;
+                transform: translateY(-50%) translateX(0);
+            }
+            from {
+                transform: translateY(-50%) translateX(20px);
+            }
+        }
+
+        /* Scrollbar Styling */
+        .info-panel::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .info-panel::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .info-panel::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .control-panel, .info-panel {
+                display: none;
+            }
+            
+            .mode-selector {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    
+    <div class="interface">
+        <div class="header">
+            <h1>Ксеноморфная Лаборатория</h1>
+            <div class="subtitle">ΨΩΔ Framework v1.0</div>
+        </div>
+
+        <div class="mode-selector">
+            <button class="mode-btn active" data-mode="field">Поле</button>
+            <button class="mode-btn" data-mode="quantum">Квантовый</button>
+            <button class="mode-btn" data-mode="wave">Волновой</button>
+            <button class="mode-btn" data-mode="network">Сетевой</button>
+            <button class="mode-btn" data-mode="spiral">Спиральный</button>
+        </div>
+
+        <div class="state-display">
+            <div class="state-item">
+                <div class="state-value" id="psi-value">0.00</div>
+                <div class="state-label">Ψ Потенциал</div>
+            </div>
+            <div class="state-item">
+                <div class="state-value" id="omega-value">0.00</div>
+                <div class="state-label">Ω Актуальность</div>
+            </div>
+            <div class="state-item">
+                <div class="state-value" id="delta-value">0.00</div>
+                <div class="state-label">Δ Градиент</div>
+            </div>
+        </div>
+
+        <div class="control-panel">
+            <h2>Операторы</h2>
+            <div class="operator-grid">
+                <div class="operator" data-op="detect">
+                    <span>DET</span>
+                    <span class="tooltip">Detect - Обнаружить</span>
+                </div>
+                <div class="operator" data-op="scan">
+                    <span>SCN</span>
+                    <span class="tooltip">Scan - Сканировать</span>
+                </div>
+                <div class="operator" data-op="focus">
+                    <span>FCS</span>
+                    <span class="tooltip">Focus - Фокус</span>
+                </div>
+                <div class="operator" data-op="track">
+                    <span>TRK</span>
+                    <span class="tooltip">Track - Отследить</span>
+                </div>
+                <div class="operator" data-op="parse">
+                    <span>PRS</span>
+                    <span class="tooltip">Parse - Разобрать</span>
+                </div>
+                <div class="operator" data-op="filter">
+                    <span>FLT</span>
+                    <span class="tooltip">Filter - Фильтр</span>
+                </div>
+                <div class="operator" data-op="compress">
+                    <span>CMP</span>
+                    <span class="tooltip">Compress - Сжать</span>
+                </div>
+                <div class="operator" data-op="expand">
+                    <span>EXP</span>
+                    <span class="tooltip">Expand - Расширить</span>
+                </div>
+                <div class="operator" data-op="amplify">
+                    <span>AMP</span>
+                    <span class="tooltip">Amplify - Усилить</span>
+                </div>
+                <div class="operator" data-op="attenuate">
+                    <span>ATT</span>
+                    <span class="tooltip">Attenuate - Ослабить</span>
+                </div>
+                <div class="operator" data-op="tune">
+                    <span>TUN</span>
+                    <span class="tooltip">Tune - Настроить</span>
+                </div>
+                <div class="operator" data-op="shift">
+                    <span>SHF</span>
+                    <span class="tooltip">Shift - Сдвинуть</span>
+                </div>
+                <div class="operator" data-op="connect">
+                    <span>CON</span>
+                    <span class="tooltip">Connect - Связать</span>
+                </div>
+                <div class="operator" data-op="separate">
+                    <span>SEP</span>
+                    <span class="tooltip">Separate - Разделить</span>
+                </div>
+                <div class="operator" data-op="layer">
+                    <span>LAY</span>
+                    <span class="tooltip">Layer - Слои</span>
+                </div>
+                <div class="operator" data-op="crystallize">
+                    <span>CRY</span>
+                    <span class="tooltip">Crystallize - Кристалл</span>
+                </div>
+            </div>
+
+            <div class="parameters">
+                <div class="parameter">
+                    <label>
+                        Резонанс
+                        <span class="value" id="resonance-val">0.5</span>
+                    </label>
+                    <input type="range" id="resonance" min="0" max="1" step="0.01" value="0.5">
+                </div>
+                <div class="parameter">
+                    <label>
+                        Пластичность
+                        <span class="value" id="plasticity-val">0.7</span>
+                    </label>
+                    <input type="range" id="plasticity" min="0" max="1" step="0.01" value="0.7">
+                </div>
+                <div class="parameter">
+                    <label>
+                        Интенсивность
+                        <span class="value" id="intensity-val">0.3</span>
+                    </label>
+                    <input type="range" id="intensity" min="0" max="1" step="0.01" value="0.3">
+                </div>
+            </div>
+        </div>
+
+        <div class="info-panel">
+            <h3>Теория Трансформации</h3>
+            <div class="info-content" id="info-content">
+                <p>Добро пожаловать в Ксеноморфную Лабораторию Трансформаций.</p>
+                
+                <div class="formula">
+                    Ψ(x) = ∫∫∫ Potential × Actual × Gradient dV dt
+                </div>
+                
+                <p>Вы находитесь в интерактивном пространстве, где можете исследовать фундаментальные принципы трансформации через прямое взаимодействие с полем.</p>
+                
+                <div class="insight">
+                    💡 Выберите режим визуализации вверху и примените операторы слева для изменения состояния системы.
+                </div>
+                
+                <p><strong>Режимы:</strong></p>
+                <p>• <strong>Поле</strong> - базовое трансформационное поле</p>
+                <p>• <strong>Квантовый</strong> - дискретные скачки состояний</p>
+                <p>• <strong>Волновой</strong> - интерференция и резонанс</p>
+                <p>• <strong>Сетевой</strong> - связность и эмерджентность</p>
+                <p>• <strong>Спиральный</strong> - эволюционное развитие</p>
+            </div>
+        </div>
+
+        <div class="resonance-indicator">
+            <div class="resonance-value" id="resonance-display">0.00</div>
+            <div class="resonance-label">Резонанс Системы</div>
+        </div>
+    </div>
+
+    <script>
+        // Canvas setup
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        let width = window.innerWidth;
+        let height = window.innerHeight;
+        canvas.width = width;
+        canvas.height = height;
+
+        // State
+        const state = {
+            mode: 'field',
+            activeOperators: new Set(),
+            particles: [],
+            connections: [],
+            waves: [],
+            field: [],
+            resonance: 0.5,
+            plasticity: 0.7,
+            intensity: 0.3,
+            psi: 0,
+            omega: 0,
+            delta: 0,
+            time: 0,
+            mouseX: width / 2,
+            mouseY: height / 2
+        };
+
+        // Initialize particles
+        function initParticles(count = 100) {
+            state.particles = [];
+            for (let i = 0; i < count; i++) {
+                state.particles.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    vx: (Math.random() - 0.5) * 2,
+                    vy: (Math.random() - 0.5) * 2,
+                    radius: Math.random() * 3 + 1,
+                    phase: Math.random() * Math.PI * 2,
+                    frequency: Math.random() * 0.1 + 0.05,
+                    connections: []
+                });
+            }
+        }
+
+        // Initialize field grid
+        function initField() {
+            const gridSize = 30;
+            const cols = Math.floor(width / gridSize);
+            const rows = Math.floor(height / gridSize);
+            
+            state.field = [];
+            for (let i = 0; i < cols; i++) {
+                state.field[i] = [];
+                for (let j = 0; j < rows; j++) {
+                    state.field[i][j] = {
+                        x: i * gridSize + gridSize / 2,
+                        y: j * gridSize + gridSize / 2,
+                        value: 0,
+                        phase: Math.random() * Math.PI * 2
+                    };
+                }
+            }
+        }
+
+        // Apply operators
+        const operators = {
+            detect: (particles) => {
+                // Highlight anomalies
+                particles.forEach(p => {
+                    if (Math.abs(p.vx) + Math.abs(p.vy) > 3) {
+                        p.highlighted = true;
+                    }
+                });
+            },
+            scan: (particles) => {
+                // Organize into grid
+                const grid = 10;
+                particles.forEach((p, i) => {
+                    p.targetX = (i % grid) * (width / grid) + width / grid / 2;
+                    p.targetY = Math.floor(i / grid) * (height / grid) + height / grid / 2;
+                });
+            },
+            focus: (particles) => {
+                // Concentrate around center
+                const centerX = width / 2;
+                const centerY = height / 2;
+                particles.forEach(p => {
+                    p.vx += (centerX - p.x) * 0.001;
+                    p.vy += (centerY - p.y) * 0.001;
+                });
+            },
+            track: (particles) => {
+                // Follow mouse
+                particles.forEach(p => {
+                    p.vx += (state.mouseX - p.x) * 0.0005;
+                    p.vy += (state.mouseY - p.y) * 0.0005;
+                });
+            },
+            parse: (particles) => {
+                // Separate into clusters
+                particles.forEach((p, i) => {
+                    const cluster = i % 5;
+                    const angle = (cluster / 5) * Math.PI * 2;
+                    p.vx += Math.cos(angle) * 0.5;
+                    p.vy += Math.sin(angle) * 0.5;
+                });
+            },
+            filter: (particles) => {
+                // Remove high frequency noise
+                particles.forEach(p => {
+                    p.vx *= 0.95;
+                    p.vy *= 0.95;
+                });
+            },
+            compress: (particles) => {
+                // Reduce space
+                particles.forEach(p => {
+                    p.x = p.x * 0.99 + width / 2 * 0.01;
+                    p.y = p.y * 0.99 + height / 2 * 0.01;
+                });
+            },
+            expand: (particles) => {
+                // Increase space
+                particles.forEach(p => {
+                    p.x = p.x * 1.01;
+                    p.y = p.y * 1.01;
+                });
+            },
+            amplify: (particles) => {
+                // Increase energy
+                particles.forEach(p => {
+                    p.vx *= 1.05;
+                    p.vy *= 1.05;
+                    p.radius = Math.min(p.radius * 1.02, 10);
+                });
+            },
+            attenuate: (particles) => {
+                // Decrease energy
+                particles.forEach(p => {
+                    p.vx *= 0.95;
+                    p.vy *= 0.95;
+                    p.radius = Math.max(p.radius * 0.98, 1);
+                });
+            },
+            tune: (particles) => {
+                // Synchronize frequencies
+                const avgFreq = particles.reduce((sum, p) => sum + p.frequency, 0) / particles.length;
+                particles.forEach(p => {
+                    p.frequency = p.frequency * 0.9 + avgFreq * 0.1;
+                });
+            },
+            shift: (particles) => {
+                // Phase shift
+                particles.forEach(p => {
+                    p.phase += 0.1;
+                });
+            },
+            connect: (particles) => {
+                // Create connections
+                particles.forEach((p1, i) => {
+                    particles.forEach((p2, j) => {
+                        if (i < j) {
+                            const dist = Math.hypot(p1.x - p2.x, p1.y - p2.y);
+                            if (dist < 100 && Math.random() > 0.95) {
+                                state.connections.push({p1, p2, strength: Math.random()});
+                            }
+                        }
+                    });
+                });
+            },
+            separate: (particles) => {
+                // Break connections and repel
+                state.connections = [];
+                particles.forEach((p1, i) => {
+                    particles.forEach((p2, j) => {
+                        if (i !== j) {
+                            const dist = Math.hypot(p1.x - p2.x, p1.y - p2.y);
+                            if (dist < 50) {
+                                const angle = Math.atan2(p1.y - p2.y, p1.x - p2.x);
+                                p1.vx += Math.cos(angle) * 0.5;
+                                p1.vy += Math.sin(angle) * 0.5;
+                            }
+                        }
+                    });
+                });
+            },
+            layer: (particles) => {
+                // Create depth layers
+                particles.forEach((p, i) => {
+                    p.layer = i % 3;
+                    p.radius = (p.layer + 1) * 2;
+                });
+            },
+            crystallize: (particles) => {
+                // Form crystalline structure
+                const gridSize = Math.ceil(Math.sqrt(particles.length));
+                particles.forEach((p, i) => {
+                    const gridX = i % gridSize;
+                    const gridY = Math.floor(i / gridSize);
+                    p.targetX = (gridX + 0.5) * (width / gridSize);
+                    p.targetY = (gridY + 0.5) * (height / gridSize);
+                    p.vx *= 0.9;
+                    p.vy *= 0.9;
+                });
+            }
+        };
+
+        // Update particles
+        function updateParticles() {
+            state.particles.forEach(p => {
+                // Apply active operators
+                state.activeOperators.forEach(op => {
+                    if (operators[op]) {
+                        operators[op](state.particles);
+                    }
+                });
+
+                // Move towards target if exists
+                if (p.targetX !== undefined) {
+                    p.vx += (p.targetX - p.x) * 0.02;
+                    p.vy += (p.targetY - p.y) * 0.02;
+                }
+
+                // Update position
+                p.x += p.vx * state.intensity;
+                p.y += p.vy * state.intensity;
+
+                // Update phase
+                p.phase += p.frequency;
+
+                // Boundary conditions
+                if (p.x < 0 || p.x > width) p.vx *= -1;
+                if (p.y < 0 || p.y > height) p.vy *= -1;
+                p.x = Math.max(0, Math.min(width, p.x));
+                p.y = Math.max(0, Math.min(height, p.y));
+
+                // Damping
+                p.vx *= 0.99;
+                p.vy *= 0.99;
+            });
+
+            // Clean old connections
+            state.connections = state.connections.filter(c => {
+                const dist = Math.hypot(c.p1.x - c.p2.x, c.p1.y - c.p2.y);
+                return dist < 150;
+            });
+        }
+
+        // Update field
+        function updateField() {
+            state.field.forEach(col => {
+                col.forEach(point => {
+                    // Calculate field value based on particles
+                    let value = 0;
+                    state.particles.forEach(p => {
+                        const dist = Math.hypot(p.x - point.x, p.y - point.y);
+                        if (dist < 100) {
+                            value += (100 - dist) / 100 * Math.sin(p.phase);
+                        }
+                    });
+                    point.value = point.value * 0.9 + value * 0.1 * state.resonance;
+                    point.phase += 0.05 * state.plasticity;
+                });
+            });
+        }
+
+        // Update metrics
+        function updateMetrics() {
+            // Calculate Psi (potential)
+            let totalEnergy = 0;
+            state.particles.forEach(p => {
+                totalEnergy += Math.abs(p.vx) + Math.abs(p.vy);
+            });
+            state.psi = totalEnergy / state.particles.length;
+
+            // Calculate Omega (actuality)
+            let avgRadius = 0;
+            state.particles.forEach(p => {
+                avgRadius += p.radius;
+            });
+            state.omega = avgRadius / state.particles.length;
+
+            // Calculate Delta (gradient)
+            let maxGradient = 0;
+            state.particles.forEach((p1, i) => {
+                state.particles.forEach((p2, j) => {
+                    if (i < j) {
+                        const dist = Math.hypot(p1.x - p2.x, p1.y - p2.y);
+                        const gradient = Math.abs(p1.radius - p2.radius) / (dist + 1);
+                        maxGradient = Math.max(maxGradient, gradient);
+                    }
+                });
+            });
+            state.delta = maxGradient;
+
+            // Update displays
+            document.getElementById('psi-value').textContent = state.psi.toFixed(2);
+            document.getElementById('omega-value').textContent = state.omega.toFixed(2);
+            document.getElementById('delta-value').textContent = state.delta.toFixed(2);
+            
+            const systemResonance = (state.psi * state.omega * state.delta * state.resonance).toFixed(2);
+            document.getElementById('resonance-display').textContent = systemResonance;
+        }
+
+        // Render functions
+        function render() {
+            // Clear canvas
+            ctx.fillStyle = 'rgba(10, 10, 10, 0.1)';
+            ctx.fillRect(0, 0, width, height);
+
+            // Render based on mode
+            switch(state.mode) {
+                case 'field':
+                    renderField();
+                    break;
+                case 'quantum':
+                    renderQuantum();
+                    break;
+                case 'wave':
+                    renderWave();
+                    break;
+                case 'network':
+                    renderNetwork();
+                    break;
+                case 'spiral':
+                    renderSpiral();
+                    break;
+            }
+
+            // Always render particles
+            renderParticles();
+        }
+
+        function renderField() {
+            state.field.forEach(col => {
+                col.forEach(point => {
+                    const intensity = Math.abs(point.value);
+                    if (intensity > 0.01) {
+                        ctx.fillStyle = `rgba(100, 255, 150, ${intensity * 0.3})`;
+                        ctx.fillRect(point.x - 15, point.y - 15, 30, 30);
+                    }
+                });
+            });
+        }
+
+        function renderQuantum() {
+            // Render quantum states as discrete levels
+            const levels = 5;
+            for (let i = 0; i < levels; i++) {
+                const y = height * (i + 1) / (levels + 1);
+                ctx.strokeStyle = `rgba(100, 255, 150, 0.2)`;
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(width, y);
+                ctx.stroke();
+
+                // Place particles on quantum levels
+                state.particles.forEach(p => {
+                    const level = Math.floor((p.y / height) * levels);
+                    p.targetY = height * (level + 1) / (levels + 1);
+                });
+            }
+        }
+
+        function renderWave() {
+            // Render interference patterns
+            ctx.strokeStyle = `rgba(100, 255, 150, 0.3)`;
+            ctx.lineWidth = 1;
+            
+            for (let i = 0; i < 5; i++) {
+                ctx.beginPath();
+                for (let x = 0; x < width; x += 5) {
+                    const y = height / 2 + Math.sin((x + state.time * 50) * 0.01 + i) * 100 * state.resonance;
+                    if (x === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                }
+                ctx.stroke();
+            }
+        }
+
+        function renderNetwork() {
+            // Render connections
+            ctx.strokeStyle = `rgba(100, 255, 150, 0.2)`;
+            ctx.lineWidth = 1;
+            
+            state.connections.forEach(conn => {
+                ctx.beginPath();
+                ctx.moveTo(conn.p1.x, conn.p1.y);
+                ctx.lineTo(conn.p2.x, conn.p2.y);
+                ctx.stroke();
+            });
+        }
+
+        function renderSpiral() {
+            // Render spiral evolution
+            ctx.strokeStyle = `rgba(100, 255, 150, 0.3)`;
+            ctx.lineWidth = 2;
+            
+            const centerX = width / 2;
+            const centerY = height / 2;
+            
+            ctx.beginPath();
+            for (let t = 0; t < 10 * Math.PI; t += 0.1) {
+                const r = t * 20;
+                const x = centerX + r * Math.cos(t + state.time * 0.01);
+                const y = centerY + r * Math.sin(t + state.time * 0.01);
+                if (t === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+            ctx.stroke();
+
+            // Place particles along spiral
+            state.particles.forEach((p, i) => {
+                const t = (i / state.particles.length) * 10 * Math.PI;
+                const r = t * 20;
+                p.targetX = centerX + r * Math.cos(t + state.time * 0.01);
+                p.targetY = centerY + r * Math.sin(t + state.time * 0.01);
+            });
+        }
+
+        function renderParticles() {
+            state.particles.forEach(p => {
+                // Glow effect
+                const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.radius * 3);
+                gradient.addColorStop(0, `rgba(100, 255, 150, ${0.8 * state.resonance})`);
+                gradient.addColorStop(1, 'rgba(100, 255, 150, 0)');
+                
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius * 3, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Core particle
+                ctx.fillStyle = p.highlighted ? '#ff6464' : '#64ff96';
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+
+        // Animation loop
+        function animate() {
+            state.time++;
+            
+            updateParticles();
+            updateField();
+            updateMetrics();
+            render();
+            
+            requestAnimationFrame(animate);
+        }
+
+        // Event listeners
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                state.mode = e.target.dataset.mode;
+                updateInfo(state.mode);
+            });
+        });
+
+        document.querySelectorAll('.operator').forEach(op => {
+            op.addEventListener('click', (e) => {
+                const opName = e.currentTarget.dataset.op;
+                if (state.activeOperators.has(opName)) {
+                    state.activeOperators.delete(opName);
+                    e.currentTarget.classList.remove('active');
+                } else {
+                    state.activeOperators.add(opName);
+                    e.currentTarget.classList.add('active');
+                }
+                updateOperatorInfo(opName);
+            });
+        });
+
+        // Parameter controls
+        document.getElementById('resonance').addEventListener('input', (e) => {
+            state.resonance = parseFloat(e.target.value);
+            document.getElementById('resonance-val').textContent = state.resonance.toFixed(2);
+        });
+
+        document.getElementById('plasticity').addEventListener('input', (e) => {
+            state.plasticity = parseFloat(e.target.value);
+            document.getElementById('plasticity-val').textContent = state.plasticity.toFixed(2);
+        });
+
+        document.getElementById('intensity').addEventListener('input', (e) => {
+            state.intensity = parseFloat(e.target.value);
+            document.getElementById('intensity-val').textContent = state.intensity.toFixed(2);
+        });
+
+        // Mouse tracking
+        canvas.addEventListener('mousemove', (e) => {
+            state.mouseX = e.clientX;
+            state.mouseY = e.clientY;
+        });
+
+        // Window resize
+        window.addEventListener('resize', () => {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+            initField();
+        });
+
+        // Update info panel
+        function updateInfo(mode) {
+            const info = {
+                field: `<h3>Трансформационное Поле</h3>
+                    <p>Базовое состояние системы, где каждая точка пространства имеет потенциал трансформации.</p>
+                    <div class="formula">Field(x,y) = Σ Particles × Distance^(-2)</div>
+                    <p>Поле визуализирует градиенты потенциала и показывает области максимальной готовности к изменению.</p>
+                    <div class="insight">💡 Примените оператор <strong>Connect</strong> для создания связей между элементами</div>`,
+                
+                quantum: `<h3>Квантовый Режим</h3>
+                    <p>Дискретные уровни энергии, между которыми происходят квантовые скачки.</p>
+                    <div class="formula">E(n) = n × ℏ × ω</div>
+                    <p>Частицы могут существовать только на определённых уровнях. Переходы между уровнями происходят мгновенно.</p>
+                    <div class="insight">💡 Используйте <strong>Amplify</strong> для повышения энергетического уровня</div>`,
+                
+                wave: `<h3>Волновой Режим</h3>
+                    <p>Интерференция волновых функций создаёт паттерны конструктивного и деструктивного взаимодействия.</p>
+                    <div class="formula">Ψ(x,t) = A × sin(kx - ωt + φ)</div>
+                    <p>Волны накладываются друг на друга, создавая области усиления и ослабления.</p>
+                    <div class="insight">💡 Оператор <strong>Tune</strong> синхронизирует частоты для резонанса</div>`,
+                
+                network: `<h3>Сетевой Режим</h3>
+                    <p>Эмерджентные свойства возникают из взаимодействия связанных элементов.</p>
+                    <div class="formula">Emergence = Nodes × Connections^2</div>
+                    <p>Сила сети не в отдельных узлах, а в паттернах их взаимодействия.</p>
+                    <div class="insight">💡 <strong>Connect</strong> создаёт связи, <strong>Separate</strong> разрывает их</div>`,
+                
+                spiral: `<h3>Спиральный Режим</h3>
+                    <p>Эволюционное развитие по спирали - возврат к похожим состояниям на новом уровне.</p>
+                    <div class="formula">r(t) = a×t, θ(t) = b×t</div>
+                    <p>Каждый виток спирали представляет цикл развития с интеграцией предыдущего опыта.</p>
+                    <div class="insight">💡 <strong>Shift</strong> сдвигает фазу спирального развития</div>`
+            };
+            
+            document.getElementById('info-content').innerHTML = info[mode];
+        }
+
+        function updateOperatorInfo(opName) {
+            const operatorInfo = {
+                detect: `<h3>Оператор: Detect</h3>
+                    <p>Обнаруживает аномалии и выделяет элементы с особыми свойствами.</p>
+                    <div class="formula">Anomaly = |Value - Mean| > 2σ</div>`,
+                scan: `<h3>Оператор: Scan</h3>
+                    <p>Систематически исследует пространство, организуя элементы в упорядоченную структуру.</p>`,
+                focus: `<h3>Оператор: Focus</h3>
+                    <p>Концентрирует энергию системы в определённой точке.</p>`,
+                track: `<h3>Оператор: Track</h3>
+                    <p>Отслеживает движение и создаёт следящую связь с целью.</p>`,
+                parse: `<h3>Оператор: Parse</h3>
+                    <p>Разделяет систему на составные части для анализа.</p>`,
+                filter: `<h3>Оператор: Filter</h3>
+                    <p>Удаляет шум и выделяет полезный сигнал.</p>`,
+                compress: `<h3>Оператор: Compress</h3>
+                    <p>Сжимает пространство, увеличивая плотность информации.</p>`,
+                expand: `<h3>Оператор: Expand</h3>
+                    <p>Расширяет пространство возможностей.</p>`,
+                amplify: `<h3>Оператор: Amplify</h3>
+                    <p>Усиливает сигнал и энергию системы.</p>`,
+                attenuate: `<h3>Оператор: Attenuate</h3>
+                    <p>Ослабляет интенсивность для стабилизации.</p>`,
+                tune: `<h3>Оператор: Tune</h3>
+                    <p>Настраивает резонанс и синхронизирует частоты.</p>`,
+                shift: `<h3>Оператор: Shift</h3>
+                    <p>Сдвигает фазу или состояние системы.</p>`,
+                connect: `<h3>Оператор: Connect</h3>
+                    <p>Создаёт связи между элементами.</p>`,
+                separate: `<h3>Оператор: Separate</h3>
+                    <p>Разрывает связи и создаёт автономность.</p>`,
+                layer: `<h3>Оператор: Layer</h3>
+                    <p>Создаёт многоуровневую структуру.</p>`,
+                crystallize: `<h3>Оператор: Crystallize</h3>
+                    <p>Фиксирует состояние в устойчивую форму.</p>`
+            };
+            
+            if (state.activeOperators.has(opName)) {
+                document.getElementById('info-content').innerHTML = operatorInfo[opName];
+            }
+        }
+
+        // Initialize
+        initParticles();
+        initField();
+        animate();
+    </script>
+</body>
+</html>

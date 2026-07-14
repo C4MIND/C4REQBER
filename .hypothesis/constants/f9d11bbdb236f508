@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/c4/transformer.py
+# hypothesis_version: 6.141.1
+
+[-0.5, 0.0, 0.2, 0.4, 0.6, 0.9, 1.0, 2.0, 'No match found', 'adaptation_rules', 'causes', 'confidence', 'constraints', 'depends_on', 'entities', 'failed', 'fingerprint', 'implements', 'mapping', 'partial', 'relations', 'route', 'verified']

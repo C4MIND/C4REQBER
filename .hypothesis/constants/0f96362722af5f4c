@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/api/routers/search.py
+# hypothesis_version: 6.141.1
+
+[200, '...', '/papers', '/search', 'abstract', 'authors', 'citation_count', 'search', 'title', 'year']

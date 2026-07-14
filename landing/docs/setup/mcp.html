@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="../../js/site-base.js"></script>
+<title>MCP Setup — c4reqber Docs</title>
+<meta name="description" content="Configure c4reqber MCP tools for Claude, Cursor, Cline, and other MCP-compatible agents.">
+<meta property="og:title" content="MCP Setup — c4reqber Docs">
+<meta property="og:type" content="website">
+<link rel="canonical" href="https://c4reqber.org/docs/setup/mcp.html">
+<meta name="theme-color" content="#0F1117">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' https: data:; connect-src 'self' https://api.github.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self';">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800,900&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#9670;</text></svg>">
+<link rel="manifest" href="../../manifest.json">
+<link rel="stylesheet" href="../../css/main.css">
+<style>
+.doc-content{max-width:800px;margin:0 auto;padding:0 24px}
+.doc-content h2{font-size:28px;font-weight:800;margin:60px 0 20px;color:var(--accent)}
+.doc-content h3{font-size:20px;font-weight:700;margin:32px 0 12px;color:var(--primary)}
+.doc-content h4{font-size:16px;font-weight:700;margin:24px 0 8px;color:var(--fg)}
+.doc-content p{color:var(--fg-2);line-height:1.8;margin-bottom:16px}
+.doc-content ul{margin:16px 0;padding-left:24px;color:var(--fg-2)}
+.doc-content li{margin-bottom:8px;line-height:1.7}
+.doc-content code{background:var(--bg-3);padding:2px 8px;border-radius:4px;font-family:var(--mono);font-size:13px;color:var(--primary)}
+.doc-content pre{background:var(--bg-4);border-radius:var(--radius);padding:20px;overflow-x:auto;border:1px solid rgba(255,255,255,.06);margin:20px 0;position:relative}
+.doc-content pre code{background:none;padding:0;color:var(--fg-2)}
+.doc-content table{width:100%;border-collapse:collapse;margin:20px 0;font-size:14px}
+.doc-content th{background:var(--bg-3);padding:10px 12px;text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--fg-3);border-bottom:1px solid rgba(255,255,255,.08)}
+.doc-content td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.04);color:var(--fg-2)}
+
+.copy-btn{position:absolute;top:8px;right:8px;background:rgba(255,255,255,.08);border:none;color:var(--fg-3);padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer;opacity:0;transition:opacity .2s}
+.doc-content pre:hover .copy-btn{opacity:1}
+.copy-btn:hover{background:rgba(78,205,196,.15);color:var(--primary)}
+
+.breadcrumb{display:flex;gap:8px;align-items:center;font-size:13px;color:var(--fg-3);margin-bottom:24px}
+.breadcrumb a{color:var(--fg-3);text-decoration:none}
+.breadcrumb a:hover{color:var(--primary)}
+
+[data-theme="light"] .doc-content pre{background:#f8f9fa;border-color:rgba(0,0,0,.08)}
+</style>
+</head>
+<body data-page-title="page_title_mcp" data-meta-desc="meta_desc_mcp">
+
+<div id="site-header"></div>
+
+<main>
+
+<section class="hero" style="min-height:35vh;padding-top:100px">
+  <div class="hero-bg"></div>
+  <div class="container" style="text-align:center;position:relative;z-index:2">
+    <div class="badge"><span class="dot"></span> <span data-i18n="badge_integration">Integration</span></div>
+    <h1 style="font-size:clamp(32px,5vw,52px);margin-bottom:16px"><span class="gradient-text" data-i18n="mcpdoc_hero_title">MCP Setup</span></h1>
+    <p class="hero-sub" style="max-width:600px;margin:0 auto" data-i18n="mcpdoc_hero_sub">Connect c4reqber to Claude, Cursor, Cline, and any MCP-compatible agent.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="doc-content">
+    <nav class="breadcrumb">
+      <a href="../../" data-i18n="breadcrumb_home">Home</a> <span>/</span> <a href="../" data-i18n="mcpdoc_breadcrumb_docs">Docs</a> <span>/</span> <span data-i18n="mcpdoc_breadcrumb">MCP Setup</span>
+    </nav>
+
+    <h2 data-i18n="mcpdoc_quick_title">Quick Config</h2>
+    <p data-i18n="mcpdoc_quick_intro">Add c4reqber to your MCP client configuration:</p>
+    <pre><button class="copy-btn" data-copy-btn data-i18n="btn_copy">copy</button><code>{
+  "mcpServers": {
+    "c4reqber": {
+      "command": "c4reqber",
+      "args": ["serve", "--mcp"],
+      "env": {
+        "OPENROUTER_API_KEY": "${OPENROUTER_API_KEY}",
+        "ARXIV_EMAIL": "your-email@example.com"
+      }
+    }
+  }
+}</code></pre>
+
+    <h3 data-i18n="mcpdoc_claude_title">Claude Desktop</h3>
+    <pre><button class="copy-btn" data-copy-btn data-i18n="btn_copy">copy</button><code>{
+  "mcpServers": {
+    "c4reqber": {
+      "command": "blast",
+      "args": ["serve", "--mcp"],
+      "env": {
+        "OPENROUTER_API_KEY": "${OPENROUTER_API_KEY}"
+      }
+    }
+  }
+}</code></pre>
+
+    <h2 data-i18n="mcpdoc_tools_title">Available Tools</h2>
+    <p data-i18n="mcpdoc_tools_intro" data-i18n-html="true">c4reqber exposes <strong>21 MCP tools</strong> for cognitive operations (blast_* + c4_* families).</p>
+
+    <h4>c4_fingerprint</h4>
+    <p data-i18n="mcpdoc_tool_fingerprint_desc">Classify a problem into the C4 cognitive space (Z₃³, 27 states).</p>
+    <ul>
+      <li><strong data-i18n="mcpdoc_input_label">Input:</strong> <code>problem_text</code> (string)</li>
+      <li><strong data-i18n="mcpdoc_output_label">Output:</strong> <code>{state: (t, s, a), confidence: float, reasoning: string}</code></li>
+    </ul>
+
+    <h4>triz_contradiction</h4>
+    <p data-i18n="mcpdoc_tool_triz_desc">Solve engineering contradictions using the TRIZ 39×39 matrix.</p>
+    <ul>
+      <li><strong data-i18n="mcpdoc_input_label">Input:</strong> <code>improving_param</code> (int 1-39), <code>worsening_param</code> (int 1-39)</li>
+      <li><strong data-i18n="mcpdoc_output_label">Output:</strong> <code>{principles: [int], descriptions: [string], examples: [string]}</code></li>
+    </ul>
+
+    <h4>pattern_simulate</h4>
+    <p data-i18n="mcpdoc_tool_simulate_desc">Run a scientific simulation pattern against a hypothesis.</p>
+    <ul>
+      <li><strong data-i18n="mcpdoc_input_label">Input:</strong> <code>pattern</code> (string), <code>params</code> (dict), <code>hypothesis</code> (string)</li>
+      <li><strong data-i18n="mcpdoc_output_label">Output:</strong> <code>{metrics: dict, charts: [bytes], execution_time_ms: float}</code></li>
+      <li><strong data-i18n="mcpdoc_engines_label">Engines:</strong> Newton, TorchSim, JaxSim, Schr, vast.ai</li>
+    </ul>
+
+    <h4>causal_analyze</h4>
+    <p data-i18n="mcpdoc_tool_causal_desc">Discover causal relationships using Pearl's do-calculus.</p>
+    <ul>
+      <li><strong data-i18n="mcpdoc_input_label">Input:</strong> <code>variables</code> (list), <code>observations</code> (list), <code>query</code> (string)</li>
+      <li><strong data-i18n="mcpdoc_output_label">Output:</strong> <code>{graph: dict, do_effect: float, counterfactuals: [dict]}</code></li>
+    </ul>
+
+    <h4>paradigm_detect</h4>
+    <p data-i18n="mcpdoc_tool_paradigm_desc">Detect paradigm shifts in scientific literature.</p>
+    <ul>
+      <li><strong data-i18n="mcpdoc_input_label">Input:</strong> <code>domain</code> (string), <code>time_range</code> (years), <code>threshold</code> (float)</li>
+      <li><strong data-i18n="mcpdoc_output_label">Output:</strong> <code>{anomalies: [dict], contradictions: [dict], shift_probability: float}</code></li>
+    </ul>
+
+    <h4>lean4_verify</h4>
+    <p data-i18n="mcpdoc_tool_lean_desc">Formally verify a discovery using Lean 4 theorem prover.</p>
+    <ul>
+      <li><strong data-i18n="mcpdoc_input_label">Input:</strong> <code>hypothesis</code> (string), <code>premises</code> (list)</li>
+      <li><strong data-i18n="mcpdoc_output_label">Output:</strong> <code>{lean_file: string, verification_status: string, proof_log: string}</code></li>
+      <li><strong data-i18n="mcpdoc_requires_label">Requires:</strong> <span data-i18n="mcpdoc_lean_requires">Lean 4 toolchain installed locally</span></li>
+    </ul>
+
+    <h4>knowledge_search</h4>
+    <p data-i18n="mcpdoc_tool_search_desc">Unified search across 47 federated knowledge sources.</p>
+    <ul>
+      <li><strong data-i18n="mcpdoc_input_label">Input:</strong> <code>query</code> (string), <code>sources</code> (list), <code>max_results</code> (int)</li>
+      <li><strong data-i18n="mcpdoc_output_label">Output:</strong> <code>{results: [{source, title, url, abstract, license}], total: int}</code></li>
+    </ul>
+
+    <h4>bayesian_update</h4>
+    <p data-i18n="mcpdoc_tool_bayesian_desc">Update beliefs using Bayesian inference.</p>
+    <ul>
+      <li><strong data-i18n="mcpdoc_input_label">Input:</strong> <code>prior</code> (dict), <code>likelihood</code> (dict), <code>method</code> (MCMC/BMA)</li>
+      <li><strong data-i18n="mcpdoc_output_label">Output:</strong> <code>{posterior: dict, model_probabilities: dict, diagnostics: dict}</code></li>
+    </ul>
+
+    <h4>system_dynamics</h4>
+    <p data-i18n="mcpdoc_tool_dynamics_desc">Simulate feedback loops using Stock-Flow DSL.</p>
+    <ul>
+      <li><strong data-i18n="mcpdoc_input_label">Input:</strong> <code>stocks</code> (list), <code>flows</code> (list), <code>params</code> (dict), <code>time_range</code> (years)</li>
+      <li><strong data-i18n="mcpdoc_output_label">Output:</strong> <code>{trajectory: [float], archetype: string, leverage_points: [dict]}</code></li>
+    </ul>
+
+    <h4>abductive_infer</h4>
+    <p data-i18n="mcpdoc_tool_abductive_desc">Generate and rank explanatory hypotheses (Inference to the Best Explanation).</p>
+    <ul>
+      <li><strong data-i18n="mcpdoc_input_label">Input:</strong> <code>observations</code> (list), <code>domain_context</code> (string)</li>
+      <li><strong data-i18n="mcpdoc_output_label">Output:</strong> <code>{hypotheses: [{text, score, explanation}], ranking: [int]}</code></li>
+    </ul>
+
+    <h2 data-i18n="mcpdoc_registry_title">Registry Listings</h2>
+    <p data-i18n="mcpdoc_registry_intro">c4reqber MCP server will be listed on major registries:</p>
+    <table>
+      <tr><th data-i18n="mcpdoc_tbl_registry">Registry</th><th data-i18n="mcpdoc_tbl_status">Status</th></tr>
+      <tr><td>modelcontextprotocol.io</td><td data-i18n="mcpdoc_status_soon">Coming soon</td></tr>
+      <tr><td>Smithery.ai</td><td data-i18n="mcpdoc_status_soon">Coming soon</td></tr>
+      <tr><td><a href="https://pypi.org/project/c4reqber/">PyPI</a></td><td data-i18n="mcpdoc_status_available">Available</td></tr>
+    </table>
+  </div>
+</section>
+
+</main>
+
+<div id="site-footer"></div>
+
+<script src="../../js/components.js"></script>
+<script src="../../js/main.js"></script>
+<script>
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('../../sw.js').catch(()=>{});
+}
+</script>
+
+</body>
+</html>

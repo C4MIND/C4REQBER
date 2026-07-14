@@ -1,0 +1,10 @@
+[
+  {"hypothesis": "x greater than zero implies x plus one greater than zero", "proof": "(set-logic QF_LIA)\n(declare-const x Int)\n(assert (> x 0))\n(assert (not (> (+ x 1) 0)))\n(check-sat)"},
+  {"hypothesis": "sum of two positives is positive", "proof": "(set-logic QF_LIA)\n(declare-const a Int)(declare-const b Int)\n(assert (> a 0))(assert (> b 0))(assert (not (> (+ a b) 0)))\n(check-sat)"},
+  {"hypothesis": "if a less than b and b less than c then a less than c", "proof": "(set-logic QF_LIA)\n(declare-const a Int)(declare-const b Int)(declare-const c Int)\n(assert (< a b))(assert (< b c))(assert (not (< a c)))\n(check-sat)"},
+  {"hypothesis": "x squared is non-negative for reals", "proof": "(set-logic QF_LRA)\n(declare-const x Real)\n(assert (not (>= (* x x) 0)))\n(check-sat)"},
+  {"hypothesis": "x plus zero equals x", "proof": "(set-logic QF_LIA)\n(declare-const x Int)\n(assert (not (= (+ x 0) x)))\n(check-sat)"},
+  {"hypothesis": "x times one equals x", "proof": "(set-logic QF_LIA)\n(declare-const x Int)\n(assert (not (= (* x 1) x)))\n(check-sat)"},
+  {"hypothesis": "commutativity of addition", "proof": "(set-logic QF_LIA)\n(declare-const x Int)(declare-const y Int)\n(assert (not (= (+ x y) (+ y x))))\n(check-sat)"},
+  {"hypothesis": "even x implies even x squared", "proof": "(set-logic QF_LIA)\n(declare-const x Int)\n(assert (= (mod x 2) 0))(assert (not (= (mod (* x x) 2) 0)))\n(check-sat)"}
+]

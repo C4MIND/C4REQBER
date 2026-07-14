@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/patterns/library/neural_network.py
+# hypothesis_version: 6.141.1
+
+[-70.0, -65.0, -55.0, -13.0, 0.0, 0.0001, 0.01, 0.02, 0.04, 0.1, 0.2, 0.3, 0.5, 0.9, 1.0, 2.0, 5.0, 8.0, 10.0, 20.0, 30.0, 100.0, 1000.0, 10000.0, 1000000.0, 100, 140, 1000, 10000, 'Number of neurons', 'Simulation time (ms)', 'Time step (ms)', 'avg_firing_rate_hz', 'brain', 'bursting', 'connection_prob', 'cpu_cores', 'dt', 'eeg', 'firing rate', 'float', 'gpu_required', 'hodgkin-huxley', 'hodgkin_huxley', 'int', 'integrate and fire', 'izhikevich', 'leaky_integrate_fire', 'logs', 'max_firing_rate_hz', 'memory_gb', 'metrics', 'neural', 'neural_network', 'neuron', 'neuron_model', 'neuroscience', 'num_connections', 'num_neurons', 'oscillation', 'population', 'select', 'simulation_time', 'simulation_time_ms', 'spiking', 'synapse', 'synchronization', 'total_spikes']

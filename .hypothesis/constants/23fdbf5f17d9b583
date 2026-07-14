@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/agents/orchestrator.py
+# hypothesis_version: 6.141.1
+
+[0.0, 3600, 'autopilot', 'c4_path', 'c4_target', 'confidence', 'critic', 'description', 'domain', 'explorer', 'final_solution', 'id', 'mode', 'mp_rotation', 'name', 'name_ru', 'orchestrator', 'phase', 'problem', 'session_id', 'step_count', 'synthesizer', 'total_duration_ms']

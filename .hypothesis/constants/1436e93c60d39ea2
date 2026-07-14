@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/api/v6_schemas.py
+# hypothesis_version: 6.141.1
+
+[0.0, 0.5, 0.7, 2.0, 2000, 8000, '^(ollama|lm_studio)$', 'arxiv', 'autopilot', 'general', 'patents', 'pubmed', 'related', 'semantic_scholar']

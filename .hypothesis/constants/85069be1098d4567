@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/patterns/library/circuit_simulation/config.py
+# hypothesis_version: 6.141.1
+
+[0.0, 1e-12, 1e-06, 0.001, 0.05, 0.1, 1.0, 5.0, 27.0, 1000000.0, 100, 'V1', 'ac', 'dc', 'distortion', 'noise', 'operating_point', 'power', 'sensitivity', 'transient']

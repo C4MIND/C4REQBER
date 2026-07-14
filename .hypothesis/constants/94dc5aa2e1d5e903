@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/patterns/resource_estimator.py
+# hypothesis_version: 6.141.1
+
+[0.0, 0.0001, 0.0005, 0.001, 0.005, 0.01, 0.1, 0.2, 0.5, 1.0, 1.2, 50.0, 60.0, 100.0, 256.0, 512.0, 1000.0, 1024.0, 100, 300, 1000, 1024, 10000, 'agent_based', 'available_disk_mb', 'available_memory_mb', 'cpu_time', 'dimensions', 'dt', 'has_psutil', 'io_ops', 'memory_mb', 'monte_carlo', 'n_agents', 'n_samples', 'n_sensitivity_runs', 'n_steps', 'num_constraints', 'num_variables', 'optimization_lp', 'population', 'resources', 'sensitivity_analysis', 'stocks', 'system_dynamics', 't_end']

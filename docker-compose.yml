@@ -1,0 +1,136 @@
+version: '3.8'
+
+services:
+  # ============================================
+  # API Backend Service
+  # ============================================
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    image: turbo-cdi-api:v8.0
+    container_name: turbo-cdi-api
+    ports:
+      - "8000:8000"
+    environment:
+      - JWT_SECRET=${JWT_SECRET:-change-me-in-production}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - DATABASE_URL=sqlite:///data/turbo_cdi.db
+      - CACHE_BACKEND=redis
+      - REDIS_URL=redis://redis:6379
+      - ENV=production
+    volumes:
+      - ./data:/app/data
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - turbo-cdi-network
+
+  # Frontend: use landing/ static site (GitLab Pages). web-v2 removed 2026-07-12.
+  # frontend service removed — API-only docker-compose by default.
+
+  # ============================================
+  # Redis Cache Service
+  # ============================================
+  redis:
+    image: redis:7-alpine
+    container_name: turbo-cdi-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - turbo-cdi-network
+
+  # ============================================
+  # PostgreSQL Database (Optional)
+  # ============================================
+  postgres:
+    image: postgres:15-alpine
+    container_name: turbo-cdi-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=turbo_cdi
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-turbo_cdi_secret}
+      - POSTGRES_DB=turbo_cdi
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U turbo_cdi"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - turbo-cdi-network
+    profiles:
+      - postgres
+
+  # ============================================
+  # Prometheus Monitoring (Optional)
+  # ============================================
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: turbo-cdi-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    restart: unless-stopped
+    networks:
+      - turbo-cdi-network
+    profiles:
+      - monitoring
+
+  # ============================================
+  # Grafana Dashboard (Optional)
+  # ============================================
+  grafana:
+    image: grafana/grafana:latest
+    container_name: turbo-cdi-grafana
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+    networks:
+      - turbo-cdi-network
+    profiles:
+      - monitoring
+
+networks:
+  turbo-cdi-network:
+    driver: bridge
+
+volumes:
+  redis_data:
+  postgres_data:
+  prometheus_data:
+  grafana_data:

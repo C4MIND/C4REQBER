@@ -1,0 +1,18 @@
+{
+  "note": "Humanity-saving mission — verified working providers (qwen OR first, no Claude/Kimi/Minimax)",
+  "cost_tier": "budget",
+  "phases": {
+    "A": {"model": "qwen/qwen-2.5-72b-instruct", "temperature": 0.3, "max_tokens": 800},
+    "B": {"model": "qwen/qwen-2.5-72b-instruct", "temperature": 0.3, "max_tokens": 800},
+    "C": {"model": "qwen/qwen-2.5-72b-instruct", "temperature": 0.3, "max_tokens": 1200},
+    "D": {"model": "qwen/qwen-2.5-72b-instruct", "temperature": 0.7, "max_tokens": 2000},
+    "E": {"model": "", "temperature": 0.3, "max_tokens": 800},
+    "F": {"model": "qwen/qwen-2.5-72b-instruct", "temperature": 0.7, "max_tokens": 4000},
+    "G": {"model": "qwen/qwen-2.5-72b-instruct", "temperature": 0.3, "max_tokens": 800}
+  },
+  "council": {
+    "cheap": ["qwen/qwen-2.5-72b-instruct", "mistralai/mistral-nemo"],
+    "balanced": ["qwen/qwen-2.5-72b-instruct", "nvidia/nemotron-3-nano-30b-a3b"],
+    "premium": ["qwen/qwen-2.5-72b-instruct", "google/gemini-2.0-flash-001"]
+  }
+}

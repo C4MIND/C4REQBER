@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/patterns/library/acoustic_waves.py
+# hypothesis_version: 6.141.1
+
+[0.05, 0.5, 1.0, 1.225, 5.0, 343.0, 1000.0, 128, 500, '6.5.0', 'acoustic_waves', 'c0: Speed of sound', 'complexity', 'context', 'courant_number', 'domain', 'energy_drift', 'energy_history', 'final_pressure', 'final_vx', 'final_vy', 'forces', 'gaussian_pulse', 'harmonic', 'ij', 'kinetic', 'max_pressure', 'method', 'name', 'parameters', 'pattern_id', 'pml', 'potential', 'pressure_history', 'pseudospectral', 'rms_pressure', 'solution', 'step', 'total', 'version', 'wavelength']

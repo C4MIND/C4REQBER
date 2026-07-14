@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/patterns/library/inverse_kinematics/tests.py
+# hypothesis_version: 6.141.1
+
+[0.0, 1e-06, 0.0001, 0.001, 0.01, 0.1, 0.5, 0.8, 1.0, 1.2, 1.5, 2.0, 1000, 2000, 'EXTENDED', '__main__', 'category', 'converged', 'convergence_rate', 'id', 'inverse_kinematics', 'n_points', 'position_error', 'solution', 'target', 'trajectory', 'trajectory_mode']

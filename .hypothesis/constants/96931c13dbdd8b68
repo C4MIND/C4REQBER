@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/patterns/library/flocking.py
+# hypothesis_version: 6.141.1
+
+[0.0, 0.01, 0.1, 0.5, 1.0, 1.5, 2.0, 3.0, 5.0, 10.0, 100.0, 100, 200, 500, '6.0.0', 'Biology', 'Continuous space', 'EXTENDED', 'Flocking', 'High (agent-based)', 'Identical agents', 'O(T·N²)', 'Robotics', 'Swarm Intelligence', '__main__', 'accuracy', 'alignment_weight', 'assumptions', 'average', 'boids', 'category', 'center_of_mass', 'clustering_distance', 'cohesion_weight', 'config', 'default', 'description', 'domain', 'enum', 'final', 'final_positions', 'final_velocities', 'float', 'flocking', 'history', 'id', 'int', 'mean_speed', 'model', 'n_agents', 'name', 'options', 'order_parameter', 'parameters', 'periodic', 'positions', 'reflective', 'seconds', 'separation_weight', 'speed_variance', 'statistics', 'trajectory', 'type', 'typical_runtime', 'velocities', 'velocity_variance', 'version', 'vicsek']

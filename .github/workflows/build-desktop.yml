@@ -1,0 +1,50 @@
+name: Build TUI Binaries
+
+on:
+  push:
+    tags: ['v*']
+    paths:
+      - 'src/tui/v9/**'
+      - '.github/workflows/build-desktop.yml'
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            goos: darwin
+            goarch: arm64
+            artifact: c4tui-v9-macos-arm64
+          - os: macos-13
+            goos: darwin
+            goarch: amd64
+            artifact: c4tui-v9-macos-amd64
+          - os: ubuntu-latest
+            goos: linux
+            goarch: amd64
+            artifact: c4tui-v9-linux-amd64
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Build TUI v9
+        working-directory: src/tui/v9
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+        run: go build -ldflags="-s -w" -o ../../../dist/${{ matrix.artifact }} ./cmd/c4tui-v9
+
+      - name: Upload binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: dist/${{ matrix.artifact }}

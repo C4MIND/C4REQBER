@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/patterns/library/continuum_mechanics.py
+# hypothesis_version: 6.141.1
+
+[0.0, 0.0001, 0.1, 0.125, 0.3, 0.5, 1.0, 9.81, 1000.0, 10000000.0, 100, '6.5.0', 'bottom', 'complexity', 'compression', 'context', 'continuum_mechanics', 'displacement_history', 'displacements', 'domain', 'energy_history', 'final_strain_energy', 'forces', 'gravity', 'material_model', 'max_displacement', 'mean_displacement', 'n_elements', 'n_nodes', 'name', 'neo_hookean', 'parameters', 'pattern_id', 'solution', 'step', 'strain_energy', 'total_lagrange', 'version']

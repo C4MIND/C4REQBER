@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/patterns/library/kalman_filter/__init__.py
+# hypothesis_version: 6.141.1
+
+[-1.0, 0.0, 1e-10, 0.01, 0.1, 0.5, 1.0, 1.05, 1.2, 9.81, 200, 300, '6.0.0', '=', 'EXTENDED', 'ExtendedKF', 'FilterType', 'KalmanFilterBase', 'KalmanFilterConfig', 'KalmanFilterPattern', 'StandardKF', 'SystemModel', 'UnscentedKF', '__main__', 'category', 'covariance_trace', 'error', 'estimated_state', 'filter_type', 'id', 'kalman_filter', 'kf', 'measurement', 'performance_metrics', 'rmse', 'time', 'true_state']

@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/abduction/engine.py
+# hypothesis_version: 6.141.1
+
+[0.0, 0.15, 0.25, 0.3, 0.45, 0.5, 0.7, 1.0, 50.0, 'IBE', 'No explanation found', 'assumptions', 'best_explanation', 'biology', 'c4', 'coherence', 'coherence_score', 'description', 'domain', 'evidence', 'explanation', 'general', 'generated_count', 'given observations', 'hypotheses', 'hypothesis', 'id', 'knowledge_graph', 'likelihood', 'likelihood_score', 'metadata', 'method', 'name', 'node_id', 'observations', 'overall_score', 'physics', 'predictive', 'predictive_score', 'request_id', 'scoring_dimensions', 'scoring_weights', 'simplicity', 'simplicity_score', 'source', 'triz']

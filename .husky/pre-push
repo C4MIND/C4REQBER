@@ -1,0 +1,53 @@
+#!/bin/bash
+set -e
+
+echo "═══════════════════════════════════════════════════════════════"
+echo "  c4reqber Pre-Push Hook"
+echo "═══════════════════════════════════════════════════════════════"
+
+echo ""
+echo "=== Python mypy ==="
+mypy src/ --strict
+
+echo ""
+echo "=== Python ruff ==="
+ruff check src/
+
+echo ""
+echo "=== Go TUI v9 ==="
+cd src/tui/v9 && go test ./... -count=1 && cd - >/dev/null
+
+echo ""
+echo "=== pytest ==="
+PYTHONPATH=src python3 -m pytest tests/ --cov=src --cov-config=.coveragerc --cov-fail-under=3
+
+echo ""
+echo "=== markdownlint ==="
+if command -v markdownlint-cli2 >/dev/null 2>&1; then
+    markdownlint-cli2 "**/*.md" || true
+else
+    echo "markdownlint-cli2 not installed, skipping..."
+fi
+
+echo ""
+echo "=== version sync ==="
+PY_VERSION=$(python3 -c "
+import sys
+try:
+    import tomllib
+    with open('pyproject.toml','rb') as f:
+        print(tomllib.load(f)['project']['version'])
+except Exception:
+    try:
+        import tomli
+        with open('pyproject.toml','rb') as f:
+            print(tomli.load(f)['project']['version'])
+    except Exception:
+        print('unknown')
+" 2>/dev/null || echo "unknown")
+echo "pyproject.toml version: $PY_VERSION"
+
+echo ""
+echo "═══════════════════════════════════════════════════════════════"
+echo "  Pre-push checks passed!"
+echo "═══════════════════════════════════════════════════════════════"

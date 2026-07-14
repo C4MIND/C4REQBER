@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/agents/pipeline/steps/step_08_synthesis.py
+# hypothesis_version: 6.141.1
+
+[0.0, 0.15, 0.5, 0.6, 0.95, 1000, 1500, ', ', 'MODELS', 'completed', 'completion_tokens', 'confidence', 'content', 'fallback', 'fallback_reason', 'model', 'none selected', 'prompt_tokens', 'provider', 'solution', 'structured_result', 'synthesis', 'unknown', 'usage']

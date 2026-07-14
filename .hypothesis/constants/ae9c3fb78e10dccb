@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/memory/core.py
+# hypothesis_version: 6.141.1
+
+[0.0, ' AND ', '1=1', 'MemoryQuery', 'StructuralMemoryBank', 'avg_confidence', 'confidence', 'data', 'db_path', 'description', 'failed', 'i.confidence >= ?', 'i.iso_type = ?', 'id', 'iso_type', 'isomorphism', 'mapping', 'partial', 'path', 'qzrf_operators', 'source_c4', 'source_domain', 'structural_memory.db', 'tags', 'target_c4', 'target_domain', 'timestamp', 'total_entries', 'utf-8', 'validation_result', 'verified']

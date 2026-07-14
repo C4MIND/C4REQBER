@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/llm/providers/ollama.py
+# hypothesis_version: 6.141.1
+
+[0.7, 60.0, 2000]

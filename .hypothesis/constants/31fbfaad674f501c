@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/llm/multi_provider.py
+# hypothesis_version: 6.141.1
+
+['AsyncLLMClient', 'AutoFallbackClient', 'BaseLLMClient', 'DeepSeekClient', 'LLMProvider', 'LLMResponse', 'MistralClient', 'MockLLMClient', 'MoonshotClient', 'OpenRouterClient', 'ProviderConfig', 'ProviderPreset', 'ProviderRouter', 'StageProviderMapping', 'XAIClient', 'async_generate']

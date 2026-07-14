@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/validation/core.py
+# hypothesis_version: 6.141.1
+
+[0.0, 0.1, 0.2, 0.5, 1.0, 'actual', 'actual_frequency', 'analyzing', 'brier_score', 'cancelled', 'completed_at', 'conclusion', 'confidence', 'confidence_bin', 'confidence_delta', 'context', 'count', 'created_at', 'description', 'design', 'difficulty', 'discovery_id', 'easy', 'experiment_type', 'falsified', 'hard', 'id', 'inconclusive', 'measurement', 'medium', 'name', 'notes', 'observations', 'predictions', 'ready', 'researcher', 'running', 'started_at', 'statement', 'status', 'tags', 'threshold', 'timestamp', 'total_predictions', 'unit', 'validated', 'value', 'w']

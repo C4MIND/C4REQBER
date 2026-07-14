@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/llm/synthesizer.py
+# hypothesis_version: 6.141.1
+
+[0.5, 0.7, 500, 800, 1000, ' → ', 'array', 'brief', 'general', 'items', 'key_assumptions', 'medium', 'novel_contribution', 'object', 'properties', 'related_work', 'required', 'string', 'theoretical_basis', 'type']

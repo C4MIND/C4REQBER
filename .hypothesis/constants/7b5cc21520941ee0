@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/api/routers/discoveries.py
+# hypothesis_version: 6.141.1
+
+[0.0, 1000.0, 3600, '/discover', '/multi-agent', 'Result', 'anon', 'c4_path', 'confidence', 'discoveries', 'duration_seconds', 'estimated_cost_usd', 'final_solution', 'hypotheses', 'hypothesis', 'id', 'method', 'mode', 'problem', 'session_id', 'simulation', 'triz_principles']

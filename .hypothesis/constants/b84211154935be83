@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/patterns/library/discrete_event.py
+# hypothesis_version: 6.141.1
+
+[0.0, 0.1, 0.2, 0.3, 0.5, 0.9, 0.95, 1.0, 1.5, 100.0, 1000.0, 100000.0, 100, 10000, 'DES failed', 'Queue discipline', 'arrival_rate', 'avg_service_time', 'avg_wait_time', 'bottleneck', 'call center', 'capacity', 'congestion', 'cpu_cores', 'discrete event', 'discrete_event', 'exponential', 'fifo', 'float', 'gpu_required', 'inf', 'int', 'kendall', 'lifo', 'logs', 'm/m/1', 'm/m/c', 'manufacturing', 'max_wait_time', 'memory_gb', 'metrics', 'num_entities', 'num_servers', 'operations', 'priority', 'production line', 'queue', 'queue_discipline', 'queuing', 'select', 'server', 'service_rate', 'shortest_job_first', 'simulation', 'simulation_time', 'stability', 'stable', 'std_service_time', 'std_wait_time', 'supply chain', 'throughput', 'traffic', 'unstable', 'utilization', 'wait time']

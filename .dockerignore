@@ -1,0 +1,83 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.egg-info
+.pytest_cache
+.mypy_cache
+.coverage
+htmlcov
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node (for web-v2 submodule builds)
+web-v2/node_modules
+web-v2/dist
+web-v2/dist-ssr
+
+# Data
+data/
+*.db
+*.sqlite3
+
+# Logs
+*.log
+logs/
+
+# Docker
+docker-compose*.yml
+Dockerfile*
+.dockerignore
+
+# Documentation
+*.md
+!README.md
+
+# CI/CD
+.github
+.gitlab-ci.yml
+.pre-commit-config.yaml
+
+# Not needed in API image (shrinks Kaniko context → less OOM on Mac Colima)
+landing/
+tests/
+test/
+discovery/
+discoveries/
+docs/
+archive/
+archives/
+examples/
+monitoring/
+k8s/
+packaging/
+scripts/
+src/tui/v9/
+**/*.go
+go.sum
+go.work
+go.work.sum
+Makefile
+*.html

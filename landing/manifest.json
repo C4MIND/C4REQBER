@@ -1,0 +1,17 @@
+{
+  "name": "c4reqber",
+  "short_name": "c4reqber",
+  "description": "Cognitive Exoskeleton for AI Agents. 27 states, 38 engine bridges, 9 verifiers.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0F1117",
+  "theme_color": "#0F1117",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%26%239670;%3C/text%3E%3C/svg%3E",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

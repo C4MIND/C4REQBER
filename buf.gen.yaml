@@ -1,0 +1,8 @@
+version: v1
+plugins:
+  - plugin: buf.build/protocolbuffers/python
+    out: gen/python
+    opt: pyi_out=gen/python
+  - plugin: buf.build/community/stephenh-ts-proto
+    out: gen/ts
+    opt: outputServices=generic-definitions

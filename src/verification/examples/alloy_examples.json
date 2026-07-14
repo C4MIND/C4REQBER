@@ -1,0 +1,10 @@
+[
+  {"hypothesis": "Empty node set is satisfiable", "proof": "sig Node {}\nrun {} for 3"},
+  {"hypothesis": "Parent relation can be acyclic for small scope", "proof": "sig Node { parent: lone Node }\nfact { no n: Node | n in n.^parent }\nrun {} for 4"},
+  {"hypothesis": "Two nodes can be linked", "proof": "sig Node { next: lone Node }\nrun { some n: Node | n.next != none } for 3"},
+  {"hypothesis": "Set with one element", "proof": "sig Item {}\none i: Item\nrun {} for 3"},
+  {"hypothesis": "Binary tree root exists", "proof": "sig Node { left, right: lone Node }\none root: Node\nrun {} for 4"},
+  {"hypothesis": "Directed graph with edge", "proof": "sig Node { adj: set Node }\nrun { some a, b: Node | b in a.adj } for 3"},
+  {"hypothesis": "Optional field may be empty", "proof": "sig Person { name: lone String }\nrun {} for 3"},
+  {"hypothesis": "Bounded scope model", "proof": "sig A, B {}\nrun { some A } for 2"}
+]

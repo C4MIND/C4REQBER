@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/patterns/library/dft.py
+# hypothesis_version: 6.141.1
+
+[-0.75, -0.5, -0.44, -0.048, 0.0, 1e-20, 1e-10, 8e-09, 1e-08, 1e-06, 1e-05, 0.0001, 0.011, 0.031, 0.1, 0.2, 0.3, 0.4, 0.5, 0.85, 1.0, 2.0, 5.0, 7.8, 10.0, 27.2114, 50.0, 1000000.0, 100, 200, 500, 1000, 'Fermi smearing (eV)', 'Number of electrons', 'band structure', 'box_size', 'cpu_cores', 'density', 'density functional', 'dft', 'eigenvalues', 'electron density', 'electronic structure', 'energy_history', 'exchange correlation', 'fermi energy', 'fermi_energy', 'float', 'functional', 'gaussian', 'gpu_required', 'hartree_energy', 'homo_lumo_gap', 'int', 'kinetic_energy', 'kohn-sham', 'lda', 'logs', 'lsda', 'max_scf_iter', 'memory_gb', 'metrics', 'molecular orbital', 'n_electrons', 'n_grid', 'numerical', 'plane_wave', 'quantum', 'quantum chemistry', 'scf_converged', 'scf_iterations', 'scf_tolerance', 'select', 'smearing', 'total_energy', 'xc_energy']

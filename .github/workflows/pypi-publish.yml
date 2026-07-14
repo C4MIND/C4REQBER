@@ -1,0 +1,72 @@
+name: Publish to PyPI
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      repository:
+        description: 'Target repository (pypi | testpypi)'
+        required: true
+        default: 'testpypi'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install build tools
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install build twine
+
+      - name: Build distribution
+        run: python -m build
+
+      - name: Check distribution
+        run: twine check dist/*
+
+      - name: Upload to TestPyPI (always — manual promotion)
+        if: github.event_name == 'workflow_dispatch' && inputs.repository == 'testpypi'
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.TEST_PYPI_API_TOKEN }}
+        run: twine upload --repository testpypi dist/*
+
+      - name: Upload to PyPI (tag push — production release)
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+        run: twine upload dist/*
+
+      - name: Attach artifacts to GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+# Notes:
+# - Primary release target is GitLab (per AGENTS.md / CLAUDE.md / global GitLab-only rule).
+#   Mirror only: this workflow exists for GitHub Action convenience; PyPI publishing
+#   can also be triggered from GitLab CI by adding a `deploy` stage with the same
+#   twine upload commands.
+# - PyPI credentials (`PYPI_API_TOKEN`, `TEST_PYPI_API_TOKEN`) must be set as
+#   GitHub Actions secrets BEFORE the first tagged release.
+# - Audit 2026-06-22 H-1 (full resolution): the `pip install c4reqber` promise
+#   in README/AGENTS.md/WHITEPAPER/INSTALL.md is now backed by an automated
+#   pipeline. Owner action: provision the API tokens in the GitHub repo /
+#   GitLab CI variables before tagging the first release.
+# - First publish should go to TestPyPI (workflow_dispatch with
+#   repository=testpypi) to verify the package metadata, then promote to
+#   PyPI via a tag push (v5.6.1, v5.7.0, etc.).

@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/api/v6_routers/isomorphism_v6.py
+# hypothesis_version: 6.141.1
+
+[0.0, 0.3, '/isomorphism', '/search', 'confidence', 'description', 'iso_type', 'mapping', 'path', 'qzrf_operators', 'target_domain', 'unknown', 'v6-isomorphism', 'verified']

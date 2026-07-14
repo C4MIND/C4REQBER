@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/graph/view/core.py
+# hypothesis_version: 6.141.1
+
+[0.0, 1.0, 10.0, '#4ECDC4', '#888888', '#95E1D3', '#A8D8EA', '#AA96DA', '#F38181', '#FCBAD3', '#FF6B6B', '#FFE66D', 'GraphEdge', 'GraphNode', 'GraphViewRenderer', 'analogy', 'color', 'concept', 'confidence_score', 'default', 'discovery', 'edge_type', 'experiment', 'get_graph_renderer', 'id', 'label', 'metadata', 'node_id', 'node_type', 'operator', 'project', 'reference', 'size', 'source', 'target', 'type', 'unknown', 'x', 'y']

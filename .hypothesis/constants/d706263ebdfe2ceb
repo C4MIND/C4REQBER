@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/agents/pipeline.py
+# hypothesis_version: 6.141.1
+
+[0.0, 0.5, 'PipelineEvent', 'PipelineStage', 'PipelineStep', 'SolvePipelineResult', 'autopilot', 'c4_path', 'complete', 'confidence', 'done', 'duration_ms', 'error', 'event', 'final_solution', 'isomorphism_found', 'mode', 'mp_perspectives', 'prior_art_summary', 'problem', 'qzrf_recommendations', 'result', 'stage', 'start', 'status', 'step_complete', 'step_start', 'steps', 'total_duration_ms', 'turbo_cdi.pipeline']

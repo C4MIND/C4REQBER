@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: c4reqber-config
+  namespace: c4reqber
+data:
+  ENV: production
+  API_WORKERS: "2"
+  POOL_SIZE: "10"
+  MAX_OVERFLOW: "20"
+  POOL_TIMEOUT: "30"
+  POOL_RECYCLE: "1800"
+  POOL_PRE_PING: "true"
+  CACHE_BACKEND: redis
+  ALLOWED_ORIGINS: "https://c4reqber.org,https://gitlab.com"
+  REDIS_URL: "redis://redis.c4reqber.svc.cluster.local:6379/0"
+  LLM_PROVIDER: openrouter

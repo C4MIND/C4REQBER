@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "generated_at": "2026-07-13T18:16:11Z",
+  "version_backend": "5.7.1",
+  "version_tui": "v9.13.0",
+  "git_head": "fabcc87",
+  "git_branch": "main",
+  "python": {
+    "loc": 222090,
+    "tests_collected": 9924
+  },
+  "go": {
+    "loc_tui_v9": 23354
+  },
+  "mcp": {
+    "tools": 21
+  },
+  "cli": {
+    "commands": 24
+  },
+  "knowledge": {
+    "sources": 47,
+    "wired": 46,
+    "footnote": "SOURCE_REGISTRY entries; wired is the registry/adapter-map intersection. Runtime-active count depends on credentials and source availability."
+  },
+  "simulations": {
+    "engines": 38,
+    "footnote": "38 engine bridges probed by GET /v8/simulations/capabilities"
+  },
+  "llm": {
+    "providers": 11,
+    "footnote": "Configured providers excluding AUTO: OpenRouter, XAI, Mistral, Moonshot, DeepSeek, Liquid, NVIDIA NIM, YandexGPT, Ollama, LM Studio, MLX."
+  },
+  "verifiers": {
+    "real": 9,
+    "guard_stubs": 0,
+    "guard_stub_names": [],
+    "footnote": "Real bridges: Lean4, Coq, Dafny, Agda, Z3/Hoare, Haskell, CVC5, TLA+, Alloy."
+  },
+  "quality": {
+    "mypy_baseline": 0,
+    "mypy_note": "regression-gated baseline; new errors fail CI"
+  }
+}

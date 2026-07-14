@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/metamodels/__init__.py
+# hypothesis_version: 6.141.1
+
+['AgentPerspective', 'CompassEngine', 'CompassLevel', 'CompassNavigation', 'ImpactEngine', 'ImpactPhase', 'ImpactResult', 'MPLibrary', 'MPProfile', 'MPRotationEngine', 'MatrixDreamLibrary', 'Metaprogram', 'PatternType', 'QzrfC4Projections', 'QzrfLibrary', 'QzrfOperator', 'QzrfPhase', 'RotationResult', 'ToteEngine', 'ToteResult', 'VariationDim']

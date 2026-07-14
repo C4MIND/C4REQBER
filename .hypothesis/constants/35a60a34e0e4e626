@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/memory/operations.py
+# hypothesis_version: 6.141.1
+
+[' AND ', 'ValidationOperations', 'WHERE ', 'completed_at', 'completed_at = ?', 'conclusion', 'conclusion = ?', 'draft', 'hypothesis_id', 'id', 'method', 'name', 'observations', 'observations = ?', 'simulation', 'started_at', 'status', 'status = ?', 'user_id']

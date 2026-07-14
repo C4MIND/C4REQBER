@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/patterns/library/garch.py
+# hypothesis_version: 6.141.1
+
+[0.0, 1e-08, 1e-06, 0.1, 0.2, 0.3, 0.5, 0.85, 0.9, 0.95, 0.99, 100, 252, 1000, 10000, 'VaR confidence level', 'alpha', 'arch', 'asset', 'beta', 'clustering', 'cpu_cores', 'cvar', 'cvar_95', 'finance', 'financial risk', 'float', 'garch', 'gpu_required', 'half_life_periods', 'heteroskedasticity', 'inf', 'int', 'logs', 'market risk', 'max_volatility', 'mean_volatility', 'memory_gb', 'metrics', 'omega', 'periods', 'persistence', 'returns', 'sharpe_ratio', 'stock price', 'value at risk', 'var', 'var_95', 'var_confidence', 'volatility']

@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/patterns/library/signal_transduction/models.py
+# hypothesis_version: 6.141.1
+
+[0.0, 0.01, 0.05, 0.1, 0.5, 0.9, 1.0, 1000000.0, 1000, 'EC50_approx', 'MAPKKK_star', 'MAPKK_PP', 'MAPK_PP', 'No clear oscillation', 'RK45', 'active_G_protein', 'adaptation', 'adaptation_error', 'adaptation_quality', 'amplification_factor', 'bistable', 'dose_response', 'final_MAPKKK_active', 'final_MAPKK_PP', 'final_MAPK_PP', 'final_u', 'final_v', 'gpcr', 'high_u', 'high_v', 'hill_coefficient', 'logs', 'mapk_cascade', 'max_MAPK_PP', 'max_protein_1', 'max_response', 'mean_protein_1', 'metrics', 'model', 'modified', 'num_genes', 'oscillation_detected', 'partial', 'peak_response', 'perfect', 'period', 'protein_1', 'protein_1_alt', 'protein_2', 'protein_2_alt', 'proteins', 'receptor_ligand', 'repressilator', 'response', 'responses', 'steady_state', 'stimulus_levels', 'switching_possible', 'time', 'toggle_switch']

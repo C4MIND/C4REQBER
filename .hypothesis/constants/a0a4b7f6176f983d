@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/api/auth.py
+# hypothesis_version: 6.141.1
+
+[3600, '/', '24', 'ENV', 'HS256', 'JWT_EXPIRE_HOURS', 'JWT_ISSUER', 'JWT_SECRET', 'access', 'created_at', 'data', 'development', 'email', 'exp', 'httponly', 'iat', 'id', 'iss', 'jti', 'key', 'lax', 'max_age', 'name', 'password_hash', 'path', 'production', 'refresh', 'require', 'samesite', 'secure', 'sub', 'turbo-cdi', 'turbo_cdi.db', 'turbo_cdi_token', 'type', 'user_id', 'verify_exp']

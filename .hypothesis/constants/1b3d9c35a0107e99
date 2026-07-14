@@ -1,0 +1,4 @@
+# file: /Users/figuramax/LocalProjects/TURBO-CDI/src/cache/orchestrator.py
+# hypothesis_version: 6.141.1
+
+[300, 3600, 'tier1_size', 'tier2', 'tier3_locks', 'tier3_size', 'tier4']

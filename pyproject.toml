@@ -98,7 +98,7 @@ blast = "src.cli.blast_app:app"
 
 [project.urls]
 Homepage = "https://c4reqber.org"
-Repository = "https://gitlab.com/cognitive-functors/turbo-cdi"
+Repository = "https://gitlab.com/cognitive-functors/c4reqber"
 Documentation = "https://c4reqber.org/docs/"
 
 [tool.ruff]

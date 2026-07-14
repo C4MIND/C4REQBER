@@ -1,4 +1,4 @@
-> **Note:** Repo on **GitLab** (`git@gitlab.com:cognitive-functors/turbo-cdi.git`). GitHub is a read-only mirror. All tags and work live on friend-stack-merged branch locally — not pushed.
+> **Note:** Repo on **GitLab** (`git@gitlab.com:cognitive-functors/c4reqber.git`). GitHub is a read-only mirror. All tags and work live on friend-stack-merged branch locally — not pushed.
 
 # TUI v9 "The Cockpit"
 

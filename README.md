@@ -2,6 +2,8 @@
 
 **Terminal-first. MCP-native. One command to discovery.**
 
+> **Repositories:** Canonical source — [GitLab](https://gitlab.com/cognitive-functors/c4reqber). Read-only mirror — [GitHub](https://github.com/C4MIND/C4REQBER). **Site:** [cognitive-functors.gitlab.io/c4reqber](https://cognitive-functors.gitlab.io/c4reqber/). Issues and development on GitLab only.
+
 [![Tests](https://img.shields.io/badge/tests-9924%20collected-yellowgreen)]()
 [![Lint](https://img.shields.io/badge/lint-41%20baseline%20%2B%20regression%20check-yellow)]()
 [![Typecheck](https://img.shields.io/badge/typecheck-0%20mypy%20errors-brightgreen)]()
@@ -164,7 +166,7 @@ C4REQBER integrates with **33+ scientific data and literature sources** across a
 ### Environment Variables for API Keys
 
 > **Full registration guide (EN/RU):** [`docs/API_KEYS.md`](docs/API_KEYS.md) — step-by-step signup for every service.
-> **Quick reference on GitLab Pages:** [API Keys setup](https://cognitive-functors.gitlab.io/turbo-cdi/docs/setup/api-keys.html) (links to the full doc).
+> **Quick reference on GitLab Pages:** [API Keys setup](https://cognitive-functors.gitlab.io/c4reqber/docs/setup/api-keys.html) (links to the full doc).
 
 Copy these into your `.env` file. Keys marked **Required** will disable the source if missing. **Optional** keys increase rate limits but the source works without them.
 

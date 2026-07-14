@@ -22,8 +22,8 @@ Minimum: Python 3.11+, `OPENROUTER_API_KEY` in `secrets.env` or env (see [docs/A
 For a **local API server** without full Python dev install:
 
 ```bash
-git clone git@gitlab.com:cognitive-functors/turbo-cdi.git
-cd turbo-cdi
+git clone git@gitlab.com:cognitive-functors/c4reqber.git
+cd c4reqber
 cp .env.example .env
 # Edit .env: JWT_SECRET (32+ chars), OPENROUTER_API_KEY
 
@@ -34,7 +34,7 @@ docker compose -f docker-compose.release.yml up -d
 curl http://localhost:8000/api/v1/health
 ```
 
-Image: `registry.gitlab.com/cognitive-functors/turbo-cdi/api:latest` (built on every green `main` pipeline).
+Image: `registry.gitlab.com/cognitive-functors/c4reqber/api:latest` (built on every green `main` pipeline).
 
 ## 3. Advanced — self-hosted VPS (optional)
 

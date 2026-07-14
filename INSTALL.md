@@ -23,8 +23,8 @@
 
 ```bash
 # 1. Clone the repository
-git clone git@gitlab.com:cognitive-functors/turbo-cdi.git
-cd turbo-cdi
+git clone git@gitlab.com:cognitive-functors/c4reqber.git
+cd c4reqber
 
 # 2. Create a virtual environment
 python -m venv .venv

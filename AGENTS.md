@@ -1,6 +1,6 @@
 ## 🔴 GIT REMOTE — PRIMARY: GitLab (NEVER say "github" in chat!)
 
-**Primary remote:** GitLab (`git@gitlab.com:cognitive-functors/turbo-cdi.git`).
+**Primary remote:** GitLab (`git@gitlab.com:cognitive-functors/c4reqber.git`).
 **GitHub = read-only mirror** for promotion only. Do NOT push to github.com.
 
 When writing commits, tags, REPORT files, or any user-facing output:

@@ -242,7 +242,7 @@ Round 5 audit: **0 CRITICAL / 0 HIGH** в scope.
 
 | Ресурс | Ссылка |
 |--------|--------|
-| Репозиторий | GitLab: `cognitive-functors/turbo-cdi` |
+| Репозиторий | GitLab: `cognitive-functors/c4reqber` |
 | Установка | [docs/INSTALL.md](docs/INSTALL.md) |
 | Архитектура | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) |
 | Верификация | [docs/VERIFICATION_BACKENDS.md](docs/VERIFICATION_BACKENDS.md) |

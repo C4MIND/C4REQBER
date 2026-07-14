@@ -7,7 +7,7 @@ Provides:
     - FRA (Fingerprint-Route-Adapt) stub integration
 
 Reference: formal-proofs/c4-comp-v5.agda
-Authors: I.G. Selyutin, N.K. Ivanovich
+Authors: I.G. Selyutin, N.I. Kovalev
 """
 
 from __future__ import annotations
@@ -50,9 +50,7 @@ def shortest_path_length(start: C4State, goal: C4State) -> int:
         return 0
     path = bfs_path(start, goal)
     if path is None:
-        raise RuntimeError(
-            f"No path found from {start} to {goal} — contradicts Theorem 1!"
-        )
+        raise RuntimeError(f"No path found from {start} to {goal} — contradicts Theorem 1!")
     return len(path)
 
 
@@ -64,9 +62,7 @@ def all_pairs_shortest_paths() -> dict[tuple[C4State, C4State], list[str]]:
         for s2 in states:
             path = bfs_path(s1, s2)
             if path is None:
-                raise RuntimeError(
-                    f"Unreachable pair: {s1} -> {s2}"
-                )
+                raise RuntimeError(f"Unreachable pair: {s1} -> {s2}")
             result[(s1, s2)] = path
     return result
 

@@ -1,6 +1,6 @@
 # TURBO-CDI Documentation
 
-> **Primary remote:** [GitLab](https://gitlab.com/cognitive-functors/turbo-cdi) · **UI:** TUI v9 + static `landing/` (GitLab Pages). No `web-v2` SPA.
+> **Primary remote:** [GitLab](https://gitlab.com/cognitive-functors/c4reqber) · **UI:** TUI v9 + static `landing/` (GitLab Pages). No `web-v2` SPA.
 
 ## 🚀 Quick Start
 
@@ -8,8 +8,8 @@
 
 ```bash
 # Clone repository
-git clone git@gitlab.com:cognitive-functors/turbo-cdi.git
-cd turbo-cdi
+git clone git@gitlab.com:cognitive-functors/c4reqber.git
+cd c4reqber
 
 # Start API (optional — most users use CLI/TUI locally)
 docker compose -f docker-compose.release.yml up -d

@@ -1,18 +1,17 @@
 cff-version: 1.2.0
 message: "If you use c4reqber in your research, please cite it as below."
 authors:
-  - family-names: "Figurov"
-    given-names: "Max"
-    orcid: "https://orcid.org/0009-0000-0000-0001"
-  - family-names: "Ivanovich"
-    given-names: "Nikolay K."
-title: "c4reqber: Cognitive Exoskeleton for AI Agents with C4-META Architecture"
-version: 5.6.0
-date-released: 2026-06-22
-url: "https://gitlab.com/cognitive-functors/turbo-cdi"
-repository-code: "https://gitlab.com/cognitive-functors/turbo-cdi"
+  - family-names: "Selyutin"
+    given-names: "I.G."
+  - family-names: "Kovalev"
+    given-names: "N.I."
+title: "c4reqber: Cognitive Exoskeleton for AI Agents"
+version: 5.7.1
+date-released: 2026-07-13
+url: "https://cognitive-functors.gitlab.io/c4reqber/"
+repository-code: "https://gitlab.com/cognitive-functors/c4reqber"
 license: AGPL-3.0
-abstract: "c4reqber is a cognitive exoskeleton for AI agents — combining C4-META cognitive architecture (Z₃³ state space, 27 cognitive states), 21 MCP tools, 32 simulation engines, formal verification (Lean 4, Agda, Coq, Dafny, Z3, Hoare), and 33+ knowledge sources into an MCP-native scientific discovery platform."
+abstract: "Terminal-first scientific discovery pipeline: C4 Z₃³ cognitive navigation (27 states, 6 operators), 47 knowledge sources, 12-stage HIL discovery, 38 simulation engine bridges, 9 formal verification backends, 21 MCP tools, TUI v9 cockpit. AGPL-3.0 — free for personal and research use."
 keywords:
   - artificial-intelligence
   - cognitive-architecture
@@ -22,3 +21,5 @@ keywords:
   - formal-verification
   - triz
   - knowledge-graph
+  - terminal
+  - open-science

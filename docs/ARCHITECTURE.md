@@ -429,7 +429,7 @@ Output with Cube-Mascot + Quality Report + Metrics
 
 **Citation:** Selyutin I.G., Kovalev N.I. (2026). *c4reqber v5.3.9: BLAST — Brain-like Adaptive System for Thought. The Multi-Agent Discovery Release.*
 
-**Repository:** https://gitlab.com/cognitive-functors/turbo-cdi
+**Repository:** https://gitlab.com/cognitive-functors/c4reqber
 **License:** AGPL-3.0
 **Version:** v5.3.9 (Release date: 2026-05-17)
 

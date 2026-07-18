@@ -33,6 +33,27 @@
 | 20 | `c4_triz` | `improving: int=1, worsening: int=2, mode: str='matrix', problem: str=''` | Resolve contradiction using TRIZ tools. |
 | 21 | `c4_verify` | `code: str, language: str \| None=None` | Verify formal proof in lean4, coq, dafny, agda, z3, hoare, cvc5, tla, or alloy. |
 
+## Status honesty (v9.18+)
+
+Outer `status` on discovery/BLAST tools may be **`partial`** or **`error`**, not only `success`:
+
+| Tool | When not `success` |
+|------|-------------------|
+| `c4_solve` / `blast_turbo` | Quality gates fail, sim stub/partial, low score |
+| `blast_solve` | Nested quality fail or low confidence |
+| `blast_turbofactory` | Any/all children failed or partial → `partial`/`error` |
+| `blast_flash` | Empty answer → `error`; sources requested but empty → `partial` |
+| `c4_search` | Zero papers → `partial` |
+| `c4_simulate` | Inner fallback / `engine_truth: not_*` / missing provenance |
+| `c4_bayesian` | Prior-ranking only → `partial`; BMA needs weighted prediction + posteriors |
+| `c4_causal` | Identifiability query did not complete |
+| `c4_fingerprint` | Heuristic path sets `heuristic: true` |
+| `c4_codegen` + hoare | Conceptual Hoare stub **refused** (`verified: false`) |
+| `c4_verify` + z3 | `sat` → `satisfiable`, not `valid`/`verified` |
+| Cognitive plugins | Need `llm_backed` or compute evidence — bare `status:success` refused; LLM-miss keeps payload as `partial` |
+
+Helpers: `src/utils/honesty_status.py` (MCP re-export: `src/mcp_server/honesty.py`). Full rules: [`HONESTY_CONTRACT.md`](HONESTY_CONTRACT.md).
+
 ## Verification
 
 ```bash

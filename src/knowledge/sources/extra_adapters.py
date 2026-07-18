@@ -22,8 +22,10 @@ class CiniiAdapter(BaseSourceAdapter):
     async def search(self, query: str, limit: int) -> list[dict[str, Any]]:
         try:
             from src.knowledge.cinii_client import CiNiiClient
+
             client = CiNiiClient()
             import asyncio
+
             loop = asyncio.get_event_loop()
             results = await loop.run_in_executor(None, lambda: client.search(query, limit=limit))
             return [
@@ -56,6 +58,7 @@ class GithubAdapter(BaseSourceAdapter):
     async def search(self, query: str, limit: int) -> list[dict[str, Any]]:
         try:
             from src.knowledge.github_client import GitHubSearchClient
+
             client = GitHubSearchClient()
             results = await client.search_repos(query, max_results=limit)
             return [
@@ -88,6 +91,7 @@ class DatasetsAdapter(BaseSourceAdapter):
     async def search(self, query: str, limit: int) -> list[dict[str, Any]]:
         try:
             from src.knowledge.dataset_clients import ZenodoClient
+
             client = ZenodoClient()
             results = await client.search(query, max_results=limit)
             return [
@@ -120,8 +124,10 @@ class RsciAdapter(BaseSourceAdapter):
     async def search(self, query: str, limit: int) -> list[dict[str, Any]]:
         try:
             from src.knowledge.rsci_client import RSCIClient
+
             client = RSCIClient()
             import asyncio
+
             loop = asyncio.get_event_loop()
             results = await loop.run_in_executor(None, lambda: client.search(query, limit=limit))
             return [
@@ -154,10 +160,16 @@ class ScimaticAdapter(BaseSourceAdapter):
     async def search(self, query: str, limit: int) -> list[dict[str, Any]]:
         try:
             from src.knowledge.scimatic_client import SciMaticClient
-            client = SciMaticClient()
+
+            client = SciMaticClient(api_key=self.api_key or "")
+            if not client.api_key:
+                return [{"error": "SCIMATIC_API_KEY required"}]
             import asyncio
+
             loop = asyncio.get_event_loop()
             raw = await loop.run_in_executor(None, lambda: client.search(query))
+            if isinstance(raw, dict) and raw.get("error"):
+                return [{"error": str(raw.get("error"))}]
             # SciMatic returns dict, extract papers list
             results = raw.get("papers", []) if isinstance(raw, dict) else raw
             if not isinstance(results, list):
@@ -179,7 +191,7 @@ class ScimaticAdapter(BaseSourceAdapter):
             ]
         except Exception as e:
             logger.debug("SciMatic error: %s", e)
-            return []
+            return [{"error": str(e)}]
 
 
 class ArxivggAdapter(BaseSourceAdapter):
@@ -192,9 +204,9 @@ class ArxivggAdapter(BaseSourceAdapter):
     async def search(self, query: str, limit: int) -> list[dict[str, Any]]:
         try:
             from src.knowledge.arxivgg_client import ArxivGGClient
-            client = ArxivGGClient()
-            # ArxivGGClient.search is async — call directly
-            results = await client.search(query, max_results=limit)
+
+            async with ArxivGGClient() as client:
+                results = await client.search(query, max_results=limit)
             return [
                 {
                     "title": r.get("title", ""),
@@ -212,4 +224,95 @@ class ArxivggAdapter(BaseSourceAdapter):
             ]
         except Exception as e:
             logger.debug("arXiv.gg error: %s", e)
-            return []
+            return [{"error": str(e)}]
+
+
+class WolframAdapter(BaseSourceAdapter):
+    """Wolfram Alpha short-answer adapter."""
+
+    @property
+    def source_id(self) -> str:
+        return "wolfram"
+
+    async def search(self, query: str, limit: int) -> list[dict[str, Any]]:
+        try:
+            from src.knowledge.sources.wolfram import search_sources
+
+            # Prefer instance key when orchestrator injected it
+            if self.api_key:
+                import os
+
+                os.environ.setdefault("WOLFRAM_APP_ID", self.api_key)
+            results = await search_sources(query, max_results=limit)
+            for r in results:
+                r.setdefault("type", "web")
+                r.setdefault("source", "wolfram")
+            return results
+        except Exception as e:
+            logger.debug("Wolfram error: %s", e)
+            return [{"error": str(e)}]
+
+
+class UniprotAdapter(BaseSourceAdapter):
+    """UniProt protein search (no key)."""
+
+    @property
+    def source_id(self) -> str:
+        return "uniprot"
+
+    async def search(self, query: str, limit: int) -> list[dict[str, Any]]:
+        try:
+            from src.knowledge.sources.uniprot import UniProtClient
+
+            client = UniProtClient()
+            raw = await client.search(query, size=min(limit, 25))
+            out: list[dict[str, Any]] = []
+            for item in raw[:limit]:
+                out.append(
+                    {
+                        "title": item.get("uniProtkbId") or item.get("primaryAccession") or query,
+                        "authors": [],
+                        "year": None,
+                        "abstract": str(item.get("proteinDescription", ""))[:500],
+                        "url": f"https://www.uniprot.org/uniprotkb/{item.get('primaryAccession', '')}",
+                        "source": "uniprot",
+                        "type": "article",
+                    }
+                )
+            return out
+        except Exception as e:
+            logger.debug("UniProt error: %s", e)
+            return [{"error": str(e)}]
+
+
+class ScholarApiAdapter(BaseSourceAdapter):
+    """ScholarAPI paid academic search."""
+
+    @property
+    def source_id(self) -> str:
+        return "scholarapi"
+
+    async def search(self, query: str, limit: int) -> list[dict[str, Any]]:
+        try:
+            from src.knowledge.scholarapi_client import ScholarAPIClient
+
+            client = ScholarAPIClient(api_key=self.api_key or "")
+            raw = await client.search(query, max_results=limit)
+            out: list[dict[str, Any]] = []
+            for r in raw[:limit]:
+                out.append(
+                    {
+                        "title": r.get("title", ""),
+                        "authors": r.get("authors", []),
+                        "year": r.get("year"),
+                        "abstract": (r.get("abstract") or r.get("snippet") or "")[:500],
+                        "url": r.get("url", ""),
+                        "doi": r.get("doi", ""),
+                        "source": "scholarapi",
+                        "type": "article",
+                    }
+                )
+            return out
+        except Exception as e:
+            logger.debug("ScholarAPI error: %s", e)
+            return [{"error": str(e)}]

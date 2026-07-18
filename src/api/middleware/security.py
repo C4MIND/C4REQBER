@@ -10,6 +10,7 @@ browsers reject. CORS registration is the sole responsibility of setup_cors().
 
 from __future__ import annotations
 
+import logging
 import os
 import time
 from typing import Any
@@ -21,6 +22,9 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from src.api.middleware.auth import JWTAuthMiddleware
 from src.api.middleware.csrf import CSRFProtectionMiddleware
 from src.api.routers.metrics import API_REQUESTS, RATE_LIMIT_HITS
+
+
+logger = logging.getLogger(__name__)
 
 
 class SecurityHeadersMiddleware:
@@ -82,8 +86,8 @@ class SecurityHeadersMiddleware:
                     API_REQUESTS.labels(
                         method=method, endpoint=path, status_code=str(status_code)
                     ).inc()
-                except Exception:
-                    pass  # observability must never crash the response
+                except Exception as _exc:
+                    logger.debug("API_REQUESTS metric failed: %s", _exc)
             await send(message)
 
         await self.app(scope, receive, send_with_headers)

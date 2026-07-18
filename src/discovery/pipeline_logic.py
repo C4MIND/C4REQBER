@@ -16,6 +16,8 @@ from datetime import datetime
 from typing import Any
 
 from src.llm.gateway import get_gateway
+from src.plugins.invoke import invoke_plugin_execute
+from src.utils.honesty_status import outer_status_from_plugin_result
 
 
 logger = logging.getLogger("c4_cdi_turbo.api.v8.discovery")
@@ -649,13 +651,37 @@ async def run_relevant_simulation(
                         "hypothesis": hypothesis.get("text", "")[:100],
                     },
                 )
-                status = sim_result.status if hasattr(sim_result, "status") else "completed"
+                status = sim_result.status if hasattr(sim_result, "status") else "unavailable"
+                if hasattr(status, "value"):
+                    status = status.value
+                status_s = str(status).lower()
+                data = getattr(sim_result, "data", None) or {}
+                if not isinstance(data, dict):
+                    data = {}
+                backend = data.get("backend") or data.get("engine_truth") or engine
+                is_stub = (
+                    status_s in {"unavailable", "simulated", "error", "partial"}
+                    or bool(getattr(sim_result, "stub", False))
+                    or bool(data.get("stub"))
+                    or data.get("engine_truth") == "not_newton_physics"
+                )
+                is_heuristic = bool(data.get("heuristic")) or (
+                    data.get("engine_truth") == "not_newton_physics"
+                )
+                final_state = (
+                    str(sim_result.final_state)[:200]
+                    if hasattr(sim_result, "final_state") and sim_result.final_state is not None
+                    else data.get("note") or status_s
+                )
                 results[pid] = {
-                    "status": status,
-                    "final_state": str(sim_result.final_state)[:200]
-                    if hasattr(sim_result, "final_state")
-                    else "ok",
+                    "status": status_s,
+                    "final_state": final_state,
                     "time_steps": getattr(sim_result, "time_steps", 0),
+                    "stub": is_stub,
+                    "heuristic": is_heuristic,
+                    "backend": backend,
+                    "engine_truth": data.get("engine_truth"),
+                    "executed": bool(data.get("executed")),
                 }
                 if store and job_id:
                     await store.push_event(
@@ -663,14 +689,19 @@ async def run_relevant_simulation(
                         "sim_finished",
                         {
                             "type": "sim_finished",
-                            "engine": engine,
+                            "engine": backend if backend != engine else engine,
                             "pattern": pid,
-                            "verdict": status,
-                            "engine_status": "ok",
+                            "verdict": status_s,
+                            "engine_status": "ok"
+                            if status_s in {"completed", "success"} and not is_stub
+                            else status_s,
+                            "stub": is_stub,
+                            "heuristic": is_heuristic,
+                            "backend": backend,
                         },
                     )
             except (RuntimeError, OSError) as e:
-                results[pid] = {"status": "error", "error": str(e)[:100]}
+                results[pid] = {"status": "error", "error": str(e)[:100], "stub": True}
                 if store and job_id:
                     await store.push_event(
                         job_id,
@@ -683,13 +714,33 @@ async def run_relevant_simulation(
                             "engine_status": "error",
                         },
                     )
+        statuses = [str(v.get("status", "")).lower() for v in results.values()]
+        if any(s in {"unavailable", "error", "failed", "partial"} for s in statuses) or any(
+            v.get("stub") for v in results.values()
+        ):
+            if all(
+                s in {"unavailable", "error", "failed"} or v.get("stub")
+                for s, v in zip(statuses, results.values(), strict=True)
+            ):
+                agg = "unavailable"
+            elif any(
+                s == "partial" or v.get("heuristic")
+                for s, v in zip(statuses, results.values(), strict=True)
+            ):
+                agg = "partial"
+            else:
+                agg = "mixed"
+        else:
+            agg = "completed" if results else "unavailable"
         return {
             "engine": engine,
             "domain": domain,
             "patterns_run": len(results),
             "pattern_ids": pattern_ids[:3],
+            "status": agg,
+            "stub": any(v.get("stub") for v in results.values()),
+            "heuristic": any(v.get("heuristic") for v in results.values()),
             "results": results,
-            "status": "completed" if results else "no_patterns",
         }
     except (ImportError, ModuleNotFoundError) as e:
         raise RuntimeError(f"NewtonBridge unavailable: {e}") from e
@@ -961,27 +1012,12 @@ def run_bayesian_model_averaging(
 
 def run_dempster_shafer(hypothesis: dict[str, Any], papers: list[dict[str, Any]]) -> dict[str, Any]:
     try:
-        from src.bayesian.dempster_shafer import EvidenceSensor, FrameOfDiscernment
+        from src.discovery.dempster_literature import fuse_dempster_from_papers
 
-        frame = FrameOfDiscernment(["supported", "refuted", "untested"])
-        sensor = EvidenceSensor(frame)
-        h_text = hypothesis.get("text", "")
-        support_keywords = ["improve", "novel", "outperform", "significant", "synergy"]
-        refute_keywords = ["fail", "invalid", "contradict", "cannot", "impossible"]
-        support = sum(1 for kw in support_keywords if kw in h_text.lower()) + 1
-        refute = sum(1 for kw in refute_keywords if kw in h_text.lower()) or 0.1
-        likelihoods = {"supported": support, "refuted": refute, "untested": 1.0}
-        bba = sensor.from_likelihoods(likelihoods, uncertainty=0.2)
-        belief_supported = bba.belief({"supported"})
-        plausibility_supported = bba.plausibility({"supported"})
-        return {
-            "belief_supported": round(belief_supported, 4),
-            "plausibility_supported": round(plausibility_supported, 4),
-            "focal_elements": len(bba.focal_elements()),
-        }
+        return fuse_dempster_from_papers(hypothesis, papers or [])
     except Exception as e:
         logger.warning("Dempster-Shafer: %s", e)
-        return {"error": str(e)}
+        return {"error": str(e), "heuristic": True}
 
 
 def run_bayesian_conjugate_update(monte_carlo: dict[str, Any]) -> dict[str, Any]:
@@ -1073,17 +1109,23 @@ async def run_autoscanner(papers: list[dict[str, Any]]) -> dict[str, Any]:
         from src.discovery.autoscanner import AutoScanner
 
         scanner = AutoScanner()
-        candidates = await scanner.scan_local()
+        candidates = await scanner.scan_from_papers(papers or [])
         return {
             "candidates_found": len(candidates),
+            "demo": False,
             "top_problems": [
-                {"problem": c.get("problem", ""), "potential": c.get("discovery_potential", 0)}
+                {
+                    "problem": c.get("problem", "") or c.get("title", ""),
+                    "potential": c.get("discovery_potential", 0),
+                    "source": c.get("source", ""),
+                    "demo": False,
+                }
                 for c in candidates[:5]
             ],
         }
     except Exception as e:
         logger.warning("AutoScanner: %s", e)
-        return {"error": str(e), "candidates_found": 0}
+        return {"error": str(e), "candidates_found": 0, "demo": False}
 
 
 def run_matrix_dream(problem: str, c4_path: dict[str, Any]) -> dict[str, Any]:
@@ -1214,19 +1256,33 @@ def run_cognitive_plugins(problem: str, hypothesis_text: str, domain: str) -> di
 
             module = importlib.import_module(f"src.plugins.{plugin_name}")
             if hasattr(module, "execute"):
-                result = module.execute(context=context, problem=problem[:200], domain=domain)
-                results[plugin_name] = {"name": display_name, "result": result, "status": "success"}
+                result = invoke_plugin_execute(
+                    module.execute,
+                    problem=problem[:2000],
+                    context=context,
+                    domain=domain,
+                )
+                results[plugin_name] = {
+                    "name": display_name,
+                    "result": result,
+                    "status": outer_status_from_plugin_result(result),
+                }
             else:
                 results[plugin_name] = {"name": display_name, "status": "no_execute"}
         except Exception as e:
             results[plugin_name] = {"name": display_name, "status": "error", "error": str(e)[:100]}
     success_count = sum(1 for v in results.values() if v.get("status") == "success")
+    partial_count = sum(1 for v in results.values() if v.get("status") == "partial")
     return {
         "plugins_run": len(plugins),
         "successful": success_count,
-        "failed": len(plugins) - success_count,
+        "partial": partial_count,
+        "failed": len(plugins) - success_count - partial_count,
         "results": results,
-        "summary": f"{success_count}/20 plugins executed successfully",
+        "summary": (
+            f"{success_count} success / {partial_count} partial / "
+            f"{len(plugins)} plugins (execute≠success)"
+        ),
     }
 
 

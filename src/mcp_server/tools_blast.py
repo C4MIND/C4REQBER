@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from src.mcp_server.honesty import outer_status_from_hil_like, record_field_status
+
 
 async def blast_solve(
     problem: str, output_format: str = "auto", domain: str | None = None
@@ -26,8 +28,30 @@ async def blast_solve(
         pipeline = UniversalSolvePipeline(config=config)
         result = await pipeline.solve(problem, mode="autopilot", domain_hint=domain)
 
+        qr = result.quality_report or {}
+        nested_fail = False
+        if isinstance(qr, dict):
+            nested_fail = (
+                any(
+                    (isinstance(v, dict) and v.get("passed") is False)
+                    or (hasattr(v, "passed") and v.passed is False)
+                    for v in qr.values()
+                )
+                if qr
+                else False
+            )
+        status = outer_status_from_hil_like(
+            quality_passed_all=None if not nested_fail else False,
+            quality_score=(result.confidence or 0) * 100,
+            sim_status=None,
+            gate_any_failed=nested_fail,
+            min_score=30.0,
+        )
+        if (result.confidence or 0) < 0.3:
+            status = "partial"
+
         return {
-            "status": "success",
+            "status": status,
             "mode": "solve",
             "problem": result.problem,
             "final_solution": result.final_solution[:2000],
@@ -66,17 +90,30 @@ async def blast_turbo(
         pipeline = HILDiscoveryPipeline(config=config, user_profile=user_profile)
         record = await pipeline.discover(topic)
 
+        sim_status = record_field_status(record.simulation)
+        ver_status = record_field_status(record.verification)
+        grade = record.quality_report.grade if record.quality_report else "N/A"
+        score = record.quality_report.overall_score if record.quality_report else 0
+        gates = list(record.quality_report.gates) if record.quality_report else []
+        gate_fail = any(getattr(g, "passed", True) is False for g in gates)
+        status = outer_status_from_hil_like(
+            quality_passed_all=False if gate_fail else True,
+            quality_score=score,
+            sim_status=str(sim_status),
+            gate_any_failed=gate_fail,
+        )
+
         return {
-            "status": "success",
+            "status": status,
             "mode": "turbo",
             "topic": record.topic,
             "sources": len(record.sources),
             "gaps": len(record.gaps),
             "hypotheses": len(record.hypotheses),
-            "simulation": record.simulation.status if record.simulation else "N/A",
-            "verification": record.verification.status if record.verification else "N/A",
-            "quality_grade": record.quality_report.grade if record.quality_report else "N/A",
-            "quality_score": record.quality_report.overall_score if record.quality_report else 0,
+            "simulation": sim_status,
+            "verification": ver_status,
+            "quality_grade": grade,
+            "quality_score": score,
             "quality_gates": [
                 {
                     "step": g.step,
@@ -84,7 +121,7 @@ async def blast_turbo(
                     "score": round(g.score, 2),
                     "message": g.message,
                 }
-                for g in (record.quality_report.gates if record.quality_report else [])
+                for g in gates
             ],
             "dissertation_path": f"dissertations/live/HIL_v2_{topic.replace(' ', '_')[:30]}.md",
         }
@@ -103,9 +140,8 @@ async def blast_flash(
         deep: Run USP cognitive components (IMPACT, C4, MP, QZRF, CDI, TOTE)
     """
     try:
-        from src.knowledge.orchestrator import MultiSourceSearcher
+        from src.knowledge.flash_sources import gather_flash_sources
         from src.llm.gateway import get_gateway
-        from src.plugins.unified_registry import WebSearchPlugin
 
         llm = get_gateway()
         context = ""
@@ -159,21 +195,21 @@ async def blast_flash(
                 pass
 
         if with_sources or deep:
-            searcher = MultiSourceSearcher()
+            from src.knowledge.flash_sources import gather_flash_sources
+
             try:
-                result = await searcher.search_all(question)
-                papers = result.get("papers", [])[:5]
-                sources = papers
-                context = "\n".join(
-                    [
-                        f"- {p.get('title', '')}: {p.get('snippet', p.get('abstract', ''))[:250]}"
-                        for p in papers
-                    ]
+                papers, context = await gather_flash_sources(
+                    question, deep=deep or with_sources, include_web=True
                 )
-            except (ImportError, AttributeError, RuntimeError, ValueError):
-                searcher = WebSearchPlugin()
-                results = searcher.execute(question, max_results=3)
-                sources = results
+                sources = papers
+            except Exception as exc:
+                import logging
+
+                logging.getLogger(__name__).warning(
+                    "Multi-source search failed in blast_flash: %s", exc
+                )
+                sources = []
+                context = ""
 
         prompt = f"""Answer concisely and accurately.
 
@@ -188,15 +224,30 @@ Question: {question}
 Answer:"""
 
         response = await llm.generate(prompt, max_tokens=800, temperature=0.3)
+        answer = (response.content or "").strip() if response else ""
+        status = "success"
+        warnings: list[str] = []
+        if not answer:
+            status = "error"
+            warnings.append("empty LLM answer")
+        elif with_sources and not sources:
+            status = "partial"
+            warnings.append("with_sources requested but no sources returned")
+        elif deep and not usp_context:
+            status = "partial"
+            warnings.append("deep=True but USP context empty (components failed)")
 
-        return {
-            "status": "success",
+        out: dict[str, Any] = {
+            "status": status,
             "mode": "flash",
-            "answer": response.content,
+            "answer": answer,
             "sources": [
                 {"title": s.get("title", ""), "url": s.get("url", "")} for s in sources[:5]
             ],
             "usp_context": usp_context,
         }
+        if warnings:
+            out["warnings"] = warnings
+        return out
     except Exception as e:
         return {"error": str(e), "status": "error", "mode": "flash"}

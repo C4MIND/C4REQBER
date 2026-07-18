@@ -214,21 +214,33 @@ class HybridVerifier:
             result = self.z3.formulate(hypothesis, backend="z3")
             elapsed_ms = (time.perf_counter() - t0) * 1000
             z3_raw = result.get("status", "unknown")
+            # SMT sat/unsat is model-finding, not "claim proved".
             if z3_raw == "sat":
-                norm_status = "verified"
+                norm_status = "sat"
+                proof_note = "Z3 returned sat (satisfiable constraints) — not a proof of the claim"
             elif z3_raw == "unsat":
-                norm_status = "rejected"
+                norm_status = "unsat"
+                proof_note = (
+                    "Z3 returned unsat (no model) — interpret relative to how the claim was encoded"
+                )
             else:
                 norm_status = "uncertain"
+                proof_note = result.get("proof_strategy", "") or str(z3_raw)
             vr = VerificationResult(
                 backend="z3",
                 status=norm_status,
                 claim=claim[:200],
                 proof_code=result.get("theorem_statement", ""),
-                proof_text=result.get("proof_strategy", ""),
+                proof_text=proof_note,
                 iterations=1,
                 execution_time_ms=elapsed_ms,
-                timing_info={"backend": "z3", "elapsed_ms": int(elapsed_ms), "was_killed": False},
+                timing_info={
+                    "backend": "z3",
+                    "elapsed_ms": int(elapsed_ms),
+                    "was_killed": False,
+                    "smt_raw": z3_raw,
+                    "not_a_proof": True,
+                },
             )
             self._cache[cache_key] = vr
             return vr
@@ -243,7 +255,21 @@ class HybridVerifier:
                     smt = self.z3.formulate(hypothesis, backend="z3")
                     code = smt.get("theorem_statement", "") or smt.get("smt_code", "")
                 if not self._looks_like_smt(code):
-                    code = "(set-logic ALL)\n(declare-const x Real)\n(check-sat)\n"
+                    elapsed_ms = (time.perf_counter() - t0) * 1000
+                    vr = VerificationResult(
+                        backend="cvc5",
+                        status="skipped",
+                        claim=claim[:200],
+                        proof_code="",
+                        proof_text="",
+                        error_message=(
+                            "No SMT-LIB claim found — refusing trivial (check-sat) placeholder"
+                        ),
+                        iterations=0,
+                        execution_time_ms=elapsed_ms,
+                    )
+                    self._cache[cache_key] = vr
+                    return vr
                 result = cvc5_client.verify(code)
                 elapsed_ms = (time.perf_counter() - t0) * 1000
                 vr = VerificationResult(

@@ -1,4 +1,5 @@
 """Tests for hypothesis ranking module."""
+
 from __future__ import annotations
 
 from unittest.mock import patch
@@ -17,7 +18,12 @@ class TestPriorScorer:
     def test_score_returns_all_criteria(self) -> None:
         scorer = PriorScorer()
         result = scorer.score({"text": "Hypothesis"}, [])
-        assert set(result.keys()) == {"novelty", "plausibility", "formalizability", "falsifiability"}
+        assert set(result.keys()) == {
+            "novelty",
+            "plausibility",
+            "formalizability",
+            "falsifiability",
+        }
         assert all(0.0 <= v <= 1.0 for v in result.values())
 
     def test_novelty_with_empty_literature(self) -> None:
@@ -60,8 +66,11 @@ class TestCostModel:
     def test_estimate_returns_all_fields(self) -> None:
         model = CostModel()
         result = model.estimate({"text": "Some hypothesis text"})
-        assert set(result.keys()) == {"llm_cost_usd", "sim_cost_usd", "data_cost_usd", "total_usd"}
-        assert result["total_usd"] == pytest.approx(result["llm_cost_usd"] + result["sim_cost_usd"] + result["data_cost_usd"])
+        assert {"llm_cost_usd", "sim_cost_usd", "data_cost_usd", "total_usd"} <= set(result.keys())
+        assert result["total_usd"] == pytest.approx(
+            result["llm_cost_usd"] + result["sim_cost_usd"] + result["data_cost_usd"]
+        )
+        assert result.get("heuristic") is True
 
     def test_cost_increases_with_languages(self) -> None:
         model = CostModel()
@@ -77,7 +86,15 @@ class TestMCDMRanker:
 
     def test_rank_single(self) -> None:
         ranker = MCDMRanker()
-        result = ranker.rank([{"text": "H1"}], criteria={"eig": [0.5], "novelty": [0.5], "plausibility": [0.5], "falsifiability": [0.5]})
+        result = ranker.rank(
+            [{"text": "H1"}],
+            criteria={
+                "eig": [0.5],
+                "novelty": [0.5],
+                "plausibility": [0.5],
+                "falsifiability": [0.5],
+            },
+        )
         assert len(result) == 1
         assert result[0].rank == 1
 
@@ -101,7 +118,12 @@ class TestMCDMRanker:
     def test_cost_inverse_prefers_cheaper(self) -> None:
         ranker = MCDMRanker()
         hyps = [{"text": "H1"}, {"text": "H2"}]
-        criteria = {"eig": [0.5, 0.5], "novelty": [0.5, 0.5], "plausibility": [0.5, 0.5], "falsifiability": [0.5, 0.5]}
+        criteria = {
+            "eig": [0.5, 0.5],
+            "novelty": [0.5, 0.5],
+            "plausibility": [0.5, 0.5],
+            "falsifiability": [0.5, 0.5],
+        }
         costs = [{"total_usd": 10.0}, {"total_usd": 1.0}]
         result = ranker.rank(hyps, criteria=criteria, costs=costs)
         assert result[0].hypothesis["text"] == "H2"  # cheaper

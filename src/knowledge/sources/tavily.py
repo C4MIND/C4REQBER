@@ -1,4 +1,5 @@
 """Tavily adapter for knowledge orchestrator."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -20,14 +21,17 @@ class TavilyAdapter(BaseSourceAdapter):
         result = await client.search(query, max_results=min(limit, 10), search_depth="basic")
         papers = []
         for r in result.get("results", []):
-            papers.append({
-                "title": r.get("title", ""),
-                "authors": [],
-                "year": None,
-                "url": r.get("url", ""),
-                "doi": None,
-                "abstract": r.get("content", "")[:500],
-                "source": "tavily",
-                "citations": 0,
-            })
+            papers.append(
+                {
+                    "title": r.get("title", ""),
+                    "authors": [],
+                    "year": None,
+                    "url": r.get("url", ""),
+                    "doi": None,
+                    "abstract": r.get("content", "")[:500],
+                    "source": "tavily",
+                    "type": "web",
+                    "citations": 0,
+                }
+            )
         return papers

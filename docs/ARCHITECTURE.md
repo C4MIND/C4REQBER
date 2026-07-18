@@ -1,8 +1,12 @@
 # c4reqber v5.4.0 — BLAST Architecture Document
 
-> ⚠️ **HISTORICAL (v5.4.0).** Superseded for the current architectural picture by
-> [`/ARCHITECTURE_AUDIT.md`](../ARCHITECTURE_AUDIT.md) (refreshed 2026-06-24).
+> ⚠️ **HISTORICAL (v5.4.0).** Superseded for current behavior by:
+> - [`HONESTY_CONTRACT.md`](HONESTY_CONTRACT.md) (2026-07-18) — status / verified semantics
+> - [`../CHANGELOG.md`](../CHANGELOG.md) · [`../AGENTS.md`](../AGENTS.md)
+> - [`../ARCHITECTURE_AUDIT.md`](../ARCHITECTURE_AUDIT.md) (if present)
+>
 > Kept for historical context; treat version numbers and structural claims as dated.
+> In particular: do **not** treat ensemble sims, keyword Dempster, or Z3 `sat` as formal proof.
 
 ## 🧠 System Overview
 

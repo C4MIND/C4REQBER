@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from src.plugins._llm_base import _llm_reason, plugin_fallback
+from src.plugins._llm_base import _llm_reason, finalize_plugin_result, plugin_fallback
 
 
 def analyze(question: str, num_experts: int = 5) -> dict[str, Any]:
@@ -33,18 +33,36 @@ Respond as JSON:
     system = "You are a Delphi method facilitator simulating diverse domain experts. Give realistic, varied estimates with genuine domain reasoning. Never use random values or generic rationales."
     raw = _llm_reason(prompt, system=system, max_tokens=800)
     if not raw:
-        return {"question": question, "expert_estimates": [], "consensus_range": [0.0, 0.0], "confidence": 0.0, "rounds_needed": 3, "key_assumptions": [plugin_fallback("LLM unavailable — no analysis performed")]}
+        payload = {
+            "question": question,
+            "expert_estimates": [],
+            "consensus_range": [0.0, 0.0],
+            "confidence": 0.0,
+            "rounds_needed": 3,
+            "key_assumptions": [plugin_fallback("LLM unavailable — retry when gateway has a key")],
+        }
+        return finalize_plugin_result(payload, raw)
     try:
         import json
         import re
+
         match = re.search(r"\{.*\}", raw, re.DOTALL)
         if match:
             result = json.loads(match.group())
             result["question"] = question
-            return result
+            return finalize_plugin_result(result, raw)
     except (json.JSONDecodeError, ValueError):
         pass
-    return {"question": question, "expert_estimates": [], "consensus_range": [0.0, 0.0], "confidence": 0.0, "rounds_needed": 3, "key_assumptions": [plugin_fallback("LLM output unparseable")]}
+    payload = {
+        "question": question,
+        "expert_estimates": [],
+        "consensus_range": [0.0, 0.0],
+        "confidence": 0.0,
+        "rounds_needed": 3,
+        "key_assumptions": [plugin_fallback("LLM output unparseable")],
+        "raw_excerpt": raw[:300],
+    }
+    return finalize_plugin_result(payload, raw)
 
 
 def execute(question: str, **kwargs: Any) -> dict[str, Any]:

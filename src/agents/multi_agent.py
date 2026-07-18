@@ -119,9 +119,12 @@ class AnalystAgent(BaseAgent):
             agent_role=self.role.value,
             agent_name=self.name,
             output_type="analysis",
-            content=analysis,
-            confidence=0.75,
-            reasoning=f"Analyzed problem across {len(analogies)} potential domains",
+            content={**analysis, "heuristic": True},
+            confidence=0.4,
+            reasoning=(
+                f"Heuristic keyword analysis across {len(analogies)} domains "
+                f"(confidence is fixed, not calibrated)"
+            ),
         )
 
     def _decompose_problem(self, problem: str) -> list[dict[str, str]]:

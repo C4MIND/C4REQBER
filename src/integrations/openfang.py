@@ -41,8 +41,13 @@ class OpenFangClient:
 
     @property
     def available(self) -> bool:
-        """OpenFang is available if the daemon is responding on its API port."""
-        return True  # checked at call time
+        """True only if the OpenFang daemon answers /health quickly."""
+        try:
+            with httpx.Client(timeout=1.5) as client:
+                resp = client.get(f"{self.api_url}/health")
+                return resp.status_code == 200
+        except Exception:
+            return False
 
     def _headers(self) -> dict[str, str]:
         h = {"Content-Type": "application/json"}

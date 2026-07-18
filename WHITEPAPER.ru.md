@@ -1,8 +1,11 @@
 # Технический Whitepaper c4reqber
 
-**Версия:** backend 5.6.0 · TUI v9.13.0 · **июль 2026**
+> **Honesty / anti green-fake SSOT:** [`docs/HONESTY_CONTRACT.md`](docs/HONESTY_CONTRACT.md) (2026-07-18). Семантика статусов runtime важнее устаревших формулировок «success = обёртка ответила».
+
+**Версия:** backend 5.7.x · TUI v9.18 (honesty) · **июль 2026**
 **Авторы:** c4reqber Contributors (AGPL-3.0)
 **Источник метрик:** `_truths.json` (обновление: `python3 scripts/gen_truths.py`)
+**Honesty SSOT:** [`docs/HONESTY_CONTRACT.md`](docs/HONESTY_CONTRACT.md)
 
 > **English version:** [WHITEPAPER.md](WHITEPAPER.md)
 

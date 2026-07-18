@@ -63,7 +63,25 @@ func selectedSocialDraft(m *model) string {
 }
 
 func blastBin() string {
+	// Prefer a sibling blast(.exe) next to this TUI binary (Windows wheel / release layout).
+	if exe, err := os.Executable(); err == nil {
+		dir := filepath.Dir(exe)
+		for _, name := range []string{"blast.exe", "blast"} {
+			cand := filepath.Join(dir, name)
+			if st, err := os.Stat(cand); err == nil && !st.IsDir() {
+				return cand
+			}
+		}
+		// Also check parent Resources/ (macOS .app) and PATH later
+		res := filepath.Join(filepath.Dir(dir), "Resources", "blast")
+		if st, err := os.Stat(res); err == nil && !st.IsDir() {
+			return res
+		}
+	}
 	if p, err := exec.LookPath("blast"); err == nil {
+		return p
+	}
+	if p, err := exec.LookPath("blast.exe"); err == nil {
 		return p
 	}
 	return "blast"

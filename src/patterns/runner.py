@@ -223,9 +223,30 @@ class PatternRunner:
             else:
                 result_data = {"output": str(result)}
 
+            # Propagate honesty — never blanket "completed" over stub/unavailable
+            nested_status = (
+                str(result_data.get("status", "")).lower() if isinstance(result_data, dict) else ""
+            )
+            if isinstance(result_data, dict) and (
+                result_data.get("stub") is True
+                or result_data.get("executed") is False
+                or nested_status in {"unavailable", "failed", "error", "partial", "simulated"}
+            ):
+                return {
+                    "pattern_id": pattern_id,
+                    "status": nested_status or "unavailable",
+                    "stub": True,
+                    "executed": False,
+                    "result": result_data,
+                    "execution_time_seconds": execution_time,
+                    "timestamp": datetime.now().isoformat(),
+                }
+
             return {
                 "pattern_id": pattern_id,
                 "status": "completed",
+                "stub": False,
+                "executed": True,
                 "result": result_data,
                 "execution_time_seconds": execution_time,
                 "timestamp": datetime.now().isoformat(),

@@ -47,17 +47,29 @@ class ProviderExhaustedError(RuntimeError):
 
 
 class LLMProviderRouter:
-    """Unified LLM router. Priority: DeepSeek → OpenRouter → LM Studio (local)."""
+    """Unified LLM router (internal strategy). Prefer ``src.llm.get_gateway().chat``.
 
-    DEEPSEEK_URL = "https://api.deepseek.com/v1/chat/completions"
-    DEEPSEEK_MODEL = "deepseek-v4-flash"
+    Free-first: OpenCode Zen → Groq → NIM → LM Studio → OR.
+    """
 
-    OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
-    OPENROUTER_MODEL = "deepseek/deepseek-chat"
+    @staticmethod
+    def _preferred_model() -> str:
+        env = os.environ.get("C4_LLM_MODEL", "").strip()
+        if env:
+            return env
+        try:
+            from src.llm.model_assignment import get_model_for_phase
 
-    LMSTUDIO_URL = "http://localhost:1234/v1/chat/completions"
+            assigned = get_model_for_phase("F") or get_model_for_phase("D")
+            if assigned:
+                return assigned
+        except Exception as _exc:
+            logger.debug("swallowed exception: %s", _exc, exc_info=True)
+        return "deepseek-v4-flash-free"
 
-    PROVIDER_ORDER = ["deepseek", "openrouter", "lmstudio"]
+    PROVIDER_ORDER = ["opencode", "groq", "nvidia", "lmstudio", "openrouter", "deepseek"]
+    if os.getenv("C4_LOCAL_LLM_FIRST", "").lower() in ("1", "true", "yes"):
+        PROVIDER_ORDER = ["lmstudio", "opencode", "groq", "nvidia", "openrouter", "deepseek"]
 
     @staticmethod
     def _get_key(name: str) -> str:
@@ -78,32 +90,60 @@ class LLMProviderRouter:
         return ""
 
     @staticmethod
-    async def chat(messages, system_prompt="", temperature=0.3, max_tokens=800, json_mode=False) -> str:
-        """Chat."""
+    async def chat(
+        messages, system_prompt="", temperature=0.3, max_tokens=800, json_mode=False
+    ) -> str:
+        """Chat via free-first provider chain (sync_provider_chain)."""
         messages = LLMProviderRouter._guard_messages(messages)
-        attempted_providers: list[str] = []
-        provider_errors: list[str] = []
-        for provider in LLMProviderRouter.PROVIDER_ORDER:
-            attempted_providers.append(provider)
-            try:
-                method = getattr(LLMProviderRouter, f"_try_{provider}")
-                result = await method(messages, system_prompt, temperature, max_tokens, json_mode)
-                if result:
-                    logger.info("LLM provider '%s' responded successfully", provider)
-                    return result
-            except (ConnectionError, TimeoutError, RuntimeError, ValueError) as e:
-                logger.debug("%s failed: %s", provider, e)
-                provider_errors.append(f"{provider}: {e}")
-        raise ProviderExhaustedError(attempted_providers, provider_errors)
+        prompt_parts: list[str] = []
+        for msg in messages:
+            role = msg.get("role", "user")
+            content = msg.get("content", "")
+            if not isinstance(content, str):
+                continue
+            if role == "system" and not system_prompt:
+                system_prompt = content
+            elif role == "user":
+                prompt_parts.append(content)
+            elif role == "assistant":
+                prompt_parts.append(f"[assistant]: {content}")
+        prompt = "\n".join(prompt_parts) if prompt_parts else str(messages)
+        preferred = LLMProviderRouter._preferred_model()
+        loop = asyncio.get_running_loop()
+        try:
+            return await loop.run_in_executor(
+                None,
+                lambda: __import__(
+                    "src.llm.sync_provider_chain", fromlist=["generate_with_fallback"]
+                ).generate_with_fallback(
+                    prompt,
+                    system_prompt=system_prompt or None,
+                    max_tokens=max_tokens,
+                    temperature=temperature,
+                    preferred_model=preferred,
+                ),
+            )
+        except RuntimeError as e:
+            raise ProviderExhaustedError(
+                ["opencode", "groq", "nvidia", "lmstudio"], [str(e)]
+            ) from e
 
     @staticmethod
-    async def _chat_safe(messages, system_prompt="", temperature=0.3, max_tokens=800, json_mode=False) -> str | None:
-        return await LLMProviderRouter.chat(messages, system_prompt, temperature, max_tokens, json_mode)
+    async def _chat_safe(
+        messages, system_prompt="", temperature=0.3, max_tokens=800, json_mode=False
+    ) -> str | None:
+        return await LLMProviderRouter.chat(
+            messages, system_prompt, temperature, max_tokens, json_mode
+        )
 
     @staticmethod
-    async def chat_json(messages, system_prompt="", temperature=0.3, max_tokens=800) -> dict[str, Any]:
+    async def chat_json(
+        messages, system_prompt="", temperature=0.3, max_tokens=800
+    ) -> dict[str, Any]:
         """Chat json."""
-        text = await LLMProviderRouter.chat(messages, system_prompt, temperature, max_tokens, json_mode=True)
+        text = await LLMProviderRouter.chat(
+            messages, system_prompt, temperature, max_tokens, json_mode=True
+        )
         if not text:
             raise RuntimeError("LLM returned empty response")
         try:
@@ -140,74 +180,6 @@ class LLMProviderRouter:
         except Exception as e:
             logger.exception("Guardian scan failed — blocking request for safety")
             raise RuntimeError(f"Guardian scan unavailable: {e}") from e
-
-    @staticmethod
-    async def _try_deepseek(messages, system_prompt, temperature, max_tokens, json_mode) -> str:
-        key = LLMProviderRouter._get_key("DEEPSEEK_API_KEY")
-        if not key:
-            return ""
-        full_msgs = [{"role": "system", "content": system_prompt}] if system_prompt else []
-        full_msgs.extend(messages)
-        extra = {"response_format": {"type": "json_object"}} if json_mode else {}
-        loop = asyncio.get_running_loop()
-        return await loop.run_in_executor(
-            None, LLMProviderRouter._call_openai_sync,
-            LLMProviderRouter.DEEPSEEK_URL, key, LLMProviderRouter.DEEPSEEK_MODEL,
-            full_msgs, temperature, max_tokens, extra, 30
-        )
-
-    @staticmethod
-    async def _try_openrouter(messages, system_prompt, temperature, max_tokens, json_mode) -> str:
-        key = LLMProviderRouter._get_key("OPENROUTER_API_KEY")
-        if not key:
-            return ""
-        full_msgs = [{"role": "system", "content": system_prompt}] if system_prompt else []
-        full_msgs.extend(messages)
-        extra = {"response_format": {"type": "json_object"}} if json_mode else {}
-        loop = asyncio.get_running_loop()
-        return await loop.run_in_executor(
-            None, LLMProviderRouter._call_openai_sync,
-            LLMProviderRouter.OPENROUTER_URL, key, LLMProviderRouter.OPENROUTER_MODEL,
-            full_msgs, temperature, max_tokens, extra, 30
-        )
-
-    @staticmethod
-    async def _try_lmstudio(messages, system_prompt, temperature, max_tokens, json_mode) -> str:
-        full_msgs = [{"role": "system", "content": system_prompt}] if system_prompt else []
-        full_msgs.extend(messages)
-        extra = {"response_format": {"type": "json_object"}} if json_mode else {}
-        loop = asyncio.get_running_loop()
-        return await loop.run_in_executor(
-            None, LLMProviderRouter._call_openai_sync,
-            LLMProviderRouter.LMSTUDIO_URL, "lm-studio", "",
-            full_msgs, temperature, max_tokens, extra, 30
-        )
-
-    @staticmethod
-    def _call_openai_sync(url, key, model, messages, temperature, max_tokens, extra, timeout) -> str:
-        headers = {"Content-Type": "application/json"}
-        if key and key != "lm-studio":
-            headers["Authorization"] = f"Bearer {key}"
-        payload: dict[str, Any] = {
-            "model": model or "", "messages": messages,
-            "temperature": temperature, "max_tokens": max_tokens, **extra
-        }
-        try:
-            session = _get_session()
-            r = session.post(url, headers=headers, json=payload, timeout=timeout)
-            if r.status_code != 200:
-                logger.warning("%s HTTP %d: %s", url[:40], r.status_code, r.text[:150])
-                return ""
-            data = r.json()
-            if "choices" not in data or not data["choices"]:
-                return ""
-            return data["choices"][0]["message"]["content"]
-        except (httpx.HTTPError, httpx.TimeoutException, json.JSONDecodeError, KeyError, OSError) as e:
-            logger.warning("%s error: %s — %s", url[:40], type(e).__name__, e)
-            return ""
-        except Exception as e:
-            logger.exception("%s unexpected error: %s", url[:40], e)
-            return ""
 
 
 __all__ = ["LLMProviderRouter", "_get_session", "_close_session"]

@@ -2,6 +2,7 @@
 C4REQBER: Comprehensive Audit Logging System
 Structured JSON audit logs for security compliance and forensics.
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -10,6 +11,7 @@ import logging
 import os
 import threading
 import uuid
+from abc import ABC, abstractmethod
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from enum import StrEnum
@@ -21,6 +23,7 @@ from src.compat import UTC
 
 class AuditEventType(StrEnum):
     """AuditEventType."""
+
     AUTH_LOGIN = "auth.login"
     AUTH_LOGOUT = "auth.logout"
     AUTH_FAILED = "auth.failed"
@@ -46,6 +49,7 @@ class AuditEventType(StrEnum):
 
 class AuditSeverity(StrEnum):
     """AuditSeverity."""
+
     INFO = "info"
     WARNING = "warning"
     ERROR = "error"
@@ -117,14 +121,14 @@ class AuditEvent:
         return json.dumps(self.to_dict(), default=str)
 
 
-class AuditLogBackend:
-    """Abstract audit log backend."""
+class AuditLogBackend(ABC):
+    """Abstract audit log backend — use FileBackend (or Memory) in production."""
 
-    def write(self, event: AuditEvent) -> None:
-        raise NotImplementedError
+    @abstractmethod
+    def write(self, event: AuditEvent) -> None: ...
 
-    def read(self, filters: dict[str, Any] | None = None, limit: int = 100) -> list[AuditEvent]:
-        raise NotImplementedError
+    @abstractmethod
+    def read(self, filters: dict[str, Any] | None = None, limit: int = 100) -> list[AuditEvent]: ...
 
 
 class FileBackend(AuditLogBackend):

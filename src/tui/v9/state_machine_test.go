@@ -2,6 +2,7 @@ package tui
 
 import (
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -104,18 +105,38 @@ func TestStateMachine_BGColorHandled(t *testing.T) {
 	_ = u.(*model)
 }
 
-func TestStateMachine_LangSwitch(t *testing.T) {
+func TestStateMachine_LangNotHijackedByTyping(t *testing.T) {
+	// Regression: typing the letter "l" into the query must NOT cycle the
+	// UI language (it used to, because ActLang was bound to plain "l"/"L"
+	// with no textarea-focus guard — so any English query containing "l"
+	// flipped the whole UI to Russian mid-discovery).
+	defer i18n.SetLang(i18n.LangEN)
+	i18n.SetLang(i18n.LangEN)
+	m := NewAppFresh("http://test")
+	// The textarea is focused by default, so a typed "l" should land in the
+	// query and leave the language untouched.
+	m.Update(teaKeyMsg("l"))
+	if i18n.GetLang() != i18n.LangEN {
+		t.Fatalf("typing 'l' changed language to %q, want en", i18n.GetLang())
+	}
+	if !strings.Contains(m.ta.Value(), "l") {
+		t.Fatalf("typed 'l' was not inserted into the query, got %q", m.ta.Value())
+	}
+}
+
+func TestStateMachine_LangSwitchViaShiftL(t *testing.T) {
 	// Use NewAppFresh to avoid touching the developer's real
 	// ~/.c4reqber (NewApp would load the persisted lang and
 	// overwrite it on the L keypress, leaking into the next
 	// `go test` run for that user).
 	defer i18n.SetLang(i18n.LangEN)
+	i18n.SetLang(i18n.LangEN)
 	m := NewAppFresh("http://test")
-	u, _ := m.Update(teaKeyMsg("L"))
+	u, _ := m.Update(teaKeyMsg("shift+l"))
 	_ = u.(*model)
-	// After L, the lang should have cycled. The i18n.GetLang() call
-	// returns the package-level current lang (process-wide), so
-	// restoring it in the defer is sufficient.
+	if i18n.GetLang() != i18n.LangRU {
+		t.Fatalf("Shift+L should cycle en→ru, got %q", i18n.GetLang())
+	}
 }
 
 func TestStateMachine_CheckAchievements_EmptyModel(t *testing.T) {

@@ -24,6 +24,7 @@ logger = logging.getLogger("reqber.api.v8.discovery.core")
 # Step 1-2: C4 cognitive navigation
 # ---------------------------------------------------------------------------
 
+
 def navigate_c4(problem: str) -> dict[str, Any]:
     """Navigate C4 cognitive space for the given problem.
 
@@ -32,6 +33,7 @@ def navigate_c4(problem: str) -> dict[str, Any]:
     """
     try:
         from src.c4.engine import C4Space, C4State
+
         space = C4Space()
 
         # Derive start/end from problem keywords
@@ -64,10 +66,14 @@ def navigate_c4(problem: str) -> dict[str, Any]:
         path = space.shortest_path(start, end)
         states = path.states_visited()
         return {
-            "start": str(start), "end": str(end),
-            "path": [str(s) for s in states], "steps": path.length,
-            "states_visited": len(states), "operators": path.operators,
-            "hamming_distance": space.hamming_distance(start, end), "problem": problem,
+            "start": str(start),
+            "end": str(end),
+            "path": [str(s) for s in states],
+            "steps": path.length,
+            "states_visited": len(states),
+            "operators": path.operators,
+            "hamming_distance": space.hamming_distance(start, end),
+            "problem": problem,
         }
     except ImportError as e:
         raise RuntimeError(f"C4 engine not available: {e}") from e
@@ -80,38 +86,60 @@ def navigate_c4(problem: str) -> dict[str, Any]:
 # Step 3-4: TRIZ contradiction resolution
 # ---------------------------------------------------------------------------
 
+
 def resolve_triz(problem: str, domain: str = "science") -> list[dict[str, Any]]:
     """Resolve problem using TRIZ contradiction matrix."""
     try:
         from src.triz.bridge import C4TrizBridge
         from src.triz.matrix import get_recommended_principles
         from src.triz.matrix_core import get_parameter_id
+
         bridge = C4TrizBridge()
         domain_params: dict[str, tuple[str, str]] = {
-            "physics": ("speed", "force"), "chemistry": ("concentration", "temperature"),
-            "biology": ("adaptability", "stability"), "engineering": ("weight", "strength"),
-            "materials": ("strength", "weight"), "electronics": ("power", "signal_to_noise"),
-            "energy": ("efficiency", "losses"), "medicine": ("precision", "side_effects"),
-            "economics": ("productivity", "cost"), "software": ("speed", "memory"),
+            "physics": ("speed", "force"),
+            "chemistry": ("concentration", "temperature"),
+            "biology": ("adaptability", "stability"),
+            "engineering": ("weight", "strength"),
+            "materials": ("strength", "weight"),
+            "electronics": ("power", "signal_to_noise"),
+            "energy": ("efficiency", "losses"),
+            "medicine": ("precision", "side_effects"),
+            "economics": ("productivity", "cost"),
+            "software": ("speed", "memory"),
         }
         improving, worsening = domain_params.get(domain, ("speed", "force"))
         imp_id = get_parameter_id(improving)
         wors_id = get_parameter_id(worsening)
         if imp_id is None or wors_id is None:
-            return [{"id": i, "name": n, "description": d} for i, n, d in [
-                (1, "Segmentation", "Divide"), (2, "Extraction", "Extract"),
-                 (3, "Local Quality", "Change")]]
+            return [
+                {"id": i, "name": n, "description": d}
+                for i, n, d in [
+                    (1, "Segmentation", "Divide"),
+                    (2, "Extraction", "Extract"),
+                    (3, "Local Quality", "Change"),
+                ]
+            ]
         principles = get_recommended_principles(imp_id, wors_id)
         results = []
         for pid in principles[:10]:
             info = bridge.get_principle_info(pid)
-            results.append({"id": pid,
-                          "name": info.name if hasattr(info, "name") else str(info),
-                          "description": info.description if hasattr(info, "description") else ""}
-                         if info else {"id": pid, "name": f"Principle #{pid}", "description": ""})
-        return results or [{"id": i, "name": n, "description": d} for i, n, d in [
-            (1, "Segmentation", "Divide"), (2, "Extraction", "Extract"),
-             (3, "Local Quality", "Change")]]
+            results.append(
+                {
+                    "id": pid,
+                    "name": info.name if hasattr(info, "name") else str(info),
+                    "description": info.description if hasattr(info, "description") else "",
+                }
+                if info
+                else {"id": pid, "name": f"Principle #{pid}", "description": ""}
+            )
+        return results or [
+            {"id": i, "name": n, "description": d}
+            for i, n, d in [
+                (1, "Segmentation", "Divide"),
+                (2, "Extraction", "Extract"),
+                (3, "Local Quality", "Change"),
+            ]
+        ]
     except (ImportError, AttributeError) as e:
         logger.error("TRIZ resolution error: %s", e)
         return [{"id": 1, "name": "Segmentation", "description": "Fallback"}]
@@ -120,6 +148,7 @@ def resolve_triz(problem: str, domain: str = "science") -> list[dict[str, Any]]:
 # ---------------------------------------------------------------------------
 # Step 5: Knowledge search
 # ---------------------------------------------------------------------------
+
 
 async def search_knowledge(problem: str) -> list[dict[str, Any]]:
     """Search papers across registered sources."""
@@ -148,9 +177,12 @@ async def search_knowledge(problem: str) -> list[dict[str, Any]]:
 # Step 6: Hypothesis generation
 # ---------------------------------------------------------------------------
 
+
 async def generate_hypothesis(
-    problem: str, c4_path: dict[str, Any],
-    triz_principles: list[dict[str, Any]], papers: list[dict[str, Any]],
+    problem: str,
+    c4_path: dict[str, Any],
+    triz_principles: list[dict[str, Any]],
+    papers: list[dict[str, Any]],
 ) -> dict[str, Any]:
     """Generate a scientific hypothesis grounded in retrieved paper abstracts."""
     triz_names = ", ".join(p["name"] for p in triz_principles[:3])
@@ -165,6 +197,7 @@ async def generate_hypothesis(
         rag_context = ""
         try:
             from src.knowledge.chroma_store import ChromaVectorStore
+
             store = ChromaVectorStore()
             rag_results = store.search_papers(problem, n_results=5)
             if rag_results:
@@ -187,6 +220,7 @@ async def generate_hypothesis(
         council_result = None
         try:
             from src.llm.council import council_generate
+
             prompt = (
                 f"Generate hypothesis. Problem: {safe_problem}\n"
                 f"TRIZ Principles: {triz_names}\n"
@@ -205,20 +239,28 @@ async def generate_hypothesis(
         except (ImportError, AttributeError, RuntimeError) as e:
             logger.debug("LLMCouncil unavailable for hypothesis: %s", e)
             llm_text = await get_gateway().chat(
-                messages=[{"role": "user", "content":
-                    f"Generate hypothesis. Problem: {safe_problem}\n"
-                    f"TRIZ Principles: {triz_names}\n"
-                    f"{rag_context}\n\n"
-                    "CRITICAL: Ground your hypothesis in the provided research. "
-                    "Reference specific paper numbers [N] when citing evidence. "
-                    "Specific, falsifiable, 3-4 sentences. No markdown."}],
-                max_tokens=400, temperature=0.4)
+                messages=[
+                    {
+                        "role": "user",
+                        "content": f"Generate hypothesis. Problem: {safe_problem}\n"
+                        f"TRIZ Principles: {triz_names}\n"
+                        f"{rag_context}\n\n"
+                        "CRITICAL: Ground your hypothesis in the provided research. "
+                        "Reference specific paper numbers [N] when citing evidence. "
+                        "Specific, falsifiable, 3-4 sentences. No markdown.",
+                    }
+                ],
+                max_tokens=400,
+                temperature=0.4,
+            )
     except (ImportError, AttributeError, RuntimeError) as e:
         llm_text = ""
         logger.warning("LLM hypothesis error: %s", e)
 
     if not llm_text or len(llm_text) < 50:
-        raise RuntimeError("Hypothesis generation failed: LLM unavailable or returned insufficient content")
+        raise RuntimeError(
+            "Hypothesis generation failed: LLM unavailable or returned insufficient content"
+        )
 
     # Evidence-based confidence: novelty × source coverage × RAG grounding
     confidence = 0.5
@@ -241,8 +283,10 @@ async def generate_hypothesis(
 # Step 9: Paper generation
 # ---------------------------------------------------------------------------
 
-def generate_paper(hypothesis: dict[str, Any], papers: list[dict[str, Any]],
-                  proof: dict[str, Any]) -> dict[str, Any]:
+
+def generate_paper(
+    hypothesis: dict[str, Any], papers: list[dict[str, Any]], proof: dict[str, Any]
+) -> dict[str, Any]:
     """Generate LaTeX paper with BibTeX."""
     hypothesis_text = hypothesis.get("text", "Hypothesis text not available")
     bibtex_entries = []
@@ -251,13 +295,14 @@ def generate_paper(hypothesis: dict[str, Any], papers: list[dict[str, Any]],
         authors_str = " and ".join(paper.get("authors", ["Unknown"]))
         year = paper.get("year", 2025)
         doi = paper.get("doi", "")
-        entry = f"@article{{ref{i+1},\n  author = {{{authors_str}}},\n  title = {{{title}}}"
+        entry = f"@article{{ref{i + 1},\n  author = {{{authors_str}}},\n  title = {{{title}}}"
         if doi:
             entry += f",\n  doi = {{{doi}}}"
         entry += f",\n  year = {{{year}}}\n}}"
         bibtex_entries.append(entry)
 
-    return {"latex": rf"""\documentclass{{article}}
+    return {
+        "latex": rf"""\documentclass{{article}}
 \usepackage{{amsmath, amssymb, amsthm}}
 \title{{One-Click Discovery}}
 \begin{{document}}
@@ -268,51 +313,98 @@ def generate_paper(hypothesis: dict[str, Any], papers: list[dict[str, Any]],
 \section{{Results}}
 \section{{Conclusion}}
 \end{{document}}""",
-            "bibtex": "\n\n".join(bibtex_entries) or "% No references",
-            "reference_count": len(bibtex_entries)}
+        "bibtex": "\n\n".join(bibtex_entries) or "% No references",
+        "reference_count": len(bibtex_entries),
+    }
 
 
 # ---------------------------------------------------------------------------
 # Step 8: Proof generation
 # ---------------------------------------------------------------------------
 
+
 async def generate_lean4_proof(hypothesis: dict[str, Any]) -> dict[str, Any]:
     """Generate Lean 4 proof."""
     try:
         from src.verification.llm_prover import LLMProver
+
         gen = LLMProver()
         h_text = hypothesis.get("text", str(hypothesis)[:500])
         proof_code_res = await gen.prove(h_text, "lean4")
-        return {"language": "lean4", "proof": proof_code_res.proof[:500],
-                "generated": True}
+        return {"language": "lean4", "proof": proof_code_res.proof[:500], "generated": True}
     except (ImportError, AttributeError, RuntimeError) as e:
-        return {"language": "lean4", "proof": f"(* Error: {e} *)",
-                "generated": False, "error": str(e)}
+        return {
+            "language": "lean4",
+            "proof": f"(* Error: {e} *)",
+            "generated": False,
+            "error": str(e),
+        }
 
 
 # ---------------------------------------------------------------------------
 # Step 7: Simulation
 # ---------------------------------------------------------------------------
 
+
 async def run_relevant_simulation(domain: str, hypothesis: dict[str, Any]) -> dict[str, Any]:
     """Run physics simulation."""
     try:
         from src.simulations.domain_selector import get_domain_simulations
         from src.simulations.newton_bridge import NewtonBridge
+
         pattern_ids = get_domain_simulations(domain, count=4)
         results = {}
         newton = NewtonBridge()
         for pid in pattern_ids[:3]:
             try:
-                sim = newton.run_simulation({"pattern_id": pid, "domain": domain,
-                                              "duration": 10.0, "dt": 0.01,
-                                              "hypothesis": hypothesis.get("text", "")[:100]})
-                results[pid] = {"status": getattr(sim, 'status', 'completed'),
-                               "final_state": str(getattr(sim, 'final_state', 'ok'))[:200],
-                                "time_steps": getattr(sim, 'time_steps', 0)}
+                sim = newton.run_simulation(
+                    {
+                        "pattern_id": pid,
+                        "domain": domain,
+                        "duration": 10.0,
+                        "dt": 0.01,
+                        "hypothesis": hypothesis.get("text", "")[:100],
+                    }
+                )
+                data = getattr(sim, "data", None) or {}
+                if not isinstance(data, dict):
+                    data = {}
+                status = getattr(sim, "status", "unavailable")
+                status_s = str(status).lower()
+                is_stub = (
+                    status_s in {"unavailable", "error", "partial", "failed"}
+                    or data.get("stub") is True
+                    or data.get("executed") is False
+                    or data.get("engine_truth") == "not_newton_physics"
+                )
+                results[pid] = {
+                    "status": status_s,
+                    "stub": is_stub,
+                    "executed": bool(data.get("executed")) and not is_stub,
+                    "backend": data.get("backend"),
+                    "engine_truth": data.get("engine_truth"),
+                    "final_state": data.get("note") or status_s,
+                    "time_steps": getattr(sim, "time_steps", 0),
+                }
             except (TimeoutError, RuntimeError, AttributeError) as e:
-                results[pid] = {"status": "error", "error": str(e)[:100]}
-        return {"engine": "newton", "domain": domain, "patterns_run": len(results),
-                "pattern_ids": pattern_ids[:3], "results": results, "status": "completed"}
+                results[pid] = {"status": "error", "error": str(e)[:100], "stub": True}
+        agg = (
+            "unavailable"
+            if (not results or all(v.get("stub") for v in results.values()))
+            else (
+                "partial"
+                if any(v.get("stub") or v.get("status") == "partial" for v in results.values())
+                else "completed"
+            )
+        )
+        return {
+            "engine": "newton",
+            "domain": domain,
+            "patterns_run": len(results),
+            "pattern_ids": pattern_ids[:3],
+            "results": results,
+            "status": agg,
+            "stub": any(v.get("stub") for v in results.values()),
+        }
     except (ImportError, AttributeError) as e:
         raise RuntimeError(f"NewtonBridge unavailable: {e}") from e

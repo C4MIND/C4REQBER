@@ -1,4 +1,5 @@
 """Exa.ai adapter for knowledge orchestrator."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -20,14 +21,17 @@ class ExaAdapter(BaseSourceAdapter):
         result = await client.search(query, num_results=min(limit, 10))
         papers = []
         for r in result.get("results", []):
-            papers.append({
-                "title": r.get("title", ""),
-                "authors": [],
-                "year": None,
-                "url": r.get("url", ""),
-                "doi": None,
-                "abstract": r.get("text", "")[:500] if "text" in r else "",
-                "source": "exa",
-                "citations": 0,
-            })
+            papers.append(
+                {
+                    "title": r.get("title", ""),
+                    "authors": [],
+                    "year": None,
+                    "url": r.get("url", ""),
+                    "doi": None,
+                    "abstract": r.get("text", "")[:500] if "text" in r else "",
+                    "source": "exa",
+                    "type": "web",
+                    "citations": 0,
+                }
+            )
         return papers

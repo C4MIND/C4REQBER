@@ -3,6 +3,7 @@ c4reqber: Cost Model
 
 Estimates computational and financial cost of verifying a hypothesis.
 """
+
 from __future__ import annotations
 
 import logging
@@ -21,7 +22,9 @@ class CostModel:
     SIM_COST_PER_MINUTE = 0.01  # Compute cost estimate
     DATA_API_COST_PER_CALL = 0.001  # External API call
 
-    def estimate(self, hypothesis: dict[str, Any], plan: dict[str, Any] | None = None) -> dict[str, float]:
+    def estimate(
+        self, hypothesis: dict[str, Any], plan: dict[str, Any] | None = None
+    ) -> dict[str, float]:
         """Estimate costs for verifying a hypothesis.
 
         Returns dict with: llm_cost_usd, sim_cpu_seconds, data_api_calls, total_usd.
@@ -49,4 +52,6 @@ class CostModel:
             "sim_cost_usd": round(sim_cost, 4),
             "data_cost_usd": round(data_cost, 4),
             "total_usd": round(llm_cost + sim_cost + data_cost, 4),
+            "heuristic": True,
+            "note": "Costs derived from text length / constants — not metered spend",
         }

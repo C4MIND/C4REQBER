@@ -53,16 +53,17 @@ def _is_valid_llm_output(text: str, *, min_words: int = MIN_SECTION_WORDS) -> bo
 def _llm_generate(prompt: str, max_tokens: int = 2000, temperature: float = 0.7) -> str:
     """Generate dissertation section — retries until valid or raises."""
     from src.config.paths import load_kilo_env
-    from src.llm.sync_provider_chain import generate_with_fallback
+    from src.llm import get_gateway
 
     load_kilo_env()
     preferred = os.environ.get("DISSERTATION_MODEL", "deepseek-v4-flash-free")
     last = ""
+    gw = get_gateway()
     for attempt in range(5):
         # After 2 failures, stop pinning preferred (often broken free-tier ids).
         model_pref = preferred if attempt < 2 else None
         try:
-            last = generate_with_fallback(
+            last = gw.generate_sync(
                 prompt,
                 max_tokens=max_tokens,
                 temperature=temperature,
@@ -445,8 +446,8 @@ Human review: REQUIRED before any publication or experimental work*
                     f"Uncovered references: {len(uncovered)}."
                 )
                 dissertation = dissertation.replace("## References", warning + "\n\n## References")
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("swallowed exception: %s", _exc, exc_info=True)
 
         return dissertation
 

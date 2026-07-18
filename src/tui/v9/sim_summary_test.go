@@ -23,8 +23,8 @@ func TestCapSummaryCardBasic(t *testing.T) {
 	if c.Sim.Engine != "capsim" {
 		t.Errorf("expected engine capsim, got %s", c.Sim.Engine)
 	}
-	if c.Sim.EngineStatus != "available" {
-		t.Errorf("expected available, got %s", c.Sim.EngineStatus)
+	if c.Sim.EngineStatus != "partial" {
+		t.Errorf("expected partial (probe ≠ available), got %s", c.Sim.EngineStatus)
 	}
 	if c.Body == "" {
 		t.Error("body should not be empty")

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from src.plugins._llm_base import _llm_reason
+from src.plugins._llm_base import _llm_reason, finalize_plugin_result
 
 
 def analyze(problem: str) -> dict[str, Any]:
@@ -25,19 +25,29 @@ Respond as JSON:
 {{"white_hat": ["fact 1", "fact 2"], "red_hat": [...], "black_hat": [...], "yellow_hat": [...], "green_hat": [...], "blue_hat": [...]}}"""
     system = "You are a Six Thinking Hats facilitator. Provide concrete, domain-specific perspectives for each hat. Never use generic questions."
     raw = _llm_reason(prompt, system=system, max_tokens=700)
+    empty = {
+        "problem": problem,
+        "white_hat": [],
+        "red_hat": [],
+        "black_hat": [],
+        "yellow_hat": [],
+        "green_hat": [],
+        "blue_hat": [],
+    }
     if not raw:
-        return {"problem": problem, "white_hat": [], "red_hat": [], "black_hat": [], "yellow_hat": [], "green_hat": [], "blue_hat": []}
+        return finalize_plugin_result(empty, raw)
     try:
         import json
         import re
+
         match = re.search(r"\{.*\}", raw, re.DOTALL)
         if match:
             result = json.loads(match.group())
             result["problem"] = problem
-            return result
+            return finalize_plugin_result(result, raw)
     except (json.JSONDecodeError, ValueError):
         pass
-    return {"problem": problem, "white_hat": [], "red_hat": [], "black_hat": [], "yellow_hat": [], "green_hat": [], "blue_hat": []}
+    return finalize_plugin_result(empty, raw)
 
 
 def execute(problem: str, **kwargs: Any) -> dict[str, Any]:

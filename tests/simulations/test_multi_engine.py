@@ -317,25 +317,31 @@ class TestJaxSimBridge:
         from src.simulations.jaxsim_bridge import JaxSimBridge
 
         bridge = JaxSimBridge()
-        result = bridge.run_rigid_body_simulation({
-            "dt": 0.001,
-            "duration": 0.1,
-            "integrate": False,
-        })
+        result = bridge.run_rigid_body_simulation(
+            {
+                "dt": 0.001,
+                "duration": 0.1,
+                "integrate": False,
+            }
+        )
         assert isinstance(result, dict)
         assert "status" in result
 
     def test_jaxsim_fallback_simulation(self):
-        """Test fallback simulation works without JaxSim."""
+        """Without JaxSim/URDF, rigid-body path is unavailable — not fake success."""
         from src.simulations.jaxsim_bridge import JaxSimBridge
 
         bridge = JaxSimBridge()
-        result = bridge.run_rigid_body_simulation({
-            "dt": 0.001,
-            "duration": 0.1,
-            "initial_joint_positions": [0.0, 0.0, 0.0],
-        })
-        assert result["status"] == "success"
+        result = bridge.run_rigid_body_simulation(
+            {
+                "dt": 0.001,
+                "duration": 0.1,
+                "initial_joint_positions": [0.0, 0.0, 0.0],
+            }
+        )
+        assert result["status"] == "unavailable"
+        assert result.get("stub") is True
+        assert result.get("executed") is False
 
     def test_jaxsim_get_metadata(self):
         """Test get_metadata returns dict."""
@@ -388,11 +394,13 @@ class TestNewtonBridge:
         from src.simulations.newton_bridge import NewtonBridge
 
         bridge = NewtonBridge()
-        result = bridge.run_simulation({
-            "type": "rigid_body",
-            "num_bodies": 5,
-            "num_steps": 10,
-        })
+        result = bridge.run_simulation(
+            {
+                "type": "rigid_body",
+                "num_bodies": 5,
+                "num_steps": 10,
+            }
+        )
         assert result.status in ("success", "error")
 
     def test_newton_bridge_benchmark_returns_dict(self):
@@ -428,13 +436,15 @@ class TestSchrBridge:
         from src.simulations.schr_bridge import SchrBridge
 
         bridge = SchrBridge()
-        result = bridge.run_schrodinger({
-            "n_points": 32,
-            "domain_size": 5.0,
-            "dt": 0.01,
-            "duration": 0.1,
-            "integrate": False,
-        })
+        result = bridge.run_schrodinger(
+            {
+                "n_points": 32,
+                "domain_size": 5.0,
+                "dt": 0.01,
+                "duration": 0.1,
+                "integrate": False,
+            }
+        )
         assert isinstance(result, dict)
         assert "status" in result
 
@@ -443,12 +453,14 @@ class TestSchrBridge:
         from src.simulations.schr_bridge import SchrBridge
 
         bridge = SchrBridge()
-        result = bridge.run_schrodinger({
-            "n_points": 32,
-            "domain_size": 5.0,
-            "dt": 0.01,
-            "duration": 0.1,
-        })
+        result = bridge.run_schrodinger(
+            {
+                "n_points": 32,
+                "domain_size": 5.0,
+                "dt": 0.01,
+                "duration": 0.1,
+            }
+        )
         assert result["status"] == "success"
 
     def test_schr_run_qed_returns_dict(self):
@@ -456,12 +468,14 @@ class TestSchrBridge:
         from src.simulations.schr_bridge import SchrBridge
 
         bridge = SchrBridge()
-        result = bridge.run_qed({
-            "n_modes": 2,
-            "n_photons_max": 2,
-            "dt": 0.1,
-            "duration": 1.0,
-        })
+        result = bridge.run_qed(
+            {
+                "n_modes": 2,
+                "n_photons_max": 2,
+                "dt": 0.1,
+                "duration": 1.0,
+            }
+        )
         assert isinstance(result, dict)
         assert "status" in result
 

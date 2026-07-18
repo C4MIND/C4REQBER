@@ -1,4 +1,5 @@
 """Tests for src/simulations/nvidia_bridge.py."""
+
 from __future__ import annotations
 
 import sys
@@ -344,43 +345,53 @@ class TestRunSimulation:
         assert "not available" in result.error_message.lower()
 
     def test_run_linear_algebra(self, bridge_cpu):
-        result = bridge_cpu.run_simulation({
-            "type": "linear_algebra",
-            "a": [[1.0, 2.0], [3.0, 4.0]],
-            "b": [[5.0, 6.0], [7.0, 8.0]],
-            "op": "matmul",
-        })
-        assert result.status == "success"
+        result = bridge_cpu.run_simulation(
+            {
+                "type": "linear_algebra",
+                "a": [[1.0, 2.0], [3.0, 4.0]],
+                "b": [[5.0, 6.0], [7.0, 8.0]],
+                "op": "matmul",
+            }
+        )
+        assert result.status == "partial"  # CPU kernel — not CUDA success
         assert "result" in result.data
+        assert result.data.get("backend") == "numpy_cpu"
 
     def test_run_neural_network_relu(self, bridge_cpu):
-        result = bridge_cpu.run_simulation({
-            "type": "neural_network",
-            "input": [[-1.0, 2.0], [-3.0, 4.0]],
-            "op": "relu",
-        })
-        assert result.status == "success"
+        result = bridge_cpu.run_simulation(
+            {
+                "type": "neural_network",
+                "input": [[-1.0, 2.0], [-3.0, 4.0]],
+                "op": "relu",
+            }
+        )
+        assert result.status == "partial"
 
     def test_run_quantum_circuit(self, bridge_cpu):
-        result = bridge_cpu.run_simulation({
-            "type": "quantum_circuit",
-            "n_qubits": 2,
-            "gates": [{"gate": "h", "targets": [0]}],
-        })
-        assert result.status == "success"
+        result = bridge_cpu.run_simulation(
+            {
+                "type": "quantum_circuit",
+                "n_qubits": 2,
+                "gates": [{"gate": "h", "targets": [0]}],
+            }
+        )
+        assert result.status == "partial"
         assert result.data["n_qubits"] == 2
 
     def test_run_multi_gpu(self, bridge_cpu):
-        result = bridge_cpu.run_simulation({
-            "type": "multi_gpu_collective",
-            "data": [1.0, 2.0, 3.0],
-            "collective_op": "all_reduce",
-        })
-        assert result.status == "success"
+        result = bridge_cpu.run_simulation(
+            {
+                "type": "multi_gpu_collective",
+                "data": [1.0, 2.0, 3.0],
+                "collective_op": "all_reduce",
+            }
+        )
+        assert result.status == "partial"
 
     def test_run_generic(self, bridge_cpu):
         result = bridge_cpu.run_simulation({"type": "unknown"})
-        assert result.status == "success"
+        assert result.status == "unavailable"
+        assert result.data.get("stub") is True
 
     def test_run_error(self, bridge_cpu):
         with patch.object(bridge_cpu, "_run_linear_algebra", side_effect=ValueError("test error")):
@@ -418,11 +429,11 @@ class TestAcceleratePattern:
             status="success",
             mode=CudaMode.GPU,
             execution_time=0.1,
-            data={"test": True},
+            data={"test": True, "backend": "cupy_local"},
             metrics={},
         )
         with patch.object(bridge_gpu, "run_simulation", return_value=mock_result):
-            result = bridge_gpu.accelerate_pattern(mock_pattern)
+            result = bridge_gpu.accelerate_pattern(mock_pattern, {"type": "linear_algebra"})
             assert result["accelerated"] is True
             assert result["engine"] == "nvidia"
             assert result["mode"] == "gpu"
@@ -434,7 +445,7 @@ class TestAcceleratePattern:
             error_message="GPU fail",
         )
         with patch.object(bridge_gpu, "run_simulation", return_value=mock_result):
-            result = bridge_gpu.accelerate_pattern(mock_pattern)
+            result = bridge_gpu.accelerate_pattern(mock_pattern, {"type": "linear_algebra"})
             assert result["accelerated"] is False
             assert result["engine"] == "legacy"
 
@@ -445,14 +456,15 @@ class TestAcceleratePattern:
         mock_pattern.run.assert_called_once_with({"test": True})
 
     def test_extract_pattern_config(self, bridge_gpu, mock_pattern):
-        result = bridge_gpu._extract_pattern_config(mock_pattern, {})
+        result = bridge_gpu._extract_pattern_config(mock_pattern, {"type": "quantum_circuit"})
         assert result["type"] == "quantum_circuit"
         assert result["pattern_id"] == "quantum_circuit"
 
-    def test_extract_pattern_config_linear_algebra(self, bridge_gpu, mock_pattern):
+    def test_extract_pattern_config_no_invented_cfd_matmul(self, bridge_gpu, mock_pattern):
         mock_pattern.PATTERN_ID = "cfd"
         result = bridge_gpu._extract_pattern_config(mock_pattern, {})
-        assert result["type"] == "linear_algebra"
+        assert result["type"] == "unsupported_pattern"
+        assert result["pattern_id"] == "cfd"
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -467,33 +479,40 @@ class TestCloudComputeStub:
         with patch.dict("os.environ", {}, clear=True):
             result = bridge_cpu.cloud.route_brev_dev("quantum_circuit", {})
             assert result["provider"] == "brev.dev"
-            assert result["status"] == "planned"
+            assert result["status"] == "unavailable"
+            assert result.get("stub") is True
             assert "BREV_API_KEY" in result["message"]
 
     def test_route_dgx_cloud_no_api_key(self, bridge_cpu):
         with patch.dict("os.environ", {}, clear=True):
             result = bridge_cpu.cloud.route_dgx_cloud("quantum_circuit", {})
             assert result["provider"] == "dgx_cloud"
-            assert result["status"] == "planned"
+            assert result["status"] == "unavailable"
+            assert result.get("stub") is True
             assert "NGC_API_KEY" in result["message"]
 
     def test_route_brev_dev_with_api_key(self, bridge_cpu):
         with patch.dict("os.environ", {"BREV_API_KEY": "test_key"}):
             result = bridge_cpu.cloud.route_brev_dev("quantum_circuit", {}, gpu_type="H100")
-            assert result["status"] == "routed"
+            assert result["status"] == "unavailable"
+            assert result.get("stub") is True
+            assert result["executed"] is False
             assert result["gpu_type"] == "H100"
             assert result["api_key_configured"] is True
 
     def test_route_dgx_cloud_with_api_key(self, bridge_cpu):
         with patch.dict("os.environ", {"NGC_API_KEY": "test_key"}):
             result = bridge_cpu.cloud.route_dgx_cloud("quantum_circuit", {}, gpu_type="H100")
-            assert result["status"] == "routed"
+            assert result["status"] == "unavailable"
+            assert result.get("stub") is True
+            assert result["executed"] is False
             assert result["gpu_type"] == "H100"
             assert result["api_key_configured"] is True
 
     def test_no_hardcoded_api_keys(self, bridge_cpu):
         # Ensure no API keys are hardcoded in the stub
         import inspect
+
         source = inspect.getsource(CloudComputeStub)
         assert "sk-" not in source
         assert "api_key = " not in source or "api_key = os" in source
@@ -546,9 +565,7 @@ class TestBenchmark:
     """Test benchmark method."""
 
     def test_benchmark(self, bridge_cpu):
-        mock_result = NvidiaBridgeResult(
-            status="success", mode=CudaMode.CPU, execution_time=0.01
-        )
+        mock_result = NvidiaBridgeResult(status="success", mode=CudaMode.CPU, execution_time=0.01)
         with patch.object(bridge_cpu, "run_simulation", return_value=mock_result):
             result = bridge_cpu.benchmark({"grid_size": 10}, num_runs=2)
             assert "nvidia_avg_time" in result
@@ -615,12 +632,14 @@ class TestCostReportIntegration:
 
     def test_cost_report_after_simulation(self, bridge_cpu):
         bridge_cpu.reset_cost_tracker()
-        result = bridge_cpu.run_simulation({
-            "type": "linear_algebra",
-            "a": [[1.0, 0.0], [0.0, 1.0]],
-            "b": [[1.0, 0.0], [0.0, 1.0]],
-        })
-        assert result.status == "success"
+        result = bridge_cpu.run_simulation(
+            {
+                "type": "linear_algebra",
+                "a": [[1.0, 0.0], [0.0, 1.0]],
+                "b": [[1.0, 0.0], [0.0, 1.0]],
+            }
+        )
+        assert result.status == "partial"
         report = bridge_cpu.get_cost_report()
         assert "cuda_hours" in report
         assert report["total_kernel_calls"] >= 0

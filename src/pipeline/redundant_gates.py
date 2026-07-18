@@ -13,6 +13,7 @@ from src.discovery.already_shifted import AlreadyShiftedDetector
 _llm_reason: Any | None = None
 try:
     from src.plugins._llm_base import _llm_reason as _llm_reason_impl
+
     _llm_reason = _llm_reason_impl
 except ImportError:
     pass
@@ -20,6 +21,7 @@ except ImportError:
 try:
     from sklearn.feature_extraction.text import TfidfVectorizer
     from sklearn.metrics.pairwise import cosine_similarity
+
     _HAVE_SKLEARN = True
 except ImportError:
     TfidfVectorizer = None
@@ -53,8 +55,7 @@ class GateFunction(Protocol):
     text/known_corpus, review gates receive draft/rules).
     """
 
-    async def check(self, **kwargs: Any) -> GateResult:
-        ...
+    async def check(self, **kwargs: Any) -> GateResult: ...
 
 
 class RedundantGate:
@@ -98,13 +99,13 @@ class RedundantGate:
         all_scores = [r.score for r in results]
 
         if dissenting:
-            rationales = "; ".join(
-                d.message for d in dissenting if d.message
-            )
+            rationales = "; ".join(d.message for d in dissenting if d.message)
             logger.warning(
-                "RedundantGate disagreement: %d/%d passed (threshold=%.0f%%). "
-                "Dissenting: %s",
-                votes, total, self._min_agreement * 100, rationales,
+                "RedundantGate disagreement: %d/%d passed (threshold=%.0f%%). Dissenting: %s",
+                votes,
+                total,
+                self._min_agreement * 100,
+                rationales,
             )
 
         return GateResult(
@@ -125,6 +126,7 @@ class RedundantGate:
 
 
 # ── ParadigmShiftGate implementations ──────────────────────────────────
+
 
 class ParadigmShiftKeywordVariant:
     """Variant 1: keyword-based AlreadyShiftedDetector.
@@ -184,13 +186,17 @@ class ParadigmShiftSemanticVariant:
         hypothesis: str = kwargs.get("hypothesis", "")
         if not hypothesis:
             return GateResult(
-                passed=False, score=0.0, confidence=0.0,
+                passed=False,
+                score=0.0,
+                confidence=0.0,
                 message="No hypothesis provided",
             )
         if not _HAVE_SKLEARN:
             logger.warning("sklearn unavailable — falling back to stub")
             return GateResult(
-                passed=None, score=0.0, confidence=0.0,
+                passed=None,
+                score=0.0,
+                confidence=0.0,
                 message="abstained: sklearn not installed",
                 details={},
                 abstained=True,
@@ -211,7 +217,11 @@ class ParadigmShiftSemanticVariant:
             score=score,
             confidence=confidence,
             message=f"{'PARADIGM-SHIFT-LIKE' if passed else 'NOT-SHIFT-LIKE'} — max cosine similarity={max_sim:.3f} (threshold={threshold})",
-            details={"max_cosine_similarity": round(max_sim, 4), "threshold": threshold, "method": "tfidf"},
+            details={
+                "max_cosine_similarity": round(max_sim, 4),
+                "threshold": threshold,
+                "method": "tfidf",
+            },
         )
 
 
@@ -235,14 +245,18 @@ Respond ONLY with valid JSON in this exact format:
         hypothesis: str = kwargs.get("hypothesis", "")
         if not hypothesis:
             return GateResult(
-                passed=False, score=0.0, confidence=0.0,
+                passed=False,
+                score=0.0,
+                confidence=0.0,
                 message="No hypothesis provided",
             )
 
         if _llm_reason is None:
             logger.warning("_llm_base unavailable — falling back to stub")
             return GateResult(
-                passed=None, score=0.0, confidence=0.0,
+                passed=None,
+                score=0.0,
+                confidence=0.0,
                 message="abstained: _llm_base not available",
                 details={},
                 abstained=True,
@@ -250,12 +264,18 @@ Respond ONLY with valid JSON in this exact format:
 
         prompt = self._PROMPT.format(hypothesis=hypothesis[:3000])
         response = await asyncio.to_thread(
-            _llm_reason, prompt, "You are a rigorous scientific paradigm evaluator. Return only JSON.", 600, 0.3
+            _llm_reason,
+            prompt,
+            "You are a rigorous scientific paradigm evaluator. Return only JSON.",
+            600,
+            0.3,
         )
 
         if not response:
             return GateResult(
-                passed=False, score=0.0, confidence=0.0,
+                passed=False,
+                score=0.0,
+                confidence=0.0,
                 message="LLM unavailable — neutral abstain",
                 details={"error": "no_response"},
             )
@@ -265,7 +285,9 @@ Respond ONLY with valid JSON in this exact format:
         except Exception as e:
             logger.warning("Failed to parse LLM response as JSON: %s", e)
             return GateResult(
-                passed=False, score=0.0, confidence=0.0,
+                passed=False,
+                score=0.0,
+                confidence=0.0,
                 message="LLM response parse error — neutral abstain",
                 details={"error": str(e), "raw": response[:200]},
             )
@@ -286,13 +308,14 @@ Respond ONLY with valid JSON in this exact format:
     @staticmethod
     def _parse_json(text: str) -> dict[str, Any]:
         text = text.strip()
-        match = re.search(r'\{[^{}]*\}', text, re.DOTALL)
+        match = re.search(r"\{[^{}]*\}", text, re.DOTALL)
         if match:
             return json.loads(match.group())
         return json.loads(text)
 
 
 # ── NoveltyGate implementations ────────────────────────────────────────
+
 
 class NoveltyJaccardVariant:
     """Variant 1: Jaccard-based keyword similarity against known corpus."""
@@ -314,7 +337,9 @@ class NoveltyJaccardVariant:
 
         if not text:
             return GateResult(
-                passed=True, score=0.5, confidence=0.0,
+                passed=True,
+                score=0.5,
+                confidence=0.0,
                 message="Empty input — cannot assess novelty",
             )
 
@@ -354,20 +379,27 @@ class NoveltySemanticVariant:
 
         if not text:
             return GateResult(
-                passed=True, score=0.5, confidence=0.0,
+                passed=True,
+                score=0.5,
+                confidence=0.0,
                 message="Empty input — cannot assess novelty",
             )
 
         if not known_corpus:
             return GateResult(
-                passed=True, score=0.5, confidence=0.3,
-                message="No corpus provided — assuming novel",
+                passed=False,
+                score=0.0,
+                confidence=0.0,
+                message="No corpus provided — cannot assess novelty",
+                abstained=True,
             )
 
         if not _HAVE_SKLEARN:
             logger.warning("sklearn unavailable — falling back to stub")
             return GateResult(
-                passed=None, score=0.0, confidence=0.0,
+                passed=None,
+                score=0.0,
+                confidence=0.0,
                 message="abstained: sklearn not installed",
                 details={},
                 abstained=True,
@@ -421,22 +453,28 @@ Respond ONLY with valid JSON in this exact format:
 
         if not text:
             return GateResult(
-                passed=True, score=0.5, confidence=0.0,
+                passed=True,
+                score=0.5,
+                confidence=0.0,
                 message="Empty input — cannot assess novelty",
             )
 
         if _llm_reason is None:
             logger.warning("_llm_base unavailable — falling back to stub")
             return GateResult(
-                passed=None, score=0.0, confidence=0.0,
+                passed=None,
+                score=0.0,
+                confidence=0.0,
                 message="abstained: _llm_base not available",
                 details={},
                 abstained=True,
             )
 
-        corpus_snippet = "\n".join(
-            f"- {doc[:200]}" for doc in known_corpus[:5]
-        ) if known_corpus else "(no corpus provided)"
+        corpus_snippet = (
+            "\n".join(f"- {doc[:200]}" for doc in known_corpus[:5])
+            if known_corpus
+            else "(no corpus provided)"
+        )
 
         prompt = self._PROMPT.format(text=text[:3000], corpus=corpus_snippet[:3000])
         response = await asyncio.to_thread(
@@ -445,7 +483,9 @@ Respond ONLY with valid JSON in this exact format:
 
         if not response:
             return GateResult(
-                passed=False, score=0.0, confidence=0.0,
+                passed=False,
+                score=0.0,
+                confidence=0.0,
                 message="LLM unavailable — neutral abstain",
                 details={"error": "no_response"},
             )
@@ -455,7 +495,9 @@ Respond ONLY with valid JSON in this exact format:
         except Exception as e:
             logger.warning("Failed to parse LLM response as JSON: %s", e)
             return GateResult(
-                passed=False, score=0.0, confidence=0.0,
+                passed=False,
+                score=0.0,
+                confidence=0.0,
                 message="LLM response parse error — neutral abstain",
                 details={"error": str(e), "raw": response[:200]},
             )
@@ -476,13 +518,14 @@ Respond ONLY with valid JSON in this exact format:
     @staticmethod
     def _parse_json(text: str) -> dict[str, Any]:
         text = text.strip()
-        match = re.search(r'\{[^{}]*\}', text, re.DOTALL)
+        match = re.search(r"\{[^{}]*\}", text, re.DOTALL)
         if match:
             return json.loads(match.group())
         return json.loads(text)
 
 
 # ── SelfCritiqueGate implementations ────────────────────────────────────
+
 
 class StructuredReviewerVariant:
     """Variant 1: structured reviewer — checks draft against a rubric."""
@@ -514,7 +557,9 @@ class StructuredReviewerVariant:
         draft: str = kwargs.get("draft", "")
         if not draft:
             return GateResult(
-                passed=True, score=0.0, confidence=0.0,
+                passed=True,
+                score=0.0,
+                confidence=0.0,
                 message="No draft provided for review",
             )
 
@@ -536,7 +581,9 @@ class StructuredReviewerVariant:
             passed=passed,
             score=score,
             confidence=0.8,
-            message=f"Structured review: {failed_checks}/{total_checks} issues found" if issues else "Structured review: no issues found",
+            message=f"Structured review: {failed_checks}/{total_checks} issues found"
+            if issues
+            else "Structured review: no issues found",
             details={
                 "issues": issues,
                 "failed_checks": failed_checks,
@@ -560,14 +607,18 @@ Identify the most critical flaws. Then respond ONLY with valid JSON in this exac
         draft: str = kwargs.get("draft", "")
         if not draft:
             return GateResult(
-                passed=True, score=0.0, confidence=0.0,
+                passed=True,
+                score=0.0,
+                confidence=0.0,
                 message="No draft provided for review",
             )
 
         if _llm_reason is None:
             logger.warning("_llm_base unavailable — falling back to stub")
             return GateResult(
-                passed=None, score=0.0, confidence=0.0,
+                passed=None,
+                score=0.0,
+                confidence=0.0,
                 message="abstained: _llm_base not available",
                 details={},
                 abstained=True,
@@ -580,7 +631,9 @@ Identify the most critical flaws. Then respond ONLY with valid JSON in this exac
 
         if not response:
             return GateResult(
-                passed=False, score=0.0, confidence=0.0,
+                passed=False,
+                score=0.0,
+                confidence=0.0,
                 message="LLM unavailable — neutral abstain",
                 details={"error": "no_response"},
             )
@@ -590,7 +643,9 @@ Identify the most critical flaws. Then respond ONLY with valid JSON in this exac
         except Exception as e:
             logger.warning("Failed to parse LLM response as JSON: %s", e)
             return GateResult(
-                passed=False, score=0.0, confidence=0.0,
+                passed=False,
+                score=0.0,
+                confidence=0.0,
                 message="LLM response parse error — neutral abstain",
                 details={"error": str(e), "raw": response[:200]},
             )
@@ -617,7 +672,9 @@ Identify the most critical flaws. Then respond ONLY with valid JSON in this exac
     @staticmethod
     def _parse_json(text: str) -> dict[str, Any]:
         text = text.strip()
-        match = re.search(r'\{[^{}]*\[.*?\][^{}]*\}', text, re.DOTALL) or re.search(r'\{[^{}]*\}', text, re.DOTALL)
+        match = re.search(r"\{[^{}]*\[.*?\][^{}]*\}", text, re.DOTALL) or re.search(
+            r"\{[^{}]*\}", text, re.DOTALL
+        )
         if match:
             return json.loads(match.group())
         return json.loads(text)
@@ -638,14 +695,18 @@ Respond ONLY with valid JSON in this exact format:
         hypothesis: str = kwargs.get("hypothesis", "")
         if not hypothesis:
             return GateResult(
-                passed=True, score=0.0, confidence=0.0,
+                passed=True,
+                score=0.0,
+                confidence=0.0,
                 message="No hypothesis provided for devil's advocate review",
             )
 
         if _llm_reason is None:
             logger.warning("_llm_base unavailable — falling back to stub")
             return GateResult(
-                passed=None, score=0.0, confidence=0.0,
+                passed=None,
+                score=0.0,
+                confidence=0.0,
                 message="abstained: _llm_base not available",
                 details={},
                 abstained=True,
@@ -653,12 +714,18 @@ Respond ONLY with valid JSON in this exact format:
 
         prompt = self._PROMPT.format(hypothesis=hypothesis[:4000])
         response = await asyncio.to_thread(
-            _llm_reason, prompt, "You are a relentless devil's advocate. Return only JSON.", 800, 0.4
+            _llm_reason,
+            prompt,
+            "You are a relentless devil's advocate. Return only JSON.",
+            800,
+            0.4,
         )
 
         if not response:
             return GateResult(
-                passed=False, score=0.0, confidence=0.0,
+                passed=False,
+                score=0.0,
+                confidence=0.0,
                 message="LLM unavailable — neutral abstain",
                 details={"error": "no_response"},
             )
@@ -668,7 +735,9 @@ Respond ONLY with valid JSON in this exact format:
         except Exception as e:
             logger.warning("Failed to parse LLM response as JSON: %s", e)
             return GateResult(
-                passed=False, score=0.0, confidence=0.0,
+                passed=False,
+                score=0.0,
+                confidence=0.0,
                 message="LLM response parse error — neutral abstain",
                 details={"error": str(e), "raw": response[:200]},
             )
@@ -695,13 +764,16 @@ Respond ONLY with valid JSON in this exact format:
     @staticmethod
     def _parse_json(text: str) -> dict[str, Any]:
         text = text.strip()
-        match = re.search(r'\{[^{}]*\[.*?\][^{}]*\}', text, re.DOTALL) or re.search(r'\{[^{}]*\}', text, re.DOTALL)
+        match = re.search(r"\{[^{}]*\[.*?\][^{}]*\}", text, re.DOTALL) or re.search(
+            r"\{[^{}]*\}", text, re.DOTALL
+        )
         if match:
             return json.loads(match.group())
         return json.loads(text)
 
 
 # ── Pre-built redundant gate configurations ────────────────────────────
+
 
 def create_paradigm_shift_gate(min_agreement: float = 0.5) -> RedundantGate:
     return RedundantGate(
@@ -734,5 +806,3 @@ def create_self_critique_gate(min_agreement: float = 0.5) -> RedundantGate:
         ],
         min_agreement=min_agreement,
     )
-
-

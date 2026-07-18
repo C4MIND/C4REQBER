@@ -64,7 +64,7 @@
     </nav>
 
     <h2 data-i18n="gpu_autodetect_title">Local GPU Auto-Detect</h2>
-    <pre><button class="copy-btn" data-copy-btn data-i18n="btn_copy">copy</button><code>blast simulate --engine openmm --detect-gpu</code></pre>
+    <pre><button class="copy-btn" data-copy-btn data-i18n="btn_copy">copy</button><code>blast simulate --detect-gpu</code></pre>
     <p data-i18n="gpu_backends_intro">Supported backends:</p>
     <ul>
       <li data-i18n="gpu_backend_cuda" data-i18n-html="true"><strong>NVIDIA CUDA</strong> — <code>nvidia-smi</code> detection, cuDNN auto-check</li>
@@ -97,7 +97,7 @@ vast.ai: 1h on A100 ($0.80)
 vast.ai: 2h on RTX 3090 ($0.40)</code></pre>
     <p><strong data-i18n="gpu_workflow_title">Workflow:</strong></p>
     <ol style="color:var(--fg-2);line-height:1.8;padding-left:24px">
-      <li data-i18n="gpu_workflow_step1" data-i18n-html="true"><code>blast simulate --engine &lt;name&gt; --dry-run</code> — shows exact conda/pip commands</li>
+      <li data-i18n="gpu_workflow_step1" data-i18n-html="true"><code>blast simulate --engine &lt;name&gt; --dry-run</code> — availability / install hints (stubs ≠ success)</li>
       <li data-i18n="gpu_workflow_step2">Install locally OR rent on vast.ai</li>
       <li data-i18n="gpu_workflow_step3" data-i18n-html="true">Re-run without <code>--dry-run</code></li>
     </ol>

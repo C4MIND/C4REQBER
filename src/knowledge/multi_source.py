@@ -13,4 +13,13 @@ from src.knowledge.orchestrator import MultiSourceSearcher
 SOURCE_REGISTRY: dict = {}
 DOMAIN_KEYWORDS: dict[str, list[str]] = {}
 
+try:
+    from src.knowledge.config import DOMAIN_KEYWORDS as _DK
+    from src.knowledge.config import SOURCE_REGISTRY as _SR
+
+    SOURCE_REGISTRY = _SR
+    DOMAIN_KEYWORDS = _DK
+except ImportError:
+    pass
+
 __all__ = ["MultiSourceSearcher", "SOURCE_REGISTRY", "DOMAIN_KEYWORDS"]

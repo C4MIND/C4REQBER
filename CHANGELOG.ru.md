@@ -2,6 +2,21 @@
 
 > **English version:** [CHANGELOG.md](CHANGELOG.md)
 
+## v9.18.0 (2026-07-18) — Honesty contract (анти green-fake)
+
+Канон: [`docs/HONESTY_CONTRACT.md`](docs/HONESTY_CONTRACT.md).
+
+- OpenAlex: match только при title similarity ≥ 0.82
+- Novelty unchecked / пустой поиск → `novelty_score: null`
+- Z3 `sat` ≠ verified; Lean-тавтологии отказаны; stamp `COMPILED` без alignment
+- MCP / симуляции / плагины: **positive provenance** для `success` (не stub-прикрытие)
+- Gateway LLM для cognitive plugins; runners биндят aliases (`target`/`situation`/…)
+- Dict-safe status для HIL simulation/verification в MCP
+- Убраны неапрувленные demo mp4/gif; Pages gallery — скриншоты
+- Dempster MNLI; capsim без default-available
+
+---
+
 ## v9.16.1 (2026-07-12) — Полный test suite зелёный + синхрон доков/сайта
 
 ### Production-фиксы (ночной аудит)

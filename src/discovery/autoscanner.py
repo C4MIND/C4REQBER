@@ -29,6 +29,7 @@ LOCAL_PROBLEMS = [
 @dataclass
 class ProblemCandidate:
     """ProblemCandidate."""
+
     title: str
     problem: str
     domain: str
@@ -66,15 +67,81 @@ class AutoScanner:
     ]
 
     DOMAIN_KEYWORDS: dict[str, list[str]] = {
-        "physics": ["physics", "quantum", "particle", "cosmology", "astrophysics", "condensed matter", "optics", "fluid"],
-        "biology": ["biology", "gene", "protein", "cell", "dna", "rna", "molecular", "organism", "evolution"],
-        "chemistry": ["chemistry", "molecule", "catalyst", "reaction", "polymer", "synthesis", "electrochem"],
-        "medicine": ["medicine", "disease", "cancer", "therapy", "drug", "clinical", "patient", "surgery"],
-        "cs": ["algorithm", "machine learning", "neural", "computation", "ai", "artificial intelligence", "data"],
-        "mathematics": ["mathematics", "number theory", "conjecture", "proof", "topology", "algebra", "geometry"],
-        "materials": ["material", "alloy", "composite", "semiconductor", "superconductor", "nanomaterial"],
+        "physics": [
+            "physics",
+            "quantum",
+            "particle",
+            "cosmology",
+            "astrophysics",
+            "condensed matter",
+            "optics",
+            "fluid",
+        ],
+        "biology": [
+            "biology",
+            "gene",
+            "protein",
+            "cell",
+            "dna",
+            "rna",
+            "molecular",
+            "organism",
+            "evolution",
+        ],
+        "chemistry": [
+            "chemistry",
+            "molecule",
+            "catalyst",
+            "reaction",
+            "polymer",
+            "synthesis",
+            "electrochem",
+        ],
+        "medicine": [
+            "medicine",
+            "disease",
+            "cancer",
+            "therapy",
+            "drug",
+            "clinical",
+            "patient",
+            "surgery",
+        ],
+        "cs": [
+            "algorithm",
+            "machine learning",
+            "neural",
+            "computation",
+            "ai",
+            "artificial intelligence",
+            "data",
+        ],
+        "mathematics": [
+            "mathematics",
+            "number theory",
+            "conjecture",
+            "proof",
+            "topology",
+            "algebra",
+            "geometry",
+        ],
+        "materials": [
+            "material",
+            "alloy",
+            "composite",
+            "semiconductor",
+            "superconductor",
+            "nanomaterial",
+        ],
         "energy": ["energy", "battery", "solar", "fuel", "nuclear", "renewable", "power"],
-        "engineering": ["engineering", "manufacturing", "design", "robotics", "optimization", "control"],
+        "engineering": [
+            "engineering",
+            "manufacturing",
+            "design",
+            "robotics",
+            "optimization",
+            "control",
+        ],
         "social": ["social", "economic", "political", "education", "policy", "behavior"],
     }
 
@@ -138,15 +205,17 @@ class AutoScanner:
                 if not matched:
                     continue
                 sentence = self._extract_relevant_sentence(abstract, matched)
-                candidates.append({
-                    "title": title[:200],
-                    "problem": sentence[:300],
-                    "domain": self._guess_domain(title + " " + abstract),
-                    "source": source,
-                    "year": str(paper.get("year", "")),
-                    "matched_indicator": matched,
-                    "raw_paper": paper,
-                })
+                candidates.append(
+                    {
+                        "title": title[:200],
+                        "problem": sentence[:300],
+                        "domain": self._guess_domain(title + " " + abstract),
+                        "source": source,
+                        "year": str(paper.get("year", "")),
+                        "matched_indicator": matched,
+                        "raw_paper": paper,
+                    }
+                )
         return candidates
 
     def _match_indicators(self, text: str) -> str:
@@ -157,7 +226,7 @@ class AutoScanner:
         return ""
 
     def _extract_relevant_sentence(self, abstract: str, indicator: str) -> str:
-        sentences = re.split(r'(?<=[.!?])\s+', abstract)
+        sentences = re.split(r"(?<=[.!?])\s+", abstract)
         for s in sentences:
             if indicator.lower() in s.lower():
                 return s.strip()[:300]
@@ -174,9 +243,7 @@ class AutoScanner:
                 best_domain = domain
         return best_domain
 
-    def _deduplicate(
-        self, candidates: list[dict[str, Any]]
-    ) -> list[dict[str, Any]]:
+    def _deduplicate(self, candidates: list[dict[str, Any]]) -> list[dict[str, Any]]:
         seen: set[str] = set()
         unique: list[dict[str, Any]] = []
         for c in candidates:
@@ -186,9 +253,7 @@ class AutoScanner:
                 unique.append(c)
         return unique
 
-    def _score_candidates(
-        self, candidates: list[dict[str, Any]]
-    ) -> list[dict[str, Any]]:
+    def _score_candidates(self, candidates: list[dict[str, Any]]) -> list[dict[str, Any]]:
         indicator_weights = {
             "open problem": 1.0,
             "unsolved": 0.95,
@@ -217,25 +282,48 @@ class AutoScanner:
         return candidates
 
     def _estimate_value(self, score: float) -> str:
+        """Heuristic market-size label (not a real valuation). Prefixed for honesty."""
         if score >= 0.90:
-            return "$1B+"
+            bucket = "$1B+"
         elif score >= 0.75:
-            return "$500M+"
+            bucket = "$500M+"
         elif score >= 0.60:
-            return "$100M+"
+            bucket = "$100M+"
         else:
-            return "$10M+"
+            bucket = "$10M+"
+        return f"heuristic:{bucket}"
 
     async def scan_local(self) -> list[dict[str, Any]]:
-        """Local mode — uses pre-loaded problem database."""
+        """Demo-only corpus — **do not call from live discovery pipelines**.
+
+        Prefer ``scan_from_papers`` or ``scan_unsolved_problems``.
+        """
         return [
-            {"problem": p, "source": "local_db", "discovery_potential": 0.7 + i * 0.02}
+            {
+                "problem": p,
+                "source": "local_db",
+                "discovery_potential": 0.7 + i * 0.02,
+                "demo": True,
+                "note": "Hardcoded demo corpus — not a live literature scan",
+            }
             for i, p in enumerate(LOCAL_PROBLEMS[:5])
         ]
 
-    async def refine_with_llm(
-        self, candidates: list[dict[str, Any]]
-    ) -> list[dict[str, Any]]:
+    async def scan_from_papers(self, papers: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        """Extract open-problem candidates from real paper abstracts (no demo corpus)."""
+        if not papers:
+            return []
+        bundled = {"pipeline": list(papers)}
+        raw = self._extract_candidates(bundled, query="pipeline_papers")
+        scored = self._score_candidates(self._deduplicate(raw))
+        scored.sort(key=lambda c: c.get("prospect_score", 0), reverse=True)
+        for c in scored:
+            c["demo"] = False
+            c["discovery_potential"] = float(c.get("prospect_score", 0.0))
+            c["potential_value_heuristic"] = True
+        return scored[:10]
+
+    async def refine_with_llm(self, candidates: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """Use LLM to reformulate problem statements into readable headlines."""
         if self.llm is None:
             return candidates

@@ -15,6 +15,7 @@ from typing import Any
 @dataclass
 class LeanGoal:
     """LeanGoal."""
+
     hypothesis: str
     target: str
 
@@ -22,6 +23,7 @@ class LeanGoal:
 @dataclass
 class LeanError:
     """LeanError."""
+
     line: int
     column: int
     message: str
@@ -127,10 +129,21 @@ class Lean4Client:
                 "error": "Lean 4 not installed",
             }
 
+        # Refuse True-wrapper theater — tactic success on `example : True`
+        # does not advance a real goal. Require caller-supplied goal state.
+        if "theorem" not in state and "example" not in state and "lemma" not in state:
+            return {
+                "success": False,
+                "new_state": state,
+                "goals": [],
+                "error": "apply_tactic requires a real theorem/lemma/example goal in state "
+                "(refusing example : True wrapper)",
+                "heuristic": False,
+            }
+
         code = f"""
 {state}
 
-example : True := by
   {tactic}
 """
         result = self.check_proof(code)
@@ -176,8 +189,7 @@ example : True := by
             if result.get("success"):
                 return True
             return not any(
-                "unknown module 'Mathlib'" in e.get("message", "")
-                for e in result.get("errors", [])
+                "unknown module 'Mathlib'" in e.get("message", "") for e in result.get("errors", [])
             )
         except (ValueError, TypeError, KeyError):
             return False
@@ -185,22 +197,27 @@ example : True := by
     def _parse_errors(self, output: str) -> list[dict[str, Any]]:
         errors = []
         import re
+
         # Match Lean4-style errors: file:line:col: error: message
         pattern = re.compile(r"^(.*?):(\d+):(\d+):\s*error:\s*(.*)$", re.IGNORECASE)
         for line in output.split("\n"):
             m = pattern.match(line)
             if m:
-                errors.append({
-                    "line": int(m.group(2)),
-                    "column": int(m.group(3)),
-                    "message": m.group(4).strip(),
-                })
+                errors.append(
+                    {
+                        "line": int(m.group(2)),
+                        "column": int(m.group(3)),
+                        "message": m.group(4).strip(),
+                    }
+                )
             elif "error:" in line.lower():
-                errors.append({
-                    "line": 0,
-                    "column": 0,
-                    "message": line.strip(),
-                })
+                errors.append(
+                    {
+                        "line": 0,
+                        "column": 0,
+                        "message": line.strip(),
+                    }
+                )
         return errors
 
     def _parse_goals(self, output: str) -> list[dict[str, Any]]:
@@ -232,7 +249,10 @@ example : True := by
             proof = ""
         proof_lower = proof.strip().lower()
         if not proof or proof_lower == "sorry" or "sorry" in proof_lower:
-            return {"valid": False, "error": "Empty proof rejected: provide real Lean4 proof tactics, not 'sorry'."}
+            return {
+                "valid": False,
+                "error": "Empty proof rejected: provide real Lean4 proof tactics, not 'sorry'.",
+            }
         code = f"""
 theorem discovery_1 : {statement} :=
   {proof}
@@ -243,7 +263,9 @@ theorem discovery_1 : {statement} :=
             "error": result["errors"][0]["message"] if result["errors"] else None,
         }
 
-    async def verify_discovery(self, hypothesis: str, evidence: list[str] | None = None) -> dict[str, Any]:
+    async def verify_discovery(
+        self, hypothesis: str, evidence: list[str] | None = None
+    ) -> dict[str, Any]:
         """Auto-generate and verify a discovery.
 
         Uses FormalizationEngine → ConsensusEngine pipeline.
@@ -341,9 +363,11 @@ theorem interactive : {theorem} := by
         for thm in theorems:
             proof = thm.get("proof") or None
             result = self.verify_theorem(thm["statement"], proof)
-            results.append({
-                "name": thm.get("name", "unnamed"),
-                "valid": result["valid"],
-                "error": result.get("error"),
-            })
+            results.append(
+                {
+                    "name": thm.get("name", "unnamed"),
+                    "valid": result["valid"],
+                    "error": result.get("error"),
+                }
+            )
         return results

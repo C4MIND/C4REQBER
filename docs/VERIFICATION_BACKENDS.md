@@ -1,18 +1,21 @@
-# Verification Backends — c4reqber v9.16
+# Verification Backends — c4reqber v9.18
 
 **Truth source:** `_truths.json` — **9 real backends**, **0 guard-stubs**.
+**Honesty rules:** [`HONESTY_CONTRACT.md`](HONESTY_CONTRACT.md) — `sat` ≠ verified; compile ≠ claim-aligned; fallback Hoare is heuristic.
 
-| Backend | Role | Install |
-|---------|------|---------|
-| Lean4 | Dependent types, mathematics | `elan` / `brew install elan-init` |
-| Coq | Inductive proofs | `brew install coq` |
-| Dafny | Imperative + contracts | `brew install dafny` |
-| Agda | Constructive type theory | `brew install agda` |
-| Z3 / Hoare | SMT + imperative logic | `pip install z3-solver` |
-| Haskell | Typecheck + QuickCheck | `brew install ghc` |
-| **CVC5** | Industrial SMT-LIB2 | `bash tools/install-verifiers.sh` |
-| **TLA+** | Temporal / concurrent specs | `bash tools/install-verifiers.sh` (tla2tools.jar) |
-| **Alloy** | Relational model finding | `brew install alloy-analyzer` or JAR |
+| Backend | Role | Install | Honesty note |
+|---------|------|---------|--------------|
+| Lean4 | Dependent types, mathematics | `elan` / `brew install elan-init` | `sorry` / tautology translators → not verified |
+| Coq | Inductive proofs | `brew install coq` | `Admitted` → incomplete |
+| Dafny | Imperative + contracts | `brew install dafny` | |
+| Agda | Constructive type theory | `brew install agda` | |
+| Z3 / Hoare | SMT + imperative logic | `pip install z3-solver` | Z3 `sat` = satisfiable only; Hoare without Z3 → `heuristic` |
+| Haskell | Typecheck + QuickCheck | `brew install ghc` | |
+| **CVC5** | Industrial SMT-LIB2 | `bash tools/install-verifiers.sh` | |
+| **TLA+** | Temporal / concurrent specs | `bash tools/install-verifiers.sh` (tla2tools.jar) | Needs positive TLC success tokens |
+| **Alloy** | Relational model finding | `brew install alloy-analyzer` or JAR | Needs positive success tokens; not returncode alone |
+
+`/v8/verify/methods` probes real availability (`import z3`, executables) — does **not** hardcode `z3: true` / `hoare: true`.
 
 Smoke test: `python3 scripts/verify_backends_smoke.py`
 

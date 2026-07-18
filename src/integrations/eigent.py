@@ -93,8 +93,8 @@ class EigentDesktop:
                 if resp.status_code == 200:
                     self.connected = True
                     return True
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("swallowed exception: %s", _exc, exc_info=True)
         return False
 
     async def query(self, prompt: str) -> dict[str, Any]:

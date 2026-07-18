@@ -3,6 +3,7 @@ package tui
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"sync"
 	"time"
@@ -85,6 +86,8 @@ type model struct {
 	// v9.12.1: dedup phase cards — only append when phase/progress changes.
 	lastPhase    string
 	lastProgress float64
+	lastSSEType  string
+	lastSSETS    time.Time
 
 	tick int
 
@@ -384,11 +387,23 @@ func NewApp(apiURL string) *model {
 			m.wizard.Show()
 		}
 	}
+	// C4_LANG is an explicit runtime override of the UI language. It MUST win
+	// over the persisted state.lang so that scripts/CI/demos can force a
+	// deterministic language (e.g. C4_LANG=en) regardless of which
+	// tui-v9-state.json the binary happens to load. Without this, C4_LANG is
+	// parsed in config.LoadConfig but never reaches i18n, so the documented
+	// "starting language" env var had no effect on the rendered UI.
+	if l, ok := i18n.FromString(os.Getenv("C4_LANG")); ok {
+		i18n.SetLang(l)
+	}
 	// v9.13 (B-05): restore last N cards from feed.jsonl FIRST, before the
 	// initial Empty placeholder. This avoids double-appending the placeholder.
 	restoredCount := 0
 	if m.feedStore != nil {
-		entries, _ := m.feedStore.LoadRecent(50)
+	entries, err := m.feedStore.LoadRecent(50)
+		if err != nil {
+			m.setToast("feed restore failed: " + err.Error())
+		}
 		// Reverse to chronological order (LoadRecent returns most-recent-first)
 		for i, j := 0, len(entries)-1; i < j; i, j = i+1, j-1 {
 			entries[i], entries[j] = entries[j], entries[i]
@@ -408,6 +423,7 @@ func NewApp(apiURL string) *model {
 				Time:     e.Time,
 				Status:   e.Status,
 				Bookmark: e.Bookmark,
+				Meta:     []cards.MetaKV{{Key: "restored", Value: "true"}},
 				Sim: cards.SimFields{
 					Engine:       e.SimEngine,
 					EngineStatus: e.SimStatus,
@@ -614,11 +630,18 @@ func (m *model) handleSimEvent(te api.TypedEvent) {
 		Status: func() string {
 			switch te.Type {
 			case api.EventSimFinished:
-				if te.EngineStatus == "success" || te.EngineStatus == "" {
+				st := simStatusString(te)
+				if st == "success" {
 					return "done"
 				}
-				return "error"
+				if st == "error" || st == "failed" {
+					return "error"
+				}
+				return st // partial/stub/unavailable stay visible
 			case api.EventSimSkipped:
+				if strings.EqualFold(te.EngineStatus, "error") || strings.EqualFold(te.EngineStatus, "failed") {
+					return "error"
+				}
 				return "skipped"
 			case api.EventSimBudgetExceeded:
 				return "error"
@@ -641,6 +664,9 @@ func (m *model) handleSimEvent(te api.TypedEvent) {
 			},
 		},
 	}
+	if te.FallbackUsed != "" {
+		c.Sim.InstallHint = strings.TrimSpace(c.Sim.InstallHint + " · fallback: " + te.FallbackUsed)
+	}
 	if te.Type == api.EventSimFinished && te.Verdict != "" {
 		// Capture evidence briefly
 		c.Sim.Evidence = cards.SimEvidence{
@@ -657,6 +683,7 @@ func (m *model) handleSimEvent(te api.TypedEvent) {
 }
 
 // simStatusString maps a typed sim event to the CardSimulation status enum.
+// Only real success (ok/success, not stub/partial/unavailable) paints green.
 func simStatusString(te api.TypedEvent) string {
 	switch te.Type {
 	case api.EventSimStarted:
@@ -665,11 +692,27 @@ func simStatusString(te api.TypedEvent) string {
 		}
 		return "running"
 	case api.EventSimFinished:
-		if te.EngineStatus == "error" {
+		st := strings.ToLower(strings.TrimSpace(te.EngineStatus))
+		switch st {
+		case "success", "ok", "completed":
+			return "success"
+		case "error", "failed":
+			return "error"
+		case "partial", "stub", "unavailable", "timeout", "skipped":
+			if st == "" {
+				return "partial"
+			}
+			return st
+		case "":
+			return "partial" // empty status ≠ success
+		default:
+			return st
+		}
+	case api.EventSimSkipped:
+		st := strings.ToLower(strings.TrimSpace(te.EngineStatus))
+		if st == "error" || st == "failed" {
 			return "error"
 		}
-		return "success"
-	case api.EventSimSkipped:
 		return "skipped"
 	case api.EventSimBudgetExceeded:
 		return "budget_exceeded"
@@ -743,11 +786,23 @@ func (m *model) teardownStream() {
 }
 
 // handleCompleteEvent handles a typed 'complete' event — final results.
+// partial/failed must not toast as full success or fire celebration burst.
 func (m *model) handleCompleteEvent(te api.TypedEvent) {
 	m.running = false
 	m.jobID = ""
-	m.setToast(i18n.T("toast.complete"))
-	m.burst.Trigger(m.width, m.height, m.width/2, m.height/2)
+	st := strings.ToLower(strings.TrimSpace(te.Status))
+	switch st {
+	case "failed", "error":
+		m.setToast(i18n.T("toast.failed"))
+		m.handleFailedEvent(api.TypedEvent{Type: api.EventFailed, Status: st, Errors: te.Errors, Result: te.Result})
+		return
+	case "partial":
+		m.setToast(i18n.T("toast.partial"))
+		// No celebration burst for partial outcomes.
+	default:
+		m.setToast(i18n.T("toast.complete"))
+		m.burst.Trigger(m.width, m.height, m.width/2, m.height/2)
+	}
 	if te.Result != nil {
 		if hyp, ok := te.Result["hypothesis"].(map[string]any); ok {
 			hc := Card{Kind: CardHypothesis, Title: i18n.T("card.hypothesis.t"), Body: fieldString(hyp, "text"), Meta: []cards.MetaKV{{Key: "source", Value: fieldString(hyp, "source")}}, Time: time.Now(), Status: "done"}
@@ -767,8 +822,10 @@ func (m *model) handleCompleteEvent(te api.TypedEvent) {
 				m.appendCard(Card{Kind: CardPaper, Title: fieldString(pm, "title"), Body: fmt.Sprintf("%s · %s · citations %s", fieldString(pm, "venue"), fieldString(pm, "year"), fieldString(pm, "citation_count")), Meta: []cards.MetaKV{{Key: "doi", Value: fieldString(pm, "doi")}, {Key: "source", Value: fieldString(pm, "source")}}, Time: time.Now(), Status: "done"})
 			}
 		}
-		m.completedDisc++
-		m.checkAchievements()
+		if st == "" || st == "complete" || st == "success" {
+			m.completedDisc++
+			m.checkAchievements()
+		}
 	}
 }
 

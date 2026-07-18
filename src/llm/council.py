@@ -87,6 +87,7 @@ def _text_similarity(text_a: str, text_b: str) -> float:
 @dataclass
 class CouncilResult:
     """CouncilResult."""
+
     responses: list[str]
     consensus: str
     confidence: float
@@ -96,11 +97,16 @@ class CouncilResult:
 
 class LLMCouncil:
     """LLMCouncil."""
-    def __init__(self, models: list[str] | None = None, min_agreement: float = 0.6, budget: str | None = None):
+
+    def __init__(
+        self, models: list[str] | None = None, min_agreement: float = 0.6, budget: str | None = None
+    ):
         self.budget = budget or COUNCIL_BUDGET
         self.models = models or _load_council_models(self.budget)
         self.min_agreement = min_agreement
-        self._api_key = os.environ.get("OPENROUTER_API_KEY") or os.environ.get("DEEPSEEK_API_KEY", "")
+        self._api_key = os.environ.get("OPENROUTER_API_KEY") or os.environ.get(
+            "DEEPSEEK_API_KEY", ""
+        )
         self._local_client: httpx.AsyncClient | None = None
         self._lock = asyncio.Lock()
 
@@ -128,10 +134,7 @@ class LLMCouncil:
                 model_used=[],
             )
 
-        tasks = [
-            self._query_model(model, prompt, max_tokens, temperature)
-            for model in self.models
-        ]
+        tasks = [self._query_model(model, prompt, max_tokens, temperature) for model in self.models]
         results = await asyncio.gather(*tasks, return_exceptions=True)
 
         responses: list[str] = []
@@ -175,21 +178,46 @@ class LLMCouncil:
     async def _query_model(
         self, model: str, prompt: str, max_tokens: int, temperature: float
     ) -> str:
-        """Query a single model via OpenRouter."""
-        if "sk-or-" in self._api_key:
+        """Query a single model via OpenRouter (preferred) or DeepSeek direct."""
+        import os
+
+        or_key = os.environ.get("OPENROUTER_API_KEY", "") or os.environ.get(
+            "KILO_OPENROUTER_API_KEY", ""
+        )
+        api_key = self._api_key or or_key
+        if or_key.startswith("sk-or-") or (self._api_key or "").startswith("sk-or-"):
             url = OPENROUTER_URL
+            api_key = or_key if or_key.startswith("sk-or-") else self._api_key
             effective_model = model
         else:
             url = DEEPSEEK_URL
-            effective_model = "deepseek-chat"
+            # DeepSeek API only accepts its own model IDs — keep list models when possible
+            m = (model or "").strip()
+            if m.startswith("deepseek/"):
+                effective_model = m.split("/", 1)[1]
+            elif m.startswith("deepseek") or m in ("deepseek-chat", "deepseek-reasoner"):
+                effective_model = m
+            else:
+                # Do not silently pretend an OR model ran on DeepSeek
+                try:
+                    from src.llm.model_assignment import get_model_for_phase
+
+                    assigned = get_model_for_phase("D") or get_model_for_phase("F")
+                    if assigned and "deepseek" in assigned.lower():
+                        effective_model = assigned.split("/")[-1]
+                    else:
+                        effective_model = "deepseek-chat"
+                except Exception:
+                    effective_model = "deepseek-chat"
 
         try:
             # Audit 2026-06-22 H-8 Tier 1: guard the raw httpx call with
             # src.llm.guarded_call for metrics + sanitization + cost tracking.
             from src.llm.guarded_call import guarded_chat_completion
+
             data = await guarded_chat_completion(
                 url=url,
-                api_key=self._api_key,
+                api_key=api_key,
                 model=effective_model,
                 temperature=temperature,
                 max_tokens=max_tokens,
@@ -201,7 +229,9 @@ class LLMCouncil:
                         "HTTP-Referer": "https://c4reqber.org",
                         "X-Title": "C4Reqber",
                     },
-                } if "openrouter" in url else None,
+                }
+                if "openrouter" in url
+                else None,
                 messages=[
                     {
                         "role": "system",
@@ -211,17 +241,13 @@ class LLMCouncil:
                 ],
             )
             content = data["choices"][0]["message"]["content"]
-            logger.debug(
-                "Model %s responded with %d chars", model, len(content)
-            )
+            logger.debug("Model %s responded with %d chars", model, len(content))
             return content
         except Exception as e:
             logger.debug("Model %s API failed: %s", model, e)
             raise RuntimeError(f"Council model failed: {e}") from e
 
-    async def _query_local(
-        self, prompt: str, max_tokens: int, temperature: float
-    ) -> str:
+    async def _query_local(self, prompt: str, max_tokens: int, temperature: float) -> str:
         """Query local LLM (LM Studio or Ollama)."""
         for endpoint in LOCAL_ENDPOINTS:
             client = await self._get_local_client()
@@ -251,9 +277,7 @@ class LLMCouncil:
 
         return sum(similarities) / len(similarities) if similarities else 0.0
 
-    def _merge_responses(
-        self, responses: list[str], parser: Callable | None
-    ) -> str:
+    def _merge_responses(self, responses: list[str], parser: Callable | None) -> str:
         """Pick the response with highest average pairwise similarity to others."""
         if len(responses) == 1:
             return responses[0]

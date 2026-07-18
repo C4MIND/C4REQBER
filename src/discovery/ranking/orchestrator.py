@@ -3,6 +3,7 @@ c4reqber: Hypothesis Ranking Orchestrator
 
 Integrates PriorScorer, EIGEstimator, CostModel, and MCDMRanker.
 """
+
 from __future__ import annotations
 
 import logging
@@ -69,10 +70,17 @@ async def rank_hypotheses(
     ranked = ranker.rank(hypotheses, criteria=criteria, costs=costs)
 
     logger.info(
-        "Ranked %d hypotheses. Top: %s (score=%.3f)",
+        "Ranked %d hypotheses (EIG/cost are heuristics). Top: %s (score=%.3f)",
         len(ranked),
         ranked[0].hypothesis.get("text", "")[:50] if ranked else "N/A",
         ranked[0].total_score if ranked else 0.0,
     )
+
+    for item in ranked:
+        hyp = item.hypothesis
+        if isinstance(hyp, dict):
+            hyp["ranking_heuristic"] = True
+            hyp["eig_note"] = "text-length/noise proxy — not information-theoretic EIG"
+            hyp["cost_note"] = "len(text)-based USD estimate — not metered spend"
 
     return ranked[:max_simulations]

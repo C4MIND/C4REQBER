@@ -113,17 +113,17 @@ func (f *FeedStore) LoadRecent(n int) ([]FeedEntry, error) {
 		lines = lines[len(lines)-n*2:]
 	}
 	out := make([]FeedEntry, 0, len(lines))
-	// Track seen (Kind, Title) pairs — keep only the first (most recent
-	// after the upcoming reverse).
+	// Keep newest duplicate: walk newest→oldest, then reverse to chronological
+	// for the cap window, then reverse again to most-recent-first.
 	seen := map[string]bool{}
-	for _, raw := range lines {
+	newestFirst := make([]FeedEntry, 0, len(lines))
+	for i := len(lines) - 1; i >= 0; i-- {
 		var e FeedEntry
-		if err := json.Unmarshal(raw, &e); err != nil {
+		if err := json.Unmarshal(lines[i], &e); err != nil {
 			continue
 		}
-		// Bookmark entries are never deduped (they're user-pinned).
 		if e.Bookmark {
-			out = append(out, e)
+			newestFirst = append(newestFirst, e)
 			continue
 		}
 		key := feedDedupKey(e)
@@ -131,15 +131,12 @@ func (f *FeedStore) LoadRecent(n int) ([]FeedEntry, error) {
 			continue
 		}
 		seen[key] = true
-		out = append(out, e)
+		newestFirst = append(newestFirst, e)
 	}
-	// Cap to n
+	out = newestFirst
+	// Cap to n (already most-recent-first)
 	if n > 0 && len(out) > n {
 		out = out[:n]
-	}
-	// Reverse to most-recent-first
-	for i, j := 0, len(out)-1; i < j; i, j = i+1, j-1 {
-		out[i], out[j] = out[j], out[i]
 	}
 	return out, nil
 }

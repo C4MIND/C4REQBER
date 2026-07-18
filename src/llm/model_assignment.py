@@ -4,6 +4,7 @@ Model Assignment — per-phase LLM model configuration with persistence.
 Stores model assignments at ~/.c4reqber/models.json
 Used by: blast config models (CLI), get_model_for_phase (routing)
 """
+
 from __future__ import annotations
 
 import json
@@ -81,10 +82,11 @@ DEFAULT_ASSIGNMENTS = {
 @dataclass
 class PhaseAssignment:
     """PhaseAssignment."""
-    model: str = ""          # Full model ID or "provider/model" or "local:tag"
+
+    model: str = ""  # Full model ID or "provider/model" or "local:tag"
     temperature: float = 0.5
     max_tokens: int = 800
-    provider: str = ""       # auto-detected from model ID
+    provider: str = ""  # auto-detected from model ID
 
     def to_dict(self) -> dict[str, Any]:
         return {"model": self.model, "temperature": self.temperature, "max_tokens": self.max_tokens}
@@ -93,13 +95,18 @@ class PhaseAssignment:
 @dataclass
 class ModelAssignment:
     """ModelAssignment."""
+
     cost_tier: str = "balanced"
     api_base_url: str = ""
     phases: dict[str, PhaseAssignment] = field(default_factory=dict)
 
     @classmethod
     def load(cls, path: str | Path | None = None) -> ModelAssignment:
-        """Load assignment from config file. Falls back to defaults."""
+        """Load assignment from config file. Falls back to defaults.
+
+        Also accepts repo ``config/mission_free_models.json`` shape when present
+        as the path, or when ~/.c4reqber/models.json is missing and mission file exists.
+        """
         filepath = Path(path) if path else CONFIG_FILE
         if filepath.exists():
             try:
@@ -107,6 +114,17 @@ class ModelAssignment:
                 return cls.from_dict(data)
             except (json.JSONDecodeError, KeyError):
                 pass
+        # Mission demo free-tier schema (repo config/) — optional fallback
+        if path is None:
+            mission = Path(__file__).resolve().parents[2] / "config" / "mission_free_models.json"
+            if mission.exists():
+                try:
+                    data = json.loads(mission.read_text())
+                    # Mission file uses cost_tier + phases like models.json
+                    if "phases" in data:
+                        return cls.from_dict(data)
+                except (json.JSONDecodeError, KeyError, OSError):
+                    pass
         return cls.create_default("balanced")
 
     @classmethod
@@ -119,7 +137,9 @@ class ModelAssignment:
             provider = _detect_provider(model)
             temp = 0.7 if phase == "D" else 0.5 if phase == "F" else 0.3
             max_tok = 2000 if phase == "F" else 800 if phase == "D" else 500
-            phases[phase] = PhaseAssignment(model=model, temperature=temp, max_tokens=max_tok, provider=provider)
+            phases[phase] = PhaseAssignment(
+                model=model, temperature=temp, max_tokens=max_tok, provider=provider
+            )
         return cls(cost_tier=cost_tier, phases=phases)
 
     @classmethod
@@ -134,7 +154,11 @@ class ModelAssignment:
                 max_tokens=pd.get("max_tokens", 800),
                 provider=_detect_provider(model),
             )
-        return cls(cost_tier=data.get("cost_tier", "balanced"), api_base_url=data.get("api_base_url", ""), phases=phases)
+        return cls(
+            cost_tier=data.get("cost_tier", "balanced"),
+            api_base_url=data.get("api_base_url", ""),
+            phases=phases,
+        )
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -154,13 +178,13 @@ class ModelAssignment:
         # First: check env var override
         env_model = os.environ.get(f"PHASE_{phase}_MODEL", "")
         if env_model:
-            return env_model
+            return normalize_model_id(env_model)
         # Second: check phase assignment
         if phase in self.phases and self.phases[phase].model:
-            return self.phases[phase].model
+            return normalize_model_id(self.phases[phase].model)
         # Third: check cost tier defaults
         if phase in DEFAULT_ASSIGNMENTS.get(self.cost_tier, {}):
-            return DEFAULT_ASSIGNMENTS[self.cost_tier][phase]
+            return normalize_model_id(DEFAULT_ASSIGNMENTS[self.cost_tier][phase])
         return ""
 
     def get_temperature(self, phase: str) -> float:
@@ -178,6 +202,7 @@ class ModelAssignment:
     def estimate_cost(self, prompt_tokens: int = 1000) -> dict[str, float]:
         """Estimate total pipeline cost based on assigned models."""
         from src.llm.model_catalog import CATALOG
+
         total = 0.0
         phases = {}
         for phase in "ABCDEFG":
@@ -188,7 +213,11 @@ class ModelAssignment:
             found = None
             # Try exact match first, then partial match on model ID suffix
             for _key, entry in CATALOG.items():
-                if entry.id == model or entry.id.endswith(model) or model.endswith(entry.id.split("/")[-1]):
+                if (
+                    entry.id == model
+                    or entry.id.endswith(model)
+                    or model.endswith(entry.id.split("/")[-1])
+                ):
                     found = entry
                     break
             if not found:
@@ -255,5 +284,41 @@ def load_assignment(cost_tier: str = "balanced") -> ModelAssignment:
     return assignment
 
 
-__all__ = ["ModelAssignment", "PhaseAssignment", "CONFIG_FILE", "CONFIG_DIR",
-           "DEFAULT_ASSIGNMENTS", "PHASE_DESCRIPTIONS", "load_assignment"]
+def get_model_for_phase(phase: str, assignment: ModelAssignment | None = None) -> str:
+    """Return the configured model ID for a pipeline phase (A–G).
+
+    Reads ~/.c4reqber/models.json (or defaults). Honors PHASE_{X}_MODEL env overrides.
+    """
+    phase = (phase or "").strip().upper()
+    if not phase:
+        return ""
+    ma = assignment or ModelAssignment.load()
+    return ma.get_model(phase)
+
+
+def normalize_model_id(model: str) -> str:
+    """Normalize catalog / shorthand IDs for OpenRouter-style routing."""
+    m = (model or "").strip()
+    if not m:
+        return ""
+    # Bare OpenAI-style IDs → openrouter path
+    if "/" not in m and m.startswith(("gpt-", "o1-", "o3-", "o4-")):
+        return f"openai/{m}"
+    if "/" not in m and m.startswith("claude-"):
+        return f"anthropic/{m}"
+    if "/" not in m and m.startswith("gemini-"):
+        return f"google/{m}"
+    return m
+
+
+__all__ = [
+    "ModelAssignment",
+    "PhaseAssignment",
+    "CONFIG_FILE",
+    "CONFIG_DIR",
+    "DEFAULT_ASSIGNMENTS",
+    "PHASE_DESCRIPTIONS",
+    "load_assignment",
+    "get_model_for_phase",
+    "normalize_model_id",
+]

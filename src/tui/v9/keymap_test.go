@@ -109,7 +109,6 @@ func TestKeyMap_Matches_BubbleteaKeys(t *testing.T) {
 		{ActColorProfile, "ctrl+shift+p"},
 		{ActNewTab, "ctrl+t"},
 		{ActEscape, "ctrl+."},
-		{ActLang, "l"},
 		{ActLang, "shift+l"},
 	}
 	for _, c := range cases {
@@ -323,8 +322,18 @@ func TestKeyMap_FocusFirstLast_CaseSensitive(t *testing.T) {
 	if km.Matches(ActFocusLast, "g") {
 		t.Error(`"g" must NOT match ActFocusLast`)
 	}
-	// Lowercase "l" still cycles language, and uppercase "L" (shift+l) too.
-	if !km.Matches(ActLang, "l") || !km.Matches(ActLang, "L") {
-		t.Error(`both "l" and "L" should match ActLang`)
+	// Language cycling is a chord (Shift+L) so the letter "l" can be typed
+	// into a query without switching the UI language.
+	if km.Matches(ActLang, "l") {
+		t.Error(`"l" must NOT match ActLang (would hijack typing)`)
+	}
+	if km.Matches(ActLang, "L") {
+		t.Error(`"L" must NOT match ActLang (would hijack typing)`)
+	}
+	if !km.Matches(ActLang, "shift+l") {
+		t.Error(`"shift+l" should match ActLang`)
+	}
+	if !km.Matches(ActLang, "shift+L") {
+		t.Error(`"shift+L" (bubbletea v2 form) should match ActLang via EqualFold`)
 	}
 }

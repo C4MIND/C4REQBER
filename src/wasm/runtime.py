@@ -2,6 +2,11 @@
 
 from __future__ import annotations
 
+import logging
+
+
+logger = logging.getLogger(__name__)
+
 import hashlib
 from dataclasses import dataclass, field
 from typing import Any, Protocol
@@ -75,8 +80,8 @@ class WASMPluginRuntime:
                 instance = linker.instantiate(store, module)
                 self._modules[key] = (store, instance)
                 return (store, instance)
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.debug("swallowed exception: %s", _exc, exc_info=True)
 
             # Fallback: pure compute (no imports)
             instance = wasmtime.Instance(store, module, [])

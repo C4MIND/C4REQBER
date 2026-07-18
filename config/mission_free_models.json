@@ -1,18 +1,72 @@
 {
-  "note": "Humanity-saving mission — verified working providers (qwen OR first, no Claude/Kimi/Minimax)",
-  "cost_tier": "budget",
+  "note": "Mission demo 2026-07-14 — OpenCode Zen free-first, Groq+NIM KILO fallback, LM Studio 14B local",
+  "cost_tier": "ultra_budget",
   "phases": {
-    "A": {"model": "qwen/qwen-2.5-72b-instruct", "temperature": 0.3, "max_tokens": 800},
-    "B": {"model": "qwen/qwen-2.5-72b-instruct", "temperature": 0.3, "max_tokens": 800},
-    "C": {"model": "qwen/qwen-2.5-72b-instruct", "temperature": 0.3, "max_tokens": 1200},
-    "D": {"model": "qwen/qwen-2.5-72b-instruct", "temperature": 0.7, "max_tokens": 2000},
-    "E": {"model": "", "temperature": 0.3, "max_tokens": 800},
-    "F": {"model": "qwen/qwen-2.5-72b-instruct", "temperature": 0.7, "max_tokens": 4000},
-    "G": {"model": "qwen/qwen-2.5-72b-instruct", "temperature": 0.3, "max_tokens": 800}
+    "A": {
+      "model": "deepseek-v4-flash-free",
+      "provider": "opencode_zen",
+      "temperature": 0.3,
+      "max_tokens": 800
+    },
+    "B": {
+      "model": "north-mini-code-free",
+      "provider": "opencode_zen",
+      "temperature": 0.2,
+      "max_tokens": 1000
+    },
+    "C": {
+      "model": "nemotron-3-ultra-free",
+      "provider": "opencode_zen",
+      "temperature": 0.3,
+      "max_tokens": 1500
+    },
+    "D": {
+      "model": "big-pickle",
+      "provider": "opencode_zen",
+      "temperature": 0.75,
+      "max_tokens": 2500
+    },
+    "E": {
+      "model": "",
+      "provider": "",
+      "temperature": 0.3,
+      "max_tokens": 800
+    },
+    "F": {
+      "model": "nemotron-3-ultra-free",
+      "provider": "opencode_zen",
+      "temperature": 0.65,
+      "max_tokens": 4500
+    },
+    "G": {
+      "model": "mimo-v2.5-free",
+      "provider": "opencode_zen",
+      "temperature": 0.25,
+      "max_tokens": 800
+    }
   },
+  "flash": {
+    "model": "deepseek-v4-flash-free",
+    "provider": "opencode_zen",
+    "temperature": 0.4,
+    "max_tokens": 1200
+  },
+  "turbo": {
+    "dissertation_model": "nemotron-3-ultra-free",
+    "hypothesis_model": "big-pickle",
+    "gap_model": "nemotron-3-ultra-free",
+    "search_model": "north-mini-code-free"
+  },
+  "fallback_chain": [
+    {"provider": "opencode_zen", "models": ["nemotron-3-ultra-free", "deepseek-v4-flash-free", "big-pickle", "mimo-v2.5-free", "north-mini-code-free"]},
+    {"provider": "groq", "models": ["llama-3.3-70b-versatile", "llama-3.1-8b-instant"]},
+    {"provider": "nvidia_nim", "models": ["nvidia/nemotron-3-nano-30b-a3b"]},
+    {"provider": "lm_studio", "models": ["qwen2.5-14b-instruct", "qwen2.5-7b-instruct"]},
+    {"provider": "openrouter", "models": ["qwen/qwen-2.5-72b-instruct", "meta-llama/llama-3.3-70b-instruct:free"]}
+  ],
   "council": {
-    "cheap": ["qwen/qwen-2.5-72b-instruct", "mistralai/mistral-nemo"],
-    "balanced": ["qwen/qwen-2.5-72b-instruct", "nvidia/nemotron-3-nano-30b-a3b"],
-    "premium": ["qwen/qwen-2.5-72b-instruct", "google/gemini-2.0-flash-001"]
+    "cheap": ["deepseek-v4-flash-free", "mimo-v2.5-free", "llama-3.1-8b-instant"],
+    "balanced": ["nemotron-3-ultra-free", "big-pickle", "llama-3.3-70b-versatile"],
+    "premium": ["nemotron-3-ultra-free", "nvidia/nemotron-3-nano-30b-a3b", "qwen/qwen-2.5-72b-instruct"]
   }
 }

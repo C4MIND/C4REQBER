@@ -3,6 +3,7 @@
 Provides verification of Hoare triples {P} C {Q} using z3-solver when available,
 with a fallback to basic parsing and symbolic execution for simple cases.
 """
+
 from __future__ import annotations
 
 import ast
@@ -228,9 +229,15 @@ class HoareClient:
         vars_post = self._extract_variables(postcondition)
         vars_cmd = self._extract_variables(command)
 
-        # Trivial case: True postcondition is always valid
+        # Trivial case: True postcondition is always valid (heuristic fallback)
         if postcondition.strip() in ("True", "true", "1"):
-            return {"valid": True, "counterexample": None, "error": None}
+            return {
+                "valid": True,
+                "counterexample": None,
+                "error": None,
+                "mode": "fallback",
+                "heuristic": True,
+            }
 
         # Simple sanity check: variables mentioned in post should be assigned in command
         # or exist in precondition
@@ -241,6 +248,8 @@ class HoareClient:
                     "valid": False,
                     "counterexample": None,
                     "error": f"Variable '{v}' in postcondition not defined",
+                    "mode": "fallback",
+                    "heuristic": True,
                 }
 
         # Try simple symbolic execution for basic assignments
@@ -252,16 +261,30 @@ class HoareClient:
         if wp is not None:
             # Simple syntactic check: if wp looks "similar" to precondition
             if self._syntactically_implies(precondition, wp):
-                return {"valid": True, "counterexample": None, "error": None}
+                return {
+                    "valid": True,
+                    "counterexample": None,
+                    "error": None,
+                    "mode": "fallback",
+                    "heuristic": True,
+                }
 
         # Basic pattern matching for common cases
         if self._check_simple_patterns(precondition, command, postcondition):
-            return {"valid": True, "counterexample": None, "error": None}
+            return {
+                "valid": True,
+                "counterexample": None,
+                "error": None,
+                "mode": "fallback",
+                "heuristic": True,
+            }
 
         return {
             "valid": False,
             "counterexample": None,
             "error": "Fallback mode: unable to verify (z3 not installed)",
+            "mode": "fallback",
+            "heuristic": True,
         }
 
     # ------------------------------------------------------------------
@@ -269,9 +292,7 @@ class HoareClient:
     # ------------------------------------------------------------------
 
     @staticmethod
-    def _symbolic_execute(
-        command: str, postcondition: str, _z3_vars: dict[str, Any]
-    ) -> str | None:
+    def _symbolic_execute(command: str, postcondition: str, _z3_vars: dict[str, Any]) -> str | None:
         """Compute weakest precondition for simple imperative commands."""
         command = command.strip()
 

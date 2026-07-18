@@ -1,13 +1,15 @@
 """Retry Policies.
 
-    Provider retry manager with provider sequencing and batch generation.
+Provider retry manager with provider sequencing and batch generation.
 """
+
 from __future__ import annotations
 
 import asyncio
 import time
 from typing import Any
 
+from src.llm.config import get_api_key_env, get_default_model
 from src.llm.multi_provider import LLMProvider, LLMResponse, ProviderConfig, ProviderRouter
 
 from .core import (
@@ -101,13 +103,50 @@ class ProviderRetryManager:
         ranked.sort(key=lambda x: x[1], reverse=True)
         return ranked
 
+    @staticmethod
+    def _provider_has_credentials(provider: LLMProvider) -> bool:
+        """Skip cloud providers that have no API key configured."""
+        import os
+
+        if provider in (
+            LLMProvider.OLLAMA,
+            LLMProvider.LM_STUDIO,
+            LLMProvider.MLX,
+            LLMProvider.AUTO,
+        ):
+            return True
+        env_name = get_api_key_env(provider)
+        if not env_name:
+            return True
+        val = os.environ.get(env_name, "")
+        if val and not val.startswith("YOUR_") and not val.startswith("sk-YOUR"):
+            return True
+        # OpenRouter often uses KILO_OPENROUTER_API_KEY
+        if provider == LLMProvider.OPENROUTER:
+            alt = os.environ.get("KILO_OPENROUTER_API_KEY", "")
+            return bool(alt and not alt.startswith("YOUR_"))
+        return False
+
+    @staticmethod
+    def _model_for_provider(
+        provider: LLMProvider,
+        primary: LLMProvider,
+        primary_model: str | None,
+    ) -> str:
+        """Use stage model only on the primary provider; else provider defaults."""
+        if provider == primary and primary_model:
+            return primary_model
+        if provider == LLMProvider.OPENROUTER and primary_model and "/" in primary_model:
+            return primary_model
+        return get_default_model(provider)
+
     # ─────────────────────────────────────────────────────────────
     # Core retry logic
     # ─────────────────────────────────────────────────────────────
 
     async def _sleep_backoff(self, attempt: int) -> None:
         """Exponential backoff: base * 2^attempt (attempt 1 -> base*2, attempt 2 -> base*4)."""
-        delay = self.backoff_base * (2 ** attempt)
+        delay = self.backoff_base * (2**attempt)
         await asyncio.sleep(delay)
 
     async def _try_provider(
@@ -150,9 +189,7 @@ class ProviderRetryManager:
             f"Provider {provider_name} failed after {self.max_retries} attempts. Last: {last_error}"
         )
 
-    def _get_provider_sequence(
-        self, primary: LLMProvider, stage_name: str
-    ) -> list[LLMProvider]:
+    def _get_provider_sequence(self, primary: LLMProvider, stage_name: str) -> list[LLMProvider]:
         """Build ordered list of providers to try (primary first, then alternates)."""
         providers = [primary]
 
@@ -226,11 +263,16 @@ class ProviderRetryManager:
                 if idx > 0:
                     provider_sequence_used = True
 
+                if not self._provider_has_credentials(provider):
+                    attempt_history.append((provider.value, "missing_api_key"))
+                    continue
+
                 try:
-                    # Use primary config but switch provider
+                    # Never reuse OpenRouter model IDs on DeepSeek/XAI/etc.
+                    model = self._model_for_provider(provider, primary, config.model)
                     provider_config = ProviderConfig(
                         provider=provider,
-                        model=config.model,
+                        model=model,
                         temperature=config.temperature,
                         max_tokens=config.max_tokens,
                         timeout=config.timeout,

@@ -90,7 +90,11 @@ func DecodeTypedEvent(data string) (TypedEvent, error) {
 			e.Type = EventFailed
 		case e.Status == "cancelled":
 			e.Type = EventCancelled
-		case e.Status == "complete" || e.Status == "partial":
+		case e.Status == "partial":
+			// Partial is terminal but not full success — still EventComplete
+			// with Status=partial so handleCompleteEvent can toast honestly.
+			e.Type = EventComplete
+		case e.Status == "complete":
 			e.Type = EventComplete
 		case e.Phase != "" || e.Progress > 0:
 			e.Type = EventPhaseProgress

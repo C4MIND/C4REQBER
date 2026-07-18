@@ -14,7 +14,10 @@ _ARR_OBJ = {"type": "array", "items": {"type": "object"}}
 _ARR = {"type": "array"}
 
 _OUT_COMMON = {
-    "status": {"type": "string", "enum": ["success", "error", "partial", "not_applicable"]},
+    "status": {
+        "type": "string",
+        "enum": ["success", "error", "partial", "unavailable", "not_applicable"],
+    },
     "errors": _ARR_STR,
     "warnings": _ARR_STR,
     "metadata": _OBJ,

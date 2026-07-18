@@ -2,6 +2,7 @@
 C4REQBER: 27 Functors / Operators
 9 Base + 18 Composed (from system-prompts-en.md)
 """
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -101,9 +102,7 @@ class Operators:
         b = BaseOperators()
         return {
             "tau+": C4Operator("tau-forward", "τ+", b.tau_plus, "Past→Present→Future"),
-            "tau-": C4Operator(
-                "tau-backward", "τ-", b.tau_minus, "Future→Present→Past"
-            ),
+            "tau-": C4Operator("tau-backward", "τ-", b.tau_minus, "Future→Present→Past"),
             "sigma": C4Operator("sigma", "σ", b.sigma, "Connect/Integrate"),
             "delta": C4Operator("delta", "δ", b.delta, "Differentiate/Separate"),
             "rho": C4Operator("rho", "ρ", b.rho, "Resonance/Pattern"),
@@ -226,28 +225,28 @@ class Operators:
         composed["sigma_phi"] = C4Operator(
             "contextual-synthesis",
             "σ∘φ",
-            lambda s: s,  # Placeholder for phi
+            lambda s: s,  # φ not in Z₃³ algebra — identity; unused in live routing
             "Integrate with context",
         )
 
         composed["delta_phi"] = C4Operator(
             "contextual-decomposition",
             "δ∘φ",
-            lambda s: s,  # Placeholder
+            lambda s: s,  # φ identity placeholder — unused in live routing
             "Divide by context",
         )
 
         composed["rho_phi"] = C4Operator(
             "adaptive-replication",
             "ρ∘φ",
-            lambda s: s,  # Placeholder
+            lambda s: s,  # φ identity placeholder — unused in live routing
             "Pattern with adaptation",
         )
 
         composed["kappa_phi"] = C4Operator(
             "concrete-in-context",
             "κ∘φ",
-            lambda s: s,  # Placeholder
+            lambda s: s,  # φ identity placeholder — unused in live routing
             "Local applicability",
         )
 

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Check API keys before running tests. Warns which tests will be skipped."""
+
 from __future__ import annotations
 
 import os
@@ -21,15 +22,14 @@ def main() -> int:
     print("═" * 70)
     print()
 
-    # Load .env if available
-    for env_file in [".env", ".env.development"]:
+    # Load keys: repo .env, then maintainer .env.dontredact (knowledge SSOT)
+    for env_file in (".env", ".env.development", ".env.dontredact"):
         if os.path.exists(env_file):
             with open(env_file) as f:
                 for line in f:
                     if "=" in line and not line.startswith("#"):
                         key, val = line.strip().split("=", 1)
-                        if key not in os.environ:
-                            os.environ[key] = val
+                        os.environ[key] = val.strip().strip('"').strip("'")
 
     all_ok = True
 
@@ -42,8 +42,23 @@ def main() -> int:
 
     print("Search Engines:")
     all_ok &= check_key("Brave", "BRAVE_API_KEY", ["web search", "WebSearchPlugin"])
-    all_ok &= check_key("Tavily", "TAVILY_API_KEY", ["AI search"])
-    all_ok &= check_key("Exa", "EXA_API_KEY", ["neural search"])
+    check_key("Tavily", "TAVILY_API_KEY", ["AI search"])
+    check_key("Exa", "EXA_API_KEY", ["neural search"])
+    print()
+
+    print("Knowledge Bases (.env.dontredact):")
+    check_key("OpenAlex", "OPENALEX_API_KEY", ["paper search", "Phase B"])
+    check_key("CORE", "CORE_API_KEY", ["open access papers"])
+    check_key("NCBI", "NCBI_API_KEY", ["PubMed", "gene search"])
+    check_key("NCBI email", "NCBI_EMAIL", ["PubMed rate limits"])
+    check_key("Unpaywall", "UNPAYWALL_EMAIL", ["OA PDF links"])
+    check_key("OpenFDA", "OPENFDA_API_KEY", ["drug/clinical data"])
+    check_key("Materials Project", "MATERIALS_PROJECT_API_KEY", ["materials science"])
+    check_key("NOAA", "NOAA_API_KEY", ["climate/ocean data"])
+    check_key("NASA Earthdata", "NASA_EARTHDATA_TOKEN", ["satellite data"])
+    check_key("Kaggle", "KAGGLE_KEY", ["datasets"])
+    check_key("BibSonomy", "BIBSONOMY_API_KEY", ["social bibliography"])
+    check_key("Datacite", "DATACITE_API_KEY", ["DOI metadata"])
     print()
 
     print("Social Media (fill before testing posting):")

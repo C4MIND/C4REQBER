@@ -1,4 +1,5 @@
 """Balance Checker — unified balance retrieval for all providers."""
+
 from __future__ import annotations
 
 import os
@@ -41,13 +42,14 @@ class BalanceChecker:
         api_key = key or os.environ.get("EXA_API_KEY")
         if not api_key:
             return {"provider": "exa", "balance": None, "error": "no key"}
-        # Exa не имеет прямого endpoint баланса, но можно получить usage
-        return {"provider": "exa", "balance": "unknown", "note": "$9.91 (manual)", "currency": "USD"}
+        # Exa has no public balance endpoint — never invent a dollar figure
+        return {"provider": "exa", "balance": None, "error": "unknown", "currency": "USD"}
 
     @staticmethod
     async def check_tavily(key: str | None = None) -> dict[str, Any]:
         """Check Tavily remaining credits."""
-        from integrations.tavily_budget import TavilyBudgetTracker
+        from src.integrations.tavily_budget import TavilyBudgetTracker
+
         tracker = TavilyBudgetTracker()
         return {
             "provider": "tavily",

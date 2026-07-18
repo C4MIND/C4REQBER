@@ -12,7 +12,6 @@ from src.core.cdi_engine import CDIEngine, ContradictionType, PhysicalContradict
 from src.core.user_profile import UserProfile
 from src.metamodels.tote import ToteEngine
 from src.pipeline.config import PipelineConfig
-from src.plugins.unified_registry import WebSearchPlugin
 from src.publishing.dissertation import DissertationGenerator
 
 
@@ -22,7 +21,9 @@ logger = logging.getLogger(__name__)
 class PhaseF_DissertationGeneration:
     """Generate dissertation with CDI contradiction analysis and TOTE validation."""
 
-    def __init__(self, config: PipelineConfig | None = None, user_profile: UserProfile | None = None) -> None:
+    def __init__(
+        self, config: PipelineConfig | None = None, user_profile: UserProfile | None = None
+    ) -> None:
         self.config = config or PipelineConfig(name="default")
         self.user_profile = user_profile or UserProfile()
         self.dissertation_gen = DissertationGenerator()
@@ -39,24 +40,19 @@ class PhaseF_DissertationGeneration:
         print("\n[Phase F] Dissertation Generation...")
         cfg = self.config
 
-        # Step F1: Ensure minimum bibliography
+        # Step F1: Ensure minimum bibliography (no fake example.com padding)
         print("\n[F1/7] Ensuring minimum bibliography...")
         bibliography = list(record.bibliography)
         if len(bibliography) < cfg.min_sources:
-            searcher = WebSearchPlugin()
-            extra = searcher.execute(topic, max_results=cfg.min_sources * 2)
-            for s in extra:
-                if len(bibliography) >= cfg.min_sources:
-                    break
-                if not any(b.get("title") == s.get("title") for b in bibliography):
-                    bibliography.append({
-                        "title": s.get("title", ""),
-                        "authors": "Unknown",
-                        "year": "",
-                        "venue": s.get("source_engine", "web"),
-                        "url": s.get("url", ""),
-                        "source": "web_search",
-                    })
+            logger.warning(
+                "Bibliography below min_sources (%d < %d) — proceeding without stubs",
+                len(bibliography),
+                cfg.min_sources,
+            )
+            print(
+                f"      ⚠ Only {len(bibliography)}/{cfg.min_sources} sources "
+                "(configure TAVILY_API_KEY / academic keys for denser biblio)"
+            )
         record.bibliography = bibliography
         print(f"      Bibliography: {len(bibliography)} sources")
 
@@ -69,9 +65,48 @@ class PhaseF_DissertationGeneration:
             c4_state="auto-gap-theorem",
             triz_principles=["gap_analysis", "auto_theorem", "iterative_verify"],
             gaps=record.gaps,
-            simulation=record.simulation.__dict__ if record.simulation and not isinstance(record.simulation, dict) else record.simulation,
-            verification=record.verification.__dict__ if record.verification and not isinstance(record.verification, dict) else record.verification,
+            simulation=record.simulation.__dict__
+            if record.simulation and not isinstance(record.simulation, dict)
+            else record.simulation,
+            verification=record.verification.__dict__
+            if record.verification and not isinstance(record.verification, dict)
+            else record.verification,
         )
+
+        # Step F2b: Citation honesty check (same gate as solve synthesis)
+        print("\n[F2b] Verifying citations...")
+        try:
+            import asyncio
+
+            from src.knowledge.citation_verifier import CitationVerifier
+
+            async def _verify() -> list[dict[str, Any]]:
+                verifier = CitationVerifier()
+                try:
+                    return [v.__dict__ for v in await verifier.verify(diss, bibliography or [])]
+                finally:
+                    await verifier.close()
+
+            try:
+                loop = asyncio.get_running_loop()
+            except RuntimeError:
+                loop = None
+            if loop and loop.is_running():
+                # Nested event loop (rare) — skip rather than deadlock
+                logger.debug("CitationVerifier skipped: event loop already running")
+                verdicts = []
+            else:
+                verdicts = asyncio.run(_verify())
+            record.plugins_context = dict(getattr(record, "plugins_context", {}) or {})
+            record.plugins_context["citation_verdicts"] = verdicts
+            flagged = sum(
+                1
+                for v in verdicts
+                if str(v.get("verdict", "")).upper() in ("HALLUCINATED", "UNVERIFIED")
+            )
+            print(f"      CitationVerifier: {len(verdicts)} checks, {flagged} flagged")
+        except Exception as exc:
+            logger.debug("Citation verification skipped: %s", exc)
 
         # Step F3: CDI Analysis
         print("\n[F3/7] Running CDI contradiction analysis...")
@@ -98,17 +133,31 @@ class PhaseF_DissertationGeneration:
                 contradiction_type=ContradictionType.TRADE_OFF,
             )
             result = self.cdi.solve(contradiction)
-            print(f"      CDI Analysis: {result.steps_taken} steps, confidence={result.confidence_score:.2f}")
-            return {"contradictions": [str(result.contradiction)], "hypothesis": result.hypothesis, "confidence": result.confidence_score}
+            print(
+                f"      CDI Analysis: {result.steps_taken} steps, confidence={result.confidence_score:.2f}"
+            )
+            return {
+                "contradictions": [str(result.contradiction)],
+                "hypothesis": result.hypothesis,
+                "confidence": result.confidence_score,
+            }
         except Exception as e:
             logger.warning("CDI analysis failed: %s", e)
             return {"contradictions": []}
 
     def _run_tote_validation(self, solution: str) -> dict[str, Any]:
         try:
-            self.tote.run()  # type: ignore[call-arg]
-            print("      TOTE Validation: completed")
-            return {"status": "completed"}
+            # tote.run() without criteria is not a validated pass.
+            if not hasattr(self, "tote") or self.tote is None:
+                return {"status": "skipped", "reason": "tote_unavailable"}
+            raw = self.tote.run()  # type: ignore[call-arg]
+            return {
+                "status": "ran",
+                "validated": False,
+                "heuristic": True,
+                "note": "TOTE invoked without scored criteria — not marked completed/passed",
+                "raw_type": type(raw).__name__ if raw is not None else "None",
+            }
         except Exception as e:
             logger.warning("TOTE validation failed: %s", e)
             return {"status": "failed", "error": str(e)}
@@ -125,31 +174,31 @@ The following gaps were automatically detected in the literature:
 """
         for i, g in enumerate(record.gaps[:5], 1):
             diss += f"""
-### Gap {i}: {g.get('area', 'Unknown')}
-- **Evidence:** {g.get('evidence', 'N/A')[:200]}...
-- **Novelty Score:** {g.get('novelty_score', 0)}
-- **Suggested Hypothesis:** {g.get('hypothesis_seed', 'N/A')[:200]}...
+### Gap {i}: {g.get("area", "Unknown")}
+- **Evidence:** {g.get("evidence", "N/A")[:200]}...
+- **Novelty Score:** {g.get("novelty_score", 0)}
+- **Suggested Hypothesis:** {g.get("hypothesis_seed", "N/A")[:200]}...
 """
 
         diss += f"""
 
 ## Appendix B: Simulation Results
 
-**Pattern:** {record.simulation.get('pattern_id', 'N/A') if isinstance(record.simulation, dict) else (record.simulation.pattern_id if record.simulation else 'N/A')}
-**Status:** {record.simulation.get('status', 'N/A') if isinstance(record.simulation, dict) else (record.simulation.status if record.simulation else 'N/A')}
-**Parameters:** {json.dumps(record.simulation.get('parameters', {})) if isinstance(record.simulation, dict) else (json.dumps(record.simulation.parameters) if record.simulation else 'N/A')}
-**Metrics:** {json.dumps(record.simulation.get('metrics', {})) if isinstance(record.simulation, dict) else (json.dumps(record.simulation.metrics) if record.simulation else 'N/A')}
-**Interpretation:** {record.simulation.get('interpretation', 'N/A') if isinstance(record.simulation, dict) else (record.simulation.interpretation if record.simulation else 'N/A')}
+**Pattern:** {record.simulation.get("pattern_id", "N/A") if isinstance(record.simulation, dict) else (record.simulation.pattern_id if record.simulation else "N/A")}
+**Status:** {record.simulation.get("status", "N/A") if isinstance(record.simulation, dict) else (record.simulation.status if record.simulation else "N/A")}
+**Parameters:** {json.dumps(record.simulation.get("parameters", {})) if isinstance(record.simulation, dict) else (json.dumps(record.simulation.parameters) if record.simulation else "N/A")}
+**Metrics:** {json.dumps(record.simulation.get("metrics", {})) if isinstance(record.simulation, dict) else (json.dumps(record.simulation.metrics) if record.simulation else "N/A")}
+**Interpretation:** {record.simulation.get("interpretation", "N/A") if isinstance(record.simulation, dict) else (record.simulation.interpretation if record.simulation else "N/A")}
 
 *Computational predictions — require experimental validation.*
 
 ## Appendix C: Formal Verification
 
-**Backend:** {record.verification.backend if record.verification else "N/A"}
-**Claim:** {(record.verification.claim[:100] + "...") if record.verification else "N/A"}
-**Status:** {record.verification.status if record.verification else "N/A"}
-**Iterations:** {record.verification.iterations if record.verification else 0}
-**Proof/Error:** {record.verification.proof_text or record.verification.error_message or "N/A"}
+**Backend:** {record.verification.get("backend", "N/A") if isinstance(record.verification, dict) else (record.verification.backend if record.verification else "N/A")}
+**Claim:** {(record.verification.get("claim", "")[:100] + "...") if isinstance(record.verification, dict) and record.verification.get("claim") else ((record.verification.claim[:100] + "...") if record.verification and getattr(record.verification, "claim", None) else "N/A")}
+**Status:** {record.verification.get("status", "N/A") if isinstance(record.verification, dict) else (record.verification.status if record.verification else "N/A")}
+**Iterations:** {record.verification.get("iterations", 0) if isinstance(record.verification, dict) else (record.verification.iterations if record.verification else 0)}
+**Proof/Error:** {(record.verification.get("proof_text") or record.verification.get("error_message") or "N/A") if isinstance(record.verification, dict) else ((record.verification.proof_text or record.verification.error_message or "N/A") if record.verification else "N/A")}
 
 *Formal verification establishes mathematical consistency, not empirical truth.*
 
@@ -176,7 +225,7 @@ The following gaps were automatically detected in the literature:
 
 **Overall Score:** {record.quality_report.overall_score}/100
 **Grade:** {record.quality_report.grade}
-**All Gates Passed:** {'Yes' if record.quality_report.passed_all else 'No'}
+**All Gates Passed:** {"Yes" if record.quality_report.passed_all else "No"}
 
 | Step | Passed | Score | Message |
 |------|--------|-------|---------|
@@ -195,15 +244,23 @@ The following gaps were automatically detected in the literature:
 ---
 
 *Generated by c4reqber v5.0.0 — Automated Discovery Pipeline*
-*Sources: {len(record.bibliography)} | Gaps: {len(record.gaps)} | Hypotheses: {len(record.hypotheses)} | Simulation: {record.simulation.get('status', record.simulation.status if record.simulation and not isinstance(record.simulation, dict) else 'N/A') if record.simulation else 'N/A'} | Verification: {record.verification.get('status', record.verification.status if record.verification and not isinstance(record.verification, dict) else 'N/A') if record.verification else 'N/A'} | Quality: {record.quality_report.grade if record.quality_report else 'N/A'}*
+*Sources: {len(record.bibliography)} | Gaps: {len(record.gaps)} | Hypotheses: {len(record.hypotheses)} | Simulation: {record.simulation.get("status", record.simulation.status if record.simulation and not isinstance(record.simulation, dict) else "N/A") if record.simulation else "N/A"} | Verification: {record.verification.get("status", record.verification.status if record.verification and not isinstance(record.verification, dict) else "N/A") if record.verification else "N/A"} | Quality: {record.quality_report.grade if record.quality_report else "N/A"}*
 """
         return diss
 
     def _reality_check(self, claim: str) -> dict[str, Any]:
         extraordinary_patterns = [
             (r"Q\s*[>=]\s*1\b", "fusion", "Claiming Q >= 1 — no compact device achieved this."),
-            (r"\b24%\s+life[- ]span", "biology", "24% lifespan extension — requires multi-year study."),
-            (r"\b1[,.]?000[,.]?000\b.*people", "social", "Claims involving 1M+ people — extraordinary evidence needed."),
+            (
+                r"\b24%\s+life[- ]span",
+                "biology",
+                "24% lifespan extension — requires multi-year study.",
+            ),
+            (
+                r"\b1[,.]?000[,.]?000\b.*people",
+                "social",
+                "Claims involving 1M+ people — extraordinary evidence needed.",
+            ),
         ]
         warnings: list[dict[str, str]] = []
         for pattern, domain, warning in extraordinary_patterns:

@@ -105,8 +105,7 @@ class PluginRegistry:
         self._register_builtin_plugin_infos()
 
     def _register_builtin_tool_plugins(self) -> None:
-        """Register v1-style tool plugins (WebSearch, Calculator)."""
-        self.register(WebSearchPlugin())
+        """Register built-in tool plugins (Calculator). WebSearch stub is not registered."""
         self.register(CalculatorPlugin())
 
     def _register_builtin_plugin_infos(self) -> None:
@@ -256,13 +255,24 @@ class PluginRegistry:
                 }
 
         try:
-            result = plugin.execute_fn(**kwargs)
+            from src.plugins.invoke import invoke_plugin_execute
+
+            result = invoke_plugin_execute(
+                plugin.execute_fn,
+                problem=str(kwargs.get("problem", "")),
+                context=str(kwargs.get("context", kwargs.get("problem", ""))),
+                domain=str(kwargs.get("domain", "")),
+                **{k: v for k, v in kwargs.items() if k not in {"problem", "context", "domain"}},
+            )
+        except TypeError:
+            try:
+                result = plugin.execute_fn(**kwargs)
+            except Exception as e:
+                return {"error": str(e), "plugin_id": plugin_id}
         except Exception as e:
             return {"error": str(e), "plugin_id": plugin_id}
 
-        self._store.save(
-            plugin_id, problem_key, result, metadata={"source": "unified_registry"}
-        )
+        self._store.save(plugin_id, problem_key, result, metadata={"source": "unified_registry"})
 
         return {"cached": False, "plugin_id": plugin_id, "result": result}
 
@@ -301,9 +311,7 @@ def get_plugin(plugin_id: str) -> PluginInfo | None:
     return PLUGIN_REGISTRY.get_plugin_info(plugin_id)  # noqa: F821
 
 
-def execute_plugin(
-    plugin_id: str, use_cache: bool = True, **kwargs: Any
-) -> dict[str, Any]:
+def execute_plugin(plugin_id: str, use_cache: bool = True, **kwargs: Any) -> dict[str, Any]:
     """Execute a plugin by ID."""
     return PLUGIN_REGISTRY.execute_plugin(plugin_id, use_cache=use_cache, **kwargs)  # noqa: F821
 
@@ -346,7 +354,8 @@ def _register_plugin_info(
             # the unified registry via WASMToolPlugin is unfinished.
             logger.debug(
                 "Skipping Python registration for WASM plugin %s "
-                "(executes via wasm runtime, not Python import)", id
+                "(executes via wasm runtime, not Python import)",
+                id,
             )
             return
         module = importlib.import_module(module_path)
@@ -691,27 +700,34 @@ def _select_plugins_for_problem(
 
 
 class WebSearchPlugin(ToolPlugin):
-    """Example plugin: Web search integration."""
+    """DEPRECATED stub — never invents URLs.
+
+    Historical "Example plugin" returned http://example.com/N and was wired
+    into production flash/turbo paths. It now always returns [] and logs so
+    callers must use MultiSourceSearcher / Tavily instead.
+    """
 
     @property
     def metadata(self) -> ToolMetadata:
         return ToolMetadata(
             name="web_search",
-            version="1.0.0",
-            description="Search the web for information",
+            version="2.0.0",
+            description="Removed stub — use MultiSourceSearcher",
             author="C4Reqber",
             requires=[],
         )
 
     def execute(self, query: str, max_results: int = 5) -> list[dict]:  # type: ignore[override, type-arg]
-        return [
-            {"title": f"Result {i}", "url": f"http://example.com/{i}"}
-            for i in range(max_results)
-        ]
+        logger.error(
+            "WebSearchPlugin.execute(%r) refused — fake example.com results removed; "
+            "use MultiSourceSearcher",
+            (query or "")[:80],
+        )
+        return []
 
 
 class CalculatorPlugin(ToolPlugin):
-    """Example plugin: Mathematical calculations."""
+    """Safe arithmetic via ast-based safe_eval (not an example stub)."""
 
     @property
     def metadata(self) -> ToolMetadata:
@@ -728,14 +744,17 @@ class CalculatorPlugin(ToolPlugin):
         from src.utils.safe_eval import safe_eval
 
         try:
-            return safe_eval(expression.strip(), {
-                "abs": abs,
-                "max": max,
-                "min": min,
-                "pow": pow,
-                "round": round,
-            })
-        except Exception:
+            return safe_eval(
+                expression.strip(),
+                {
+                    "abs": abs,
+                    "max": max,
+                    "min": min,
+                    "pow": pow,
+                    "round": round,
+                },
+            )
+        except (ValueError, TypeError, SyntaxError, ZeroDivisionError):
             logger.warning("Calculator expression evaluation failed")
             raise
 

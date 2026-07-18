@@ -15,7 +15,18 @@ blast tui            # TUI v9 cockpit (Go)
 blast serve --mcp    # MCP server for AI agents
 ```
 
-Minimum: Python 3.11+, `OPENROUTER_API_KEY` in `secrets.env` or env (see [docs/API_KEYS.md](docs/API_KEYS.md)).
+**TUI binary (`c4tui-v9`):** platform wheels built via `scripts/ci/prepare_tui_wheel.sh`
+include the Go binary under `src/tui/v9/bin/`. Pure-Python / cross-platform sdists do not;
+on first `blast tui`, c4reqber downloads the matching GitLab release asset into
+`~/.c4reqber/bin/` (override with `C4REQBER_TUI_URL`). Fallback: install Go and
+`cd src/tui/v9 && go build -o bin/c4tui-v9 .`. CLI modes work without the TUI.
+
+Minimum: Python 3.11+, `OPENROUTER_API_KEY` in `secrets.env` or env (see [docs/API_KEYS.md](API_KEYS.md)).
+
+**HuggingFace (optional, Dempster MNLI):** set `HF_TOKEN` or use `~/.cache/huggingface/token`
+(`huggingface-cli login`). Local model cache may live under the repo `.cache/huggingface`
+when `HF_HOME` is set. LLM keys in `~/.kilo/.env` (and the `~/.kimi/.env` symlink) are
+separate — do not expect HF to be there. Honesty rules: [HONESTY_CONTRACT.md](HONESTY_CONTRACT.md).
 
 ## 2. Optional — Docker API only
 

@@ -4,18 +4,26 @@ C4REQBER: Citation Verifier
 Prevents AI-generated citation hallucinations by verifying every [N] citation
 against CrossRef (DOI) and OpenAlex (title). Inspired by NousResearch/hermes-agent.
 """
+
 from __future__ import annotations
 
 import asyncio
 import logging
 import re
+import unicodedata
 from dataclasses import dataclass, field
+from difflib import SequenceMatcher
 from typing import Any
 
 import httpx
 
+from src.knowledge.contact_email import contact_email
+
 
 logger = logging.getLogger("c4reqber.citation_verifier")
+
+# Minimum normalized title similarity for OpenAlex "match" (not first hit).
+_OPENALEX_TITLE_SIM_THRESHOLD = 0.82
 
 
 @dataclass
@@ -25,10 +33,34 @@ class CitationCheck:
     citation_id: str  # e.g. "[3]"
     title: str
     doi: str | None
-    verdict: str  # VERIFIED, PARTIAL, UNVERIFIED, HALLUCINATED
+    verdict: str  # VERIFIED, PARTIAL, UNVERIFIED, HALLUCINATED, ERROR
     found_in: list[str] = field(default_factory=list)
     crossref_match: bool = False
     openalex_match: bool = False
+    openalex_score: float = 0.0
+    check_error: str | None = None
+
+
+def normalize_title(title: str) -> str:
+    """Lowercase, strip punctuation/diacritics for fuzzy title compare."""
+    if not title:
+        return ""
+    text = unicodedata.normalize("NFKD", title)
+    text = "".join(c for c in text if not unicodedata.combining(c))
+    text = text.lower()
+    text = re.sub(r"[^\w\s]", " ", text)
+    text = re.sub(r"\s+", " ", text).strip()
+    return text
+
+
+def title_similarity(a: str, b: str) -> float:
+    """SequenceMatcher ratio on normalized titles in [0, 1]."""
+    na, nb = normalize_title(a), normalize_title(b)
+    if not na or not nb:
+        return 0.0
+    if na == nb:
+        return 1.0
+    return SequenceMatcher(None, na, nb).ratio()
 
 
 class CitationVerifier:
@@ -66,10 +98,12 @@ class CitationVerifier:
             start = max(m.start() - 200, 0)
             end = min(m.end() + 200, len(text))
             context = text[start:end]
-            citations.append({
-                "id": f"[{m.group(1)}]",
-                "context": context,
-            })
+            citations.append(
+                {
+                    "id": f"[{m.group(1)}]",
+                    "context": context,
+                }
+            )
         return citations
 
     # Common patterns in LLM-hallucinated citations
@@ -113,26 +147,42 @@ class CitationVerifier:
         found_in: list[str] = []
         crossref_ok = False
         openalex_ok = False
+        openalex_score = 0.0
+        errors: list[str] = []
 
         if doi:
-            crossref_ok = await self._check_crossref(doi)
+            cr = await self._check_crossref(doi)
+            if cr.get("error"):
+                errors.append(f"crossref:{cr['error']}")
+            crossref_ok = bool(cr.get("ok"))
             if crossref_ok:
                 found_in.append("CrossRef")
 
         if title:
-            openalex_ok = await self._check_openalex(title)
+            oa = await self._check_openalex(title)
+            if oa.get("error"):
+                errors.append(f"openalex:{oa['error']}")
+            openalex_ok = bool(oa.get("ok"))
+            openalex_score = float(oa.get("score") or 0.0)
             if openalex_ok:
                 found_in.append("OpenAlex")
 
-        # Verdict logic
+        # Verdict logic — VERIFIED requires DOI CrossRef + title-matched OpenAlex
+        check_error = "; ".join(errors) if errors else None
         if crossref_ok and openalex_ok:
             verdict = "VERIFIED"
         elif crossref_ok or openalex_ok:
             verdict = "PARTIAL"
+        elif check_error and not (title or doi):
+            verdict = "ERROR"
         elif title or doi:
             verdict = "UNVERIFIED"
         else:
             verdict = "HALLUCINATED"
+
+        if check_error and verdict in {"UNVERIFIED", "HALLUCINATED"} and (title or doi):
+            # Transport failure ≠ "not in literature"
+            verdict = "ERROR"
 
         return CitationCheck(
             citation_id=cit_id,
@@ -142,13 +192,13 @@ class CitationVerifier:
             found_in=found_in,
             crossref_match=crossref_ok,
             openalex_match=openalex_ok,
+            openalex_score=openalex_score,
+            check_error=check_error,
         )
 
     @staticmethod
     def _guess_source(context: str, sources: list[dict[str, Any]]) -> tuple[str, str | None]:
         """Try to match citation context to a known source by title proximity."""
-        # Very simple heuristic: look for a title in the References section
-        # that appears near the citation marker
         best_title = ""
         best_doi = None
         for src in sources:
@@ -161,39 +211,53 @@ class CitationVerifier:
 
     # ── External checks ──────────────────────────────────────────────────
 
-    async def _check_crossref(self, doi: str) -> bool:
-        """Resolve DOI via CrossRef."""
+    async def _check_crossref(self, doi: str) -> dict[str, Any]:
+        """Resolve DOI via CrossRef. Returns {ok, error?}."""
         try:
             url = f"{self.CROSSREF_BASE}/{doi}"
-            resp = await self._client.get(url, params={"mailto": "c44tcdi@example.com"})
+            resp = await self._client.get(url, params={"mailto": contact_email()})
             if resp.status_code == 200:
                 data = resp.json()
                 item = data.get("message", {})
-                return bool(item.get("title"))
-        except Exception:
-            pass
-        return False
+                return {"ok": bool(item.get("title"))}
+            return {"ok": False, "error": f"http_{resp.status_code}"}
+        except Exception as exc:
+            logger.debug("CrossRef check failed: %s", exc, exc_info=True)
+            return {"ok": False, "error": type(exc).__name__}
 
-    async def _check_openalex(self, title: str) -> bool:
-        """Search title via OpenAlex."""
+    async def _check_openalex(self, title: str) -> dict[str, Any]:
+        """Search title via OpenAlex; match only if similarity ≥ threshold."""
         try:
             url = f"{self.OPENALEX_BASE}"
             resp = await self._client.get(
                 url,
                 params={
                     "search": title,
-                    "per_page": 1,
-                    "mailto": "c44tcdi@example.com",
+                    "per_page": 5,
+                    "mailto": contact_email(),
                 },
             )
-            if resp.status_code == 200:
-                data = resp.json()
-                results = data.get("results", [])
-                if results:
-                    return bool(results[0].get("title"))
-        except Exception:
-            pass
-        return False
+            if resp.status_code != 200:
+                return {"ok": False, "score": 0.0, "error": f"http_{resp.status_code}"}
+            data = resp.json()
+            results = data.get("results") or []
+            best_score = 0.0
+            best_title = ""
+            for item in results:
+                hit_title = item.get("display_name") or item.get("title") or ""
+                score = title_similarity(title, hit_title)
+                if score > best_score:
+                    best_score = score
+                    best_title = hit_title
+            matched = best_score >= _OPENALEX_TITLE_SIM_THRESHOLD
+            return {
+                "ok": matched,
+                "score": round(best_score, 4),
+                "matched_title": best_title if matched else "",
+            }
+        except Exception as exc:
+            logger.debug("OpenAlex check failed: %s", exc, exc_info=True)
+            return {"ok": False, "score": 0.0, "error": type(exc).__name__}
 
     async def close(self) -> None:
         await self._client.aclose()

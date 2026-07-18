@@ -3,6 +3,8 @@ from __future__ import annotations
 import asyncio
 from typing import Any
 
+from src.knowledge.contact_email import contact_email
+
 from .base import BaseSourceAdapter
 from .base_p6_adapter import BaseP6SourceAdapter
 
@@ -27,14 +29,16 @@ class OpenAlexAdapter(BaseSourceAdapter):
             # pyalex is synchronous; run in executor to avoid blocking
             works = await loop.run_in_executor(
                 None,
-                lambda: Works()
-                .search(query)
-                .sort("cited_by_count", desc=True)
-                .select(
-                    "id,title,publication_year,abstract_inverted_index,"
-                    "authorships,doi,primary_location,cited_by_count"
-                )
-                .get(limit),
+                lambda: (
+                    Works()
+                    .search(query)
+                    .sort("cited_by_count", desc=True)
+                    .select(
+                        "id,title,publication_year,abstract_inverted_index,"
+                        "authorships,doi,primary_location,cited_by_count"
+                    )
+                    .get(limit)
+                ),
             )
             return self._normalize(works)
         except Exception:
@@ -53,7 +57,11 @@ class OpenAlexAdapter(BaseSourceAdapter):
             # pyalex returns Work objects with attribute access
             authors = []
             for auth in getattr(w, "authorships", []) or []:
-                author_obj = auth.get("author", {}) if isinstance(auth, dict) else getattr(auth, "author", {})
+                author_obj = (
+                    auth.get("author", {})
+                    if isinstance(auth, dict)
+                    else getattr(auth, "author", {})
+                )
                 if isinstance(author_obj, dict):
                     authors.append(author_obj.get("display_name", ""))
                 else:
@@ -63,7 +71,11 @@ class OpenAlexAdapter(BaseSourceAdapter):
             doi = doi_raw.replace("https://doi.org/", "") if doi_raw else ""
 
             venue = getattr(w, "primary_location", None) or {}
-            source_info = (venue or {}).get("source", {}) if isinstance(venue, dict) else getattr(venue, "source", {})
+            source_info = (
+                (venue or {}).get("source", {})
+                if isinstance(venue, dict)
+                else getattr(venue, "source", {})
+            )
             venue_name = ""
             if isinstance(source_info, dict):
                 venue_name = source_info.get("display_name", "")
@@ -73,20 +85,22 @@ class OpenAlexAdapter(BaseSourceAdapter):
             # pyalex auto-reconstructs abstract_inverted_index into .abstract
             abstract = getattr(w, "abstract", "") or ""
 
-            result.append({
-                "id": getattr(w, "id", ""),
-                "title": getattr(w, "title", "") or "",
-                "authors": authors,
-                "year": int(getattr(w, "publication_year", 0) or 0),
-                "abstract": abstract,
-                "abstract_missing": not abstract,
-                "doi": doi,
-                "venue": venue_name,
-                "citation_count": getattr(w, "cited_by_count", 0) or 0,
-                "source": self.source_id,
-                "source_name": "OpenAlex",
-                "sources": ["OpenAlex"],
-            })
+            result.append(
+                {
+                    "id": getattr(w, "id", ""),
+                    "title": getattr(w, "title", "") or "",
+                    "authors": authors,
+                    "year": int(getattr(w, "publication_year", 0) or 0),
+                    "abstract": abstract,
+                    "abstract_missing": not abstract,
+                    "doi": doi,
+                    "venue": venue_name,
+                    "citation_count": getattr(w, "cited_by_count", 0) or 0,
+                    "source": self.source_id,
+                    "source_name": "OpenAlex",
+                    "sources": ["OpenAlex"],
+                }
+            )
         return result
 
 
@@ -104,7 +118,7 @@ class _OpenAlexRawAdapter(BaseP6SourceAdapter):
         params: dict[str, Any] = {
             "search": query,
             "per_page": min(limit, 200),
-            "mailto": "c44tcdi@example.com",
+            "mailto": contact_email(),
             "select": "id,title,publication_year,abstract_inverted_index,authorships,doi,primary_location,cited_by_count",
         }
         data = await self._get_with_retry("/works", params=params, use_cache=True)
@@ -136,18 +150,22 @@ class _OpenAlexRawAdapter(BaseP6SourceAdapter):
             doi = doi_raw.replace("https://doi.org/", "") if doi_raw else ""
             venue = item.get("primary_location", {})
             source_info = (venue or {}).get("source", {}) if isinstance(venue, dict) else {}
-            venue_name = source_info.get("display_name", "") if isinstance(source_info, dict) else ""
-            result.append({
-                "title": item.get("title", ""),
-                "authors": authors,
-                "year": int(item.get("publication_year") or 0),
-                "abstract": self._reconstruct_abstract(item.get("abstract_inverted_index")),
-                "abstract_missing": item.get("abstract_inverted_index") is None,
-                "doi": doi,
-                "venue": venue_name,
-                "citation_count": item.get("cited_by_count", 0) or 0,
-                "source": self.source_id,
-                "source_name": "OpenAlex",
-                "sources": ["OpenAlex"],
-            })
+            venue_name = (
+                source_info.get("display_name", "") if isinstance(source_info, dict) else ""
+            )
+            result.append(
+                {
+                    "title": item.get("title", ""),
+                    "authors": authors,
+                    "year": int(item.get("publication_year") or 0),
+                    "abstract": self._reconstruct_abstract(item.get("abstract_inverted_index")),
+                    "abstract_missing": item.get("abstract_inverted_index") is None,
+                    "doi": doi,
+                    "venue": venue_name,
+                    "citation_count": item.get("cited_by_count", 0) or 0,
+                    "source": self.source_id,
+                    "source_name": "OpenAlex",
+                    "sources": ["OpenAlex"],
+                }
+            )
         return result

@@ -25,17 +25,30 @@ func TestDream_TouchKeepsInactive(t *testing.T) {
 
 func TestDream_ActivatesAfterIdle(t *testing.T) {
 	d := NewDreamState()
-	d.idleSeconds = 0
+	d.idleSeconds = 5
 	d.startedAt = time.Now().Add(-time.Hour)
 	d.Tick()
 	if !d.Active() {
-		t.Error("dream should activate after idle seconds = 0")
+		t.Error("dream should activate after idle threshold (idleSeconds > 0)")
+	}
+}
+
+func TestDream_DisabledWhenIdleZero(t *testing.T) {
+	// C4_DREAM_IDLE=0 means dream mode is disabled (per config docs).
+	// Previously this evaluated to idle > 0 and permanently buried the
+	// live UI. Now it must stay inactive regardless of idle time.
+	d := NewDreamState()
+	d.idleSeconds = 0
+	d.startedAt = time.Now().Add(-time.Hour)
+	d.Tick()
+	if d.Active() {
+		t.Error("dream must stay inactive when idleSeconds = 0")
 	}
 }
 
 func TestDream_Tick_AdvancesArt(t *testing.T) {
 	d := NewDreamState()
-	d.idleSeconds = 0
+	d.idleSeconds = 5
 	d.startedAt = time.Now().Add(-time.Hour)
 	d.Tick()
 	art1 := d.currentArt
@@ -48,7 +61,7 @@ func TestDream_Tick_AdvancesArt(t *testing.T) {
 
 func TestDream_ResetDisables(t *testing.T) {
 	d := NewDreamState()
-	d.idleSeconds = 0
+	d.idleSeconds = 5
 	d.startedAt = time.Now().Add(-time.Hour)
 	d.Tick()
 	if !d.Active() {
@@ -62,7 +75,7 @@ func TestDream_ResetDisables(t *testing.T) {
 
 func TestDream_TouchDisables(t *testing.T) {
 	d := NewDreamState()
-	d.idleSeconds = 0
+	d.idleSeconds = 5
 	d.startedAt = time.Now().Add(-time.Hour)
 	d.Tick()
 	if !d.Active() {
@@ -84,7 +97,7 @@ func TestDream_RenderEmptyWhenInactive(t *testing.T) {
 
 func TestDream_RenderContainsTitleAndArtWhenActive(t *testing.T) {
 	d := NewDreamState()
-	d.idleSeconds = 0
+	d.idleSeconds = 5
 	d.startedAt = time.Now().Add(-time.Hour)
 	d.Tick()
 	out := d.Render(120, 40)
@@ -95,7 +108,7 @@ func TestDream_RenderContainsTitleAndArtWhenActive(t *testing.T) {
 
 func TestDream_RenderContainsIdleTime(t *testing.T) {
 	d := NewDreamState()
-	d.idleSeconds = 0
+	d.idleSeconds = 5
 	d.startedAt = time.Now().Add(-30 * time.Second)
 	d.Tick()
 	out := d.Render(120, 40)

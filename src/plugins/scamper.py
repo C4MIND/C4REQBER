@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from src.plugins._llm_base import _llm_reason
+from src.plugins._llm_base import _llm_reason, finalize_plugin_result
 
 
 def analyze(original: str) -> dict[str, Any]:
@@ -26,19 +26,30 @@ Respond as JSON:
 {{"substitute": ["idea 1", "idea 2"], "combine": [...], "adapt": [...], "modify": [...], "put_to_other_uses": [...], "eliminate": [...], "reverse": [...]}}"""
     system = "You are a SCAMPER creative facilitator. Generate genuinely non-obvious, domain-specific ideas. Never use generic filler."
     raw = _llm_reason(prompt, system=system, max_tokens=700, temperature=0.7)
+    empty = {
+        "original": original,
+        "substitute": [],
+        "combine": [],
+        "adapt": [],
+        "modify": [],
+        "put_to_other_uses": [],
+        "eliminate": [],
+        "reverse": [],
+    }
     if not raw:
-        return {"original": original, "substitute": [], "combine": [], "adapt": [], "modify": [], "put_to_other_uses": [], "eliminate": [], "reverse": []}
+        return finalize_plugin_result(empty, raw)
     try:
         import json
         import re
+
         match = re.search(r"\{.*\}", raw, re.DOTALL)
         if match:
             result = json.loads(match.group())
             result["original"] = original
-            return result
+            return finalize_plugin_result(result, raw)
     except (json.JSONDecodeError, ValueError):
         pass
-    return {"original": original, "substitute": [], "combine": [], "adapt": [], "modify": [], "put_to_other_uses": [], "eliminate": [], "reverse": []}
+    return finalize_plugin_result(empty, raw)
 
 
 def execute(original: str, **kwargs: Any) -> dict[str, Any]:

@@ -42,6 +42,8 @@ config/secrets/
 # Removed: *token* was too broad, use specific rules
 *secret*
 !scripts/k8s-init-secrets.sh
+# Product module (not a credential dump) — must ship in the PyPI wheel.
+!src/config/secrets_store.py
 # Audit 2026-06-22: .secrets.baseline is the detect-secrets reference
 # file (what counts as 'known false positives'). Without this exception
 # the blanket *secret* rule silently drops the file and every developer
@@ -349,3 +351,10 @@ docs/LOCAL_LLM_STACK.md
 
 # Go coverage artifacts
 coverage.out
+
+# Local model caches / accidental Ollama exports (never ship)
+qwen3:8b*/
+**/blobs/sha256-*
+docs/screenshots/frame_*.png
+*.mp4
+!docs/demo/.gitkeep

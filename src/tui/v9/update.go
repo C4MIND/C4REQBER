@@ -82,6 +82,11 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// Falls back to legacy extraction for the old v8.12 events.
 		te, terr := api.DecodeTypedEvent(msg.event.Data)
 		if terr == nil {
+			m.lastSSEType = string(te.Type)
+			if te.Status != "" {
+				m.lastSSEType = string(te.Type) + ":" + te.Status
+			}
+			m.lastSSETS = time.Now()
 			switch te.Type {
 			case api.EventPhaseProgress, api.EventPhaseChange:
 				m.handlePhaseEvent(te)
@@ -259,6 +264,15 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		switch {
 
+		// While the query input is focused, route every plain keystroke to the
+		// text input so single-letter shortcuts (c/f/g/i/o/...) can't swallow
+		// typed characters. Global chords (ctrl/cmd/alt/shift+…), help (?),
+		// palette (:), and overlay arrow-nav must still reach the action
+		// switch — otherwise Shift+L / ? / settings ↑↓ are silently eaten.
+		case m.ta.Focused() && routeKeyToTextarea(keyStr, m):
+			var c tea.Cmd
+			m.ta, c = m.ta.Update(msg)
+			return m, c
 		case km.Matches(ActQuit, keyStr):
 			if m.saveHistory && m.tel != nil {
 				saveTelemetryHistory(m.tel, m.Config())
@@ -457,7 +471,12 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if c := m.focusedCard(); c != nil && c.Kind == CardSimulation && c.Sim.InstallHint != "" {
 				m.setToast("ⓘ install: " + c.Sim.InstallHint)
 			} else if c != nil && c.Kind == CardSimulation {
-				m.setToast("ⓘ engine " + c.Sim.Engine + " is available; nothing to install")
+				st := strings.ToLower(c.Sim.EngineStatus)
+				if st == "unavailable" || st == "skipped" || st == "error" || st == "failed" {
+					m.setToast("ⓘ no install hint for " + c.Sim.Engine + " (" + st + ")")
+				} else {
+					m.setToast("ⓘ engine " + c.Sim.Engine + ": no install hint")
+				}
 			} else {
 				m.setToast("ⓘ install hint only works on simulation cards")
 			}
@@ -793,9 +812,18 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if msg.completed {
 				m.running = false
 				m.jobID = ""
-				m.setToast(i18n.T("toast.complete"))
-				m.burst.Trigger(m.width, m.height, m.width/2, m.height/2)
-				if msg.result != nil {
+				st := strings.ToLower(strings.TrimSpace(msg.status))
+				switch st {
+				case "failed", "error":
+					m.setToast(i18n.T("toast.failed"))
+					m.appendCard(Card{Kind: CardError, Title: "Discovery failed", Body: st, Time: time.Now(), Status: "error"})
+				case "partial":
+					m.setToast(i18n.T("toast.partial"))
+				default:
+					m.setToast(i18n.T("toast.complete"))
+					m.burst.Trigger(m.width, m.height, m.width/2, m.height/2)
+				}
+				if msg.result != nil && st != "failed" && st != "error" {
 					if hyp, ok := msg.result["hypothesis"].(map[string]any); ok {
 						hc := Card{Kind: CardHypothesis, Title: i18n.T("card.hypothesis.t"), Body: fieldString(hyp, "text"), Meta: []cards.MetaKV{{Key: "source", Value: fieldString(hyp, "source")}}, Time: time.Now(), Status: "done"}
 						m.appendCard(hc)
@@ -819,6 +847,10 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 
 	case apiPapersMsg:
+		if msg.err != nil {
+			m.setToast("papers fetch failed: " + msg.err.Error())
+			return m, nil
+		}
 		if msg.err == nil {
 			for i, pm := range msg.papers {
 				if i >= 3 {
@@ -878,20 +910,21 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case capsimMsg:
 		m.capsimLoading = false
-		m.capsimReport = msg.report
 		if msg.err != nil {
-			// Backend unreachable — overlay still renders, but with a hint.
-			m.setToast("⏚ capabilities: backend unreachable (using last known)")
+			if m.capsimReport != nil {
+				m.setToast(i18n.T("sim.toast.unreachable"))
+			} else {
+				m.setToast("capabilities: backend unreachable (no cached report)")
+			}
 			return m, nil
 		}
-		// D-03 in action: surface missing engines to the feed as first-class
-		// CardSimulation entries with status=unavailable + install hint.
-		// User can press 'i' on any of them to see the conda line.
+		m.capsimReport = msg.report
+		// D-03: surface missing engines as CardSimulation entries.
+		// Do NOT count probe cards toward simCountThisRun (not real sims).
 		summary := capSummaryCard(msg.report)
 		m.appendCard(summary)
 		for _, c := range capUnavailableCards(msg.report, 6) {
 			m.appendCard(c)
-			m.simCountThisRun++
 		}
 		m.setToast("⏚ " + i18n.T("sim.toast.loaded") + " (" + capsim.ShortSummary(msg.report) + ")")
 		return m, nil
@@ -1188,6 +1221,28 @@ func abs(x float64) float64 {
 		return -x
 	}
 	return x
+}
+
+// routeKeyToTextarea reports whether a focused query input should consume
+// this keystroke. Modifier chords, help/palette toggles, and arrow keys while
+// an overlay is open must reach the action switch instead.
+func routeKeyToTextarea(keyStr string, m *model) bool {
+	if strings.HasPrefix(keyStr, "ctrl+") ||
+		strings.HasPrefix(keyStr, "cmd+") ||
+		strings.HasPrefix(keyStr, "alt+") ||
+		strings.HasPrefix(keyStr, "shift+") {
+		return false
+	}
+	switch keyStr {
+	case "esc", "enter", "tab", "?", ":":
+		return false
+	case "up", "down":
+		if m.settingsVisible || m.agendaVisible || m.modelsVisible ||
+			m.setupVisible || m.socialVisible || m.showHelp {
+			return false
+		}
+	}
+	return true
 }
 
 // sseReconnectMsg is emitted by the retry timer to trigger a re-attempt

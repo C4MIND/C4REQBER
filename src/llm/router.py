@@ -24,9 +24,10 @@ from src.llm.providers import (
 
 
 class ProviderRouter:
-    """
-    Routes LLM requests to appropriate providers based on pipeline stage.
-    Supports 7 providers: OpenRouter, XAI, Mistral, Moonshot, DeepSeek, Ollama, LM Studio.
+    """Stage-based multi-provider router (internal strategy).
+
+    Prefer ``src.llm.get_gateway().generate_for_stage`` for new code.
+    Supports OpenRouter, XAI, Mistral, Moonshot, DeepSeek, Ollama, LM Studio.
     """
 
     PRESETS: dict[ProviderPreset, StageProviderMapping] = {
@@ -53,19 +54,25 @@ class ProviderRouter:
         ),
         ProviderPreset.COST_OPTIMIZED: StageProviderMapping(
             preset="cost_optimized",
-            default=ProviderConfig(LLMProvider.DEEPSEEK, model="deepseek-chat"),
+            default=ProviderConfig(LLMProvider.LM_STUDIO, model="qwen2.5-14b-instruct"),
             stages={
                 "synthesis": ProviderConfig(
-                    LLMProvider.OPENROUTER,
-                    model="openai/gpt-4o-mini",
+                    LLMProvider.LM_STUDIO,
+                    model="qwen2.5-14b-instruct",
                     temperature=0.6,
                     max_tokens=2000,
                 ),
                 "mp_rotation": ProviderConfig(
-                    LLMProvider.DEEPSEEK, model="deepseek-chat", temperature=0.7, max_tokens=500
+                    LLMProvider.LM_STUDIO,
+                    model="qwen2.5-14b-instruct",
+                    temperature=0.7,
+                    max_tokens=500,
                 ),
                 "validation": ProviderConfig(
-                    LLMProvider.DEEPSEEK, model="deepseek-chat", temperature=0.3, max_tokens=500
+                    LLMProvider.LM_STUDIO,
+                    model="qwen2.5-14b-instruct",
+                    temperature=0.3,
+                    max_tokens=500,
                 ),
             },
         ),
@@ -122,26 +129,29 @@ class ProviderRouter:
         ),
         ProviderPreset.C4REQBER: StageProviderMapping(
             preset="c4reqber",
-            default=ProviderConfig(LLMProvider.DEEPSEEK, model="deepseek-chat"),
+            default=ProviderConfig(LLMProvider.LM_STUDIO, model="qwen2.5-14b-instruct"),
             stages={
                 "synthesis": ProviderConfig(
-                    LLMProvider.DEEPSEEK,
-                    model="deepseek-chat",
+                    LLMProvider.LM_STUDIO,
+                    model="qwen2.5-14b-instruct",
                     temperature=0.6,
                     max_tokens=3000,
                 ),
                 "mp_rotation": ProviderConfig(
-                    LLMProvider.XAI, model="grok-4.3", temperature=0.7, max_tokens=800
+                    LLMProvider.LM_STUDIO,
+                    model="qwen2.5-14b-instruct",
+                    temperature=0.7,
+                    max_tokens=800,
                 ),
                 "validation": ProviderConfig(
                     LLMProvider.LM_STUDIO,
-                    model="deepseek/deepseek-r1-0528-qwen3-8b",
+                    model="qwen2.5-14b-instruct",
                     temperature=0.3,
                     max_tokens=500,
                 ),
                 "c4_fingerprint": ProviderConfig(
-                    LLMProvider.DEEPSEEK,
-                    model="deepseek-chat",
+                    LLMProvider.LM_STUDIO,
+                    model="qwen2.5-14b-instruct",
                     temperature=0.4,
                     max_tokens=200,
                 ),
@@ -215,7 +225,67 @@ class ProviderRouter:
         return cls(StageProviderMapping(stages=stages, default=default))
 
     def get_config_for_stage(self, stage_name: str) -> ProviderConfig:
-        return self.mapping.stages.get(stage_name, self.mapping.default)
+        config = self.mapping.stages.get(stage_name, self.mapping.default)
+        overridden = self._apply_model_assignment(stage_name, config)
+        return overridden
+
+    @staticmethod
+    def _apply_model_assignment(stage_name: str, config: ProviderConfig) -> ProviderConfig:
+        """Override PRESET model with ~/.c4reqber/models.json when set."""
+        try:
+            from src.llm.model_assignment import ModelAssignment, get_model_for_phase
+
+            stage_to_phase = {
+                "synthesis": "F",
+                "dissertation": "F",
+                "hypothesis": "D",
+                "hypothesis_generation": "D",
+                "gap_analysis": "C",
+                "knowledge": "B",
+                "framing": "A",
+                "c4_framing": "A",
+                "validation": "G",
+                "quality": "G",
+                "mp_rotation": "D",
+            }
+            phase = stage_to_phase.get((stage_name or "").lower(), "")
+            if not phase:
+                return config
+            model = get_model_for_phase(phase)
+            if not model:
+                return config
+            ma = ModelAssignment.load()
+            provider_asg = ma.phases.get(phase)
+            provider_str = (provider_asg.provider if provider_asg is not None else "") or ""
+            if not provider_str:
+                from src.llm.model_assignment import _detect_provider
+
+                provider_str = _detect_provider(model)
+
+            if ":" in model or provider_str in ("local", "ollama"):
+                provider = LLMProvider.OLLAMA
+            elif provider_str in ("lm_studio", "lmstudio"):
+                provider = LLMProvider.LM_STUDIO
+            elif provider_str == "deepseek":
+                provider = LLMProvider.DEEPSEEK
+            elif provider_str in ("xai", "mistral", "moonshot", "nvidia", "yandex"):
+                try:
+                    provider = LLMProvider(provider_str)
+                except ValueError:
+                    provider = LLMProvider.OPENROUTER
+            else:
+                # Bare free-tier / OpenRouter-style IDs (incl. nemotron-*-free)
+                provider = LLMProvider.OPENROUTER
+
+            return ProviderConfig(
+                provider=provider,
+                model=model,
+                temperature=ma.get_temperature(phase) if phase else config.temperature,
+                max_tokens=ma.get_max_tokens(phase) if phase else config.max_tokens,
+                timeout=config.timeout,
+            )
+        except Exception:
+            return config
 
     async def _get_client(self, provider: LLMProvider) -> BaseLLMClient:
         """Get or create client for a provider (thread-safe)."""

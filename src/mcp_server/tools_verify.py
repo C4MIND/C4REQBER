@@ -207,12 +207,37 @@ async def c4_verify(code: str, language: str | None = None) -> dict[str, Any]:
                         "language": language,
                     }
                 result = s.check()
-                is_sat = result == z3.sat
+                # sat = satisfiable, NOT theorem verified (HONESTY_CONTRACT).
+                if result == z3.sat:
+                    return {
+                        "valid": False,
+                        "verified": False,
+                        "satisfiable": True,
+                        "proof": code,
+                        "language": language,
+                        "status": "partial",
+                        "note": "z3.sat means satisfiable, not formally verified",
+                        "details": {"status": str(result), "model": str(s.model())},
+                    }
+                if result == z3.unsat:
+                    return {
+                        "valid": False,
+                        "verified": False,
+                        "satisfiable": False,
+                        "proof": code,
+                        "language": language,
+                        "status": "partial",
+                        "note": "unsat without explicit proof-goal semantics",
+                        "details": {"status": str(result)},
+                    }
                 return {
-                    "valid": is_sat,
+                    "valid": False,
+                    "verified": False,
+                    "satisfiable": None,
                     "proof": code,
                     "language": language,
-                    "details": {"status": str(result), "model": str(s.model()) if is_sat else None},
+                    "status": "error",
+                    "details": {"status": str(result)},
                 }
             except (z3.Z3Exception, ValueError, RuntimeError) as e:
                 logger.warning("Z3 verification error: language=%s error=%s", language, e)

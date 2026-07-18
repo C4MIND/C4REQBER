@@ -34,7 +34,7 @@ func capSummaryCard(r *capsim.Report) cards.Card {
 		Status: "done",
 		Sim: cards.SimFields{
 			Engine:       "capsim",
-			EngineStatus: "available",
+			EngineStatus: "partial", // probe summary ≠ engine available
 			Domain:       "general",
 			Pattern:      "capability_probe",
 			Verdict:      "inconclusive",

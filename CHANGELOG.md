@@ -2,6 +2,42 @@
 
 > **Русская версия:** [CHANGELOG.ru.md](CHANGELOG.ru.md)
 
+## v9.18.0 (2026-07-18) — Honesty contract (anti green-fake)
+
+Canonical rules: [`docs/HONESTY_CONTRACT.md`](docs/HONESTY_CONTRACT.md).
+
+### Citations / novelty / verification
+- **OpenAlex** title match requires similarity ≥ 0.82 — first search hit is not a match; VERIFIED needs CrossRef + matched OpenAlex
+- **Novelty** empty/unchecked → `novelty_score: null` (no more `0.5` gate bypass / empty-search `1.0`)
+- **Quality / RedundantGate** fail-closed when corpus missing or gate unavailable
+- **Z3 API** `sat` → `satisfiable`, not `verified`
+- **Lean translators** refuse `True:=trivial` / `Exists True` / `x→x` tautologies
+- **step_10_verify** stamps `COMPILED`, not `FORMALLY VERIFIED`, without alignment
+- **Hoare codegen stub** refused (`verified: false`)
+- **Alloy / TLA** parsers require positive success tokens (not returncode alone)
+
+### Simulations / Dempster / MCP / plugins
+- Schr / TorchSim / Newton / JaxSim set positive `engine_truth` on real success; fallbacks stay `partial` + `not_*`
+- Dempster: MNLI → LLM → keywords; `heuristic` only when NLI unused
+- MCP outer status requires **positive provenance** (`src/utils/honesty_status.py`); bare `status:success` refused
+- `c4_solve` / `blast_*` use dict-safe sim/verification status (no AttributeError on HIL dicts)
+- Cognitive plugins: gateway LLM + `llm_backed` provenance; runners bind `target`/`situation`/… aliases via `src/plugins/invoke.py`
+- Morphological uses problem-derived axes (not fixed Metal/Polymer toy grid)
+- Prior-only BMA ranking → `partial`; do-calculus `identifiable=false` is still success
+
+### TUI v9 / docs / site
+- `sim_finished` green only for real `ok`/`success`/`completed`
+- `toast.partial` / `toast.failed` (7 langs); no celebration burst on failure
+- Capsim summary card = `partial`; debug overlay records last SSE type/ts
+- Feed dedup keeps **newest**; restored hypotheses no longer show `NEW`
+- Removed unapproved agent demo mp4/gif; Pages discoveries gallery uses screenshots only
+
+### Tests
+- `tests/test_citation_openalex_honesty.py`, `tests/test_mcp_honesty_status.py`, W1–W6 / MNLI / physics honesty suites
+- Go TUI packages green after status mapping fixes
+
+---
+
 ## v9.17.1 (2026-07-13) — PyPI 5.7.1 metadata + landing mobile splash
 
 ### PyPI / badges

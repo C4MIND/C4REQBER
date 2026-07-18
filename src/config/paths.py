@@ -47,12 +47,10 @@ _KILO_ENV_LOADED = False
 # OpenCode Zen free models (per ~/.kilo/.env — 6 accounts × 7 models)
 OPENCODE_ZEN_FREE_MODELS: tuple[str, ...] = (
     "deepseek-v4-flash-free",
-    "qwen3.6-plus-free",
-    "big-pickle",
     "nemotron-3-ultra-free",
+    "big-pickle",
     "mimo-v2.5-free",
     "north-mini-code-free",
-    "minimax-m3-free",
 )
 
 

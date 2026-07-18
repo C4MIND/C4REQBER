@@ -1,5 +1,11 @@
 """c4reqber: Secure Key Storage — Fernet encryption for agent.json secrets."""
+
 from __future__ import annotations
+
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 import os
 from pathlib import Path
@@ -39,26 +45,32 @@ def _get_or_create_key() -> bytes:
     # 2. macOS Keychain
     try:
         import subprocess
+
         result = subprocess.run(
             ["security", "find-generic-password", "-s", "c4reqber-keyring", "-w"],
-            capture_output=True, text=True, timeout=5,
+            capture_output=True,
+            text=True,
+            timeout=5,
         )
         if result.returncode == 0 and result.stdout.strip():
             return result.stdout.strip().encode()
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("swallowed exception: %s", _exc, exc_info=True)
 
     # 3. Linux libsecret
     try:
         import subprocess
+
         result = subprocess.run(
             ["secret-tool", "lookup", "application", "c4reqber-keyring"],
-            capture_output=True, text=True, timeout=5,
+            capture_output=True,
+            text=True,
+            timeout=5,
         )
         if result.returncode == 0 and result.stdout.strip():
             return result.stdout.strip().encode()
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("swallowed exception: %s", _exc, exc_info=True)
 
     # 4. Cached file
     if KEYRING_FILE.exists():

@@ -211,8 +211,8 @@ async def verify_hypothesis(req: HypothesisVerifyRequest) -> dict[str, Any]:
             backend_label = r.backend or "unknown"
             status_label = r.status or "unknown"
             VERIFICATION_RUNS.labels(backend=backend_label, status=status_label).inc()
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("swallowed exception: %s", _exc, exc_info=True)
 
     payload = {
         "verify_id": verify_id,
@@ -246,12 +246,21 @@ async def list_methods() -> dict[str, Any]:
         "coq": hv._check_executable(hv.COQ_PATH),
         "dafny": hv._check_executable(hv.DAFNY_PATH),
         "agda": hv._check_executable(hv.AGDA_PATH),
-        "z3": True,
+        "z3": False,
         "cvc5": CVC5Client().test_connection(),
         "tla": TLAClient().test_connection(),
         "alloy": AlloyClient().test_connection(),
-        "hoare": True,
+        "hoare": False,
+        "hoare_fallback": True,
     }
+    try:
+        import z3  # noqa: F401
+
+        backends["z3"] = True
+        backends["hoare"] = True  # Z3-backed Hoare
+    except ImportError:
+        backends["z3"] = False
+        backends["hoare"] = False
     return {
         "available": [k for k, v in backends.items() if v],
         "all": list(backends.keys()),
@@ -349,12 +358,31 @@ async def verify_code(req: VerifyRequest) -> dict[str, Any]:
                 solver.set("timeout", 5000)
                 solver.from_string(req.code)
                 check = solver.check()
-                valid = check == z3.sat
-                payload = {
-                    "verified": valid,
-                    "errors": [] if valid else [str(check)],
-                    "method": "z3",
-                }
+                # SAT = model exists (satisfiable), NOT "theorem verified".
+                # Only unsat proves a negated claim; expose honest labels.
+                if check == z3.sat:
+                    payload = {
+                        "verified": False,
+                        "satisfiable": True,
+                        "errors": [],
+                        "method": "z3",
+                        "note": "z3.sat means satisfiable, not formally verified",
+                    }
+                elif check == z3.unsat:
+                    payload = {
+                        "verified": False,
+                        "satisfiable": False,
+                        "errors": ["unsat"],
+                        "method": "z3",
+                        "note": "unsat without explicit proof-goal semantics",
+                    }
+                else:
+                    payload = {
+                        "verified": False,
+                        "satisfiable": None,
+                        "errors": [str(check)],
+                        "method": "z3",
+                    }
             except Exception as exc:
                 payload = {"verified": False, "errors": [str(exc)], "method": "z3"}
         elif req.formal_method == "hoare":

@@ -1,6 +1,22 @@
-# TURBO-CDI Documentation
+# TURBO-CDI / c4reqber Documentation
 
 > **Primary remote:** [GitLab](https://gitlab.com/cognitive-functors/c4reqber) · **UI:** TUI v9 + static `landing/` (GitLab Pages). No `web-v2` SPA.
+
+## Canonical docs (start here)
+
+| Doc | Purpose |
+|-----|---------|
+| [`HONESTY_CONTRACT.md`](HONESTY_CONTRACT.md) | **Anti green-fake rules** — what success/verified/available mean |
+| [`../CHANGELOG.md`](../CHANGELOG.md) | Release notes (EN) · [`../CHANGELOG.ru.md`](../CHANGELOG.ru.md) (RU) |
+| [`../AGENTS.md`](../AGENTS.md) | AI agent map + honest implementation status |
+| [`VERIFICATION_BACKENDS.md`](VERIFICATION_BACKENDS.md) | Lean/Coq/Dafny/Z3/TLA/Alloy honesty notes |
+| [`INSTALL.md`](INSTALL.md) | End-user install (`pip install c4reqber`, `blast setup`) |
+| [`GPU_SETUP.md`](GPU_SETUP.md) | Newton / Warp / local GPU |
+| [`mcp_registry.md`](mcp_registry.md) | MCP tool schemas |
+| [`../WHITEPAPER.md`](../WHITEPAPER.md) | Technical whitepaper (EN) · [`../WHITEPAPER.ru.md`](../WHITEPAPER.ru.md) (RU) |
+| [`../src/tui/v9/README.md`](../src/tui/v9/README.md) | TUI v9 cockpit |
+
+Historical / speculative metamodel essays under `docs/upgrades/` are **not** runtime truth — prefer HONESTY_CONTRACT + CHANGELOG for behavior.
 
 ## 🚀 Quick Start
 

@@ -5,6 +5,7 @@ with fallback simulation mode.
 
 Supports: Lean 4 (primary), Agda, Haskell (future)
 """
+
 from __future__ import annotations
 
 import re
@@ -98,37 +99,33 @@ def hypothesis_to_lean(hypothesis: str, domain: str = "general") -> str:
 
 
 def _translate_exists(hypothesis: str, domain: str) -> str:
-    """Translate existential claims."""
-    # Extract variable and property
-    match = re.search(r"exists\s+(\w+)\s+such\s+that\s+(.+)", hypothesis)
-    if match:
-        var, prop = match.groups()
-        return f"theorem existence_claim : Exists (fun {var} => {prop.replace(var, '_' + var)}) := by"
-    return f"theorem existence_claim : Exists (fun x => True) := by\n  -- {hypothesis}"
+    """Refuse Exists(True) tautology — not a claim formalization."""
+    return _translate_simple(hypothesis, domain)
 
 
 def _translate_forall(hypothesis: str, domain: str) -> str:
-    """Translate universal claims."""
-    return f"theorem universal_claim (x : Prop) : x → x := by\n  -- {hypothesis}"
+    """Refuse x→x tautology — not a claim formalization."""
+    return _translate_simple(hypothesis, domain)
 
 
 def _translate_implication(hypothesis: str, domain: str) -> str:
-    """Translate implication claims."""
-    return f"theorem implication_claim (P Q : Prop) : P → Q := by\n  -- {hypothesis}"
+    """Refuse incomplete P→Q as verified theater."""
+    return _translate_simple(hypothesis, domain)
 
 
 def _translate_simple(hypothesis: str, domain: str) -> str:
-    """Translate simple claims into structurally valid Lean theorems."""
-    safe_name = re.sub(r"[^\w]", "_", hypothesis[:30])
-    words = len(re.findall(r"\w+", hypothesis))
-    if words < 10:
-        return f"theorem {safe_name} : True := by\n  intro h,\n  trivial"
+    """Refuse tautology proofs — True:=trivial is not a claim formalization."""
+    safe_name = re.sub(r"[^\w]", "_", hypothesis[:30]) or "claim"
+    # Emit an incomplete theorem that Lean will reject without sorry-as-success.
+    # Hybrid verifier / Lean backends must not treat this as verified.
     return (
-        f"theorem {safe_name} : True := by\n"
-        f"  intro h,\n"
-        f"  have h_step : True := by trivial,\n"
-        f"  -- Domain: {domain}\n"
-        f"  exact h_step"
+        f"/-- AUTO-GENERATED PLACEHOLDER — not a real formalization of the claim.\n"
+        f"    Original: {hypothesis[:200]}\n"
+        f"    Domain: {domain}\n"
+        f"-/\n"
+        f"theorem {safe_name} : False := by\n"
+        f"  -- Refusing True:=trivial theater; requires real formalization\n"
+        f"  sorry"
     )
 
 
@@ -189,13 +186,9 @@ class TheoremProver:
             formal = generate_lean_proof_skeleton(hypothesis_text)
             status = ProofStatus.MANUAL_REVIEW
         else:
-            # Simulation mode - generate plausible formalization
+            # Simulation / non-Lean: scaffold only — never claim PROVED
             formal = self._simulate_formalization(hypothesis_text, domain)
-            status = (
-                ProofStatus.PROVED
-                if self._can_auto_prove(hypothesis_text)
-                else ProofStatus.PENDING
-            )
+            status = ProofStatus.PENDING
 
         theorem = Theorem(
             id=theorem_id,
@@ -256,35 +249,14 @@ class TheoremProver:
         theorem.status = ProofStatus.PROVING
 
         if self.backend == ProverBackend.SIMULATION:
-            # Simulate proof attempt
-
-            if theorem.confidence > 0.7:
-                theorem.status = ProofStatus.PROVED
-                theorem.proved_at = datetime.now().isoformat()
-                theorem.proof_steps = [
-                    ProofStep(
-                        id="step-1",
-                        tactic="intro",
-                        goal_before=theorem.formal_statement,
-                        goal_after="⊢ True",
-                        justification="Introduce hypothesis",
-                        line_number=1,
-                    ),
-                    ProofStep(
-                        id="step-2",
-                        tactic="simp",
-                        goal_before="⊢ True",
-                        goal_after=None,
-                        justification="Simplify using known lemmas",
-                        line_number=2,
-                    ),
-                ]
-            elif theorem.confidence < 0.3:
-                theorem.status = ProofStatus.DISPROVED
-                theorem.error_message = "Counter-example found in simulation"
-            else:
-                theorem.status = ProofStatus.TIMEOUT
-                theorem.error_message = "Proof search exceeded time limit"
+            # Never invent PROVED — simulation backend is scaffolding only.
+            theorem.status = ProofStatus.TIMEOUT
+            theorem.proof_steps = []
+            theorem.error_message = (
+                "SIMULATION backend refuses fake proofs. "
+                "Use Lean/Coq/Z3 verification backends for real results."
+            )
+            theorem.proved_at = None
 
         return theorem
 
@@ -303,7 +275,9 @@ class TheoremProver:
             stats[thm.status.value] += 1
         return stats
 
-    def _translate_simple(self, problem: dict[str, Any], context: dict[str, Any] | None = None) -> dict[str, Any]:
+    def _translate_simple(
+        self, problem: dict[str, Any], context: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         """Translate a problem into a structured theorem statement."""
         name = problem.get("name", "unknown").replace(" ", "_")
         domain = problem.get("domain", "general")
@@ -315,9 +289,9 @@ by
   -- Step 1: Define the domain and assumptions
   intro h,
   have h_domain : ℕ := by
-    -- Domain analysis via {'semantic' if domain != 'general' else 'structural'} decomposition
+    -- Domain analysis via {"semantic" if domain != "general" else "structural"} decomposition
     exact 0,
-  -- Step 2: Apply {'known' if context else 'default'} lemma
+  -- Step 2: Apply {"known" if context else "default"} lemma
   have h_step : True := by
     trivial,
   -- Step 3: Synthesize conclusion
@@ -339,9 +313,16 @@ by
 # SINGLETON (backed by DI container)
 # ═══════════════════════════════════════════════════════════════════
 
-def get_theorem_prover(backend: str = "simulation") -> TheoremProver:
-    """Get singleton theorem prover instance (backed by DI container)."""
+
+def get_theorem_prover(backend: str | None = None) -> TheoremProver:
+    """Get singleton theorem prover. Default backend is Lean when available, else simulation (no fake PROVED)."""
     from src.di.container import get_container
+
+    if backend is None:
+        import shutil
+
+        backend = "lean" if shutil.which("lean") else "simulation"
+
     container = get_container()
     if not container.has("theorem_prover"):
         container.register("theorem_prover", TheoremProver(ProverBackend(backend)))

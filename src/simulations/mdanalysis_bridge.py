@@ -3,6 +3,7 @@
 
 Install: pip install MDAnalysis
 """
+
 from __future__ import annotations
 
 import logging
@@ -47,8 +48,11 @@ class MDAnalysisBridge(BaseSimulationAdapter):
                 }
 
             return {
+                "status": "unavailable",
+                "stub": True,
+                "executed": False,
                 "mdanalysis_version": version,
-                "note": "Provide topology + trajectory files for analysis",
+                "note": "Provide topology + trajectory files — import alone is not analysis",
             }
 
         return self._run_wrapped(_run, input_data)

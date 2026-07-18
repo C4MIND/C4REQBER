@@ -3,6 +3,7 @@ c4reqber: Agenda Generator
 
 Generates research questions from knowledge graph and open gaps.
 """
+
 from __future__ import annotations
 
 import logging
@@ -33,6 +34,8 @@ class ResearchQuestion:
             "novelty_score": round(self.novelty_score, 3),
             "impact_potential": round(self.impact_potential, 3),
             "user_alignment": round(self.user_alignment, 3),
+            "heuristic": True,
+            "note": "novelty/impact scores are fixed heuristics, not model estimates",
         }
 
 
@@ -89,12 +92,14 @@ class AgendaGenerator:
             i, j = rng.choice(len(nodes), 2, replace=False)
             n1, n2 = nodes[i], nodes[j]
             if not graph.has_edge(n1, n2):
-                questions.append(ResearchQuestion(
-                    text=f"What is the relationship between {n1} and {n2}?",
-                    strategy="gap",
-                    novelty_score=0.7,
-                    impact_potential=0.6,
-                ))
+                questions.append(
+                    ResearchQuestion(
+                        text=f"What is the relationship between {n1} and {n2}?",
+                        strategy="gap",
+                        novelty_score=0.7,
+                        impact_potential=0.6,
+                    )
+                )
         return questions
 
     def _extension_driven(
@@ -108,24 +113,30 @@ class AgendaGenerator:
             hyp = result.get("hypothesis", {}).get("text", "")
             if not hyp:
                 continue
-            questions.append(ResearchQuestion(
-                text=f"Does the finding '{hyp[:80]}...' generalize to other populations or contexts?",
-                strategy="extension",
-                novelty_score=0.5,
-                impact_potential=0.7,
-            ))
+            questions.append(
+                ResearchQuestion(
+                    text=f"Does the finding '{hyp[:80]}...' generalize to other populations or contexts?",
+                    strategy="extension",
+                    novelty_score=0.5,
+                    impact_potential=0.7,
+                )
+            )
         return questions
 
     def _conflict_driven(self, recent_results: list[dict]) -> list[ResearchQuestion]:
         """Find contradictions and propose resolutions."""
         questions = []
         # Simple heuristic: if multiple hypotheses exist, ask about reconciliation
-        hypotheses = [r.get("hypothesis", {}).get("text", "") for r in recent_results if r.get("hypothesis")]
+        hypotheses = [
+            r.get("hypothesis", {}).get("text", "") for r in recent_results if r.get("hypothesis")
+        ]
         if len(hypotheses) >= 2:
-            questions.append(ResearchQuestion(
-                text=f"How can we reconcile the hypotheses: '{hypotheses[0][:60]}...' and '{hypotheses[1][:60]}...'?",
-                strategy="conflict",
-                novelty_score=0.8,
-                impact_potential=0.7,
-            ))
+            questions.append(
+                ResearchQuestion(
+                    text=f"How can we reconcile the hypotheses: '{hypotheses[0][:60]}...' and '{hypotheses[1][:60]}...'?",
+                    strategy="conflict",
+                    novelty_score=0.8,
+                    impact_potential=0.7,
+                )
+            )
         return questions

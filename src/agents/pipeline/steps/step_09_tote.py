@@ -6,6 +6,7 @@ validation engine that checks whether a solution actually addresses
 the problem using structured criteria (completeness, relevance,
 feasibility, etc.) and returns a proper validation result.
 """
+
 from __future__ import annotations
 
 import logging
@@ -29,6 +30,7 @@ def _get_bayesian_updater() -> type[BayesianUpdater]:
     global _bayesian_updater_cls
     if _bayesian_updater_cls is None:
         from src.validation.core import BayesianUpdater as _BU
+
         _bayesian_updater_cls = _BU
     return _bayesian_updater_cls
 
@@ -77,10 +79,22 @@ class ToteValidationEngine:
     ) -> None:
         self.tote = ToteEngine()
         self.criteria = self._build_criteria()
-        self.pass_threshold = pass_threshold if pass_threshold is not None else self.DEFAULT_PASS_THRESHOLD
-        self.revision_threshold = revision_threshold if revision_threshold is not None else self.DEFAULT_REVISION_THRESHOLD
-        self.max_critiques = max_critiques if max_critiques is not None else self.DEFAULT_MAX_CRITIQUES
-        self.false_positive_rate = false_positive_rate if false_positive_rate is not None else self.DEFAULT_FALSE_POSITIVE_RATE
+        self.pass_threshold = (
+            pass_threshold if pass_threshold is not None else self.DEFAULT_PASS_THRESHOLD
+        )
+        self.revision_threshold = (
+            revision_threshold
+            if revision_threshold is not None
+            else self.DEFAULT_REVISION_THRESHOLD
+        )
+        self.max_critiques = (
+            max_critiques if max_critiques is not None else self.DEFAULT_MAX_CRITIQUES
+        )
+        self.false_positive_rate = (
+            false_positive_rate
+            if false_positive_rate is not None
+            else self.DEFAULT_FALSE_POSITIVE_RATE
+        )
 
     def _build_criteria(self) -> list[ValidationCriterion]:
         """Define structured validation criteria."""
@@ -120,8 +134,12 @@ class ToteValidationEngine:
         critique points, and improvement suggestions.
         """
         if len(solution) > self.MAX_SOLUTION_LENGTH:
-            logger.warning("Solution exceeds max length (%d > %d), truncating for validation", len(solution), self.MAX_SOLUTION_LENGTH)
-            solution = solution[:self.MAX_SOLUTION_LENGTH]
+            logger.warning(
+                "Solution exceeds max length (%d > %d), truncating for validation",
+                len(solution),
+                self.MAX_SOLUTION_LENGTH,
+            )
+            solution = solution[: self.MAX_SOLUTION_LENGTH]
 
         target_state = "solution_addresses_problem"
         initial_state = "unvalidated"
@@ -134,9 +152,9 @@ class ToteValidationEngine:
             """Operate fn."""
             results = [c.evaluate(problem, solution) for c in self.criteria]
             total_weight = sum(c.weight for c in self.criteria)
-            weighted_score = sum(
-                r["score"] * r["weight"] for r in results
-            ) / max(total_weight, 1e-6)
+            weighted_score = sum(r["score"] * r["weight"] for r in results) / max(
+                total_weight, 1e-6
+            )
 
             # Store results in instance for later retrieval
             self._last_results = results
@@ -164,16 +182,14 @@ class ToteValidationEngine:
         suggestions = []
         for r in results:
             if r["score"] < 0.5:
-                critiques.append(
-                    f"{r['criterion']}: {r['critique']} (score: {r['score']:.2f})"
-                )
-                suggestions.extend(
-                    _get_suggestions(r["criterion"], r["score"])
-                )
+                critiques.append(f"{r['criterion']}: {r['critique']} (score: {r['score']:.2f})")
+                suggestions.extend(_get_suggestions(r["criterion"], r["score"]))
 
         confidence = weighted_score
         # Revision needed if confidence is low OR there are many significant critiques
-        needs_revision = confidence < self.revision_threshold or len(critiques) >= self.max_critiques
+        needs_revision = (
+            confidence < self.revision_threshold or len(critiques) >= self.max_critiques
+        )
 
         # Apply Bayesian update for confidence calibration
         prior = 0.5
@@ -185,9 +201,7 @@ class ToteValidationEngine:
             "needs_revision": needs_revision,
             "confidence": round(posterior, 3),
             "raw_score": round(weighted_score, 3),
-            "criteria_scores": {
-                r["criterion"]: round(r["score"], 3) for r in results
-            },
+            "criteria_scores": {r["criterion"]: round(r["score"], 3) for r in results},
             "critique_points": critiques,
             "improvement_suggestions": list(dict.fromkeys(suggestions)),
             "tote_iterations": tote_result.total_iterations,
@@ -227,23 +241,40 @@ def _check_relevance(problem: str, solution: str) -> tuple[float, str]:
 
 
 def _check_completeness(problem: str, solution: str) -> tuple[float, str]:
-    """Check if solution length and structure indicate completeness."""
+    """Length heuristic only — capped and labeled (not validation quality)."""
     word_count = len(solution.split())
     if word_count >= 300:
-        return 0.9, "Solution is comprehensive"
+        return 0.55, "length_heuristic: long text (not validated completeness)"
     elif word_count >= 150:
-        return 0.7, "Solution covers main points but may lack detail"
+        return 0.4, "length_heuristic: medium text"
     elif word_count >= 50:
-        return 0.4, "Solution is brief and may be incomplete"
-    return 0.1, "Solution is too short to be complete"
+        return 0.25, "length_heuristic: brief text"
+    return 0.1, "length_heuristic: too short"
 
 
 def _check_feasibility(problem: str, solution: str) -> tuple[float, str]:
     """Check for feasibility markers (steps, resources, constraints)."""
     feasibility_markers = [
-        "step", "phase", "first", "second", "third", "next", "then",
-        "using", "via", "by", "implement", "deploy", "build", "create",
-        "resource", "cost", "time", "budget", "constraint", "limit",
+        "step",
+        "phase",
+        "first",
+        "second",
+        "third",
+        "next",
+        "then",
+        "using",
+        "via",
+        "by",
+        "implement",
+        "deploy",
+        "build",
+        "create",
+        "resource",
+        "cost",
+        "time",
+        "budget",
+        "constraint",
+        "limit",
     ]
     s_lower = solution.lower()
     matches = sum(1 for m in feasibility_markers if m in s_lower)
@@ -269,9 +300,24 @@ def _check_clarity(problem: str, solution: str) -> tuple[float, str]:
 def _check_actionability(problem: str, solution: str) -> tuple[float, str]:
     """Check for actionable language (verbs, outcomes)."""
     action_verbs = [
-        "develop", "design", "build", "implement", "create", "establish",
-        "optimize", "improve", "reduce", "increase", "enhance", "apply",
-        "use", "integrate", "deploy", "test", "validate", "measure",
+        "develop",
+        "design",
+        "build",
+        "implement",
+        "create",
+        "establish",
+        "optimize",
+        "improve",
+        "reduce",
+        "increase",
+        "enhance",
+        "apply",
+        "use",
+        "integrate",
+        "deploy",
+        "test",
+        "validate",
+        "measure",
     ]
     s_lower = solution.lower()
     matches = sum(1 for v in action_verbs if v in s_lower)
@@ -284,18 +330,95 @@ def _check_actionability(problem: str, solution: str) -> tuple[float, str]:
 def _extract_keywords(text: str) -> list[str]:
     """Extract meaningful keywords from text."""
     stopwords = {
-        "the", "a", "an", "is", "are", "was", "were", "be", "been",
-        "being", "have", "has", "had", "do", "does", "did", "will",
-        "would", "could", "should", "may", "might", "must", "shall",
-        "can", "need", "dare", "ought", "used", "to", "of", "in",
-        "for", "on", "with", "at", "by", "from", "as", "into",
-        "through", "during", "before", "after", "above", "below",
-        "between", "under", "and", "but", "or", "yet", "so", "if",
-        "because", "although", "though", "while", "where", "when",
-        "that", "which", "who", "whom", "whose", "what", "this",
-        "these", "those", "i", "you", "he", "she", "it", "we",
-        "they", "me", "him", "her", "us", "them", "my", "your",
-        "his", "its", "our", "their", "how", "why",
+        "the",
+        "a",
+        "an",
+        "is",
+        "are",
+        "was",
+        "were",
+        "be",
+        "been",
+        "being",
+        "have",
+        "has",
+        "had",
+        "do",
+        "does",
+        "did",
+        "will",
+        "would",
+        "could",
+        "should",
+        "may",
+        "might",
+        "must",
+        "shall",
+        "can",
+        "need",
+        "dare",
+        "ought",
+        "used",
+        "to",
+        "of",
+        "in",
+        "for",
+        "on",
+        "with",
+        "at",
+        "by",
+        "from",
+        "as",
+        "into",
+        "through",
+        "during",
+        "before",
+        "after",
+        "above",
+        "below",
+        "between",
+        "under",
+        "and",
+        "but",
+        "or",
+        "yet",
+        "so",
+        "if",
+        "because",
+        "although",
+        "though",
+        "while",
+        "where",
+        "when",
+        "that",
+        "which",
+        "who",
+        "whom",
+        "whose",
+        "what",
+        "this",
+        "these",
+        "those",
+        "i",
+        "you",
+        "he",
+        "she",
+        "it",
+        "we",
+        "they",
+        "me",
+        "him",
+        "her",
+        "us",
+        "them",
+        "my",
+        "your",
+        "his",
+        "its",
+        "our",
+        "their",
+        "how",
+        "why",
     }
     words = []
     for w in text.lower().split():

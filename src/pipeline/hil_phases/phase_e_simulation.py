@@ -61,6 +61,19 @@ class PhaseE_SimulationVerification:
                 }
             if status in ("completed", "delegated"):
                 result_data = raw_result.get("result", {})
+                if not isinstance(result_data, dict):
+                    result_data = {"output": result_data}
+                # Honesty: never claim REAL success on stub/unavailable nested payloads
+                nested_status = str(result_data.get("status", "")).lower()
+                is_stub = (
+                    raw_result.get("stub") is True
+                    or result_data.get("stub") is True
+                    or raw_result.get("executed") is False
+                    or result_data.get("executed") is False
+                    or nested_status in {"unavailable", "failed", "error", "partial", "simulated"}
+                    or raw_result.get("heuristic") is True
+                    or result_data.get("heuristic") is True
+                )
                 exec_time = raw_result.get("execution_time_seconds", 0)
                 metrics: dict[str, float] = {}
                 if isinstance(result_data, dict):
@@ -79,6 +92,27 @@ class PhaseE_SimulationVerification:
                 if not metrics:
                     metrics = {"execution_time": exec_time, "status_code": 0}
 
+                if is_stub:
+                    sim_status = "unavailable"
+                    note = (
+                        result_data.get("note")
+                        or result_data.get("error")
+                        or nested_status
+                        or "stub"
+                    )
+                    interp = f"{pattern_id} did not execute real physics ({note})"
+                    print(f"      ⚠ Simulation UNAVAILABLE/STUB: {pattern_id} — {note}")
+                    return {
+                        "pattern_id": pattern_id,
+                        "parameters": params,
+                        "status": sim_status,
+                        "stub": True,
+                        "executed": False,
+                        "metrics": metrics,
+                        "raw_output": json.dumps(result_data, indent=2, default=str)[:500],
+                        "interpretation": interp,
+                    }
+
                 if status == "delegated":
                     sim_status = "delegated"
                     interp = f"{pattern_id} delegated to remote GPU (vast.ai / NVIDIA Brev)"
@@ -92,6 +126,8 @@ class PhaseE_SimulationVerification:
                     "pattern_id": pattern_id,
                     "parameters": params,
                     "status": sim_status,
+                    "stub": False,
+                    "executed": True,
                     "metrics": metrics,
                     "raw_output": json.dumps(result_data, indent=2, default=str)[:500],
                     "interpretation": interp,
@@ -169,9 +205,7 @@ class PhaseE_SimulationVerification:
                     continue
 
             if best_result is None and hypotheses:
-                best_result = await self.hybrid_verifier.verify(
-                    hypotheses[0], context=verify_ctx
-                )
+                best_result = await self.hybrid_verifier.verify(hypotheses[0], context=verify_ctx)
         except Exception as e:
             logger.warning("Hybrid verification failed: %s", e)
             return {

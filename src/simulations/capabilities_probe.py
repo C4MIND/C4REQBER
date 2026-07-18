@@ -1,5 +1,11 @@
 """Probe simulation engines and formal verifiers for TUI capabilities overlay."""
+
 from __future__ import annotations
+
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 import importlib
 import os
@@ -28,10 +34,26 @@ _ENGINE_SPECS: list[tuple[str, str, str, str, str, str, bool]] = [
     ("openfoam", "OpenFOAM", "openfoam_bridge", "OpenFOAMBridge", "physics", "slow", True),
     ("gromacs", "GROMACS", "gromacs_bridge", "GromacsBridge", "chemistry", "slow", True),
     ("lammps", "LAMMPS", "lammps_bridge", "LammpsBridge", "materials", "slow", True),
-    ("mdanalysis", "MDAnalysis", "mdanalysis_bridge", "MDAnalysisBridge", "chemistry", "slow", True),
+    (
+        "mdanalysis",
+        "MDAnalysis",
+        "mdanalysis_bridge",
+        "MDAnalysisBridge",
+        "chemistry",
+        "slow",
+        True,
+    ),
     ("pyscf", "PySCF", "pyscf_bridge", "PySCFBridge", "quantum", "slow", True),
     ("psi4", "Psi4", "psi4_bridge", "Psi4Bridge", "quantum", "slow", True),
-    ("quantum_espresso", "Quantum ESPRESSO", "quantum_espresso_bridge", "QuantumEspressoBridge", "quantum", "slow", True),
+    (
+        "quantum_espresso",
+        "Quantum ESPRESSO",
+        "quantum_espresso_bridge",
+        "QuantumEspressoBridge",
+        "quantum",
+        "slow",
+        True,
+    ),
     ("tellurium", "Tellurium", "tellurium_bridge", "TelluriumBridge", "biology", "slow", True),
     ("neuron", "NEURON", "neuron_bridge", "NeuronBridge", "neuroscience", "slow", True),
     ("brian2", "Brian2", "brian2_bridge", "Brian2Bridge", "neuroscience", "slow", True),
@@ -49,20 +71,40 @@ _ENGINE_SPECS: list[tuple[str, str, str, str, str, str, bool]] = [
     ("taichi", "Taichi", "taichi_bridge", "TaichiBridge", "physics", "fast", True),
     ("jax_md", "JAX-MD", "jaxmd_bridge", "JaxMDBridge", "physics", "fast", True),
     ("jax_lab", "JAX-LaB", "jaxlab_bridge", "JaxLaBBridge", "biology", "slow", True),
-    ("modelingtoolkit", "ModelingToolkit", "modelingtoolkit_bridge", "ModelingToolkitBridge", "physics", "slow", True),
+    (
+        "modelingtoolkit",
+        "ModelingToolkit",
+        "modelingtoolkit_bridge",
+        "ModelingToolkitBridge",
+        "physics",
+        "slow",
+        True,
+    ),
     ("vastai", "Vast.ai", "vastai_delegate", "VastAIDelegate", "general", "cloud", True),
     ("nvidia", "NVIDIA Brev", "nvidia_bridge", "NvidiaBridge", "general", "cloud", True),
 ]
 
 _VERIFIER_SPECS: list[tuple[str, str, str, str]] = [
-    ("lean4", "Lean 4", "lean4_client", "Lean4Client", "brew install elan-init && elan default stable"),
+    (
+        "lean4",
+        "Lean 4",
+        "lean4_client",
+        "Lean4Client",
+        "brew install elan-init && elan default stable",
+    ),
     ("coq", "Coq/Rocq", "coq_client", "CoqClient", "brew install coq"),
     ("dafny", "Dafny", "dafny_client", "DafnyClient", "brew install dafny"),
     ("agda", "Agda", "agda_bridge", "AgdaBridge", "brew install agda"),
     ("z3", "Z3 SMT", "hoare_verifier", "HoareVerifier", "pip install z3-solver"),
     ("cvc5", "CVC5", "cvc5_client", "CVC5Client", "bash tools/install-verifiers.sh"),
     ("hoare", "Hoare/Z3", "hoare_verifier", "HoareVerifier", "pip install z3-solver"),
-    ("tla", "TLA+", "tla_client", "TLAClient", "bash tools/install-verifiers.sh  # downloads tla2tools.jar"),
+    (
+        "tla",
+        "TLA+",
+        "tla_client",
+        "TLAClient",
+        "bash tools/install-verifiers.sh  # downloads tla2tools.jar",
+    ),
     ("alloy", "Alloy", "alloy_client", "AlloyClient", "brew install alloy-analyzer"),
     ("haskell", "Haskell", "haskell_bridge", "_find_ghc", "brew install ghc"),
 ]
@@ -105,7 +147,9 @@ def _probe_bridge(module_name: str, class_name: str) -> tuple[bool, str, str]:
         elif hasattr(inst, "_check_available"):
             ok = bool(inst._check_available())
         else:
-            ok = True
+            # Instantiable without availability probe ≠ available.
+            hint = getattr(cls, "_install_hint", "") or getattr(inst, "_install_hint", "")
+            return False, hint, "no_availability_api"
         hint = getattr(cls, "_install_hint", "") or getattr(inst, "_install_hint", "")
         if ok:
             return True, hint, ""
@@ -130,7 +174,7 @@ def _probe_verifier(module_name: str, class_name: str) -> tuple[bool, str, str]:
         elif hasattr(inst, "is_available"):
             ok = bool(inst.is_available())
         else:
-            ok = True
+            ok = False
         path = ""
         for attr in ("cvc5_path", "alloy_path", "tlc_path", "jar_path", "lean_path"):
             if hasattr(inst, attr) and getattr(inst, attr):
@@ -140,6 +184,8 @@ def _probe_verifier(module_name: str, class_name: str) -> tuple[bool, str, str]:
             path = shutil.which("lean") or ""
         if not path and class_name == "CoqClient":
             path = shutil.which("coqc") or ""
+        if not ok and not path:
+            return False, path, "no_availability_api"
         return ok, path, ""
     except Exception as exc:
         return False, "", str(exc)[:120]
@@ -167,8 +213,8 @@ def probe_capabilities() -> CapabilitiesReport:
         import psutil
 
         hw["ram_gb"] = round(psutil.virtual_memory().total / (1024**3), 1)
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("swallowed exception: %s", _exc, exc_info=True)
 
     engines: list[dict[str, Any]] = []
     domain_buckets: dict[str, list[str]] = {}
@@ -182,16 +228,18 @@ def probe_capabilities() -> CapabilitiesReport:
             status = "available" if tier in ("fast", "cloud") else "slow"
         else:
             status = "unavailable"
-        engines.append({
-            "id": eid,
-            "name": name,
-            "domain": domain,
-            "status": status,
-            "mac_native": mac_native,
-            "tier": tier,
-            "install_hint": hint,
-            "missing_reason": reason,
-        })
+        engines.append(
+            {
+                "id": eid,
+                "name": name,
+                "domain": domain,
+                "status": status,
+                "mac_native": mac_native,
+                "tier": tier,
+                "install_hint": hint,
+                "missing_reason": reason,
+            }
+        )
         domain_buckets.setdefault(domain, []).append(eid)
 
     verifiers: list[dict[str, Any]] = []
@@ -203,19 +251,22 @@ def probe_capabilities() -> CapabilitiesReport:
         if vid == "z3":
             try:
                 import z3  # noqa: F401
+
                 avail, path = True, "python:z3"
             except ImportError:
                 avail, path = False, ""
         else:
             avail, path, _ = _probe_verifier(mod, cls)
-        verifiers.append({
-            "id": vid,
-            "name": vname,
-            "available": avail,
-            "version": "",
-            "path": path,
-            "install_hint": hint if not avail else "",
-        })
+        verifiers.append(
+            {
+                "id": vid,
+                "name": vname,
+                "available": avail,
+                "version": "",
+                "path": path,
+                "install_hint": hint if not avail else "",
+            }
+        )
 
     domains = [{"domain": d, "engines": ids} for d, ids in sorted(domain_buckets.items())]
     elapsed_ms = int((time.perf_counter() - t0) * 1000)

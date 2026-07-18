@@ -29,15 +29,121 @@ def _key(name: str, env_var: str) -> str:
     return get_key(name) or os.environ.get(env_var, "")
 
 
+def _nvidia_key() -> str:
+    for env_var in ("NVIDIA_API_KEY_KILO", "NVIDIA_API_KEY_1", "NVIDIA_API_KEY"):
+        val = os.environ.get(env_var, "")
+        if val:
+            return val
+    return _key("nvidia", "NVIDIA_API_KEY")
+
+
+def _groq_key() -> str:
+    for env_var in ("GROQ_API_KEY_KILO", "GROQ_API_KEY_HERMES", "GROQ_API_KEY"):
+        val = os.environ.get(env_var, "")
+        if val:
+            return val
+    return _key("groq", "GROQ_API_KEY")
+
+
 def _lm_studio_url() -> str:
-    raw = os.environ.get("LM_STUDIO_URL", "http://localhost:1234")
-    return raw.rstrip("/")
+    for raw in (
+        os.environ.get("LM_STUDIO_URL_LOCAL"),
+        "http://127.0.0.1:1234",
+        os.environ.get("LM_STUDIO_URL"),
+        "http://localhost:1234",
+    ):
+        if not raw:
+            continue
+        url = raw.rstrip("/")
+        if "docker.internal" in url:
+            continue
+        try:
+            r = httpx.get(f"{url}/v1/models", timeout=2.0)
+            if r.status_code == 200:
+                return url
+        except Exception:
+            continue
+    return "http://127.0.0.1:1234"
+
+
+def _lm_studio_model(models: list[str]) -> str:
+    preferred = os.environ.get("LM_STUDIO_MODEL", "")
+    if preferred and preferred in models:
+        return preferred
+    for candidate in ("qwen2.5-14b-instruct", "qwen2.5-7b-instruct"):
+        if candidate in models:
+            return candidate
+    return models[0] if models else "local-model"
 
 
 def _build_chain() -> list[_ProviderSpec]:
     chain: list[_ProviderSpec] = []
 
-    # 1) Ollama local (~4.7GB, best RAM/quality tradeoff)
+    # 1) OpenCode Zen — free cloud (6 keys × priority models)
+    zen_base = os.environ.get("OPENCODE_BASE_URL", "https://opencode.ai/zen/v1").rstrip("/")
+    zen_headers = {"HTTP-Referer": "https://c4reqber.org", "X-Title": "C4Reqber"}
+    zen_models = list(OPENCODE_ZEN_FREE_MODELS)
+    preferred = os.environ.get("C4_LLM_MODEL", "")
+    if preferred and preferred in zen_models:
+        zen_models = [preferred] + [m for m in zen_models if m != preferred]
+    for zen_key in opencode_api_keys():
+        for model in zen_models:
+            chain.append(
+                _ProviderSpec(
+                    "opencode_zen",
+                    f"{zen_base}/chat/completions",
+                    model,
+                    zen_key,
+                    zen_headers,
+                )
+            )
+
+    # 2) Groq — fast free-tier cloud
+    groq_key = _groq_key()
+    if groq_key:
+        for model in (
+            os.environ.get("GROQ_MODEL_DEFAULT", "llama-3.3-70b-versatile"),
+            "llama-3.1-8b-instant",
+        ):
+            chain.append(
+                _ProviderSpec(
+                    "groq",
+                    "https://api.groq.com/openai/v1/chat/completions",
+                    model,
+                    groq_key,
+                    {},
+                )
+            )
+
+    # 3) NVIDIA NIM (KILO key — dontredact NVIDIA_API_KEY often 403)
+    nv_key = _nvidia_key()
+    if nv_key:
+        nv_base = os.environ.get("NVIDIA_BASE_URL", "https://integrate.api.nvidia.com/v1").rstrip(
+            "/"
+        )
+        for model in ("nvidia/nemotron-3-nano-30b-a3b", "meta/llama-3.1-8b-instruct"):
+            chain.append(
+                _ProviderSpec(
+                    "nvidia_nim",
+                    f"{nv_base}/chat/completions",
+                    model,
+                    nv_key,
+                    {},
+                )
+            )
+
+    # 4) LM Studio local (14B preferred over 7B)
+    lm_url = _lm_studio_url()
+    try:
+        r = httpx.get(f"{lm_url}/v1/models", timeout=2.0)
+        if r.status_code == 200:
+            models = [m.get("id", "") for m in r.json().get("data", [])]
+            model = _lm_studio_model(models)
+            chain.append(_ProviderSpec("lm_studio", f"{lm_url}/v1/chat/completions", model, "", {}))
+    except Exception:
+        logger.debug("LM Studio probe skipped", exc_info=True)
+
+    # 5) Ollama local
     ollama_url = os.environ.get("OLLAMA_URL", "http://localhost:11434")
     try:
         r = httpx.get(f"{ollama_url.rstrip('/')}/api/tags", timeout=2.0)
@@ -55,62 +161,16 @@ def _build_chain() -> list[_ProviderSpec]:
                 )
             )
     except Exception:
-        pass
+        logger.debug("Ollama probe skipped", exc_info=True)
 
-    # 2) OpenCode Zen — free cloud models (~/.kilo: 6 keys × 7 models)
-    zen_base = os.environ.get("OPENCODE_BASE_URL", "https://opencode.ai/zen/v1").rstrip("/")
-    zen_headers = {"HTTP-Referer": "https://c4reqber.org", "X-Title": "C4Reqber"}
-    for zen_key in opencode_api_keys():
-        for model in OPENCODE_ZEN_FREE_MODELS:
-            chain.append(
-                _ProviderSpec(
-                    "opencode_zen",
-                    f"{zen_base}/chat/completions",
-                    model,
-                    zen_key,
-                    zen_headers,
-                )
-            )
-
-    # 2b) Groq — fast free-tier cloud
-    groq_key = _key("groq", "GROQ_API_KEY")
-    if groq_key:
-        for model in (
-            os.environ.get("GROQ_MODEL_DEFAULT", "llama-3.3-70b-versatile"),
-            "qwen-qwq-32b",
-            "llama-3.1-8b-instant",
-        ):
-            chain.append(
-                _ProviderSpec(
-                    "groq",
-                    "https://api.groq.com/openai/v1/chat/completions",
-                    model,
-                    groq_key,
-                    {},
-                )
-            )
-
-    # 3) LM Studio local (GGUF)
-    lm_url = _lm_studio_url()
-    try:
-        r = httpx.get(f"{lm_url}/v1/models", timeout=2.0)
-        if r.status_code == 200:
-            models = [m.get("id", "") for m in r.json().get("data", [])]
-            model = models[0] if models else "local-model"
-            chain.append(_ProviderSpec("lm_studio", f"{lm_url}/v1/chat/completions", model, "", {}))
-    except Exception:
-        pass
-
-    or_key = _key("openrouter", "OPENROUTER_API_KEY")
+    or_key = _key("openrouter", "OPENROUTER_API_KEY") or os.environ.get(
+        "KILO_OPENROUTER_API_KEY", ""
+    )
     if or_key:
         or_headers = {"HTTP-Referer": "https://c4reqber.org", "X-Title": "C4Reqber"}
-        # Paid/reliable models first; broken :free ids last.
         for model in (
             "qwen/qwen-2.5-72b-instruct",
-            "mistralai/mistral-nemo",
-            "google/gemini-2.0-flash-001",
             "meta-llama/llama-3.3-70b-instruct:free",
-            "google/gemini-2.0-flash-exp:free",
         ):
             chain.append(
                 _ProviderSpec(
@@ -122,37 +182,25 @@ def _build_chain() -> list[_ProviderSpec]:
                 )
             )
 
-    nv_key = _key("nvidia", "NVIDIA_API_KEY")
-    if nv_key:
-        chain.append(
-            _ProviderSpec(
-                "nvidia",
-                "https://integrate.api.nvidia.com/v1/chat/completions",
-                "nvidia/nemotron-3-nano-30b-a3b",
-                nv_key,
-                {},
-            )
-        )
-
-    xai_key = _key("xai", "XAI_API_KEY")
-    if xai_key:
-        chain.append(
-            _ProviderSpec(
-                "xai",
-                "https://api.x.ai/v1/chat/completions",
-                "grok-2-1212",
-                xai_key,
-                {},
-            )
-        )
-
     ds_key = _key("deepseek", "DEEPSEEK_API_KEY")
     if ds_key:
+        ds_model = (
+            os.environ.get("DEEPSEEK_MODEL") or os.environ.get("C4_LLM_MODEL") or "deepseek-chat"
+        )
+        # Prefer assigned phase-F model when it looks like a DeepSeek id
+        try:
+            from src.llm.model_assignment import get_model_for_phase
+
+            assigned = get_model_for_phase("F")
+            if assigned and "deepseek" in assigned.lower():
+                ds_model = assigned.split("/")[-1] if "/" in assigned else assigned
+        except Exception:
+            logger.debug("DeepSeek model assignment probe failed", exc_info=True)
         chain.append(
             _ProviderSpec(
                 "deepseek",
                 "https://api.deepseek.com/v1/chat/completions",
-                "deepseek-chat",
+                ds_model,
                 ds_key,
                 {},
             )
@@ -172,7 +220,7 @@ def _build_chain() -> list[_ProviderSpec]:
                     )
                 )
         except Exception:
-            pass
+            logger.debug("MLX probe skipped", exc_info=True)
 
     return chain
 
@@ -197,7 +245,26 @@ def generate_with_fallback(
 
     chain = _build_chain()
     if preferred_model:
-        chain = sorted(chain, key=lambda p: 0 if p.model == preferred_model else 1)
+        pref = preferred_model.strip()
+        # Prefer exact model match; also force OpenRouter entry with preferred id.
+        matched = [p for p in chain if p.model == pref or pref in p.model]
+        rest = [p for p in chain if p not in matched]
+        or_key = _key("openrouter", "OPENROUTER_API_KEY") or os.environ.get(
+            "KILO_OPENROUTER_API_KEY", ""
+        )
+        if or_key and pref and not any(p.model == pref and p.name == "openrouter" for p in matched):
+            or_headers = {"HTTP-Referer": "https://c4reqber.org", "X-Title": "C4Reqber"}
+            matched.insert(
+                0,
+                _ProviderSpec(
+                    "openrouter",
+                    "https://openrouter.ai/api/v1/chat/completions",
+                    pref,
+                    or_key,
+                    or_headers,
+                ),
+            )
+        chain = matched + rest
 
     errors: list[str] = []
     with httpx.Client(timeout=120.0) as client:

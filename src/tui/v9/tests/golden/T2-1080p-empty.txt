@@ -10,7 +10,7 @@
  │  90mticks=0  runs=0  ok=0  fail=0  abort=0  cost=$0.0000  apis=0  errs=0m
  │ 1;36m▣ Keyboard shortcutsm  [░░░░░░░░░░░░░░░░░░░░]
  │  90mEnter  Run   ?  Help   Ctrl+C  Quitm
- │  90mTab  Cycle mode   L  Lang   Ctrl+Y  Cycle tierm
+ │  90mTab  Cycle mode   Shift+L  Lang   Ctrl+Y  Cycle tierm
  │  90mCtrl+Shift+P  Cycle color profile (6 modes)   Ctrl+,  Settings   Ctrl+T  Telemetrym
  │ 1;36m▣ Mode variantsm  [░░░░░░░░░░░░░░░░░░░░]
  │  90m▶ Discover   —  multi-paper discovery with C4 paradigm-shift gatem

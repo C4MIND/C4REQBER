@@ -1,4 +1,5 @@
 """TLA+ model checker client (TLC via tla2tools.jar)."""
+
 from __future__ import annotations
 
 import re
@@ -236,17 +237,21 @@ class TLAClient:
             return False
         if "unexpected exception" in low and "runtimeexception" in low:
             return False
-        if any(tok in low for tok in ("violation", "counterexample", "assertion failed", "invariant")):
+        if any(
+            tok in low for tok in ("violation", "counterexample", "assertion failed", "invariant")
+        ):
             if "no error" not in low:
                 return False
         if "finished in" in low and "states generated" in low:
             if "65536" in combined or "unexpected exception" in low:
                 return False
+            # Require absence of soft failures, not just returncode
+            if returncode != 0 or "error:" in low:
+                return False
             return True
         if "model checking completed" in low:
-            return returncode == 0
-        if returncode == 0 and "error:" not in low:
-            return True
+            return returncode == 0 and "error:" not in low
+        # Refuse returncode==0 alone without positive TLC success tokens.
         return False
 
     @staticmethod
@@ -255,6 +260,11 @@ class TLAClient:
             low = line.lower()
             if "65536 or more states" in line:
                 return UNBOUNDED_HINT
-            if "error" in low or "violation" in low or "counterexample" in low or "exception" in low:
+            if (
+                "error" in low
+                or "violation" in low
+                or "counterexample" in low
+                or "exception" in low
+            ):
                 return line.strip()
         return "TLC model checking failed"

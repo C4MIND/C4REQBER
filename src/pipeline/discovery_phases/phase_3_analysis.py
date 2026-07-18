@@ -180,6 +180,7 @@ async def run_deep_analysis(problem, domain, papers, results, thresholds, errors
         )
 
     # Hypothesis generation (async, LLM-bound — timeout 20s)
+    hypothesis: dict = {"source": "none", "text": ""}
     try:
         hypothesis = await asyncio.wait_for(
             generate_hypothesis(

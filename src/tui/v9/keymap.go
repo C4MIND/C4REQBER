@@ -114,7 +114,7 @@ func defaultBindings() map[Action][]keyBinding {
 		ActQuit:         {{label: "Ctrl+C", keys: []string{"ctrl+c"}}},
 		ActCancel:       {{label: "Esc", keys: []string{"esc"}}},
 		ActCycleMode:    {{label: "Tab", keys: []string{"tab"}}},
-		ActLang:         {{label: "L", keys: []string{"l", "L", "shift+l"}}},
+		ActLang:         {{label: "Shift+L", keys: []string{"shift+l"}}},
 		ActReauth:       {{label: "Ctrl+L", keys: []string{"ctrl+l"}}},
 		ActSearch:       {{label: "/", keys: []string{"/"}}},
 		ActCopy:         {{label: "c", keys: []string{"c"}}},

@@ -1,13 +1,19 @@
-> **Note:** Repo on **GitLab** (`git@gitlab.com:cognitive-functors/c4reqber.git`). GitHub is a read-only mirror. All tags and work live on friend-stack-merged branch locally — not pushed.
+> **Note:** Repo on **GitLab** (`git@gitlab.com:cognitive-functors/c4reqber.git`). GitHub is a read-only mirror.
 
 # TUI v9 "The Cockpit"
 
-**Tag:** v9.12.6 | **Branch:** `friend-stack-merged`
-**Date:** 2026-06-11
-**Status:** 20/20 tests PASS with -race, 9/9 Go packages, i18n 7 langs × 158 keys.
-**Pipeline:** A(instant)→B(8.8s)→C(73.5s chunked)→D→E→F(verified)
+**Tag / honesty:** aligned with **v9.18.0** honesty contract — see [`docs/HONESTY_CONTRACT.md`](../../../docs/HONESTY_CONTRACT.md).
+**Status mapping (anti green-fake):**
+- `sim_finished` → green only if `engine_status` ∈ `{ok, success, completed}`
+- `partial` / `stub` / `unavailable` → amber/red, not success glyph
+- Job `partial` → `toast.partial` (no celebration burst); `failed` → `toast.failed` + error card
+- Capsim summary card uses `EngineStatus: partial` (probe ≠ engine available)
+- Debug overlay (Ctrl+Shift+D) records last SSE type + timestamp
+- Restored feed cards do **not** show `NEW`
 
-## Quick Start (для коллеги)
+**Pipeline claim:** discovery may end `complete` **or** `partial` — do not assume F(verified).
+
+## Quick Start
 
 ```bash
 # 1. API ключи

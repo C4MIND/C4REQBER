@@ -5,6 +5,11 @@ Non-blocking multi-provider LLM interface.
 
 from __future__ import annotations
 
+import logging
+
+
+logger = logging.getLogger(__name__)
+
 import asyncio
 import json
 import os
@@ -112,8 +117,8 @@ class AsyncLLMClient:
 
             LLM_CALLS.labels(provider="async_client", model=model or "unknown", status=status).inc()
             LLM_LATENCY.labels(provider="async_client", model=model or "unknown").observe(duration)
-        except Exception:
-            pass  # observability must never crash callers
+        except Exception as _exc:
+            logger.debug("metrics increment failed: %s", _exc)
 
     def _record_cost(self, model: str, input_tokens: int, output_tokens: int) -> None:
         try:
@@ -141,8 +146,8 @@ class AsyncLLMClient:
                     cost_usd=cost,
                 )
             )
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("swallowed exception: %s", _exc, exc_info=True)
 
     async def generate(
         self,

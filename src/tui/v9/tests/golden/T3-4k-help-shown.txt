@@ -2,7 +2,7 @@
 
  1;36mNavigationm
    32mTabm           Cycle mode (DISCOVER/FLASH/TURBO/TURBOFACTORY)
-   32mLm             Cycle language (EN/RU/ZH/JA/DE/AR/HI)
+   32mShift+Lm       Cycle language (EN/RU/ZH/JA/DE/AR/HI)
    32mCtrl+Ym        Cycle LLM tier (C1/C2/C3)
    32mCtrl+Tm        Toggle telemetry panel
    32m?m             Toggle this help overlay

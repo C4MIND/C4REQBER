@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from src.plugins._llm_base import _llm_reason
+from src.plugins._llm_base import _llm_reason, finalize_plugin_result
 
 
 DEFAULT_CATEGORIES = {
@@ -34,19 +34,21 @@ Respond as JSON:
 {{"categories": {{"People": ["specific cause 1", "specific cause 2"], "Process": [...], ...}}, "root_causes": ["top cause 1", "top cause 2", "top cause 3"]}}"""
     system = "You are a root cause analyst. Provide specific, domain-grounded causes for each Ishikawa category. Never use generic template strings."
     raw = _llm_reason(prompt, system=system, max_tokens=700, temperature=0.3)
+    empty = {"problem": problem, "categories": {}, "root_causes": []}
     if not raw:
-        return {"problem": problem, "categories": {}, "root_causes": []}
+        return finalize_plugin_result(empty, raw)
     try:
         import json
         import re
+
         match = re.search(r"\{.*\}", raw, re.DOTALL)
         if match:
             result = json.loads(match.group())
             result["problem"] = problem
-            return result
+            return finalize_plugin_result(result, raw)
     except (json.JSONDecodeError, ValueError):
         pass
-    return {"problem": problem, "categories": {}, "root_causes": []}
+    return finalize_plugin_result(empty, raw)
 
 
 def execute(problem: str, **kwargs: Any) -> dict[str, Any]:

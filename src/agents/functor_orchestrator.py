@@ -36,8 +36,9 @@ class FunctorOrchestrator:
     """Orchestrates parallel functor-agent execution for turbo discovery."""
 
     def __init__(self, llm_client: AsyncLLMClient | None = None) -> None:
-        from src.llm.router import ProviderRouter
-        self.llm_client = llm_client or ProviderRouter()
+        from src.llm import get_gateway
+
+        self.llm_client = llm_client or get_gateway()
         self.base_functors: list[FunctorAgent] = [
             TemporalAgent(llm_client=self.llm_client),
             IntegrationAgent(llm_client=self.llm_client),
@@ -84,16 +85,18 @@ class FunctorOrchestrator:
         agent_results: list[dict[str, Any]] = []
         for idx, (functor, result) in enumerate(zip(selected, raw_results, strict=False)):
             if isinstance(result, Exception):
-                agent_results.append({
-                    "agent": functor.symbol,
-                    "index": idx,
-                    "operation": f"error_{functor.symbol}",
-                    "insight": f"Error: {str(result)}",
-                    "contradiction": None,
-                    "novel": False,
-                    "confidence": 0.0,
-                    "error": str(result),
-                })
+                agent_results.append(
+                    {
+                        "agent": functor.symbol,
+                        "index": idx,
+                        "operation": f"error_{functor.symbol}",
+                        "insight": f"Error: {str(result)}",
+                        "contradiction": None,
+                        "novel": False,
+                        "confidence": 0.0,
+                        "error": str(result),
+                    }
+                )
             else:
                 result["index"] = idx
                 result["operation"] = f"{vector}_{functor.symbol}"
@@ -131,7 +134,11 @@ class FunctorOrchestrator:
         except Exception as e:
             logger.warning(
                 "functor %s failed for problem=%r vector=%s index=%d: %s",
-                functor.symbol, problem, vector, index, e,
+                functor.symbol,
+                problem,
+                vector,
+                index,
+                e,
             )
             return {
                 "agent": functor.symbol,
@@ -153,7 +160,9 @@ class FunctorOrchestrator:
         insights = [r["insight"] for r in agent_results if r.get("insight") and not r.get("error")]
         contradictions = [r["contradiction"] for r in agent_results if r.get("contradiction")]
         novel_count = sum(1 for r in agent_results if r.get("novel"))
-        avg_confidence = sum(r.get("confidence", 0) for r in agent_results) / max(len(agent_results), 1)
+        avg_confidence = sum(r.get("confidence", 0) for r in agent_results) / max(
+            len(agent_results), 1
+        )
 
         if vector == "discover":
             return {

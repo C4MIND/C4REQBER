@@ -43,7 +43,7 @@ class AutoGapAnalyzer(GapAnalyzer):
             title = s.get("title", "")
             snippet = s.get("snippet", s.get("abstract", s.get("description", "")))
             url = s.get("url", "")
-            rich_corpus += f"\n--- Source {i+1}: {title} ({url}) ---\n{snippet}\n"
+            rich_corpus += f"\n--- Source {i + 1}: {title} ({url}) ---\n{snippet}\n"
 
         # Use LLM for sophisticated gap analysis WITH real evidence
         prompt = f"""Analyze this literature corpus on "{topic}" and identify the TOP 3 research gaps.
@@ -81,9 +81,10 @@ Focus on gaps that are:
         # Parse JSON
         import json
         import re
+
         gaps = []
         try:
-            match = re.search(r'\[.*?\]', raw, re.DOTALL)
+            match = re.search(r"\[.*?\]", raw, re.DOTALL)
             if match:
                 gaps = json.loads(match.group())
         except (json.JSONDecodeError, re.error, ValueError):
@@ -96,6 +97,7 @@ Focus on gaps that are:
         # Link each gap to best evidence sources via semantic similarity
         try:
             from src.llm.embeddings import find_best_evidence
+
             for gap in gaps:
                 best = find_best_evidence(gap, sources, top_k=3)
                 if best:
@@ -103,10 +105,11 @@ Focus on gaps that are:
                         {"title": b.get("title", ""), "score": b.get("_evidence_score", 0.0)}
                         for b in best
                     ]
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("swallowed exception: %s", _exc, exc_info=True)
 
         return gaps[:5]  # Max 5 gaps
+
     def _extract_real_gaps(self, sources: list[dict[str, Any]], topic: str) -> list[dict[str, Any]]:
         """Extract gaps with real quotes from source snippets."""
         gaps = []
@@ -128,7 +131,9 @@ Focus on gaps that are:
                     quote = snippet[start:end].strip()
 
                     # Compute resolution score — inverse of how well the gap is addressed
-                    resolution_count = sum(1 for ri in set(RESOLUTION_INDICATORS) if ri in snippet.lower())
+                    resolution_count = sum(
+                        1 for ri in set(RESOLUTION_INDICATORS) if ri in snippet.lower()
+                    )
                     resolution_score = min(resolution_count * 0.15, 0.85)
 
                     # Build meaningful area from context + source title
@@ -138,13 +143,15 @@ Focus on gaps that are:
                     if len(ctx) < 5:
                         ctx = title[:50]
 
-                    gaps.append({
-                        "area": f"{ctx[:60]}: {indicator}",
-                        "evidence": f"Source '{title[:50]}...': \"...{quote}...\"",
-                        "novelty_score": max(0.15, 0.6 - resolution_score),
-                        "resolution_score": resolution_score,
-                        "hypothesis_seed": f"Investigate {topic} to resolve: {indicator}",
-                    })
+                    gaps.append(
+                        {
+                            "area": f"{ctx[:60]}: {indicator}",
+                            "evidence": f"Source '{title[:50]}...': \"...{quote}...\"",
+                            "novelty_score": max(0.15, 0.6 - resolution_score),
+                            "resolution_score": resolution_score,
+                            "hypothesis_seed": f"Investigate {topic} to resolve: {indicator}",
+                        }
+                    )
 
         # Deduplicate by area
         seen = set()

@@ -1,5 +1,10 @@
 from __future__ import annotations
 
+import logging
+
+
+logger = logging.getLogger(__name__)
+
 import time
 from collections import OrderedDict
 from typing import Any
@@ -35,8 +40,8 @@ class SearchCache:
             from src.api.routers.metrics import CACHE_HITS
 
             CACHE_HITS.labels(cache_type="search").inc()
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("swallowed exception: %s", _exc, exc_info=True)
         return value
 
     def set(self, key: str, value: Any) -> None:

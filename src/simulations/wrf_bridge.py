@@ -3,6 +3,7 @@
 
 Install: conda install -c conda-forge wrf-python
 """
+
 from __future__ import annotations
 
 import logging
@@ -19,7 +20,9 @@ class WrfBridge(BaseSimulationAdapter):
 
     _engine_name = "wrf"
     _package_checks = ["wrf"]
-    _install_hint = "conda install -c conda-forge wrf-python  (requires WRF binaries for simulation)"
+    _install_hint = (
+        "conda install -c conda-forge wrf-python  (requires WRF binaries for simulation)"
+    )
 
     def configure(self, params: dict[str, Any]) -> None:
         super().configure(params)
@@ -29,19 +32,29 @@ class WrfBridge(BaseSimulationAdapter):
             import wrf
             from netCDF4 import Dataset
 
-            wrf_file = data.get("wrfout")
-            if wrf_file:
-                nc = Dataset(wrf_file)
+            wrf_file = data.get("wrfout") or self._params.get("wrfout")
+            if not wrf_file:
+                return {
+                    "status": "unavailable",
+                    "stub": True,
+                    "executed": False,
+                    "backend": "wrf-python",
+                    "wrfpython_version": wrf.__version__,
+                    "note": "Provide wrfout NetCDF — wrf-python alone does not run WRF",
+                }
+            with Dataset(wrf_file) as nc:
                 t2 = wrf.getvar(nc, "T2")
                 return {
+                    "status": "success",
+                    "backend": "wrf-python",
+                    "executed": True,
+                    "stub": False,
+                    "wrf_file": str(wrf_file),
                     "wrfpython_version": wrf.__version__,
                     "t2_shape": list(t2.shape),
                     "t2_mean": float(t2.mean()),
-                    "note": "WRF output processed",
+                    "note": "WRF output post-processed (not a WRF forecast run)",
+                    "postprocess_only": True,
                 }
-            return {
-                "wrfpython_version": wrf.__version__,
-                "note": "Provide wrfout NetCDF file for post-processing",
-            }
 
         return self._run_wrapped(_run, input_data)

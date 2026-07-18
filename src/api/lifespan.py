@@ -27,29 +27,38 @@ def _detect_environment() -> None:
     log = logging.getLogger("c4_cdi_turbo")
     # Apple Silicon detection
     import platform
+
     proc = platform.processor().lower()
     if "arm" in proc or "apple" in proc:
         log.info("Apple Silicon detected — MLX local LLM available")
     # Check ChromaDB
     try:
         import chromadb
+
         log.info("ChromaDB available — vector store enabled")
     except ImportError:
         pass
     # Check FastMCP
     try:
         import fastmcp
+
         log.info("FastMCP available — external MCP client enabled")
     except ImportError:
         pass
     # Check uv for package manager
     import shutil
+
     if shutil.which("uv"):
         log.info("uv found — package manager with isolated envs ready")
 
 
 LMS_PATH = os.environ.get("LMS_PATH") or shutil.which("lms") or None
-MLX_PYTHON_PATH = os.environ.get("MLX_PYTHON_PATH") or shutil.which("python3.11") or shutil.which("python3") or None
+MLX_PYTHON_PATH = (
+    os.environ.get("MLX_PYTHON_PATH")
+    or shutil.which("python3.11")
+    or shutil.which("python3")
+    or None
+)
 
 
 def _start_external_service(
@@ -92,9 +101,7 @@ def _start_external_service(
             except (OSError, RuntimeError):
                 pass
             time.sleep(0.5)
-        logging.getLogger("c4_cdi_turbo").warning(
-            "%s did not start within %ds", name, timeout
-        )
+        logging.getLogger("c4_cdi_turbo").warning("%s did not start within %ds", name, timeout)
     except (OSError, RuntimeError) as e:
         logging.getLogger("c4_cdi_turbo").error("Failed to start %s: %s", name, e)
 
@@ -113,7 +120,9 @@ async def startup_services() -> None:
             start_cmd=[LMS_PATH, "server", "start"],
         )
 
-    if MLX_PYTHON_PATH is None:
+    if os.environ.get("MLX_SERVER_ENABLED", "0") in ("0", "false", "no"):
+        logging.getLogger("c4_cdi_turbo").info("MLX_SERVER_ENABLED=0 — skipping MLX auto-start")
+    elif MLX_PYTHON_PATH is None:
         logging.getLogger("c4_cdi_turbo").warning(
             "MLX_PYTHON_PATH not set and python3.11/python3 not found in PATH; skipping MLX Server auto-start"
         )
@@ -123,9 +132,12 @@ async def startup_services() -> None:
             check_url="http://localhost:8001/v1/models",
             start_cmd=[
                 MLX_PYTHON_PATH,
-                "-m", "mlx_lm.server",
-                "--port", "8001",
-                "--model", "qwen2.5-coder-7b",
+                "-m",
+                "mlx_lm.server",
+                "--port",
+                "8001",
+                "--model",
+                "qwen2.5-coder-7b",
             ],
         )
 

@@ -30,6 +30,7 @@ class FastMCPBridge:
     def available(self) -> bool:
         try:
             import fastmcp
+
             return True
         except ImportError:
             return False
@@ -40,6 +41,7 @@ class FastMCPBridge:
             return False
         try:
             import fastmcp
+
             self._client = fastmcp.Client(
                 transport="stdio",
                 command=command,
@@ -61,6 +63,7 @@ class FastMCPBridge:
             return False
         try:
             import fastmcp
+
             self._client = fastmcp.Client(transport="sse", url=url)
             await self._client.connect()
             tools = await self._client.list_tools()
@@ -91,6 +94,7 @@ class FastMCPBridge:
             ".mcp.json",
         ]
         import json as _json
+
         for path in config_paths:
             if os.path.exists(path):
                 try:
@@ -98,8 +102,8 @@ class FastMCPBridge:
                     if "mcpServers" in cfg:
                         for name, srv in cfg["mcpServers"].items():
                             servers.append({"name": name, "config": srv, "source": path})
-                except Exception:
-                    pass
+                except Exception as _exc:
+                    logger.debug("swallowed exception: %s", _exc, exc_info=True)
         return servers
 
     @property
@@ -114,8 +118,8 @@ class FastMCPBridge:
         if self._client:
             try:
                 await self._client.close()
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.debug("swallowed exception: %s", _exc, exc_info=True)
             self._client = None
             self._tools = {}
             self._connected_servers = []

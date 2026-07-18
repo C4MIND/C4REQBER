@@ -1,7 +1,7 @@
 """Integration bridges for scientific packages.
 
-Each bridge provides auto-detection, test_connection(), and a minimal
-working interface. Deep integration comes in v5.6+ per roadmap.
+These are **availability probes** (import + optional test_connection), not deep
+runtime integrations. Prefer renaming mental model: AvailabilityProbe per package.
 """
 
 from __future__ import annotations
@@ -20,6 +20,7 @@ class LangGraphBridge:
     def available(self) -> bool:
         try:
             import langgraph
+
             return True
         except ImportError:
             return False
@@ -35,6 +36,7 @@ class SmitheryBridge:
     def available(self) -> bool:
         try:
             import smithery
+
             return True
         except ImportError:
             return False
@@ -50,6 +52,7 @@ class PyMCBridge:
     def available(self) -> bool:
         try:
             import pymc
+
             return True
         except ImportError:
             return False
@@ -65,6 +68,7 @@ class OpenMMBridge:
     def available(self) -> bool:
         try:
             import openmm
+
             return True
         except ImportError:
             return False
@@ -80,6 +84,7 @@ class DeepChemBridge:
     def available(self) -> bool:
         try:
             import deepchem
+
             return True
         except ImportError:
             return False
@@ -95,6 +100,7 @@ class UnslothBridge:
     def available(self) -> bool:
         try:
             import unsloth
+
             return True
         except ImportError:
             return False
@@ -110,6 +116,7 @@ class VLLMBridge:
     def available(self) -> bool:
         try:
             import vllm
+
             return True
         except ImportError:
             return False

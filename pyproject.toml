@@ -92,6 +92,17 @@ dev = [
 # package as `src` so `import src.X` resolves after install.
 packages = ["src"]
 
+# Conditionally ship c4tui-v9 when prepare_tui_wheel.sh built it (see hatch_build.py).
+[tool.hatch.build.targets.wheel.hooks.custom]
+path = "hatch_build.py"
+
+[tool.hatch.build.targets.sdist]
+exclude = [
+  "/src/tui/v9/bin/c4tui-v9",
+  "/src/tui/v9/bin/c4tui-v9.exe",
+  "/src/tui/v9/bin/c4tui-v9-*",
+]
+
 [project.scripts]
 c4reqber = "src.cli.blast_app:app"
 blast = "src.cli.blast_app:app"

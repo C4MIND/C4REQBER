@@ -4,6 +4,7 @@ C4REQBER: Saga Pattern
 Orchestrates long-running business transactions across multiple services
 with compensation support for rollback.
 """
+
 from __future__ import annotations
 
 import logging
@@ -194,8 +195,14 @@ class Saga:
 # C4REQBER Specific Sagas
 # ============================================================================
 
+
 class DiscoverySaga(Saga):
-    """Saga for the complete discovery pipeline."""
+    """Named saga shell for discovery bookkeeping (IDs / compensate hooks).
+
+    Not a distributed transaction. Live HIL pipeline attaches a marker step only;
+    real work is phases A–G. Prefer ``create_discovery_saga`` when real compensate
+    steps are wired.
+    """
 
     def __init__(self, saga_id: str | None = None) -> None:
         super().__init__("discovery_pipeline", saga_id)

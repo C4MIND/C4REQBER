@@ -7,8 +7,9 @@ from typing import Any
 class BaseSourceAdapter(abc.ABC):
     """Base adapter for academic source APIs."""
 
-    def __init__(self, api_key: str | None = None) -> None:
+    def __init__(self, api_key: str | None = None, timeout: float | None = None) -> None:
         self.api_key = api_key
+        self.timeout = timeout
 
     @property
     @abc.abstractmethod

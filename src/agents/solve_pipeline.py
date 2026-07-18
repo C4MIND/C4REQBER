@@ -215,8 +215,8 @@ class UniversalSolvePipeline(BasePipeline):
                                 error=s.get("error"),
                             )
                         )
-                    except Exception:
-                        pass
+                    except Exception as _exc:
+                        self._logger.debug("swallowed exception: %s", _exc, exc_info=True)
         result.cost_usd = self._cost_tracker.get_session_cost()
         return result
 

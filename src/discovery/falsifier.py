@@ -14,6 +14,7 @@ import numpy as np
 from scipy import stats
 
 from src.config import get_key
+from src.llm.model_assignment import get_model_for_phase
 
 
 logger = logging.getLogger("c44tcdi.discovery.falsifier")
@@ -225,7 +226,7 @@ class Falsifier:
     def __init__(
         self,
         rng_seed: int | None = None,
-        llm_model: str = "deepseek/deepseek-chat",
+        llm_model: str | None = None,
         llm_temperature: float = 0.3,
         llm_max_tokens: int = 800,
     ) -> None:
@@ -233,7 +234,14 @@ class Falsifier:
             np.random.RandomState(rng_seed) if rng_seed is not None else np.random.RandomState()
         )
         self.simulator = PhysicsSimulator(self.rng)
-        self.llm_model = llm_model
+        if llm_model:
+            self.llm_model = llm_model
+        else:
+            self.llm_model = (
+                os.environ.get("C4_LLM_MODEL")
+                or get_model_for_phase("D")
+                or "deepseek/deepseek-chat"
+            )
         self.llm_temperature = llm_temperature
         self.llm_max_tokens = llm_max_tokens
 

@@ -4,6 +4,11 @@ import asyncio
 import logging
 from typing import Any
 
+from src.mcp_server.honesty import (
+    bma_outer_status,
+    causal_outer_status,
+    outer_status_from_sim_payload,
+)
 from src.mcp_server.tool_dependencies import (
     HAS_TOOLS,
     DoCalculus,
@@ -37,6 +42,21 @@ async def c4_simulate(pattern_id: str, hypothesis: dict[str, Any]) -> dict[str, 
 
         runner = get_runner_v2()
         result = await asyncio.to_thread(runner.run, pattern_id, hypothesis or {})
+        status = outer_status_from_sim_payload(result)
+        if status != "success":
+            err = None
+            if isinstance(result, dict):
+                err = result.get("error") or result.get("error_message") or result.get("note")
+            return {
+                "status": status,
+                "errors": [err or f"Simulation incomplete (status={status})"],
+                "data": {
+                    "pattern": pattern_id,
+                    "result": result,
+                    "stub": status in {"unavailable", "error"},
+                    "heuristic": isinstance(result, dict) and bool(result.get("heuristic")),
+                },
+            }
         return {"status": "success", "data": {"pattern": pattern_id, "result": result}}
     except (AttributeError, ImportError, TypeError, ValueError) as e:
         logger.warning("MCP tool optional dep missing: %s", e)
@@ -66,7 +86,8 @@ async def c4_bayesian(
             ]
             ranked.sort(key=lambda model: model["posterior_prob"], reverse=True)
             return {
-                "status": "success",
+                "status": "partial",
+                "heuristic": True,
                 "data": {
                     "method": "prior_ranking",
                     "models": ranked,
@@ -81,10 +102,27 @@ async def c4_bayesian(
         from src.bayesian.router import BMARequest
 
         result = await run_bma(BMARequest(models=models))
-        return {
-            "status": "success",
+        if not isinstance(result, dict):
+            return {
+                "status": "partial",
+                "data": {"raw": result, "method": "bayesian_model_averaging", "samples": samples},
+            }
+        if result.get("error") or result.get("status") in {"error", "failed"}:
+            return {
+                "status": "error",
+                "errors": [str(result.get("error") or result.get("status"))],
+                "data": {**result, "method": "bayesian_model_averaging", "samples": samples},
+            }
+        status = bma_outer_status(result)
+        out: dict[str, Any] = {
+            "status": status,
             "data": {**result, "method": "bayesian_model_averaging", "samples": samples},
         }
+        if status != "success":
+            out["warnings"] = [
+                "BMA response missing weighted_prediction/posteriors — not claiming success"
+            ]
+        return out
     except (AttributeError, ImportError, KeyError, TypeError, ValueError) as e:
         logger.warning("MCP tool optional dep missing: %s", e)
         return {"status": "error", "errors": [str(e)]}
@@ -127,15 +165,18 @@ async def c4_causal(nodes: list[dict[str, Any]], treatment: str, outcome: str) -
         dc = DoCalculus(scm)
         identifiable, formula, adjustment_set = dc.get_adjustment_formula(treatment, outcome)
         reason = dc.is_identifiable(treatment, outcome)[1]
+        status = causal_outer_status(identifiable=identifiable, formula=formula)
         return {
-            "status": "success",
+            "status": status,
             "data": {
+                "method": "do_calculus",
                 "treatment": treatment,
                 "outcome": outcome,
                 "identifiable": identifiable,
                 "formula": formula,
                 "adjustment_set": sorted(adjustment_set or set()),
                 "reason": reason,
+                "executed": True,
             },
         }
     except (AttributeError, ImportError, KeyError, TypeError, ValueError) as e:

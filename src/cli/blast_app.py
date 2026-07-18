@@ -312,6 +312,97 @@ def wasm_execute(
         console.print(f"[yellow]Stub mode:[/] {e}")
 
 
+@app.command("simulate")
+def blast_simulate(
+    engine: str = typer.Option(
+        "newtonian",
+        "--engine",
+        "-e",
+        help="Pattern/engine id (e.g. newtonian, openmm). See --list.",
+    ),
+    list_engines: bool = typer.Option(False, "--list", "-l", help="List capability engines"),
+    detect_gpu: bool = typer.Option(False, "--detect-gpu", help="Print GPU/hardware probe"),
+    dry_run: bool = typer.Option(
+        False, "--dry-run", help="Show install hints / availability without executing"
+    ),
+    estimate_cost: bool = typer.Option(
+        False, "--estimate-cost", help="Print vast.ai cost estimate only (no remote run)"
+    ),
+    hypothesis: str = typer.Option("", "--hypothesis", "-H", help="Optional hypothesis text"),
+) -> None:
+    """Run a simulation pattern via PatternRunnerV2 (honest status; stubs ≠ success)."""
+    import json
+    from dataclasses import asdict, is_dataclass
+    from typing import Any
+
+    def _payload(report: Any) -> dict[str, Any]:
+        if hasattr(report, "to_dict"):
+            return report.to_dict()
+        if is_dataclass(report):
+            return asdict(report)
+        if isinstance(report, dict):
+            return report
+        return {"raw": str(report)}
+
+    if estimate_cost:
+        from src.simulations.vastai_delegate import VastAIDelegate
+
+        d = VastAIDelegate()
+        for gpu in ("RTX 4090", "A100", "H100"):
+            console.print(f"  {gpu}: ~${d.estimate_cost(1.0, gpu):.2f}/h (estimate only)")
+        console.print("[dim]Remote vast.ai execution is not implemented — estimate only.[/]")
+        return
+
+    if detect_gpu or list_engines or dry_run:
+        try:
+            from src.simulations.capabilities_probe import probe_capabilities
+
+            payload = _payload(probe_capabilities())
+        except Exception as exc:
+            console.print(f"[red]Capabilities probe failed:[/] {exc}")
+            raise typer.Exit(1) from exc
+
+        if detect_gpu:
+            console.print(json.dumps(payload.get("hardware", {}), indent=2, default=str))
+        if list_engines:
+            for eng in payload.get("engines", []):
+                console.print(
+                    f"  {eng.get('id')}: {eng.get('status', '?')} — {eng.get('install_hint', '')}"
+                )
+        if dry_run:
+            match = next(
+                (
+                    e
+                    for e in payload.get("engines", [])
+                    if e.get("id") == engine or engine in str(e.get("id", ""))
+                ),
+                None,
+            )
+            if match:
+                console.print(json.dumps(match, indent=2, default=str))
+            else:
+                console.print(f"[yellow]No capability row for {engine}; try --list[/]")
+        return
+
+    from src.simulations.runner_v2 import get_runner_v2
+
+    runner = get_runner_v2()
+    hyp = {"text": hypothesis} if hypothesis else {}
+    result = runner.run(engine, hyp)
+    status = result.get("status") if isinstance(result, dict) else getattr(result, "status", "?")
+    console.print(
+        json.dumps(
+            result if isinstance(result, dict) else {"result": str(result)},
+            indent=2,
+            default=str,
+        )
+    )
+    if str(status).lower() in {"unavailable", "failed", "error", "skipped"} or (
+        isinstance(result, dict) and result.get("stub")
+    ):
+        raise typer.Exit(2)
+
+
 @app.command("models")
 def blast_models(
     tier: str = typer.Option(
@@ -405,6 +496,18 @@ def blast_config(
             category=keys_category,
             assign=keys_assign,
             health=keys_health,
+        )
+        return
+
+    # `blast config --health` (without keys section) still runs key health.
+    if keys_health:
+        from src.cli.config_keys import handle_keys_command
+
+        handle_keys_command(
+            json_out=keys_json,
+            category=keys_category,
+            assign=keys_assign,
+            health=True,
         )
         return
 
@@ -1453,11 +1556,18 @@ def blast_packages(
 def _install_verifiers(console: Console) -> None:
     """Install CVC5/TLA+/Alloy via tools/install-verifiers.sh (idempotent)."""
     import subprocess
+    import sys
     from pathlib import Path
 
     script = Path(__file__).resolve().parents[2] / "tools" / "install-verifiers.sh"
     if not script.is_file():
         console.print("[yellow]Verifier installer not found — skip CVC5/TLA+/Alloy setup[/]")
+        return
+    if sys.platform == "win32":
+        console.print(
+            "[yellow]Verifier auto-install uses bash — skipped on Windows.\n"
+            "Install CVC5/TLA+/Alloy manually or via WSL: bash tools/install-verifiers.sh[/]"
+        )
         return
     console.print("\n[bold]Installing formal verifiers (CVC5, TLA+, Alloy)...[/]")
     result = subprocess.run(["bash", str(script)], check=False)

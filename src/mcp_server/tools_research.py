@@ -37,8 +37,18 @@ async def c4_autoresearch(
             metric=metric,
             max_iter=max_iter,
         )
-        return {
-            "status": "success",
+        status = "success"
+        warnings: list[str] = []
+        if getattr(report, "total_iterations", 0) <= 0:
+            status = "partial"
+            warnings.append("no iterations completed")
+        elif getattr(report, "best_iteration", None) in (None, -1, 0) and not getattr(
+            report, "improvement_trace", None
+        ):
+            status = "partial"
+            warnings.append("no improvement recorded")
+        out: dict[str, Any] = {
+            "status": status,
             "data": {
                 "best_metric": report.best_metric,
                 "best_iteration": report.best_iteration,
@@ -47,6 +57,9 @@ async def c4_autoresearch(
                 "improvement_trace": report.improvement_trace,
             },
         }
+        if warnings:
+            out["warnings"] = warnings
+        return out
     except Exception as e:
         logger.exception("MCP tool failed")
         return {"error": str(e), "status": "error"}

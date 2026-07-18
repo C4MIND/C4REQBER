@@ -406,7 +406,7 @@
   "gpu_tbl_category": "Категория",
   "gpu_tbl_engines": "Движки",
   "gpu_tbl_install": "Типичная установка",
-  "gpu_workflow_step1": "<code>blast simulate --engine &lt;name&gt; --dry-run</code> — показывает точные команды conda/pip",
+  "gpu_workflow_step1": "<code>blast simulate --engine &lt;name&gt; --dry-run</code> — доступность / install hints (stubs ≠ success)",
   "gpu_workflow_step2": "Установите локально ИЛИ арендуйте на vast.ai",
   "gpu_workflow_step3": "Перезапустите без <code>--dry-run</code>",
   "gpu_workflow_title": "Рабочий процесс:",

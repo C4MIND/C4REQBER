@@ -56,6 +56,7 @@ class PatternRunnerV2(PatternRunner):
         if engine == "newton":
             try:
                 from .newton_bridge import NewtonBridge
+
                 bridge = NewtonBridge()
                 if not bridge.is_available():
                     bridge = None
@@ -65,6 +66,7 @@ class PatternRunnerV2(PatternRunner):
         elif engine == "torchsim":
             try:
                 from .torchsim_bridge import TorchSimBridge
+
                 bridge = TorchSimBridge()
                 if not bridge.is_available():
                     bridge = None
@@ -74,6 +76,7 @@ class PatternRunnerV2(PatternRunner):
         elif engine == "jaxsim":
             try:
                 from .jaxsim_bridge import JaxSimBridge
+
                 bridge = JaxSimBridge()
                 if not bridge.is_available():
                     bridge = None
@@ -83,6 +86,7 @@ class PatternRunnerV2(PatternRunner):
         elif engine == "schr":
             try:
                 from .schr_bridge import SchrBridge
+
                 bridge = SchrBridge()
                 if not bridge.is_available():
                     bridge = None
@@ -92,6 +96,7 @@ class PatternRunnerV2(PatternRunner):
         elif engine == "openmm":
             try:
                 from .openmm_bridge import OpenMMBridge
+
                 bridge = OpenMMBridge()
                 if not bridge.is_available():
                     bridge = None
@@ -101,6 +106,7 @@ class PatternRunnerV2(PatternRunner):
         elif engine == "vina":
             try:
                 from .vina_bridge import VinaBridge
+
                 bridge = VinaBridge()
                 if not bridge.is_available():
                     bridge = None
@@ -110,6 +116,7 @@ class PatternRunnerV2(PatternRunner):
         elif engine == "boolnet":
             try:
                 from .boolnet_bridge import BoolNetBridge
+
                 bridge = BoolNetBridge()
                 if not bridge.is_available():
                     bridge = None
@@ -119,6 +126,7 @@ class PatternRunnerV2(PatternRunner):
         elif engine == "cobra":
             try:
                 from .cobra_bridge import CobraBridge
+
                 bridge = CobraBridge()
                 if not bridge.is_available():
                     bridge = None
@@ -128,6 +136,7 @@ class PatternRunnerV2(PatternRunner):
         elif engine == "slim":
             try:
                 from .slim_bridge import SlimBridge
+
                 bridge = SlimBridge()
                 if not bridge.is_available():
                     bridge = None
@@ -144,7 +153,10 @@ class PatternRunnerV2(PatternRunner):
                 "mdanalysis": ("src.simulations.mdanalysis_bridge", "MDAnalysisBridge"),
                 "pyscf": ("src.simulations.pyscf_bridge", "PySCFBridge"),
                 "psi4": ("src.simulations.psi4_bridge", "Psi4Bridge"),
-                "quantum_espresso": ("src.simulations.quantum_espresso_bridge", "QuantumEspressoBridge"),
+                "quantum_espresso": (
+                    "src.simulations.quantum_espresso_bridge",
+                    "QuantumEspressoBridge",
+                ),
                 "tellurium": ("src.simulations.tellurium_bridge", "TelluriumBridge"),
                 "neuron": ("src.simulations.neuron_bridge", "NeuronBridge"),
                 "brian2": ("src.simulations.brian2_bridge", "Brian2Bridge"),
@@ -162,12 +174,16 @@ class PatternRunnerV2(PatternRunner):
                 "taichi": ("src.simulations.taichi_bridge", "TaichiBridge"),
                 "jax_md": ("src.simulations.jaxmd_bridge", "JaxMDBridge"),
                 "jax_lab": ("src.simulations.jaxlab_bridge", "JaxLaBBridge"),
-                "modelingtoolkit": ("src.simulations.modelingtoolkit_bridge", "ModelingToolkitBridge"),
+                "modelingtoolkit": (
+                    "src.simulations.modelingtoolkit_bridge",
+                    "ModelingToolkitBridge",
+                ),
             }
             if engine in _p1_table:
                 mod_name, cls_name = _p1_table[engine]
                 try:
                     import importlib
+
                     mod = importlib.import_module(mod_name)
                     cls = getattr(mod, cls_name)
                     bridge = cls()
@@ -181,10 +197,7 @@ class PatternRunnerV2(PatternRunner):
         return bridge
 
     def _determine_engine(
-        self,
-        pattern_id: str,
-        engine: str | None = None,
-        force_cpu: bool = False
+        self, pattern_id: str, engine: str | None = None, force_cpu: bool = False
     ) -> str:
         """
         Determine the best engine for a pattern.
@@ -219,7 +232,7 @@ class PatternRunnerV2(PatternRunner):
         pattern_id: str,
         hypothesis: dict | None = None,
         engine: str | None = None,
-        force_cpu: bool = False
+        force_cpu: bool = False,
     ) -> dict:
         """
         Run pattern with optimal engine.
@@ -267,12 +280,7 @@ class PatternRunnerV2(PatternRunner):
 
         return result
 
-    def _run_legacy(
-        self,
-        pattern_id: str,
-        instance: Any,
-        hypothesis: dict | None
-    ) -> dict:
+    def _run_legacy(self, pattern_id: str, instance: Any, hypothesis: dict | None) -> dict:
         """Run pattern with legacy CPU implementation."""
         try:
             if hasattr(instance, "run"):
@@ -289,23 +297,27 @@ class PatternRunnerV2(PatternRunner):
                 else:
                     result = run_method(hypothesis)
 
-                if hasattr(result, "__dict__"):
+                if hasattr(result, "__dict__") and not isinstance(result, dict):
                     result = result.__dict__
                 elif not isinstance(result, dict):
                     result = {"output": str(result)}
 
-                return {
-                    "pattern_id": pattern_id,
-                    "status": "completed",
-                    "result": result,
-                    "accelerated": False,
-                }
+                return self._finalize_result(
+                    {
+                        "pattern_id": pattern_id,
+                        "result": result,
+                        "accelerated": False,
+                        "executed": True,
+                    },
+                    default_ok_status="completed",
+                )
             else:
                 return {
                     "pattern_id": pattern_id,
                     "status": "failed",
                     "error": "Pattern has no run() method",
                     "accelerated": False,
+                    "executed": False,
                 }
         except Exception as e:
             logger.exception(f"Legacy run failed for {pattern_id}")
@@ -314,61 +326,134 @@ class PatternRunnerV2(PatternRunner):
                 "status": "failed",
                 "error": str(e),
                 "accelerated": False,
+                "executed": False,
             }
 
-    async def _run_async_pattern(
-        self,
-        run_method: Any,
-        hypothesis: dict | None
-    ) -> Any:
+    async def _run_async_pattern(self, run_method: Any, hypothesis: dict | None) -> Any:
         """Run async pattern method."""
         return await run_method(hypothesis)
 
+    @staticmethod
+    def _finalize_result(result: dict, *, default_ok_status: str = "completed") -> dict:
+        """Normalize status — never invent SUCCESS/completed over stub/unavailable."""
+        if not isinstance(result, dict):
+            return {"status": "failed", "error": "non-dict result", "executed": False}
+
+        incomplete_statuses = {
+            "unavailable",
+            "failed",
+            "error",
+            "skipped",
+            "simulated",
+            "not_implemented",
+            "partial",
+        }
+
+        nested = result.get("result")
+        if isinstance(nested, dict):
+            if nested.get("stub") is True or nested.get("executed") is False:
+                result["status"] = "unavailable"
+                result["stub"] = True
+                result["executed"] = False
+                result["accelerated"] = False
+                result.setdefault("note", nested.get("note") or "nested stub/unavailable")
+                return result
+            nested_status = str(nested.get("status", "")).lower()
+            if nested_status in incomplete_statuses:
+                result["status"] = nested_status
+                result["stub"] = bool(nested.get("stub", nested_status != "partial"))
+                result["executed"] = bool(nested.get("executed", False))
+                result["accelerated"] = False
+                return result
+
+        if result.get("stub") is True or result.get("executed") is False:
+            result["status"] = str(result.get("status") or "unavailable")
+            if result["status"] not in incomplete_statuses:
+                result["status"] = "unavailable"
+            result["accelerated"] = False
+            return result
+
+        status = str(result.get("status", "")).lower()
+        if status in incomplete_statuses:
+            result["accelerated"] = False
+            return result
+
+        # Missing status: only promote if explicitly executed and not stub
+        if "status" not in result or not status:
+            if result.get("executed") is True and result.get("stub") is not True:
+                result["status"] = default_ok_status
+            else:
+                result["status"] = "unavailable"
+                result["stub"] = True
+                result["executed"] = False
+                result["accelerated"] = False
+                result.setdefault(
+                    "note",
+                    "Missing status/executed — refusing invented completed",
+                )
+        return result
+
     def _run_with_bridge(
-        self,
-        pattern_id: str,
-        instance: Any,
-        hypothesis: dict | None,
-        engine: str
+        self, pattern_id: str, instance: Any, hypothesis: dict | None, engine: str
     ) -> dict:
         """Run pattern with GPU-accelerated bridge."""
         bridge = self._get_bridge(engine)
 
         if bridge is None:
             logger.info(f"Bridge '{engine}' unavailable, falling back to legacy")
-            return self._run_legacy(pattern_id, instance, hypothesis)
+            legacy = self._run_legacy(pattern_id, instance, hypothesis)
+            legacy["fallback_reason"] = f"bridge '{engine}' unavailable"
+            legacy["accelerated"] = False
+            legacy["engine_truth"] = "legacy_fallback"
+            return legacy
 
         try:
             if hasattr(bridge, "accelerate_pattern"):
                 result = bridge.accelerate_pattern(instance, hypothesis or {})
+            elif hasattr(bridge, "run"):
+                # Prefer adapter.run when accelerate_pattern is absent
+                sim = bridge.run(hypothesis or {})
+                if hasattr(sim, "to_dict"):
+                    result = sim.to_dict()
+                elif isinstance(sim, dict):
+                    result = sim
+                else:
+                    result = {"output": str(sim)}
+                result["accelerated"] = False
             else:
                 result = self._run_legacy(pattern_id, instance, hypothesis)
+                result["accelerated"] = False
+                result["fallback_reason"] = f"bridge '{engine}' has no run/accelerate"
 
             if isinstance(result, dict):
-                result["accelerated"] = result.get("accelerated", True)
+                # Never invent accelerated=True
+                if "accelerated" not in result:
+                    result["accelerated"] = False
                 result["pattern_id"] = pattern_id
-                if "status" not in result:
-                    result["status"] = "completed"
-                return result
-            else:
-                return {
+                return self._finalize_result(result, default_ok_status="completed")
+            return self._finalize_result(
+                {
                     "pattern_id": pattern_id,
-                    "status": "completed",
-                    "result": result.__dict__ if hasattr(result, "__dict__") else {"output": str(result)},
-                    "accelerated": True,
-                }
+                    "result": result.__dict__
+                    if hasattr(result, "__dict__")
+                    else {"output": str(result)},
+                    "accelerated": False,
+                    "executed": False,
+                    "stub": True,
+                    "note": "Non-dict bridge result — not claiming completed",
+                },
+                default_ok_status="unavailable",
+            )
 
         except Exception as e:
             logger.warning(f"Bridge acceleration failed for {pattern_id}: {e}, using legacy")
             legacy_result = self._run_legacy(pattern_id, instance, hypothesis)
             legacy_result["fallback_reason"] = str(e)
+            legacy_result["accelerated"] = False
             return legacy_result
 
     def run_batch(
-        self,
-        patterns: list[str],
-        hypotheses: list[dict],
-        parallel: bool = True
+        self, patterns: list[str], hypotheses: list[dict], parallel: bool = True
     ) -> list[dict]:
         """
         Run multiple patterns in parallel if possible.
@@ -385,10 +470,7 @@ class PatternRunnerV2(PatternRunner):
             raise ValueError("patterns and hypotheses must have same length")
 
         if not parallel:
-            return [
-                self.run(pid, hyp)
-        for pid, hyp in zip(patterns, hypotheses, strict=False)
-            ]
+            return [self.run(pid, hyp) for pid, hyp in zip(patterns, hypotheses, strict=False)]
 
         futures = []
         for pid, hyp in zip(patterns, hypotheses, strict=False):
@@ -400,19 +482,17 @@ class PatternRunnerV2(PatternRunner):
             try:
                 results.append(future.result(timeout=300))
             except Exception as e:
-                results.append({
-                    "status": "failed",
-                    "error": str(e),
-                    "engine": "batch_error",
-                })
+                results.append(
+                    {
+                        "status": "failed",
+                        "error": str(e),
+                        "engine": "batch_error",
+                    }
+                )
 
         return results
 
-    async def run_batch_async(
-        self,
-        patterns: list[str],
-        hypotheses: list[dict]
-    ) -> list[dict]:
+    async def run_batch_async(self, patterns: list[str], hypotheses: list[dict]) -> list[dict]:
         """
         Run multiple patterns asynchronously.
 
@@ -436,12 +516,14 @@ class PatternRunnerV2(PatternRunner):
         processed = []
         for i, result in enumerate(results):
             if isinstance(result, Exception):
-                processed.append({
-                    "pattern_id": patterns[i],
-                    "status": "failed",
-                    "error": str(result),
-                    "engine": "async_error",
-                })
+                processed.append(
+                    {
+                        "pattern_id": patterns[i],
+                        "status": "failed",
+                        "error": str(result),
+                        "engine": "async_error",
+                    }
+                )
             else:
                 processed.append(result)
 
@@ -450,19 +532,9 @@ class PatternRunnerV2(PatternRunner):
     async def _run_async(self, pattern_id: str, hypothesis: dict | None) -> dict:
         """Async wrapper for run method."""
         loop = asyncio.get_event_loop()
-        return await loop.run_in_executor(
-            self._executor,
-            self.run,
-            pattern_id,
-            hypothesis
-        )
+        return await loop.run_in_executor(self._executor, self.run, pattern_id, hypothesis)
 
-    def benchmark(
-        self,
-        pattern_id: str,
-        hypothesis: dict | None = None,
-        num_runs: int = 3
-    ) -> dict:
+    def benchmark(self, pattern_id: str, hypothesis: dict | None = None, num_runs: int = 3) -> dict:
         """
         Compare legacy vs GPU-accelerated execution.
 
@@ -502,9 +574,7 @@ class PatternRunnerV2(PatternRunner):
         gpu_result = None
         for _ in range(num_runs):
             start = time.perf_counter()
-            gpu_result = self._run_with_bridge(
-                pattern_id, instance, hypothesis, recommended_engine
-            )
+            gpu_result = self._run_with_bridge(pattern_id, instance, hypothesis, recommended_engine)
             gpu_times.append(time.perf_counter() - start)
 
         avg_legacy = sum(legacy_times) / len(legacy_times)
@@ -570,4 +640,5 @@ class PatternRunnerV2(PatternRunner):
 def get_runner_v2() -> PatternRunnerV2:
     """Get singleton PatternRunnerV2 instance (backed by DI container)."""
     from src.di.container import get_container
+
     return get_container().get_or_register("runner_v2", PatternRunnerV2)

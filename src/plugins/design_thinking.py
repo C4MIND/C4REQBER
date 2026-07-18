@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from src.plugins._llm_base import _llm_reason
+from src.plugins._llm_base import _llm_reason, finalize_plugin_result
 
 
 def analyze(challenge: str) -> dict[str, Any]:
@@ -24,19 +24,28 @@ Respond as JSON:
 {{"empathize": ["point 1", "point 2"], "define": [...], "ideate": [...], "prototype": [...], "test": [...]}}"""
     system = "You are a Design Thinking facilitator. Provide human-centered, concrete design insights. Never use generic questions or templates."
     raw = _llm_reason(prompt, system=system, max_tokens=600, temperature=0.5)
+    empty = {
+        "challenge": challenge,
+        "empathize": [],
+        "define": [],
+        "ideate": [],
+        "prototype": [],
+        "test": [],
+    }
     if not raw:
-        return {"challenge": challenge, "empathize": [], "define": [], "ideate": [], "prototype": [], "test": []}
+        return finalize_plugin_result(empty, raw)
     try:
         import json
         import re
+
         match = re.search(r"\{.*\}", raw, re.DOTALL)
         if match:
             result = json.loads(match.group())
             result["challenge"] = challenge
-            return result
+            return finalize_plugin_result(result, raw)
     except (json.JSONDecodeError, ValueError):
         pass
-    return {"challenge": challenge, "empathize": [], "define": [], "ideate": [], "prototype": [], "test": []}
+    return finalize_plugin_result(empty, raw)
 
 
 def execute(challenge: str, **kwargs: Any) -> dict[str, Any]:

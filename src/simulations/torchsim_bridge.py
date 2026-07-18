@@ -32,6 +32,7 @@ logger = logging.getLogger(__name__)
 
 class MDIntegrator(StrEnum):
     """MDIntegrator."""
+
     NVE = "nve"
     NVT_LANGEVIN = "nvt_langevin"
     NPT_LANGEVIN = "npt_langevin"
@@ -39,6 +40,7 @@ class MDIntegrator(StrEnum):
 
 class RelaxationMethod(StrEnum):
     """RelaxationMethod."""
+
     FIRE = "fire"
     GRADIENT_DESCENT = "gradient_descent"
     LBFGS = "lbfgs"
@@ -48,6 +50,7 @@ class RelaxationMethod(StrEnum):
 @dataclass
 class TorchSimResult:
     """TorchSimResult."""
+
     status: str
     engine: str
     final_energy: float
@@ -69,8 +72,7 @@ class BasePatternProtocol(Protocol):
 
     PATTERN_ID: str
 
-    def run(self, hypothesis: dict[str, Any] | None = None) -> dict[str, Any]:
-        ...
+    def run(self, hypothesis: dict[str, Any] | None = None) -> dict[str, Any]: ...
 
 
 class TorchSimBridge:
@@ -416,8 +418,12 @@ class TorchSimBridge:
         return {
             "status": result.status,
             "engine": self.ENGINE_NAME,
+            "engine_truth": "torchsim" if result.status == "success" else "not_torchsim",
+            "executed": result.status == "success",
             "pattern_id": pattern.PATTERN_ID,
-            "accelerated": True,
+            "accelerated": result.status == "success" and self.is_gpu_mode()
+            if hasattr(self, "is_gpu_mode")
+            else result.status == "success",
             "final_energy": result.final_energy,
             "n_atoms": result.n_atoms,
             "n_steps": result.n_steps,
@@ -476,9 +482,7 @@ class TorchSimBridge:
         if model_name in model_map:
             return model_map[model_name]()
 
-        raise ValueError(
-            f"Unknown model: {model_name}. Available: {list(model_map.keys())}"
-        )
+        raise ValueError(f"Unknown model: {model_name}. Available: {list(model_map.keys())}")
 
     def _build_integrator_kwargs(self, integrator: str, config: dict[str, Any]) -> dict[str, Any]:
         """Build kwargs for integrator."""
@@ -498,14 +502,29 @@ class TorchSimBridge:
 
         return kwargs
 
-    def _is_atomistic_pattern(self, pattern: BasePatternProtocol, hypothesis: dict[str, Any]) -> bool:
+    def _is_atomistic_pattern(
+        self, pattern: BasePatternProtocol, hypothesis: dict[str, Any]
+    ) -> bool:
         """Check if pattern is atomistic/molecular."""
         atomistic_keywords = {
-            "atom", "atomic", "molecular", "molecule", "crystal",
-            "md", "molecular dynamics", "dft", "ab initio",
-            "relaxation", "geometry optimization", "minimization",
-            "lattice", "unit cell", "simulation cell",
-            "mlip", "machine learning potential", "interatomic",
+            "atom",
+            "atomic",
+            "molecular",
+            "molecule",
+            "crystal",
+            "md",
+            "molecular dynamics",
+            "dft",
+            "ab initio",
+            "relaxation",
+            "geometry optimization",
+            "minimization",
+            "lattice",
+            "unit cell",
+            "simulation cell",
+            "mlip",
+            "machine learning potential",
+            "interatomic",
         }
 
         pattern_id = pattern.PATTERN_ID.lower()
@@ -526,15 +545,30 @@ class TorchSimBridge:
 
         return False
 
-    def _extract_atomistic_config(self, pattern: BasePatternProtocol, hypothesis: dict[str, Any]) -> dict[str, Any]:
+    def _extract_atomistic_config(
+        self, pattern: BasePatternProtocol, hypothesis: dict[str, Any]
+    ) -> dict[str, Any]:
         """Extract atomistic simulation config from pattern/hypothesis."""
         config: dict[str, Any] = {}
 
         if hypothesis:
-            for key in ["positions", "atomic_numbers", "cell", "model",
-                        "temperature", "pressure", "n_steps", "timestep",
-                        "integrator", "method", "max_steps", "force_tol",
-                        "trajectory_path", "pbc", "seed"]:
+            for key in [
+                "positions",
+                "atomic_numbers",
+                "cell",
+                "model",
+                "temperature",
+                "pressure",
+                "n_steps",
+                "timestep",
+                "integrator",
+                "method",
+                "max_steps",
+                "force_tol",
+                "trajectory_path",
+                "pbc",
+                "seed",
+            ]:
                 if key in hypothesis:
                     config[key] = hypothesis[key]
 
@@ -550,6 +584,7 @@ class TorchSimBridge:
 def get_torchsim_bridge(device: str = "auto") -> TorchSimBridge:
     """Get singleton TorchSimBridge instance (backed by DI container)."""
     from src.di.container import get_container
+
     container = get_container()
     if not container.has("torchsim_bridge"):
         container.register("torchsim_bridge", TorchSimBridge(device=device))

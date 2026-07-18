@@ -2,6 +2,7 @@
 C4REQBER: 4-Tier Cache System
 Bootstrap -> Memory LRU -> Redis -> Upstream with cache stampede protection.
 """
+
 from __future__ import annotations
 
 import json
@@ -162,20 +163,53 @@ class RedisTierCache:
 
 
 class UpstreamCache:
-    """Upstream API cache (Tier 4) — placeholder for external API caching."""
+    """Tier 4 — on-disk JSON cache under ~/.c4reqber/cache/upstream (not a CDN)."""
 
-    def __init__(self) -> None:
+    def __init__(self, cache_dir: str | None = None) -> None:
+        from pathlib import Path
+
+        self._dir = Path(cache_dir or os.path.expanduser("~/.c4reqber/cache/upstream"))
+        self._dir.mkdir(parents=True, exist_ok=True)
         self._hits = 0
         self._misses = 0
 
+    def _path(self, key: str) -> Any:
+        import hashlib
+        from pathlib import Path
+
+        digest = hashlib.sha256(key.encode()).hexdigest()[:32]
+        return self._dir / f"{digest}.json"
+
     async def get(self, key: str) -> Any | None:
-        # In production: check external cache (CDN, etc.)
         """Get."""
-        self._misses += 1
-        return None
+        path = self._path(key)
+        try:
+            if not path.is_file():
+                self._misses += 1
+                return None
+            raw = json.loads(path.read_text(encoding="utf-8"))
+            if float(raw.get("expiry", 0)) < time.time():
+                path.unlink(missing_ok=True)
+                self._misses += 1
+                return None
+            self._hits += 1
+            return raw.get("value")
+        except (OSError, json.JSONDecodeError, TypeError, ValueError):
+            self._misses += 1
+            return None
 
     async def set(self, key: str, value: Any, ttl: int = 3600) -> None:
-        pass
+        path = self._path(key)
+        try:
+            path.write_text(
+                json.dumps(
+                    {"expiry": time.time() + ttl, "value": value},
+                    default=str,
+                ),
+                encoding="utf-8",
+            )
+        except OSError:
+            pass
 
     def get_hit_rate(self) -> float:
         """Get hit rate."""
@@ -293,12 +327,13 @@ class TieredCache:
     def get_hit_rate(self) -> float:
         """Aggregate hit rate across all tiers."""
         total_hits = (
-            self.bootstrap._hits + self.memory._hits
-            + self.redis._hits + self.upstream._hits
+            self.bootstrap._hits + self.memory._hits + self.redis._hits + self.upstream._hits
         )
         total_misses = (
-            self.bootstrap._misses + self.memory._misses
-            + self.redis._misses + self.upstream._misses
+            self.bootstrap._misses
+            + self.memory._misses
+            + self.redis._misses
+            + self.upstream._misses
         )
         total = total_hits + total_misses
         return total_hits / total if total > 0 else 0.0

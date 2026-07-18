@@ -36,14 +36,18 @@ func TestSimStatusString(t *testing.T) {
 		{api.TypedEvent{Type: api.EventSimStarted}, "running"},
 		{api.TypedEvent{Type: api.EventSimStarted, EngineStatus: "available"}, "available"},
 		{api.TypedEvent{Type: api.EventSimFinished, EngineStatus: "success"}, "success"},
+		{api.TypedEvent{Type: api.EventSimFinished, EngineStatus: "ok"}, "success"},
 		{api.TypedEvent{Type: api.EventSimFinished, EngineStatus: "error"}, "error"},
+		{api.TypedEvent{Type: api.EventSimFinished, EngineStatus: "partial"}, "partial"},
+		{api.TypedEvent{Type: api.EventSimFinished}, "partial"}, // empty ≠ success
 		{api.TypedEvent{Type: api.EventSimSkipped}, "skipped"},
+		{api.TypedEvent{Type: api.EventSimSkipped, EngineStatus: "error"}, "error"},
 		{api.TypedEvent{Type: api.EventSimBudgetExceeded}, "budget_exceeded"},
 		{api.TypedEvent{Type: api.EventPhaseProgress, EngineStatus: "available"}, "available"},
 	}
 	for _, c := range cases {
 		if got := simStatusString(c.te); got != c.want {
-			t.Errorf("simStatusString(%s) = %q, want %q", c.te.Type, got, c.want)
+			t.Errorf("simStatusString(%s/%s) = %q, want %q", c.te.Type, c.te.EngineStatus, got, c.want)
 		}
 	}
 }

@@ -276,6 +276,8 @@ pypi-publish-test:
   before_script:
     - bash scripts/ci/setup_python.sh
     - pip install build twine
+    # Platform Go binary into wheel when go is available (else runtime download)
+    - bash scripts/ci/prepare_tui_wheel.sh || true
   script:
     - python -m build
     - twine check dist/*
@@ -301,6 +303,7 @@ pypi-publish-prod:
   before_script:
     - bash scripts/ci/setup_python.sh
     - pip install build twine
+    - bash scripts/ci/prepare_tui_wheel.sh || true
   script:
     - python -m build
     - twine check dist/*

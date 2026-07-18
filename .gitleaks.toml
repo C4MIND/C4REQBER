@@ -1,0 +1,8 @@
+# Gitleaks config — allowlist the detect-secrets baseline (hashed fingerprints only).
+title = "c4reqber"
+
+[allowlist]
+description = "Detect-secrets baseline stores hashed fingerprints, not live secrets"
+paths = [
+  '''\.secrets\.baseline$''',
+]

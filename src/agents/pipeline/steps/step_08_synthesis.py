@@ -221,23 +221,32 @@ class SynthesisStep(PipelineStep):
             )
             solution = ""
             usage: dict[str, Any] = {}
+            response = None
+            preferred_model = ""
+            try:
+                from src.llm.model_assignment import get_model_for_phase
+
+                preferred_model = get_model_for_phase("F") or ""
+            except Exception:
+                preferred_model = ""
             try:
                 response = await provider_router.generate("synthesis", prompt, system_prompt=system)
                 solution = getattr(response, "content", str(response))
                 usage = getattr(response, "usage", {}) or {}
             except Exception as exc:
-                logger.warning("ProviderRouter synthesis failed (%s) — sync chain fallback", exc)
-                from src.llm.sync_provider_chain import generate_with_fallback
+                logger.warning("ProviderRouter synthesis failed (%s) — gateway sync fallback", exc)
+                from src.llm import get_gateway
 
                 try:
-                    solution = generate_with_fallback(
+                    solution = get_gateway().generate_sync(
                         prompt,
                         system_prompt=system,
                         max_tokens=max(max_tokens, 4000),
                         temperature=0.7,
+                        preferred_model=preferred_model or None,
                     )
                 except RuntimeError as chain_exc:
-                    logger.warning("Sync provider chain failed: %s", chain_exc)
+                    logger.warning("Gateway sync chain failed: %s", chain_exc)
                     solution = ""
 
             if not solution or len(solution.split()) < 400:

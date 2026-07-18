@@ -354,6 +354,25 @@ class PipelineExecutor:
             async for event in self._execute_step(step_def, result):
                 yield event
 
+            # Abort solve pipeline when synthesis failed (no fake success)
+            if step_id == "s8":
+                sol = (result.final_solution or "").strip()
+                last = result.steps[-1] if result.steps else None
+                synth_failed = bool(
+                    (last and last.error)
+                    or not sol
+                    or "[LLM unavailable" in sol
+                    or len(sol.split()) < 50
+                )
+                if synth_failed:
+                    yield {
+                        "event": "pipeline_abort",
+                        "stage": "synthesis",
+                        "error": (last.error if last and last.error else "synthesis failed"),
+                    }
+                    result.confidence = 0.0
+                    break
+
             # After synthesis: track stagnation for potential O₁ → O₂ shift
             if step_id == "s8" and self._observer_controller is not None:
                 obs_metrics = {

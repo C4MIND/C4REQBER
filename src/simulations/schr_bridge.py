@@ -32,6 +32,7 @@ class BasePattern(Protocol):
 @dataclass
 class SchrodingerConfig:
     """Configuration for Schrödinger equation solver."""
+
     n_points: int = 128
     domain_size: float = 10.0
     dt: float = 0.001
@@ -46,6 +47,7 @@ class SchrodingerConfig:
 @dataclass
 class QEDConfig:
     """Configuration for QED simulation."""
+
     n_modes: int = 8
     n_photons_max: int = 4
     n_levels: int = 4
@@ -120,10 +122,12 @@ class SchrBridge:
         """Check if Schr is installed and initialize JAX backend."""
         try:
             import jax
+
             self._jax = jax
 
             try:
                 import schr
+
                 self._schr = schr
             except ImportError:
                 logger.info("schr not installed. Run: pip install schr")
@@ -268,6 +272,8 @@ class SchrBridge:
                 return {
                     "status": "success",
                     "engine": "schr",
+                    "engine_truth": "schr",
+                    "executed": True,
                     "device": self._device,
                     "n_points": cfg.n_points,
                     "wave_function": np.array(psi),
@@ -289,6 +295,8 @@ class SchrBridge:
                 return {
                     "status": "success",
                     "engine": "schr",
+                    "engine_truth": "schr",
+                    "executed": True,
                     "device": self._device,
                     "n_points": cfg.n_points,
                     "wave_function": np.array(psi),
@@ -361,21 +369,29 @@ class SchrBridge:
                 trajectory.append(psi.copy())
 
                 prob = np.abs(psi) ** 2
-                energy = np.sum(prob * V) * dx + 0.5 * np.sum(k**2 * np.abs(np.fft.fft(psi))**2) * dx / cfg.n_points
+                energy = (
+                    np.sum(prob * V) * dx
+                    + 0.5 * np.sum(k**2 * np.abs(np.fft.fft(psi)) ** 2) * dx / cfg.n_points
+                )
                 energies.append(float(np.real(energy)))
 
                 pos = np.sum(x * prob) * dx
                 positions.append(float(pos))
 
                 momentum_space = np.fft.fft(psi)
-                mom = np.sum(k * np.abs(momentum_space)**2) * dx / cfg.n_points
+                mom = np.sum(k * np.abs(momentum_space) ** 2) * dx / cfg.n_points
                 momenta.append(float(np.real(mom)))
 
             times = np.linspace(0, cfg.duration, n_steps)
 
             return {
-                "status": "success",
+                "status": "partial",
                 "engine": "schr_fallback",
+                "backend": "numpy_split_operator",
+                "engine_truth": "not_schr",
+                "executed": True,
+                "stub": False,
+                "accelerated": False,
                 "device": "cpu",
                 "n_points": cfg.n_points,
                 "wave_function": psi,
@@ -389,7 +405,7 @@ class SchrBridge:
                 "dt": cfg.dt,
                 "n_steps": n_steps,
                 "potential_type": cfg.potential_type,
-                "note": "Using fallback CPU simulation (Schr not available)",
+                "note": "NumPy split-operator fallback — not Schr GPU engine",
             }
 
         psi = np.fft.ifft(kinetic_phase * np.fft.fft(psi))
@@ -400,18 +416,25 @@ class SchrBridge:
         energy = np.sum(prob * V) * dx
 
         return {
-            "status": "success",
+            "status": "partial",
             "engine": "schr_fallback",
+            "backend": "numpy_split_operator",
+            "engine_truth": "not_schr",
+            "executed": True,
+            "stub": False,
+            "accelerated": False,
             "device": "cpu",
             "n_points": cfg.n_points,
             "wave_function": psi,
             "probability_density": prob,
             "energy": float(np.real(energy)),
             "potential_type": cfg.potential_type,
-            "note": "Using fallback (Schr not available)",
+            "note": "NumPy fallback — not Schr GPU engine",
         }
 
-    def _create_initial_state_numpy(self, cfg: SchrodingerConfig, x: np.ndarray, dx: float) -> np.ndarray:
+    def _create_initial_state_numpy(
+        self, cfg: SchrodingerConfig, x: np.ndarray, dx: float
+    ) -> np.ndarray:
         """Create initial wave function (numpy fallback)."""
         if cfg.initial_state == "gaussian":
             sigma = cfg.domain_size / 10
@@ -530,6 +553,8 @@ class SchrBridge:
             return {
                 "status": "success",
                 "engine": "schr",
+                "engine_truth": "schr",
+                "executed": True,
                 "device": self._device,
                 "n_modes": cfg.n_modes,
                 "n_photons_max": cfg.n_photons_max,
@@ -594,10 +619,10 @@ class SchrBridge:
             g_n = g * np.sqrt(max(n0, 1))
 
             if abs(delta) < 1e-10:
-                Pe = ce0 * np.cos(g_n * t)**2 + cg0 * np.sin(g_n * t)**2
-                Pg = ce0 * np.sin(g_n * t)**2 + cg0 * np.cos(g_n * t)**2
+                Pe = ce0 * np.cos(g_n * t) ** 2 + cg0 * np.sin(g_n * t) ** 2
+                Pg = ce0 * np.sin(g_n * t) ** 2 + cg0 * np.cos(g_n * t) ** 2
             else:
-                Pe = ce0 * (np.cos(Omega * t)**2 + (delta/Omega)**2 * np.sin(Omega * t)**2)
+                Pe = ce0 * (np.cos(Omega * t) ** 2 + (delta / Omega) ** 2 * np.sin(Omega * t) ** 2)
                 Pg = 1 - Pe
 
             atomic_populations.append([Pe, Pg])
@@ -605,12 +630,21 @@ class SchrBridge:
             n_ph = n0 * Pg + (n0 + 1) * Pe * 0.5
             photon_numbers.append(float(n_ph))
 
-            ent = -Pe * np.log(max(Pe, 1e-10)) - Pg * np.log(max(Pg, 1e-10)) if Pe > 0 and Pg > 0 else 0
+            ent = (
+                -Pe * np.log(max(Pe, 1e-10)) - Pg * np.log(max(Pg, 1e-10))
+                if Pe > 0 and Pg > 0
+                else 0
+            )
             entanglement.append(float(ent))
 
         return {
-            "status": "success",
+            "status": "partial",
             "engine": "schr_fallback",
+            "backend": "numpy_jaynes_cummings",
+            "engine_truth": "not_schr",
+            "executed": True,
+            "stub": False,
+            "accelerated": False,
             "device": "cpu",
             "n_modes": cfg.n_modes,
             "times": times,
@@ -620,10 +654,12 @@ class SchrBridge:
             "coupling_strength": cfg.coupling_strength,
             "detuning": cfg.detuning,
             "duration": cfg.duration,
-            "note": "Using fallback Jaynes-Cummings model (Schr not available)",
+            "note": "NumPy Jaynes-Cummings fallback — not Schr GPU engine",
         }
 
-    def accelerate_pattern(self, pattern: BasePattern, hypothesis: dict[str, Any]) -> dict[str, Any]:
+    def accelerate_pattern(
+        self, pattern: BasePattern, hypothesis: dict[str, Any]
+    ) -> dict[str, Any]:
         """
         Accelerate quantum patterns with Schr if applicable.
 
@@ -696,8 +732,16 @@ class SchrBridge:
 
         result = self.run_schrodinger(config)
         result["pattern_id"] = getattr(pattern, "PATTERN_ID", "unknown")
-        result["accelerated_by"] = "schr"
-
+        if (
+            result.get("status") == "success"
+            and result.get("engine") == "schr"
+            and result.get("stub") is not True
+        ):
+            result["accelerated_by"] = "schr"
+            result["accelerated"] = True
+        else:
+            result["accelerated_by"] = "none"
+            result["accelerated"] = False
         return result
 
     def _accelerate_qed_pattern(
@@ -716,8 +760,16 @@ class SchrBridge:
 
         result = self.run_qed(config)
         result["pattern_id"] = getattr(pattern, "PATTERN_ID", "unknown")
-        result["accelerated_by"] = "schr"
-
+        if (
+            result.get("status") == "success"
+            and result.get("engine") == "schr"
+            and result.get("stub") is not True
+        ):
+            result["accelerated_by"] = "schr"
+            result["accelerated"] = True
+        else:
+            result["accelerated_by"] = "none"
+            result["accelerated"] = False
         return result
 
     def _accelerate_qc_pattern(
@@ -733,37 +785,16 @@ class SchrBridge:
 
         Returns speedup metrics for pattern.
         """
-        import time
-
-        if not self._available:
-            return {
-                "pattern": pattern_id,
-                "schr_available": False,
-                "speedup": 1.0,
-                "message": "Schr not installed",
-            }
-
-        legacy_start = time.perf_counter()
-        time.sleep(0.001)
-        legacy_time = time.perf_counter() - legacy_start
-
-        schr_start = time.perf_counter()
-        if "qed" in pattern_id.lower():
-            result = self.run_qed(config)
-        else:
-            result = self.run_schrodinger(config)
-        schr_time = time.perf_counter() - schr_start
-
-        speedup = legacy_time / schr_time if schr_time > 0 else 1.0
-
+        # Refuse fake speedup theater (time.sleep as "legacy").
         return {
             "pattern": pattern_id,
             "schr_available": True,
             "device": self._device,
-            "legacy_time": legacy_time,
-            "schr_time": schr_time,
-            "speedup": speedup,
-            "schr_result": result.get("status"),
+            "legacy_time": None,
+            "schr_time": None,
+            "speedup": None,
+            "note": "benchmark_legacy_vs_schr refuses synthetic sleep-based legacy timing",
+            "heuristic": False,
         }
 
     @classmethod

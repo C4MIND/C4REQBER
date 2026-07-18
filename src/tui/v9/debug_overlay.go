@@ -41,10 +41,10 @@ type DebugSnapshot struct {
 // CollectDebugSnapshot builds a snapshot from the live model.
 func (m *model) CollectDebugSnapshot() DebugSnapshot {
 	connStr := ConnLabel(m.connState)
-	lastType := ""
-	lastTS := time.Time{}
-	if m.lastPhase != "" {
-		lastType = "phase (legacy v8.12)"
+	lastType := m.lastSSEType
+	lastTS := m.lastSSETS
+	if lastType == "" && m.lastPhase != "" {
+		lastType = "phase:" + m.lastPhase
 	}
 	bookmarks := 0
 	simsTotal := 0

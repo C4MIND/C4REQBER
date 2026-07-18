@@ -14,13 +14,11 @@ This is a permanent rule. If you accidentally wrote "github" — flag it to the 
 
 ---
 
-# c4reqber v9.14.0 — AI Agent Context File
+# c4reqber v9.18.0 — AI Agent Context File
 
-**Version:** 9.14.0 (TUI v9 Simulation Surface) | **Branch:** `feat/production-upgrade` | **Date:** 2026-06-22 | Production — Round 5 Master Audit fixes landed (10 CRITICAL + 19 HIGH + 20 MEDIUM + 11 LOW resolved)
-> Previous: Round 4 Audit (16 CRITICAL + 39 HIGH + 55 MEDIUM + 14 LOW fixes) | 2026-05-29
-> **Purpose:** Provide AI agents with instant project context. Loaded by Kilo CLI and compatible tools.
-> **Doc status:** Body is a snapshot of the v9.13.0 / v5.6.0 architecture (last full rewrite). For post-v9.14.0 changes see `CHANGELOG.md`. **Canonical technical whitepaper:** [WHITEPAPER.md](WHITEPAPER.md) (EN) · [WHITEPAPER.ru.md](WHITEPAPER.ru.md) (RU) · [docs/VERIFICATION_BACKENDS.md](docs/VERIFICATION_BACKENDS.md).
-
+**Version:** 9.18.0 (Honesty contract / anti green-fake) | **Date:** 2026-07-18
+> **Honesty SSOT:** [`docs/HONESTY_CONTRACT.md`](docs/HONESTY_CONTRACT.md). Post-v9.14 changes: [`CHANGELOG.md`](CHANGELOG.md). Whitepaper: [WHITEPAPER.md](WHITEPAPER.md) · [WHITEPAPER.ru.md](WHITEPAPER.ru.md) · [docs/VERIFICATION_BACKENDS.md](docs/VERIFICATION_BACKENDS.md).
+> Body below remains a v9.13–v9.14 architecture snapshot — prefer HONESTY_CONTRACT + CHANGELOG for runtime truth.
 ---
 
 ## Common pitfalls (post-audit findings, 2026-06-22)
@@ -45,37 +43,45 @@ This is a permanent rule. If you accidentally wrote "github" — flag it to the 
 
 ## Honest Implementation Status
 
-Updated during 2026-05-19 + 2026-05-21 + 2026-06-03 (Kimi Code CLI audit + v5.6.0 polish). All counts verified against actual source code.
+Updated 2026-07-18 (honesty / anti green-fake pass). **Rules SSOT:** [`docs/HONESTY_CONTRACT.md`](docs/HONESTY_CONTRACT.md).
+
+### Honesty invariants (do not regress)
+- Simulation / MCP / TUI must not paint `success` for stub, fallback, heuristic, or unavailable work
+- OpenAlex citation match = title similarity ≥ 0.82; Z3 `sat` ≠ verified; Lean tautology translators refused
+- Novelty unchecked / empty search → `novelty_score: null` (not 0.5 / 1.0)
+- Formal pipeline stamp without alignment → `COMPILED`, not `FORMALLY VERIFIED`
+- Dempster prefers MNLI (`facebook/bart-large-mnli`); keywords remain `heuristic: true`
+- HF token: `HF_TOKEN` or `~/.cache/huggingface/token` (usually **not** in `~/.kilo/.env`)
 
 ### ✅ REAL — Production quality
 - **C4 Engine** (Z₃³, 27 states, 6 operators) — real modular arithmetic, Theorem 11 brute-force verified
 - **Social Publishing System** — 17 modules, 5 platform poster implementations (Twitter, Mastodon, Telegram, SciMatic, Bluesky) + webhook clients for Reddit/Discord/Slack, Zenodo/arXiv upload, ORCID integration, Fernet keyring, LatexCompiler, BYOK model
-- **Hoare logic verifier** (`src/verification/hoare_verifier.py`) — Z3-based WP calculus, full while+invariant support
+- **Hoare logic verifier** (`src/verification/hoare_verifier.py`) — Z3-based WP calculus, full while+invariant support (fallback path flagged `heuristic` / `mode: fallback`)
 - **LLM Prover** (`src/verification/llm_prover.py`) — iterative LLM→compile→error→fix loop for 6 languages
-- **TUI v9** (Go Bubble Tea v2, sim surface: `CardSimulation` kind + capabilities overlay Ctrl+Shift+C listing 38 engine bridges + 9 verifiers with per-platform status and install hints, command palette `:`, debug overlay Ctrl+Shift+D, status bar Ctrl+B, per-card expansion Enter/Esc, 7-language i18n at 100% parity, 7 color profiles including solarized-dark, adaptive layout T0/T1/T2/T3, feed.jsonl persistence + resume on launch, 132 golden snapshots) — 0 critical bugs, 27 atomic commits, +7302 lines. **Merged on `feat/production-upgrade` branch (round 5 audit landed).**
+- **TUI v9** (Go Bubble Tea v2, sim surface + honest status mapping: partial/failed toasts, debug last-SSE, capsim probe ≠ available) — production `blast tui`
 - **CLI** — 24 top-level `blast` commands
 - **Agent system** (Pydantic AI, 11 skills, MCP bridge, memory, sub-agents, `/preprint`, LangGraph executor, FastMCP external tool discovery, ChromaDB memory)
 - **TRIZ** (40 principles, contradiction matrix) — semantic C4 mapping
-- **9 real verification backends** (Lean4, Coq, Dafny, Agda, Z3/Hoare, Haskell, CVC5, TLA+, Alloy)
+- **9 real verification backends** (Lean4, Coq, Dafny, Agda, Z3/Hoare, Haskell, CVC5, TLA+, Alloy) — availability probed; Z3/Hoare not hardcoded always-on
 - **251 few-shot proof examples** (Lean4×56, Coq×48, Dafny×52, Z3×50, Agda×45) with TF-IDF RAG retrieval
 - **Causal inference adult** (DoWhy + EconML + gCastle: PC/FCI/NOTEARS/ANM)
 - **Hypothesis ranking** (PriorScorer × EIGEstimator × CostModel × MCDMRanker)
-- **Closed-loop simulation** (Bayesian tracker, experiment designer, ensemble runner, convergence)
+- **Closed-loop simulation** (Bayesian tracker + experiment designer are real math; **ensemble runner is a noise heuristic**, flagged `heuristic: True` — not physics evidence)
 - **Self-directed agenda** (generator, feasibility, priority, progress, TUI screen shift+a)
 - **Open-ended exploration** (anomaly detector, surprise-driven questions, formal extender)
 - **7/7 metamodels** (IMPACT, COMPASS, UCOS, QZRF, FRA, Matrix Dream, TOTE)
-- **47 configured knowledge source integrations** (46 wired to `MultiSourceSearcher`; runtime-active subset depends on credentials and availability). Truth source: `_truths.json`.
+- **47 configured knowledge source integrations** (wired via `SOURCE_REGISTRY` + adapters; runtime-active subset depends on credentials, `enabled` flags, and health — several fragile APIs are `enabled: False`). Truth source: `_truths.json`.
 - **15 installable scientific packages** — auto-detected, 10 native + 5 isolated Python 3.12 envs
 - **REPL** — 100% real (project/task models implemented)
 - **v8 API** — fully functional aggregator router (discovery, knowledge, newton, social, verification, novelty, news)
 - **News/LiveFeed** — real aggregation pipeline (arXiv, PubMed, knowledge sources)
-- **MCP Server** — 21 tools (per `_truths.json` + `docs/mcp_registry.md`), all verified working with JSON Schema sync (c4_solve, c4_search, c4_triz, c4_fingerprint, c4_verify, c4_prove, c4_transfer, c4_simulate, c4_bayesian, c4_causal, c4_export, c4_autoresearch, c4_chain, c4_meta, c4_social, c4_codegen, blast_solve, blast_turbo, blast_flash, blast_turbofactory, blast_auto)
-- **Security**: JWT+HMAC auth, CSRF hardened, subprocess injection blocked, prompt injection fail-closed, path traversal blocked, pip allow-list, MATLAB sandbox, 0 CRITICAL/HIGH findings
-- **Code quality**: 0 ruff lint errors across entire `src/`, `__import__` antipatterns removed, importlib for dynamic loading
-- **Type safety**: 56 mypy baseline errors (regression-gated; no new errors in CI) (559→508→0 after 3 audit rounds)
-- **Tests**: 9,924 collected (Python), 485+ passed core suites, 1 flaky Monte Carlo. Go TUI: 8/8 packages pass, staticcheck clean.
+- **MCP Server** — 21 tools (per `_truths.json` + `docs/mcp_registry.md`); outer `status` may be `partial` when gates/sims weak
+- **Security**: JWT+HMAC auth, CSRF hardened, subprocess injection blocked, prompt injection fail-closed, path traversal blocked, pip allow-list, MATLAB sandbox
+- **Code quality**: prefer 0 ruff on touched paths; `__import__` antipatterns removed where cleaned
+- **Type safety**: mypy baseline errors remain (regression-gated); do **not** claim “0 mypy errors” without re-check
+- **Tests**: honesty suites under `tests/test_w*.py`, `tests/test_citation_openalex_honesty.py`, `tests/test_mnli_real.py`; Go TUI packages pass after honesty mapping
 - **Pydantic V2 migration** — `ConfigDict`, `field_validator`, `min_length/max_length` across all models
-- **Citation verifier** — hallucination detection for fake theory names ("Recursive Harmonic", "Pantheon Theory", "UCH-HSTR")
+- **Citation verifier** — CrossRef DOI + OpenAlex **title-similarity** match; hallucinated theory-name heuristics
 - **Cost tracker** — resets per `solve()` call, prevents cumulative inflation
 - **MP Rotation — 23 Core Metaprograms** — multi-perspective analysis via `MPLibrary` (`src/metamodels/mp/data.py`). 23 MPs across 9 dimensions (thinking×5, feeling×3, doing×3, relating×2, perceiving×2, time×2, chunking×2, direction×2, reason×2). Pipeline step `s4` rotates problems through 3 selected profiles (systems + critical + keyword-matched). Output: perspectives with confidence, consensus score, synthesized view. Dynamic LLM-generated profiles with static fallback.
 - **Observer Position Shifts (O₀→O₁→O₂)** — meta-cognitive self-reflection integrated into `PipelineExecutor`. O₀→O₁ diagnostic after synthesis (blind spot detection). O₁→O₂ meta-reflection on stagnation. Alternative C4 state derivation from O₂ insights (keyword-driven axis shifts + deterministic fallback). Events: `observer_diagnostic` / `observer_meta`
@@ -348,7 +354,7 @@ Layer 5: Knowledge + Verification — 47 configured sources (orchestrator.py), 3
 | Simulation patterns | 101+ (CPU fluid: Navier-Stokes Euler solver) |
 | Physics engines | 5 internal (Newton, TorchSim, JaxSim, Schr, vast.ai) + 26 P1 bridges (FEniCSx, OpenFOAM, GROMACS, LAMMPS, MDAnalysis, PySCF, Psi4, QE, Tellurium, NEURON, Brian2, Jaxley, COPASI, xarray, WRF, Mesa, SimPy, Rebound, AMUSE, MuJoCo, PyBullet, diffeqpy, Taichi, JAX MD, JAX-LaB, ModelingToolkit.jl) + 6 Virtual Biology + MirrorFish + MATLAB |
 | LLM providers | 11 configured (cloud + local); runtime availability varies |
-| Architecture | Saga (238 lines), CQRS (167 lines), Event Sourcing (297 lines) — fully implemented, wired into BasePipeline + HILDiscoveryPipeline. ChromaDB vector store (4 collections) caching knowledge search + agent memory + paper embeddings. FastMCP client bridge for external MCP server discovery. LangGraph executor in AgentCore for graph-based processing. |
+| Architecture | Saga / CQRS / Event Sourcing modules exist and are wired into pipelines for bookkeeping — saga discover step is lightweight (not a full multi-service transaction theatre). ChromaDB vector store (4 collections). FastMCP client bridge. LangGraph executor in AgentCore. EIG/ensemble closed-loop helpers are **heuristic placeholders** until real simulators are attached. Platform wheels may ship `c4tui-v9` via `prepare_tui_wheel.sh`; otherwise `blast tui` auto-downloads a GitLab release asset into `~/.c4reqber/bin/` (or build with Go / set `C4REQBER_TUI_URL`). |
 | WASM runtime | `blast wasm-load/list` CLI + stub mode (wasmtime optional) |
 | CLI commands | 24 top-level `blast` commands |
 | Pipeline architecture | `BasePipeline` → HILDiscoveryPipeline + UniversalSolvePipeline. `PluginStageRouter` A-G. Progressive streaming via ProgressEmitter. |
@@ -462,7 +468,7 @@ Global Kilo agents for c4reqber development. Located in `~/.kilo/agent/`:
 | **Lint (ruff)** | **0 errors across entire `src/`** — 95 pre-existing fixed in final round |
 | **Security audit Round 4 (Kimi Code CLI)** | 16 CRITICAL → ALL FIXED. 34 HIGH → ALL FIXED. 55 MEDIUM → ALL FIXED. 14 LOW → ALL FIXED |
 | **Security audit (pre-existing)** | 43 Critical + 75 High + 113 Medium → ALL RESOLVED (v5.4.0 → v5.4.1) |
-| **Code quality** | 152 bare `except Exception:` → critical paths logged; `__import__` antipatterns → proper imports/importlib; dead code removed |
+| **Code quality** | Silent `except Exception: pass` on critical paths → `logger.debug(..., exc_info=True)`; `__import__` antipatterns → proper imports/importlib; dead code removed. Prefer `src.llm.get_gateway()` over direct ProviderRouter / sync_provider_chain imports. |
 | **Bugs fixed total** | 124 (Round 4: 16+34+55+14) + 70 (Kimi CLI) + 18 (pre-existing) = **222 fixes** |
 | **Tests** | 594 passed, 1 xfailed, 27 warnings (numpy state pollution in acoustic sims, not code bugs). Go TUI: 8/8 packages pass |
 | **TUI app.py** | Full rewrite: 362 lint errors → 0, multi-statement lines eliminated |
@@ -636,3 +642,32 @@ Step 8.5: Formal Verification (summary)
 **Citation**: Selyutin I., Kovalev N.I. (2026). *c4reqber v5.4.0: Cognitive Exoskeleton for AI Agents.*
 **License**: AGPL-3.0 (open-source) / Commercial License available
 **Discovery Clause**: Mandatory citation in every generated paper
+
+---
+
+## Learned User Preferences
+
+- Never delete, rewrite, or “clean up” `.env.dontredact` — treat it as a permanent local secrets vault.
+- For mission/pipeline work prefer free-tier LLM providers and models; rotate and probe keys until something works instead of stopping at the first failure; skip paid-only stacks (Kimi, Minimax, Claude, etc.) unless explicitly asked.
+- End-user production is `pip install` / `blast` / TUI v9 / MCP (optional `docker-compose.release.yml`) — not maintainer-Mac Docker, Traefik VPS hosting, or treating GitLab Environment Play as the product.
+- First public surface is CLI + TUI v9 + MCP; hide unfinished Desktop app from docs, landing, and marketing until it is real.
+- Prefer deep systemic analysis (and a chat report) before code when stuck or when asked; avoid repeated micro-fix loops that waste time.
+- Expect clear status plus time remaining on long CI/jobs; if a job is `pending` on a known runner for more than ~2 minutes, fix tags/runner immediately rather than waiting.
+- Do mechanical setup end-to-end yourself (install tools, GitLab UI clicks when Chrome is already logged in) — do not bounce routine steps back to the user.
+- Demo GIF/video must show real TUI discovery with visible results; never record personal apps or private UI; wait for user visual approval before committing demo media.
+- Author/citation name is Selyutin I. (with Kovalev N.I.) — never invent alternate surnames like Figurov.
+- Keep user-facing copy and footers on GitLab as the canonical home; do not label the product as a GitHub project.
+- Prefer finishing and integrating real backends (sims, MNLI, citations, MCP) over disabling features or honest-but-empty refusals when the work can be completed.
+- Treat “green fakes” as bugs: never paint success/verified/complete for stub, heuristic, fallback, or unavailable work; expect adversarial re-audits after honesty fixes.
+
+## Learned Workspace Facts
+
+- Local agent secrets: repo `.env.dontredact` (knowledge/API keys) and `~/.kilo` (LLM provider keys, including OpenCode free models).
+- Canonical GitLab repo is `cognitive-functors/c4reqber` (legacy `turbo-cdi` name/path may still appear in old registry/docs); public site is `https://cognitive-functors.gitlab.io/c4reqber/`.
+- GitHub `c4reqber` is a read-only promotion mirror via GitLab repository mirroring — push only to GitLab.
+- CI for this project uses the project’s own Mac/Colima GitLab runners — do not borrow runners from unrelated projects (e.g. MacBook DSM).
+- `social-marketing/` is a local gitignored folder for Reddit/outreach drafts; do not commit it.
+- Landing splash should mirror the TUI splash (purple cube → morph → final animated C4R); final is reached by finishing the animation or an explicit skip/Enter — never dump straight to a static final on mobile or desktop.
+- Maintainer CI/release invariants (Colima, Kaniko `build-api`, deploy-as-verify) live in `.cursor/rules/c4reqber-ci-release.mdc`.
+- Honesty / anti green-fake SSOT is `docs/HONESTY_CONTRACT.md` (sims, MCP, TUI status mapping, novelty nulls, formal stamps).
+- HF token probe order: `HF_TOKEN` env, `~/.cache/huggingface/token`, then `~/.kilo` env files when missing elsewhere.

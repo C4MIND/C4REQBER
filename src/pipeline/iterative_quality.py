@@ -3,6 +3,7 @@
 When quality score < threshold, analyzes failed gates, generates improvement
 plan, and re-runs specific phases with enhanced parameters.
 """
+
 from __future__ import annotations
 
 import copy
@@ -20,6 +21,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class ImprovementPlan:
     """Actionable plan to fix failed quality gates."""
+
     iteration: int
     failed_gates: list[str] = field(default_factory=list)
     actions: list[dict[str, Any]] = field(default_factory=list)
@@ -53,52 +55,68 @@ class IterativeQualityLoop:
 
         for gate in failed:
             if gate.step == "sources":
-                actions.append({
-                    "phase": "B",
-                    "action": "expand_source_search",
-                    "detail": f"Increase min_sources from {self.config.min_sources} to {self.config.min_sources + 5}",
-                })
+                actions.append(
+                    {
+                        "phase": "B",
+                        "action": "expand_source_search",
+                        "detail": f"Increase min_sources from {self.config.min_sources} to {self.config.min_sources + 5}",
+                    }
+                )
                 param_changes["min_sources"] = self.config.min_sources + 5
+                # Prefer real MultiSourceSearcher web adapters (Tavily), never stub padding
                 param_changes["fallback_to_web_search"] = True
+                param_changes["include_web"] = True
 
             elif gate.step == "gaps":
-                actions.append({
-                    "phase": "C",
-                    "action": "deepen_gap_analysis",
-                    "detail": "Re-run gap analyzer with stricter evidence requirements",
-                })
+                actions.append(
+                    {
+                        "phase": "C",
+                        "action": "deepen_gap_analysis",
+                        "detail": "Re-run gap analyzer with stricter evidence requirements",
+                    }
+                )
                 param_changes["min_gaps"] = max(self.config.min_gaps, 3)
 
             elif gate.step == "hypotheses":
-                actions.append({
-                    "phase": "D",
-                    "action": "regenerate_hypotheses",
-                    "detail": f"Generate more ambitious hypotheses (current ambition: {self.config.hypothesis_ambition})",
-                })
+                actions.append(
+                    {
+                        "phase": "D",
+                        "action": "regenerate_hypotheses",
+                        "detail": f"Generate more ambitious hypotheses (current ambition: {self.config.hypothesis_ambition})",
+                    }
+                )
                 param_changes["min_hypotheses"] = self.config.min_hypotheses + 2
                 param_changes["llm_temperature"] = min(self.config.llm_temperature + 0.05, 0.5)
-                actions.append({
-                    "phase": "D",
-                    "action": "diversify_prompting",
-                    "detail": "Use alternative LLM prompt template for hypothesis diversity",
-                })
+                actions.append(
+                    {
+                        "phase": "D",
+                        "action": "diversify_prompting",
+                        "detail": "Use alternative LLM prompt template for hypothesis diversity",
+                    }
+                )
 
             elif gate.step == "bibliography":
-                actions.append({
-                    "phase": "B",
-                    "action": "expand_bibliography",
-                    "detail": "Fetch additional sources via web search",
-                })
+                actions.append(
+                    {
+                        "phase": "B",
+                        "action": "expand_bibliography",
+                        "detail": "Fetch additional sources via web search",
+                    }
+                )
                 param_changes["max_sources"] = self.config.max_sources + 10
 
             elif gate.step == "dissertation":
-                actions.append({
-                    "phase": "F",
-                    "action": "regenerate_dissertation",
-                    "detail": "Add missing sections and expand content",
-                })
+                actions.append(
+                    {
+                        "phase": "F",
+                        "action": "regenerate_dissertation",
+                        "detail": "Add missing sections and expand content",
+                    }
+                )
                 param_changes["min_dissertation_words"] = self.config.min_dissertation_words + 300
-                param_changes["max_llm_tokens_per_section"] = self.config.max_llm_tokens_per_section + 500
+                param_changes["max_llm_tokens_per_section"] = (
+                    self.config.max_llm_tokens_per_section + 500
+                )
 
         return ImprovementPlan(
             iteration=iteration,
@@ -107,7 +125,9 @@ class IterativeQualityLoop:
             parameter_changes=param_changes,
         )
 
-    def apply_parameter_changes(self, config: PipelineConfig, plan: ImprovementPlan) -> PipelineConfig:
+    def apply_parameter_changes(
+        self, config: PipelineConfig, plan: ImprovementPlan
+    ) -> PipelineConfig:
         """Create new config with improved parameters."""
         new_config = copy.deepcopy(config)
         for key, value in plan.parameter_changes.items():
@@ -135,8 +155,13 @@ class IterativeQualityLoop:
 
         while self.should_improve(current_report) and iterations < self.max_iterations:
             iterations += 1
-            logger.info("Quality improvement cycle %d/%d (score: %d, threshold: %d)",
-                       iterations, self.max_iterations, current_report.overall_score, self.quality_threshold)
+            logger.info(
+                "Quality improvement cycle %d/%d (score: %d, threshold: %d)",
+                iterations,
+                self.max_iterations,
+                current_report.overall_score,
+                self.quality_threshold,
+            )
 
             plan = self.create_improvement_plan(current_report, iterations)
             logger.info("Improvement plan: %s", plan.actions)
@@ -147,7 +172,7 @@ class IterativeQualityLoop:
             # Re-run specific phases based on failed gates
             if "sources" in plan.failed_gates or "bibliography" in plan.failed_gates:
                 current_record.sources = await pipeline_instance._fetch_bibliography(topic)
-                current_record.bibliography = current_record.sources[:improved_config.max_sources]
+                current_record.bibliography = current_record.sources[: improved_config.max_sources]
 
             if "gaps" in plan.failed_gates:
                 current_record.gaps = pipeline_instance.gap_analyzer.analyze(
@@ -179,11 +204,15 @@ class IterativeQualityLoop:
                 current_record.simulation,
                 current_record.verification,
                 current_record.bibliography,
-                getattr(current_record, 'dissertation', ''),
+                getattr(current_record, "dissertation", ""),
             )
             current_config = improved_config
 
-            logger.info("After improvement cycle %d: score = %d, grade = %s",
-                       iterations, current_report.overall_score, current_report.grade)
+            logger.info(
+                "After improvement cycle %d: score = %d, grade = %s",
+                iterations,
+                current_report.overall_score,
+                current_report.grade,
+            )
 
         return current_record, current_report, iterations

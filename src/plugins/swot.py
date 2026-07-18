@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from src.plugins._llm_base import _llm_reason
+from src.plugins._llm_base import _llm_reason, finalize_plugin_result
 
 
 def analyze(context: str) -> dict[str, Any]:
@@ -18,20 +18,37 @@ Output format (JSON):
   "opportunities": ["specific opportunity 1", "specific opportunity 2"],
   "threats": ["specific threat 1", "specific threat 2"]
 }}"""
-    system = "You are a strategic analyst. Provide SWOT analysis with concrete, domain-specific items — never generic templates."
+    system = (
+        "You are a strategic analyst. Provide SWOT analysis with concrete, "
+        "domain-specific items — never generic templates."
+    )
     raw = _llm_reason(prompt, system=system, max_tokens=600)
     if not raw:
-        return {"strengths": ["LLM unavailable — unable to analyze"], "weaknesses": [], "opportunities": [], "threats": []}
+        payload = {
+            "strengths": [],
+            "weaknesses": [],
+            "opportunities": [],
+            "threats": [],
+            "note": "LLM unavailable — empty SWOT fields retained for retry",
+        }
+        return finalize_plugin_result(payload, raw)
     try:
         import json
         import re
+
         match = re.search(r"\{.*\}", raw, re.DOTALL)
         if match:
-            return json.loads(match.group())
+            return finalize_plugin_result(json.loads(match.group()), raw)
     except (json.JSONDecodeError, ValueError):
         pass
-    lines = [l.strip("- ") for l in raw.split("\n") if l.strip().startswith("-")]
-    return {"strengths": lines[:3] or ["Analysis produced no structured output"], "weaknesses": [], "opportunities": [], "threats": []}
+    lines = [line.strip("- ") for line in raw.split("\n") if line.strip().startswith("-")]
+    payload = {
+        "strengths": lines[:3] or [raw[:200]],
+        "weaknesses": [],
+        "opportunities": [],
+        "threats": [],
+    }
+    return finalize_plugin_result(payload, raw)
 
 
 def execute(context: str, **kwargs: Any) -> dict[str, Any]:

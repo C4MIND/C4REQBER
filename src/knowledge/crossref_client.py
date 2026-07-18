@@ -45,7 +45,12 @@ class CrossRefClient:
         if not HAS_HTTPX:
             raise ImportError("httpx required: pip install httpx")
 
-        self.mailto = mailto or os.getenv("CROSSREF_MAILTO", "c4reqber@example.com")
+        if mailto:
+            self.mailto = mailto
+        else:
+            from src.knowledge.contact_email import contact_email
+
+            self.mailto = contact_email()
         self._timeout = timeout
         self._client: httpx.AsyncClient | None = None
         self._last_request: float = 0.0
@@ -235,7 +240,9 @@ class CrossRefClient:
         doi = work.get("DOI", "")
 
         year = 0
-        published = work.get("published-print") or work.get("published-online") or work.get("published")
+        published = (
+            work.get("published-print") or work.get("published-online") or work.get("published")
+        )
         if published:
             date_parts = published.get("date-parts", [[]])
             if date_parts and date_parts[0]:
@@ -284,6 +291,7 @@ class SyncCrossRefClient:
 
     def get_by_doi(self, doi: str) -> dict[str, Any] | None:
         """Get by doi."""
+
         async def _get() -> dict[str, Any] | None:
             async with CrossRefClient(self.mailto, self._timeout) as client:
                 return await client.get_by_doi(doi)
@@ -297,6 +305,7 @@ class SyncCrossRefClient:
         filters: dict[str, str] | None = None,
     ) -> list[dict[str, Any]]:
         """Search."""
+
         async def _search() -> list[dict[str, Any]]:
             async with CrossRefClient(self.mailto, self._timeout) as client:
                 return await client.search(query, max_results, filters)
@@ -305,6 +314,7 @@ class SyncCrossRefClient:
 
     def get_by_issn(self, issn: str) -> dict[str, Any] | None:
         """Get by issn."""
+
         async def _get() -> dict[str, Any] | None:
             async with CrossRefClient(self.mailto, self._timeout) as client:
                 return await client.get_by_issn(issn)

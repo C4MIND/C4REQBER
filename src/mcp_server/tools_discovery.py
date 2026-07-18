@@ -4,6 +4,11 @@ import asyncio
 import logging
 from typing import Any
 
+from src.mcp_server.honesty import (
+    outer_status_from_hil_like,
+    record_field_status,
+    search_outer_status,
+)
 from src.mcp_server.tool_dependencies import (
     HAS_TOOLS,
     C4Space,
@@ -35,16 +40,23 @@ async def c4_solve(problem: str, domain: str = "science") -> dict[str, Any]:
         pipeline = HILDiscoveryPipeline(config=config, user_profile=user_profile)
         record = await pipeline.discover(problem)
 
+        sim_status = record_field_status(record.simulation)
+        score = record.quality_report.overall_score if record.quality_report else 0
+        passed_all = bool(record.quality_report.passed_all) if record.quality_report else None
         result = {
-            "status": "success",
+            "status": outer_status_from_hil_like(
+                quality_passed_all=passed_all,
+                quality_score=score,
+                sim_status=str(sim_status),
+            ),
             "topic": record.topic,
             "sources": len(record.sources),
             "gaps": len(record.gaps),
             "hypotheses": len(record.hypotheses),
-            "simulation": record.simulation.status if record.simulation else "N/A",
-            "verification": record.verification.status if record.verification else "N/A",
+            "simulation": sim_status,
+            "verification": record_field_status(record.verification),
             "quality_grade": record.quality_report.grade if record.quality_report else "N/A",
-            "quality_score": record.quality_report.overall_score if record.quality_report else 0,
+            "quality_score": score,
             "dissertation_path": f"dissertations/live/HIL_v2_{problem.replace(' ', '_')[:30]}.md",
         }
 
@@ -80,8 +92,9 @@ async def c4_search(query: str, sources: list[str] | None = None) -> dict[str, A
             source_names = list(search_result.get("source_names", []))
 
         truncated = papers[:10]
-        return {
-            "status": "success",
+        status = search_outer_status(total_found=len(papers), sources_requested=bool(sources))
+        out: dict[str, Any] = {
+            "status": status,
             "data": truncated,
             "metadata": {
                 "query": query,
@@ -91,6 +104,9 @@ async def c4_search(query: str, sources: list[str] | None = None) -> dict[str, A
                 "returned": len(truncated),
             },
         }
+        if status == "partial":
+            out["warnings"] = ["No papers found — empty search is not success"]
+        return out
     except (AttributeError, ImportError, TypeError, ValueError) as e:
         logger.exception("MCP knowledge search failed")
         return {
@@ -217,7 +233,20 @@ async def c4_fingerprint(problem: str) -> dict[str, Any]:
             state = router.classify_c4_state(problem)
         except (ImportError, AttributeError):
             state = space._heuristic_classify(problem)
-        return {"problem": problem, "state": list(state.to_tuple()), "fingerprint": str(state)}
+            return {
+                "problem": problem,
+                "state": list(state.to_tuple()),
+                "fingerprint": str(state),
+                "backend": "heuristic",
+                "heuristic": True,
+            }
+        return {
+            "problem": problem,
+            "state": list(state.to_tuple()),
+            "fingerprint": str(state),
+            "backend": "fra_router",
+            "heuristic": False,
+        }
     except (AttributeError, ImportError) as e:
         logger.warning("MCP tool optional dep missing: %s", e)
         return {"error": str(e)}

@@ -6,17 +6,19 @@
 
 [![Tests](https://img.shields.io/badge/tests-9924%20collected-yellowgreen)]()
 [![Lint](https://img.shields.io/badge/lint-41%20baseline%20%2B%20regression%20check-yellow)]()
-[![Typecheck](https://img.shields.io/badge/typecheck-0%20mypy%20errors-brightgreen)]()
+[![Typecheck](https://img.shields.io/badge/typecheck-mypy%20baseline%20gated-yellow)]()
 [![Version](https://img.shields.io/badge/version-5.7.1-magenta)]()
-[![TUI](https://img.shields.io/badge/TUI-v9.13.0-blueviolet)]()
+[![TUI](https://img.shields.io/badge/TUI-v9.18%20honesty-blueviolet)]()
 [![Python](https://img.shields.io/badge/python-3.11%2B-blue)]()
 [![License](https://img.shields.io/badge/license-AGPL--3.0-green)]()
 [![PyPI](https://img.shields.io/pypi/v/c4reqber)](https://pypi.org/project/c4reqber/)
 [![Security](https://img.shields.io/badge/security-round5%20audit%20passed-brightgreen)]()
+[![Honesty](https://img.shields.io/badge/honesty-contract%20v9.18-orange)](docs/HONESTY_CONTRACT.md)
 
 > **Truth source:** all counts (tests, tools, sources, engines, providers, verifiers)
 > are generated from `_truths.json` via `scripts/gen_truths.py --check`. Run the
 > script in CI to catch drift. See `CHANGELOG.md` for release history.
+> **Anti green-fake:** [`docs/HONESTY_CONTRACT.md`](docs/HONESTY_CONTRACT.md) — success/verified/available semantics.
 
 ## Quickstart
 
@@ -62,7 +64,7 @@ Six **research proposals** from end-to-end `blast turbo` runs (400–500 literat
 | Soil carbon / desertification | 5,102 | [`06_soil_carbon.md`](discoveries/humanity_mission_2026-07-09/06_soil_carbon.md) |
 | Ocean plastic bioremediation | 5,395 | [`08_ocean_plastic_v2.md`](discoveries/humanity_mission_2026-07-09/08_ocean_plastic_v2.md) |
 
-**Demo:** [TUI screenshots](docs/screenshots/) · [30s video](docs/demo/c4reqber_mission_demo_30s.mp4) · [Web gallery](https://c4reqber.org/discoveries/)
+**Demo:** [TUI screenshots](docs/screenshots/) · [Web gallery](https://cognitive-functors.gitlab.io/c4reqber/discoveries/)
 
 ## What is this?
 

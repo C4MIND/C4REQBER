@@ -1,10 +1,10 @@
 """
-C4 Navigation Engine — Path finding, state transitions, FRA stub.
+C4 Navigation Engine — Path finding, state transitions, FRA router.
 
 Provides:
     - BFS path finding between any two C4 states
     - State transition graph
-    - FRA (Fingerprint-Route-Adapt) stub integration
+    - FRA (Fingerprint-Route-Adapt) local graph routing
 
 Reference: formal-proofs/c4-comp-v5.agda
 Authors: I.G. Selyutin, N.I. Kovalev
@@ -162,14 +162,11 @@ class C4TransitionGraph:
 
 class FRARouter:
     """
-    FRA (Fingerprint-Route-Adapt) stub for C4 navigation.
+    FRA (Fingerprint-Route-Adapt) for C4 navigation — lightweight local router.
 
-    FRA is the adaptive routing meta-algorithm:
-        fingerprint -> route -> adapt
-
-    In the C4 context, a "fingerprint" is the current state F⟨T,S,A⟩,
-    the "route" is the canonical path to the target state,
-    and "adapt" adjusts based on intermediate feedback.
+    This is **not** a separate ML service: fingerprint = state tuple,
+    route = canonical_path on the C4 graph, adapt = re-route from feedback.
+    Sufficient for navigation; do not market as a full adaptive FRA stack.
     """
 
     def fingerprint(self, state: C4State) -> tuple[int, int, int]:

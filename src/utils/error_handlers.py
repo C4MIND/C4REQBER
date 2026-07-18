@@ -9,6 +9,9 @@ import time
 from contextlib import asynccontextmanager, contextmanager
 from typing import Any, AsyncIterator, Awaitable, Callable, Iterator, TypeVar
 
+from src.plugins.invoke import invoke_plugin_execute
+from src.utils.honesty_status import outer_status_from_plugin_result
+
 
 logger = logging.getLogger(__name__)
 
@@ -18,6 +21,7 @@ T = TypeVar("T")
 # ---------------------------------------------------------------------------
 # Async safe execution helpers
 # ---------------------------------------------------------------------------
+
 
 async def safe_execute(
     func: Callable[..., Awaitable[T]],
@@ -72,6 +76,7 @@ def sync_safe_execute(
 # ---------------------------------------------------------------------------
 # Step executor: eliminates repeated try-except in API endpoints
 # ---------------------------------------------------------------------------
+
 
 def execute_step(
     results: dict[str, Any],
@@ -175,6 +180,7 @@ async def async_execute_step(
 # Timed execution context managers
 # ---------------------------------------------------------------------------
 
+
 @contextmanager
 def timed_execution(name: str, level: str = "info") -> Iterator[None]:
     """Context manager to time execution and log it.
@@ -223,6 +229,7 @@ async def async_timed_execution(name: str, level: str = "info") -> AsyncIterator
 # ErrorHandler context manager
 # ---------------------------------------------------------------------------
 
+
 class ErrorHandler:
     """Context manager for error handling with logging.
 
@@ -254,6 +261,7 @@ class ErrorHandler:
 # Plugin execution helper
 # ---------------------------------------------------------------------------
 
+
 def execute_plugin(
     plugin_name: str,
     display_name: str,
@@ -277,14 +285,20 @@ def execute_plugin(
     """
     try:
         import importlib
+
         module = importlib.import_module(f"src.plugins.{plugin_name}")
         if hasattr(module, "execute"):
-            result = module.execute(context=context, problem=problem[:200], domain=domain)
+            result = invoke_plugin_execute(
+                module.execute,
+                problem=problem[:2000],
+                context=context,
+                domain=domain,
+            )
             return {
                 "name": display_name,
                 "result": result,
-                "status": "success",
+                "status": outer_status_from_plugin_result(result),
             }
         return {"name": display_name, "status": "no_execute"}
-    except (AttributeError, ImportError) as e:
+    except (AttributeError, ImportError, TypeError) as e:
         return {"name": display_name, "status": "error", "error": str(e)[:100]}

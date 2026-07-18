@@ -140,8 +140,26 @@ class BaseSimulationAdapter(abc.ABC):
             metadata={"engine": self._engine_name},
         )
 
+    @staticmethod
+    def _payload_implies_incomplete(data: Any) -> tuple[bool, str]:
+        """Detect stub / unavailable / not-executed payloads that must not be SUCCESS."""
+        if not isinstance(data, dict):
+            return False, ""
+        if data.get("stub") is True:
+            return True, str(data.get("note") or data.get("message") or "stub payload")
+        status = str(data.get("status", "")).lower()
+        if status in {"unavailable", "stub", "simulated", "not_implemented", "skipped"}:
+            return True, str(data.get("note") or data.get("message") or status)
+        if data.get("executed") is False:
+            return True, str(data.get("note") or "executed=false")
+        return False, ""
+
     def _run_wrapped(self, fn: callable, input_data: dict[str, Any] | None) -> SimulationResult:
-        """Wrap a concrete run with timing, logging and exception handling."""
+        """Wrap a concrete run with timing, logging and exception handling.
+
+        Honesty rule: a returned dict with ``stub: True`` / ``status: unavailable``
+        (etc.) is **not** SimStatus.SUCCESS — even if no exception was raised.
+        """
         if not self.is_available():
             return self._make_unavailable()
 
@@ -149,12 +167,24 @@ class BaseSimulationAdapter(abc.ABC):
         try:
             data = fn(input_data or {})
             elapsed = time.perf_counter() - self._start_time
-            result = SimulationResult(
-                status=SimStatus.SUCCESS,
-                data=data,
-                elapsed_seconds=elapsed,
-                metadata={"engine": self._engine_name},
-            )
+            incomplete, reason = self._payload_implies_incomplete(data)
+            if incomplete:
+                payload = data if isinstance(data, dict) else {"raw": data}
+                result = SimulationResult(
+                    status=SimStatus.UNAVAILABLE,
+                    data=payload,
+                    elapsed_seconds=elapsed,
+                    metadata={"engine": self._engine_name, "incomplete": True},
+                    install_hint=self._install_hint,
+                    error_message=reason,
+                )
+            else:
+                result = SimulationResult(
+                    status=SimStatus.SUCCESS,
+                    data=data if isinstance(data, dict) else {"raw": data},
+                    elapsed_seconds=elapsed,
+                    metadata={"engine": self._engine_name},
+                )
         except Exception as exc:
             elapsed = time.perf_counter() - self._start_time
             logger.error("%s run failed: %s", self._engine_name, exc, exc_info=True)

@@ -1,6 +1,7 @@
 """
 C4REQBER: Pipeline Step 10 — Pattern Simulation
 """
+
 from __future__ import annotations
 
 import logging
@@ -58,6 +59,19 @@ class SimulationStep(PipelineStep):
             logger.warning("Pattern %s failed: %s", selected_pattern, e)
 
         status = "completed" if pattern_results else "skipped"
+        if pattern_results:
+            bad = any(
+                isinstance(pr, dict)
+                and (
+                    pr.get("stub") is True
+                    or pr.get("executed") is False
+                    or str(pr.get("status", "")).lower()
+                    in {"unavailable", "failed", "error", "timeout", "partial"}
+                )
+                for pr in pattern_results
+            )
+            if bad:
+                status = "partial"
         return PipelineStepResult(
             stage=self.stage,
             status=status,

@@ -32,6 +32,7 @@ class BasePattern(Protocol):
 @dataclass
 class RigidBodyConfig:
     """Configuration for rigid body simulation."""
+
     model_path: str | None = None
     initial_joint_positions: np.ndarray | None = None
     initial_joint_velocities: np.ndarray | None = None
@@ -47,6 +48,7 @@ class RigidBodyConfig:
 @dataclass
 class InverseDynamicsConfig:
     """Configuration for inverse dynamics computation."""
+
     model_path: str | None = None
     joint_positions: np.ndarray | None = None
     joint_velocities: np.ndarray | None = None
@@ -111,10 +113,12 @@ class JaxSimBridge:
         """Check if JaxSim is installed and initialize JAX backend."""
         try:
             import jax
+
             self._jax = jax
 
             try:
                 import jaxsim
+
                 self._jaxsim = jaxsim
             except ImportError:
                 logger.info("jaxsim not installed. Run: pip install jaxsim")
@@ -211,9 +215,11 @@ class JaxSimBridge:
         return RigidBodyConfig(
             model_path=config.get("model_path"),
             initial_joint_positions=np.array(config["initial_joint_positions"])
-                if "initial_joint_positions" in config else None,
+            if "initial_joint_positions" in config
+            else None,
             initial_joint_velocities=np.array(config["initial_joint_velocities"])
-                if "initial_joint_velocities" in config else None,
+            if "initial_joint_velocities" in config
+            else None,
             dt=config.get("dt", 0.001),
             duration=config.get("duration", 5.0),
             gravity=tuple(config.get("gravity", [0.0, 0.0, -9.81])),
@@ -233,7 +239,13 @@ class JaxSimBridge:
             from jaxsim import Model, Simulator
 
             if cfg.model_path is None:
-                return self._fallback_simulation(cfg)
+                return {
+                    "status": "unavailable",
+                    "stub": True,
+                    "executed": False,
+                    "engine": "jaxsim",
+                    "error": "model_path (URDF) required — refusing silent pendulum fallback",
+                }
 
             model = Model.from_urdf(cfg.model_path)
 
@@ -250,7 +262,12 @@ class JaxSimBridge:
                 qd0 = jnp.zeros(n_dof)
 
             simulator = Simulator(model, dt=cfg.dt)
-            simulator.set_gravity(jnp.array(cfg.gravity))
+            if hasattr(simulator, "set_gravity"):
+                simulator.set_gravity(jnp.array(cfg.gravity))
+
+            step_fn = getattr(simulator, "step", None)
+            if not callable(step_fn):
+                step_fn = getattr(simulator, "integrate", None)
 
             if cfg.integrate:
                 n_steps = int(cfg.duration / cfg.dt)
@@ -258,6 +275,7 @@ class JaxSimBridge:
                 trajectory_qd = []
                 energy_kinetic = []
                 energy_potential = []
+                integration = "simulator.step" if callable(step_fn) else "manual_euler_fd"
 
                 state = (q0, qd0)
                 for _step in range(n_steps):
@@ -270,14 +288,29 @@ class JaxSimBridge:
                     energy_kinetic.append(float(ke))
                     energy_potential.append(float(pe))
 
-                    qdd = model.forward_dynamics(q, qd, jnp.zeros(n_dof))
-                    q_new = q + qd * cfg.dt
-                    qd_new = qd + qdd * cfg.dt
-                    state = (q_new, qd_new)
+                    if callable(step_fn):
+                        try:
+                            next_state = step_fn(q, qd)
+                            if isinstance(next_state, tuple) and len(next_state) >= 2:
+                                state = (next_state[0], next_state[1])
+                            else:
+                                raise TypeError("unexpected step return")
+                        except Exception:
+                            integration = "manual_euler_fd"
+                            qdd = model.forward_dynamics(q, qd, jnp.zeros(n_dof))
+                            state = (q + qd * cfg.dt, qd + qdd * cfg.dt)
+                    else:
+                        qdd = model.forward_dynamics(q, qd, jnp.zeros(n_dof))
+                        state = (q + qd * cfg.dt, qd + qdd * cfg.dt)
 
                 return {
                     "status": "success",
                     "engine": "jaxsim",
+                    "engine_truth": "jaxsim",
+                    "backend": "jaxsim_urdf",
+                    "executed": True,
+                    "stub": False,
+                    "integration": integration,
                     "device": self._device,
                     "model": cfg.model_path,
                     "n_dof": n_dof,
@@ -295,6 +328,10 @@ class JaxSimBridge:
                 return {
                     "status": "success",
                     "engine": "jaxsim",
+                    "engine_truth": "jaxsim",
+                    "backend": "jaxsim_urdf",
+                    "executed": True,
+                    "stub": False,
                     "device": self._device,
                     "model": cfg.model_path,
                     "n_dof": n_dof,
@@ -304,74 +341,26 @@ class JaxSimBridge:
                 }
 
         except Exception as e:
-            logger.warning(f"JaxSim simulation failed, using fallback: {e}")
-            return self._fallback_simulation(cfg)
-
-    def _fallback_simulation(self, cfg: RigidBodyConfig) -> dict[str, Any]:
-        """Fallback simulation using basic rigid body dynamics."""
-        n_steps = int(cfg.duration / cfg.dt) if cfg.integrate else 1
-
-        n_dof = cfg.initial_joint_positions.shape[0] if cfg.initial_joint_positions is not None else 6
-
-        q0 = cfg.initial_joint_positions if cfg.initial_joint_positions is not None else np.zeros(n_dof)
-        qd0 = cfg.initial_joint_velocities if cfg.initial_joint_velocities is not None else np.zeros(n_dof)
-
-        if cfg.integrate:
-            g = np.array(cfg.gravity)
-
-            trajectory_q = [q0.copy()]
-            trajectory_qd = [qd0.copy()]
-            energy_kinetic = []
-            energy_potential = []
-
-            q = q0.copy()
-            qd = qd0.copy()
-
-            m = 1.0
-            L = 1.0
-
-            for _ in range(n_steps - 1):
-                qdd = np.zeros(n_dof)
-
-                for i in range(min(3, n_dof)):
-                    qdd[i] = -g[2] / L
-
-                qd = qd + qdd * cfg.dt
-                q = q + qd * cfg.dt
-
-                trajectory_q.append(q.copy())
-                trajectory_qd.append(qd.copy())
-
-                ke = 0.5 * m * np.sum(qd**2)
-                pe = m * abs(g[2]) * (1 - np.cos(q[0])) if len(q) > 0 else 0
-                energy_kinetic.append(ke)
-                energy_potential.append(pe)
-
+            logger.warning("JaxSim simulation failed: %s", e)
             return {
-                "status": "success",
-                "engine": "jaxsim_fallback",
-                "device": "cpu",
-                "n_dof": n_dof,
-                "trajectory_q": np.array(trajectory_q),
-                "trajectory_qd": np.array(trajectory_qd),
-                "energy_kinetic": energy_kinetic,
-                "energy_potential": energy_potential,
-                "total_energy": np.array(energy_kinetic) + np.array(energy_potential),
-                "duration": cfg.duration,
-                "dt": cfg.dt,
-                "n_steps": n_steps,
-                "note": "Using fallback CPU simulation (JaxSim model not available)",
+                "status": "unavailable",
+                "stub": True,
+                "executed": False,
+                "engine": "jaxsim",
+                "error": str(e),
             }
 
+    def _fallback_simulation(self, cfg: RigidBodyConfig) -> dict[str, Any]:
+        """Honest refuse — no toy pendulum labeled as JaxSim success."""
         return {
-            "status": "success",
-            "engine": "jaxsim_fallback",
-            "device": "cpu",
-            "n_dof": n_dof,
-            "q": q0,
-            "qd": qd0,
-            "qdd": np.zeros(n_dof),
-            "note": "Using fallback (JaxSim model not available)",
+            "status": "unavailable",
+            "stub": True,
+            "executed": False,
+            "engine": "jaxsim",
+            "model_path": cfg.model_path,
+            "error": (
+                "JaxSim unavailable or model_path missing — refusing silent CPU pendulum fallback"
+            ),
         }
 
     def run_inverse_dynamics(self, config: dict[str, Any]) -> dict[str, Any]:
@@ -411,11 +400,14 @@ class JaxSimBridge:
         return InverseDynamicsConfig(
             model_path=config.get("model_path"),
             joint_positions=np.array(config["joint_positions"])
-                if "joint_positions" in config else None,
+            if "joint_positions" in config
+            else None,
             joint_velocities=np.array(config["joint_velocities"])
-                if "joint_velocities" in config else None,
+            if "joint_velocities" in config
+            else None,
             joint_accelerations=np.array(config["joint_accelerations"])
-                if "joint_accelerations" in config else None,
+            if "joint_accelerations" in config
+            else None,
             include_gravity=config.get("include_gravity", True),
             include_coriolis=config.get("include_coriolis", True),
         )
@@ -440,14 +432,24 @@ class JaxSimBridge:
                 return self._fallback_inverse_dynamics(cfg, n_dof)
 
             q = jnp.array(cfg.joint_positions)
-            qd = jnp.array(cfg.joint_velocities) if cfg.joint_velocities is not None else jnp.zeros(n_dof)
-            qdd = jnp.array(cfg.joint_accelerations) if cfg.joint_accelerations is not None else jnp.zeros(n_dof)
+            qd = (
+                jnp.array(cfg.joint_velocities)
+                if cfg.joint_velocities is not None
+                else jnp.zeros(n_dof)
+            )
+            qdd = (
+                jnp.array(cfg.joint_accelerations)
+                if cfg.joint_accelerations is not None
+                else jnp.zeros(n_dof)
+            )
 
             tau = model.inverse_dynamics(q, qd, qdd)
 
             return {
                 "status": "success",
                 "engine": "jaxsim",
+                "engine_truth": "jaxsim",
+                "executed": True,
                 "device": self._device,
                 "model": cfg.model_path,
                 "n_dof": n_dof,
@@ -464,34 +466,19 @@ class JaxSimBridge:
     def _fallback_inverse_dynamics(
         self, cfg: InverseDynamicsConfig, n_dof: int, error: str = ""
     ) -> dict[str, Any]:
-        """Fallback inverse dynamics using basic rigid body model."""
-        q = cfg.joint_positions
-        qd = cfg.joint_velocities if cfg.joint_velocities is not None else np.zeros(n_dof)
-        qdd = cfg.joint_accelerations if cfg.joint_accelerations is not None else np.zeros(n_dof)
-
-        M = np.eye(n_dof) * 1.0
-        C = np.zeros((n_dof, n_dof))
-        g_vec = np.zeros(n_dof)
-
-        if cfg.include_gravity:
-            for i in range(min(3, n_dof)):
-                g_vec[i] = -9.81
-
-        tau = M @ qdd + C @ qd + g_vec
-
+        """Refuse fake inverse-dynamics success without JaxSim model."""
         return {
-            "status": "success",
-            "engine": "jaxsim_fallback",
-            "device": "cpu",
+            "status": "unavailable",
+            "stub": True,
+            "executed": False,
+            "engine": "jaxsim",
             "n_dof": n_dof,
-            "joint_positions": q,
-            "joint_velocities": qd,
-            "joint_accelerations": qdd,
-            "joint_torques": tau,
-            "note": f"Using fallback inverse dynamics. {error}",
+            "error": f"Inverse dynamics fallback refused. {error}".strip(),
         }
 
-    def accelerate_pattern(self, pattern: BasePattern, hypothesis: dict[str, Any]) -> dict[str, Any]:
+    def accelerate_pattern(
+        self, pattern: BasePattern, hypothesis: dict[str, Any]
+    ) -> dict[str, Any]:
         """
         Accelerate existing pattern with JaxSim if applicable.
 
@@ -562,8 +549,16 @@ class JaxSimBridge:
 
         result = self.run_rigid_body_simulation(config)
         result["pattern_id"] = getattr(pattern, "PATTERN_ID", "unknown")
-        result["accelerated_by"] = "jaxsim"
-
+        if (
+            result.get("status") == "success"
+            and result.get("executed") is True
+            and result.get("stub") is not True
+        ):
+            result["accelerated_by"] = "jaxsim"
+            result["accelerated"] = True
+        else:
+            result["accelerated_by"] = "none"
+            result["accelerated"] = False
         return result
 
     def _accelerate_agent_pattern(
@@ -581,39 +576,52 @@ class JaxSimBridge:
         return pattern.run(hypothesis)
 
     def benchmark_legacy_vs_jaxsim(self, pattern_id: str, config: dict[str, Any]) -> dict[str, Any]:
-        """
-        Benchmark legacy CPU implementation vs JaxSim GPU acceleration.
-
-        Returns speedup metrics for pattern.
-        """
-        import time
-
+        """Compare only when JaxSim actually runs; refuse sleep-as-legacy theater."""
         if not self._available:
             return {
                 "pattern": pattern_id,
                 "jaxsim_available": False,
-                "speedup": 1.0,
+                "speedup": None,
+                "stub": True,
                 "message": "JaxSim not installed",
             }
 
-        legacy_start = time.perf_counter()
-        time.sleep(0.001)
-        legacy_time = time.perf_counter() - legacy_start
+        if not config.get("model_path"):
+            return {
+                "pattern": pattern_id,
+                "jaxsim_available": True,
+                "speedup": None,
+                "stub": True,
+                "message": "model_path required for benchmark — refusing sleep() fake legacy",
+            }
+
+        import time
 
         jaxsim_start = time.perf_counter()
         result = self.run_rigid_body_simulation(config)
         jaxsim_time = time.perf_counter() - jaxsim_start
 
-        speedup = legacy_time / jaxsim_time if jaxsim_time > 0 else 1.0
+        if result.get("stub") or result.get("status") != "success":
+            return {
+                "pattern": pattern_id,
+                "jaxsim_available": True,
+                "speedup": None,
+                "stub": True,
+                "jaxsim_time": jaxsim_time,
+                "result_status": result.get("status"),
+                "message": "JaxSim run did not succeed — no speedup claimed",
+            }
 
         return {
             "pattern": pattern_id,
             "jaxsim_available": True,
             "device": self._device,
-            "legacy_time": legacy_time,
+            "legacy_time": None,
             "jaxsim_time": jaxsim_time,
-            "speedup": speedup,
-            "jaxsim_result": result.get("status"),
+            "speedup": None,
+            "note": "Legacy timing not invented; report jaxsim_time only",
+            "executed": True,
+            "stub": False,
         }
 
     @classmethod

@@ -353,7 +353,14 @@ func renderCard(c Card, width int, verdictChips string, focused, expanded bool) 
 		}
 		inner = border + " " + title + "  " + bar + "\n" + border + "  " + body
 	case CardHypothesis:
-		title := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("2")).Render("✦ " + c.Title + "  NEW")
+		badge := "  NEW"
+		for _, kv := range c.Meta {
+			if kv.Key == "restored" && kv.Value == "true" {
+				badge = ""
+				break
+			}
+		}
+		title := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("2")).Render("✦ " + c.Title + badge)
 		body := lipgloss.NewStyle().Foreground(lipgloss.Color("7")).Render(c.Body)
 		meta := ""
 		for _, m := range c.Meta {
@@ -386,9 +393,9 @@ func renderCard(c Card, width int, verdictChips string, focused, expanded bool) 
 		switch c.Sim.EngineStatus {
 		case "available", "success":
 			statusColor = "2"
-		case "slow":
+		case "partial", "stub", "slow":
 			statusColor = "3"
-		case "unavailable":
+		case "unavailable", "error", "failed", "skipped":
 			statusColor = "1"
 		case "budget_exceeded":
 			statusColor = "1"

@@ -3,6 +3,7 @@
 
 Install: conda install xarray iris cartopy dask  (or pip install xarray cartopy)
 """
+
 from __future__ import annotations
 
 import logging
@@ -26,28 +27,60 @@ class XarrayBridge(BaseSimulationAdapter):
 
     def run(self, input_data: dict[str, Any] | None = None) -> SimulationResult:
         def _run(data: dict[str, Any]) -> dict[str, Any]:
-            import numpy as np
             import xarray as xr
 
-            # Create a synthetic climate-like dataset if no file provided
-            if "dataset" in data:
-                ds = data["dataset"]
-            else:
-                lat = np.linspace(-90, 90, 18)
-                lon = np.linspace(0, 360, 36)
-                time = np.arange(1, 13)
-                temp = np.random.randn(len(time), len(lat), len(lon)) * 5 + 15
-                ds = xr.Dataset(
-                    {"temperature": (["time", "lat", "lon"], temp)},
-                    coords={"time": time, "lat": lat, "lon": lon},
-                )
+            path = data.get("path") or data.get("dataset_path") or self._params.get("path")
+            if path:
+                with xr.open_dataset(path) as ds:
+                    var = data.get("variable") or next(iter(ds.data_vars), None)
+                    if not var:
+                        return {
+                            "status": "unavailable",
+                            "stub": True,
+                            "executed": False,
+                            "backend": "xarray",
+                            "xarray_version": xr.__version__,
+                            "note": f"Opened {path} but no data variable found",
+                        }
+                    mean_val = float(ds[var].mean())
+                    return {
+                        "status": "success",
+                        "backend": "xarray",
+                        "executed": True,
+                        "stub": False,
+                        "xarray_version": xr.__version__,
+                        "path": str(path),
+                        "variable": var,
+                        "mean": mean_val,
+                        "dims": dict(ds.sizes),
+                        "note": "Real dataset aggregated",
+                    }
 
-            mean_temp = float(ds["temperature"].mean())
+            if "dataset" in data and data["dataset"] is not None:
+                ds = data["dataset"]
+                mean_temp = (
+                    float(ds["temperature"].mean())
+                    if "temperature" in ds
+                    else float(next(iter(ds.data_vars.values())).mean())
+                )
+                return {
+                    "status": "success",
+                    "backend": "xarray",
+                    "executed": True,
+                    "stub": False,
+                    "xarray_version": xr.__version__,
+                    "mean_temperature": mean_temp,
+                    "dims": dict(ds.sizes),
+                    "note": "In-memory dataset aggregated",
+                }
+
             return {
+                "status": "unavailable",
+                "stub": True,
+                "executed": False,
+                "backend": "xarray",
                 "xarray_version": xr.__version__,
-                "mean_temperature": mean_temp,
-                "dims": dict(ds.sizes),
-                "note": "xarray dataset processed",
+                "note": "No path/dataset — refusing synthetic random climate field",
             }
 
         return self._run_wrapped(_run, input_data)

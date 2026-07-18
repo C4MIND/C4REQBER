@@ -261,10 +261,12 @@ func StatusIcon(s string) string {
 	switch s {
 	case "available", "success":
 		return "●"
-	case "slow":
+	case "partial", "stub", "slow":
 		return "◐"
-	case "unavailable":
+	case "unavailable", "error", "failed":
 		return "○"
+	case "skipped":
+		return "◌"
 	case "budget_exceeded":
 		return "⊘"
 	case "delegated", "delegated_to_cloud":

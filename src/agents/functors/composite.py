@@ -42,13 +42,18 @@ class _CompositeFunctor(FunctorAgent):
         elif outer.llm_client is not None:
             self.llm_client = outer.llm_client
         else:
-            from src.llm.router import ProviderRouter
-            self.llm_client = ProviderRouter()
+            from src.llm import get_gateway
+
+            self.llm_client = get_gateway()
 
     async def analyze(self, problem: str, context: dict[str, Any] | None = None) -> dict[str, Any]:
         """Analyze."""
         inner_result = await self._inner.analyze(problem, context)
-        enriched_context = {**(context or {}), "inner_result": inner_result, "inner_symbol": self._inner.symbol}
+        enriched_context = {
+            **(context or {}),
+            "inner_result": inner_result,
+            "inner_symbol": self._inner.symbol,
+        }
         outer_result = await self._outer.analyze(problem, enriched_context)
         outer_result["agent"] = self.symbol
         outer_result["composite"] = self.symbol
@@ -102,7 +107,22 @@ def generate_all_composites(base_functors: list[FunctorAgent]) -> list[FunctorAg
 
 # Pre-defined 18 composite functor symbols (selected meaningful pairs)
 COMPOSITE_SYMBOLS: list[str] = [
-    "τ∘σ", "τ∘δ", "τ∘ρ", "τ∘ι", "τ∘λ", "τ∘κ",
-    "σ∘δ", "σ∘ρ", "σ∘ι", "σ∘λ", "σ∘φ", "σ∘ψ",
-    "δ∘ρ", "δ∘ι", "δ∘λ", "δ∘φ", "λ∘κ", "ψ∘φ",
+    "τ∘σ",
+    "τ∘δ",
+    "τ∘ρ",
+    "τ∘ι",
+    "τ∘λ",
+    "τ∘κ",
+    "σ∘δ",
+    "σ∘ρ",
+    "σ∘ι",
+    "σ∘λ",
+    "σ∘φ",
+    "σ∘ψ",
+    "δ∘ρ",
+    "δ∘ι",
+    "δ∘λ",
+    "δ∘φ",
+    "λ∘κ",
+    "ψ∘φ",
 ]

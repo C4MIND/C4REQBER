@@ -15,7 +15,7 @@ func TestAllKeysPresentEN(t *testing.T) {
 		"keymap.cancel", "phase.a", "phase.b", "phase.c", "phase.d", "phase.e",
 		"phase.f", "phase.g", "card.phase.status", "card.hypothesis.t",
 		"card.paper.t", "card.code.t", "card.error.t", "empty.title", "empty.hint",
-		"placeholder", "toast.empty", "toast.cancelled", "toast.complete",
+		"placeholder", "toast.empty", "toast.cancelled", "toast.complete", "toast.partial", "toast.failed",
 		"toast.submit_failed",
 	}
 	for _, k := range required {
@@ -256,4 +256,62 @@ unquoted_name = NO_QUOTES
 			t.Error("expected error for missing file, got nil")
 		}
 	})
+}
+
+// TestNoMachineTranslationGarbage guards catastrophic HY-MT mixups that
+// previously shipped: "Cycle LLM tier" → bicycle, "Ctrl+Y — cycle LLM tier"
+// → "no color" (confused with profile.mono), research Paper → stationery.
+func TestNoMachineTranslationGarbage(t *testing.T) {
+	forbidden := map[Lang]map[string][]string{
+		LangRU: {
+			"tier.ctrl_y":   {"Никакого цвета", "цвет"},
+			"profile.name":  {"Высокий контраст"},
+			"card.paper.t":  {"Бумага"},
+			"stats.discoveries": {"Общая количество"},
+			"settings.hint": {"Уголки"},
+		},
+		LangDE: {
+			"tier.ctrl_y":  {"Kein Farbe", "Farbe"},
+			"tier.cycle":   {"Fahrrad"},
+			"help.rain":    {"Idiot"},
+			"card.paper.t": {"Papier"},
+		},
+		LangZH: {
+			"tier.ctrl_y": {"无颜色"},
+			"tier.name":   {"顶级"},
+		},
+		LangJA: {
+			"tier.ctrl_y": {"色なし"},
+			"help.rain":   {"行列雨"},
+		},
+		LangAR: {
+			"tier.ctrl_y": {"لا لون"},
+			"tier.cycle":  {"دراجات"},
+		},
+		LangHI: {
+			"tier.ctrl_y": {"बिना रंग"},
+			"tier.cycle":  {"साइकिल"},
+		},
+	}
+	// Keys that MUST keep the Ctrl+Y chord literal in every language.
+	for _, lang := range []Lang{LangRU, LangZH, LangJA, LangDE, LangAR, LangHI} {
+		got := translations[lang]["tier.ctrl_y"]
+		if !strings.Contains(got, "Ctrl+Y") {
+			t.Errorf("%s tier.ctrl_y missing Ctrl+Y chord: %q", lang, got)
+		}
+	}
+	for lang, keys := range forbidden {
+		for key, needles := range keys {
+			got := translations[lang][key]
+			for _, n := range needles {
+				if strings.Contains(got, n) {
+					t.Errorf("%s %s still contains garbage %q: %q", lang, key, n, got)
+				}
+			}
+		}
+	}
+	// profile.name must not equal profile.hc (was swapped in RU).
+	if translations[LangRU]["profile.name"] == translations[LangRU]["profile.hc"] {
+		t.Error("ru profile.name must not equal profile.hc")
+	}
 }

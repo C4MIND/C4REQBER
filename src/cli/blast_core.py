@@ -14,6 +14,7 @@ Modes:
 
 import asyncio
 import logging
+import os
 from pathlib import Path
 from typing import Any
 
@@ -22,6 +23,7 @@ from rich.console import Console
 
 from src.agents.pipeline import UniversalSolvePipeline
 from src.cli.mode_router import auto_route, get_mode_description
+from src.utils.honesty_status import outer_status_from_hil_like, record_field_status
 
 
 logger = logging.getLogger(__name__)
@@ -60,22 +62,38 @@ def cmd_solve(
     pipeline = UniversalSolvePipeline()
     result = asyncio.run(pipeline.solve(problem, mode=mode, domain_hint=domain))
 
+    text = (result.final_solution or "").strip()
+    llm_failed = (
+        "[LLM unavailable" in text
+        or len(text.split()) < 50
+        or float(getattr(result, "confidence", 0) or 0) <= 0.0
+    )
+    if llm_failed:
+        console.print(
+            f"\n[bold red]✗ Solve failed[/bold red] "
+            f"(confidence: {result.confidence:.2f}, {len(text.split())} words)"
+        )
+        if verbose and text:
+            console.print(f"\n[dim]Partial output:[/dim]\n{text[:500]}...")
+        if output:
+            console.print("[bold red]Refusing to save failed synthesis[/bold red]")
+        raise typer.Exit(1)
+
     console.print(f"\n[green]✓ Solution generated[/green] (confidence: {result.confidence:.2f})")
 
     if verbose:
-        console.print(f"\n[bold]Solution:[/bold]\n{result.final_solution[:500]}...")
+        console.print(f"\n[bold]Solution:[/bold]\n{text[:500]}...")
 
     if output:
-        text = (result.final_solution or "").strip()
-        if len(text.split()) < 400 or "[LLM unavailable" in text:
+        if len(text.split()) < 400:
             console.print(
-                f"[bold red]Refusing to save — synthesis too short or LLM failed "
+                f"[bold red]Refusing to save — synthesis too short "
                 f"({len(text.split())} words)[/bold red]"
             )
-        else:
-            Path(output).parent.mkdir(parents=True, exist_ok=True)
-            Path(output).write_text(text, encoding="utf-8")
-            console.print(f"[green]Saved to:[/green] {output}")
+            raise typer.Exit(1)
+        Path(output).parent.mkdir(parents=True, exist_ok=True)
+        Path(output).write_text(text, encoding="utf-8")
+        console.print(f"[green]Saved to:[/green] {output}")
 
     return result.to_dict()
 
@@ -88,9 +106,9 @@ def cmd_solve(
 def _print_explain_report(record: Any, topic: str) -> None:
     """Print a human-readable explanation of the pipeline's decisions."""
     console.print()
-    console.print(f"[bold cyan]{'='*60}[/]")
+    console.print(f"[bold cyan]{'=' * 60}[/]")
     console.print("[bold cyan]  EXPLAIN: Why these results?[/]")
-    console.print(f"[bold cyan]{'='*60}[/]")
+    console.print(f"[bold cyan]{'=' * 60}[/]")
 
     # C4 State reasoning
     c4 = getattr(record, "c4_state", "")
@@ -103,20 +121,20 @@ def _print_explain_report(record: Any, topic: str) -> None:
             a_name = {0: "Self (A=0)", 1: "Other (A=1)", 2: "System (A=2)"}.get(a, "")
             console.print(f"\n[bold]C4 State: {c4}[/]")
             console.print(
-                f"  Time: {t_name} — {'looking backward' if t==0 else 'present-focused' if t==1 else 'forward-looking'}"
+                f"  Time: {t_name} — {'looking backward' if t == 0 else 'present-focused' if t == 1 else 'forward-looking'}"
             )
             console.print(
-                f"  Scale: {s_name} — {'tangible/practical' if s==0 else 'theoretical' if s==1 else 'meta/framework-level'}"
+                f"  Scale: {s_name} — {'tangible/practical' if s == 0 else 'theoretical' if s == 1 else 'meta/framework-level'}"
             )
             console.print(
-                f"  Agency: {a_name} — {'personal perspective' if a==0 else 'interpersonal' if a==1 else 'system-wide'}"
+                f"  Agency: {a_name} — {'personal perspective' if a == 0 else 'interpersonal' if a == 1 else 'system-wide'}"
             )
             ops = {0: ["τ+", "λ+", "κ+"], 1: ["τ-", "λ-", "κ-"], 2: ["ι"]}.get(
                 sum([t, s, a]) % 3, []
             )
             console.print(f"  Recommended operators: {', '.join(ops)}")
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("swallowed exception: %s", _exc, exc_info=True)
 
     # Knowledge sources
     sources = getattr(record, "sources", [])
@@ -177,7 +195,7 @@ def cmd_turbo(
         console.print("  Estimated time: ~30s")
         console.print("  Estimated cost: ~$0.01 (DeepSeek)")
         console.print(
-            f"  Would save to: {output or 'dissertations/live/blast_' + topic[:30].replace(' ','_') + '.md'}"
+            f"  Would save to: {output or 'dissertations/live/blast_' + topic[:30].replace(' ', '_') + '.md'}"
         )
         console.print("\n[dim]Remove --dry-run to execute.[/]")
         return
@@ -216,11 +234,11 @@ def cmd_turbo(
 
     if record.quality_report:
         console.print()
-        console.print(f"[bold]{'='*60}[/bold]")
+        console.print(f"[bold]{'=' * 60}[/bold]")
         console.print(
             f"[bold cyan]Quality Report: {record.quality_report.grade} (Score: {record.quality_report.overall_score}/100)[/bold cyan]"
         )
-        console.print(f"[bold]{'='*60}[/bold]")
+        console.print(f"[bold]{'=' * 60}[/bold]")
         for gate in record.quality_report.gates:
             status = "✅" if gate.passed else "⚠️"
             color = "green" if gate.passed else "yellow"
@@ -280,11 +298,9 @@ def cmd_flash(
     ),
 ) -> None:
     """Get a quick answer (no pipeline, just fast LLM + optional web search)."""
-    from src.knowledge.orchestrator import MultiSourceSearcher
     from src.llm.gateway import get_gateway
     from src.pipeline.config import PipelineConfig
     from src.pipeline.quality import QualityGates
-    from src.plugins.unified_registry import WebSearchPlugin
 
     console.print(f"[bold]BLAST flash[/bold] — {get_mode_description('flash')}")
     console.print(
@@ -385,38 +401,23 @@ def cmd_flash(
         # ═══════════════════════════════════════════════════════════════════
         # Source gathering
         # ═══════════════════════════════════════════════════════════════════
-        if deep:
+        if deep or with_sources:
             console.print("[dim]Searching multi-source knowledge base...[/dim]")
-            searcher: Any = MultiSourceSearcher()
+            from src.knowledge.flash_sources import gather_flash_sources
+
             try:
-                result = await searcher.search_all(question)
-                papers = result.get("papers", [])[:5]
+                papers, context = await gather_flash_sources(question, deep=deep, include_web=True)
                 sources = papers
-                context = "\n".join(
-                    [
-                        f"- {p.get('title', '')} ({p.get('_source', 'unknown')}): {p.get('snippet', p.get('abstract', ''))[:250]}"
-                        for p in papers
-                    ]
-                )
-                console.print(
-                    f"[dim]Found {len(papers)} papers from {result.get('sources_used', 0)} sources[/dim]"
-                )
+                console.print(f"[dim]Found {len(papers)} papers[/dim]")
+                if not papers:
+                    console.print(
+                        "[yellow]No papers found — check API keys "
+                        "(TAVILY_API_KEY helps for web)[/yellow]"
+                    )
             except Exception as e:
                 console.print(f"[yellow]Multi-source search failed: {e}[/yellow]")
-                # Fallback to web search
-                searcher = WebSearchPlugin()
-                results = searcher.execute(question, max_results=5)
-                sources = results
-                context = "\n".join(
-                    [f"- {r.get('title', '')}: {r.get('snippet', '')[:200]}" for r in results[:5]]
-                )
-        elif with_sources:
-            searcher = WebSearchPlugin()
-            results = searcher.execute(question, max_results=3)
-            sources = results
-            context = "\n".join(
-                [f"- {r.get('title', '')}: {r.get('snippet', '')[:200]}" for r in results[:3]]
-            )
+                sources = []
+                context = ""
 
         # ═══════════════════════════════════════════════════════════════════
         # Build enriched prompt with USP context
@@ -425,13 +426,13 @@ def cmd_flash(
         if usp_context:
             usp_section = f"""
 Cognitive Analysis Context:
-- C4 State: {usp_context.get('c4_state', 'N/A')}
-- IMPACT: {usp_context.get('impact', 'N/A')}
-- Perspectives: {', '.join(usp_context.get('perspectives', []))}
-- QZRF Operators: {', '.join(usp_context.get('qzrf', []))}
-- Patterns: {', '.join(usp_context.get('patterns', []))}
-- Contradictions: {usp_context.get('contradictions', 'N/A')}
-- TOTE: {usp_context.get('tote_status', 'N/A')}
+- C4 State: {usp_context.get("c4_state", "N/A")}
+- IMPACT: {usp_context.get("impact", "N/A")}
+- Perspectives: {", ".join(usp_context.get("perspectives", []))}
+- QZRF Operators: {", ".join(usp_context.get("qzrf", []))}
+- Patterns: {", ".join(usp_context.get("patterns", []))}
+- Contradictions: {usp_context.get("contradictions", "N/A")}
+- TOTE: {usp_context.get("tote_status", "N/A")}
 """
 
         format_instructions = {
@@ -451,8 +452,11 @@ Question: {question}
 
 Answer:"""
 
-        response = await llm.generate(prompt, max_tokens=1200 if deep else 800, temperature=0.3)
-        answer = response.content
+        answer = await llm.chat(
+            [{"role": "user", "content": prompt}],
+            max_tokens=1200 if deep else 800,
+            temperature=0.3,
+        )
 
         # Quick quality check for deep mode
         if deep and sources:
@@ -585,7 +589,7 @@ Sub-problems:"""
                 problems.append(m.group(1).strip())
         # Ensure exact count
         while len(problems) < n:
-            problems.append(f"{domain} — aspect {len(problems)+1}")
+            problems.append(f"{domain} — aspect {len(problems) + 1}")
         return problems[:n]
 
     async def _run_single_pipeline(
@@ -600,19 +604,23 @@ Sub-problems:"""
                 "solve_result": None,
                 "turbo_result": None,
             }
+            child_partial = False
 
             if use_solve:
                 try:
                     solve_pipeline = UniversalSolvePipeline()
                     solve_record = await solve_pipeline.solve(topic, mode="autopilot")
+                    conf = float(getattr(solve_record, "confidence", 0) or 0)
                     result["solve_result"] = {
                         "final_solution": solve_record.final_solution[:500],
-                        "confidence": solve_record.confidence,
+                        "confidence": conf,
                         "sources": len(getattr(solve_record, "sources", [])),
                         "gaps": len(getattr(solve_record, "gaps", [])),
                         "quality_report": getattr(solve_record, "quality_report", None),
                     }
                     result["pipeline_used"].append("solve")
+                    if conf < 0.3:
+                        child_partial = True
                 except Exception as e:
                     logger.warning("Solve pipeline failed for '%s': %s", topic, e)
                     result["solve_result"] = {"error": str(e)}
@@ -621,24 +629,36 @@ Sub-problems:"""
                 try:
                     turbo_pipeline = HILDiscoveryPipeline(config=config, user_profile=user_profile)
                     turbo_record = await turbo_pipeline.discover(topic)
+                    qscore = (
+                        turbo_record.quality_report.overall_score
+                        if turbo_record.quality_report
+                        else 0
+                    )
+                    sim_raw = turbo_record.simulation
+                    sim_st = record_field_status(sim_raw)
                     result["turbo_result"] = {
                         "hypotheses": len(turbo_record.hypotheses),
                         "sources": len(turbo_record.sources),
                         "quality_grade": turbo_record.quality_report.grade
                         if turbo_record.quality_report
                         else "N/A",
-                        "quality_score": turbo_record.quality_report.overall_score
-                        if turbo_record.quality_report
-                        else 0,
+                        "quality_score": qscore,
                         "gaps": [g.get("area", "") for g in turbo_record.gaps[:3]],
-                        "simulation": turbo_record.simulation.get("status", "N/A")
-                        if turbo_record.simulation
-                        else "N/A",
-                        "verification": turbo_record.verification.get("status", "N/A")
-                        if turbo_record.verification
-                        else "N/A",
+                        "simulation": sim_st,
+                        "verification": record_field_status(turbo_record.verification),
                     }
                     result["pipeline_used"].append("turbo")
+                    child_st = outer_status_from_hil_like(
+                        quality_passed_all=(
+                            bool(turbo_record.quality_report.passed_all)
+                            if turbo_record.quality_report
+                            else None
+                        ),
+                        quality_score=qscore,
+                        sim_status=str(sim_st),
+                    )
+                    if child_st != "success":
+                        child_partial = True
                 except Exception as e:
                     logger.warning("Turbo pipeline failed for '%s': %s", topic, e)
                     result["turbo_result"] = {"error": str(e)}
@@ -646,6 +666,17 @@ Sub-problems:"""
             if not result["pipeline_used"]:
                 result["status"] = "error"
                 result["error"] = "Both pipelines failed"
+            elif (
+                child_partial
+                or (result.get("solve_result") or {}).get("error")
+                or (result.get("turbo_result") or {}).get("error")
+            ):
+                solve_err = (result.get("solve_result") or {}).get("error")
+                turbo_err = (result.get("turbo_result") or {}).get("error")
+                if result["pipeline_used"] and solve_err and turbo_err:
+                    result["status"] = "error"
+                else:
+                    result["status"] = "partial"
 
             return result
 
@@ -672,20 +703,28 @@ Sub-problems:"""
             res = await coro
             results.append(res)
             completed += 1
-            status_icon = "[green]✓[/green]" if res["status"] == "success" else "[red]✗[/red]"
+            status_icon = (
+                "[green]✓[/green]"
+                if res["status"] == "success"
+                else "[yellow]~[/yellow]"
+                if res["status"] == "partial"
+                else "[red]✗[/red]"
+            )
             console.print(f"  {status_icon} [{completed}/{n_pipelines}] {res['topic'][:50]}...")
 
         # Synthesis
         console.print("\n[dim]Synthesizing results...[/dim]")
         successful = [r for r in results if r["status"] == "success"]
+        partial = [r for r in results if r["status"] == "partial"]
         failed = [r for r in results if r["status"] == "error"]
 
-        # Aggregate turbo results
-        total_hypotheses = sum(r.get("turbo_result", {}).get("hypotheses", 0) for r in successful)
-        total_sources = sum(r.get("turbo_result", {}).get("sources", 0) for r in successful)
+        # Aggregate turbo results (include partial — ran but weak gates)
+        scored_pool = successful + partial
+        total_hypotheses = sum(r.get("turbo_result", {}).get("hypotheses", 0) for r in scored_pool)
+        total_sources = sum(r.get("turbo_result", {}).get("sources", 0) for r in scored_pool)
         avg_quality = sum(
-            r.get("turbo_result", {}).get("quality_score", 0) for r in successful
-        ) / max(len(successful), 1)
+            r.get("turbo_result", {}).get("quality_score", 0) for r in scored_pool
+        ) / max(len(scored_pool), 1)
 
         # Aggregate solve results
         solve_successful = [r for r in successful if "solve" in r.get("pipeline_used", [])]
@@ -698,6 +737,8 @@ Sub-problems:"""
 
 **Scale:** {scale} ({n_pipelines} pipelines, {pipeline_mode} mode)
 **Successful:** {len(successful)}/{n_pipelines}
+**Partial:** {len(partial)}/{n_pipelines}
+**Failed:** {len(failed)}/{n_pipelines}
 **Total Hypotheses:** {total_hypotheses}
 **Total Sources:** {total_sources}
 **Average Quality Score:** {avg_quality:.1f}/100
@@ -709,7 +750,9 @@ Sub-problems:"""
 
 """
         for r in results:
-            status = "✅" if r["status"] == "success" else "❌"
+            status = (
+                "✅" if r["status"] == "success" else "🟡" if r["status"] == "partial" else "❌"
+            )
             pipelines = ", ".join(r.get("pipeline_used", []))
             report += f"- {status} **{r['topic']}** — pipelines: {pipelines}"
             if r.get("turbo_result"):
@@ -718,7 +761,7 @@ Sub-problems:"""
 
         report += "\n## Key Research Gaps (from turbo pipelines)\n\n"
         seen_gaps = set()
-        for r in successful:
+        for r in scored_pool:
             turbo = r.get("turbo_result", {})
             for gap in turbo.get("gaps", []):
                 if gap and gap not in seen_gaps:
@@ -749,7 +792,7 @@ Sub-problems:"""
         from collections import Counter
 
         grades = Counter(
-            [r.get("turbo_result", {}).get("quality_grade", "N/A") for r in successful]
+            [r.get("turbo_result", {}).get("quality_grade", "N/A") for r in scored_pool]
         )
         for grade, count in grades.most_common():
             report += f"| {grade} | {count} |\n"
@@ -769,8 +812,7 @@ Sub-problems:"""
         # Save report with unique subdirectory to avoid race conditions
         ts = time.strftime("%Y%m%d_%H%M%S")
         out_path = (
-            output
-            or f"dissertations/live/" f"{domain.replace(' ', '_')[:20]}/" f"turbofactory_{ts}.md"
+            output or f"dissertations/live/{domain.replace(' ', '_')[:20]}/turbofactory_{ts}.md"
         )
         Path(out_path).parent.mkdir(parents=True, exist_ok=True)
         Path(out_path).write_text(report, encoding="utf-8")

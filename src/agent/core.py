@@ -1,5 +1,11 @@
 """AgentCore — LLM-powered cognitive agent for c4reqber."""
+
 from __future__ import annotations
+
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 import asyncio
 import json
@@ -76,6 +82,7 @@ class AgentCore:
     def sub_agents(self):
         if self._sub_agent_mgr is None:
             from src.agent.sub_agent import SubAgentManager
+
             self._sub_agent_mgr = SubAgentManager()
         return self._sub_agent_mgr
 
@@ -98,9 +105,9 @@ class AgentCore:
                     self.history.append(Message(**data))
             # Trim to max size from tail
             if len(self.history) > self.config.history_size:
-                self.history = self.history[-self.config.history_size:]
-        except Exception:
-            pass
+                self.history = self.history[-self.config.history_size :]
+        except Exception as _exc:
+            logger.debug("swallowed exception: %s", _exc, exc_info=True)
 
     _history_lock = None
 
@@ -124,8 +131,8 @@ class AgentCore:
                     )
                     + "\n"
                 )
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("swallowed exception: %s", _exc, exc_info=True)
 
     # ── System Prompt ──────────────────────────────────────────────────────
 
@@ -145,8 +152,7 @@ class AgentCore:
         mcp_desc = ""
         if self._mcp_tools:
             mcp_desc = "\n## Connected MCP Tools\n" + "\n".join(
-                f"- **{t.get('name', '?')}**: {t.get('description', '')}"
-                for t in self._mcp_tools
+                f"- **{t.get('name', '?')}**: {t.get('description', '')}" for t in self._mcp_tools
             )
 
         return f"""You are c4reqber v{__version__} — a terminal-first cognitive exoskeleton.
@@ -196,16 +202,17 @@ You are an AI research and engineering assistant with deep access to the c4reqbe
                     start_new_session=True,
                 )
                 self._mcp_processes[mcp_cfg.name] = proc
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.debug("swallowed exception: %s", _exc, exc_info=True)
 
     def _discover_external_mcp(self) -> None:
         """Discover external MCP servers via FastMCP."""
         try:
             from src.mcp_server.fastmcp_bridge import FastMCPBridge
+
             self._fastmcp = FastMCPBridge()
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("swallowed exception: %s", _exc, exc_info=True)
 
     def add_mcp_server(self, name: str, command: str, args: list[str] | None = None) -> str:
         cfg = MCPServerConfig(name=name, command=command, args=args or [])
@@ -231,13 +238,17 @@ You are an AI research and engineering assistant with deep access to the c4reqbe
     def list_mcp_servers(self) -> list[dict[str, Any]]:
         result = []
         for cfg in self.config.mcp_servers:
-            running = cfg.name in self._mcp_processes and self._mcp_processes[cfg.name].poll() is None
-            result.append({
-                "name": cfg.name,
-                "command": f"{cfg.command} {' '.join(cfg.args)}",
-                "enabled": cfg.enabled,
-                "running": running,
-            })
+            running = (
+                cfg.name in self._mcp_processes and self._mcp_processes[cfg.name].poll() is None
+            )
+            result.append(
+                {
+                    "name": cfg.name,
+                    "command": f"{cfg.command} {' '.join(cfg.args)}",
+                    "enabled": cfg.enabled,
+                    "running": running,
+                }
+            )
         return result
 
     # ── Skill Execution ────────────────────────────────────────────────────
@@ -267,7 +278,8 @@ You are an AI research and engineering assistant with deep access to the c4reqbe
             model = OpenAIModel(  # type: ignore[call-overload]
                 model_name=provider.model,
                 base_url=provider.api_base,
-                api_key=get_key("openrouter") or os.environ.get("OPENROUTER_API_KEY", ""),  # central first
+                api_key=get_key("openrouter")
+                or os.environ.get("OPENROUTER_API_KEY", ""),  # central first
             )
 
             # Build system prompt from first message
@@ -276,7 +288,8 @@ You are an AI research and engineering assistant with deep access to the c4reqbe
 
             chat = messages[1:] if messages and messages[0]["role"] == "system" else messages
             full_conversation = "\n".join(
-                f"{msg['role']}: {msg.get('content', '')}" for msg in chat
+                f"{msg['role']}: {msg.get('content', '')}"
+                for msg in chat
                 if msg.get("role") in ("user", "assistant")
             )
             result = pydantic_agent.run_sync(full_conversation)
@@ -316,7 +329,9 @@ You are an AI research and engineering assistant with deep access to the c4reqbe
             return {"result": msg, "messages": [{"role": "assistant", "content": msg}]}
 
         def knowledge_search(state: AgentState):
-            msg = self._call_llm([{"role": "user", "content": f"Search knowledge for: {user_input}"}])
+            msg = self._call_llm(
+                [{"role": "user", "content": f"Search knowledge for: {user_input}"}]
+            )
             return {"result": msg, "messages": [{"role": "assistant", "content": msg}]}
 
         def solve_pipeline(state: AgentState):
@@ -349,15 +364,23 @@ You are an AI research and engineering assistant with deep access to the c4reqbe
         builder.add_node("merge", merge_result)
 
         builder.set_entry_point("classify")
-        builder.add_conditional_edges("classify", route_after_classify, {
-            "analyze": "analyze",
-            "solve": "solve",
-            "verify": "verify",
-        })
-        builder.add_conditional_edges("analyze", route_after_analyze, {
-            "search": "search",
-            "merge": "merge",
-        })
+        builder.add_conditional_edges(
+            "classify",
+            route_after_classify,
+            {
+                "analyze": "analyze",
+                "solve": "solve",
+                "verify": "verify",
+            },
+        )
+        builder.add_conditional_edges(
+            "analyze",
+            route_after_analyze,
+            {
+                "search": "search",
+                "merge": "merge",
+            },
+        )
         builder.add_edge("search", "merge")
         builder.add_edge("solve", "merge")
         builder.add_edge("verify", "merge")
@@ -396,10 +419,11 @@ You are an AI research and engineering assistant with deep access to the c4reqbe
         # ── LangGraph graph-based execution (if available) ────────
         try:
             from src.integrations.scientific_bridges import LangGraphBridge
+
             if LangGraphBridge().available:
                 return self._process_langgraph(user_input, start)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("swallowed exception: %s", _exc, exc_info=True)
 
         system_prompt = self._build_system_prompt()
         messages: list[dict[str, Any]] = [
@@ -512,8 +536,8 @@ You are an AI research and engineering assistant with deep access to the c4reqbe
 
                 soul = Soul(path=Path(self.config.soul.path))
                 soul_info = f" | {soul.get_identity().name}"
-            except Exception:
-                pass
+            except Exception as _exc:
+                logger.debug("swallowed exception: %s", _exc, exc_info=True)
 
         mcp_count = len(self.list_mcp_servers())
 
@@ -655,7 +679,9 @@ You are an AI research and engineering assistant with deep access to the c4reqbe
                 else:
                     self.config.provider.model = model_val
                 self.config.save()
-                console.print(f"[green]Model set to {self.config.provider.model} via {self.config.provider.id}[/]")
+                console.print(
+                    f"[green]Model set to {self.config.provider.model} via {self.config.provider.id}[/]"
+                )
             return
 
         # ── Pipeline commands ──────────────────────────────────────────────
@@ -671,23 +697,37 @@ You are an AI research and engineering assistant with deep access to the c4reqbe
                 import sys
 
                 from src.cli.blast_core import cmd_turbo
+
                 old_stdout = sys.stdout
                 sys.stdout = io.StringIO()
                 try:
-                    cmd_turbo(topic=args, output=None, verify_backend="hybrid", functors=True,
-                              plugins=None, verbose=False, competing=1, no_iterative=False)
+                    cmd_turbo(
+                        topic=args,
+                        output=None,
+                        verify_backend="hybrid",
+                        functors=True,
+                        plugins=None,
+                        verbose=False,
+                        competing=1,
+                        no_iterative=False,
+                    )
                 finally:
                     sys.stdout = old_stdout
                 from pathlib import Path
+
                 drafts_dir = Path.home() / ".c4reqber" / "drafts"
                 if drafts_dir.exists():
-                    recent = sorted([d for d in drafts_dir.iterdir() if d.is_dir()],
-                                    key=lambda d: d.stat().st_mtime, reverse=True)[:1]
+                    recent = sorted(
+                        [d for d in drafts_dir.iterdir() if d.is_dir()],
+                        key=lambda d: d.stat().st_mtime,
+                        reverse=True,
+                    )[:1]
                     if recent:
                         console.print(f"[green]Preprint ready: {recent[0].name}[/]")
                         console.print("[dim]Review: /review[/]")
                         return
                 console.print("[yellow]Pipeline completed. Check drafts.[/]")
+
             asyncio.run(_gen())
             return
 
@@ -736,7 +776,9 @@ You are an AI research and engineering assistant with deep access to the c4reqbe
             result = info_map[command]
             if isinstance(result, str):
                 console.print(
-                    Markdown(result) if "## " in result or "**" in result or "```" in result else result
+                    Markdown(result)
+                    if "## " in result or "**" in result or "```" in result
+                    else result
                 )
             return
 
@@ -759,15 +801,25 @@ You are an AI research and engineering assistant with deep access to the c4reqbe
                 from src.cli.blast_core import cmd_solve
 
                 cmd_solve(
-                    problem=args, mode="autopilot", output_format="auto",
-                    domain=None, output=None, verbose=False,
+                    problem=args,
+                    mode="autopilot",
+                    output_format="auto",
+                    domain=None,
+                    output=None,
+                    verbose=False,
                 )
             elif mode == "turbo":
                 from src.cli.blast_core import cmd_turbo
 
                 cmd_turbo(
-                    topic=args, output=None, verify_backend="hybrid", functors=True,
-                    plugins=None, verbose=False, competing=2, no_iterative=False,
+                    topic=args,
+                    output=None,
+                    verify_backend="hybrid",
+                    functors=True,
+                    plugins=None,
+                    verbose=False,
+                    competing=2,
+                    no_iterative=False,
                 )
             elif mode == "flash":
                 from src.cli.blast_core import cmd_flash
@@ -782,7 +834,9 @@ You are an AI research and engineering assistant with deep access to the c4reqbe
         sys.stdout = old_stdout
 
         if output.strip():
-            console.print(Panel(Markdown(output[:2000]), title=f"[bold]{mode}[/]", border_style="cyan"))
+            console.print(
+                Panel(Markdown(output[:2000]), title=f"[bold]{mode}[/]", border_style="cyan")
+            )
         else:
             console.print(f"[dim]{mode} pipeline completed (no text output)[/]")
 

@@ -5,6 +5,11 @@ Arrow keys: navigate. Enter: install/remove. Q: quit.
 
 from __future__ import annotations
 
+import logging
+
+
+logger = logging.getLogger(__name__)
+
 from rich.console import Console
 from rich.table import Table
 
@@ -106,8 +111,8 @@ def _keyboard_input() -> str:
         active_app = App.get_running_app()  # type: ignore[attr-defined]
         if active_app:
             return ""  # Textual handles keys via on_key, not raw stdin
-    except Exception:
-        pass
+    except Exception as _exc:
+        logger.debug("swallowed exception: %s", _exc, exc_info=True)
     if sys.platform == "win32":
         import msvcrt
 

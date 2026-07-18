@@ -11,6 +11,8 @@ from typing import Any
 import numpy as np
 
 from src.config import get_key
+from src.knowledge.contact_email import contact_email
+from src.llm.model_assignment import get_model_for_phase
 
 
 logger = logging.getLogger("c44tcdi.discovery.novelty_validator")
@@ -181,6 +183,24 @@ class NoveltyValidator:
                         )
                         continue
 
+            if not closest_papers:
+                # Empty search ≠ maximum novelty — abstain honestly.
+                return {
+                    "status": "unchecked",
+                    "novelty_score": None,
+                    "max_similarity": 0.0,
+                    "most_similar_paper": None,
+                    "citation_overlap": {
+                        "overlap_count": 0,
+                        "union_count": 0,
+                        "jaccard": 0.0,
+                        "shared_citations": [],
+                    },
+                    "closest_papers": [],
+                    "papers_checked": 0,
+                    "error": "no_papers_found",
+                }
+
             max_similarity = max(all_similarities) if all_similarities else 0.0
             novelty_score = _derive_novelty_score(max_similarity)
             closest_papers.sort(key=lambda p: p["similarity"], reverse=True)
@@ -209,7 +229,8 @@ class NoveltyValidator:
             logger.error("Novelty check error: %s", e)
             return {
                 "status": "unchecked",
-                "novelty_score": 0.5,
+                # None so gates using `< 0.5` do not treat failure as "acceptable".
+                "novelty_score": None,
                 "max_similarity": 0.0,
                 "most_similar_paper": None,
                 "citation_overlap": {
@@ -237,7 +258,9 @@ class NoveltyValidator:
         response = await guarded_chat_completion(
             url="https://openrouter.ai/api/v1/chat/completions",
             api_key=or_key,
-            model="deepseek/deepseek-chat",
+            model=os.environ.get("C4_LLM_MODEL")
+            or get_model_for_phase("C")
+            or "deepseek/deepseek-chat",
             temperature=0.3,
             max_tokens=500,
             timeout=60.0,
@@ -284,12 +307,12 @@ class NoveltyValidator:
                 r = await client.get(
                     "https://api.crossref.org/works",
                     params={"query": keywords, "rows": 10},
-                    headers={"User-Agent": "c44tcdi (mailto:c44tcdi@example.com)"},
+                    headers={"User-Agent": f"c4reqber (mailto:{contact_email()})"},
                 )
                 if r.status_code != 200:
                     return {
                         "status": "unchecked",
-                        "novelty_score": 0.5,
+                        "novelty_score": None,
                         "max_similarity": 0.0,
                         "most_similar_paper": None,
                         "citation_overlap": {
@@ -357,7 +380,7 @@ class NoveltyValidator:
         except ImportError:
             return {
                 "status": "unchecked",
-                "novelty_score": 0.5,
+                "novelty_score": None,
                 "max_similarity": 0.0,
                 "most_similar_paper": None,
                 "citation_overlap": {
@@ -382,7 +405,7 @@ class NoveltyValidator:
             logger.error("Novelty fallback check error: %s", e)
             return {
                 "status": "unchecked",
-                "novelty_score": 0.5,
+                "novelty_score": None,
                 "max_similarity": 0.0,
                 "most_similar_paper": None,
                 "citation_overlap": {

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from src.mcp_server.honesty import outer_status_from_hil_like, record_field_status
 from src.mcp_server.tools_blast import blast_flash, blast_solve, blast_turbo
 
 
@@ -53,66 +54,116 @@ async def blast_turbofactory(
 
         async def run_one(topic: str) -> dict[str, Any]:
             async with sem:
-                result = {
+                result: dict[str, Any] = {
                     "topic": topic,
                     "status": "success",
                     "pipeline_used": [],
                     "solve_result": None,
                     "turbo_result": None,
                 }
+                child_partial = False
                 if use_solve:
                     try:
                         pipeline = UniversalSolvePipeline(config=config)
                         solve_record = await pipeline.solve(topic, mode="autopilot")
+                        conf = float(solve_record.confidence or 0)
                         result["solve_result"] = {
                             "final_solution": solve_record.final_solution[:500],
-                            "confidence": solve_record.confidence,
+                            "confidence": conf,
                             "sources": len(solve_record.sources),
                             "gaps": len(solve_record.gaps),
                         }
                         result["pipeline_used"].append("solve")
+                        if conf < 0.3:
+                            child_partial = True
                     except (AttributeError, ImportError, RuntimeError, ValueError) as e:
                         result["solve_result"] = {"error": str(e)}
                 if use_turbo:
                     try:
                         pipeline = HILDiscoveryPipeline(config=config, user_profile=user_profile)
                         turbo_record = await pipeline.discover(topic)
+                        qscore = (
+                            turbo_record.quality_report.overall_score
+                            if turbo_record.quality_report
+                            else 0
+                        )
+                        sim_st = record_field_status(turbo_record.simulation)
                         result["turbo_result"] = {
                             "hypotheses": len(turbo_record.hypotheses),
                             "sources": len(turbo_record.sources),
                             "quality_grade": turbo_record.quality_report.grade
                             if turbo_record.quality_report
                             else "N/A",
-                            "quality_score": turbo_record.quality_report.overall_score
-                            if turbo_record.quality_report
-                            else 0,
+                            "quality_score": qscore,
+                            "simulation": sim_st,
                         }
                         result["pipeline_used"].append("turbo")
+                        child_st = outer_status_from_hil_like(
+                            quality_passed_all=(
+                                bool(turbo_record.quality_report.passed_all)
+                                if turbo_record.quality_report
+                                else None
+                            ),
+                            quality_score=qscore,
+                            sim_status=str(sim_st),
+                        )
+                        if child_st != "success":
+                            child_partial = True
                     except (AttributeError, ImportError, RuntimeError, ValueError) as e:
                         result["turbo_result"] = {"error": str(e)}
                 if not result["pipeline_used"]:
                     result["status"] = "error"
                     result["error"] = "All pipelines failed"
+                elif (
+                    child_partial
+                    or (result.get("solve_result", {}) or {}).get("error")
+                    or (result.get("turbo_result", {}) or {}).get("error")
+                ):
+                    # Mixed: some ran but weak / one side errored
+                    if result["pipeline_used"] and (
+                        (result.get("solve_result") or {}).get("error")
+                        and (result.get("turbo_result") or {}).get("error")
+                    ):
+                        result["status"] = "error"
+                    else:
+                        result["status"] = "partial"
                 return result
 
         tasks = [run_one(sp) for sp in subproblems]
         results = await asyncio.gather(*tasks)
 
         successful = [r for r in results if r["status"] == "success"]
-        total_hypotheses = sum(r.get("turbo_result", {}).get("hypotheses", 0) for r in successful)
-        avg_quality = sum(
-            r.get("turbo_result", {}).get("quality_score", 0) for r in successful
-        ) / max(len(successful), 1)
+        partial_n = sum(1 for r in results if r["status"] == "partial")
+        failed_n = sum(1 for r in results if r["status"] == "error")
+        total_hypotheses = sum(
+            (r.get("turbo_result") or {}).get("hypotheses", 0)
+            for r in results
+            if r["status"] in {"success", "partial"}
+        )
+        scored = [
+            (r.get("turbo_result") or {}).get("quality_score", 0)
+            for r in results
+            if r["status"] in {"success", "partial"}
+        ]
+        avg_quality = sum(scored) / max(len(scored), 1)
+
+        if failed_n == len(results):
+            outer_status = "error"
+        elif failed_n > 0 or partial_n > 0:
+            outer_status = "partial"
+        else:
+            outer_status = "success"
 
         return {
-            "status": "success",
+            "status": outer_status,
             "mode": "turbofactory",
             "domain": domain,
             "scale": scale,
             "pipeline_mode": pipeline_mode,
             "pipelines": n_pipelines,
             "successful": len(successful),
-            "failed": len(results) - len(successful),
+            "partial": partial_n,
+            "failed": failed_n,
             "total_hypotheses": total_hypotheses,
             "avg_quality_score": round(avg_quality, 1),
             "results": results,

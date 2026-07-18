@@ -85,11 +85,16 @@ class QualityGates:
             errors.append(f"Only {with_url} sources with URL (min {cfg.min_sources_with_url})")
             score *= with_url / cfg.min_sources_with_url
 
-        # Penalize dummy titles
-        dummy_count = sum(1 for s in sources if s.get("title", "").startswith("Result "))
+        # Penalize / strip dummy titles and fake URLs
+        dummy_count = sum(
+            1
+            for s in sources
+            if str(s.get("title", "")).startswith("Result ")
+            or "example.com" in str(s.get("url", ""))
+        )
         if dummy_count > 0:
-            errors.append(f"{dummy_count} dummy sources detected")
-            score *= max(0, 1 - dummy_count * 0.1)
+            errors.append(f"{dummy_count} dummy sources detected (Result* / example.com)")
+            score = 0.0  # hard-fail: never treat stub bibliography as PASS
 
         passed = not errors
         return GateResult(
@@ -213,9 +218,16 @@ class QualityGates:
         if isinstance(sim, dict):
             sim_status = sim.get("status", "")
             sim_metrics = sim.get("metrics", {})
+            is_stub = (
+                sim.get("stub") is True
+                or sim.get("executed") is False
+                or sim.get("heuristic") is True
+                or str(sim_status).lower() in {"unavailable", "partial", "simulated"}
+            )
         else:
             sim_status = getattr(sim, "status", "") if sim else ""
             sim_metrics = getattr(sim, "metrics", {}) if sim else {}
+            is_stub = bool(getattr(sim, "stub", False)) or getattr(sim, "executed", True) is False
 
         if sim_status == "timeout":
             exec_time = sim_metrics.get("execution_time", 0) if sim_metrics else 0
@@ -228,6 +240,23 @@ class QualityGates:
                     f"(ran {exec_time:.1f}s)"
                 ),
                 details={"execution_time": exec_time, "status": "timeout"},
+            )
+
+        if is_stub:
+            if cfg.require_simulation_success:
+                return GateResult(
+                    step="simulation",
+                    passed=False,
+                    score=0.0,
+                    message="Simulation stub/unavailable/heuristic — not real physics",
+                    details={"status": sim_status, "stub": True},
+                )
+            return GateResult(
+                step="simulation",
+                passed=True,
+                score=0.25,
+                message="Simulation stub (not required)",
+                details={"status": sim_status, "stub": True},
             )
 
         if not sim or sim_status not in good_statuses:
@@ -288,21 +317,35 @@ class QualityGates:
             verif_status = getattr(verif, "status", "")
             verif_backend = getattr(verif, "backend", "unknown")
 
-        good_statuses = {
-            "verified",
-            "consistent",
-            "sat",
-            "partial",
-            "success",
-            "not_applicable",
-            "skipped",
-        }
-        if verif_status in good_statuses:
+        # Real proof / consistency only — never inflate skipped/partial to PASS 1.0
+        pass_statuses = {"verified", "consistent", "success", "proved"}
+        soft_statuses = {"partial", "not_applicable", "skipped", "sat", "unsat", "uncertain"}
+        # "sat"/"unsat" = SMT model-finding, not claim proved — soft evidence only
+
+        if verif_status in pass_statuses:
             return GateResult(
                 step="verification",
                 passed=True,
                 score=1.0,
                 message=f"PASS ({verif_status})",
+                details={"backend": verif_backend, "status": verif_status},
+            )
+
+        if verif_status in soft_statuses:
+            soft_score = 0.4 if verif_status in {"skipped", "not_applicable"} else 0.55
+            if cfg.require_verification:
+                return GateResult(
+                    step="verification",
+                    passed=False,
+                    score=soft_score,
+                    message=f"Incomplete verification ({verif_status}) — not a PASS",
+                    details={"backend": verif_backend, "status": verif_status},
+                )
+            return GateResult(
+                step="verification",
+                passed=True,
+                score=soft_score,
+                message=f"Soft accept ({verif_status}) — not full formal proof",
                 details={"backend": verif_backend, "status": verif_status},
             )
 
@@ -425,9 +468,12 @@ class QualityGates:
                 else f"LOW: {result.message}",
                 details={"votes": result.confidence},
             )
-        except Exception:
+        except Exception as exc:
             return GateResult(
-                step="novelty", passed=True, score=0.5, message="RedundantGate unavailable"
+                step="novelty",
+                passed=False,
+                score=0.0,
+                message=f"RedundantGate unavailable: {type(exc).__name__}",
             )
 
     # ── Overall Scoring ───────────────────────────────────────────────
@@ -459,8 +505,8 @@ class QualityGates:
                 hypotheses[0].get("text", "") if hypotheses else "", sources[:20] if sources else []
             )
             gates.append(extra_gate)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("swallowed exception: %s", _exc, exc_info=True)
 
         # Weighted score — normalize by actual weights used
         weights = {

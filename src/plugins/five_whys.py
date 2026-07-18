@@ -2,11 +2,11 @@
 
 from typing import Any
 
-from src.plugins._llm_base import _llm_reason
+from src.plugins._llm_base import _llm_reason, finalize_plugin_result
 
 
-def analyze(problem: str, depth: int = 5) -> list[dict[str, Any]]:
-    """Analyze."""
+def analyze(problem: str, depth: int = 5) -> tuple[list[dict[str, Any]], str]:
+    """Analyze. Returns (chain, llm_raw)."""
     prompt = f"""Perform a rigorous 5 Whys root cause analysis.
 
 PROBLEM: {problem[:1000]}
@@ -22,21 +22,38 @@ Respond as a JSON array:
     system = "You are a root cause analyst. Drill deeper at each level. Never say 'root cause level N' — give real answers."
     raw = _llm_reason(prompt, system=system, max_tokens=600, temperature=0.3)
     if not raw:
-        return [{"level": i + 1, "question": f"Why? (level {i + 1})", "answer": "LLM unavailable — analysis skipped"} for i in range(depth)]
+        chain = [
+            {
+                "level": i + 1,
+                "question": f"Why? (level {i + 1})",
+                "answer": "pending — retry when LLM gateway is available",
+            }
+            for i in range(depth)
+        ]
+        return chain, raw
     try:
         import json
         import re
+
         match = re.search(r"\[.*\]", raw, re.DOTALL)
         if match:
             result = json.loads(match.group())
             if isinstance(result, list):
-                return result[:depth]
+                return result[:depth], raw
     except (json.JSONDecodeError, ValueError):
         pass
-    return [{"level": i + 1, "question": f"Why? (level {i + 1})", "answer": "LLM output unparseable"} for i in range(depth)]
+    chain = [
+        {
+            "level": i + 1,
+            "question": f"Why? (level {i + 1})",
+            "answer": "LLM output unparseable — see raw_excerpt on execute",
+        }
+        for i in range(depth)
+    ]
+    return chain, raw
 
 
 def execute(problem: str, **kwargs: Any) -> dict[str, Any]:
     """Execute."""
-    result = analyze(problem, **kwargs)
-    return {"problem": problem, "chain": result}
+    result, raw = analyze(problem, **kwargs)
+    return finalize_plugin_result({"problem": problem, "chain": result}, raw)

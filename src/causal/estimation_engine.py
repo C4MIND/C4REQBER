@@ -4,6 +4,7 @@ c4reqber: Causal Effect Estimation Engine
 Estimates causal effects using DoWhy + EconML.
 Supports: backdoor adjustment, propensity scoring, doubly robust, CausalForest.
 """
+
 from __future__ import annotations
 
 import logging
@@ -76,9 +77,14 @@ class CausalEstimationEngine:
         """
         if method not in self.METHODS:
             return EstimationResult(
-                ate=0.0, ci_lower=0.0, ci_upper=0.0,
-                method=method, treatment=treatment, outcome=outcome,
-                valid=False, error=f"Unknown method: {method}",
+                ate=0.0,
+                ci_lower=0.0,
+                ci_upper=0.0,
+                method=method,
+                treatment=treatment,
+                outcome=outcome,
+                valid=False,
+                error=f"Unknown method: {method}",
             )
 
         confounders = confounders or []
@@ -86,9 +92,14 @@ class CausalEstimationEngine:
         missing = required_cols - set(data.columns)
         if missing:
             return EstimationResult(
-                ate=0.0, ci_lower=0.0, ci_upper=0.0,
-                method=method, treatment=treatment, outcome=outcome,
-                valid=False, error=f"Missing columns: {missing}",
+                ate=0.0,
+                ci_lower=0.0,
+                ci_upper=0.0,
+                method=method,
+                treatment=treatment,
+                outcome=outcome,
+                valid=False,
+                error=f"Missing columns: {missing}",
             )
 
         try:
@@ -144,8 +155,8 @@ class CausalEstimationEngine:
                     ie = m.identify_effect(proceed_when_unidentifiable=True)
                     e = m.estimate_effect(ie, method_name=dowhy_method)
                     bootstraps.append(e.value)
-                except Exception:
-                    pass
+                except Exception as _exc:
+                    logger.debug("swallowed exception: %s", _exc, exc_info=True)
 
             if bootstraps:
                 ci_lower = float(np.percentile(bootstraps, 2.5))
@@ -192,9 +203,14 @@ class CausalEstimationEngine:
             )
         except Exception as e:
             return EstimationResult(
-                ate=0.0, ci_lower=0.0, ci_upper=0.0,
-                method=method, treatment=treatment, outcome=outcome,
-                valid=False, error=str(e),
+                ate=0.0,
+                ci_lower=0.0,
+                ci_upper=0.0,
+                method=method,
+                treatment=treatment,
+                outcome=outcome,
+                valid=False,
+                error=str(e),
             )
 
     @staticmethod

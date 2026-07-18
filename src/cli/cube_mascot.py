@@ -1,5 +1,10 @@
 from __future__ import annotations
 
+import logging
+
+
+logger = logging.getLogger(__name__)
+
 import os
 import random
 import time
@@ -10,13 +15,13 @@ from src.terminal_.cyberpunk_theme import CyberpunkTheme as T
 RESET = T.RESET
 
 CUBE_STATES = {
-    "idle":       "▫▫▫",
-    "thinking":   "▫◈▫",
+    "idle": "▫▫▫",
+    "thinking": "▫◈▫",
     "processing": "◈▣▫",
-    "discovery":  "◈▣◈",
-    "error":      "✖▫▫",
-    "done":       "◈▣◈ ✓",
-    "paradigm":   "✦◈▣◈✦",
+    "discovery": "◈▣◈",
+    "error": "✖▫▫",
+    "done": "◈▣◈ ✓",
+    "paradigm": "✦◈▣◈✦",
 }
 
 CUBE_COMMENTS = {
@@ -61,7 +66,14 @@ CUBE_COMMENTS = {
 class CubeMascot:
     """Cognitive daemon — 8-bit cube visualization with cyberpunk flair."""
 
-    DISCOVERY_KEYWORDS = {"discovery", "novel", "hypothesis", "breakthrough", "paradigm", "isomorphism"}
+    DISCOVERY_KEYWORDS = {
+        "discovery",
+        "novel",
+        "hypothesis",
+        "breakthrough",
+        "paradigm",
+        "isomorphism",
+    }
     ERROR_KEYWORDS = {"error", "fail", "anomaly", "exception", "traceback", "contradiction"}
     PARADIGM_KEYWORDS = {"paradigm shift", "revolutionary", "game-changing", "paradigm"}
     BLAST_MODE_KEYWORDS = {
@@ -85,6 +97,7 @@ class CubeMascot:
     def _load_personality(self) -> None:
         """Load session stats from history."""
         import json
+
         self.history_path = os.path.expanduser("~/.c4reqber/mascot_memory.json")
         self.today_discoveries = 0
         self.total_discoveries = 0
@@ -97,12 +110,13 @@ class CubeMascot:
                 self.total_discoveries = data.get("total_discoveries", 0)
                 self.favorite_domain = data.get("favorite_domain", "")
                 self._domain_counts = data.get("domain_counts", {})
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("swallowed exception: %s", _exc, exc_info=True)
 
     def _check_streak(self) -> None:
         """Check consecutive days streak."""
         import json
+
         streak_path = os.path.expanduser("~/.c4reqber/streak.json")
         today = time.strftime("%Y-%m-%d")
         try:
@@ -128,17 +142,21 @@ class CubeMascot:
             self._domain_counts[domain] = self._domain_counts.get(domain, 0) + 1
             self.favorite_domain = max(self._domain_counts, key=lambda k: self._domain_counts[k])
         import json
+
         try:
             os.makedirs(os.path.dirname(self.history_path), exist_ok=True)
             with open(self.history_path, "w") as f:
-                json.dump({
-                    "today_discoveries": self.today_discoveries,
-                    "total_discoveries": self.total_discoveries,
-                    "favorite_domain": self.favorite_domain,
-                    "domain_counts": self._domain_counts,
-                }, f)
-        except Exception:
-            pass
+                json.dump(
+                    {
+                        "today_discoveries": self.today_discoveries,
+                        "total_discoveries": self.total_discoveries,
+                        "favorite_domain": self.favorite_domain,
+                        "domain_counts": self._domain_counts,
+                    },
+                    f,
+                )
+        except Exception as _exc:
+            logger.debug("swallowed exception: %s", _exc, exc_info=True)
 
     def personal_comment(self) -> str:
         """Return a personalized comment based on session history."""
@@ -148,7 +166,7 @@ class CubeMascot:
             if self.streak >= 7:
                 return f"{self.streak}-day streak. The cube remembers every question you've asked. Today's {self.streak}th session."
             if self.today_discoveries >= 5:
-                return f"5 discoveries today. Theorem 11 approves. Cognitive momentum: {min(1.0, self.today_discoveries/10):.1f}"
+                return f"5 discoveries today. Theorem 11 approves. Cognitive momentum: {min(1.0, self.today_discoveries / 10):.1f}"
             if self.favorite_domain:
                 return f"Your favorite domain: {self.favorite_domain}. Ready for another question?"
         return random.choice(CUBE_COMMENTS.get(self.state, ["Ready."]))
@@ -159,9 +177,11 @@ class CubeMascot:
             return None
         suggestions = []
         if self.today_discoveries < 3:
-            suggestions.append(f"Try: blast analyze \"{self.favorite_domain or 'supply chain optimization'}\"")
+            suggestions.append(
+                f'Try: blast analyze "{self.favorite_domain or "supply chain optimization"}"'
+            )
         suggestions.append("Explore: blast packages install --id pymc")
-        suggestions.append("Discover: blast auto \"cancer early detection\"")
+        suggestions.append('Discover: blast auto "cancer early detection"')
         suggestions.append("Visualize: blast tui --packages    # arrow-key package installer")
         return random.choice(suggestions)
 
@@ -270,6 +290,7 @@ class CubeMascot:
 
     def _pulse_color(self) -> str:
         import math
+
         self._pulse_phase = (self._pulse_phase + 0.05) % (2 * math.pi)
         brightness = 0.5 + 0.5 * math.sin(self._pulse_phase)
         if brightness > 0.8:
@@ -284,7 +305,7 @@ class CubeMascot:
         cube = CUBE_STATES.get(self.state, CUBE_STATES["idle"])
         comment = self.comment
         if len(comment) > width - 12:
-            comment = comment[:width - 15] + "..."
+            comment = comment[: width - 15] + "..."
 
         if self.state == "idle":
             color = self._pulse_color()
@@ -300,7 +321,9 @@ class CubeMascot:
                 return f"{burst}{T.FG_ACCENT}{T.BOLD}{cube}{RESET} {T.FG_ACCENT}{comment}{RESET} {burst}"
             return f"{T.FG_ACCENT}{T.BOLD}{cube}{RESET} {T.FG_ACCENT}{comment}{RESET}"
         elif self.state == "paradigm":
-            return f"{T.FG_ACCENT}{T.BOLD}{T.BLINK}{cube}{RESET} {T.FG_ACCENT}{T.BOLD}{comment}{RESET}"
+            return (
+                f"{T.FG_ACCENT}{T.BOLD}{T.BLINK}{cube}{RESET} {T.FG_ACCENT}{T.BOLD}{comment}{RESET}"
+            )
         elif self.state == "error":
             return f"{T.FG_DANGER}{T.BOLD}{cube}{RESET} {T.FG_DANGER}{comment}{RESET}"
         elif self.state == "done":

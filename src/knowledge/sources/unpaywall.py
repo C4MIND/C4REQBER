@@ -7,6 +7,8 @@ from typing import Any
 
 import httpx
 
+from src.knowledge.contact_email import contact_email
+
 from .base import BaseSourceAdapter
 
 
@@ -31,7 +33,7 @@ class UnpaywallAdapter(BaseSourceAdapter):
         if not doi:
             return []
 
-        email = self.api_key or os.environ.get("UNPAYWALL_EMAIL", "c44tcdi@example.com")
+        email = self.api_key or contact_email()
         url = f"https://api.unpaywall.org/v2/{doi}"
         params = {"email": email}
         async with httpx.AsyncClient(timeout=5.0) as client:
@@ -39,12 +41,14 @@ class UnpaywallAdapter(BaseSourceAdapter):
             resp.raise_for_status()
             data = resp.json()
             if data.get("title"):
-                return [{
-                    "doi": doi,
-                    "title": data.get("title", ""),
-                    "year": data.get("year", 0) or 0,
-                    "oa_status": data.get("oa_status", ""),
-                    "source": "unpaywall",
-                    "source_name": "Unpaywall",
-                }]
+                return [
+                    {
+                        "doi": doi,
+                        "title": data.get("title", ""),
+                        "year": data.get("year", 0) or 0,
+                        "oa_status": data.get("oa_status", ""),
+                        "source": "unpaywall",
+                        "source_name": "Unpaywall",
+                    }
+                ]
             return []

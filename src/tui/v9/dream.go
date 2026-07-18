@@ -108,7 +108,10 @@ func (d *DreamState) Tick() bool {
 	}
 	idle := now.Sub(d.startedAt)
 	wasActive := d.active
-	d.active = idle > time.Duration(d.idleSeconds)*time.Second
+	// idleSeconds <= 0 means dream mode is disabled (C4_DREAM_IDLE=0 per
+	// config docs). Previously this evaluated to idle > 0, permanently
+	// activating dream mode — which buried the live UI during recordings.
+	d.active = d.idleSeconds > 0 && idle > time.Duration(d.idleSeconds)*time.Second
 	if !d.active {
 		return wasActive // maybe transitioned to inactive
 	}
@@ -172,5 +175,3 @@ func QuoteForTest(i int) string {
 func ArtForTest(i int) string {
 	return dreamArts[i%len(dreamArts)]
 }
-
-

@@ -1,4 +1,5 @@
 """Pipeline step: formal verification via LLM-based proof generation."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -23,8 +24,17 @@ class Step10Verify:
         result = await prover.prove(hypothesis, "lean4")
 
         discovery["formal_verification"] = result.to_dict()
+        # Compilation success alone is not claim-aligned formal verification.
         if result.valid:
-            discovery["verification_stamp"] = "FORMALLY VERIFIED"
+            discovery["verification_stamp"] = "COMPILED"
+            discovery["verification_aligned"] = False
+            discovery["verification_note"] = (
+                "Proof artifact compiled; SemanticAlignmentChecker not run — "
+                "not stamped FORMALLY VERIFIED"
+            )
         else:
-            discovery["verification_stamp"] = f"VERIFICATION FAILED: {result.error or 'Unknown error'}"
+            discovery["verification_stamp"] = (
+                f"VERIFICATION FAILED: {result.error or 'Unknown error'}"
+            )
+            discovery["verification_aligned"] = False
         return discovery

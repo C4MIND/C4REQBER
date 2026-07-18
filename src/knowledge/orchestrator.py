@@ -30,7 +30,10 @@ from .sources.extra_adapters import (
     DatasetsAdapter,
     GithubAdapter,
     RsciAdapter,
+    ScholarApiAdapter,
     ScimaticAdapter,
+    UniprotAdapter,
+    WolframAdapter,
 )
 from .sources.figshare import FigshareAdapter
 from .sources.inspire_hep import InspireHepAdapter
@@ -69,6 +72,7 @@ from .sources.pubmed import PubmedAdapter
 from .sources.semantic_scholar import SemanticScholarAdapter
 from .sources.tavily import TavilyAdapter
 from .sources.unpaywall import UnpaywallAdapter
+from .sources.wikidata import WikidataAdapter
 from .sources.zenodo import ZenodoAdapter
 
 
@@ -135,65 +139,72 @@ class MultiSourceSearcher:
         )
 
     def _build_adapters(self, sources: set[str] | None) -> None:
-        adapter_map = cast(dict[str, type[BaseSourceAdapter] | None], {
-            # semantic_scholar disabled — free tier rate limit (429) hangs the
-            # search pipeline. TODO: re-enable after upgrading to paid tier or
-            # adding circuit-breaker with longer cooldown.
-            # "semantic_scholar": SemanticScholarAdapter,
-            "openalex": OpenAlexAdapter,
-            "crossref": CrossrefAdapter,
-            "arxiv": ArxivAdapter,
-            "pubmed": PubmedAdapter,
-            "doaj": DoajAdapter,
-            "europe_pmc": EuropePmcAdapter,
-            "dblp": DblpAdapter,
-            "datacite": DataciteAdapter,
-            "zenodo": ZenodoAdapter,
-            "figshare": FigshareAdapter,
-            "brave": BraveAdapter,
-            "core": CoreAdapter,
-            "base": BaseSearchAdapter,
-            "unpaywall": UnpaywallAdapter,
-            "oa_mg": OaMgAdapter,
-            "lens_org": LensOrgAdapter,
-            "inspire_hep": InspireHepAdapter,
-            "tavily": TavilyAdapter,
-            "exa": ExaAdapter,
-            "cinii": CiniiAdapter,
-            "github": GithubAdapter,
-            "datasets": DatasetsAdapter,
-            "rsci": RsciAdapter,
-            "scimatic": ScimaticAdapter,
-            "arxivgg": ArxivggAdapter,
-            "bibsonomy": BibsonomyAdapter,
-            "ncbi_eutils": NcbiEutilsAdapter,
-            "pubchem": PubchemAdapter,
-            "chembl": ChemblAdapter,
-            "materials_project": MaterialsProjectAdapter,
-            "kaggle": KaggleAdapter,
-            "aflow": AflowAdapter,
-            "uci_ml": UciMlAdapter,
-            "harvard_dataverse": HarvardDataverseAdapter,
-            "re3data": Re3dataAdapter,
-            # NEW (2026-05-31 batch)
-            "string_db": StringDbAdapter,
-            "clinicaltrials": ClinicalTrialsAdapter,
-            "gbif": GbifAdapter,
-            "allen_brain": AllenBrainAdapter,
-            "usgs": UsgsAdapter,
-            "cern_opendata": CernOpenDataAdapter,
-            "oeis": OeisAdapter,
-            "conceptnet": ConceptNetAdapter,
-            "uspto_patentsview": UsptoPatentsviewAdapter,
-            "huggingface_datasets": HuggingFaceDatasetsAdapter,
-            "openreview": OpenReviewAdapter,
-            "openfda": OpenFdaAdapter,
-            "nasa_earthdata": NasaEarthdataAdapter,
-            "noaa": NoaaAdapter,
-            "orcid": OrcidAdapter,
-            "cyberleninka": CyberLeninkaAdapter,
-            "mathnet_ru": MathNetRuAdapter,
-        })
+        adapter_map = cast(
+            dict[str, type[BaseSourceAdapter] | None],
+            {
+                # semantic_scholar disabled — free tier rate limit (429) hangs the
+                # search pipeline. TODO: re-enable after upgrading to paid tier or
+                # adding circuit-breaker with longer cooldown.
+                # "semantic_scholar": SemanticScholarAdapter,
+                "openalex": OpenAlexAdapter,
+                "crossref": CrossrefAdapter,
+                "arxiv": ArxivAdapter,
+                "pubmed": PubmedAdapter,
+                "doaj": DoajAdapter,
+                "europe_pmc": EuropePmcAdapter,
+                "dblp": DblpAdapter,
+                "datacite": DataciteAdapter,
+                "zenodo": ZenodoAdapter,
+                "figshare": FigshareAdapter,
+                "brave": BraveAdapter,
+                "core": CoreAdapter,
+                "base": BaseSearchAdapter,
+                "unpaywall": UnpaywallAdapter,
+                "oa_mg": OaMgAdapter,
+                "lens_org": LensOrgAdapter,
+                "inspire_hep": InspireHepAdapter,
+                "tavily": TavilyAdapter,
+                "exa": ExaAdapter,
+                "cinii": CiniiAdapter,
+                "github": GithubAdapter,
+                "datasets": DatasetsAdapter,
+                "rsci": RsciAdapter,
+                "scimatic": ScimaticAdapter,
+                "arxivgg": ArxivggAdapter,
+                "bibsonomy": BibsonomyAdapter,
+                "ncbi_eutils": NcbiEutilsAdapter,
+                "pubchem": PubchemAdapter,
+                "chembl": ChemblAdapter,
+                "materials_project": MaterialsProjectAdapter,
+                "kaggle": KaggleAdapter,
+                "aflow": AflowAdapter,
+                "uci_ml": UciMlAdapter,
+                "harvard_dataverse": HarvardDataverseAdapter,
+                "re3data": Re3dataAdapter,
+                # NEW (2026-05-31 batch)
+                "string_db": StringDbAdapter,
+                "clinicaltrials": ClinicalTrialsAdapter,
+                "gbif": GbifAdapter,
+                "allen_brain": AllenBrainAdapter,
+                "usgs": UsgsAdapter,
+                "cern_opendata": CernOpenDataAdapter,
+                "oeis": OeisAdapter,
+                "conceptnet": ConceptNetAdapter,
+                "uspto_patentsview": UsptoPatentsviewAdapter,
+                "huggingface_datasets": HuggingFaceDatasetsAdapter,
+                "openreview": OpenReviewAdapter,
+                "openfda": OpenFdaAdapter,
+                "nasa_earthdata": NasaEarthdataAdapter,
+                "noaa": NoaaAdapter,
+                "orcid": OrcidAdapter,
+                "cyberleninka": CyberLeninkaAdapter,
+                "mathnet_ru": MathNetRuAdapter,
+                "wikidata": WikidataAdapter,
+                "wolfram": WolframAdapter,
+                "uniprot": UniprotAdapter,
+                "scholarapi": ScholarApiAdapter,
+            },
+        )
 
         for src_id, cfg in SOURCE_REGISTRY.items():
             if sources is not None and src_id not in sources:
@@ -215,11 +226,30 @@ class MultiSourceSearcher:
                 if not key:
                     logger.debug("Skipping %s: API key required (%s)", src_id, api_key_env)
                     continue
+                # Paired credentials (Kaggle username+key, ORCID id+secret, BibSonomy user+key)
+                extra_env = cfg.get("api_key_env_extra")
+                if extra_env:
+                    extra = (
+                        get_key(extra_env)
+                        or self._api_keys.get(extra_env, "")
+                        or os.environ.get(extra_env)
+                        or os.environ.get(str(extra_env).upper())
+                    )
+                    if not extra:
+                        logger.debug(
+                            "Skipping %s: paired credential required (%s)",
+                            src_id,
+                            extra_env,
+                        )
+                        continue
             adapter_cls = adapter_map.get(src_id)
             if adapter_cls is None:
                 logger.debug("No adapter for %s", src_id)
                 continue
-            self._active_sources[src_id] = adapter_cls(api_key=key)
+            try:
+                self._active_sources[src_id] = adapter_cls(api_key=key, timeout=cfg.get("timeout"))
+            except TypeError:
+                self._active_sources[src_id] = adapter_cls(api_key=key)
 
     # ─── Public API ───────────────────────────────────────────────────────
 
@@ -230,8 +260,6 @@ class MultiSourceSearcher:
         max_per_source: int | None = None,
         include_web: bool = False,
     ) -> dict[str, Any]:
-        # Domain-aware source boost: prioritize domain-specific sources
-        domain_boost = self._domain_sources(domain)
         """Launch ALL active sources in parallel. Semaphore controls concurrency."""
         cache_key = f"search_all:{query}:{domain}:{max_per_source or self.MAX_PAPERS_PER_SOURCE}:web={include_web}"
         cached = self._cache.get(cache_key)
@@ -242,14 +270,16 @@ class MultiSourceSearcher:
 
         max_per = max_per_source or self.MAX_PAPERS_PER_SOURCE
         keywords = self._extract_query_keywords(query)
+        # Academic APIs reject huge / Cyrillic-heavy full prompts (400/414).
+        search_query = self._shape_search_query(query)
 
         async def search_one(src_id: str) -> tuple[str, list[dict], float]:
             """Search one."""
             t1 = time.perf_counter()
             try:
-                papers = await self._search_with_timeout(src_id, query, max_per)
+                papers = await self._search_with_timeout(src_id, search_query, max_per)
                 return (src_id, papers, time.perf_counter() - t1)
-            except Exception as e:
+            except BaseException as e:
                 return (src_id, [{"error": str(e)}], time.perf_counter() - t1)
 
         tasks = [search_one(src_id) for src_id in self._active_sources]
@@ -260,8 +290,13 @@ class MultiSourceSearcher:
         sources_used: list[str] = []
 
         for src_id, papers, elapsed in results:
-            papers = papers or []
-            papers = [p for p in papers if "error" not in p]  # Filter error dicts
+            raw = papers or []
+            had_error = any(isinstance(p, dict) and "error" in p for p in raw)
+            err_msg = next(
+                (p.get("error") for p in raw if isinstance(p, dict) and "error" in p),
+                None,
+            )
+            papers = [p for p in raw if not (isinstance(p, dict) and "error" in p)]
             for p in papers:
                 p.setdefault("_source", src_id)
             all_papers.extend(papers)
@@ -270,7 +305,8 @@ class MultiSourceSearcher:
             source_stats[src_id] = {
                 "papers": len(papers),
                 "time": round(elapsed, 3),
-                "ok": not any(isinstance(p, dict) and "error" in p for p in papers),
+                "ok": not had_error,
+                "error": err_msg,
             }
 
         unique_papers = self._deduplicate(all_papers)
@@ -311,18 +347,27 @@ class MultiSourceSearcher:
             "source_names": sources_used,
             "source_stats": source_stats,
             "total_time": round(total, 3),
+            "below_min_papers": len(unique_papers) < self.MIN_PAPERS_FOR_RESULT,
+            "min_papers_target": self.MIN_PAPERS_FOR_RESULT,
             "relevance_distribution": {
                 ">0.8": len([p for p in unique_papers if p.get("relevance_score", 0) > 0.8]),
                 ">0.5": len([p for p in unique_papers if p.get("relevance_score", 0) > 0.5]),
                 ">0.3": len([p for p in unique_papers if p.get("relevance_score", 0) > 0.3]),
             },
         }
+        if result["below_min_papers"]:
+            logger.warning(
+                "MultiSource below MIN_PAPERS_FOR_RESULT (%d < %d)",
+                len(unique_papers),
+                self.MIN_PAPERS_FOR_RESULT,
+            )
 
         self._cache.set(cache_key, result)
 
         # Cache embeddings in ChromaDB vector store for RAG
         try:
             from src.knowledge.chroma_store import ChromaVectorStore
+
             store = ChromaVectorStore()
             store.add_knowledge(query, unique_papers[:50])
         except Exception:
@@ -349,14 +394,16 @@ class MultiSourceSearcher:
         """Return all registered source metadata."""
         result: list[dict[str, Any]] = []
         for src_id, cfg in SOURCE_REGISTRY.items():
-            result.append({
-                "id": src_id,
-                "name": cfg["name"],
-                "tier": cfg["tier"],
-                "coverage": cfg["coverage"],
-                "needs_key": cfg["needs_key"],
-                "active": src_id in self._active_sources,
-            })
+            result.append(
+                {
+                    "id": src_id,
+                    "name": cfg["name"],
+                    "tier": cfg["tier"],
+                    "coverage": cfg["coverage"],
+                    "needs_key": cfg["needs_key"],
+                    "active": src_id in self._active_sources,
+                }
+            )
         return result
 
     # ─── Internal: Query Analysis ─────────────────────────────────────────
@@ -364,26 +411,86 @@ class MultiSourceSearcher:
     def _domain_sources(self, domain: str) -> set[str]:
         """Return source IDs prioritized for a given research domain."""
         from .config import DOMAIN_SOURCES
+
         return DOMAIN_SOURCES.get(domain, DOMAIN_SOURCES["general"])
 
     def _extract_query_keywords(self, query: str) -> list[str]:
         """Extract meaningful keywords from query for relevance scoring."""
         import re
+
         q = query.lower().strip()
         q = re.sub(r"[^\w\s]", " ", q, flags=re.UNICODE)
         words = [w for w in q.split() if len(w) > 2]
         stopwords = {
-            "the", "and", "for", "with", "that", "this", "from", "are",
-            "was", "has", "have", "been", "will", "can", "not", "but",
-            "its", "also", "which", "their", "they", "were", "when",
+            "the",
+            "and",
+            "for",
+            "with",
+            "that",
+            "this",
+            "from",
+            "are",
+            "was",
+            "has",
+            "have",
+            "been",
+            "will",
+            "can",
+            "not",
+            "but",
+            "its",
+            "also",
+            "which",
+            "their",
+            "they",
+            "were",
+            "when",
+            # Common Russian function words (full RU prompts otherwise flood APIs)
+            "для",
+            "как",
+            "что",
+            "это",
+            "или",
+            "при",
+            "без",
+            "над",
+            "под",
+            "про",
+            "если",
+            "когда",
+            "также",
+            "между",
+            "через",
+            "который",
+            "которая",
+            "которые",
+            "можно",
+            "нужно",
+            "есть",
         }
         meaningful = [w for w in words if w not in stopwords]
         return meaningful[:20]
 
+    def _shape_search_query(self, query: str, max_len: int = 200) -> str:
+        """Compress user prompts into API-safe search strings (avoids 400/414)."""
+        keywords = self._extract_query_keywords(query)
+        if keywords:
+            shaped = " ".join(keywords[:15])
+            if len(shaped) <= max_len:
+                return shaped
+            return shaped[:max_len].rsplit(" ", 1)[0] or shaped[:max_len]
+        q = (query or "").strip()
+        if len(q) <= max_len:
+            return q
+        return q[:max_len].rsplit(" ", 1)[0] or q[:max_len]
+
     # ─── Internal: Search Orchestration ───────────────────────────────────
 
     async def _search_with_timeout(
-        self, src_id: str, query: str, limit: int,
+        self,
+        src_id: str,
+        query: str,
+        limit: int,
     ) -> list[dict[str, Any]]:
         cfg = SOURCE_REGISTRY.get(src_id)
         if not cfg or src_id not in self._active_sources:
@@ -393,7 +500,7 @@ class MultiSourceSearcher:
         cb = self._circuit_breakers.setdefault(src_id, _CircuitBreaker())
         if not cb.can_call():
             logger.debug("Source %s circuit breaker open — skipping", src_id)
-            return []
+            return [{"error": "circuit_breaker_open"}]
 
         timeout_val = cfg.get("timeout", self.REQUEST_TIMEOUT)
 
@@ -405,15 +512,18 @@ class MultiSourceSearcher:
                     timeout=timeout_val,
                 )
                 cb.record_success()
-                return papers
+                return papers or []
         except TimeoutError:
             logger.debug("Source %s timed out after %ss", src_id, timeout_val)
             cb.record_failure()
-            return []
-        except Exception as e:
+            return [{"error": f"timeout after {timeout_val}s"}]
+        except asyncio.CancelledError:
+            cb.record_failure()
+            return [{"error": "cancelled"}]
+        except BaseException as e:
             logger.debug("Source %s error: %s", src_id, e)
             cb.record_failure()
-            return []
+            return [{"error": str(e) or type(e).__name__}]
 
     async def _rate_limit(self, src_id: str, cfg: dict[str, Any]) -> None:
         rate = cfg.get("rate_limit", 1.0)
@@ -428,7 +538,10 @@ class MultiSourceSearcher:
             self._rate_trackers[src_id] = time.monotonic()
 
     async def _dispatch_source(
-        self, src_id: str, query: str, limit: int,
+        self,
+        src_id: str,
+        query: str,
+        limit: int,
     ) -> list[dict[str, Any]]:
         adapter = self._active_sources.get(src_id)
         if adapter is None:
@@ -561,6 +674,7 @@ class MultiSourceSearcher:
         # Semantic deduplication: remove near-duplicate papers with different titles/DOIs
         try:
             from src.llm.embeddings import semantic_deduplicate
+
             deduped = semantic_deduplicate(deduped, threshold=0.85)
         except (ImportError, RuntimeError, ValueError, TypeError) as e:
             logger.warning("Semantic deduplication failed: %s", e)
@@ -581,6 +695,7 @@ class MultiSourceSearcher:
         if norm:
             return f"title:{hashlib.md5(norm.encode(), usedforsecurity=False).hexdigest()}"
         import json
+
         stable = json.dumps(paper, sort_keys=True, default=str)
         return f"hash:{hashlib.md5(stable.encode(), usedforsecurity=False).hexdigest()}"
 
@@ -669,7 +784,9 @@ class MultiSourceSearcher:
                 "min": min(years),
                 "max": max(years),
                 "median": sorted(years)[len(years) // 2] if years else 0,
-                "top_decade": max(Counter(y // 10 * 10 for y in years).items(), key=lambda x: x[1], default=(0, 0))[0],
+                "top_decade": max(
+                    Counter(y // 10 * 10 for y in years).items(), key=lambda x: x[1], default=(0, 0)
+                )[0],
             }
 
         cross_validated = sum(1 for p in papers if self._cross_validate_score(p) > 0.5)

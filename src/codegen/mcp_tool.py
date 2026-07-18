@@ -336,17 +336,13 @@ def _dafny_extrema_harness(language: str) -> str:
 
 def _lean4_harness(code: str, specification: str) -> str:
     spec = specification.replace('"', "'")
-    return (
-        f"-- Lean 4 proof harness for: {spec}\n" "theorem correctness : True := by\n" "  trivial\n"
-    )
+    return f"-- Lean 4 proof harness for: {spec}\ntheorem correctness : True := by\n  trivial\n"
 
 
 def _coq_harness(code: str, specification: str) -> str:
     spec = specification.replace('"', "'")
     return (
-        f"(* Coq proof harness for: {spec} *)\n"
-        "Theorem correctness : True.\n"
-        "Proof. trivial. Qed.\n"
+        f"(* Coq proof harness for: {spec} *)\nTheorem correctness : True.\nProof. trivial. Qed.\n"
     )
 
 
@@ -404,10 +400,14 @@ async def _verify_code(code: str, backend: str) -> dict[str, Any]:
             "error": result.get("error"),
         }
     if backend == "hoare":
+        # Refuse conceptual theater — Hoare requires actual WP/Z3 check.
         return {
-            "verified": True,
-            "details": {"note": "Hoare logic verified conceptually"},
-            "error": None,
+            "verified": False,
+            "details": {
+                "note": "Hoare conceptual stub refused; use HoareVerifier / c4_verify",
+            },
+            "error": "hoare_not_run",
+            "heuristic": False,
         }
     return {"verified": False, "error": f"Unsupported backend: {backend}"}
 

@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from src.knowledge.contact_email import contact_email
+
 from .base_p6_adapter import BaseP6SourceAdapter
 
 
@@ -24,7 +26,7 @@ class WikidataAdapter(BaseP6SourceAdapter):
     def __init__(self, **kwargs: Any) -> None:
         headers = kwargs.pop("headers", {})
         headers.setdefault("Accept", "application/sparql-results+json")
-        headers.setdefault("User-Agent", "c44tcdi/1.0 (mailto:c44tcdi@example.com)")
+        headers.setdefault("User-Agent", f"c4reqber/1.0 (mailto:{contact_email()})")
         super().__init__(headers=headers, **kwargs)
 
     async def search(self, query: str, limit: int) -> list[dict[str, Any]]:
@@ -79,19 +81,21 @@ class WikidataAdapter(BaseP6SourceAdapter):
                 doi = doi.replace("https://doi.org/", "")
             venue = item.get("venueLabel", {}).get("value", "")
 
-            result.append({
-                "title": title,
-                "authors": authors,
-                "year": year,
-                "abstract": "",
-                "doi": doi,
-                "venue": venue,
-                "citation_count": 0,  # SPARQL COUNT is expensive; skip for now
-                "source": self.source_id,
-                "source_name": "Wikidata",
-                "sources": ["Wikidata"],
-                "wikidata_id": item_id,
-            })
+            result.append(
+                {
+                    "title": title,
+                    "authors": authors,
+                    "year": year,
+                    "abstract": "",
+                    "doi": doi,
+                    "venue": venue,
+                    "citation_count": 0,  # SPARQL COUNT is expensive; skip for now
+                    "source": self.source_id,
+                    "source_name": "Wikidata",
+                    "sources": ["Wikidata"],
+                    "wikidata_id": item_id,
+                }
+            )
         return result
 
     async def entity_lookup(self, entity_id: str) -> dict[str, Any]:

@@ -1,4 +1,5 @@
 """Alloy analyzer client for relational model checking."""
+
 from __future__ import annotations
 
 import os
@@ -125,17 +126,29 @@ class AlloyClient:
     @staticmethod
     def _parse_result(stdout: str, stderr: str, returncode: int) -> bool:
         combined = (stdout + "\n" + stderr).lower()
-        if any(tok in combined for tok in ("syntax error", "type error", "resolution error", "cannot be found", "no solution")):
+        if any(
+            tok in combined
+            for tok in (
+                "syntax error",
+                "type error",
+                "resolution error",
+                "cannot be found",
+                "no solution",
+            )
+        ):
             return False
         if "counterexample" in combined and "no counterexample" not in combined:
             return False
-        if any(tok in combined for tok in (" sat", "\tsat", "no counterexample", "1/1")):
-            return returncode == 0
-        if returncode == 0 and "error" not in combined:
+        # Require positive success tokens — returncode==0 alone is not enough.
+        positive = any(
+            tok in combined
+            for tok in ("no counterexample", "instance found", " sat", "\tsat", "1/1")
+        )
+        if positive and returncode == 0 and "error" not in combined:
             return True
         if "unsat" in combined:
             return False
-        return returncode == 0
+        return False
 
     @staticmethod
     def _first_error(stdout: str, stderr: str) -> str:

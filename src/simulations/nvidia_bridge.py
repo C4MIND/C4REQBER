@@ -30,6 +30,7 @@ logger = logging.getLogger(__name__)
 
 class CudaMode(Enum):
     """CUDA execution mode."""
+
     GPU = "gpu"
     CPU = "cpu"
     UNAVAILABLE = "unavailable"
@@ -38,6 +39,7 @@ class CudaMode(Enum):
 @dataclass
 class NvidiaBridgeConfig:
     """Configuration for NvidiaBridge."""
+
     device_id: int = 0
     allow_cpu_fallback: bool = True
     track_cost: bool = True
@@ -49,6 +51,7 @@ class NvidiaBridgeConfig:
 @dataclass
 class CudaCostTracker:
     """Tracks GPU compute costs."""
+
     cuda_hours: float = 0.0
     peak_memory_mb: float = 0.0
     total_kernel_calls: int = 0
@@ -84,6 +87,7 @@ class CudaCostTracker:
 @dataclass
 class NvidiaBridgeResult:
     """Result from NvidiaBridge operation."""
+
     status: str = "pending"
     mode: CudaMode = CudaMode.UNAVAILABLE
     execution_time: float = 0.0
@@ -96,10 +100,10 @@ class NvidiaBridgeResult:
 @runtime_checkable
 class PatternProtocol(Protocol):
     """Protocol for pattern objects that can be accelerated."""
+
     PATTERN_ID: str
 
-    def run(self, hypothesis: dict[str, Any] | None = None) -> dict[str, Any]:
-        ...
+    def run(self, hypothesis: dict[str, Any] | None = None) -> dict[str, Any]: ...
 
 
 class CuBLASWrapper:
@@ -115,6 +119,7 @@ class CuBLASWrapper:
             return True
         try:
             import cupy as cp
+
             self._cupy = cp
             return True
         except ImportError:
@@ -193,6 +198,7 @@ class CuDNNWrapper:
             return True
         try:
             import cupy as cp
+
             self._cupy = cp
             return True
         except ImportError:
@@ -216,8 +222,9 @@ class CuDNNWrapper:
                 w = cp.asarray(kernel)
                 # Use cupy convolution
                 from cupyx.scipy.signal import convolve2d
+
                 result = convolve2d(x, w, mode="same")
-                result = result[::stride[0], ::stride[1]]
+                result = result[:: stride[0], :: stride[1]]
                 mem_mb = (input_data.nbytes + kernel.nbytes + result.nbytes) / (1024 * 1024)
                 self._bridge._cost_tracker.record_kernel(mem_mb)
                 return cp.asnumpy(result)
@@ -237,8 +244,9 @@ class CuDNNWrapper:
     ) -> np.ndarray:
         """Naive 2D convolution CPU fallback."""
         from scipy.signal import convolve2d
+
         result = convolve2d(input_data, kernel, mode="same")
-        return result[::stride[0], ::stride[1]]
+        return result[:: stride[0], :: stride[1]]
 
     def batch_norm(
         self,
@@ -296,12 +304,15 @@ class CuQuantumWrapper:
             return True
         try:
             import cuquantum
+
             self._cuquantum = cuquantum
             return True
         except ImportError:
             return False
 
-    def apply_gate(self, state_vector: np.ndarray, gate_matrix: np.ndarray, target_qubits: list[int]) -> np.ndarray:
+    def apply_gate(
+        self, state_vector: np.ndarray, gate_matrix: np.ndarray, target_qubits: list[int]
+    ) -> np.ndarray:
         """Apply quantum gate to state vector. Falls back to NumPy."""
         time.perf_counter()
         self._bridge._cost_tracker.start_session()
@@ -317,10 +328,19 @@ class CuQuantumWrapper:
                 handle = cuquantum.custatevec.create()
                 n_qubits = int(np.log2(len(state_vector)))
                 cuquantum.custatevec.apply_matrix(
-                    handle, sv.data.ptr, cuquantum.cudaDataType.CUDA_C_64F,
-                    n_qubits, gate.data.ptr, cuquantum.cudaDataType.CUDA_C_64F,
-                    cuquantum.custatevec.MatrixLayout.ROW, 0,
-                    target_qubits, len(target_qubits), [], [], 0,
+                    handle,
+                    sv.data.ptr,
+                    cuquantum.cudaDataType.CUDA_C_64F,
+                    n_qubits,
+                    gate.data.ptr,
+                    cuquantum.cudaDataType.CUDA_C_64F,
+                    cuquantum.custatevec.MatrixLayout.ROW,
+                    0,
+                    target_qubits,
+                    len(target_qubits),
+                    [],
+                    [],
+                    0,
                     cuquantum.ComputeType.COMPUTE_64F,
                 )
                 cuquantum.custatevec.destroy(handle)
@@ -333,10 +353,12 @@ class CuQuantumWrapper:
 
         return self._cpu_apply_gate(state_vector, gate_matrix, target_qubits)
 
-    def _cpu_apply_gate(self, state_vector: np.ndarray, gate_matrix: np.ndarray, target_qubits: list[int]) -> np.ndarray:
+    def _cpu_apply_gate(
+        self, state_vector: np.ndarray, gate_matrix: np.ndarray, target_qubits: list[int]
+    ) -> np.ndarray:
         """CPU fallback for quantum gate application."""
         n_qubits = int(np.log2(len(state_vector)))
-        if 2 ** n_qubits != len(state_vector):
+        if 2**n_qubits != len(state_vector):
             raise ValueError("State vector length must be a power of 2")
 
         # Full matrix via tensor product
@@ -347,7 +369,7 @@ class CuQuantumWrapper:
         """Expand a gate to the full Hilbert space."""
         from functools import reduce
 
-        dim = 2 ** n_qubits
+        dim = 2**n_qubits
 
         if len(targets) == 1:
             ops = [np.eye(2) for _ in range(n_qubits)]
@@ -368,6 +390,7 @@ class CuQuantumWrapper:
         if self._bridge.is_gpu_mode() and self._try_import():
             try:
                 import cupy as cp
+
                 sv = cp.asarray(state_vector)
                 obs = cp.asarray(observable)
                 result = float(cp.vdot(sv, obs @ sv).real)
@@ -379,9 +402,11 @@ class CuQuantumWrapper:
 
         return float(np.vdot(state_vector, observable @ state_vector).real)
 
-    def simulate_circuit(self, n_qubits: int, gates: list[dict[str, Any]], initial_state: str = "zero") -> dict[str, Any]:
+    def simulate_circuit(
+        self, n_qubits: int, gates: list[dict[str, Any]], initial_state: str = "zero"
+    ) -> dict[str, Any]:
         """Simulate a quantum circuit. Returns state vector and probabilities."""
-        dim = 2 ** n_qubits
+        dim = 2**n_qubits
         if initial_state == "zero":
             state = np.zeros(dim, dtype=complex)
             state[0] = 1.0
@@ -419,8 +444,12 @@ class CuQuantumWrapper:
             "rx": self._rx_matrix(params.get("theta", 0.0)),
             "ry": self._ry_matrix(params.get("theta", 0.0)),
             "rz": self._rz_matrix(params.get("theta", 0.0)),
-            "cnot": np.array([[1,0,0,0],[0,1,0,0],[0,0,0,1],[0,0,1,0]], dtype=complex),
-            "cz": np.array([[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,-1]], dtype=complex),
+            "cnot": np.array(
+                [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]], dtype=complex
+            ),
+            "cz": np.array(
+                [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, -1]], dtype=complex
+            ),
         }
         return gates.get(name, np.eye(2, dtype=complex))
 
@@ -450,6 +479,7 @@ class NCCLWrapper:
             return True
         try:
             import cupy as cp
+
             # NCCL is available via cupy if multi-GPU setup exists
             if cp.cuda.runtime.getDeviceCount() > 1:
                 self._nccl = True
@@ -469,23 +499,13 @@ class NCCLWrapper:
         return False
 
     def all_reduce(self, data: np.ndarray, op: str = "sum") -> np.ndarray:
-        """All-reduce across GPUs. Falls back to identity on single GPU."""
-        if self._world_size == 1:
+        """All-reduce across GPUs. Single-rank: identity. Multi-rank: not faked."""
+        if self._world_size <= 1:
             return data.copy()
 
-        if self._bridge.is_gpu_mode() and self._try_import():
-            try:
-                import cupy as cp
-                arr = cp.asarray(data)
-                # Simulated all-reduce: in real NCCL, this would be collective
-                result = arr * self._world_size if op == "sum" else arr
-                mem_mb = data.nbytes / (1024 * 1024)
-                self._bridge._cost_tracker.record_kernel(mem_mb)
-                return cp.asnumpy(result)
-            except Exception as e:
-                logger.warning(f"NCCL all_reduce failed, falling back: {e}")
-
-        return data.copy()
+        raise NotImplementedError(
+            "Real NCCL all_reduce is not wired — refusing simulated arr*world_size"
+        )
 
     def broadcast(self, data: np.ndarray, root: int = 0) -> np.ndarray:
         """Broadcast from root to all ranks. Falls back to identity."""
@@ -517,23 +537,31 @@ class CloudComputeStub:
             logger.info("BREV_API_KEY not set, returning routing plan without execution")
             return {
                 "provider": "brev.dev",
-                "status": "planned",
+                "status": "unavailable",
                 "simulation_type": simulation_type,
                 "gpu_type": gpu_type,
                 "instance_hours": instance_hours,
                 "estimated_cost_usd": self._estimate_brev_cost(gpu_type, instance_hours),
                 "config_hash": self._hash_config(config),
                 "message": "Set BREV_API_KEY to execute on Brev.dev",
+                "stub": True,
+                "executed": False,
             }
 
         return {
             "provider": "brev.dev",
-            "status": "routed",
+            "status": "unavailable",
+            "stub": True,
+            "executed": False,
             "simulation_type": simulation_type,
             "gpu_type": gpu_type,
             "instance_hours": instance_hours,
             "estimated_cost_usd": self._estimate_brev_cost(gpu_type, instance_hours),
             "api_key_configured": True,
+            "message": (
+                "BREV_API_KEY is set but job submission is not implemented — "
+                "refusing status=routed without a real API call"
+            ),
         }
 
     def route_dgx_cloud(
@@ -549,23 +577,31 @@ class CloudComputeStub:
             logger.info("NGC_API_KEY not set, returning routing plan without execution")
             return {
                 "provider": "dgx_cloud",
-                "status": "planned",
+                "status": "unavailable",
                 "simulation_type": simulation_type,
                 "gpu_type": gpu_type,
                 "instance_hours": instance_hours,
                 "estimated_cost_usd": self._estimate_dgx_cost(gpu_type, instance_hours),
                 "config_hash": self._hash_config(config),
                 "message": "Set NGC_API_KEY to execute on DGX Cloud",
+                "stub": True,
+                "executed": False,
             }
 
         return {
             "provider": "dgx_cloud",
-            "status": "routed",
+            "status": "unavailable",
+            "stub": True,
+            "executed": False,
             "simulation_type": simulation_type,
             "gpu_type": gpu_type,
             "instance_hours": instance_hours,
             "estimated_cost_usd": self._estimate_dgx_cost(gpu_type, instance_hours),
             "api_key_configured": True,
+            "message": (
+                "NGC_API_KEY is set but job submission is not implemented — "
+                "refusing status=routed without a real API call"
+            ),
         }
 
     def _estimate_brev_cost(self, gpu_type: str, hours: float) -> float:
@@ -589,6 +625,7 @@ class CloudComputeStub:
     def _hash_config(self, config: dict[str, Any]) -> str:
         import hashlib
         import json
+
         config_str = json.dumps(config, sort_keys=True, default=str)
         return hashlib.sha256(config_str.encode()).hexdigest()[:16]
 
@@ -606,25 +643,68 @@ class NvidiaBridge:
 
     VERSION = "1.0.0"
 
-    NVIDIA_ACCELERATED_PATTERNS = frozenset({
-        "cfd", "climate_gcm", "cloud_microphysics", "ocean_circulation",
-        "air_quality", "navier_stokes", "turbulence", "boundary_layer",
-        "convection", "advection_diffusion", "continuum_mechanics",
-        "elasticity_3d", "phase_field", "thermal", "stress_strain",
-        "fracture_mechanics", "viscoelasticity", "plasticity",
-        "heat_transfer", "diffusion", "dft", "crystal_growth",
-        "composite_mechanics", "molecular_dynamics", "lattice_dynamics",
-        "dislocation_dynamics", "grain_growth", "atomistic_deposition",
-        "double_pendulum", "agent_based", "flocking", "n_body",
-        "robot_kinematics", "articulated_body", "multi_body_dynamics",
-        "soft_robotics", "particle_system", "granular_flow",
-        "powder_dynamics", "sediment_transport", "em_wave",
-        "antenna_simulation", "em_scattering", "acoustic_wave",
-        "sonar", "ultrasound", "stellar_evolution", "galaxy_dynamics",
-        "black_hole_accretion", "quantum_harmonic", "wave_function",
-        "quantum_tunneling", "quantum_circuit", "qubit_dynamics",
-        "quantum_gate", "entanglement", "bell_state", "quantum_error",
-    })
+    NVIDIA_ACCELERATED_PATTERNS = frozenset(
+        {
+            "cfd",
+            "climate_gcm",
+            "cloud_microphysics",
+            "ocean_circulation",
+            "air_quality",
+            "navier_stokes",
+            "turbulence",
+            "boundary_layer",
+            "convection",
+            "advection_diffusion",
+            "continuum_mechanics",
+            "elasticity_3d",
+            "phase_field",
+            "thermal",
+            "stress_strain",
+            "fracture_mechanics",
+            "viscoelasticity",
+            "plasticity",
+            "heat_transfer",
+            "diffusion",
+            "dft",
+            "crystal_growth",
+            "composite_mechanics",
+            "molecular_dynamics",
+            "lattice_dynamics",
+            "dislocation_dynamics",
+            "grain_growth",
+            "atomistic_deposition",
+            "double_pendulum",
+            "agent_based",
+            "flocking",
+            "n_body",
+            "robot_kinematics",
+            "articulated_body",
+            "multi_body_dynamics",
+            "soft_robotics",
+            "particle_system",
+            "granular_flow",
+            "powder_dynamics",
+            "sediment_transport",
+            "em_wave",
+            "antenna_simulation",
+            "em_scattering",
+            "acoustic_wave",
+            "sonar",
+            "ultrasound",
+            "stellar_evolution",
+            "galaxy_dynamics",
+            "black_hole_accretion",
+            "quantum_harmonic",
+            "wave_function",
+            "quantum_tunneling",
+            "quantum_circuit",
+            "qubit_dynamics",
+            "quantum_gate",
+            "entanglement",
+            "bell_state",
+            "quantum_error",
+        }
+    )
 
     def __init__(self, config: NvidiaBridgeConfig | None = None) -> None:
         self.config = config or NvidiaBridgeConfig()
@@ -652,9 +732,12 @@ class NvidiaBridge:
 
         try:
             import torch
+
             if torch.cuda.is_available():
                 self._device_name = torch.cuda.get_device_name(self.config.device_id)
-                self._device_memory_gb = torch.cuda.get_device_properties(self.config.device_id).total_memory / (1024**3)
+                self._device_memory_gb = torch.cuda.get_device_properties(
+                    self.config.device_id
+                ).total_memory / (1024**3)
                 logger.info(f"CUDA detected via PyTorch: {self._device_name}")
                 return CudaMode.GPU
         except (ImportError, OSError):
@@ -662,6 +745,7 @@ class NvidiaBridge:
 
         try:
             import cupy as cp
+
             if cp.cuda.runtime.getDeviceCount() > 0:
                 with cp.cuda.Device(self.config.device_id):
                     props = cp.cuda.runtime.getDeviceProperties(self.config.device_id)
@@ -791,9 +875,20 @@ class NvidiaBridge:
 
             self._cost_tracker.end_session()
             execution_time = time.perf_counter() - start_time
+            backend = (data or {}).get("backend", "")
+            status = "success"
+            if data.get("stub") is True or data.get("status") == "unavailable":
+                status = "unavailable"
+            elif backend == "numpy_cpu" or (
+                not self.is_gpu_mode() and sim_type in self._KERNEL_TYPES
+            ):
+                status = "partial"
+                data = dict(data)
+                data.setdefault("backend", "numpy_cpu")
+                data.setdefault("note", "CPU kernel — not CUDA physics")
 
             return NvidiaBridgeResult(
-                status="success",
+                status=status,
                 mode=self._mode,
                 execution_time=execution_time,
                 data=data,
@@ -813,7 +908,7 @@ class NvidiaBridge:
             )
 
     def _run_linear_algebra(self, config: dict[str, Any]) -> dict[str, Any]:
-        """Run linear algebra operations via cuBLAS."""
+        """Run linear algebra via CuPy (or NumPy CPU) — not a physics CFD solver."""
         a = np.array(config.get("a", [[1.0, 2.0], [3.0, 4.0]]))
         b = np.array(config.get("b", [[5.0, 6.0], [7.0, 8.0]]))
         op = config.get("op", "matmul")
@@ -827,7 +922,14 @@ class NvidiaBridge:
         else:
             result = np.matmul(a, b)
 
-        return {"result": result.tolist() if hasattr(result, "tolist") else result, "op": op}
+        return {
+            "result": result.tolist() if hasattr(result, "tolist") else result,
+            "op": op,
+            "backend": "cupy_local" if self.is_gpu_mode() else "numpy_cpu",
+            "executed": True,
+            "stub": False,
+            "note": "Local GEMM/kernel — not CFD/physics acceleration",
+        }
 
     def _run_neural_network(self, config: dict[str, Any]) -> dict[str, Any]:
         """Run neural network primitives via cuDNN."""
@@ -886,48 +988,72 @@ class NvidiaBridge:
 
     def _run_generic_simulation(self, config: dict[str, Any]) -> dict[str, Any]:
         """Run generic simulation fallback."""
-        return {"status": "completed", "mode": self._mode.value, "config": config}
+        return {
+            "status": "unavailable",
+            "stub": True,
+            "executed": False,
+            "mode": self._mode.value,
+            "config": config,
+            "note": "Generic NVIDIA path is a stub — no CUDA kernel executed",
+        }
+
+    # Explicit kernel sims only — never remap CFD → matmul as "acceleration".
+    _KERNEL_TYPES = frozenset(
+        {"linear_algebra", "neural_network", "quantum_circuit", "multi_gpu_collective"}
+    )
 
     def accelerate_pattern(
         self,
         pattern: PatternProtocol,
         hypothesis: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
-        """Accelerate existing pattern with NvidiaBridge if applicable."""
+        """Accelerate only when hypothesis asks for an explicit GPU kernel type."""
         pattern_id = getattr(pattern, "PATTERN_ID", "unknown").lower()
-        can_accelerate = self.can_accelerate(pattern_id)
+        hyp = hypothesis or {}
+        explicit_type = hyp.get("type")
 
-        if not can_accelerate:
-            logger.debug(f"Pattern '{pattern_id}' not in NvidiaBridge-accelerated list")
-            return self._fallback_run(pattern, hypothesis)
+        if explicit_type not in self._KERNEL_TYPES:
+            logger.debug(
+                "Pattern '%s' refused Nvidia 'acceleration' without explicit kernel type "
+                "(got type=%r) — physics remaps to matmul are dishonest",
+                pattern_id,
+                explicit_type,
+            )
+            out = self._fallback_run(pattern, hypothesis)
+            out["note"] = (
+                "NvidiaBridge only accelerates explicit type in "
+                "{linear_algebra,neural_network,quantum_circuit,multi_gpu_collective}"
+            )
+            out["backend"] = "pattern_fallback"
+            return out
 
         if not self.is_available():
-            logger.debug("NvidiaBridge not available, using pattern fallback")
             return self._fallback_run(pattern, hypothesis)
 
-        if not self.is_gpu_mode():
-            logger.info("NvidiaBridge in CPU mode — acceleration limited, using pattern fallback")
-            return self._fallback_run(pattern, hypothesis)
-
-        logger.info(f"Accelerating pattern '{pattern_id}' with NvidiaBridge GPU")
-
-        config = self._extract_pattern_config(pattern, hypothesis)
+        config = dict(hyp)
+        config.setdefault("type", explicit_type)
         result = self.run_simulation(config)
 
-        if result.status == "success":
+        if result.status in {"success", "partial"}:
+            backend = (result.data or {}).get("backend", "")
+            on_gpu = self.is_gpu_mode() and backend == "cupy_local" and result.status == "success"
             return {
-                "accelerated": True,
+                "accelerated": on_gpu,
                 "engine": "nvidia",
-                "mode": "gpu",
+                "backend": backend or ("cupy_local" if on_gpu else "numpy_cpu"),
+                "mode": "gpu" if on_gpu else "cpu",
                 "pattern_id": pattern_id,
                 "execution_time": result.execution_time,
                 "data": result.data,
                 "metrics": result.metrics,
                 "cost_report": result.cost_report,
+                "status": result.status,
+                "note": None
+                if on_gpu
+                else "Kernel ran without CUDA acceleration — accelerated=False",
             }
-        else:
-            logger.warning(f"NvidiaBridge acceleration failed: {result.error_message}")
-            return self._fallback_run(pattern, hypothesis)
+        logger.warning("NvidiaBridge kernel failed: %s", result.error_message)
+        return self._fallback_run(pattern, hypothesis)
 
     def _fallback_run(
         self,
@@ -953,55 +1079,13 @@ class NvidiaBridge:
         pattern: PatternProtocol,
         hypothesis: dict[str, Any] | None,
     ) -> dict[str, Any]:
-        """Extract NvidiaBridge-compatible config from pattern and hypothesis."""
+        """Pass through hypothesis; do not invent linear_algebra for CFD patterns."""
         pattern_id = getattr(pattern, "PATTERN_ID", "unknown").lower()
-        config = hypothesis or {}
-
-        type_mapping = {
-            "cfd": "linear_algebra",
-            "climate_gcm": "linear_algebra",
-            "cloud_microphysics": "linear_algebra",
-            "ocean_circulation": "linear_algebra",
-            "air_quality": "linear_algebra",
-            "navier_stokes": "linear_algebra",
-            "turbulence": "linear_algebra",
-            "boundary_layer": "linear_algebra",
-            "convection": "linear_algebra",
-            "advection_diffusion": "linear_algebra",
-            "continuum_mechanics": "linear_algebra",
-            "elasticity_3d": "linear_algebra",
-            "phase_field": "linear_algebra",
-            "thermal": "linear_algebra",
-            "stress_strain": "linear_algebra",
-            "fracture_mechanics": "linear_algebra",
-            "viscoelasticity": "linear_algebra",
-            "plasticity": "linear_algebra",
-            "heat_transfer": "linear_algebra",
-            "diffusion": "linear_algebra",
-            "dft": "neural_network",
-            "crystal_growth": "neural_network",
-            "composite_mechanics": "neural_network",
-            "molecular_dynamics": "neural_network",
-            "lattice_dynamics": "neural_network",
-            "dislocation_dynamics": "neural_network",
-            "grain_growth": "neural_network",
-            "atomistic_deposition": "neural_network",
-            "quantum_harmonic": "quantum_circuit",
-            "wave_function": "quantum_circuit",
-            "quantum_tunneling": "quantum_circuit",
-            "quantum_circuit": "quantum_circuit",
-            "qubit_dynamics": "quantum_circuit",
-            "quantum_gate": "quantum_circuit",
-            "entanglement": "quantum_circuit",
-            "bell_state": "quantum_circuit",
-            "quantum_error": "quantum_circuit",
-        }
-
-        return {
-            "type": type_mapping.get(pattern_id, "linear_algebra"),
-            "pattern_id": pattern_id,
-            **config,
-        }
+        config = dict(hypothesis or {})
+        config.setdefault("pattern_id", pattern_id)
+        if "type" not in config:
+            config["type"] = "unsupported_pattern"
+        return config
 
     def benchmark(self, config: dict[str, Any], num_runs: int = 3) -> dict[str, Any]:
         """Benchmark NvidiaBridge vs legacy implementation."""
@@ -1087,6 +1171,7 @@ class NvidiaBridge:
 def get_nvidia_bridge(config: NvidiaBridgeConfig | None = None) -> NvidiaBridge:
     """Get or create NvidiaBridge singleton (backed by DI container)."""
     from src.di.container import get_container
+
     container = get_container()
     if not container.has("nvidia_bridge"):
         container.register("nvidia_bridge", NvidiaBridge(config))

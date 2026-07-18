@@ -28,7 +28,10 @@ func submitCmd(c *api.Client, query, domain, tier string) tea.Cmd {
 // pollCmd polls /v8/discover/status/{job_id}. Used as fallback when SSE fails.
 func pollCmd(c *api.Client, jobID string) tea.Cmd {
 	return func() tea.Msg {
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		// TURBO dissertations routinely exceed 10s between status polls;
+		// a short timeout surfaces spurious "Poll error" cards while the
+		// job is still running. Keep this aligned with long pipeline work.
+		ctx, cancel := context.WithTimeout(context.Background(), 180*time.Second)
 		defer cancel()
 		js, err := c.JobStatus(ctx, jobID)
 		if err != nil {
@@ -85,10 +88,13 @@ func sseContinueCmd(events <-chan api.SSEEvent, cancel func()) tea.Cmd {
 	}
 }
 
-// flashCmd runs /v8/discover/flash (sync, ~5-10s).
+// flashCmd runs /v8/discover/flash. The backend flash pipeline includes a
+// knowledge search across many sources (can take 30-60s) plus hypothesis
+// generation, so the client deadline must comfortably exceed that — 240s
+// keeps FLASH from failing with context.DeadlineExceeded on slower runs.
 func flashCmd(c *api.Client, query string) tea.Cmd {
 	return func() tea.Msg {
-		ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), 240*time.Second)
 		defer cancel()
 		if err := ensureAPIAuth(ctx, c); err != nil {
 			return flashResultMsg{err: err}

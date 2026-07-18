@@ -1,25 +1,18 @@
-"""LLMGateway — the single sanctioned entry point for LLM calls (P2-A).
+"""LLMGateway — the single sanctioned entry point for LLM calls.
 
-This is the **equivalence-preserving facade** (REWORK_PLAN.md → P2-A track A1).
-It does NOT change behavior: each method is a transparent pass-through to the
-existing implementation, with the same signature and defaults, so callers
-migrated onto the gateway behave byte-for-byte as before (proven by the
-characterization tests in tests/llm/test_gateway_characterization.py).
+Preferred entry::
 
-The three call styles are kept distinct on purpose — they are genuinely
-different (stage-routed vs prompt+params vs message-list), and unifying them or
-applying cross-cutting concerns (guardian/cost/cache) to all of them is a
-*behavior change* deferred to track A2.
+    from src.llm import get_gateway
+    text = await get_gateway().chat([...])
+    text = get_gateway().generate_sync(prompt)
 
-  * generate_for_stage(...) → ProviderRouter (stage→PRESETS, retry, stats)
-  * generate(...)           → AsyncLLMClient (DEFAULT_MODEL, response cache)
-  * chat(...)               → LLMProviderRouter (guardian + provider fallback)
-
-Prometheus metrics: every gateway call increments c4_llm_calls_total
-(provider, model, status). Status is "success" | "error". This fixes audit
-finding C-2 (all Prometheus counters were zero — the gateway is the most-used
-entry point and now flows real metrics).
+Internal strategies (do not import in new code):
+  * generate_for_stage → ProviderRouter
+  * generate           → AsyncLLMClient
+  * chat / chat_json   → LLMProviderRouter → sync_provider_chain
+  * generate_sync      → sync_provider_chain.generate_with_fallback
 """
+
 from __future__ import annotations
 
 import logging
@@ -38,8 +31,12 @@ def _record_llm_call(provider: str, model: str, status: str, duration: float) ->
             LLM_LATENCY,
         )
 
-        LLM_CALLS.labels(provider=provider or "unknown", model=model or "unknown", status=status).inc()
-        LLM_LATENCY.labels(provider=provider or "unknown", model=model or "unknown").observe(duration)
+        LLM_CALLS.labels(
+            provider=provider or "unknown", model=model or "unknown", status=status
+        ).inc()
+        LLM_LATENCY.labels(provider=provider or "unknown", model=model or "unknown").observe(
+            duration
+        )
     except Exception as exc:  # pragma: no cover - metrics are best-effort
         logger.debug("metrics increment failed: %s", exc)
 
@@ -210,6 +207,37 @@ class DefaultGateway:
             _record_llm_call(provider, "chat_json", "error", time.monotonic() - t0)
             raise
 
+    def generate_sync(
+        self,
+        prompt: str,
+        *,
+        system_prompt: str | None = None,
+        max_tokens: int = 2000,
+        temperature: float = 0.7,
+        preferred_model: str | None = None,
+    ) -> str:
+        """Synchronous multi-provider generate (sync_provider_chain under the hood)."""
+        from src.llm.sync_provider_chain import generate_with_fallback
+
+        t0 = time.monotonic()
+        try:
+            result = generate_with_fallback(
+                prompt,
+                system_prompt=system_prompt,
+                max_tokens=max_tokens,
+                temperature=temperature,
+                preferred_model=preferred_model,
+            )
+            _record_llm_call(
+                "sync_chain", preferred_model or "auto", "success", time.monotonic() - t0
+            )
+            return result
+        except Exception:
+            _record_llm_call(
+                "sync_chain", preferred_model or "auto", "error", time.monotonic() - t0
+            )
+            raise
+
     async def close(self) -> None:
         """Best-effort cleanup of any constructed strategies."""
         if self._provider_router is not None and hasattr(self._provider_router, "close_all"):
@@ -227,3 +255,21 @@ def get_gateway() -> DefaultGateway:
     if _default_gateway is None:
         _default_gateway = DefaultGateway()
     return _default_gateway
+
+
+def generate_with_fallback(
+    prompt: str,
+    *,
+    system_prompt: str | None = None,
+    max_tokens: int = 2000,
+    temperature: float = 0.7,
+    preferred_model: str | None = None,
+) -> str:
+    """Public sync generate — thin alias of ``get_gateway().generate_sync``."""
+    return get_gateway().generate_sync(
+        prompt,
+        system_prompt=system_prompt,
+        max_tokens=max_tokens,
+        temperature=temperature,
+        preferred_model=preferred_model,
+    )

@@ -74,22 +74,37 @@ class HILDiscoveryPipeline(BasePipeline):
         except Exception as e:
             logger.debug("CQRS dispatch skipped: %s", e)
 
-        # ── Architecture: Saga orchestration ───────────────────────
+        # ── Architecture: Saga orchestration (honest bookkeeping only) ──
         try:
             from src.architecture.saga import FunctionSagaStep
 
             saga = self.saga
-            saga.add_step(FunctionSagaStep("discover", lambda ctx: None))
+
+            def _saga_mark(ctx: Any) -> None:
+                """Record that discovery saga started — real work is phases A–G."""
+                ctx.data["saga_phase"] = "discover_started"
+                ctx.data["saga_bookkeeping_only"] = True
+                ctx.results["discover"] = {
+                    "ok": True,
+                    "bookkeeping": True,
+                    "note": "Saga ID only — phases A-G perform the real discovery work",
+                }
+
+            saga.add_step(FunctionSagaStep("discover", _saga_mark))
             ctx = saga.execute({"topic": topic})
             record.saga_id = ctx.saga_id
-        except Exception:
-            pass
+            record.plugins_context["saga"] = {
+                "bookkeeping": True,
+                "saga_id": ctx.saga_id,
+            }
+        except Exception as _exc:
+            logger.debug("swallowed exception: %s", _exc, exc_info=True)
 
         query_type = self._classify_query(topic)
-        print(f"\n{'='*70}")
+        print(f"\n{'=' * 70}")
         print(f"  DISCOVERY: {topic}")
         print(f"  QUERY TYPE: {query_type}")
-        print(f"{'='*70}")
+        print(f"{'=' * 70}")
 
         await event_bus.emit(
             "pipeline_start",
@@ -348,8 +363,8 @@ class HILDiscoveryPipeline(BasePipeline):
         # ── Saga completion ─────────────────────────────────────────
         try:
             logger.debug("Saga %s completed: %s", record.saga_id, self.saga.status)
-        except Exception:
-            pass
+        except Exception as _exc:
+            logger.debug("swallowed exception: %s", _exc, exc_info=True)
 
         return record
 

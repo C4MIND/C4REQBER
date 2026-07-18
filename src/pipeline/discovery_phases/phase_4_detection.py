@@ -1,6 +1,7 @@
 """Phase 4: Shift Detection — AlreadyShiftedDetector, paradigm shift, novelty validator,
 falsification engine, DoE design, power analysis, reproducibility.
 """
+
 from __future__ import annotations
 
 import logging
@@ -10,7 +11,9 @@ from typing import Any
 logger = logging.getLogger("c4_cdi_turbo.pipeline.discovery.phase4")
 
 
-async def run_shift_detection(problem, domain, papers, results, citation_chase_result, thresholds, errors, abort_reasons) -> dict[str, Any]:
+async def run_shift_detection(
+    problem, domain, papers, results, citation_chase_result, thresholds, errors, abort_reasons
+) -> dict[str, Any]:
     """Run shift detection."""
     import asyncio
     import time
@@ -26,13 +29,31 @@ async def run_shift_detection(problem, domain, papers, results, citation_chase_r
     already_shifted_result: dict[str, Any] = {}
     try:
         from src.discovery.already_shifted import AlreadyShiftedDetector
+
         hypothesis_text = results.get("hypothesis", {}).get("text", "")
         shift_detector = AlreadyShiftedDetector()
-        already_shifted_result = await asyncio.wait_for(shift_detector.check(hypothesis=hypothesis_text, papers=papers[:100], citation_timeline=citation_chase_result.get("timeline", []), domain=domain), timeout=15.0)
-        if isinstance(already_shifted_result, dict) and already_shifted_result.get("already_shifted"):
+        already_shifted_result = await asyncio.wait_for(
+            shift_detector.check(
+                hypothesis=hypothesis_text,
+                papers=papers[:100],
+                citation_timeline=citation_chase_result.get("timeline", []),
+                domain=domain,
+            ),
+            timeout=15.0,
+        )
+        if isinstance(already_shifted_result, dict) and already_shifted_result.get(
+            "already_shifted"
+        ):
             verdict = already_shifted_result.get("verdict", "ALREADY_SHIFTED")
-            logger.warning("ALREADY_SHIFTED_GATE: adding abort reason. Verdict=%s Consensus=%s ShiftYear=%s", verdict, already_shifted_result.get('consensus_level'), already_shifted_result.get('shift_year'))
-            abort_reasons.append(f"ALREADY_SHIFTED: This paradigm shift has ALREADY occurred. Seminal papers: {[p['title'][:60] for p in already_shifted_result.get('seminal_papers', [])[:3]]}. First detected: {already_shifted_result.get('shift_year')}. Consensus: {already_shifted_result.get('consensus_level', 0):.0%}.")
+            logger.warning(
+                "ALREADY_SHIFTED_GATE: adding abort reason. Verdict=%s Consensus=%s ShiftYear=%s",
+                verdict,
+                already_shifted_result.get("consensus_level"),
+                already_shifted_result.get("shift_year"),
+            )
+            abort_reasons.append(
+                f"ALREADY_SHIFTED: This paradigm shift has ALREADY occurred. Seminal papers: {[p['title'][:60] for p in already_shifted_result.get('seminal_papers', [])[:3]]}. First detected: {already_shifted_result.get('shift_year')}. Consensus: {already_shifted_result.get('consensus_level', 0):.0%}."
+            )
             logger.warning("abort_reasons now has %d items: %s", len(abort_reasons), abort_reasons)
     except TimeoutError:
         logger.warning("shift_detector.check timed out after 15s")
@@ -47,12 +68,22 @@ async def run_shift_detection(problem, domain, papers, results, citation_chase_r
     logger.info("Paradigm shift: %.3fs", time.perf_counter() - t_ps)
     try:
         from src.discovery.novelty_validator import NoveltyValidator
+
         hypothesis_text = results.get("hypothesis", {}).get("text", "")
         async with NoveltyValidator() as validator:
             novelty_result = await validator.check(hypothesis_text, domain)
         results["novelty"] = novelty_result
-        novelty_score_val = novelty_result.get("novelty_score", 0.5)
-        if novelty_score_val < thresholds["min_novelty_score"]:
+        novelty_score_val = novelty_result.get("novelty_score")
+        novelty_status = novelty_result.get("status", "")
+        if novelty_score_val is None or novelty_status == "unchecked":
+            unchecked_note = (
+                f"NOVELTY_UNCHECKED: score unavailable "
+                f"(error={novelty_result.get('error', 'unknown')})"
+            )
+            abort_reasons.append(unchecked_note)
+            results["novelty_warning"] = unchecked_note
+            logger.warning(unchecked_note)
+        elif novelty_score_val < thresholds["min_novelty_score"]:
             closest = novelty_result.get("closest_papers", [])
             closest_title = closest[0].get("title", "unknown") if closest else "unknown"
             low_novelty_note = f"LOW_NOVELTY: hypothesis overlaps with existing literature. Closest: '{closest_title}' (similarity={novelty_result.get('max_similarity', 0):.2f}, score={novelty_score_val:.2f}). Consider reformulating."
@@ -60,14 +91,19 @@ async def run_shift_detection(problem, domain, papers, results, citation_chase_r
             results["novelty_warning"] = low_novelty_note
             logger.warning(low_novelty_note)
         elif novelty_score_val < 0.6:
-            results["novelty_warning"] = f"MODERATE_NOVELTY: score={novelty_score_val:.2f}. Acceptable but borderline."
+            results["novelty_warning"] = (
+                f"MODERATE_NOVELTY: score={novelty_score_val:.2f}. Acceptable but borderline."
+            )
             logger.info("Moderate novelty: %.2f", novelty_score_val)
     except Exception as e:
-        results["novelty"] = {"status": "unchecked", "novelty_score": 0.5, "error": str(e)}
+        results["novelty"] = {"status": "unchecked", "novelty_score": None, "error": str(e)}
         errors.append(f"novelty: {str(e)}")
+        abort_reasons.append(f"NOVELTY_UNCHECKED: {e}")
     t_fals = time.perf_counter()
     try:
-        results["falsification_engine"] = run_falsification_engine(results.get("hypothesis", {}), domain)
+        results["falsification_engine"] = run_falsification_engine(
+            results.get("hypothesis", {}), domain
+        )
     except Exception as e:
         results["falsification_engine"] = {"error": str(e)}
         errors.append(f"falsification_engine: {str(e)}")

@@ -58,12 +58,8 @@ func LoadConfig() Config {
 		cfg.APIURL = v
 	}
 	if v := os.Getenv("C4_LANG"); v != "" {
-		lang := i18n.Lang(strings.ToLower(v))
-		// Validate
-		switch lang {
-		case i18n.LangEN, i18n.LangRU, i18n.LangZH, i18n.LangJA,
-			i18n.LangDE, i18n.LangAR, i18n.LangHI:
-			cfg.Lang = lang
+		if l, ok := i18n.FromString(v); ok {
+			cfg.Lang = l
 		}
 	}
 	if v := os.Getenv("C4_DREAM_IDLE"); v != "" {

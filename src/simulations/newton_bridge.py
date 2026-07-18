@@ -4,19 +4,15 @@ import os
 
 
 """
-Newton Physics Bridge — GPU-accelerated physics engine adapter.
+Newton Physics Bridge — optional adapter for newton-physics.
 
-Newton (github.com/newton-physics/newton) is a Linux Foundation project
-developed by Disney Research, Google DeepMind, and NVIDIA.
-License: Apache 2.0 (permissive, commercial OK)
+When ``newton`` / ``newton-physics`` is available in NEWTON_PYTHON, the
+subprocess runner may use it. Otherwise ``newton_runner`` runs a labeled
+NumPy n-body fallback (``engine_truth: not_newton_physics``) or refuses
+empty ``completed`` results for other sim types.
 
-Requirements:
-- pip install newton-physics
-- NVIDIA GPU with CUDA support (GPU mode)
-- Falls back to CPU on macOS or systems without NVIDIA GPU
-
-GPU Mode: 10-100x faster for fluid/continuum physics
-CPU Mode: Functional but slower
+Do not treat ``accelerated: True`` as proof of Disney/NVIDIA Newton GPU —
+check ``backend`` / ``engine_truth`` on the result.
 """
 
 import logging
@@ -32,6 +28,7 @@ logger = logging.getLogger(__name__)
 
 class NewtonMode(Enum):
     """Newton execution mode."""
+
     GPU = "gpu"
     CPU = "cpu"
     UNAVAILABLE = "unavailable"
@@ -40,6 +37,7 @@ class NewtonMode(Enum):
 @dataclass
 class NewtonConfig:
     """Configuration for Newton simulations."""
+
     device: str = "cuda:0"
     num_substeps: int = 4
     solver_iterations: int = 10
@@ -51,6 +49,7 @@ class NewtonConfig:
 @dataclass
 class NewtonResult:
     """Result from Newton simulation."""
+
     status: str = "pending"
     mode: NewtonMode = NewtonMode.UNAVAILABLE
     execution_time: float = 0.0
@@ -62,49 +61,39 @@ class NewtonResult:
 @runtime_checkable
 class PatternProtocol(Protocol):
     """Protocol for pattern objects that can be accelerated."""
+
     PATTERN_ID: str
 
-    def run(self, hypothesis: dict[str, Any] | None = None) -> dict[str, Any]:
-        ...
+    def run(self, hypothesis: dict[str, Any] | None = None) -> dict[str, Any]: ...
 
 
-NEWTON_ACCELERATED_PATTERNS = frozenset({
-    "cfd",
-    "cloud_microphysics",
-    "climate_gcm",
-    "continuum_mechanics",
-    "ocean_circulation",
-    "phase_field",
-    "thermal",
-    "wave_equation",
-    "acoustic_waves",
-    "groundwater",
-    "air_quality",
-    "rigid_body",
-    "n_body",
-    "soft_body",
-    "cloth",
-})
+NEWTON_ACCELERATED_PATTERNS = frozenset(
+    {
+        "cfd",
+        "cloud_microphysics",
+        "climate_gcm",
+        "continuum_mechanics",
+        "ocean_circulation",
+        "phase_field",
+        "thermal",
+        "wave_equation",
+        "acoustic_waves",
+        "groundwater",
+        "air_quality",
+        "rigid_body",
+        "n_body",
+        "soft_body",
+        "cloth",
+    }
+)
 
 
 class NewtonBridge:
     """
-    Bridge to Newton GPU-accelerated physics engine (Apache 2.0).
+    Adapter around optional newton-physics + honest NumPy fallback.
 
-    Newton is the most powerful GPU-accelerated physics engine, developed by
-    Disney Research, Google DeepMind, and NVIDIA as a Linux Foundation project.
-
-    Features:
-    - Rigid body dynamics
-    - Soft body simulation
-    - Fluid dynamics (CFD)
-    - Cloth simulation
-    - Articulated bodies
-    - MuJoCo Warp backend
-
-    Requirements:
-    - NVIDIA GPU with CUDA for GPU mode (10-100x speedup)
-    - Falls back to CPU on macOS or systems without NVIDIA GPU
+    ``is_available()`` means a Python able to import/run the runner exists —
+    not that GPU Newton physics executed. Inspect result ``backend``.
     """
 
     VERSION = "8.0.0"
@@ -121,13 +110,25 @@ class NewtonBridge:
             self._initialize()
 
     def _detect_mode(self) -> NewtonMode:
-        """Detect if Newton is available via mlx-env Python 3.11 venv (≥3.10 required)."""
+        """Detect Newton via NEWTON_PYTHON / C4_NEWTON_PYTHON or common local venvs."""
         import shutil
+
         _home = os.path.expanduser("~")
+        _repo_venv = os.path.abspath(
+            os.path.join(os.path.dirname(__file__), "..", "..", ".venv", "bin", "python")
+        )
+        _env = (os.environ.get("NEWTON_PYTHON") or os.environ.get("C4_NEWTON_PYTHON") or "").strip()
         _candidates = [
-            os.path.join(_home, "LocalProjects/mlx-env/bin/python"),
-            os.path.join(_home, "mlx-env/bin/python"),
-            "/opt/homebrew/bin/python3.11",
+            c
+            for c in (
+                _env,
+                _repo_venv,
+                os.path.join(_home, "LocalProjects/mlx-env/bin/python"),
+                os.path.join(_home, "mlx-env/bin/python"),
+                os.path.join(_home, ".c4reqber/envs/newton/bin/python"),
+                "/opt/homebrew/bin/python3.11",
+            )
+            if c
         ]
         self._mlx_venv_python = ""
         for cand in _candidates:
@@ -135,20 +136,22 @@ class NewtonBridge:
                 self._mlx_venv_python = cand
                 break
         if not self._mlx_venv_python:
-            self._mlx_venv_python = shutil.which("python3.11") or shutil.which("python3") or "python3"
+            self._mlx_venv_python = (
+                shutil.which("python3.11") or shutil.which("python3") or "python3"
+            )
         try:
             import subprocess
+
             result = subprocess.run(
                 [self._mlx_venv_python, "-c", "import newton; print('newton_ok')"],
                 capture_output=True,
                 text=True,
-                timeout=5
+                timeout=5,
             )
             if result.returncode == 0 and "newton_ok" in result.stdout:
                 self._newton_module = True  # Mark as available via subprocess
-                logger.info(f"Newton found via {self._mlx_venv_python}")
-                if self._is_nvidia_gpu_available():
-                    return NewtonMode.GPU
+                logger.info(f"Newton package importable via {self._mlx_venv_python}")
+                # Import ≠ GPU physics executed. Mode reflects runner capability only.
                 return NewtonMode.CPU
             else:
                 logger.info("Newton not found. Install with: pip install newton-physics")
@@ -165,6 +168,7 @@ class NewtonBridge:
 
         try:
             import warp as wp
+
             self._warp_module = wp
 
             if wp.is_cuda_available():
@@ -179,12 +183,8 @@ class NewtonBridge:
 
         try:
             import subprocess
-            result = subprocess.run(
-                ["nvidia-smi"],
-                capture_output=True,
-                text=True,
-                timeout=5
-            )
+
+            result = subprocess.run(["nvidia-smi"], capture_output=True, text=True, timeout=5)
             if result.returncode == 0:
                 logger.debug("nvidia-smi detected GPU")
                 return True
@@ -272,22 +272,52 @@ class NewtonBridge:
                 [self._mlx_venv_python, runner_script, config_json],
                 capture_output=True,
                 text=True,
-                timeout=30
+                timeout=120,
+                env={
+                    **os.environ,
+                    "WARP_CACHE_DIR": os.path.join(
+                        os.path.dirname(__file__), "..", "..", ".cache", "warp"
+                    ),
+                    "WARP_CACHE_PATH": os.path.join(
+                        os.path.dirname(__file__), "..", "..", ".cache", "warp"
+                    ),
+                },
             )
 
             if result.returncode != 0:
                 raise RuntimeError(f"Newton runner failed: {result.stderr}")
 
-            sim_result = json.loads(result.stdout)
+            sim_result = None
+            for line in reversed((result.stdout or "").splitlines()):
+                line = line.strip()
+                if line.startswith("{") and line.endswith("}"):
+                    try:
+                        sim_result = json.loads(line)
+                        break
+                    except json.JSONDecodeError:
+                        continue
+            if sim_result is None:
+                raise RuntimeError(
+                    f"Newton runner produced no JSON (rc={result.returncode}): "
+                    f"stderr={result.stderr[-500:]} stdout={result.stdout[-500:]}"
+                )
             execution_time = time.perf_counter() - start_time
+            data = dict(sim_result.get("data") or {})
+            # Surface honesty fields at top of data for accelerate_pattern checks.
+            for key in ("backend", "engine_truth", "executed", "stub", "note"):
+                if key in sim_result and key not in data:
+                    data[key] = sim_result[key]
+            metrics = dict(sim_result.get("metrics") or {})
+            if "backend" in sim_result:
+                metrics["backend"] = sim_result["backend"]
 
             return NewtonResult(
-                status=sim_result.get("status", "success"),
+                status=sim_result.get("status", "error"),
                 mode=self._mode,
                 execution_time=execution_time,
-                data=sim_result.get("data", {}),
-                metrics=sim_result.get("metrics", {}),
-                error_message=sim_result.get("error", "")
+                data=data,
+                metrics=metrics,
+                error_message=sim_result.get("error", "") or "",
             )
 
         except Exception as e:
@@ -327,9 +357,7 @@ class NewtonBridge:
         return self.run_simulation(cfd_config)
 
     def accelerate_pattern(
-        self,
-        pattern: PatternProtocol,
-        hypothesis: dict[str, Any] | None = None
+        self, pattern: PatternProtocol, hypothesis: dict[str, Any] | None = None
     ) -> dict[str, Any]:
         """
         Accelerate existing pattern with Newton if NVIDIA GPU available.
@@ -359,29 +387,54 @@ class NewtonBridge:
             logger.info("Newton in CPU mode — acceleration limited, using pattern fallback")
             return self._fallback_run(pattern, hypothesis)
 
-        logger.info(f"Accelerating pattern '{pattern_id}' with Newton GPU")
+        logger.info("Attempting Newton path for pattern '%s'", pattern_id)
 
         config = self._extract_pattern_config(pattern, hypothesis)
         newton_result = self.run_simulation(config)
+        backend = (newton_result.data or {}).get("backend") or (newton_result.metrics or {}).get(
+            "backend"
+        )
 
-        if newton_result.status == "success":
+        if newton_result.status == "success" and backend == "newton_physics":
             return {
                 "accelerated": True,
                 "engine": "newton",
-                "mode": "gpu",
+                "backend": "newton_physics",
+                "engine_truth": "newton_physics",
+                "mode": "gpu" if self.is_gpu_mode() else "cpu",
                 "pattern_id": pattern_id,
                 "execution_time": newton_result.execution_time,
                 "data": newton_result.data,
                 "metrics": newton_result.metrics,
             }
-        else:
-            logger.warning(f"Newton acceleration failed: {newton_result.error_message}")
-            return self._fallback_run(pattern, hypothesis)
+
+        if newton_result.status == "partial" and backend == "numpy_fallback":
+            return {
+                "accelerated": False,
+                "engine": "numpy_fallback",
+                "backend": "numpy_fallback",
+                "engine_truth": "not_newton_physics",
+                "mode": "cpu",
+                "pattern_id": pattern_id,
+                "execution_time": newton_result.execution_time,
+                "data": newton_result.data,
+                "metrics": newton_result.metrics,
+                "note": "NumPy fallback — not claiming Newton GPU acceleration",
+            }
+
+        logger.warning(
+            "Newton path not real acceleration (status=%s backend=%s): %s",
+            newton_result.status,
+            backend,
+            newton_result.error_message,
+        )
+        out = self._fallback_run(pattern, hypothesis)
+        out["engine_truth"] = "not_newton_physics"
+        out["backend"] = backend or "pattern_fallback"
+        return out
 
     def _fallback_run(
-        self,
-        pattern: PatternProtocol,
-        hypothesis: dict[str, Any] | None
+        self, pattern: PatternProtocol, hypothesis: dict[str, Any] | None
     ) -> dict[str, Any]:
         """Run pattern with standard implementation."""
         start_time = time.perf_counter()
@@ -398,9 +451,7 @@ class NewtonBridge:
         }
 
     def _extract_pattern_config(
-        self,
-        pattern: PatternProtocol,
-        hypothesis: dict[str, Any] | None
+        self, pattern: PatternProtocol, hypothesis: dict[str, Any] | None
     ) -> dict[str, Any]:
         """Extract Newton-compatible config from pattern and hypothesis."""
         pattern_id = getattr(pattern, "PATTERN_ID", "unknown").lower()
@@ -432,7 +483,6 @@ class NewtonBridge:
     def _run_fluid_simulation(self, config: dict[str, Any]) -> dict[str, Any]:
         """Run fluid dynamics simulation."""
         try:
-
             grid_size = config.get("grid_size", 50)
             num_particles = config.get("num_particles", grid_size * grid_size)
             dt = config.get("dt", 1e-3)
@@ -486,12 +536,42 @@ class NewtonBridge:
         for _step in range(min(num_steps, 10)):
             vx = velocities[:, :, 0]
             vy = velocities[:, :, 1]
-            laplacian_vx = (np.roll(vx, 1, 0) + np.roll(vx, -1, 0) + np.roll(vx, 1, 1) + np.roll(vx, -1, 1) - 4 * vx)
-            laplacian_vy = (np.roll(vy, 1, 0) + np.roll(vy, -1, 0) + np.roll(vy, 1, 1) + np.roll(vy, -1, 1) - 4 * vy)
+            laplacian_vx = (
+                np.roll(vx, 1, 0)
+                + np.roll(vx, -1, 0)
+                + np.roll(vx, 1, 1)
+                + np.roll(vx, -1, 1)
+                - 4 * vx
+            )
+            laplacian_vy = (
+                np.roll(vy, 1, 0)
+                + np.roll(vy, -1, 0)
+                + np.roll(vy, 1, 1)
+                + np.roll(vy, -1, 1)
+                - 4 * vy
+            )
             velocities[:, :, 0] += viscosity * laplacian_vx * dt
             velocities[:, :, 1] += viscosity * laplacian_vy * dt
-            velocities[:, :, 0] -= 0.5 * dt * (np.roll(vx * vx, -1, 0) - np.roll(vx * vx, 1, 0) + np.roll(vx * vy, -1, 1) - np.roll(vx * vy, 1, 1))
-            velocities[:, :, 1] -= 0.5 * dt * (np.roll(vx * vy, -1, 0) - np.roll(vx * vy, 1, 0) + np.roll(vy * vy, -1, 1) - np.roll(vy * vy, 1, 1))
+            velocities[:, :, 0] -= (
+                0.5
+                * dt
+                * (
+                    np.roll(vx * vx, -1, 0)
+                    - np.roll(vx * vx, 1, 0)
+                    + np.roll(vx * vy, -1, 1)
+                    - np.roll(vx * vy, 1, 1)
+                )
+            )
+            velocities[:, :, 1] -= (
+                0.5
+                * dt
+                * (
+                    np.roll(vx * vy, -1, 0)
+                    - np.roll(vx * vy, 1, 0)
+                    + np.roll(vy * vy, -1, 1)
+                    - np.roll(vy * vy, 1, 1)
+                )
+            )
             positions += velocities * dt
 
         return {
@@ -628,9 +708,9 @@ class NewtonBridge:
         complexity = max(num_particles, grid_size * grid_size) * num_steps
 
         if self.is_gpu_mode():
-            return complexity * 1e-5# type: ignore[no-any-return]
+            return complexity * 1e-5  # type: ignore[no-any-return]
         else:
-            return complexity * 1e-6# type: ignore[no-any-return]
+            return complexity * 1e-6  # type: ignore[no-any-return]
 
     def __repr__(self) -> str:
         return f"NewtonBridge(mode={self._mode.value}, available={self.is_available()})"
@@ -639,6 +719,7 @@ class NewtonBridge:
 def get_bridge(config: NewtonConfig | None = None) -> NewtonBridge:
     """Get or create Newton bridge singleton (backed by DI container)."""
     from src.di.container import get_container
+
     container = get_container()
     if not container.has("newton_bridge"):
         container.register("newton_bridge", NewtonBridge(config))

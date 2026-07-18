@@ -18,8 +18,10 @@ class FunctorAgent(ABC):
     phase: str = "дивергенция"
 
     def __init__(self, llm_client: AsyncLLMClient | None = None) -> None:
-        from src.llm.router import ProviderRouter
-        self.llm_client = llm_client or ProviderRouter()
+        from src.llm import get_gateway
+
+        # Gateway.generate matches AsyncLLMClient.generate kwargs used by _llm_generate.
+        self.llm_client = llm_client or get_gateway()
 
     @abstractmethod
     async def analyze(self, problem: str, context: dict[str, Any] | None = None) -> dict[str, Any]:
@@ -47,7 +49,7 @@ class FunctorAgent(ABC):
             temperature=temperature,
             max_tokens=max_tokens,
         )
-        return response.content
+        return getattr(response, "content", str(response))
 
     def _build_result(
         self,

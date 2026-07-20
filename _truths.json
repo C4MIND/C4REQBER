@@ -1,26 +1,26 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "generated_at": "2026-07-13T18:16:11Z",
-  "version_backend": "5.7.3",
+  "generated_at": "2026-07-20T14:51:04Z",
+  "version_backend": "5.7.4",
   "version_tui": "v9.13.0",
-  "git_head": "fabcc87",
+  "git_head": "4005c7a",
   "git_branch": "main",
   "python": {
-    "loc": 222090,
+    "loc": 227799,
     "tests_collected": 9924
   },
   "go": {
-    "loc_tui_v9": 23354
+    "loc_tui_v9": 23685
   },
   "mcp": {
     "tools": 21
   },
   "cli": {
-    "commands": 24
+    "commands": 25
   },
   "knowledge": {
-    "sources": 47,
-    "wired": 46,
+    "sources": 59,
+    "wired": 56,
     "footnote": "SOURCE_REGISTRY entries; wired is the registry/adapter-map intersection. Runtime-active count depends on credentials and source availability."
   },
   "simulations": {

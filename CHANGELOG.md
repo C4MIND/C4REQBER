@@ -4,6 +4,9 @@
 
 ## v9.18.0 (2026-07-18) — Honesty contract (anti green-fake)
 
+### PyPI
+- **5.7.2** on PyPI — ships honesty contract (MCP/plugin/sim status, citation gates, TUI mapping)
+
 Canonical rules: [`docs/HONESTY_CONTRACT.md`](docs/HONESTY_CONTRACT.md).
 
 ### Citations / novelty / verification

@@ -76,6 +76,24 @@ Public URL: https://cognitive-functors.gitlab.io/c4reqber/
 
 If login redirect: Settings → General → Pages → **Everyone**.
 
+## PyPI tag release order (badge pitfall)
+
+`pypi-publish-prod` runs only on tags matching `^v\d+\.\d+\.\d+$` and needs green
+`test-backend-checks` + `test-backend-suite` on that **tag** pipeline.
+
+**Order (avoid dual queue on one Mac runner):**
+
+1. Locally run the same suite as CI (`tests/verification/` … `not slow`) until 0 failed.
+2. Push the release commit to `main` only; wait until `main` suite is green.
+3. Then `git tag vX.Y.Z && git push origin vX.Y.Z`.
+4. Confirm publish via Pipelines `ref=vX.Y.Z` + `https://pypi.org/pypi/c4reqber/json`, **not** the
+   CI icon next to the commit in Commits.
+
+**Why:** Pushing `main` and the tag together starts two pipelines that share
+`resource_group: mac-colima-v2`. Canceling `main` to unblock the tag frees the runner but leaves a
+**canceled** badge on that SHA in the Commits UI even when the tag pipeline and PyPI succeed.
+Retry the `main` pipeline afterward if you need a green commit badge (no new version bump).
+
 ## Registry
 
 ```

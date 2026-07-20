@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "c4reqber"
-version = "5.7.4"
+version = "5.7.5"
 description = "Cognitive exoskeleton for AI agents — MCP-native discovery pipeline"
 readme = "README.md"
 license = { text = "AGPL-3.0" }
@@ -44,7 +44,7 @@ dependencies = [
     "pyyaml>=6.0.0",
     "jsonschema",
     "anyio>=4.0.0",
-    "mcp",
+    "mcp>=1.28.1",
     "aiofiles",
     "beautifulsoup4",
     "feedparser>=6.0.0",

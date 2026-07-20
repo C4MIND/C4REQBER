@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="js/site-base.js"></script>
 <title>c4reqber — Cognitive Exoskeleton for AI Agents</title>
-<meta name="description" content="Cognitive exoskeleton for AI agents. 38 simulation bridges, 9 verifiers, 47 knowledge sources, 21 MCP tools. Think. Simulate. Prove. Discover.">
+<meta name="description" content="Cognitive exoskeleton for AI agents. 38 simulation bridges, 9 verifiers, 59 knowledge sources, 21 MCP tools. Think. Simulate. Prove. Discover.">
 <meta property="og:title" content="c4reqber — Cognitive Exoskeleton for AI Agents">
 <meta property="og:description" content="Think. Simulate. Prove. Discover.">
 <meta property="og:type" content="website">
@@ -37,10 +37,10 @@
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
   "name": "c4reqber",
-  "description": "Cognitive exoskeleton for humans and AI agents. 27 states, 38 engine bridges, 9 verifiers, 47 sources, 21 MCP tools.",
+  "description": "Cognitive exoskeleton for humans and AI agents. 27 states, 38 engine bridges, 9 verifiers, 59 sources, 21 MCP tools.",
   "applicationCategory": "ScientificApplication",
   "operatingSystem": "macOS, Linux",
-  "softwareVersion": "5.7.1",
+  "softwareVersion": "5.7.4",
   "license": "https://www.gnu.org/licenses/agpl-3.0.html",
   "url": "https://c4reqber.org",
   "author": {
@@ -59,7 +59,7 @@
   "@context": "https://schema.org",
   "@type": "FAQPage",
   "mainEntity": [
-    {"@type": "Question", "name": "What is c4reqber?", "acceptedAnswer": {"@type": "Answer", "text": "c4reqber is a cognitive exoskeleton for AI agents and human researchers. It combines 38 simulation engines, 47 knowledge sources, formal verification (Lean4, Coq, Dafny, Agda, Z3), a Z₃³ cognitive topology, O₀→O₁→O₂ meta-cognitive observer, and 23 core metaprograms to transform research questions into gated research proposals."}},
+    {"@type": "Question", "name": "What is c4reqber?", "acceptedAnswer": {"@type": "Answer", "text": "c4reqber is a cognitive exoskeleton for AI agents and human researchers. It combines 38 simulation engines, 59 knowledge sources, formal verification (Lean4, Coq, Dafny, Agda, Z3), a Z₃³ cognitive topology, O₀→O₁→O₂ meta-cognitive observer, and 23 core metaprograms to transform research questions into gated research proposals."}},
     {"@type": "Question", "name": "How much does c4reqber cost?", "acceptedAnswer": {"@type": "Answer", "text": "c4reqber is free and open-source (AGPL-3.0). You only pay for the LLM API calls you use. A full pipeline run costs between $0.002 (Budget tier, DeepSeek) and $0.11 (Premium tier, Claude Opus). The recommended balanced tier costs approximately $0.35 per run."}},
     {"@type": "Question", "name": "Is c4reqber open source?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. c4reqber is licensed under AGPL-3.0. The entire codebase, including 21 MCP tools, 38 simulation engine bridges, and 9 formal verification backends, is publicly available on GitLab."}},
     {"@type": "Question", "name": "What operating systems are supported?", "acceptedAnswer": {"@type": "Answer", "text": "macOS and Linux are fully tested and supported. Windows is not tested but may work under WSL2. External simulation engines (GROMACS, OpenFOAM, etc.) require separate installation per engine."}},
@@ -118,7 +118,7 @@
       <a href="discoveries/index.html" class="btn btn-secondary" data-i18n="hero_cta_discoveries">6 verified proposals →</a>
       <a href="https://gitlab.com/cognitive-functors/c4reqber" class="btn btn-secondary" rel="noopener noreferrer" target="_blank" data-i18n="hero_cta_secondary">GitLab</a>
     </div>
-    <p class="hero-meta" style="margin-top:20px" data-i18n="hero_tags">Z₃³ COGNITIVE EXOSKELETON · 27 STATES · 6 OPERATORS · 47 SOURCES · 38 ENGINE BRIDGES · 21 MCP TOOLS · O₀→O₁→O₂ OBSERVER · 23 MPs</p>
+    <p class="hero-meta" style="margin-top:20px" data-i18n="hero_tags">Z₃³ COGNITIVE EXOSKELETON · 27 STATES · 6 OPERATORS · 59 SOURCES · 38 ENGINE BRIDGES · 21 MCP TOOLS · O₀→O₁→O₂ OBSERVER · 23 MPs</p>
     <p class="hero-meta" style="margin-top:8px;font-size:11px;opacity:.7" data-i18n="hero_meta">AGPL-3.0 · BYOK · Multi-Prompt Router · Terminal-First · OpenRouter · XAI · Mistral · Moonshot · DeepSeek · Liquid · NVIDIA · YandexGPT · Ollama · LM Studio · MLX</p>
   </div>
 </section>
@@ -129,7 +129,7 @@
     <div class="stats-grid">
       <div class="stat-card accent"><div class="stat-value accent">27</div><div class="stat-label" data-i18n="stat_states">Cognitive States</div></div>
       <div class="stat-card green"><div class="stat-value green">6</div><div class="stat-label" data-i18n="stat_operators">C4 Operators</div></div>
-      <div class="stat-card blue"><div class="stat-value blue">47</div><div class="stat-label" data-i18n="stat_sources">Knowledge Sources</div></div>
+      <div class="stat-card blue"><div class="stat-value blue">59</div><div class="stat-label" data-i18n="stat_sources">Knowledge Sources</div></div>
       <div class="stat-card pink"><div class="stat-value pink">38</div><div class="stat-label" data-i18n="stat_engines">Simulation Engines</div></div>
       <div class="stat-card amber"><div class="stat-value amber">21</div><div class="stat-label" data-i18n="stat_mcp">MCP Tools</div></div>
       <div class="stat-card accent"><div class="stat-value accent">9924</div><div class="stat-label" data-i18n="stat_tests">Tests Collected</div></div>
@@ -196,7 +196,7 @@
       <div class="feature-card"><div class="feature-icon">&#9670;</div><h3 data-i18n="feat_c4">Z₃³ Cognitive Topology</h3><p data-i18n="feat_c4_desc">27 discrete cognitive states across Time, Scale, and Agency dimensions. Every query is mapped, tracked, and navigable.</p><div class="feature-tags"><span class="tag">Z₃³</span><span class="tag">Theorem 9</span><span class="tag">Theorem 11</span></div></div>
       <div class="feature-card"><div class="feature-icon">&#9632;</div><h3 data-i18n="feat_verify">Formal Verification Engine</h3><p data-i18n="feat_verify_desc">Lean4, Coq, Dafny, Agda, Z3, Hoare logic — your hypotheses don't just claim, they prove.</p><div class="feature-tags"><span class="tag">Lean4</span><span class="tag">Coq</span><span class="tag">Dafny</span><span class="tag">Z3</span></div></div>
       <div class="feature-card"><div class="feature-icon">&#9733;</div><h3 data-i18n="feat_sim">38 Simulation Engines</h3><p data-i18n="feat_sim_desc">Molecular dynamics (GROMACS, OpenMM), quantum (PySCF), CFD (OpenFOAM), neuro (NEURON), and more.</p><div class="feature-tags"><span class="tag">GROMACS</span><span class="tag">OpenFOAM</span><span class="tag">PySCF</span><span class="tag">NEURON</span></div></div>
-      <div class="feature-card"><div class="feature-icon">&#9735;</div><h3 data-i18n="feat_kg">47 Knowledge Sources</h3><p data-i18n="feat_kg_desc">arXiv, PubMed, Semantic Scholar, OpenAlex, Europe PMC, Crossref, Zenodo, ClinicalTrials.gov, GBIF, NASA Earthdata, Materials Project, Kaggle, OpenFDA, ORCID, and other configured sources. MultiSourceSearcher with circuit breaker and semantic dedup.</p><div class="feature-tags"><span class="tag">arXiv</span><span class="tag">PubMed</span><span class="tag">DOI</span><span class="tag">Circuit Breaker</span></div></div>
+      <div class="feature-card"><div class="feature-icon">&#9735;</div><h3 data-i18n="feat_kg">59 Knowledge Sources</h3><p data-i18n="feat_kg_desc">arXiv, PubMed, Semantic Scholar, OpenAlex, Europe PMC, Crossref, Zenodo, ClinicalTrials.gov, GBIF, NASA Earthdata, Materials Project, Kaggle, OpenFDA, ORCID, and other configured sources. MultiSourceSearcher with circuit breaker and semantic dedup.</p><div class="feature-tags"><span class="tag">arXiv</span><span class="tag">PubMed</span><span class="tag">DOI</span><span class="tag">Circuit Breaker</span></div></div>
       <div class="feature-card"><div class="feature-icon">&#9654;</div><h3 data-i18n="feat_pub">Automated Dissertation Generator</h3><p data-i18n="feat_pub_desc">LaTeX + BibTeX + Markdown + JSON + HTML exports. Citation verifier with hallucination detection. Zenodo DOI upload; arXiv/bioRxiv = LaTeX package generation only (no auto-submit API).</p><div class="feature-tags"><span class="tag">LaTeX</span><span class="tag">BibTeX</span><span class="tag">Anti-Hallucination</span></div></div>
       <div class="feature-card"><div class="feature-icon">&#9673;</div><h3 data-i18n="feat_mcp">MCP Server — 21 Tools</h3><p data-i18n="feat_mcp_desc">Expose full C4REQBER capability to AI agents. JSON Schema compliant. stdio JSON-RPC.</p><div class="feature-tags"><span class="tag">21 Tools</span><span class="tag">JSON Schema</span><span class="tag">Claude</span></div></div>
       <div class="feature-card" style="border-color:rgba(236,72,153,.2)"><div class="feature-icon" style="color:#f472b6">&#9670;</div><h3 data-i18n="feat_observer">Observer Position Shifts</h3><p data-i18n="feat_observer_desc">O₀→O₁ self-diagnostic after synthesis detects blind spots. O₁→O₂ meta-reflection on stagnation derives alternative C4 routes. Keyword-driven axis shifts + deterministic fallback.</p><div class="feature-tags"><span class="tag">O₀→O₁→O₂</span><span class="tag">Blind Spots</span><span class="tag">Stagnation</span></div></div>
@@ -341,7 +341,7 @@
       <div class="flow-step" style="text-align:center;padding:24px 16px;background:var(--bg-3);border-radius:var(--radius);border:1px solid rgba(255,255,255,.06);position:relative">
         <div style="font-size:28px;margin-bottom:8px">&#128214;</div>
         <h4 style="font-size:14px;margin-bottom:4px" data-i18n="df_s3_title">Knowledge</h4>
-        <p style="font-size:12px;color:var(--fg-3)" data-i18n="df_s3_desc">47 sources + QZRF/CDI analysis</p>
+        <p style="font-size:12px;color:var(--fg-3)" data-i18n="df_s3_desc">59 sources + QZRF/CDI analysis</p>
       </div>
       <div class="flow-step" style="text-align:center;padding:24px 16px;background:var(--bg-3);border-radius:var(--radius);border:1px solid rgba(255,255,255,.06);position:relative">
         <div style="font-size:28px;margin-bottom:8px">&#128161;</div>
@@ -569,7 +569,7 @@
     </div>
     <div class="mcp-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:24px">
       <div class="feature-card" style="padding:20px"><h4 style="font-size:14px;margin-bottom:4px">c4_solve</h4><p style="font-size:12px;color:var(--fg-3)" data-i18n="home_mcp_c4_solve_desc">7-phase HIL discovery pipeline (A→G)</p></div>
-      <div class="feature-card" style="padding:20px"><h4 style="font-size:14px;margin-bottom:4px">c4_search</h4><p style="font-size:12px;color:var(--fg-3)" data-i18n="home_mcp_c4_search_desc">47 knowledge sources</p></div>
+      <div class="feature-card" style="padding:20px"><h4 style="font-size:14px;margin-bottom:4px">c4_search</h4><p style="font-size:12px;color:var(--fg-3)" data-i18n="home_mcp_c4_search_desc">59 knowledge sources</p></div>
       <div class="feature-card" style="padding:20px"><h4 style="font-size:14px;margin-bottom:4px">c4_triz</h4><p style="font-size:12px;color:var(--fg-3)" data-i18n="home_mcp_c4_triz_desc">Contradiction resolution</p></div>
       <div class="feature-card" style="padding:20px"><h4 style="font-size:14px;margin-bottom:4px">c4_fingerprint</h4><p style="font-size:12px;color:var(--fg-3)" data-i18n="home_mcp_c4_fingerprint_desc">Z₃³ state classification</p></div>
       <div class="feature-card" style="padding:20px"><h4 style="font-size:14px;margin-bottom:4px">c4_verify</h4><p style="font-size:12px;color:var(--fg-3)" data-i18n="home_mcp_c4_verify_desc">Lean4/Coq/Dafny check</p></div>
@@ -762,7 +762,7 @@
   <div class="container">
     <div class="section-header">
       <span class="section-label" data-i18n="sources_label">Sources</span>
-      <h2 class="section-title" data-i18n="sources_title">47 Knowledge Sources — Real Citations</h2>
+      <h2 class="section-title" data-i18n="sources_title">59 Knowledge Sources — Real Citations</h2>
       <p class="section-desc" data-i18n="sources_desc">No hallucinated references. Every citation is verified against live databases with DOI.</p>
     </div>
 

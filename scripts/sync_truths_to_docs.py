@@ -91,14 +91,14 @@ Lean4 → Coq → Dafny → Agda → Z3/CVC5 → Hoare → TLA+ → Alloy → Ha
         text,
     )
     text = re.sub(
-        r"- \*\*(?:33\+|43|47|51) active knowledge source adapters\*\*.*",
+        r"- \*\*(?:33\+|43|47|51|59) (?:active knowledge source adapters|configured knowledge source integrations)\*\*.*",
         f"- **{sources} configured knowledge source integrations** "
         f"({t['knowledge']['wired']} wired to `MultiSourceSearcher`; runtime-active subset "
         "depends on credentials and availability)",
         text,
     )
     text = re.sub(
-        r"- \*\*Knowledge search\*\* — \d+\+? source adapters",
+        r"- \*\*Knowledge search\*\* — \d+\+? (?:source adapters|configured source integrations)",
         f"- **Knowledge search** — {sources} configured source integrations",
         text,
     )
@@ -155,12 +155,12 @@ def patch_agents(t: dict) -> None:
     text = text.replace("32 engine adapters", f"{engines} engine bridges")
     text = text.replace("32 simulation engine adapters", f"{engines} simulation engine bridges")
     text = re.sub(
-        r"- \*\*CLI\*\* \(blast commands\) — .*",
+        r"- \*\*CLI\*\*(?: \(blast commands\))? — .*",
         f"- **CLI** — {cli_commands} top-level `blast` commands",
         text,
     )
     text = re.sub(
-        r"- \*\*(?:33\+|43|47|51) active knowledge source adapters\*\*.*",
+        r"- \*\*(?:33\+|43|47|51|59) (?:active knowledge source adapters|configured knowledge source integrations)\*\*.*",
         f"- **{sources} configured knowledge source integrations** "
         f"({wired_sources} wired to `MultiSourceSearcher`; runtime-active subset depends "
         "on credentials and availability). Truth source: `_truths.json`.",
@@ -469,6 +469,16 @@ def patch_landing_html(t: dict) -> None:
     text = text.replace("51 sources", f"{sources} sources")
     text = text.replace("51 knowledge sources", f"{sources} knowledge sources")
     text = text.replace("51 Knowledge Sources", f"{sources} Knowledge Sources")
+    text = text.replace("47 Knowledge Sources", f"{sources} Knowledge Sources")
+    text = text.replace("47 knowledge sources", f"{sources} knowledge sources")
+    text = text.replace("47 SOURCES", f"{sources} SOURCES")
+    text = text.replace("47 sources", f"{sources} sources")
+    text = re.sub(
+        r'<div class="stat-card blue"><div class="stat-value blue">\d+\+?</div>',
+        f'<div class="stat-card blue"><div class="stat-value blue">{sources}</div>',
+        text,
+        count=1,
+    )
     text = text.replace("20 MCP TOOLS", f"{mcp} MCP TOOLS")
     text = text.replace(
         "✓ Type safety zero (0 mypy errors)",
@@ -759,9 +769,13 @@ def patch_whitepapers(t: dict) -> None:
             text,
         )
         text = re.sub(
-            r"\*\*51 (knowledge sources|источник знаний)\*\*",
+            r"\*\*(?:47|51|59) (knowledge sources|источник знаний)\*\*",
             lambda match: f"**{sources} {match.group(1)}**",
             text,
+        )
+        text = text.replace(
+            "MultiSourceSearcher (47 configured sources)",
+            f"MultiSourceSearcher ({sources} configured sources)",
         )
         text = text.replace(
             "MultiSourceSearcher (51 sources)",
@@ -772,7 +786,11 @@ def patch_whitepapers(t: dict) -> None:
             f"MultiSourceSearcher ({sources} настроенных источников)",
         )
         text = text.replace("**51 registered sources**", f"**{sources} configured sources**")
+        text = text.replace("**47 configured sources**", f"**{sources} configured sources**")
         text = text.replace("**51 источник** через", f"**{sources} настроенных источников** через")
+        text = text.replace(
+            "| Knowledge sources | 47 configured |", f"| Knowledge sources | {sources} configured |"
+        )
         text = text.replace(
             "| Knowledge sources | 51 |", f"| Knowledge sources | {sources} configured |"
         )

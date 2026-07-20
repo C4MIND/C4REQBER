@@ -6,8 +6,8 @@
 
 [![Tests](https://img.shields.io/badge/tests-9924%20collected-yellowgreen)]()
 [![Lint](https://img.shields.io/badge/lint-41%20baseline%20%2B%20regression%20check-yellow)]()
-[![Typecheck](https://img.shields.io/badge/typecheck-mypy%20baseline%20gated-yellow)]()
-[![Version](https://img.shields.io/badge/version-5.7.4-magenta)]()
+[![Typecheck](https://img.shields.io/badge/typecheck-0%20mypy%20errors-brightgreen)]()
+[![Version](https://img.shields.io/badge/version-5.7.5-magenta)]()
 [![TUI](https://img.shields.io/badge/TUI-v9.18%20honesty-blueviolet)]()
 [![Python](https://img.shields.io/badge/python-3.11%2B-blue)]()
 [![License](https://img.shields.io/badge/license-AGPL--3.0-green)]()
@@ -84,7 +84,7 @@ A cognitive exoskeleton for AI agents and humans.
 - **Kuhn Paradigm Shift Assessment**: 4-stage model, 5 values, iterative refinement
 - **TUI v9 command palette** (`:` key): fuzzy-match 35+ commands (settings, capabilities, history, language, debug)
 - **11 LLM providers**: OpenRouter, XAI, Mistral, Moonshot, DeepSeek, Liquid AI, NVIDIA NIM, YandexGPT, Ollama, LM Studio, MLX — auto-detected with depth-based routing
-- **47 configured knowledge source integrations** (46 wired to `MultiSourceSearcher`; runtime-active subset depends on credentials and availability)
+- **59 configured knowledge source integrations** (56 wired to `MultiSourceSearcher`; runtime-active subset depends on credentials and availability)
 
 **v5.4.0:** "Agent System + Git Hygiene + Code Audit" — main AI agent with Pydantic AI, skills, MCP bridge, persistent memory, sub-agents; 3 critical eval() sandboxes fixed; git secrets removed
 
@@ -282,7 +282,7 @@ Copy these into your `.env` file. Keys marked **Required** will disable the sour
 - **Closed-loop simulation** — Bayesian hypothesis tracker + adaptive experiment design + ensemble simulation + convergence detection
 - **Self-directed agenda** — Gap/conflict/extension question generation; TUI v9 `Shift+A` + `/v8/agenda/*`
 - **Open-ended exploration** — Literature anomaly detection (IsolationForest) + surprise-driven question generation + formal framework extension
-- **Knowledge search** — 47 configured source integrations (arXiv, PubMed, Crossref, Europe PMC, Semantic Scholar, OpenAlex, Zenodo, Figshare, NCBI, PubChem, ChEMBL, Materials Project, AFLOW, Kaggle, UCI ML, Harvard Dataverse, re3data, STRING, ClinicalTrials.gov, GBIF, Allen Brain, USGS, CERN, USPTO, OpenReview, HuggingFace, OpenFDA, NASA Earthdata, CyberLeninka, Math-Net.Ru, and more)
+- **Knowledge search** — 59 configured source integrations (arXiv, PubMed, Crossref, Europe PMC, Semantic Scholar, OpenAlex, Zenodo, Figshare, NCBI, PubChem, ChEMBL, Materials Project, AFLOW, Kaggle, UCI ML, Harvard Dataverse, re3data, STRING, ClinicalTrials.gov, GBIF, Allen Brain, USGS, CERN, USPTO, OpenReview, HuggingFace, OpenFDA, NASA Earthdata, CyberLeninka, Math-Net.Ru, and more)
 - **TUI v9** (`blast tui`) — Go/Bubble Tea feed cockpit: SSE discovery, sim surface (`Ctrl+Shift+C`), agenda (`Shift+A`), models/council (`Ctrl+Shift+M`), API keys (`Ctrl+Shift+K`), social (`Ctrl+Shift+S`), command palette `:`, 7-language i18n, 244 i18n keys, golden snapshots
 - **Falsification** — Domain-aware simulation + statistical tests with Bonferroni correction
 - **MCP server** — 21 tools verified working for AI agent integration

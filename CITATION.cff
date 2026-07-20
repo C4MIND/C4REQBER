@@ -6,7 +6,7 @@ authors:
   - family-names: "Kovalev"
     given-names: "N.I."
 title: "c4reqber: Cognitive Exoskeleton for AI Agents"
-version: 5.7.4
+version: 5.7.5
 date-released: 2026-07-13
 url: "https://cognitive-functors.gitlab.io/c4reqber/"
 repository-code: "https://gitlab.com/cognitive-functors/c4reqber"

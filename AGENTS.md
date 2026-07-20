@@ -59,10 +59,10 @@ Updated 2026-07-18 (honesty / anti green-fake pass). **Rules SSOT:** [`docs/HONE
 - **Hoare logic verifier** (`src/verification/hoare_verifier.py`) — Z3-based WP calculus, full while+invariant support (fallback path flagged `heuristic` / `mode: fallback`)
 - **LLM Prover** (`src/verification/llm_prover.py`) — iterative LLM→compile→error→fix loop for 6 languages
 - **TUI v9** (Go Bubble Tea v2, sim surface + honest status mapping: partial/failed toasts, debug last-SSE, capsim probe ≠ available) — production `blast tui`
-- **CLI** — 24 top-level `blast` commands
+- **CLI** — 25 top-level `blast` commands
 - **Agent system** (Pydantic AI, 11 skills, MCP bridge, memory, sub-agents, `/preprint`, LangGraph executor, FastMCP external tool discovery, ChromaDB memory)
 - **TRIZ** (40 principles, contradiction matrix) — semantic C4 mapping
-- **9 real verification backends** (Lean4, Coq, Dafny, Agda, Z3/Hoare, Haskell, CVC5, TLA+, Alloy) — availability probed; Z3/Hoare not hardcoded always-on
+- **9 real verification backends** (Lean4, Coq, Dafny, Agda, Z3/Hoare, Haskell, CVC5, TLA+, Alloy)
 - **251 few-shot proof examples** (Lean4×56, Coq×48, Dafny×52, Z3×50, Agda×45) with TF-IDF RAG retrieval
 - **Causal inference adult** (DoWhy + EconML + gCastle: PC/FCI/NOTEARS/ANM)
 - **Hypothesis ranking** (PriorScorer × EIGEstimator × CostModel × MCDMRanker)
@@ -70,7 +70,7 @@ Updated 2026-07-18 (honesty / anti green-fake pass). **Rules SSOT:** [`docs/HONE
 - **Self-directed agenda** (generator, feasibility, priority, progress, TUI screen shift+a)
 - **Open-ended exploration** (anomaly detector, surprise-driven questions, formal extender)
 - **7/7 metamodels** (IMPACT, COMPASS, UCOS, QZRF, FRA, Matrix Dream, TOTE)
-- **47 configured knowledge source integrations** (wired via `SOURCE_REGISTRY` + adapters; runtime-active subset depends on credentials, `enabled` flags, and health — several fragile APIs are `enabled: False`). Truth source: `_truths.json`.
+- **59 configured knowledge source integrations** (56 wired to `MultiSourceSearcher`; runtime-active subset depends on credentials and availability). Truth source: `_truths.json`.
 - **15 installable scientific packages** — auto-detected, 10 native + 5 isolated Python 3.12 envs
 - **REPL** — 100% real (project/task models implemented)
 - **v8 API** — fully functional aggregator router (discovery, knowledge, newton, social, verification, novelty, news)
@@ -133,7 +133,7 @@ Updated 2026-07-18 (honesty / anti green-fake pass). **Rules SSOT:** [`docs/HONE
 
 ## What is this?
 
-**c4reqber** is a terminal-first scientific discovery pipeline with C4 state-space navigation layer. 27 Z₃³ states, 9 verification backends + MathDetector (Categories A/B/C) + guardrails, 6 virtual biology simulators, experimental protocol generator, simulation config (GPU/CPU/off), 6 output formats with auto-detection, 11 configured LLM providers (MLX/LM Studio/Ollama/OpenRouter/DeepSeek/XAI/Mistral/Moonshot/Liquid/NVIDIA/YandexGPT), MLX-LM local ($0/MTok), file/OCR workflow, Live Intelligence Feed, 7-language i18n, **21 MCP tools** (all verified working post-audit), **TUI v9** (`blast tui`, Go feed cockpit with overlays `Ctrl+Shift+K/S/M`, `Shift+A`, `:`), **1 main AI Agent** (skills, MCP, memory, sub-agents, Pydantic AI, `/preprint`), **Social Publishing module** (Zenodo/ORCID/Mastodon/Bluesky/Telegram/Reddit/Discord/Slack — BYOK, honest limits), 24 CLI commands, 5 WASM plugins. **TUI v9** (v9.13.0) adds: simulation surface with 38 engine bridges + 9 verifiers (capabilities overlay Ctrl+Shift+C), CardSimulation kind in the feed, typed SSE decoder for `sim_started/sim_finished/sim_skipped` events, command palette `:`, debug overlay Ctrl+Shift+D, status bar Ctrl+B, per-card expansion Enter/Esc, 7 color profiles including solarized-dark, adaptive layout T0/T1/T2/T3, feed.jsonl persistence + resume on launch, 132 golden snapshots. **Security hardened**: auth bypass fixed, prompt injection fail-closed with nonce delimiters + HTML entity decoding + LaTeX escaping, subprocess shell-injection blocked, path traversal protected, SSRF protection on paper IDs, symlink guards, Agda module validation, rate-limiter token leak fixed, all 16 CRITICAL + 34 HIGH + 55 MEDIUM + 14 LOW findings resolved (Round 4 audit).
+**c4reqber** is a terminal-first scientific discovery pipeline with C4 state-space navigation layer. 27 Z₃³ states, 9 verification backends + MathDetector (Categories A/B/C) + guardrails, 6 virtual biology simulators, experimental protocol generator, simulation config (GPU/CPU/off), 6 output formats with auto-detection, 11 configured LLM providers (MLX/LM Studio/Ollama/OpenRouter/DeepSeek/XAI/Mistral/Moonshot/Liquid/NVIDIA/YandexGPT), MLX-LM local ($0/MTok), file/OCR workflow, Live Intelligence Feed, 7-language i18n, **21 MCP tools** (all verified working post-audit), **TUI v9** (`blast tui`, Go feed cockpit with overlays `Ctrl+Shift+K/S/M`, `Shift+A`, `:`), **1 main AI Agent** (skills, MCP, memory, sub-agents, Pydantic AI, `/preprint`), **Social Publishing module** (Zenodo/ORCID/Mastodon/Bluesky/Telegram/Reddit/Discord/Slack — BYOK, honest limits), 25 CLI commands, 5 WASM plugins. **TUI v9** (v9.13.0) adds: simulation surface with 38 engine bridges + 9 verifiers (capabilities overlay Ctrl+Shift+C), CardSimulation kind in the feed, typed SSE decoder for `sim_started/sim_finished/sim_skipped` events, command palette `:`, debug overlay Ctrl+Shift+D, status bar Ctrl+B, per-card expansion Enter/Esc, 7 color profiles including solarized-dark, adaptive layout T0/T1/T2/T3, feed.jsonl persistence + resume on launch, 132 golden snapshots. **Security hardened**: auth bypass fixed, prompt injection fail-closed with nonce delimiters + HTML entity decoding + LaTeX escaping, subprocess shell-injection blocked, path traversal protected, SSRF protection on paper IDs, symlink guards, Agda module validation, rate-limiter token leak fixed, all 16 CRITICAL + 34 HIGH + 55 MEDIUM + 14 LOW findings resolved (Round 4 audit).
 
 ---
 
@@ -350,13 +350,13 @@ Layer 5: Knowledge + Verification — 47 configured sources (orchestrator.py), 3
 | Micro-features | **17 integrated** (pipeline/C4 Python modules). Legacy Python TUI widgets removed Wave C — see TUI v9 overlays |
 | TUI shortcuts | **TUI v9 only** (`blast tui`): `:` palette, `Ctrl+Shift+K/S/C/M`, `Shift+A`, `j/k` cards, `Ctrl+B` status — see keymap below |
 | Slash commands | **Removed** with legacy Python TUI. Use `:` command palette or `blast config` / `blast config keys` |
-| Knowledge sources | 47 configured; 46 wired |
+| Knowledge sources | 59 configured; 56 wired |
 | Simulation patterns | 101+ (CPU fluid: Navier-Stokes Euler solver) |
 | Physics engines | 5 internal (Newton, TorchSim, JaxSim, Schr, vast.ai) + 26 P1 bridges (FEniCSx, OpenFOAM, GROMACS, LAMMPS, MDAnalysis, PySCF, Psi4, QE, Tellurium, NEURON, Brian2, Jaxley, COPASI, xarray, WRF, Mesa, SimPy, Rebound, AMUSE, MuJoCo, PyBullet, diffeqpy, Taichi, JAX MD, JAX-LaB, ModelingToolkit.jl) + 6 Virtual Biology + MirrorFish + MATLAB |
 | LLM providers | 11 configured (cloud + local); runtime availability varies |
 | Architecture | Saga / CQRS / Event Sourcing modules exist and are wired into pipelines for bookkeeping — saga discover step is lightweight (not a full multi-service transaction theatre). ChromaDB vector store (4 collections). FastMCP client bridge. LangGraph executor in AgentCore. EIG/ensemble closed-loop helpers are **heuristic placeholders** until real simulators are attached. Platform wheels may ship `c4tui-v9` via `prepare_tui_wheel.sh`; otherwise `blast tui` auto-downloads a GitLab release asset into `~/.c4reqber/bin/` (or build with Go / set `C4REQBER_TUI_URL`). |
 | WASM runtime | `blast wasm-load/list` CLI + stub mode (wasmtime optional) |
-| CLI commands | 24 top-level `blast` commands |
+| CLI commands | 25 top-level `blast` commands |
 | Pipeline architecture | `BasePipeline` → HILDiscoveryPipeline + UniversalSolvePipeline. `PluginStageRouter` A-G. Progressive streaming via ProgressEmitter. |
 | Export formats | Markdown, JSON, BibTeX, LaTeX (.tex+.bib), HTML dashboard |
 | Security | Prompt sanitizer (19 patterns), credential guard (16 regex), C4Result TypedDict enforcement |

@@ -13,7 +13,8 @@ BOUNDED_TLA = """---- MODULE Counter ----
 EXTENDS Naturals
 VARIABLE x
 Init == x = 0
-Next == /\\ x < 5 /\\ x' = x + 1
+Next == \\/ (x < 5 /\\ x' = x + 1)
+        \\/ (x' = x)
 ====
 """
 

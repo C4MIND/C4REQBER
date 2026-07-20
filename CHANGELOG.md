@@ -5,7 +5,7 @@
 ## v9.18.0 (2026-07-18) — Honesty contract (anti green-fake)
 
 ### PyPI
-- **5.7.5** on PyPI — honesty contract + CI unblock (mcp CVE, Z3 split, truths sync) (MCP/plugin/sim status, citation gates, TUI mapping)
+- **5.7.6** on PyPI — honesty contract + Alloy/TLA suite aligned with parsers (MCP/plugin/sim status, citation gates, TUI mapping)
 
 Canonical rules: [`docs/HONESTY_CONTRACT.md`](docs/HONESTY_CONTRACT.md).
 

@@ -1,4 +1,5 @@
 """Deep tests for TLA+ TLC client."""
+
 from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
@@ -97,13 +98,21 @@ class TestTLAParsing:
         out = "Error: invariant violated. Counterexample found."
         assert TLAClient._parse_result(out, "", 12) is False
 
-    def test_finished_with_deadlock_is_valid(self) -> None:
+    def test_finished_with_deadlock_is_not_valid(self) -> None:
+        # Honesty: "Error: Deadlock" is a soft failure, not verified success.
         out = (
             "Error: Deadlock reached.\n"
             "6 states generated, 6 distinct states found.\n"
             "Finished in 00s at (2026-07-12 02:04:00)\n"
         )
-        assert TLAClient._parse_result(out, "", 11) is True
+        assert TLAClient._parse_result(out, "", 11) is False
+
+    def test_finished_with_states_no_error_is_valid(self) -> None:
+        out = (
+            "6 states generated, 6 distinct states found.\n"
+            "Finished in 00s at (2026-07-12 02:04:00)\n"
+        )
+        assert TLAClient._parse_result(out, "", 0) is True
 
 
 class TestTLAClientMocked:
@@ -138,7 +147,11 @@ class TestTLAClientMocked:
 
         def capture(cmd: list[str], **kwargs: object) -> MagicMock:
             cmd_holder.append(cmd)
-            return MagicMock(returncode=0, stdout="finished", stderr="")
+            return MagicMock(
+                returncode=0,
+                stdout="Model checking completed. No error found.",
+                stderr="",
+            )
 
         with patch("src.verification.tla_client.safe_subprocess_run", side_effect=capture):
             result = client.verify(MINIMAL_TLA)

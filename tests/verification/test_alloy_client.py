@@ -1,4 +1,5 @@
 """Deep tests for Alloy analyzer client."""
+
 from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
@@ -27,9 +28,17 @@ class TestAlloyNormalization:
         assert "check emptyOK" in out
 
 
+# Realistic Alloy CLI success (positive token required by honesty contract).
+ALLOY_SAT_OK = "00. run   run$1                    0    1/1     SAT\n"
+
+
 class TestAlloyParsing:
     def test_success_no_errors(self) -> None:
-        assert AlloyClient._parse_result("Executing...\nDone.", "", 0) is True
+        assert AlloyClient._parse_result(ALLOY_SAT_OK, "", 0) is True
+
+    def test_executing_done_alone_is_not_success(self) -> None:
+        # Honesty: returncode/Done without positive tokens ≠ verified.
+        assert AlloyClient._parse_result("Executing...\nDone.", "", 0) is False
 
     def test_syntax_error_fails(self) -> None:
         assert AlloyClient._parse_result("", "Syntax error at line 3", 1) is False
@@ -58,7 +67,7 @@ class TestAlloyClientMocked:
 
         def capture(cmd: list[str], **kwargs: object) -> MagicMock:
             cmd_holder.append(cmd)
-            return MagicMock(returncode=0, stdout="Executing... Done.", stderr="")
+            return MagicMock(returncode=0, stdout=ALLOY_SAT_OK, stderr="")
 
         with patch("src.verification.alloy_client.safe_subprocess_run", side_effect=capture):
             result = client.verify(MINIMAL_ALLOY)
@@ -69,7 +78,7 @@ class TestAlloyClientMocked:
         client = AlloyClient(alloy_path=None, jar_path="/fake/alloy.jar")
         client._available = True
         client.java_path = "/usr/bin/java"
-        mock_result = MagicMock(returncode=0, stdout="Executing...", stderr="")
+        mock_result = MagicMock(returncode=0, stdout=ALLOY_SAT_OK, stderr="")
         with patch("src.verification.alloy_client.safe_subprocess_run", return_value=mock_result):
             result = client.verify(MINIMAL_ALLOY)
         assert result["valid"] is True
@@ -77,7 +86,11 @@ class TestAlloyClientMocked:
     def test_check_proof_api(self) -> None:
         client = AlloyClient(alloy_path="/usr/bin/alloy")
         client._available = True
-        mock_result = MagicMock(returncode=0, stdout="Done.", stderr="")
+        mock_result = MagicMock(
+            returncode=0,
+            stdout="Checking assertion emptyOK: No counterexample found.",
+            stderr="",
+        )
         with patch("src.verification.alloy_client.safe_subprocess_run", return_value=mock_result):
             result = client.check_proof(MINIMAL_ALLOY)
         assert result["success"] is True

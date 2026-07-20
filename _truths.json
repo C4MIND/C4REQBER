@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "generated_at": "2026-07-13T18:16:11Z",
-  "version_backend": "5.7.2",
+  "version_backend": "5.7.3",
   "version_tui": "v9.13.0",
   "git_head": "fabcc87",
   "git_branch": "main",

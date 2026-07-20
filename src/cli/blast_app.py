@@ -338,7 +338,7 @@ def blast_simulate(
     def _payload(report: Any) -> dict[str, Any]:
         if hasattr(report, "to_dict"):
             return report.to_dict()
-        if is_dataclass(report):
+        if is_dataclass(report) and not isinstance(report, type):
             return asdict(report)
         if isinstance(report, dict):
             return report

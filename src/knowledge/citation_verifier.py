@@ -196,6 +196,104 @@ class CitationVerifier:
             check_error=check_error,
         )
 
+    async def verify_paper_dicts(self, papers: list[dict[str, Any]]) -> list[CitationCheck]:
+        """Verify flash/pipeline paper dicts (title + DOI) against CrossRef/OpenAlex.
+
+        Fail-closed: transport errors → ERROR (not verified).
+        VERIFIED = CrossRef DOI + OpenAlex title match ≥ 0.82.
+        PARTIAL = exactly one of those matches.
+        """
+        if not papers:
+            return []
+
+        async def _one(idx: int, paper: dict[str, Any]) -> CitationCheck:
+            title = str(paper.get("title") or "").strip()
+            doi_raw = paper.get("doi")
+            doi = str(doi_raw).strip() if doi_raw else None
+            if doi and doi.lower() in {"n/a", "none", "null", ""}:
+                doi = None
+            return await self._verify_known(f"[{idx}]", title, doi)
+
+        tasks = [_one(i, p) for i, p in enumerate(papers, 1)]
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        out: list[CitationCheck] = []
+        for i, r in enumerate(results, 1):
+            if isinstance(r, CitationCheck):
+                out.append(r)
+            else:
+                err_name = type(r).__name__ if isinstance(r, BaseException) else "Error"
+                out.append(
+                    CitationCheck(
+                        citation_id=f"[{i}]",
+                        title=str(papers[i - 1].get("title") or ""),
+                        doi=papers[i - 1].get("doi"),
+                        verdict="ERROR",
+                        check_error=err_name,
+                    )
+                )
+        return out
+
+    async def _verify_known(self, cit_id: str, title: str, doi: str | None) -> CitationCheck:
+        """Verify a known title/DOI pair (same verdict rules as dissertation cites)."""
+        lower_title = (title or "").lower()
+        if any(p in lower_title for p in self._SUSPICIOUS_PATTERNS):
+            return CitationCheck(
+                citation_id=cit_id,
+                title=title or "",
+                doi=doi,
+                verdict="HALLUCINATED",
+            )
+
+        found_in: list[str] = []
+        crossref_ok = False
+        openalex_ok = False
+        openalex_score = 0.0
+        errors: list[str] = []
+
+        if doi:
+            cr = await self._check_crossref(doi)
+            if cr.get("error"):
+                errors.append(f"crossref:{cr['error']}")
+            crossref_ok = bool(cr.get("ok"))
+            if crossref_ok:
+                found_in.append("CrossRef")
+
+        if title:
+            oa = await self._check_openalex(title)
+            if oa.get("error"):
+                errors.append(f"openalex:{oa['error']}")
+            openalex_ok = bool(oa.get("ok"))
+            openalex_score = float(oa.get("score") or 0.0)
+            if openalex_ok:
+                found_in.append("OpenAlex")
+
+        check_error = "; ".join(errors) if errors else None
+        if crossref_ok and openalex_ok:
+            verdict = "VERIFIED"
+        elif crossref_ok or openalex_ok:
+            verdict = "PARTIAL"
+        elif check_error and not (title or doi):
+            verdict = "ERROR"
+        elif title or doi:
+            verdict = "UNVERIFIED"
+        else:
+            verdict = "HALLUCINATED"
+
+        if check_error and verdict in {"UNVERIFIED", "HALLUCINATED"} and (title or doi):
+            verdict = "ERROR"
+
+        return CitationCheck(
+            citation_id=cit_id,
+            title=title or "",
+            doi=doi,
+            verdict=verdict,
+            found_in=found_in,
+            crossref_match=crossref_ok,
+            openalex_match=openalex_ok,
+            openalex_score=openalex_score,
+            check_error=check_error,
+        )
+
     @staticmethod
     def _guess_source(context: str, sources: list[dict[str, Any]]) -> tuple[str, str | None]:
         """Try to match citation context to a known source by title proximity."""

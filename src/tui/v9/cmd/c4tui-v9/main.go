@@ -57,6 +57,10 @@ func main() {
 			noSplash = true
 		case strings.HasPrefix(arg, "--story="):
 			demoStory = strings.TrimPrefix(arg, "--story=")
+		case arg == "--story":
+			if i+1 < len(os.Args)-1 {
+				demoStory = os.Args[i+2]
+			}
 		case arg == "--version" || arg == "-v":
 			showVersion = true
 		case arg == "--config":

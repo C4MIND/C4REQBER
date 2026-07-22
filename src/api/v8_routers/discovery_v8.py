@@ -4,6 +4,7 @@ POST /v8/discover/one-click — runs the full discovery pipeline:
 C4 → TRIZ → UCOS (4-Layer) → QZRF (14 Operators) →
 Knowledge Search → Isomorphism → Hypothesis → Simulation → Verification → Paper Generation.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -72,7 +73,9 @@ async def one_click_discovery_route(request: OneClickRequest) -> dict[str, Any]:
     # after the 202 response is sent. Wrap in _supervised_task so any error
     # is logged AND sets the job to 'failed' (not stuck in 'running' forever).
     asyncio.create_task(
-        _supervised_task(_run_one_click_job(job.job_id, request), job_id=job.job_id, kind="one-click")
+        _supervised_task(
+            _run_one_click_job(job.job_id, request), job_id=job.job_id, kind="one-click"
+        )
     )
     return {"job_id": job.job_id, "status": job.status.value}
 
@@ -167,17 +170,29 @@ async def _sse_stream(job_id: str) -> Any:
         for ev in await store.drain_events(job_id, last_event_seq):
             last_event_seq = ev.seq
             yield f"event: {ev.event_type}\ndata: {json.dumps(ev.data)}\n\n"
-            if ev.event_type in ("complete", "failed"):
+            if ev.event_type in ("complete", "partial", "failed"):
                 terminal_sent = True
                 return
 
-        if not terminal_sent and job.status in (JobStatus.COMPLETE, JobStatus.FAILED):
+        if not terminal_sent and job.status in (
+            JobStatus.COMPLETE,
+            JobStatus.PARTIAL,
+            JobStatus.FAILED,
+        ):
             # Back-compat: emit terminal frame if set_complete/set_failed raced the drain.
-            event_type = "complete" if job.status == JobStatus.COMPLETE else "failed"
+            if job.status == JobStatus.FAILED:
+                event_type = "failed"
+            elif job.status == JobStatus.PARTIAL:
+                event_type = "partial"
+            else:
+                event_type = "complete"
+            result_status = ""
+            if isinstance(job.result, dict):
+                result_status = str(job.result.get("status") or "")
             payload = {
                 "type": event_type,
                 "phase": job.phase,
-                "status": job.status.value,
+                "status": result_status or job.status.value,
                 "progress": job.progress,
                 "detail": job.phase_detail,
                 "result": job.result,

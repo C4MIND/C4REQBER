@@ -66,6 +66,7 @@ test-backend-checks:
     - python3 scripts/gen_mcp_registry.py --check
     - python3 scripts/check_i18n_parity.py
     - sh scripts/ci/check_docker_requirements.sh
+    - sh scripts/ci/validate_vps_compose.sh
     - PYTHONPATH=. pytest tests/mcp_server/ tests/utils/ tests/publishing/ tests/patterns/test_topic_router.py -v --tb=short
 
 security-checks:
@@ -303,7 +304,9 @@ pypi-publish-prod:
   before_script:
     - bash scripts/ci/setup_python.sh
     - pip install build twine
-    - bash scripts/ci/prepare_tui_wheel.sh || true
+    # Release wheels must ship a platform TUI binary — fail hard (no || true)
+    - C4REQBER_TUI_WHEEL_STRICT=1 bash scripts/ci/prepare_tui_wheel.sh
+    - test -f src/tui/v9/bin/c4tui-v9 -o -f src/tui/v9/bin/c4tui-v9.exe
   script:
     - python -m build
     - twine check dist/*

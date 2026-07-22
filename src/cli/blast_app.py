@@ -45,6 +45,19 @@ app = typer.Typer(
 console = Console()
 
 
+@app.callback()
+def _blast_startup(ctx: typer.Context) -> None:
+    """Load ~/.c4reqber/secrets.env + config into env for all commands (incl. flash)."""
+    try:
+        from src.config.paths import apply_config_to_env
+
+        apply_config_to_env()
+    except Exception as exc:
+        import logging
+
+        logging.getLogger(__name__).debug("blast startup config apply failed: %s", exc)
+
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # Auto-dispatch (no subcommand)
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -1175,7 +1188,75 @@ def blast_agent(
 
         @fallback.tool("agent_search")
         async def agent_search(query: str, max_results: int = 10) -> str:
-            return f"Search for: {query} (max_results={max_results})"
+            from src.knowledge.flash_contract import source_cards_from_papers
+            from src.knowledge.flash_sources import gather_flash_sources
+
+            q = (query or "").strip()
+            if not q:
+                return json.dumps(
+                    {
+                        "status": "error",
+                        "message": "Search query cannot be empty.",
+                        "sources": [],
+                        "verified_count": 0,
+                        "found_count": 0,
+                    }
+                )
+
+            limit = max(1, min(int(max_results), 25))
+            try:
+                papers, _context, search_meta = await gather_flash_sources(
+                    q,
+                    deep=limit > 5,
+                    include_web=True,
+                )
+            except Exception as exc:
+                return json.dumps(
+                    {
+                        "status": "error",
+                        "message": f"Literature search unavailable: {exc}",
+                        "sources": [],
+                        "verified_count": 0,
+                        "found_count": 0,
+                        "search_meta": {"errors": {"gather": str(exc)[:200]}},
+                    }
+                )
+
+            papers = papers[:limit]
+            partitioned = source_cards_from_papers(papers, sanitize=False, limit=limit)
+            verified_count = int(partitioned["verified_count"])
+            found_count = int(partitioned["found_count"])
+            errors = search_meta.get("errors") or {}
+
+            if found_count == 0 and errors:
+                return json.dumps(
+                    {
+                        "status": "error",
+                        "message": "Literature search unavailable — all configured sources failed.",
+                        "sources": [],
+                        "unverified_hits": [],
+                        "verified_count": 0,
+                        "found_count": 0,
+                        "search_meta": search_meta,
+                    }
+                )
+
+            status = "success" if verified_count > 0 else "partial"
+            if found_count == 0:
+                status = "partial"
+
+            return json.dumps(
+                {
+                    "status": status,
+                    "query": q,
+                    "sources": partitioned["sources"],
+                    "unverified_hits": partitioned["unverified_hits"],
+                    "verified_count": verified_count,
+                    "found_count": found_count,
+                    "search_meta": search_meta,
+                },
+                ensure_ascii=False,
+            )
 
         @fallback.tool("agent_fingerprint")
         async def agent_fingerprint(problem: str) -> str:
@@ -1498,8 +1579,8 @@ def blast_packages(
             return
         console.print(f"[bold]Removing {package_id}...[/]")
         ok, msg = uninstall_package(package_id)
-        console.print(f"[green]{msg}[/]" if ok else f"[yellow]{msg}[/]")
-        return
+        console.print(f"[green]{msg}[/]" if ok else f"[red]{msg}[/]")
+        raise typer.Exit(code=1 if not ok else 0)
 
     # List / status
     statuses = detect_all()

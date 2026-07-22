@@ -11,9 +11,33 @@ import httpx
 
 from src.config import get_key
 from src.config.paths import OPENCODE_ZEN_FREE_MODELS, opencode_api_keys
+from src.llm.errors import RateLimited
 
 
 logger = logging.getLogger(__name__)
+
+_LOCAL_PROVIDERS = frozenset({"lm_studio", "ollama", "mlx"})
+# R9: cap rotation depth so 429 storms do not burn every free-tier key.
+MAX_ROTATION_DEPTH = int(os.environ.get("C4_LLM_MAX_ROTATIONS", "8"))
+
+
+def _parse_retry_after(response: httpx.Response) -> float | None:
+    raw = response.headers.get("Retry-After", "").strip()
+    if not raw:
+        return None
+    try:
+        return float(raw)
+    except ValueError:
+        return None
+
+
+def _reorder_local_first(chain: list[_ProviderSpec]) -> list[_ProviderSpec]:
+    """Prefer LM Studio / Ollama / MLX when C4_LOCAL_LLM_FIRST or after 429."""
+    local = [p for p in chain if p.name in _LOCAL_PROVIDERS]
+    if not local:
+        return chain
+    rest = [p for p in chain if p.name not in _LOCAL_PROVIDERS]
+    return local + rest
 
 
 @dataclass(frozen=True)
@@ -266,9 +290,27 @@ def generate_with_fallback(
             )
         chain = matched + rest
 
+    if os.getenv("C4_LOCAL_LLM_FIRST", "").lower() in ("1", "true", "yes"):
+        chain = _reorder_local_first(chain)
+
     errors: list[str] = []
+    last_retry_after: float | None = None
+    last_rate_provider = ""
+    saw_429 = False
+    attempts = 0
+
     with httpx.Client(timeout=120.0) as client:
-        for spec in chain:
+        idx = 0
+        while idx < len(chain):
+            if attempts >= MAX_ROTATION_DEPTH:
+                logger.warning(
+                    "LLM rotation cap reached (%d); stopping to avoid key burn",
+                    MAX_ROTATION_DEPTH,
+                )
+                break
+            spec = chain[idx]
+            idx += 1
+            attempts += 1
             headers = {"Content-Type": "application/json", **spec.extra_headers}
             if spec.api_key:
                 headers["Authorization"] = f"Bearer {spec.api_key}"
@@ -280,15 +322,47 @@ def generate_with_fallback(
             }
             try:
                 resp = client.post(spec.url, headers=headers, json=body)
+                if resp.status_code == 429:
+                    saw_429 = True
+                    last_retry_after = _parse_retry_after(resp) or last_retry_after
+                    last_rate_provider = spec.name
+                    err = f"{spec.name}/{spec.model}: HTTP 429"
+                    errors.append(err)
+                    logger.warning("LLM rate limited: %s", err)
+                    # After first 429, prefer local providers for remaining attempts.
+                    if idx < len(chain):
+                        chain = chain[:idx] + _reorder_local_first(chain[idx:])
+                    continue
                 resp.raise_for_status()
                 data = resp.json()
                 content = data["choices"][0]["message"]["content"]
                 if content and content.strip():
                     logger.info("LLM ok via %s / %s", spec.name, spec.model)
                     return content
+            except httpx.HTTPStatusError as e:
+                if e.response.status_code == 429:
+                    saw_429 = True
+                    last_retry_after = _parse_retry_after(e.response) or last_retry_after
+                    last_rate_provider = spec.name
+                    err = f"{spec.name}/{spec.model}: HTTP 429"
+                    errors.append(err)
+                    logger.warning("LLM rate limited: %s", err)
+                    if idx < len(chain):
+                        chain = chain[:idx] + _reorder_local_first(chain[idx:])
+                    continue
+                err = f"{spec.name}/{spec.model}: HTTP {e.response.status_code}"
+                errors.append(err)
+                logger.warning("LLM provider failed: %s", err)
             except Exception as e:
                 err = f"{spec.name}/{spec.model}: {type(e).__name__}"
                 errors.append(err)
                 logger.warning("LLM provider failed: %s", err)
+
+    if saw_429:
+        raise RateLimited(
+            f"all providers rate-limited after {attempts} attempt(s)",
+            retry_after=last_retry_after,
+            provider=last_rate_provider or "openrouter",
+        )
 
     raise RuntimeError(f"All LLM providers failed: {'; '.join(errors[:4])}")

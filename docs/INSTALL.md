@@ -1,5 +1,9 @@
 # Install c4reqber (end user)
 
+> **Recommended for almost everyone:** `pip install c4reqber` + `blast setup` + `blast tui`.
+> Docker and VPS Traefik stacks below are **optional** for operators who want a hosted API —
+> they are not the primary product path.
+
 **Product model:** you run everything **on your machine**. No hosted SaaS required.
 
 ## 1. Recommended — CLI + TUI (most users)

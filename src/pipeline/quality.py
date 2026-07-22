@@ -9,6 +9,7 @@ import re
 from dataclasses import dataclass, field
 from typing import Any
 
+from src.knowledge.flash_sources import is_checkable_paper
 from src.pipeline.config import PipelineConfig
 from src.pipeline.redundant_gates import create_novelty_gate
 
@@ -79,11 +80,19 @@ class QualityGates:
             errors.append(f"Only {len(dbs)} databases (min {cfg.min_source_databases})")
             score *= len(dbs) / cfg.min_source_databases
 
-        # Count sources with URLs
+        # Count sources with checkable DOI or real URL (not Scholar/example.com stubs)
+        checkable = sum(1 for s in sources if is_checkable_paper(s))
         with_url = sum(1 for s in sources if s.get("url"))
-        if with_url < cfg.min_sources_with_url:
-            errors.append(f"Only {with_url} sources with URL (min {cfg.min_sources_with_url})")
-            score *= with_url / cfg.min_sources_with_url
+        if cfg.min_sources_with_url > 0 and checkable == 0:
+            errors.append(
+                f"No checkable DOI or URL among {total} sources (min {cfg.min_sources_with_url})"
+            )
+            score = 0.0
+        elif checkable < cfg.min_sources_with_url:
+            errors.append(
+                f"Only {checkable} checkable DOI|URL sources (min {cfg.min_sources_with_url})"
+            )
+            score *= checkable / cfg.min_sources_with_url
 
         # Penalize / strip dummy titles and fake URLs
         dummy_count = sum(
@@ -106,6 +115,7 @@ class QualityGates:
                 "total": total,
                 "databases": len(dbs),
                 "with_url": with_url,
+                "checkable": checkable,
                 "dummy": dummy_count,
             },
         )

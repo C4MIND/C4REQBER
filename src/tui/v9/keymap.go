@@ -274,9 +274,12 @@ type HelpRow struct {
 // overlay, with the resolved key labels for the active platform.
 func (km *KeyMap) HelpRows() []HelpRow {
 	order := []Action{
-		ActRun, ActCancel, ActCycleMode, ActLang, ActTier,
+		ActRun, ActCancel, ActCycleMode, ActLang, ActTier, ActPalette,
+		ActFocusNext, ActFocusPrev, ActFocusFirst, ActFocusLast,
 		ActReauth, ActSearch, ActCopy, ActJump, ActSettings, ActCapabilities,
-		ActInstallHint, ActSelectFallback, ActOpenPlot, ActStatusBar, ActDebug, ActSocial, ActPalette,
+		ActInstallHint, ActSelectFallback, ActOpenPlot,
+		ActSetupHub, ActSocial, ActModels, ActAgenda,
+		ActStatusBar, ActDebug,
 		ActColorProfile, ActProfileMac, ActNewTab, ActEscape, ActHelp, ActQuit,
 	}
 	rows := make([]HelpRow, 0, len(order))
@@ -301,7 +304,7 @@ func helpDescKey(a Action) string {
 	case ActLang:
 		return "help.lang"
 	case ActTier:
-		return "help.tier"
+		return "tier.cycle"
 	case ActReauth:
 		return "reauth.success"
 	case ActSearch:
@@ -314,6 +317,20 @@ func helpDescKey(a Action) string {
 		return "settings.title"
 	case ActCapabilities:
 		return "sim.capabilities.title"
+	case ActSetupHub:
+		return "help.setup_hub"
+	case ActAgenda:
+		return "help.agenda"
+	case ActModels:
+		return "help.models"
+	case ActFocusNext:
+		return "help.focus_next"
+	case ActFocusPrev:
+		return "help.focus_prev"
+	case ActFocusFirst:
+		return "help.focus_first"
+	case ActFocusLast:
+		return "help.focus_last"
 	case ActInstallHint:
 		return "sim.action.install"
 	case ActSelectFallback:

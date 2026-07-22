@@ -16,6 +16,7 @@ from typing import Any
 @dataclass
 class AgdaError:
     """AgdaError."""
+
     file: str
     line: int
     column: int
@@ -60,6 +61,7 @@ class AgdaBridge:
     @staticmethod
     def _validate_module_name(name: str) -> str:
         import re
+
         if not re.fullmatch(r"[A-Z][a-zA-Z0-9_]*", name):
             raise ValueError(f"Invalid Agda module name: {name}")
         return name
@@ -78,15 +80,14 @@ class AgdaBridge:
         if not self.available:
             return {
                 "success": False,
+                "status": "unavailable",
                 "errors": [{"file": "", "line": 0, "column": 0, "message": "Agda not installed"}],
                 "warnings": [],
             }
 
         agda_code = f"module {module_name} where\n\n{code}"
 
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".agda", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".agda", delete=False) as f:
             f.write(agda_code)
             temp_path = f.name
 
@@ -109,7 +110,9 @@ class AgdaBridge:
         except subprocess.TimeoutExpired:
             return {
                 "success": False,
-                "errors": [{"file": "", "line": 0, "column": 0, "message": "Type-checking timed out"}],
+                "errors": [
+                    {"file": "", "line": 0, "column": 0, "message": "Type-checking timed out"}
+                ],
                 "warnings": [],
             }
         finally:
@@ -119,7 +122,9 @@ class AgdaBridge:
             if os.path.exists(compiled_file):
                 os.unlink(compiled_file)
 
-    def compile(self, code: str, target: str = "haskell", module_name: str = "TURBOCDI") -> dict[str, Any]:
+    def compile(
+        self, code: str, target: str = "haskell", module_name: str = "TURBOCDI"
+    ) -> dict[str, Any]:
         """Compile Agda to Haskell or JS.
 
         Args:
@@ -133,6 +138,7 @@ class AgdaBridge:
         if not self.available:
             return {
                 "success": False,
+                "status": "unavailable",
                 "output_path": None,
                 "errors": [{"file": "", "line": 0, "column": 0, "message": "Agda not installed"}],
             }
@@ -141,7 +147,9 @@ class AgdaBridge:
             return {
                 "success": False,
                 "output_path": None,
-                "errors": [{"file": "", "line": 0, "column": 0, "message": f"Unknown target: {target}"}],
+                "errors": [
+                    {"file": "", "line": 0, "column": 0, "message": f"Unknown target: {target}"}
+                ],
             }
 
         agda_code = f"module {module_name} where\n\n{code}"
@@ -175,7 +183,9 @@ class AgdaBridge:
                 return {
                     "success": False,
                     "output_path": None,
-                    "errors": [{"file": "", "line": 0, "column": 0, "message": "Compilation timed out"}],
+                    "errors": [
+                        {"file": "", "line": 0, "column": 0, "message": "Compilation timed out"}
+                    ],
                 }
 
     def get_environment(self) -> dict[str, Any]:
@@ -293,8 +303,7 @@ class AgdaBridge:
         """
         result = self.type_check(code, module_name)
         termination_errors = [
-            e for e in result["errors"]
-            if "termination" in e.get("message", "").lower()
+            e for e in result["errors"] if "termination" in e.get("message", "").lower()
         ]
 
         return {
@@ -315,8 +324,10 @@ class AgdaBridge:
         """
         result = self.type_check(code, module_name)
         coverage_errors = [
-            e for e in result["errors"]
-            if "coverage" in e.get("message", "").lower() or "incomplete" in e.get("message", "").lower()
+            e
+            for e in result["errors"]
+            if "coverage" in e.get("message", "").lower()
+            or "incomplete" in e.get("message", "").lower()
         ]
 
         return {

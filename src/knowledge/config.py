@@ -153,6 +153,23 @@ DOMAIN_KEYWORDS: dict[str, list[str]] = {
         "free will",
         "consciousness",
     ],
+    "materials_science": [
+        "steel",
+        "alloy",
+        "metallurgy",
+        "cryogenic",
+        "heat treatment",
+        "aisi",
+        "microstructure",
+        "hardness",
+        "corrosion",
+        "wear resistance",
+        "quench",
+        "tempering",
+        "materials science",
+        "stainless",
+        "carbide",
+    ],
     "education": [
         "pedagogy",
         "curriculum",
@@ -830,8 +847,69 @@ DOMAIN_SOURCES: dict[str, set[str]] = {
     "mathematics": {"mathnet_ru", "arxiv", "openalex", "crossref", "oeis"},
     "philosophy": {"openalex", "crossref", "datacite"},
     "education": {"openalex", "crossref", "pubmed", "datacite"},
+    "materials_science": {
+        "openalex",
+        "crossref",
+        "arxiv",
+        "datacite",
+        "zenodo",
+    },
     "general": {"openalex", "crossref", "pubmed", "dblp", "datacite"},
 }
+
+# Adapters that must not be sprayed for literature / materials queries.
+LIT_IRRELEVANT_SOURCES: frozenset[str] = frozenset(
+    {
+        "pubchem",
+        "clinicaltrials",
+        "uci_ml",
+        "cern_opendata",
+        "huggingface_datasets",
+        "re3data",
+        "kaggle",
+        "oeis",
+        "conceptnet",
+        "openfda",
+        "chembl",
+        "string_db",
+        "gbif",
+        "usgs",
+        "nasa_earthdata",
+        "noaa",
+        # Structured materials APIs — noisy on free-text literature queries (AISI flash)
+        "aflow",
+        "materials_project",
+    }
+)
+
+# Always allow these web engines when include_web=True and keys exist.
+WEB_SEARCH_SOURCES: frozenset[str] = frozenset({"tavily", "exa", "brave"})
+
+
+def infer_query_domain(question: str) -> str:
+    """Classify a user question into a DOMAIN_KEYWORDS / DOMAIN_SOURCES key."""
+    text = (question or "").lower()
+    if not text.strip():
+        return "general"
+    scores: dict[str, int] = {}
+    for domain, keywords in DOMAIN_KEYWORDS.items():
+        score = sum(1 for kw in keywords if kw in text)
+        if score:
+            scores[domain] = score
+    if not scores:
+        return "general"
+    return max(scores, key=lambda d: scores[d])
+
+
+def flash_source_allowlist(domain: str, *, include_web: bool = True) -> set[str]:
+    """Sources to activate for flash literature search (domain + web, minus junk)."""
+    core = set(DOMAIN_SOURCES.get(domain, DOMAIN_SOURCES["general"]))
+    # Always keep primary academic indexes for lit queries.
+    core |= {"openalex", "crossref", "arxiv", "pubmed", "datacite", "zenodo", "doaj"}
+    if include_web:
+        core |= set(WEB_SEARCH_SOURCES)
+    return core - set(LIT_IRRELEVANT_SOURCES)
+
 
 # ─── Helpers ──────────────────────────────────────────────────────────────
 

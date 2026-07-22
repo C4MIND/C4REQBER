@@ -3,6 +3,7 @@ c4reqber: Prior Scorer
 
 Scores hypotheses on prior plausibility before simulation.
 """
+
 from __future__ import annotations
 
 import logging
@@ -26,10 +27,11 @@ class PriorScorer:
         self,
         hypothesis: dict[str, Any],
         literature: list[dict],
-    ) -> dict[str, float]:
+    ) -> dict[str, float | None]:
         """Compute prior scores for a hypothesis.
 
         Returns dict with keys: novelty, plausibility, formalizability, falsifiability.
+        ``novelty`` is ``None`` when literature is empty/unchecked (never invent 1.0).
         """
         return {
             "novelty": self._novelty(hypothesis, literature),
@@ -38,21 +40,24 @@ class PriorScorer:
             "falsifiability": self._falsifiability(hypothesis),
         }
 
-    def _novelty(self, hypothesis: dict[str, Any], literature: list[dict]) -> float:
-        """Novelty = distance from existing literature (0-1). Higher = more novel."""
+    def _novelty(self, hypothesis: dict[str, Any], literature: list[dict]) -> float | None:
+        """Novelty = distance from existing literature (0-1). Higher = more novel.
+
+        Empty / unscored literature → ``None`` (unchecked), not 1.0.
+        """
         if not literature:
-            return 1.0
+            return None
 
         hyp_text = hypothesis.get("text", "")
         if not hyp_text:
-            return 0.5
+            return None
 
         try:
             hyp_emb = self._embedding.embed([hyp_text])[0]
             paper_texts = [p.get("title", "") + " " + p.get("abstract", "") for p in literature]
             paper_embs = [self._embedding.embed([t])[0] for t in paper_texts if t.strip()]
             if not paper_embs:
-                return 1.0
+                return None
 
             similarities = [self._cosine_sim(hyp_emb, pe) for pe in paper_embs]
             max_sim = max(similarities)
@@ -61,7 +66,7 @@ class PriorScorer:
             return float(np.clip(novelty, 0.0, 1.0))
         except Exception as e:
             logger.warning("Novelty scoring error: %s", e)
-            return 0.5
+            return None
 
     def _plausibility(self, hypothesis: dict[str, Any], literature: list[dict]) -> float:
         """Plausibility = citation support / semantic similarity to evidence (0-1)."""
@@ -94,9 +99,22 @@ class PriorScorer:
 
         # Heuristic: presence of mathematical/logical keywords
         math_keywords = [
-            "forall", "exists", "implies", "if and only if", "theorem", "proof",
-            "equal", "greater than", "less than", "function", "mapping",
-            "converges", "diverges", "bounded", "continuous", "differentiable",
+            "forall",
+            "exists",
+            "implies",
+            "if and only if",
+            "theorem",
+            "proof",
+            "equal",
+            "greater than",
+            "less than",
+            "function",
+            "mapping",
+            "converges",
+            "diverges",
+            "bounded",
+            "continuous",
+            "differentiable",
         ]
         text_lower = hyp_text.lower()
         score = sum(0.15 for kw in math_keywords if kw in text_lower)
@@ -110,9 +128,22 @@ class PriorScorer:
 
         # Heuristic: presence of testable claims
         testable_markers = [
-            "increases", "decreases", "reduces", "enhances", "improves",
-            "correlates", "causes", "affects", "inhibits", "promotes",
-            "faster", "slower", "higher", "lower", "more", "less",
+            "increases",
+            "decreases",
+            "reduces",
+            "enhances",
+            "improves",
+            "correlates",
+            "causes",
+            "affects",
+            "inhibits",
+            "promotes",
+            "faster",
+            "slower",
+            "higher",
+            "lower",
+            "more",
+            "less",
         ]
         text_lower = hyp_text.lower()
         score = sum(0.12 for m in testable_markers if m in text_lower)

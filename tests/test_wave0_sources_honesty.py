@@ -14,6 +14,13 @@ def test_web_search_plugin_returns_empty_not_example_com() -> None:
     results = WebSearchPlugin().execute("anything", max_results=5)
     assert results == []
     assert not any("example.com" in str(r) for r in results)
+    assert WebSearchPlugin.STUB is True
+
+
+def test_web_search_plugin_not_registered_in_production_registry() -> None:
+    from src.plugins.unified_registry import PLUGIN_REGISTRY
+
+    assert "web_search" not in PLUGIN_REGISTRY
 
 
 def test_shape_search_query_truncates_long_russian_prompt() -> None:

@@ -358,11 +358,15 @@ def uninstall_package(package_id: str) -> tuple[bool, str]:
     if not pkg:
         return False, f"Package '{package_id}' not found"
     try:
-        subprocess.run(
+        result = subprocess.run(
             [sys.executable, "-m", "pip", "uninstall", pkg.pip_name, "-y", "-q"],
             capture_output=True,
             timeout=60,
         )
+        if result.returncode != 0:
+            err = (result.stderr or result.stdout or b"").decode(errors="replace").strip()
+            detail = err[:200] if err else f"exit code {result.returncode}"
+            return False, f"✗ {pkg.name} uninstall failed: {detail}"
         return True, f"✓ {pkg.name} removed"
     except Exception as e:
         return False, str(e)

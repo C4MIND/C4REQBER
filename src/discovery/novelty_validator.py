@@ -281,8 +281,17 @@ class NoveltyValidator:
         )
         try:
             result = json.loads(response["choices"][0]["message"]["content"])
+            raw_score = result.get("novelty_score", None)
+            score: float | None
+            if raw_score is None:
+                score = None
+            else:
+                try:
+                    score = float(raw_score)
+                except (TypeError, ValueError):
+                    score = None
             return {
-                "semantic_novelty": result.get("novelty_score", 0.5),
+                "semantic_novelty": score,
                 "reasoning": result.get("reasoning", ""),
                 "closest_work": result.get("closest_known_work", ""),
             }
@@ -294,7 +303,7 @@ class NoveltyValidator:
             TypeError,
             json.JSONDecodeError,
         ):
-            return {"semantic_novelty": 0.5}
+            return {"semantic_novelty": None}
 
     async def _fallback_check(self, hypothesis: str, domain: str) -> dict[str, Any]:
         """Fallback: use raw httpx to search CrossRef directly."""

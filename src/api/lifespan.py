@@ -152,6 +152,14 @@ async def lifespan(app: FastAPI) -> None:  # type: ignore[misc]
     logger = logging.getLogger("c4_cdi_turbo")
     logger.info("C4REQBER API starting up...")
 
+    try:
+        from src.config.paths import apply_config_to_env
+
+        apply_config_to_env()
+        logger.info("Loaded ~/.c4reqber config + secrets.env into process env")
+    except Exception as exc:
+        logger.warning("apply_config_to_env failed at startup: %s", exc)
+
     app.state.cache = CacheManager()
     app.state.rate_limiter = RateLimiter()
 

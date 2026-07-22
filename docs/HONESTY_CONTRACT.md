@@ -1,6 +1,6 @@
 # Honesty Contract — c4reqber (anti green-fake)
 
-**Status:** active · **Date:** 2026-07-18
+**Status:** active · **Date:** 2026-07-22
 **Audience:** agents, reviewers, contributors
 **Canonical remote:** GitLab `cognitive-functors/c4reqber`
 
@@ -42,6 +42,56 @@ If code paints green while this contract says it must not — the code is wrong.
 7. **TUI:** `sim_finished` paints green only for `engine_status` in `{ok, success, completed}`. `partial` / `failed` jobs use `toast.partial` / `toast.failed` — never celebration burst for failure.
 8. **Capabilities probe:** instantiable without `available` / `is_available` → **unavailable** (`no_availability_api`), not default-true.
 9. **HF token:** optional `HF_TOKEN` env or `~/.cache/huggingface/token`. `~/.kimi/.env` → symlink to `~/.kilo/.env` (LLM keys); HF is usually **not** there.
+10. **Flash `--sources`:** `blast flash` / MCP `blast_flash` share `run_flash`. A source is **verified** only after `CitationVerifier` (CrossRef DOI and/or OpenAlex title similarity ≥ 0.82 → `VERIFIED`/`PARTIAL`). Presence of a DOI/URL alone is **checkable**, not verified. Footer / mascot / `sources` list = **verified only**. Unverified raw hits may appear under a separate “Unverified hits (not counted)” section. If verified sources exist, the answer must not claim “unable to find”. Strip `example.com` and `scholar.google.com/scholar?q=` URLs. `~/.c4reqber/secrets.env` is loaded for **all** CLI commands so Tavily can activate.
+11. **Rate limits (HTTP 429):** OpenRouter / gateway chat must rotate free-tier and local providers (cap: `C4_LLM_MAX_ROTATIONS`, default 8). When all providers are exhausted → `status: partial` + `rate_limited` warning — **never** an empty success answer. Prefer LM Studio / Ollama / MLX when `C4_LOCAL_LLM_FIRST=1` or after the first 429.
+12. **Query spray:** literature/materials flash queries use domain allowlists — do not hammer PubChem / ClinicalTrials / UCI ML / HF datasets / CERN OD / AFLOW / Materials Project with full English instructions.
+
+---
+
+## Flash surfaces (I1–I10)
+
+Merge blockers from the Zero-Asymmetry Product Lock PRD. Every surface that shows Flash, sources, complete, verified, or novelty must obey these invariants.
+
+| ID | Invariant | Surfaces |
+|----|-----------|----------|
+| **I1** | Exactly **one** Flash implementation: `run_flash` → shared `FlashResult` schema. CLI, MCP, API job, TUI all consume the **composed** job (answer + verified sources + optional C4/TRIZ/hypothesis). | `blast flash`, MCP `blast_flash`, `POST /v8/discover/flash`, TUI Flash mode |
+| **I2** | No UI fires `toast.complete` or celebration **burst** unless terminal status ∈ `{success, complete}` **and** payload honesty allows it. Missing status → fail-closed (`partial`, no burst). | TUI `applyCelebrationPolicy`, Flash / Discover / Multi SSE + poll paths |
+| **I3** | `sources` / mascot source count = **CitationVerifier-confirmed** (`VERIFIED`/`PARTIAL`) only. Raw hits → `unverified_hits` (labeled, not counted). | CLI footer, MCP payload, TUI cards, turbo/solve mascots, Phase B |
+| **I4** | Empty / unchecked novelty → `novelty_score: null` — never placeholder `1.0` or `0.5`. Gates treat `null` as **unchecked** (warn/skip), not automatic fail. | NoveltyScorer, synthesis, agenda, discovery_utils, quality gates |
+| **I5** | HTTP **429** → rotate free-tier/local providers (cap `C4_LLM_MAX_ROTATIONS`); all exhausted → `status: partial` + `rate_limited` warning — never empty success answer. | `AsyncLLMClient`, gateway, `run_flash` |
+| **I6** | Fallback sim (`not_*`, `*_not_*`, e.g. `rebound_not_amuse`) → outer **`partial`**, never SUCCESS. | MCP `c4_simulate`, TUI `sim_finished`, honesty_status helpers |
+| **I7** | Stub tools forbidden on production paths (`agent_search` string placeholders, fake dissertation sections, `WebSearchPlugin` example.com). Wire real search or honest `unavailable`. | Agent daemon, plugins, live_feed |
+| **I8** | `~/.c4reqber/secrets.env` loaded on every product entry: `blast *`, API lifespan, MCP serve, Win desktop launcher. | `apply_config_to_env` in paths / lifespan / MCP / launcher.bat |
+| **I9** | Query shaping (`_shape_search_query`) on **all** search entrypoints including `search_single` and MCP `c4_search`. | orchestrator, MCP search tools |
+| **I10** | Live Windows AISI 440C acceptance (TUI Flash **or** CLI after TUI path proven) before calling the PRD done. Log or explicit waiver required. | `docs/WINDOWS_FLASH_ACCEPTANCE.md` |
+
+### FlashResult (SSOT)
+
+Defined in `src/knowledge/flash_contract.py`:
+
+```text
+status: success | partial | error
+answer: str
+sources: list[CitationCard]          # verified only
+unverified_hits: list[CitationCard]  # not counted
+verified_count, found_count, warnings, search_meta
+c4_path?, triz_principles?, hypothesis?  # composer framing (§4.1)
+```
+
+### JobTerminalEvent (SSE)
+
+`JobStore` derives terminal event from `result.status` via `derive_terminal()` — **must not** emit `type=complete` when `result.status` ∈ `{partial, aborted, failed, error}`.
+
+### TUI celebration policy
+
+| Incoming status | Toast | Burst | Card status |
+|-----------------|-------|-------|-------------|
+| `success` / `complete` | `toast.complete` | yes | done |
+| `partial` / `aborted` | `toast.partial` | **no** | partial |
+| `failed` / `error` | `toast.failed` | **no** | error |
+| missing | `toast.partial` (fail-closed) | **no** | partial |
+
+Applies to Flash, Multi, Discover SSE `handleCompleteEvent`, and poll paths.
 
 ---
 
@@ -87,6 +137,9 @@ HF_HOME="$(pwd)/.cache/huggingface" \
 .venv/bin/python -m pytest \
   tests/test_mcp_honesty_status.py \
   tests/test_citation_openalex_honesty.py \
+  tests/test_flash_sources.py \
+  tests/test_flash_grounding_honesty.py \
+  tests/test_wave0_sources_honesty.py \
   tests/test_mnli_real.py \
   tests/test_w*.py \
   tests/test_full_physics_integration.py \

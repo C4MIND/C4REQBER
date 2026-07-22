@@ -209,13 +209,12 @@ def apply_config_to_env() -> None:
 
         logging.getLogger(__name__).warning("secrets.env load failed: %s", exc)
     mapping = get_user_keys()
-    extra = {}
+    extra: dict[str, str] = {}
     sections = load_config_toml()
     core = sections.get("core", {})
-    if core.get("demo_mode") in ("true", "1", "True"):
-        extra["C4_DEMO_AUTH"] = "1"
+    # demo_auth bypass: only via explicit C4_DEMO_AUTH env or blast tui --demo (R14).
     if core.get("language"):
-        extra.setdefault("C4_LANG", core["language"])
+        extra.setdefault("C4_LANG", str(core["language"]))
     for key, val in {**mapping, **extra}.items():
         if key in ("language", "demo_mode"):
             continue  # handled above or via specific

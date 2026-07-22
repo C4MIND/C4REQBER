@@ -25,6 +25,7 @@ from data.database import PatternDatabase
 from export.manager import ExportManager
 from extractors.contradiction import ContradictionExtractor
 from projects.manager import ProjectManager
+from src import __tui_version__, __version__
 from visualization.c4_viz import C4Visualizer
 
 
@@ -48,7 +49,7 @@ class C4REQBERShell(cmd.Cmd):
     intro = f"""
 {Style.CYAN}{Style.BOLD}
 ╔══════════════════════════════════════════════════════════════╗
-║  ⚡ C4REQBER Interactive Research Environment v5.4          ║
+║  ⚡ C4REQBER Interactive Research Environment {__tui_version__} · pip {__version__}  ║
 ║  Type 'help' for commands, 'exit' to quit                   ║
 ╚══════════════════════════════════════════════════════════════╝
 {Style.RESET}

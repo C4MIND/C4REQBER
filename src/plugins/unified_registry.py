@@ -700,19 +700,21 @@ def _select_plugins_for_problem(
 
 
 class WebSearchPlugin(ToolPlugin):
-    """DEPRECATED stub — never invents URLs.
+    """DEPRECATED stub — never invents URLs (quarantined from PLUGIN_REGISTRY).
 
     Historical "Example plugin" returned http://example.com/N and was wired
     into production flash/turbo paths. It now always returns [] and logs so
     callers must use MultiSourceSearcher / Tavily instead.
     """
 
+    STUB = True
+
     @property
     def metadata(self) -> ToolMetadata:
         return ToolMetadata(
             name="web_search",
             version="2.0.0",
-            description="Removed stub — use MultiSourceSearcher",
+            description="QUARANTINED stub — use MultiSourceSearcher; not registered",
             author="C4Reqber",
             requires=[],
         )

@@ -294,10 +294,11 @@ class SynthesisStep(PipelineStep):
 
             # ------------------------------------------------------------------
             # Citation Verification + Novelty Scoring
+            # Honesty: unchecked novelty → null (never fake 0.5 under gates)
             # ------------------------------------------------------------------
             citation_verdicts: list[dict[str, Any]] = []
-            novelty_score = 0.5
-            novelty_flag = "NOVELTY_UNCERTAIN"
+            novelty_score: float | None = None
+            novelty_flag = "NOVELTY_UNCHECKED"
             try:
                 verifier = CitationVerifier()
                 citation_verdicts = [
@@ -311,8 +312,12 @@ class SynthesisStep(PipelineStep):
                 scorer = NoveltyScorer()
                 novelty_score = scorer.score(solution, sources or [])
                 novelty_flag = scorer.flag(novelty_score)
+                if novelty_score is None:
+                    logger.debug("Novelty unchecked: empty or non-embeddable prior art")
             except Exception as exc:
                 logger.debug("Novelty scoring skipped: %s", exc)
+                novelty_score = None
+                novelty_flag = "NOVELTY_UNCHECKED"
 
             # ------------------------------------------------------------------
             # Dynamic confidence calculation (v3 — real metrics, target >0.92)
@@ -369,8 +374,8 @@ class SynthesisStep(PipelineStep):
             claim_coverage = context.get("claim_verification", {}).get("overall_coverage", 0.0)
             claim_boost = claim_coverage * 0.08
 
-            # 9. Novelty boost (v3)
-            novelty_boost = novelty_score * 0.08  # +0.08 if completely novel
+            # 9. Novelty boost (v3) — only when scored; null ≠ mid-confidence
+            novelty_boost = (novelty_score * 0.08) if novelty_score is not None else 0.0
 
             # 10. Citation verification penalty
             verified_count = sum(1 for v in citation_verdicts if v.get("verdict") == "VERIFIED")
@@ -415,7 +420,7 @@ class SynthesisStep(PipelineStep):
                     "has_concrete_steps": has_concrete,
                 },
                 "novelty": {
-                    "score": round(novelty_score, 3),
+                    "score": round(novelty_score, 3) if novelty_score is not None else None,
                     "flag": novelty_flag,
                 },
                 "citation_verification": {

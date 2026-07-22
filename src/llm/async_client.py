@@ -18,6 +18,7 @@ from typing import Any
 
 from src.config import get_key
 from src.llm.cache import AsyncLLMCache, hash_prompt
+from src.llm.errors import RateLimited
 
 
 # Try to import httpx for async support
@@ -42,21 +43,32 @@ class LLMResponse:
     raw_response: dict | None = None  # type: ignore[type-arg]
 
 
+# Task-name → pipeline phase for ModelAssignment / models.json SSOT
+_TASK_TO_PHASE: dict[str, str] = {
+    "hypothesis": "D",
+    "falsifiability": "G",
+    "synthesis": "F",
+    "cheap": "G",
+}
+
+
 class AsyncLLMClient:
     """
     Async LLM client for non-blocking API calls.
 
     Supports concurrent requests for batch processing.
+    Default model resolution goes through ModelAssignment (models.json),
+    not hardcoded IDs that ignore user config.
     """
 
     DEFAULT_MODEL = "qwen/qwen-2.5-72b-instruct"
 
-    # Models optimized for different tasks
+    # Legacy task aliases — resolved via get_model_for_phase at call time
     MODELS = {
-        "hypothesis": "anthropic/claude-sonnet-4.6",
-        "falsifiability": "openai/gpt-4o",
-        "synthesis": "anthropic/claude-sonnet-4.6",
-        "cheap": "openai/gpt-4o-mini",
+        "hypothesis": "D",
+        "falsifiability": "G",
+        "synthesis": "F",
+        "cheap": "G",
     }
 
     def __init__(
@@ -64,6 +76,7 @@ class AsyncLLMClient:
         api_key: str | None = None,
         timeout: float = 60.0,
         cache: AsyncLLMCache | None = None,
+        default_phase: str = "D",
     ) -> None:
         if not HAS_HTTPX:
             raise ImportError("httpx required for async LLM client. Install: pip install httpx")
@@ -76,6 +89,27 @@ class AsyncLLMClient:
         self.timeout = timeout
         self._client: httpx.AsyncClient | None = None
         self._cache = cache or AsyncLLMCache()
+        self.default_phase = (default_phase or "D").strip().upper()
+
+    def _resolve_model(self, model: str | None, phase: str | None = None) -> str:
+        """Resolve model via explicit arg → ModelAssignment → last-resort default."""
+        if model:
+            # Task alias (e.g. "synthesis") → phase lookup
+            alias_phase = _TASK_TO_PHASE.get(model.strip().lower())
+            if alias_phase:
+                phase = alias_phase
+            else:
+                return model
+        use_phase = (phase or self.default_phase or "D").strip().upper()
+        try:
+            from src.llm.model_assignment import get_model_for_phase
+
+            assigned = get_model_for_phase(use_phase)
+            if assigned:
+                return assigned
+        except Exception as exc:
+            logger.debug("ModelAssignment lookup failed: %s", exc)
+        return self.DEFAULT_MODEL
 
     async def __aenter__(self) -> Any:
         """Async context manager entry."""
@@ -157,17 +191,20 @@ class AsyncLLMClient:
         max_tokens: int = 2000,
         system_prompt: str | None = None,
         response_format: str | None = None,
+        phase: str | None = None,
     ) -> LLMResponse:
         """
         Generate text using LLM (async).
 
         Args:
             prompt: User prompt
-            model: Model identifier
+            model: Model identifier (or task alias). When None / alias, uses
+                ModelAssignment / models.json via ``get_model_for_phase``.
             temperature: 0-1 (0=deterministic, 1=creative)
             max_tokens: Maximum response length
             system_prompt: System instructions
             response_format: "json" or None
+            phase: Pipeline phase A–G for ModelAssignment (default: D)
 
         Returns:
             LLMResponse with content and metadata
@@ -189,13 +226,15 @@ class AsyncLLMClient:
         except Exception as exc:
             raise RuntimeError("Prompt safety scan failed; refusing to call the LLM") from exc
 
+        model = self._resolve_model(model, phase=phase)
+
         # ── Cache check ───────────────────────────────────────────────
-        prompt_hash = hash_prompt(prompt + (system_prompt or "") + (model or self.DEFAULT_MODEL))
+        prompt_hash = hash_prompt(prompt + (system_prompt or "") + model)
         cached = await self._cache.get(prompt_hash)
         if cached is not None:
             return LLMResponse(
                 content=cached,
-                model=model or self.DEFAULT_MODEL,
+                model=model,
                 usage={"prompt_tokens": 0, "completion_tokens": 0, "cached": True},
                 latency_ms=0.0,
             )
@@ -206,8 +245,6 @@ class AsyncLLMClient:
             )
 
         await self._init_client()
-
-        model = model or self.DEFAULT_MODEL
 
         messages = []
         if system_prompt:
@@ -245,9 +282,20 @@ class AsyncLLMClient:
                 self._record_metric(model, "error_retry", time.time() - start_time)
                 last_error = e
                 status = e.response.status_code
-                last_error = e
-                status = e.response.status_code
                 await self.close()
+                if status == 429:
+                    retry_after = None
+                    raw = e.response.headers.get("Retry-After", "").strip()
+                    if raw:
+                        try:
+                            retry_after = float(raw)
+                        except ValueError:
+                            pass
+                    raise RateLimited(
+                        "OpenRouter rate limit (HTTP 429)",
+                        retry_after=retry_after,
+                        provider="openrouter",
+                    ) from e
                 if attempt == max_retries - 1 or status in (400, 401, 402, 403, 404):
                     raise RuntimeError(f"LLM API error: {e}") from e
                 await asyncio.sleep(0.5 * (attempt + 1))
@@ -335,7 +383,8 @@ Respond ONLY with JSON, no markdown formatting, no explanations."""
 
         response = await self.generate(
             prompt=prompt,
-            model=model or self.MODELS["falsifiability"],
+            model=model,
+            phase="G" if model is None else None,
             system_prompt=system_prompt,
             temperature=0.3,
             response_format="json",

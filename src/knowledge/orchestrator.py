@@ -377,7 +377,8 @@ class MultiSourceSearcher:
 
     async def search_single(self, source: str, query: str) -> list[dict[str, Any]]:
         """Search a single source by name."""
-        cache_key = f"search_single:{source}:{query}"
+        shaped_query = self._shape_search_query(query)
+        cache_key = f"search_single:{source}:{shaped_query}"
         cached = self._cache.get(cache_key)
         if cached is not None:
             return cached
@@ -386,7 +387,7 @@ class MultiSourceSearcher:
         if not cfg:
             logger.warning("Unknown source: %s", source)
             return []
-        result = await self._search_with_timeout(source, query, self.MAX_PAPERS_PER_SOURCE)
+        result = await self._search_with_timeout(source, shaped_query, self.MAX_PAPERS_PER_SOURCE)
         self._cache.set(cache_key, result)
         return result
 

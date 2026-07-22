@@ -27,6 +27,15 @@ if [[ -f "${CONFIG}" ]]; then
   export LEAN4_PATH="${LEAN4_PATH:-$(grep -E '^lean4_path' "${CONFIG}" 2>/dev/null | head -1 | sed 's/.*= *"\(.*\)".*/\1/')}"
 fi
 
+# secrets.env (Setup Hub) — Tavily and other keys may live here only
+SECRETS="${HOME}/.c4reqber/secrets.env"
+if [[ -f "${SECRETS}" ]]; then
+  set -a
+  # shellcheck disable=SC1090
+  source "${SECRETS}" 2>/dev/null || true
+  set +a
+fi
+
 if [[ ! -x "${TUI_BIN}" ]]; then
   echo "TUI binary missing at ${TUI_BIN}"
   exit 1

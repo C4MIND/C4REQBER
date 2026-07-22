@@ -391,10 +391,10 @@ func renderCard(c Card, width int, verdictChips string, focused, expanded bool) 
 		}
 		statusColor := "8"
 		switch c.Sim.EngineStatus {
-		case "available", "success":
+		case "success", "ok", "completed":
 			statusColor = "2"
-		case "partial", "stub", "slow":
-			statusColor = "3"
+		case "available", "partial", "stub", "slow":
+			statusColor = "3" // capsim probe / standby ≠ executed success
 		case "unavailable", "error", "failed", "skipped":
 			statusColor = "1"
 		case "budget_exceeded":

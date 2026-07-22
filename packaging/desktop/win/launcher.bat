@@ -50,6 +50,17 @@ if exist "%CONFIG%" (
   )
 )
 
+REM secrets.env (Setup Hub) — keys not duplicated in config.toml (Tavily etc.)
+set SECRETS=%USERPROFILE%\.c4reqber\secrets.env
+if exist "%SECRETS%" (
+  for /f "usebackq eol=# tokens=1,* delims==" %%a in ("%SECRETS%") do (
+    if not defined %%a if not "%%b"=="" set "%%a=%%b"
+  )
+  for %%V in (TAVILY_API_KEY BRAVE_API_KEY EXA_API_KEY OPENROUTER_API_KEY DEEPSEEK_API_KEY GROQ_API_KEY NVIDIA_API_KEY) do (
+    if defined %%V set %%V=!%%V:"=!
+  )
+)
+
 if not exist "%TUI%" (
   echo TUI binary missing: %TUI%
   exit /b 1

@@ -17,6 +17,7 @@ class EmbeddingCache:
 
     def __init__(self, max_size: int = 10000) -> None:
         from collections import OrderedDict
+
         self._cache: OrderedDict[str, np.ndarray] = OrderedDict()
         self._max = max_size
 
@@ -43,6 +44,7 @@ class EmbeddingCache:
     def _init_ordered_dict(self) -> None:
         """Ensure _cache is an OrderedDict for LRU behavior."""
         from collections import OrderedDict
+
         if not isinstance(self._cache, OrderedDict):
             # Rebuild in insertion order to preserve existing behavior
             self._cache = OrderedDict(self._cache)  # type: ignore[unreachable]
@@ -81,6 +83,7 @@ class EmbeddingEngine:
             return True
         try:
             from sentence_transformers import SentenceTransformer
+
             self._model = SentenceTransformer(self._model_name)
             logger.info("Embedding model loaded: %s", self._model_name)
             return True
@@ -127,13 +130,16 @@ class EmbeddingEngine:
     def _embed_batch(self, texts: list[str]) -> list[np.ndarray]:
         if self._ensure_model():
             assert self._model is not None
-            embeddings = self._model.encode(texts, batch_size=self._batch_size, show_progress_bar=False, convert_to_numpy=True)
+            embeddings = self._model.encode(
+                texts, batch_size=self._batch_size, show_progress_bar=False, convert_to_numpy=True
+            )
             return [e for e in embeddings]
         raise RuntimeError("Embedding model unavailable")
 
     async def aembed(self, texts: list[str]) -> np.ndarray:
         """Async wrapper for embed — delegates to thread pool."""
         import asyncio
+
         loop = asyncio.get_running_loop()
         return await loop.run_in_executor(None, self.embed, texts)
 
@@ -141,13 +147,26 @@ class EmbeddingEngine:
 _engine = EmbeddingEngine()
 
 
-def semantic_deduplicate(sources: list[dict[str, Any]], threshold: float = 0.85) -> list[dict[str, Any]]:
-    """Remove near-duplicate sources via embedding similarity."""
+def semantic_deduplicate(
+    sources: list[dict[str, Any]], threshold: float = 0.85
+) -> list[dict[str, Any]]:
+    """Remove near-duplicate sources via embedding similarity.
+
+    Falls back to lexical title Jaccard when sentence-transformers is unavailable.
+    """
     if len(sources) < 2:
         return sources
 
     texts = [s.get("title", "") + " " + s.get("snippet", s.get("abstract", "")) for s in sources]
-    vecs = _engine.embed(texts)
+    try:
+        vecs = _engine.embed(texts)
+    except (RuntimeError, ImportError, ValueError, TypeError) as exc:
+        logger.warning(
+            "Semantic deduplication unavailable (%s); using lexical title fallback",
+            exc,
+        )
+        return _lexical_deduplicate(sources, threshold=max(0.5, threshold - 0.2))
+
     # Normalize for cosine similarity via dot product
     norms = np.linalg.norm(vecs, axis=1, keepdims=True)
     norms[norms == 0] = 1.0
@@ -157,16 +176,53 @@ def semantic_deduplicate(sources: list[dict[str, Any]], threshold: float = 0.85)
     if len(sources) > 1:
         keep_vecs = normalized[0:1]
         for i in range(1, len(sources)):
-            sims = (normalized[i:i+1] @ keep_vecs.T).flatten()
+            sims = (normalized[i : i + 1] @ keep_vecs.T).flatten()
             if sims.max() < threshold:
                 keep.append(i)
-                keep_vecs = np.vstack([keep_vecs, normalized[i:i+1]])
+                keep_vecs = np.vstack([keep_vecs, normalized[i : i + 1]])
 
-    logger.info("Semantic dedup: %d → %d sources (threshold %.2f)", len(sources), len(keep), threshold)
+    logger.info(
+        "Semantic dedup: %d → %d sources (threshold %.2f)", len(sources), len(keep), threshold
+    )
     return [sources[k] for k in keep]
 
 
-def find_best_evidence(gap: dict[str, Any], sources: list[dict[str, Any]], top_k: int = 3) -> list[dict[str, Any]]:
+def _lexical_deduplicate(
+    sources: list[dict[str, Any]], threshold: float = 0.65
+) -> list[dict[str, Any]]:
+    """Title-token Jaccard dedup when embeddings are unavailable."""
+
+    def _tokens(title: str) -> set[str]:
+        return {t for t in (title or "").lower().split() if len(t) > 2}
+
+    keep: list[dict[str, Any]] = []
+    kept_toks: list[set[str]] = []
+    for src in sources:
+        toks = _tokens(str(src.get("title", "")))
+        if not toks:
+            keep.append(src)
+            kept_toks.append(toks)
+            continue
+        dup = False
+        for prev in kept_toks:
+            if not prev:
+                continue
+            sim = len(toks & prev) / max(len(toks | prev), 1)
+            if sim >= threshold:
+                dup = True
+                break
+        if not dup:
+            keep.append(src)
+            kept_toks.append(toks)
+    logger.info(
+        "Lexical dedup: %d → %d sources (threshold %.2f)", len(sources), len(keep), threshold
+    )
+    return keep
+
+
+def find_best_evidence(
+    gap: dict[str, Any], sources: list[dict[str, Any]], top_k: int = 3
+) -> list[dict[str, Any]]:
     """Find best source evidence for a gap via embedding similarity.
 
     Before embedding, verifies that the claimed quote (if any) actually exists
@@ -230,7 +286,9 @@ def find_best_evidence(gap: dict[str, Any], sources: list[dict[str, Any]], top_k
     return results
 
 
-def cluster_by_topic(sources: list[dict[str, Any]], n_clusters: int = 5) -> dict[int, list[dict[str, Any]]]:
+def cluster_by_topic(
+    sources: list[dict[str, Any]], n_clusters: int = 5
+) -> dict[int, list[dict[str, Any]]]:
     """Group sources into semantic clusters via embedding K-means."""
     if len(sources) < n_clusters:
         return {0: sources}
@@ -239,6 +297,7 @@ def cluster_by_topic(sources: list[dict[str, Any]], n_clusters: int = 5) -> dict
     vecs = _engine.embed(texts)
 
     from sklearn.cluster import KMeans
+
     km = KMeans(n_clusters=min(n_clusters, len(sources)), random_state=42, n_init=3)
     labels = km.fit_predict(vecs)
 
@@ -261,7 +320,9 @@ def coverage_check(dissertation: str, bibliography: list[dict[str, Any]]) -> dic
         return {"coverage": 0.0, "covered": 0, "total": len(bibliography), "uncovered": []}
 
     section_vecs = _engine.embed(sections)
-    bib_texts = [b.get("title", "") + " " + b.get("snippet", b.get("abstract", "")) for b in bibliography]
+    bib_texts = [
+        b.get("title", "") + " " + b.get("snippet", b.get("abstract", "")) for b in bibliography
+    ]
     bib_vecs = _engine.embed(bib_texts)
 
     covered = 0
@@ -283,11 +344,13 @@ def coverage_check(dissertation: str, bibliography: list[dict[str, Any]]) -> dic
 
 # ── Fast-Complete: cheap models for sub-LLM tasks ──
 
+
 def fast_summarize(text: str, max_sentences: int = 5) -> str:
     """Summarize text using cheapest available model (depth 0). Return key sentences."""
     if not text or len(text.split()) < 30:
         return text
     from src.llm.depth_router import DepthBasedRouter
+
     model = DepthBasedRouter.route(0, "cheap")  # depth=0 fast-complete
     prompt = f"Extract the {max_sentences} most important factual sentences from this text. Output ONLY the sentences, one per line. No preamble. No commentary.\n\n{text[:3000]}"
     result = _call_llm(model, prompt, max_tokens=300)
@@ -327,7 +390,7 @@ def _extract_json_block(text: str) -> str:
         elif ch in "]}":
             depth -= 1
             if depth == 0:
-                return text[start:i + 1]
+                return text[start : i + 1]
     return ""
 
 
@@ -336,6 +399,7 @@ def fast_extract_entities(text: str) -> list[str]:
     if not text:
         return []
     from src.llm.depth_router import DepthBasedRouter
+
     model = DepthBasedRouter.route(0, "balanced")
     prompt = f"Extract 5-10 key scientific entities and concepts from this text. Output ONLY a JSON list of strings. No preamble.\n\n{text[:2000]}"
     result = _call_llm(model, prompt, max_tokens=200)
@@ -343,6 +407,7 @@ def fast_extract_entities(text: str) -> list[str]:
         logger.warning("fast_extract_entities failed: empty response, returning empty list")
         return []
     import json
+
     try:
         block = _extract_json_block(result)
         if not block:
@@ -358,6 +423,7 @@ def fast_structure(text: str) -> list[tuple[str, str]]:
     if not text:
         return []
     from src.llm.depth_router import DepthBasedRouter
+
     model = DepthBasedRouter.route(0, "cheap")
     prompt = f"""Split this text into logical sections. Output as JSON list of [heading, content] pairs. Content max 200 chars per section.
 
@@ -367,6 +433,7 @@ def fast_structure(text: str) -> list[tuple[str, str]]:
         logger.warning("fast_structure failed: empty response, returning empty list")
         return []
     import json
+
     try:
         block = _extract_json_block(result)
         if not block:
@@ -385,6 +452,7 @@ def _call_llm(model: str, prompt: str, max_tokens: int = 300) -> str:
 
         # Audit 2026-06-22 H-8 Tier 1: sync variant of guarded wrapper.
         from src.llm.guarded_call import guarded_chat_completion_sync
+
         key = os.environ.get("OPENROUTER_API_KEY", "")
         if not key:
             raise RuntimeError("OPENROUTER_API_KEY required for embeddings")

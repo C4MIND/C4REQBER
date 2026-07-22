@@ -10,6 +10,8 @@ from typing import Any
 
 import httpx
 
+from src.llm.errors import RateLimited
+
 
 logger = logging.getLogger(__name__)
 
@@ -123,6 +125,8 @@ class LLMProviderRouter:
                     preferred_model=preferred,
                 ),
             )
+        except RateLimited:
+            raise
         except RuntimeError as e:
             raise ProviderExhaustedError(
                 ["opencode", "groq", "nvidia", "lmstudio"], [str(e)]

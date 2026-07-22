@@ -193,6 +193,25 @@ class HybridVerifier:
             backend = self._select_backend(claim)
         logger.info("Selected backend: %s for claim: %s...", backend, claim[:60])
 
+        if backend == "agda" and not self._check_executable(self.AGDA_PATH):
+            elapsed_ms = (time.perf_counter() - t0) * 1000
+            vr = VerificationResult(
+                backend="agda",
+                status="unavailable",
+                claim=claim[:200],
+                proof_text="Agda not installed — formal verification unavailable",
+                error_message="agda not found",
+                iterations=0,
+                execution_time_ms=elapsed_ms,
+                timing_info={
+                    "backend": "agda",
+                    "elapsed_ms": int(elapsed_ms),
+                    "not_installed": True,
+                },
+            )
+            self._cache[cache_key] = vr
+            return vr
+
         # Emit verification start event
         try:
             from src.infrastructure.events import event_bus
@@ -389,6 +408,26 @@ class HybridVerifier:
                 vr.was_timeout = True
                 vr.timing_info = compile_timing.to_dict()
                 vr.fallback_reason = reason
+                return vr
+
+            if compile_result.get("status") == "not_installed":
+                total_ms = (time.perf_counter() - t0) * 1000
+                vr = VerificationResult(
+                    backend=backend,
+                    status="unavailable",
+                    claim=claim[:200],
+                    proof_code=proof_code,
+                    proof_text=f"{backend} not installed — verification unavailable",
+                    error_message=compile_result.get("error", f"{backend} not found"),
+                    iterations=attempt,
+                    execution_time_ms=total_ms,
+                    timing_info={
+                        "backend": backend,
+                        "elapsed_ms": int(total_ms),
+                        "not_installed": True,
+                    },
+                )
+                self._cache[cache_key] = vr
                 return vr
 
             if compile_result["status"] == "success":

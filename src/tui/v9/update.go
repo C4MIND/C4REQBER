@@ -96,7 +96,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				if te.CostUSD > 0 {
 					m.ApplySimCost(te.CostUSD)
 				}
-			case api.EventComplete:
+			case api.EventComplete, api.EventPartial:
 				m.handleCompleteEvent(te)
 			case api.EventFailed, api.EventCancelled:
 				m.handleFailedEvent(te)
@@ -108,7 +108,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			// Terminal event: tear the stream down so the reader goroutine +
 			// HTTP connection don't linger, and stop re-issuing sseContinueCmd
 			// against a finished job.
-			if te.Type == api.EventComplete || te.Type == api.EventFailed || te.Type == api.EventCancelled {
+			if te.Type == api.EventComplete || te.Type == api.EventPartial || te.Type == api.EventFailed || te.Type == api.EventCancelled {
 				m.teardownStream()
 				return m, nil
 			}
@@ -375,6 +375,10 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			return m, nil
 		case km.Matches(ActCycleMode, keyStr):
+			if m.modelsVisible {
+				modelsToggleView(m)
+				return m, nil
+			}
 			// Cycle mode: DISCOVER → FLASH → TURBO → TURBOFACTORY → DISCOVER
 			switch m.mode {
 			case ModeDiscover:
@@ -813,30 +817,34 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.running = false
 				m.jobID = ""
 				st := strings.ToLower(strings.TrimSpace(msg.status))
-				switch st {
-				case "failed", "error":
-					m.setToast(i18n.T("toast.failed"))
-					m.appendCard(Card{Kind: CardError, Title: "Discovery failed", Body: st, Time: time.Now(), Status: "error"})
-				case "partial":
-					m.setToast(i18n.T("toast.partial"))
-				default:
-					m.setToast(i18n.T("toast.complete"))
-					m.burst.Trigger(m.width, m.height, m.width/2, m.height/2)
+				if st == "" && msg.result != nil {
+					if rs, ok := msg.result["status"].(string); ok {
+						st = strings.ToLower(strings.TrimSpace(rs))
+					}
 				}
-				if msg.result != nil && st != "failed" && st != "error" {
+				cardStatus := m.applyCelebrationPolicy(st)
+				if st == "failed" || st == "error" {
+					m.appendCard(Card{Kind: CardError, Title: "Discovery failed", Body: st, Time: time.Now(), Status: "error"})
+				} else if msg.result != nil {
+					if ans, ok := msg.result["answer"].(string); ok && strings.TrimSpace(ans) != "" {
+						m.appendCard(Card{Kind: CardHypothesis, Title: "Flash", Body: ans, Time: time.Now(), Status: cardStatus})
+						m.typew.Set(ans, m.tick)
+					}
 					if hyp, ok := msg.result["hypothesis"].(map[string]any); ok {
-						hc := Card{Kind: CardHypothesis, Title: i18n.T("card.hypothesis.t"), Body: fieldString(hyp, "text"), Meta: []cards.MetaKV{{Key: "source", Value: fieldString(hyp, "source")}}, Time: time.Now(), Status: "done"}
+						hc := Card{Kind: CardHypothesis, Title: i18n.T("card.hypothesis.t"), Body: fieldString(hyp, "text"), Meta: []cards.MetaKV{{Key: "source", Value: fieldString(hyp, "source")}}, Time: time.Now(), Status: cardStatus}
 						m.appendCard(hc)
 						m.typew.Set(fieldString(hyp, "text"), m.tick)
 					}
-					if papers, ok := msg.result["papers"].([]any); ok {
-						for i, p := range papers {
-							if i >= 3 {
-								break
-							}
-							pm, _ := p.(map[string]any)
-							m.appendCard(Card{Kind: CardPaper, Title: fieldString(pm, "title"), Body: fmt.Sprintf("%s · %s · citations %s", fieldString(pm, "venue"), fieldString(pm, "year"), fieldString(pm, "citation_count")), Meta: []cards.MetaKV{{Key: "doi", Value: fieldString(pm, "doi")}, {Key: "source", Value: fieldString(pm, "source")}}, Time: time.Now(), Status: "done"})
+					srcList, _ := msg.result["sources"].([]any)
+					if len(srcList) == 0 {
+						srcList, _ = msg.result["papers"].([]any)
+					}
+					for i, p := range srcList {
+						if i >= 5 {
+							break
 						}
+						pm, _ := p.(map[string]any)
+						m.appendCard(Card{Kind: CardPaper, Title: fieldString(pm, "title"), Body: fmt.Sprintf("%s · %s", fieldString(pm, "year"), fieldString(pm, "source")), Meta: []cards.MetaKV{{Key: "doi", Value: fieldString(pm, "doi")}, {Key: "url", Value: fieldString(pm, "url")}, {Key: "source", Value: fieldString(pm, "source")}}, Time: time.Now(), Status: cardStatus})
 					}
 				}
 			}
@@ -867,15 +875,38 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.running = false
 		} else {
 			m.running = false
-			m.setToast(i18n.T("toast.complete"))
-			m.burst.Trigger(m.width, m.height, m.width/2, m.height/2)
-			if hyp, ok := msg.result["hypothesis"].(map[string]any); ok {
-				hc := Card{Kind: CardHypothesis, Title: i18n.T("card.hypothesis.t"), Body: fieldString(hyp, "text"), Time: time.Now(), Status: "done"}
-				m.appendCard(hc)
-				m.typew.Set(fieldString(hyp, "text"), m.tick)
+			st := ""
+			if msg.result != nil {
+				if rs, ok := msg.result["status"].(string); ok {
+					st = rs
+				}
 			}
-			m.completedDisc++
-			m.checkAchievements()
+			cardStatus := m.applyCelebrationPolicy(st)
+			if msg.result != nil {
+				if ans, ok := msg.result["answer"].(string); ok && strings.TrimSpace(ans) != "" {
+					m.appendCard(Card{Kind: CardHypothesis, Title: "Flash", Body: ans, Time: time.Now(), Status: cardStatus})
+					m.typew.Set(ans, m.tick)
+				}
+				if hyp, ok := msg.result["hypothesis"].(map[string]any); ok {
+					hc := Card{Kind: CardHypothesis, Title: i18n.T("card.hypothesis.t"), Body: fieldString(hyp, "text"), Time: time.Now(), Status: cardStatus}
+					m.appendCard(hc)
+					if fieldString(hyp, "text") != "" {
+						m.typew.Set(fieldString(hyp, "text"), m.tick)
+					}
+				}
+				srcList, _ := msg.result["sources"].([]any)
+				for i, p := range srcList {
+					if i >= 5 {
+						break
+					}
+					pm, _ := p.(map[string]any)
+					m.appendCard(Card{Kind: CardPaper, Title: fieldString(pm, "title"), Body: fmt.Sprintf("%s · %s", fieldString(pm, "year"), fieldString(pm, "doi")), Meta: []cards.MetaKV{{Key: "doi", Value: fieldString(pm, "doi")}, {Key: "url", Value: fieldString(pm, "url")}}, Time: time.Now(), Status: cardStatus})
+				}
+			}
+			if cardStatus == "done" {
+				m.completedDisc++
+				m.checkAchievements()
+			}
 		}
 		return m, nil
 
@@ -885,10 +916,21 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.running = false
 		} else {
 			m.running = false
-			m.setToast(i18n.T("toast.complete"))
-			m.burst.Trigger(m.width, m.height, m.width/2, m.height/2)
-			m.completedDisc++
-			m.checkAchievements()
+			st := ""
+			if msg.result != nil {
+				if rs, ok := msg.result["status"].(string); ok {
+					st = rs
+				}
+			}
+			// Multi without status → partial (fail-closed); success only if explicit
+			if st == "" {
+				st = "partial"
+			}
+			cardStatus := m.applyCelebrationPolicy(st)
+			if cardStatus == "done" {
+				m.completedDisc++
+				m.checkAchievements()
+			}
 			// Render each ranked hypothesis as a card
 			if ranked, ok := msg.result["ranked_hypotheses"].([]any); ok {
 				for i, h := range ranked {
@@ -902,7 +944,7 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					}
 					score := fieldString(hm, "score")
 					title := fmt.Sprintf("%s #%d (%s)", i18n.T("card.hypothesis.t"), i+1, score)
-					m.appendCard(Card{Kind: CardHypothesis, Title: title, Body: text, Meta: []cards.MetaKV{{Key: "source", Value: fieldString(hm, "source")}}, Time: time.Now(), Status: "done"})
+					m.appendCard(Card{Kind: CardHypothesis, Title: title, Body: text, Meta: []cards.MetaKV{{Key: "source", Value: fieldString(hm, "source")}}, Time: time.Now(), Status: cardStatus})
 				}
 			}
 		}
@@ -1009,6 +1051,18 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.modelsOutput = msg.output
 		}
 		return m, nil
+
+	case modelsSaveMsg:
+		m.modelsLoading = false
+		if msg.err != nil {
+			m.modelsOutput = msg.output
+			m.setToast("❌ " + i18n.T("models.tier") + " save failed")
+			return m, nil
+		}
+		m.modelsCostTier = msg.tier
+		m.modelsOutput = i18n.T("config.saved") + ": " + msg.tier
+		m.setToast("✓ " + i18n.T("models.tier") + ": " + msg.tier)
+		return m, modelsConfigCmd()
 	}
 
 	m.sparks.Emit(2, 0, 3)

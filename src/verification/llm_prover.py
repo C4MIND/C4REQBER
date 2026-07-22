@@ -15,6 +15,7 @@ Workflow per language:
 
 Uses ``src.llm.router.ProviderRouter`` for LLM access.
 """
+
 from __future__ import annotations
 
 import importlib
@@ -32,19 +33,33 @@ def _sanitize_for_prompt(text: str, max_len: int = 2000) -> str:
     if not text:
         return text
     # Strip control characters
-    text = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f]', '', text)
+    text = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f]", "", text)
     # Strip Unicode bidi overrides
-    text = re.sub(r'[\u202A-\u202E\u2066-\u2069]', '', text)
+    text = re.sub(r"[\u202A-\u202E\u2066-\u2069]", "", text)
     # Neutralize role tags
-    text = text.replace("<system>", "[SYSTEM_TAG_REMOVED]").replace("</system>", "[/SYSTEM_TAG_REMOVED]")
+    text = text.replace("<system>", "[SYSTEM_TAG_REMOVED]").replace(
+        "</system>", "[/SYSTEM_TAG_REMOVED]"
+    )
     text = text.replace("</user_query>", "<\\/user_query>")
     text = text.replace("'''", "' ' '").replace('"""', '" " "')
     # Block bare role prefixes
-    text = re.sub(r'(?i)^\s*(system|user|assistant)\s*[:>]', '[BLOCKED]', text)
+    text = re.sub(r"(?i)^\s*(system|user|assistant)\s*[:>]", "[BLOCKED]", text)
     return text[:max_len]
 
 
-LANGUAGES = ("lean4", "coq", "dafny", "agda", "z3", "hoare", "cvc5", "tla", "alloy", "haskell-typecheck", "haskell-quickcheck")
+LANGUAGES = (
+    "lean4",
+    "coq",
+    "dafny",
+    "agda",
+    "z3",
+    "hoare",
+    "cvc5",
+    "tla",
+    "alloy",
+    "haskell-typecheck",
+    "haskell-quickcheck",
+)
 
 PROOF_PROMPT_TEMPLATE = """You are a formal verification engineer. Translate the following scientific hypothesis into a {language} formal proof.
 
@@ -108,9 +123,20 @@ class LLMProofResult:
     error: str = ""
 
     def to_dict(self) -> dict[str, Any]:
+        status = (
+            "success"
+            if self.valid
+            else (
+                "unavailable"
+                if self.error
+                and ("not installed" in self.error.lower() or "unavailable" in self.error.lower())
+                else "partial"
+            )
+        )
         return {
             "language": self.language,
             "valid": self.valid,
+            "status": status,
             "proof": self.proof[:500] + "..." if len(self.proof) > 500 else self.proof,
             "iterations": len(self.iterations),
             "total_time_ms": round(self.total_time_ms, 1),
@@ -143,7 +169,9 @@ def _format_examples(examples: list[dict[str, str]], language: str) -> str:
         return ""
     parts = ["\n## Examples:\n"]
     for i, ex in enumerate(examples, 1):
-        parts.append(f"Example {i}:\nHypothesis: {ex['hypothesis']}\n{language} proof:\n{ex['proof']}\n")
+        parts.append(
+            f"Example {i}:\nHypothesis: {ex['hypothesis']}\n{language} proof:\n{ex['proof']}\n"
+        )
     return "\n".join(parts)
 
 
@@ -183,6 +211,17 @@ class LLMProver:
                 error=f"Unsupported language: {language}. Choose from: {LANGUAGES}",
             )
 
+        if language == "agda":
+            from src.verification.agda_bridge import AgdaBridge
+
+            if not AgdaBridge().available:
+                return LLMProofResult(
+                    language=language,
+                    hypothesis=hypothesis,
+                    valid=False,
+                    error="Agda unavailable (not installed). Install Agda or use another backend.",
+                )
+
         iterations: list[ProofAttempt] = []
         proof_code = ""
         last_error = ""
@@ -204,6 +243,7 @@ class LLMProver:
 
             # Spoofing guard: reject proofs containing known cheat patterns (word-boundary aware)
             import re as _re
+
             code_lower = code.lower()
             cheat_patterns = {
                 "lean4": [r"\bsorry\b"],
@@ -230,6 +270,23 @@ class LLMProver:
                 continue
 
             attempt.success = result.get("valid") or result.get("success", False)
+            if not attempt.success and str(result.get("status", "")).lower() == "unavailable":
+                err_list = result.get("errors") or []
+                if err_list and isinstance(err_list[0], dict):
+                    last_error = str(err_list[0].get("message", "Agda not installed"))
+                else:
+                    last_error = str(result.get("error") or "Verifier unavailable (not installed)")
+                total_time = (time.perf_counter() - start) * 1000
+                return LLMProofResult(
+                    language=language,
+                    hypothesis=hypothesis,
+                    valid=False,
+                    proof=proof_code,
+                    iterations=iterations,
+                    total_time_ms=total_time,
+                    error=last_error,
+                )
+
             if attempt.success:
                 total_time = (time.perf_counter() - start) * 1000
                 return LLMProofResult(
@@ -289,7 +346,12 @@ class LLMProver:
             language_hints=LANGUAGE_HINTS.get(language, ""),
         )
         if examples_text:
-            prompt = prompt + "\n" + examples_text + "\nNow generate the proof for the hypothesis above.\n"
+            prompt = (
+                prompt
+                + "\n"
+                + examples_text
+                + "\nNow generate the proof for the hypothesis above.\n"
+            )
         return await self._call_llm(prompt, language)
 
     async def _fix(self, hypothesis: str, language: str, previous: str, error: str) -> str:
@@ -329,9 +391,20 @@ class LLMProver:
         """Extract proof code from LLM response (handles markdown code blocks)."""
         import re
 
-        lang_variants = [language, {"lean4": "lean", "coq": "coq", "dafny": "dafny",
-                                      "agda": "agda", "z3": "z3", "hoare": "hoare",
-                                      "cvc5": "smt2", "tla": "tla", "alloy": "alloy"}.get(language, language)]
+        lang_variants = [
+            language,
+            {
+                "lean4": "lean",
+                "coq": "coq",
+                "dafny": "dafny",
+                "agda": "agda",
+                "z3": "z3",
+                "hoare": "hoare",
+                "cvc5": "smt2",
+                "tla": "tla",
+                "alloy": "alloy",
+            }.get(language, language),
+        ]
         for variant in lang_variants:
             # Find the outermost fenced block for this language
             pattern = rf"```{re.escape(variant)}\s*\n(.*?)```"
@@ -383,7 +456,11 @@ class LLMProver:
                 e_msg = str(e)
 
                 async def err_fn(code: str) -> dict[str, Any]:
-                    return {"valid": False, "error": f"Cannot initialize {language} verifier: {e_msg}"}
+                    return {
+                        "valid": False,
+                        "error": f"Cannot initialize {language} verifier: {e_msg}",
+                    }
+
                 self._client_cache[language] = err_fn
                 return err_fn
 
@@ -397,6 +474,7 @@ class LLMProver:
 
         async def unsupported(code: str) -> dict[str, Any]:
             return {"valid": False, "error": f"No verifier for {language}"}
+
         self._client_cache[language] = unsupported
         return unsupported
 
@@ -411,6 +489,7 @@ class LLMProver:
                 return await fn(code) or {}
             loop = asyncio.get_running_loop()
             return await loop.run_in_executor(None, fn, code) or {}
+
         return verify
 
     @staticmethod
@@ -421,13 +500,17 @@ class LLMProver:
         ``sat`` means a counterexample was found (assertion is NOT valid).
         """
         import z3
+
         try:
             code_stripped = code.strip()
             if not code_stripped:
                 return {"valid": False, "error": "Empty Z3 code"}
             # Spoofing guard: must contain at least one assert
             if "assert" not in code_stripped.lower():
-                return {"valid": False, "error": "Z3 proof rejected: no assertions found (vacuous proof)"}
+                return {
+                    "valid": False,
+                    "error": "Z3 proof rejected: no assertions found (vacuous proof)",
+                }
             s = z3.Solver()
             s.set("timeout", 5000)
             s.from_string(code)
@@ -441,6 +524,7 @@ class LLMProver:
     def _verify_hoare(code: str) -> dict[str, Any]:
         """Verify Hoare triple."""
         from src.verification.hoare_verifier import HoareVerifier
+
         hv = HoareVerifier()
         result = hv.verify(code)
         return {"valid": result.valid, "error": result.error, "details": result.counterexample}

@@ -220,6 +220,7 @@ class AmuseBridge(BaseSimulationAdapter):
             else 0.0
         )
         return {
+            "status": "partial",
             "executed": True,
             "stub": False,
             "backend": "rebound",

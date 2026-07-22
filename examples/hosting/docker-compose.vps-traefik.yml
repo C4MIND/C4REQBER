@@ -1,63 +1,66 @@
-version: '3.8'
+# Optional VPS stack — NOT the primary end-user install path.
+# Primary product: pip install c4reqber + blast setup (see docs/INSTALL.md).
+#
+# Run from repository root:
+#   cp .env.example .env
+#   # Required: JWT_SECRET, DB_PASSWORD, OPENROUTER_API_KEY, ACME_EMAIL
+#   docker compose -f examples/hosting/docker-compose.vps-traefik.yml config
+#   docker compose -f examples/hosting/docker-compose.vps-traefik.yml --profile full up -d
 
 services:
-  # PostgreSQL Database
   postgres:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: ${DB_USER:-turbo_cdi}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-changeme}
-      POSTGRES_DB: ${DB_NAME:-turbo_cdi}
+      POSTGRES_USER: ${DB_USER:-c4reqber}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
+      POSTGRES_DB: ${DB_NAME:-c4reqber}
       PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./migrations/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     ports:
       - "${DB_PORT:-5432}:5432"
     restart: unless-stopped
     networks:
       - turbo-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-turbo_cdi} -d ${DB_NAME:-turbo_cdi}"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-c4reqber} -d ${DB_NAME:-c4reqber}"]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 10s
 
-  # c4-cdi-turbo API Server
   api:
-    image: ${CI_REGISTRY_IMAGE:-registry.gitlab.com/cognitive-functors/turbo-cdi}/api:${API_IMAGE_TAG:-latest}
+    image: ${CI_REGISTRY_IMAGE:-registry.gitlab.com/cognitive-functors/c4reqber}/api:${API_IMAGE_TAG:-latest}
     build:
-      context: .
+      context: ../..
       dockerfile: Dockerfile.backend
     ports:
-      - "8000:8000"
+      - "${API_PORT:-8000}:8000"
     environment:
-      - ENV=production
-      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET required}
-      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
-      - OLLAMA_URL=${OLLAMA_URL:-}
-      - LM_STUDIO_URL=${LM_STUDIO_URL:-}
-      - CORS_ORIGINS=${CORS_ORIGINS:-https://turbo-cdi.org}
-      - LLM_PROVIDER=${LLM_PROVIDER:-openrouter}
-      - LLM_MODEL=${LLM_MODEL:-anthropic/claude-sonnet-4.6}
-      - API_WORKERS=4
-      - PYTHONUNBUFFERED=1
-      # PostgreSQL configuration
-      - DATABASE_URL=postgresql://${DB_USER:-turbo_cdi}:${DB_PASSWORD:-changeme}@postgres:5432/${DB_NAME:-turbo_cdi}
-      - DB_HOST=postgres
-      - DB_PORT=5432
-      - DB_NAME=${DB_NAME:-turbo_cdi}
-      - DB_USER=${DB_USER:-turbo_cdi}
-      - DB_PASSWORD=${DB_PASSWORD:-changeme}
-      # Connection pooling
-      - POOL_SIZE=${POOL_SIZE:-10}
-      - MAX_OVERFLOW=${MAX_OVERFLOW:-20}
-      - POOL_TIMEOUT=${POOL_TIMEOUT:-30}
-      - POOL_RECYCLE=${POOL_RECYCLE:-1800}
-      - POOL_PRE_PING=true
-      - CACHE_BACKEND=memory
-      - API_RELOAD=false
+      ENV: production
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET required — openssl rand -hex 32}
+      CSRF_SECRET: ${CSRF_SECRET:-}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      OLLAMA_URL: ${OLLAMA_URL:-}
+      LM_STUDIO_URL: ${LM_STUDIO_URL:-}
+      CORS_ORIGINS: ${CORS_ORIGINS:-https://c4reqber.org}
+      LLM_PROVIDER: ${LLM_PROVIDER:-openrouter}
+      LLM_MODEL: ${LLM_MODEL:-}
+      API_WORKERS: "4"
+      PYTHONUNBUFFERED: "1"
+      DATABASE_URL: postgresql://${DB_USER:-c4reqber}:${DB_PASSWORD:?Set DB_PASSWORD}@postgres:5432/${DB_NAME:-c4reqber}
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_NAME: ${DB_NAME:-c4reqber}
+      DB_USER: ${DB_USER:-c4reqber}
+      DB_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD}
+      POOL_SIZE: ${POOL_SIZE:-10}
+      MAX_OVERFLOW: ${MAX_OVERFLOW:-20}
+      POOL_TIMEOUT: ${POOL_TIMEOUT:-30}
+      POOL_RECYCLE: ${POOL_RECYCLE:-1800}
+      POOL_PRE_PING: "true"
+      CACHE_BACKEND: memory
+      API_RELOAD: "false"
     volumes:
       - turbo_data:/app/data
     restart: unless-stopped
@@ -68,31 +71,36 @@ services:
         condition: service_healthy
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.api.rule=Host(`api.turbo-cdi.org`)"
+      - "traefik.http.routers.api.rule=Host(`api.${VPS_DOMAIN:-localhost}`)"
       - "traefik.http.routers.api.tls.certresolver=letsencrypt"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 20s
 
-  # Static landing site (GitLab Pages / nginx). web-v2 removed 2026-07-12.
   web:
     image: nginx:alpine
     profiles: ["full"]
     volumes:
-      - ./landing:/usr/share/nginx/html:ro
+      - ../../landing:/usr/share/nginx/html:ro
     depends_on:
-      - api
+      api:
+        condition: service_healthy
     restart: unless-stopped
     networks:
       - turbo-network
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.web.rule=Host(`turbo-cdi.org`)"
+      - "traefik.http.routers.web.rule=Host(`${VPS_DOMAIN:-localhost}`)"
       - "traefik.http.routers.web.tls.certresolver=letsencrypt"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
 
-  # Traefik Reverse Proxy (SSL termination)
   traefik:
     image: traefik:v3.0
     profiles: ["full"]
@@ -103,7 +111,7 @@ services:
       - "--entrypoints.web.address=:80"
       - "--entrypoints.websecure.address=:443"
       - "--certificatesresolvers.letsencrypt.acme.tlschallenge=true"
-      - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL:-admin@turbo-cdi.org}"
+      - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL:?Set ACME_EMAIL for Let's Encrypt}"
       - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
     ports:
       - "80:80"
@@ -115,7 +123,6 @@ services:
     networks:
       - turbo-network
 
-  # Database backups (daily cron)
   backup:
     image: postgres:16-alpine
     profiles: ["full"]
@@ -123,17 +130,20 @@ services:
       /bin/sh -c "
       while true; do
         sleep 86400
-        pg_dump -h postgres -U turbo_cdi turbo_cdi -Fc > /backups/turbo_cdi_\$(date +%Y%m%d).dump
+        pg_dump -h postgres -U ${DB_USER:-c4reqber} ${DB_NAME:-c4reqber} -Fc > /backups/c4reqber_$(date +%Y%m%d).dump
         find /backups -mtime +30 -delete
       done
       "
     volumes:
       - backup_data:/backups
     environment:
-      PGPASSWORD: ${DB_PASSWORD}
+      PGPASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD}
     depends_on:
       postgres:
         condition: service_healthy
+    networks:
+      - turbo-network
+    restart: unless-stopped
 
 volumes:
   postgres_data:

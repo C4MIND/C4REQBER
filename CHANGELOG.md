@@ -2,6 +2,83 @@
 
 > **Русская версия:** [CHANGELOG.ru.md](CHANGELOG.ru.md)
 
+## v9.20.0 (2026-07-22) — Zero-Asymmetry Product Lock
+
+**PyPI:** `c4reqber==5.7.7` · **W10 Windows live AISI:** waived by maintainer (optional external re-test later).
+
+Eliminates Flash/TUI/API asymmetry: one composed Flash contract, terminal honesty on SSE, celebration policy, and shared source/novelty/rate-limit rules across CLI, MCP, API, and TUI.
+
+### Flash / API / TUI (I1–I2)
+- **Composed Flash API:** `POST /v8/discover/flash` job = `run_flash` (answer + verified sources + status) + C4 + TRIZ + optional hypothesis from verified papers — not destructive replace of framing
+- **`FlashResult` SSOT** in `src/knowledge/flash_contract.py`; `derive_terminal()` / `celebration_allowed()` helpers
+- **JobStore terminal honesty:** SSE `type=complete` only when `result.status` ∈ `{success, complete}` — partial/error never forced complete
+- **TUI celebration policy:** burst + `toast.complete` only on success; partial/failed/missing → no burst (fail-closed)
+- **TUI Flash** parses answer, verified sources, hypothesis; `FlashAndWait` propagates partial/failed
+- **Surface parity tests:** `tests/test_flash_surface_parity.py`
+
+### Sources / novelty / search (I3–I4, I9)
+- **Verified counts** shared via `count_verified_sources` / `source_cards_from_papers` (Phase B, MCP, CLI, turbo mascot)
+- **Novelty empty** → `null`; gates treat null as unchecked (not 0.5 bypass)
+- **`search_single`** applies `_shape_search_query` (MCP `c4_search` path)
+- **`agent_search`** wired to real `gather_flash_sources` (unavailable only on hard failure)
+
+### Rate limits / sims / stubs (I5–I7)
+- **`RateLimited`** error type; OpenRouter 429 → rotate free-tier/local; exhausted → partial + warning
+- **AMUSE → Rebound fallback** stays `partial` + `engine_truth: rebound_not_amuse`
+- **`WebSearchPlugin` quarantined** — not registered; returns `[]`; regression lock in `test_wave0_sources_honesty`
+- **Agda** verifier: `not_installed` → honest unavailable (bridge kept)
+
+### Secrets / Windows (I8)
+- **`apply_config_to_env`** on API lifespan, MCP module entry, all `blast` commands, Win `launcher.bat` secrets.env load
+
+### Polish (W6)
+- TUI help overlay + README keymap synced (`:`, overlays, j/k, Ctrl+Shift+*)
+- Sim **`available` ≠ success** color (amber ◐, not green ●)
+- **`blast packages remove`** honest pip returncode / exit 1 on failure
+- REPL banner shows `__tui_version__` + pip `__version__`
+- Flash CLI footer: status-aware (`flash success` / `flash partial`) not always “complete”
+
+### Docs / acceptance
+- `docs/HONESTY_CONTRACT.md` § Flash surfaces (I1–I10)
+- `docs/WINDOWS_FLASH_ACCEPTANCE.md` — composed Flash, celebration policy, W10 live log row
+- **W10 live Windows AISI 440C:** still requires tester log or explicit waiver
+
+### Tests
+- `tests/test_flash_*`, `test_novelty_empty_null`, `test_rate_limited`, `test_workstream_bc_honesty_windows`, `test_workstream_w3_honesty`, Go TUI celebration mapping
+
+---
+
+## v9.19.0 (2026-07-22) — Flash honesty + Windows systemic remediation
+
+Closes Windows tester report (5.7.6 `flash --sources`) and systemic audit F1–F15 / D1–D7.
+
+### Flash / sources / citations
+- Shared `run_flash` for CLI + MCP (`src/knowledge/flash_runner.py`)
+- Domain routing + lit allowlist (no PubChem/ClinicalTrials/UCI spray on materials queries)
+- Citation cards: title, authors, year, DOI, URL; **verified only after CitationVerifier** (CrossRef/OpenAlex)
+- Unverified raw hits listed separately — never counted as Sources
+- Count / mascot use **verified only**; Scholar `?q=` and `example.com` stripped
+- Materials flash allowlist excludes AFLOW / Materials Project spray
+- Turbo mascot maps HIL honesty status (not always `done`)
+- Grounded prompt forbids “unable to find” when verified sources exist
+- Search meta log: `sources_used`, errors, `tavily=on|off|no_key`
+- `apply_config_to_env` / secrets.env on **all** `blast` commands (unlocks Tavily for flash)
+- Semantic dedup: lexical title fallback when sentence-transformers missing
+
+### Config / packaging / Windows
+- `AsyncLLMClient` resolves models via ModelAssignment / `models.json`
+- PyPI prod publish: `prepare_tui_wheel.sh` must succeed (no `|| true`)
+- Newton env probe: Windows `Scripts/python.exe` candidates
+- Verifier install: honest skip on win32
+- Regression: `python -m pip` install argv (never `pip pip`)
+
+### Tests / docs
+- `tests/test_flash_sources.py`, `tests/test_flash_grounding_honesty.py`, pip argv + dedup fallback
+- `docs/HONESTY_CONTRACT.md` flash rules 10–11
+- Tester checklist: `docs/WINDOWS_FLASH_ACCEPTANCE.md`
+
+---
+
 ## v9.18.0 (2026-07-18) — Honesty contract (anti green-fake)
 
 ### PyPI

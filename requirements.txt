@@ -83,7 +83,7 @@ structlog>=23.0.0          # Structured JSON logging
 prometheus-client>=0.25.0  # /metrics endpoint (src/api/routers/metrics.py, top-level import)
 opentelemetry-api>=1.20.0   # OpenTelemetry tracing (optional)
 opentelemetry-sdk>=1.20.0   # OpenTelemetry SDK (optional)
-sentry-sdk>=1.40.0         # Error tracking (optional)
+sentry-sdk>=2.66.0         # Error tracking (optional)
 
 # ═══════════════════════════════════════════════════════════════
 # DEVELOPMENT DEPENDENCIES

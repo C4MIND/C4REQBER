@@ -181,7 +181,7 @@ func TestHelp_RenderContainsTitle(t *testing.T) {
 
 func TestHelp_RenderContainsAllSections(t *testing.T) {
 	out := HelpOverlay(120, 40)
-	for _, section := range []string{"Navigation", "Run", "Display"} {
+	for _, section := range []string{"Navigation", "Overlays", "Display"} {
 		if !strings.Contains(out, section) {
 			t.Errorf("missing section %q in:\n%s", section, out)
 		}

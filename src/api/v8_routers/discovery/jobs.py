@@ -219,7 +219,9 @@ class JobStore:
             event_type,
             {
                 "type": event_type,
-                "status": (result_status if result_status else terminal_status),
+                # Typed SSE status is the derived terminal (complete|partial|failed),
+                # not the raw result.status synonym (ok/success/…).
+                "status": terminal_status,
                 "phase": phase,
                 "progress": 1.0,
                 "result": result,

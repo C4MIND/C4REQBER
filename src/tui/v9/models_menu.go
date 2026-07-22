@@ -18,12 +18,18 @@ type modelsConfigMsg struct {
 	err     error
 }
 
+type modelsSaveMsg struct {
+	tier   string
+	output string
+	err    error
+}
+
 type modelsConfigPayload struct {
-	CostTier          string                   `json:"cost_tier"`
-	ConfigPath        string                   `json:"config_path"`
-	Phases            []modelsPhaseRow         `json:"phases"`
-	Council           map[string][]string      `json:"council"`
-	EstimatedCostUSD  float64                  `json:"estimated_cost_usd"`
+	CostTier         string              `json:"cost_tier"`
+	ConfigPath        string              `json:"config_path"`
+	Phases            []modelsPhaseRow    `json:"phases"`
+	Council           map[string][]string `json:"council"`
+	EstimatedCostUSD  float64             `json:"estimated_cost_usd"`
 }
 
 type modelsPhaseRow struct {
@@ -36,6 +42,19 @@ type modelsPhaseRow struct {
 
 const modelsViewPhases = 0
 const modelsViewCouncil = 1
+
+// Cost tiers accepted by `blast config --tier` (ModelAssignment SSOT).
+var modelsCostTier = []string{"budget", "balanced", "premium", "local", "ultra_budget"}
+
+// Map council budget labels → ModelAssignment cost_tier names.
+var councilToCostTier = map[string]string{
+	"cheap":         "budget",
+	"budget":        "budget",
+	"balanced":      "balanced",
+	"premium":       "premium",
+	"local":         "local",
+	"ultra_budget":  "ultra_budget",
+}
 
 func modelsConfigCmd() tea.Cmd {
 	return func() tea.Msg {
@@ -53,6 +72,18 @@ func modelsConfigCmd() tea.Cmd {
 			return modelsConfigMsg{output: strings.TrimSpace(string(out)), err: jerr}
 		}
 		return modelsConfigMsg{payload: payload}
+	}
+}
+
+func modelsSaveTierCmd(tier string) tea.Cmd {
+	return func() tea.Msg {
+		cmd := exec.Command(blastBin(), "config", "--tier", tier, "--save")
+		out, err := cmd.CombinedOutput()
+		text := strings.TrimSpace(string(out))
+		if text == "" && err != nil {
+			text = err.Error()
+		}
+		return modelsSaveMsg{tier: tier, output: text, err: err}
 	}
 }
 
@@ -76,8 +107,8 @@ func (m *model) applyModelsPayload(p modelsConfigPayload) {
 func modelsRows(m *model) []string {
 	if m.modelsView == modelsViewCouncil {
 		rows := make([]string, 0)
-		for tier, models := range m.modelsCouncil {
-			rows = append(rows, tier+": "+strings.Join(models, ", "))
+		for _, tier := range councilTierOrdered(m.modelsCouncil) {
+			rows = append(rows, tier+": "+strings.Join(m.modelsCouncil[tier], ", "))
 		}
 		if len(rows) == 0 {
 			rows = append(rows, i18n.T("models.no_council"))
@@ -86,13 +117,59 @@ func modelsRows(m *model) []string {
 	}
 	rows := make([]string, 0, len(m.modelsPhases))
 	for _, p := range m.modelsPhases {
-		model := p.Model
-		if model == "" {
-			model = "(compute — no LLM)"
+		modelName := p.Model
+		if modelName == "" {
+			modelName = "(compute — no LLM)"
 		}
-		rows = append(rows, "Phase "+p.Phase+": "+truncate(model, 40))
+		rows = append(rows, "Phase "+p.Phase+": "+truncate(modelName, 40))
 	}
 	return rows
+}
+
+func councilTierOrdered(council map[string][]string) []string {
+	if council == nil {
+		return nil
+	}
+	tiers := make([]string, 0, len(council))
+	for tier := range council {
+		tiers = append(tiers, tier)
+	}
+	ordered := make([]string, 0, len(tiers))
+	seen := map[string]bool{}
+	for _, pref := range []string{"cheap", "budget", "balanced", "premium", "local", "ultra_budget"} {
+		if _, ok := council[pref]; ok {
+			ordered = append(ordered, pref)
+			seen[pref] = true
+		}
+	}
+	for _, t := range tiers {
+		if !seen[t] {
+			ordered = append(ordered, t)
+		}
+	}
+	return ordered
+}
+
+func modelsToggleView(m *model) {
+	m.modelsView = 1 - m.modelsView
+	m.modelsCursor = 0
+	label := i18n.T("models.view.phases")
+	if m.modelsView == modelsViewCouncil {
+		label = i18n.T("models.view.council")
+	}
+	m.modelsOutput = label
+}
+
+func nextCostTier(current string) string {
+	if current == "" {
+		return "balanced"
+	}
+	for i, t := range modelsCostTier {
+		if t == current {
+			return modelsCostTier[(i+1)%len(modelsCostTier)]
+		}
+	}
+	return "balanced"
 }
 
 func truncateModelsNav(m *model, up bool) {
@@ -112,15 +189,31 @@ func truncateModelsNav(m *model, up bool) {
 }
 
 func modelsMenuEnter(m *model) tea.Cmd {
-	// Tab between phases / council views
-	m.modelsView = 1 - m.modelsView
-	m.modelsCursor = 0
-	label := i18n.T("models.view.phases")
+	// Persist via blast config --tier/--save (models.json SSOT).
 	if m.modelsView == modelsViewCouncil {
-		label = i18n.T("models.view.council")
+		tiers := councilTierOrdered(m.modelsCouncil)
+		if len(tiers) == 0 {
+			m.modelsOutput = i18n.T("models.no_council")
+			return nil
+		}
+		idx := m.modelsCursor
+		if idx < 0 || idx >= len(tiers) {
+			idx = 0
+		}
+		raw := tiers[idx]
+		tier := councilToCostTier[raw]
+		if tier == "" {
+			tier = raw
+		}
+		m.modelsLoading = true
+		m.setToast("💾 " + i18n.T("models.tier") + ": " + tier)
+		return modelsSaveTierCmd(tier)
 	}
-	m.modelsOutput = label
-	return nil
+	// Phases view: cycle cost tier and persist.
+	next := nextCostTier(m.modelsCostTier)
+	m.modelsLoading = true
+	m.setToast("💾 " + i18n.T("models.tier") + ": " + next)
+	return modelsSaveTierCmd(next)
 }
 
 func RenderModelsMenu(
@@ -157,7 +250,8 @@ func RenderModelsMenu(
 	rows := make([]string, 0)
 	if view == modelsViewCouncil {
 		viewLabel = i18n.T("models.view.council")
-		for tier, models := range council {
+		for _, tier := range councilTierOrdered(council) {
+			models := council[tier]
 			rows = append(rows, tier+": "+truncate(strings.Join(models, ", "), 50))
 		}
 		if len(rows) == 0 {
@@ -165,11 +259,11 @@ func RenderModelsMenu(
 		}
 	} else {
 		for _, p := range phases {
-			model := p.Model
-			if model == "" {
-				model = "(no LLM)"
+			modelName := p.Model
+			if modelName == "" {
+				modelName = "(no LLM)"
 			}
-			rows = append(rows, "Phase "+p.Phase+": "+truncate(model, 44))
+			rows = append(rows, "Phase "+p.Phase+": "+truncate(modelName, 44))
 		}
 	}
 	body.WriteString(dimStyle.Render(viewLabel) + "\n")

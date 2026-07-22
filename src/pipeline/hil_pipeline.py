@@ -260,6 +260,17 @@ class HILDiscoveryPipeline(BasePipeline):
             diss,
         )
         assert record.quality_report is not None
+        gate_any_failed = any(not g.passed for g in record.quality_report.gates)
+        await event_bus.emit(
+            "quality_report",
+            {
+                "score": record.quality_report.overall_score,
+                "grade": record.quality_report.grade,
+                "passed_all": record.quality_report.passed_all,
+                "gate_any_failed": gate_any_failed,
+            },
+            mode="turbo",
+        )
         await event_bus.emit("phase_end", {"phase": "G", "name": "Quality Control"}, mode="turbo")
 
         # PipelineObserver: instantiate before refinement to accumulate across iterations
@@ -347,6 +358,11 @@ class HILDiscoveryPipeline(BasePipeline):
             )
 
         assert record.quality_report is not None
+        from src.knowledge.flash_contract import source_cards_from_papers
+
+        source_report = source_cards_from_papers(record.sources)
+        gate_any_failed = any(not g.passed for g in record.quality_report.gates)
+        sim_payload = record.simulation if isinstance(record.simulation, dict) else {}
         await self.emit_event(
             "pipeline_complete",
             {
@@ -354,7 +370,11 @@ class HILDiscoveryPipeline(BasePipeline):
                 "path": path,
                 "grade": record.quality_report.grade,
                 "score": record.quality_report.overall_score,
+                "passed_all": record.quality_report.passed_all,
+                "gate_any_failed": gate_any_failed,
                 "sources": len(record.sources),
+                "verified_count": source_report["verified_count"],
+                "simulation": sim_payload,
                 "hypotheses": len(record.hypotheses),
             },
             mode="turbo",

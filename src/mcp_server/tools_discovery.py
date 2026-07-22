@@ -4,6 +4,7 @@ import asyncio
 import logging
 from typing import Any
 
+from src.knowledge.flash_contract import sanitize_biblio_row, source_cards_from_papers
 from src.mcp_server.honesty import (
     outer_status_from_hil_like,
     record_field_status,
@@ -43,14 +44,20 @@ async def c4_solve(problem: str, domain: str = "science") -> dict[str, Any]:
         sim_status = record_field_status(record.simulation)
         score = record.quality_report.overall_score if record.quality_report else 0
         passed_all = bool(record.quality_report.passed_all) if record.quality_report else None
+        source_report = source_cards_from_papers(record.sources)
         result = {
             "status": outer_status_from_hil_like(
                 quality_passed_all=passed_all,
                 quality_score=score,
                 sim_status=str(sim_status),
+                sources_requested=bool(record.sources),
+                verified_count=source_report["verified_count"],
+                quality_report_missing=record.quality_report is None,
             ),
             "topic": record.topic,
-            "sources": len(record.sources),
+            "sources": source_report["sources"],
+            "verified_count": source_report["verified_count"],
+            "found_count": source_report["found_count"],
             "gaps": len(record.gaps),
             "hypotheses": len(record.hypotheses),
             "simulation": sim_status,
@@ -59,6 +66,8 @@ async def c4_solve(problem: str, domain: str = "science") -> dict[str, Any]:
             "quality_score": score,
             "dissertation_path": f"dissertations/live/HIL_v2_{problem.replace(' ', '_')[:30]}.md",
         }
+        if source_report["unverified_hits"]:
+            result["unverified_hits"] = source_report["unverified_hits"]
 
         if record.quality_report and not record.quality_report.passed_all:
             result["warnings"] = record.quality_report.recommendations
@@ -91,19 +100,31 @@ async def c4_search(query: str, sources: list[str] | None = None) -> dict[str, A
             papers = list(search_result.get("papers", []))
             source_names = list(search_result.get("source_names", []))
 
-        truncated = papers[:10]
-        status = search_outer_status(total_found=len(papers), sources_requested=bool(sources))
+        sanitized = [sanitize_biblio_row(p) for p in papers if isinstance(p, dict)]
+        source_report = source_cards_from_papers(sanitized, sanitize=False)
+        truncated_verified = source_report["sources"][:10]
+        truncated_unverified = source_report["unverified_hits"][:10]
+        status = search_outer_status(
+            total_found=len(sanitized),
+            sources_requested=bool(sources),
+            verified_count=source_report["verified_count"],
+        )
         out: dict[str, Any] = {
             "status": status,
-            "data": truncated,
+            "data": truncated_verified or truncated_unverified,
+            "sources": truncated_verified,
+            "verified_count": source_report["verified_count"],
+            "found_count": source_report["found_count"],
             "metadata": {
                 "query": query,
                 "sources": sources,
                 "source_names": source_names,
                 "total_found": len(papers),
-                "returned": len(truncated),
+                "returned": len(truncated_verified or truncated_unverified),
             },
         }
+        if source_report["unverified_hits"]:
+            out["unverified_hits"] = truncated_unverified
         if status == "partial":
             out["warnings"] = ["No papers found — empty search is not success"]
         return out

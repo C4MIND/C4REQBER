@@ -149,9 +149,9 @@ func (m *model) tipShortcuts() string {
 			m.keymap.Label(ActTier), i18n.T("keymap.cycle_tier"),
 		),
 		fmt.Sprintf("%s  %s   %s  %s   %s  %s",
-			m.keymap.Label(ActColorProfile), i18n.T("profile.cycle"),
-			m.keymap.Label(ActSettings), i18n.T("settings.title"),
-			m.keymap.Label(ActNewTab), i18n.T("keymap.telemetry"),
+			m.keymap.Label(ActPalette), i18n.T("help.palette"),
+			m.keymap.Label(ActSetupHub), i18n.T("help.setup_hub"),
+			m.keymap.Label(ActCapabilities), i18n.T("sim.capabilities.title"),
 		),
 	}
 	return strings.Join(lines, "\n")

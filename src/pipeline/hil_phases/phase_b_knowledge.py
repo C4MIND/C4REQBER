@@ -6,6 +6,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from src.knowledge.flash_contract import sanitize_biblio_row
 from src.knowledge.orchestrator import MultiSourceSearcher
 
 
@@ -58,24 +59,20 @@ class PhaseB_KnowledgeAcquisition:
             result = await self.multi_searcher.search_all(topic, include_web=include_web)
             papers = result.get("papers", [])
             for r in papers:
-                title = r.get("title", "")
-                real_url = (r.get("url") or r.get("link") or "").strip()
-                if real_url and "example.com" in real_url:
-                    real_url = ""
-                if real_url and "scholar.google.com/scholar?q=" in real_url:
-                    real_url = ""  # synthesized search links are not citations
-                bibliography.append(
+                row = sanitize_biblio_row(
                     {
-                        "title": title,
+                        "title": r.get("title", ""),
                         "authors": r.get("authors", "Unknown"),
                         "year": r.get("year", ""),
                         "venue": r.get("venue", r.get("_source", "")),
-                        "url": real_url,
+                        "doi": (r.get("doi") or "").strip(),
+                        "url": (r.get("url") or r.get("link") or "").strip(),
                         "source": r.get("_source", "multi"),
                         "citations": r.get("citationCount", 0),
                         "snippet": r.get("abstract", r.get("snippet", "")),
                     }
                 )
+                bibliography.append(row)
             print(
                 f"      MultiSourceSearcher: {len(papers)} papers from "
                 f"{result.get('sources_used', 0)} sources"

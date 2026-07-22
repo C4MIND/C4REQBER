@@ -17,19 +17,19 @@ from src.discovery.ranking.prior_scorer import PriorScorer
 class TestPriorScorer:
     def test_score_returns_all_criteria(self) -> None:
         scorer = PriorScorer()
-        result = scorer.score({"text": "Hypothesis"}, [])
+        result = scorer.score({"text": "Hypothesis"}, [{"title": "Prior", "abstract": "art"}])
         assert set(result.keys()) == {
             "novelty",
             "plausibility",
             "formalizability",
             "falsifiability",
         }
-        assert all(0.0 <= v <= 1.0 for v in result.values())
+        assert all(v is None or 0.0 <= v <= 1.0 for v in result.values())
 
     def test_novelty_with_empty_literature(self) -> None:
         scorer = PriorScorer()
         result = scorer.score({"text": "Test"}, [])
-        assert result["novelty"] == 1.0
+        assert result["novelty"] is None
 
     def test_formalizability_detects_math(self) -> None:
         scorer = PriorScorer()

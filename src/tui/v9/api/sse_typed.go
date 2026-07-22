@@ -26,6 +26,7 @@ const (
 	EventSimSkipped       SSEEventType = "sim_skipped"
 	EventSimBudgetExceeded SSEEventType = "sim_budget_exceeded"
 	EventComplete         SSEEventType = "complete"
+	EventPartial          SSEEventType = "partial"
 	EventFailed           SSEEventType = "failed"
 	EventCancelled        SSEEventType = "cancelled"
 	// Legacy v8.12 events still emitted by the current backend:
@@ -91,16 +92,18 @@ func DecodeTypedEvent(data string) (TypedEvent, error) {
 		case e.Status == "cancelled":
 			e.Type = EventCancelled
 		case e.Status == "partial":
-			// Partial is terminal but not full success — still EventComplete
-			// with Status=partial so handleCompleteEvent can toast honestly.
-			e.Type = EventComplete
-		case e.Status == "complete":
+			e.Type = EventPartial
+		case e.Status == "complete", e.Status == "success":
 			e.Type = EventComplete
 		case e.Phase != "" || e.Progress > 0:
 			e.Type = EventPhaseProgress
 		default:
 			e.Type = EventLog
 		}
+	}
+	// Normalize explicit type=partial from JobStore
+	if e.Type == EventPartial && e.Status == "" {
+		e.Status = "partial"
 	}
 	return e, nil
 }

@@ -23,7 +23,11 @@ from rich.console import Console
 
 from src.agents.pipeline import UniversalSolvePipeline
 from src.cli.mode_router import auto_route, get_mode_description
-from src.utils.honesty_status import outer_status_from_hil_like, record_field_status
+from src.utils.honesty_status import (
+    mascot_state_from_outer_status,
+    outer_status_from_hil_like,
+    record_field_status,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -94,6 +98,20 @@ def cmd_solve(
         Path(output).parent.mkdir(parents=True, exist_ok=True)
         Path(output).write_text(text, encoding="utf-8")
         console.print(f"[green]Saved to:[/green] {output}")
+
+    from src.cli.cube_mascot import inject_mascot_status
+
+    solve_conf = float(getattr(result, "confidence", 0) or 0)
+    solve_outer = "success" if solve_conf >= 0.5 and len(text.split()) >= 50 else "partial"
+    console.print()
+    console.print(
+        inject_mascot_status(
+            mode="solve",
+            state=mascot_state_from_outer_status(solve_outer),
+            confidence=solve_conf,
+        )
+    )
+    console.print(f"[dim]solve status={solve_outer} · confidence={solve_conf:.2f}[/dim]")
 
     return result.to_dict()
 
@@ -268,17 +286,38 @@ def cmd_turbo(
     if explain:
         _print_explain_report(record, topic)
 
-    # ── Mascot ──────────────────────────────────────────────────────
+    # ── Mascot (honest — not always done) ───────────────────────────
     from src.cli.cube_mascot import inject_mascot_status
+
+    gate_fail = False
+    if record.quality_report and record.quality_report.gates:
+        gate_fail = any(not g.passed for g in record.quality_report.gates)
+    from src.knowledge.flash_contract import source_cards_from_papers
+
+    source_report = source_cards_from_papers(record.sources)
+    turbo_status = outer_status_from_hil_like(
+        quality_passed_all=not gate_fail if record.quality_report else False,
+        quality_score=(record.quality_report.overall_score if record.quality_report else None),
+        sim_status=record_field_status(getattr(record, "simulation", None)),
+        gate_any_failed=gate_fail,
+        sources_requested=bool(record.sources),
+        verified_count=source_report["verified_count"],
+        quality_report_missing=record.quality_report is None,
+    )
+    mascot_state = mascot_state_from_outer_status(turbo_status)
 
     console.print()
     console.print(
         inject_mascot_status(
             mode="turbo",
-            state="done",
-            sources=len(record.sources),
+            state=mascot_state,
+            sources=source_report["verified_count"] or len(record.sources),
             confidence=record.quality_report.overall_score / 100 if record.quality_report else 0,
         )
+    )
+    console.print(
+        f"[dim]turbo status={turbo_status} · "
+        f"found {source_report['found_count']} · verified {source_report['verified_count']}[/dim]"
     )
 
 
@@ -298,203 +337,90 @@ def cmd_flash(
     ),
 ) -> None:
     """Get a quick answer (no pipeline, just fast LLM + optional web search)."""
-    from src.llm.gateway import get_gateway
-    from src.pipeline.config import PipelineConfig
-    from src.pipeline.quality import QualityGates
+    from src.knowledge.flash_runner import run_flash
 
     console.print(f"[bold]BLAST flash[/bold] — {get_mode_description('flash')}")
     console.print(
-        f"[dim]Format:[/dim] {format} | [dim]Sources:[/dim] {'yes' if with_sources else 'no'} | [dim]Deep:[/dim] {'yes' if deep else 'no'}"
+        f"[dim]Format:[/dim] {format} | [dim]Sources:[/dim] {'yes' if with_sources else 'no'} | "
+        f"[dim]Deep:[/dim] {'yes' if deep else 'no'}"
     )
 
-    async def _run() -> dict[str, Any]:
-        llm = get_gateway()
-        context = ""
-        sources = []
-        quality_score = 0
-        usp_context: dict[str, Any] = {}
+    if deep or with_sources:
+        console.print("[dim]Searching multi-source knowledge base...[/dim]")
 
-        # ═══════════════════════════════════════════════════════════════════
-        # USP Cognitive Components (deep mode)
-        # ═══════════════════════════════════════════════════════════════════
-        if deep:
-            from src.c4.engine import C4Space
-            from src.core.cdi_engine import CDIEngine
-            from src.metamodels.impact import ImpactEngine
-            from src.metamodels.matrix_dream import MatrixDreamLibrary
-            from src.metamodels.mp.library import MPLibrary
-            from src.metamodels.mp.profiles import MPRotationEngine
-            from src.metamodels.qzrf.operators import QzrfLibrary
-            from src.metamodels.tote import ToteEngine
+    result = asyncio.run(run_flash(question, with_sources=with_sources, deep=deep, format=format))
 
-            console.print("[dim]Running USP cognitive components...[/dim]")
+    answer = result.get("answer") or ""
+    sources = result.get("sources") or []
+    quality_score = int(result.get("quality_score") or 0)
+    verified_count = int(result.get("verified_count") or 0)
+    found_count = int(result.get("found_count") or 0)
+    status = result.get("status") or "success"
+    search_meta = result.get("search_meta") or {}
+    warnings = result.get("warnings") or []
 
-            # IMPACT
-            try:
-                impact = ImpactEngine()
-                impact_result = impact.identify(question)  # type: ignore[attr-defined]
-                impact_mapped = impact.map(impact_result)  # type: ignore[attr-defined]
-                usp_context["impact"] = (
-                    f"{len(impact_mapped.get('entities', []))} entities, {len(impact_mapped.get('stakeholders', []))} stakeholders"
-                )
-                console.print(f"  [dim]IMPACT: {usp_context['impact']}[/dim]")
-            except Exception as e:
-                logger.debug("IMPACT failed: %s", e)
-
-            # C4 Fingerprint
-            try:
-                c4_space = C4Space()
-                c4_state = c4_space.fingerprint(question)  # type: ignore[attr-defined]
-                usp_context["c4_state"] = str(c4_state)
-                console.print(f"  [dim]C4 Fingerprint: {c4_state}[/dim]")
-            except Exception as e:
-                logger.debug("C4 fingerprint failed: %s", e)
-                c4_state = "unknown"
-
-            # MP Rotation
-            try:
-                mp_lib = MPLibrary()
-                mp_rotation = MPRotationEngine(mp_lib)
-                perspectives = mp_rotation.rotate(question, state=str(c4_state))  # type: ignore[attr-defined]
-                usp_context["perspectives"] = [p.get("name", "") for p in perspectives[:3]]
-                console.print(f"  [dim]MP Rotation: {len(perspectives)} perspectives[/dim]")
-            except Exception as e:
-                logger.debug("MP rotation failed: %s", e)
-
-            # QZRF Select
-            try:
-                qzrf = QzrfLibrary()
-                operators = qzrf.select(str(c4_state))  # type: ignore[attr-defined]
-                usp_context["qzrf"] = operators[:5]
-                console.print(f"  [dim]QZRF: {', '.join(operators[:3])}[/dim]")
-            except Exception as e:
-                logger.debug("QZRF failed: %s", e)
-
-            # MatrixDream
-            try:
-                matrix = MatrixDreamLibrary()
-                patterns = matrix.match(question)
-                usp_context["patterns"] = [p[0].id for p in patterns[:3]]
-                console.print(f"  [dim]MatrixDream: {len(patterns)} patterns[/dim]")
-            except Exception as e:
-                logger.debug("MatrixDream failed: %s", e)
-
-            # CDI Analysis
-            try:
-                cdi = CDIEngine()
-                cdi_result = cdi.analyze(question, context={"c4_state": str(c4_state)})  # type: ignore[attr-defined]
-                contradictions = cdi_result.get("contradictions", [])
-                usp_context["contradictions"] = len(contradictions)
-                console.print(f"  [dim]CDI: {len(contradictions)} contradictions[/dim]")
-            except Exception as e:
-                logger.debug("CDI failed: %s", e)
-
-            # TOTE Validation (on empty solution for now — just get framework)
-            try:
-                tote = ToteEngine()
-                tote_result = tote.validate(question)  # type: ignore[attr-defined]
-                usp_context["tote_status"] = tote_result.get("status", "unknown")
-                console.print(f"  [dim]TOTE: {usp_context['tote_status']}[/dim]")
-            except Exception as e:
-                logger.debug("TOTE failed: %s", e)
-
-        # ═══════════════════════════════════════════════════════════════════
-        # Source gathering
-        # ═══════════════════════════════════════════════════════════════════
-        if deep or with_sources:
-            console.print("[dim]Searching multi-source knowledge base...[/dim]")
-            from src.knowledge.flash_sources import gather_flash_sources
-
-            try:
-                papers, context = await gather_flash_sources(question, deep=deep, include_web=True)
-                sources = papers
-                console.print(f"[dim]Found {len(papers)} papers[/dim]")
-                if not papers:
-                    console.print(
-                        "[yellow]No papers found — check API keys "
-                        "(TAVILY_API_KEY helps for web)[/yellow]"
-                    )
-            except Exception as e:
-                console.print(f"[yellow]Multi-source search failed: {e}[/yellow]")
-                sources = []
-                context = ""
-
-        # ═══════════════════════════════════════════════════════════════════
-        # Build enriched prompt with USP context
-        # ═══════════════════════════════════════════════════════════════════
-        usp_section = ""
-        if usp_context:
-            usp_section = f"""
-Cognitive Analysis Context:
-- C4 State: {usp_context.get("c4_state", "N/A")}
-- IMPACT: {usp_context.get("impact", "N/A")}
-- Perspectives: {", ".join(usp_context.get("perspectives", []))}
-- QZRF Operators: {", ".join(usp_context.get("qzrf", []))}
-- Patterns: {", ".join(usp_context.get("patterns", []))}
-- Contradictions: {usp_context.get("contradictions", "N/A")}
-- TOTE: {usp_context.get("tote_status", "N/A")}
-"""
-
-        format_instructions = {
-            "concise": "Answer in 2-4 sentences. Be direct and specific.",
-            "detailed": "Provide a thorough explanation with examples where helpful.",
-            "bullet": "Answer using bullet points. Each point should be atomic and clear.",
-            "code": "If the answer involves code, provide a clean working example. Explain briefly after the code block.",
-        }.get(format, "Answer concisely and accurately.")
-
-        prompt = f"""{format_instructions}
-
-Use the following context if relevant:
-{context}
-{usp_section}
-
-Question: {question}
-
-Answer:"""
-
-        answer = await llm.chat(
-            [{"role": "user", "content": prompt}],
-            max_tokens=1200 if deep else 800,
-            temperature=0.3,
+    if deep or with_sources:
+        console.print(
+            f"[dim]Found {found_count} papers · verified {verified_count} · "
+            f"domain={search_meta.get('domain', '?')} · tavily={search_meta.get('tavily', '?')}[/dim]"
         )
+        if found_count and not verified_count:
+            console.print(
+                "[yellow]0 verified sources (need DOI or real URL) — "
+                "not counted as citations[/yellow]"
+            )
+        elif not found_count:
+            console.print(
+                "[yellow]No papers found — check API keys "
+                "(TAVILY_API_KEY in ~/.c4reqber/secrets.env helps for web)[/yellow]"
+            )
 
-        # Quick quality check for deep mode
-        if deep and sources:
-            config = PipelineConfig(name="default")
-            qg = QualityGates(config)
-            gate = qg.check_sources(sources)
-            quality_score = int(gate.score * 100)
-
-        return {
-            "answer": answer,
-            "sources": sources,
-            "quality_score": quality_score,
-            "context_length": len(context),
-            "usp_context": usp_context,
-        }
-
-    result = asyncio.run(_run())
-    answer = result["answer"]
-    sources = result["sources"]
-    quality_score = result["quality_score"]
-
-    # Output formatting
     console.print(f"\n[bold]Answer:[/bold]\n{answer}")
 
     if sources:
-        console.print("\n[bold]Sources:[/bold]")
+        console.print("\n[bold]Sources (verified):[/bold]")
         for i, s in enumerate(sources[:5], 1):
             title = s.get("title", "Untitled")
             url = s.get("url", "")
-            source_name = s.get("_source", s.get("source_engine", "web"))
+            doi = s.get("doi", "")
+            source_name = s.get("source", "web")
+            year = s.get("year", "")
+            verdict = s.get("verify_verdict") or ("verified" if s.get("verified") else "")
+            console.print(f"  {i}. [{source_name}] {title}")
+            meta_bits = [str(verdict)] if verdict else ["verified"]
+            if year:
+                meta_bits.append(str(year))
+            if doi:
+                meta_bits.append(f"doi:{doi}")
+            console.print(f"     [dim]{' · '.join(meta_bits)}[/dim]")
             if url:
-                console.print(f"  {i}. [{source_name}] {title[:60]}")
                 console.print(f"     [dim]{url}[/dim]")
-            else:
-                console.print(f"  {i}. [{source_name}] {title[:60]}")
+    elif found_count and (deep or with_sources):
+        console.print("\n[bold]Sources (verified):[/bold] [dim]none[/dim]")
 
-    # Display USP cognitive context in deep mode
-    usp_context = result.get("usp_context", {})
+    unverified = result.get("unverified_hits") or []
+    if unverified and (deep or with_sources):
+        console.print("\n[bold]Unverified hits (not counted):[/bold]")
+        for i, s in enumerate(unverified[:5], 1):
+            title = s.get("title", "Untitled")
+            verdict = s.get("verify_verdict") or "unverified"
+            console.print(f"  {i}. {title}")
+            console.print(
+                f"     [dim]{verdict} — not a citation until CrossRef/OpenAlex confirm[/dim]"
+            )
+
+    used = search_meta.get("sources_used") or []
+    errs = search_meta.get("errors") or {}
+    if deep or with_sources:
+        console.print(
+            f"\n[dim]Search providers: {', '.join(used) if used else '(none)'} · "
+            f"errors={len(errs)} · tavily={search_meta.get('tavily', 'off')}[/dim]"
+        )
+        if errs:
+            for src_id, err in list(errs.items())[:5]:
+                console.print(f"  [dim]{src_id}: {err}[/dim]")
+
+    usp_context = result.get("usp_context") or {}
     if deep and usp_context:
         console.print("\n[bold]Cognitive Analysis:[/bold]")
         if usp_context.get("c4_state"):
@@ -514,11 +440,21 @@ Answer:"""
         color = "green" if quality_score >= 80 else "yellow" if quality_score >= 60 else "red"
         console.print(f"\n[bold]Quality Score:[/bold] [{color}]{quality_score}/100[/{color}]")
 
-    # ── Mascot ──────────────────────────────────────────────────────
+    if warnings:
+        for w in warnings:
+            console.print(f"[yellow]warning:[/yellow] {w}")
+
     from src.cli.cube_mascot import inject_mascot_status
 
+    mascot_state = mascot_state_from_outer_status(status)
     console.print()
-    console.print(inject_mascot_status(mode="flash", state="done", sources=len(sources)))
+    console.print(inject_mascot_status(mode="flash", state=mascot_state, sources=verified_count))
+    status_label = {"success": "success", "partial": "partial", "error": "failed"}.get(
+        status, status or "unknown"
+    )
+    console.print(
+        f"[dim]flash {status_label}. {verified_count} verified sources ({found_count} found)[/dim]"
+    )
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -567,6 +503,13 @@ def cmd_turbofactory(
     manager = UserProfileManager()
     user_profile = manager.load()
     config = manager.get_config()
+    run_summary: dict[str, Any] = {
+        "status": "error",
+        "total_sources": 0,
+        "successful": 0,
+        "partial": 0,
+        "failed": 0,
+    }
 
     async def _generate_subproblems(domain: str, n: int) -> list[str]:
         """Generate N distinct sub-problems for parallel research."""
@@ -817,9 +760,33 @@ Sub-problems:"""
         Path(out_path).parent.mkdir(parents=True, exist_ok=True)
         Path(out_path).write_text(report, encoding="utf-8")
 
-        console.print("\n[bold green]Turbofactory complete![/bold green]")
+        if len(failed) == len(results):
+            outer_status = "error"
+        elif len(failed) > 0 or len(partial) > 0:
+            outer_status = "partial"
+        else:
+            outer_status = "success"
+
+        run_summary.update(
+            {
+                "status": outer_status,
+                "total_sources": total_sources,
+                "successful": len(successful),
+                "partial": len(partial),
+                "failed": len(failed),
+            }
+        )
+
+        if outer_status == "success":
+            console.print("\n[bold green]Turbofactory complete![/bold green]")
+        elif outer_status == "partial":
+            console.print("\n[bold yellow]Turbofactory finished (partial)[/bold yellow]")
+        else:
+            console.print("\n[bold red]Turbofactory failed[/bold red]")
         console.print(f"[green]Report saved:[/green] {out_path}")
         console.print(f"[dim]Successful pipelines:[/dim] {len(successful)}/{n_pipelines}")
+        console.print(f"[dim]Partial pipelines:[/dim] {len(partial)}/{n_pipelines}")
+        console.print(f"[dim]Failed pipelines:[/dim] {len(failed)}/{n_pipelines}")
         console.print(f"[dim]Total hypotheses:[/dim] {total_hypotheses}")
         console.print(f"[dim]Average quality:[/dim] {avg_quality:.1f}/100")
 
@@ -828,8 +795,16 @@ Sub-problems:"""
     # ── Mascot ──────────────────────────────────────────────────────
     from src.cli.cube_mascot import inject_mascot_status
 
+    mascot_state = mascot_state_from_outer_status(str(run_summary.get("status", "partial")))
+
     console.print()
-    console.print(inject_mascot_status(mode="turbofactory", state="done", sources=0))
+    console.print(
+        inject_mascot_status(
+            mode="turbofactory",
+            state=mascot_state,
+            sources=int(run_summary.get("total_sources", 0)),
+        )
+    )
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

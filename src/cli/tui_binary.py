@@ -92,12 +92,23 @@ def find_tui_v9_binary() -> Path | None:
                 if _is_runnable(cand):
                     return cand
 
+    # Prefer sibling of running interpreter / blast launcher (Windows Scripts/,
+    # wheel layouts where blast.exe and c4tui-v9.exe sit together).
+    exe_parent = Path(sys.executable).resolve().parent
     search_dirs = [
+        exe_parent,
         _package_bin_dir(),
         _repo_root() / "src" / "tui" / "v9" / "bin",
         _repo_root() / "bin",
         _cache_bin_dir(),
     ]
+    # Sibling of blast(.exe) on PATH
+    for blast_name in ("blast", "blast.exe"):
+        which_blast = shutil.which(blast_name)
+        if which_blast:
+            search_dirs.insert(0, Path(which_blast).resolve().parent)
+            break
+
     for directory in search_dirs:
         for name in _binary_names():
             cand = directory / name

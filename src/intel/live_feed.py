@@ -13,6 +13,7 @@ Caching: 1-hour TTL, disk cache at ~/.c4reqber/feed_cache.json
 Offline mode: serves cached data, no network calls
 Force refresh: Ctrl+R in TUI or feed.force_refresh()
 """
+
 from __future__ import annotations
 
 import json
@@ -39,6 +40,7 @@ MAX_CACHE_AGE = 24 * 3600  # Show cached data up to 24h in offline mode
 @dataclass
 class Problem:
     """Problem."""
+
     id: str
     title: str
     source: str  # "reddit", "hackernews", "x", "arxiv"
@@ -54,6 +56,7 @@ class Problem:
 @dataclass
 class Hypothesis:
     """Hypothesis."""
+
     id: str
     title: str
     source_problems: list[str]  # problem IDs this hypothesis addresses
@@ -93,7 +96,11 @@ class LiveFeed:
                     self._problems.append(Problem(**p))
                 for h in data.get("hypotheses", []):
                     self._hypotheses.append(Hypothesis(**h))
-                logger.info("Loaded %d problems + %d hypotheses from cache", len(self._problems), len(self._hypotheses))
+                logger.info(
+                    "Loaded %d problems + %d hypotheses from cache",
+                    len(self._problems),
+                    len(self._hypotheses),
+                )
         except Exception:
             logger.debug("Feed source failed", exc_info=True)
 
@@ -104,8 +111,28 @@ class LiveFeed:
             FEED_CACHE_PATH.parent.mkdir(parents=True, exist_ok=True)
             with self._lock:
                 data = {
-                    "problems": [{"id": p.id, "title": p.title, "source": p.source, "url": p.url, "severity": p.severity, "discovered_at": p.discovered_at} for p in list(self._problems)[:30]],
-                    "hypotheses": [{"id": h.id, "title": h.title, "source_problems": h.source_problems, "confidence": h.confidence, "domain": h.domain, "generated_at": h.generated_at} for h in list(self._hypotheses)[:30]],
+                    "problems": [
+                        {
+                            "id": p.id,
+                            "title": p.title,
+                            "source": p.source,
+                            "url": p.url,
+                            "severity": p.severity,
+                            "discovered_at": p.discovered_at,
+                        }
+                        for p in list(self._problems)[:30]
+                    ],
+                    "hypotheses": [
+                        {
+                            "id": h.id,
+                            "title": h.title,
+                            "source_problems": h.source_problems,
+                            "confidence": h.confidence,
+                            "domain": h.domain,
+                            "generated_at": h.generated_at,
+                        }
+                        for h in list(self._hypotheses)[:30]
+                    ],
                     "updated_at": time.time(),
                 }
             FEED_CACHE_PATH.write_text(json.dumps(data, indent=2))
@@ -227,7 +254,9 @@ class LiveFeed:
         with self._lock:
             if any(p.id == pid for p in self._problems):
                 return
-            self._problems.appendleft(Problem(id=pid, title=title, source=source, url=url, severity=severity))
+            self._problems.appendleft(
+                Problem(id=pid, title=title, source=source, url=url, severity=severity)
+            )
 
     def _detect_anomalies(self) -> None:
         """Detect anomalies: repeated keywords, sentiment shifts, topic bursts."""
@@ -239,7 +268,21 @@ class LiveFeed:
         words: Counter[str] = Counter()
         for p in recent:
             for w in p.title.lower().split():
-                if len(w) > 3 and w not in {"that", "this", "with", "from", "your", "what", "when", "there", "which", "have", "they", "about", "will"}:
+                if len(w) > 3 and w not in {
+                    "that",
+                    "this",
+                    "with",
+                    "from",
+                    "your",
+                    "what",
+                    "when",
+                    "there",
+                    "which",
+                    "have",
+                    "they",
+                    "about",
+                    "will",
+                }:
                     words[w] += 1
 
         for word, count in words.most_common(10):
@@ -274,20 +317,29 @@ class LiveFeed:
                 domain=keyword,
             )
 
-    def _add_hypothesis(self, title: str, source_problems: list[str], confidence: float, domain: str) -> None:
+    def _add_hypothesis(
+        self, title: str, source_problems: list[str], confidence: float, domain: str
+    ) -> None:
         hid = f"hyp:{hash(title) % 1000000:06d}"
         with self._lock:
             if any(h.id == hid for h in self._hypotheses):
                 return
-            self._hypotheses.appendleft(Hypothesis(
-                id=hid, title=title, source_problems=source_problems,
-                confidence=confidence, domain=domain,
-            ))
+            self._hypotheses.appendleft(
+                Hypothesis(
+                    id=hid,
+                    title=title,
+                    source_problems=source_problems,
+                    confidence=confidence,
+                    domain=domain,
+                )
+            )
 
     @staticmethod
     def _is_tutorial(title: str) -> bool:
         lower = title.lower()
-        return any(w in lower for w in {"tutorial", "how to", "guide", "introduction to", "101", "course"})
+        return any(
+            w in lower for w in {"tutorial", "how to", "guide", "introduction to", "101", "course"}
+        )
 
     @staticmethod
     def _is_show_hn(title: str) -> bool:
@@ -302,7 +354,12 @@ class LiveFeed:
             with httpx.Client(timeout=10.0) as client:
                 r = client.get(
                     "https://newsapi.org/v2/top-headlines",
-                    params={"apiKey": news_key, "language": "en", "pageSize": 20, "category": "science"},
+                    params={
+                        "apiKey": news_key,
+                        "language": "en",
+                        "pageSize": 20,
+                        "category": "science",
+                    },
                 )
                 if r.status_code != 200:
                     return
@@ -334,15 +391,22 @@ class LiveFeed:
                     )
                     if r.status_code != 200:
                         continue
-                    # Parse XML titles
-                    titles = re.findall(r"<title>(.*?)</title>", r.text)
-                    authors = re.findall(r"<name>(.*?)</name>", r.text)
-                    for i, title in enumerate(titles[1:]):  # Skip first (query title)
-                        author = authors[i][:40] if i < len(authors) else ""
+                    # Parse entry blocks — use real /abs/ URLs, not search-page stubs
+                    for block in re.split(r"<entry>", r.text)[1:]:
+                        id_m = re.search(r"<id>https?://arxiv\.org/abs/([^<]+)</id>", block)
+                        title_m = re.search(r"<title>(.*?)</title>", block, re.DOTALL)
+                        if not id_m or not title_m:
+                            continue
+                        arxiv_id = id_m.group(1).strip()
+                        title = re.sub(r"\s+", " ", title_m.group(1)).strip()
+                        author_m = re.search(r"<name>(.*?)</name>", block)
+                        author = (author_m.group(1)[:40] if author_m else "").strip()
                         self._add_problem(
-                            title=f"[arXiv:{cat}] {title.strip()} ({author})",
+                            title=f"[arXiv:{cat}] {title} ({author})"
+                            if author
+                            else f"[arXiv:{cat}] {title}",
                             source="arxiv",
-                            url=f"https://arxiv.org/search/?query={title.strip()[:50].replace(' ', '+')}",
+                            url=f"https://arxiv.org/abs/{arxiv_id}",
                             severity=0.7,
                         )
             except Exception:
@@ -359,7 +423,11 @@ class LiveFeed:
             with httpx.Client(timeout=10.0) as client:
                 r = client.get(
                     "https://api.semanticscholar.org/graph/v1/paper/search",
-                    params={"query": "novel method framework model", "limit": 5, "fieldsOfStudy": "Computer Science,Physics,Biology"},
+                    params={
+                        "query": "novel method framework model",
+                        "limit": 5,
+                        "fieldsOfStudy": "Computer Science,Physics,Biology",
+                    },
                     headers={"x-api-key": ss_key},
                 )
                 if r.status_code != 200:

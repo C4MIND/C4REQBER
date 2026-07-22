@@ -200,15 +200,20 @@ class CubeMascot:
                     self.comment = f"Phase: {phase}"
                 elif event.event_type == "quality_report":
                     score = event.data.get("score", 0)
-                    if score >= 95:
+                    passed_all = event.data.get("passed_all", True)
+                    gate_fail = event.data.get("gate_any_failed", False)
+                    if gate_fail or passed_all is False:
+                        self.set_state("partial")
+                        self.comment = f"Quality gates incomplete ({score}/100)"
+                    elif score >= 95:
                         self.set_state("paradigm")
                         self.comment = f"A+ quality achieved! ({score}/100)"
                     elif score >= 85:
                         self.set_state("discovery")
                         self.comment = f"High quality output ({score}/100)"
                     elif score >= 60:
-                        self.set_state("done")
-                        self.comment = f"Quality acceptable ({score}/100)"
+                        self.set_state("partial")
+                        self.comment = f"Quality acceptable with warnings ({score}/100)"
                     else:
                         self.set_state("error")
                         self.comment = f"Quality below threshold ({score}/100)"
@@ -230,8 +235,33 @@ class CubeMascot:
                         self.set_state("processing")
                         self.comment = f"{backend.upper()} verifying ({elapsed:.0f}s)..."
                 elif event.event_type == "pipeline_complete":
-                    self.set_state("done")
-                    self.comment = "Pipeline complete. Output saved."
+                    from src.utils.honesty_status import (
+                        mascot_state_from_outer_status,
+                        outer_status_from_hil_like,
+                        record_field_status,
+                    )
+
+                    data = event.data or {}
+                    gate_fail = bool(data.get("gate_any_failed"))
+                    outer = outer_status_from_hil_like(
+                        quality_passed_all=data.get("passed_all"),
+                        quality_score=data.get("score"),
+                        sim_status=record_field_status(data.get("simulation")),
+                        gate_any_failed=gate_fail,
+                        sources_requested=bool(data.get("sources")),
+                        verified_count=data.get("verified_count"),
+                        quality_report_missing=data.get("score") is None,
+                    )
+                    state = mascot_state_from_outer_status(outer)
+                    self.set_state(state)
+                    grade = data.get("grade", "?")
+                    score = data.get("score", "?")
+                    if state == "done":
+                        self.comment = f"Pipeline complete ({grade}, {score}/100)."
+                    elif state == "partial":
+                        self.comment = f"Pipeline finished partial ({grade}, {score}/100)."
+                    else:
+                        self.comment = "Pipeline failed quality or verification gates."
 
             event_bus.add_callback(on_event)
         except (ImportError, RuntimeError):
@@ -358,9 +388,11 @@ def inject_mascot_status(
     """
     _MASCOT.set_state(state)
     if state == "done":
-        _MASCOT.comment = f"{mode} complete. {papers or sources} sources."
+        _MASCOT.comment = f"{mode} complete. {papers or sources} verified sources."
     elif state == "thinking":
         _MASCOT.comment = f"Running {mode} pipeline..."
+    elif state == "partial":
+        _MASCOT.comment = f"{mode} partial. {papers or sources} verified sources."
     elif state == "error":
         _MASCOT.comment = f"{mode} encountered an error."
 

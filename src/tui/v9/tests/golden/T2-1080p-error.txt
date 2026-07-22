@@ -5,7 +5,7 @@
  │ 1;36m▣ Keyboard shortcutsm  [░░░░░░░░░░░░░░░░░░░░]
  │  90mEnter  Run   ?  Help   Ctrl+C  Quitm
  │  90mTab  Cycle mode   Shift+L  Lang   Ctrl+Y  Cycle tierm
- │  90mCtrl+Shift+P  Cycle color profile (6 modes)   Ctrl+,  Settings   Ctrl+T  Telemetrym
+ │  90m:  help.palette   Ctrl+Shift+K  help.setup_hub   Ctrl+Shift+C  Simulation capabilitiesm
  │ 1;36m▣ Mode variantsm  [░░░░░░░░░░░░░░░░░░░░]
  │  90m▶ Discover   —  multi-paper discovery with C4 paradigm-shift gatem
  │  90m▶ Flash      —  quick answer with optional USP cognitive analysism

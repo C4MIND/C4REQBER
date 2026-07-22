@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import os
-
 
 """
 Newton Physics Bridge — optional adapter for newton-physics.
@@ -16,7 +14,9 @@ check ``backend`` / ``engine_truth`` on the result.
 """
 
 import logging
+import os
 import platform
+import sys
 import time
 from dataclasses import dataclass, field
 from enum import Enum
@@ -114,30 +114,46 @@ class NewtonBridge:
         import shutil
 
         _home = os.path.expanduser("~")
-        _repo_venv = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), "..", "..", ".venv", "bin", "python")
-        )
+        _venv_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".venv"))
+        if sys.platform == "win32":
+            _repo_venv = os.path.join(_venv_dir, "Scripts", "python.exe")
+            _newton_local = os.path.join(
+                _home, ".c4reqber", "envs", "newton", "Scripts", "python.exe"
+            )
+            _mlx_candidates = (
+                os.path.join(_home, "LocalProjects", "mlx-env", "Scripts", "python.exe"),
+                os.path.join(_home, "mlx-env", "Scripts", "python.exe"),
+            )
+        else:
+            _repo_venv = os.path.join(_venv_dir, "bin", "python")
+            _newton_local = os.path.join(_home, ".c4reqber", "envs", "newton", "bin", "python")
+            _mlx_candidates = (
+                os.path.join(_home, "LocalProjects/mlx-env/bin/python"),
+                os.path.join(_home, "mlx-env/bin/python"),
+            )
         _env = (os.environ.get("NEWTON_PYTHON") or os.environ.get("C4_NEWTON_PYTHON") or "").strip()
         _candidates = [
             c
             for c in (
                 _env,
                 _repo_venv,
-                os.path.join(_home, "LocalProjects/mlx-env/bin/python"),
-                os.path.join(_home, "mlx-env/bin/python"),
-                os.path.join(_home, ".c4reqber/envs/newton/bin/python"),
-                "/opt/homebrew/bin/python3.11",
+                *_mlx_candidates,
+                _newton_local,
+                *([] if sys.platform == "win32" else ["/opt/homebrew/bin/python3.11"]),
             )
             if c
         ]
         self._mlx_venv_python = ""
         for cand in _candidates:
-            if os.path.isfile(cand) and os.access(cand, os.X_OK):
+            if os.path.isfile(cand) and (sys.platform == "win32" or os.access(cand, os.X_OK)):
                 self._mlx_venv_python = cand
                 break
         if not self._mlx_venv_python:
             self._mlx_venv_python = (
-                shutil.which("python3.11") or shutil.which("python3") or "python3"
+                shutil.which("python3.11")
+                or shutil.which("python3")
+                or shutil.which("python")
+                or ("python.exe" if sys.platform == "win32" else "python3")
             )
         try:
             import subprocess

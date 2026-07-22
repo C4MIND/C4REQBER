@@ -121,8 +121,19 @@ def launch_tui_v9(extra_args: list[str] | None = None, *, build_if_missing: bool
             print(f"Error: {exc}")
             return 1
 
-    proc = subprocess.run([str(binary), *args])
-    return proc.returncode
+    try:
+        proc = subprocess.run([str(binary), *args])
+        return proc.returncode
+    except OSError as exc:
+        print(f"Failed to launch c4tui-v9 ({binary}): {exc}")
+        if sys.platform == "win32":
+            print(
+                "Windows tip: unblock the binary (Properties → Unblock), or reinstall "
+                "from the GitLab release asset into ~/.c4reqber/bin/"
+            )
+        elif exc.errno == 8:  # ENOEXEC
+            print("The file may not be executable — run: chmod +x", binary)
+        return 1
 
 
 def launch_package_installer() -> int:

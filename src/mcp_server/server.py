@@ -9,11 +9,15 @@ from functools import wraps
 from types import ModuleType
 from typing import Any
 
-from src.config.paths import load_kilo_env, load_verifiers_env
+from src.config.paths import apply_config_to_env, load_kilo_env, load_verifiers_env
 
 
 load_kilo_env()
 load_verifiers_env()
+try:
+    apply_config_to_env()
+except Exception as exc:
+    logging.getLogger(__name__).debug("apply_config_to_env at MCP import: %s", exc)
 
 from src.mcp_server import (  # noqa: E402
     tools_analysis,

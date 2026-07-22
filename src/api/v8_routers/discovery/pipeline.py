@@ -275,43 +275,94 @@ async def flash_discovery(
     *,
     job_id: str | None = None,
 ) -> dict[str, Any]:
-    """Lightweight discovery: C4 -> TRIZ -> Knowledge -> 1 hypothesis."""
+    """Composed Flash (§4.1): run_flash + C4 + TRIZ + optional hypothesis.
+
+    Keeps framing/hyp UX while sharing honesty with CLI/MCP ``run_flash``.
+    """
     import time
+
+    from src.knowledge.flash_runner import run_flash
 
     start_total = time.perf_counter()
     problem = request.problem
     domain = request.domain
     errors: list[str] = []
-    results: dict[str, Any] = {
-        "problem": problem,
-        "domain": domain,
-        "pipeline_version": "v8.0-flash",
-        "warnings": [],
+    deep = str(getattr(request, "level", "simple") or "simple").lower() not in {
+        "simple",
+        "flash",
+        "",
     }
 
     await _update_phase(job_id, "A: Framing", "C4 navigation", 0.0)
     c4_path = navigate_c4(problem)
-    results["c4_path"] = c4_path
 
-    await _update_phase(job_id, "B: Search", "TRIZ principles", 0.20)
+    await _update_phase(job_id, "B: Search", "TRIZ principles", 0.15)
     triz_principles = resolve_triz(problem, domain)
-    results["triz_principles"] = triz_principles
 
-    await _update_phase(job_id, "C: Gaps", "Knowledge search", 0.40)
-    papers = await search_knowledge(problem)
-    results["papers"] = papers
+    await _update_phase(job_id, "C: Gaps", "Grounded flash + sources", 0.35)
+    flash = await run_flash(
+        problem,
+        with_sources=True,
+        deep=deep,
+        format="detailed" if deep else "concise",
+    )
 
-    await _update_phase(job_id, "D: Hyps", "Hypothesis generation", 0.60)
-    try:
-        h = await generate_hypothesis(problem, c4_path, triz_principles, papers)
-        results["hypothesis"] = h
-    except Exception as e:
-        errors.append(f"hypothesis: {e}")
-        results["hypothesis"] = {"text": f"Failed: {e}", "source": "error"}
+    verified_count = int(flash.get("verified_count") or 0)
+    sources = flash.get("sources") or []
+    # Back-compat: TUI Discover path still reads "papers"
+    papers = list(sources)
+
+    await _update_phase(job_id, "D: Hyps", "Hypothesis generation", 0.70)
+    hypothesis: dict[str, Any] | None = None
+    if verified_count >= 1 or deep:
+        try:
+            # Prefer verified cards as prior art for hyp generation
+            hyp_papers = [
+                {
+                    "title": s.get("title"),
+                    "doi": s.get("doi"),
+                    "url": s.get("url"),
+                    "year": s.get("year"),
+                    "abstract": "",
+                    "verified": True,
+                }
+                for s in sources
+                if isinstance(s, dict)
+            ]
+            hypothesis = await generate_hypothesis(
+                problem, c4_path, triz_principles, hyp_papers or papers
+            )
+        except Exception as e:
+            errors.append(f"hypothesis: {e}")
+            logger.debug("flash hyp generation failed: %s", e, exc_info=True)
 
     await _update_phase(job_id, "G: Quality", "Finalizing", 0.90)
-    results["errors"] = errors
-    results["total_time_seconds"] = round(time.perf_counter() - start_total, 2)
+
+    status = str(flash.get("status") or "partial")
+    warnings = list(flash.get("warnings") or [])
+    if verified_count == 0 and not hypothesis and not deep:
+        # Framing-only without verified sources → still partial if answer ok
+        if status == "success" and not sources:
+            status = "partial"
+            warnings.append("no verified sources; hypothesis skipped")
+    if errors and status == "success":
+        status = "partial"
+
+    results: dict[str, Any] = {
+        **flash,
+        "status": status,
+        "problem": problem,
+        "domain": domain,
+        "pipeline_version": "v9.20-flash-composed",
+        "c4_path": c4_path,
+        "triz_principles": triz_principles,
+        "papers": papers,
+        "warnings": warnings,
+        "errors": errors,
+        "total_time_seconds": round(time.perf_counter() - start_total, 2),
+    }
+    if hypothesis is not None:
+        results["hypothesis"] = hypothesis
     await _update_phase(job_id, "G: Quality", "Complete", 1.0)
     return results
 
@@ -438,7 +489,7 @@ async def multi_hypothesis_discovery(request: MultiHypothesisRequest) -> dict[st
         "ranked_hypotheses": comparison,
         "errors": errors,
         "total_time_seconds": round(total_time, 2),
-        "status": "partial" if errors else "complete",
+        "status": "partial" if errors else "success",
     }
 
 

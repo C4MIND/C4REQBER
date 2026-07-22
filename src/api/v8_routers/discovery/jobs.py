@@ -33,6 +33,7 @@ class JobStatus(StrEnum):
     PHASE_F = "phase_f"
     PHASE_G = "phase_g"
     COMPLETE = "complete"
+    PARTIAL = "partial"
     FAILED = "failed"
 
 
@@ -182,22 +183,43 @@ class JobStore:
             return [e for e in job.events if e.seq > after_seq]
 
     async def set_complete(self, job_id: str, result: dict[str, Any]) -> None:
+        from src.knowledge.flash_contract import derive_terminal
+
         phase = ""
+        result_status = ""
+        if isinstance(result, dict):
+            result_status = str(result.get("status") or "")
+        event_type, job_status_value = derive_terminal(result_status)
+        # Empty status on legacy payloads that omit status → treat as complete
+        # only when result has no honesty status key at all and looks like
+        # classic one-click (has papers/hypothesis without status field).
+        if not result_status and isinstance(result, dict) and "status" not in result:
+            event_type, job_status_value = "complete", "complete"
+
         async with self._lock:
             job = self._jobs.get(job_id)
             if job is not None:
-                job.status = JobStatus.COMPLETE
+                if job_status_value == "failed":
+                    job.status = JobStatus.FAILED
+                elif job_status_value == "partial":
+                    job.status = JobStatus.PARTIAL
+                else:
+                    job.status = JobStatus.COMPLETE
                 job.result = result
                 job.progress = 1.0
                 job.completed_at = time.time()
                 job.updated_at = job.completed_at
                 phase = job.phase
+                terminal_status = job.status.value
+            else:
+                terminal_status = job_status_value
+
         await self.push_event(
             job_id,
-            "complete",
+            event_type,
             {
-                "type": "complete",
-                "status": JobStatus.COMPLETE.value,
+                "type": event_type,
+                "status": (result_status if result_status else terminal_status),
                 "phase": phase,
                 "progress": 1.0,
                 "result": result,

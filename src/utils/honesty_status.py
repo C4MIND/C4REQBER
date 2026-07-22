@@ -89,7 +89,11 @@ def outer_status_from_sim_payload(result: Any) -> str:
         return "error" if inner in _SIM_ERROR else "unavailable"
     if inner in _SIM_UNAVAILABLE:
         return "unavailable"
-    if heuristic or inner in _SIM_PARTIAL or engine_truth.startswith("not_"):
+    # Fallback markers: not_* prefix OR *_not_* infix (e.g. rebound_not_amuse)
+    _fallback_truth = (
+        engine_truth.startswith("not_") or "_not_" in engine_truth or engine_truth.endswith("_not")
+    )
+    if heuristic or inner in _SIM_PARTIAL or _fallback_truth:
         return "partial"
     if accelerated is False and any(
         tok in f"{engine} {backend}" for tok in ("fallback", "numpy", "cpu_stub", "heuristic")
@@ -98,7 +102,7 @@ def outer_status_from_sim_payload(result: Any) -> str:
     if inner in {"success", "completed", "ok"}:
         # Positive provenance: explicit engine_truth, or named real engine
         # without fallback tokens (bridges should set engine_truth on success).
-        if engine_truth and not engine_truth.startswith("not_"):
+        if engine_truth and not (engine_truth.startswith("not_") or "_not_" in engine_truth):
             return "success"
         if any(tok in f"{engine} {backend}" for tok in ("fallback", "numpy", "stub")):
             return "partial"
@@ -153,10 +157,17 @@ def outer_status_from_hil_like(
     sim_status: str | None,
     gate_any_failed: bool = False,
     min_score: float = 40.0,
+    sources_requested: bool = False,
+    verified_count: int | None = None,
+    quality_report_missing: bool = False,
 ) -> str:
     """Shared HIL / turbo / solve outer status."""
     sim_s = str(sim_status or "").lower()
     if gate_any_failed or quality_passed_all is False:
+        return "partial"
+    if quality_report_missing and sources_requested:
+        return "partial"
+    if sources_requested and verified_count is not None and verified_count <= 0:
         return "partial"
     if sim_s in _SIM_ERROR | _SIM_UNAVAILABLE | _SIM_PARTIAL | {"stub"}:
         return "partial"
@@ -165,11 +176,25 @@ def outer_status_from_hil_like(
     return "success"
 
 
-def search_outer_status(*, total_found: int, sources_requested: bool) -> str:
-    """Empty literature hit is partial (not success)."""
+def search_outer_status(
+    *,
+    total_found: int,
+    sources_requested: bool,
+    verified_count: int | None = None,
+) -> str:
+    """Empty / unverified literature hit is partial (not success)."""
     if total_found <= 0:
         return "partial"
+    if sources_requested and verified_count is not None and verified_count <= 0:
+        return "partial"
     return "success"
+
+
+def derive_terminal(result_status: str | None) -> tuple[str, str]:
+    """SSE event type + job status from result.status (re-export for jobs)."""
+    from src.knowledge.flash_contract import derive_terminal as _derive
+
+    return _derive(result_status)
 
 
 def record_field_status(obj: Any, default: str = "N/A") -> str:
@@ -205,6 +230,33 @@ def bma_outer_status(result: Any) -> str:
     )
     if has_weighted and has_posteriors:
         return "success"
+    return "partial"
+
+
+def mascot_state_from_outer_status(outer_status: str) -> str:
+    """Map outer honesty status → cube mascot state (never false ``done``)."""
+    s = str(outer_status or "").lower()
+    if s == "success":
+        return "done"
+    if s in {"partial", "unavailable", "aborted", "skipped"}:
+        return "partial"
+    return "error"
+
+
+def outer_status_from_verification(status: str | None, *, backend: str = "") -> str:
+    """Formal verification inner status → outer honesty (Agda missing = unavailable)."""
+    s = str(status or "").lower()
+    if s in {"unavailable", "not_installed", "not_applicable"}:
+        return "unavailable"
+    if s in {"failed", "error", "unknown_backend", "exception"}:
+        return "error"
+    if s == "verified":
+        return "success"
+    # sat/unsat/z3_fallback/timeout are real but not full claim proof
+    if s in {"sat", "unsat", "uncertain", "partial", "timeout", "incomplete", "skipped"}:
+        return "partial"
+    if s in {"success", "completed", "ok", "consistent"}:
+        return "partial"
     return "partial"
 
 

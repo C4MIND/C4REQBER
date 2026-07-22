@@ -785,44 +785,71 @@ func (m *model) teardownStream() {
 	m.sseEvents = nil
 }
 
-// handleCompleteEvent handles a typed 'complete' event — final results.
+// applyCelebrationPolicy sets toast/burst from result status (I2 / §3.3).
+// Fail-closed: missing status → partial, no burst.
+func (m *model) applyCelebrationPolicy(status string) string {
+	st := strings.ToLower(strings.TrimSpace(status))
+	switch st {
+	case "failed", "error", "aborted":
+		m.setToast(i18n.T("toast.failed"))
+		return "error"
+	case "success", "complete", "ok":
+		m.setToast(i18n.T("toast.complete"))
+		m.burst.Trigger(m.width, m.height, m.width/2, m.height/2)
+		return "done"
+	default:
+		// partial, empty, unknown
+		m.setToast(i18n.T("toast.partial"))
+		return "partial"
+	}
+}
+
+// handleCompleteEvent handles a typed 'complete'/'partial' event — final results.
 // partial/failed must not toast as full success or fire celebration burst.
 func (m *model) handleCompleteEvent(te api.TypedEvent) {
 	m.running = false
 	m.jobID = ""
 	st := strings.ToLower(strings.TrimSpace(te.Status))
-	switch st {
-	case "failed", "error":
-		m.setToast(i18n.T("toast.failed"))
+	if st == "" && te.Result != nil {
+		if rs, ok := te.Result["status"].(string); ok {
+			st = strings.ToLower(strings.TrimSpace(rs))
+		}
+	}
+	cardStatus := m.applyCelebrationPolicy(st)
+	if st == "failed" || st == "error" || st == "aborted" {
 		m.handleFailedEvent(api.TypedEvent{Type: api.EventFailed, Status: st, Errors: te.Errors, Result: te.Result})
 		return
-	case "partial":
-		m.setToast(i18n.T("toast.partial"))
-		// No celebration burst for partial outcomes.
-	default:
-		m.setToast(i18n.T("toast.complete"))
-		m.burst.Trigger(m.width, m.height, m.width/2, m.height/2)
 	}
 	if te.Result != nil {
+		// Flash composed answer card
+		if ans, ok := te.Result["answer"].(string); ok && strings.TrimSpace(ans) != "" {
+			m.appendCard(Card{Kind: CardHypothesis, Title: "Flash", Body: ans, Time: time.Now(), Status: cardStatus})
+			m.typew.Set(ans, m.tick)
+		}
 		if hyp, ok := te.Result["hypothesis"].(map[string]any); ok {
-			hc := Card{Kind: CardHypothesis, Title: i18n.T("card.hypothesis.t"), Body: fieldString(hyp, "text"), Meta: []cards.MetaKV{{Key: "source", Value: fieldString(hyp, "source")}}, Time: time.Now(), Status: "done"}
+			hc := Card{Kind: CardHypothesis, Title: i18n.T("card.hypothesis.t"), Body: fieldString(hyp, "text"), Meta: []cards.MetaKV{{Key: "source", Value: fieldString(hyp, "source")}}, Time: time.Now(), Status: cardStatus}
 			m.appendCard(hc)
-			m.typew.Set(fieldString(hyp, "text"), m.tick)
+			if fieldString(hyp, "text") != "" {
+				m.typew.Set(fieldString(hyp, "text"), m.tick)
+			}
 			if novelty, ok := hyp["novelty_score"].(float64); ok {
 				m.lastQuality = novelty
 			}
 		}
-		if papers, ok := te.Result["papers"].([]any); ok {
-			m.lastPapersCount = len(papers)
-			for i, p := range papers {
-				if i >= 3 {
-					break
-				}
-				pm, _ := p.(map[string]any)
-				m.appendCard(Card{Kind: CardPaper, Title: fieldString(pm, "title"), Body: fmt.Sprintf("%s · %s · citations %s", fieldString(pm, "venue"), fieldString(pm, "year"), fieldString(pm, "citation_count")), Meta: []cards.MetaKV{{Key: "doi", Value: fieldString(pm, "doi")}, {Key: "source", Value: fieldString(pm, "source")}}, Time: time.Now(), Status: "done"})
-			}
+		// Prefer verified sources cards; fall back to papers
+		srcList, _ := te.Result["sources"].([]any)
+		if len(srcList) == 0 {
+			srcList, _ = te.Result["papers"].([]any)
 		}
-		if st == "" || st == "complete" || st == "success" {
+		m.lastPapersCount = len(srcList)
+		for i, p := range srcList {
+			if i >= 5 {
+				break
+			}
+			pm, _ := p.(map[string]any)
+			m.appendCard(Card{Kind: CardPaper, Title: fieldString(pm, "title"), Body: fmt.Sprintf("%s · %s", fieldString(pm, "year"), fieldString(pm, "source")), Meta: []cards.MetaKV{{Key: "doi", Value: fieldString(pm, "doi")}, {Key: "url", Value: fieldString(pm, "url")}, {Key: "source", Value: fieldString(pm, "source")}}, Time: time.Now(), Status: cardStatus})
+		}
+		if st == "complete" || st == "success" || st == "ok" {
 			m.completedDisc++
 			m.checkAchievements()
 		}

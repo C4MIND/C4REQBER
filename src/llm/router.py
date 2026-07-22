@@ -246,6 +246,7 @@ class ProviderRouter:
                 "c4_framing": "A",
                 "validation": "G",
                 "quality": "G",
+                "proof_generation": "G",
                 "mp_rotation": "D",
             }
             phase = stage_to_phase.get((stage_name or "").lower(), "")

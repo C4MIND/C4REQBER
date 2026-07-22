@@ -309,6 +309,8 @@ func TestStateMachine_SSEEvent_PhaseA_IsNotComplete(t *testing.T) {
 func TestStateMachine_FlashResult(t *testing.T) {
 	m := NewApp("http://test")
 	data := map[string]any{
+		"status":     "success",
+		"answer":     "flash answer",
 		"hypothesis": map[string]any{"text": "flash hypothesis", "source": "v8"},
 	}
 	u, _ := m.Update(flashResultMsg{result: data})
@@ -321,9 +323,23 @@ func TestStateMachine_FlashResult(t *testing.T) {
 	}
 }
 
+func TestStateMachine_FlashResultPartialNoCelebrate(t *testing.T) {
+	m := NewApp("http://test")
+	data := map[string]any{
+		"status": "partial",
+		"answer": "weak",
+	}
+	u, _ := m.Update(flashResultMsg{result: data})
+	mm := u.(*model)
+	if mm.completedDisc != 0 {
+		t.Errorf("partial flash must not increment completedDisc, got %d", mm.completedDisc)
+	}
+}
+
 func TestStateMachine_MultiResult(t *testing.T) {
 	m := NewApp("http://test")
 	data := map[string]any{
+		"status": "success",
 		"ranked_hypotheses": []any{
 			map[string]any{"text": "h1", "source": "a", "score": "0.9"},
 			map[string]any{"text": "h2", "source": "b", "score": "0.7"},

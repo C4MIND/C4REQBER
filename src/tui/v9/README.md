@@ -2,11 +2,13 @@
 
 # TUI v9 "The Cockpit"
 
-**Tag / honesty:** aligned with **v9.18.0** honesty contract — see [`docs/HONESTY_CONTRACT.md`](../../../docs/HONESTY_CONTRACT.md).
+**Tag / honesty:** aligned with **v9.20.0** Zero-Asymmetry lock — see [`docs/HONESTY_CONTRACT.md`](../../../docs/HONESTY_CONTRACT.md).
 **Status mapping (anti green-fake):**
 - `sim_finished` → green only if `engine_status` ∈ `{ok, success, completed}`
+- `available` (capsim probe / standby) → amber ◐ — **not** success green
 - `partial` / `stub` / `unavailable` → amber/red, not success glyph
 - Job `partial` → `toast.partial` (no celebration burst); `failed` → `toast.failed` + error card
+- Flash / Discover / Multi: celebration burst only when terminal `status` ∈ `{success, complete}` (fail-closed on missing status)
 - Capsim summary card uses `EngineStatus: partial` (probe ≠ engine available)
 - Debug overlay (Ctrl+Shift+D) records last SSE type + timestamp
 - Restored feed cards do **not** show `NEW`
@@ -172,11 +174,23 @@ ok  github.com/figuramax/c4reqber-tui-v9/i18n    (18.8% coverage)
 
 | Key | Action |
 |---|---|
-| `Enter` | Submit query |
+| `Enter` | Submit query / run discovery |
 | `Tab` | Cycle mode (Discover → Flash → Turbo → TurboFactory) |
+| `:` | Command palette |
+| `j` / `k` | Focus next / previous card |
+| `g g` / `G` | Focus first / last card |
 | `Esc` | Cancel running discovery |
 | `Ctrl+C` | Quit |
-| `?` | Help (inline card in feed) |
+| `?` | Help overlay (full keymap) |
+| `Ctrl+Shift+K` | API keys setup hub |
+| `Ctrl+Shift+S` | Social publishing menu |
+| `Ctrl+Shift+M` | Models & council config |
+| `Ctrl+Shift+C` | Sim / verifier capabilities |
+| `Ctrl+Shift+D` | Debug overlay (last SSE) |
+| `Shift+A` | Research agenda |
+| `Ctrl+B` | Toggle status bar |
+| `Ctrl+,` | Settings |
+| `i` / `f` / `o` | Sim install hint / fallback / open plot (on focused sim card) |
 | Mouse click | Select card (zone-based) |
 
 ## Architecture decisions (from `tui-v9-cockpit-plan-v2.md` §13)

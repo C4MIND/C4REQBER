@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from src.knowledge.flash_contract import source_cards_from_papers
 from src.mcp_server.honesty import outer_status_from_hil_like, record_field_status
 from src.mcp_server.tools_blast import blast_flash, blast_solve, blast_turbo
 
@@ -67,10 +68,13 @@ async def blast_turbofactory(
                         pipeline = UniversalSolvePipeline(config=config)
                         solve_record = await pipeline.solve(topic, mode="autopilot")
                         conf = float(solve_record.confidence or 0)
+                        solve_report = source_cards_from_papers(solve_record.sources)
                         result["solve_result"] = {
                             "final_solution": solve_record.final_solution[:500],
                             "confidence": conf,
-                            "sources": len(solve_record.sources),
+                            "sources": solve_report["sources"],
+                            "verified_count": solve_report["verified_count"],
+                            "found_count": solve_report["found_count"],
                             "gaps": len(solve_record.gaps),
                         }
                         result["pipeline_used"].append("solve")
@@ -88,9 +92,12 @@ async def blast_turbofactory(
                             else 0
                         )
                         sim_st = record_field_status(turbo_record.simulation)
+                        turbo_report = source_cards_from_papers(turbo_record.sources)
                         result["turbo_result"] = {
                             "hypotheses": len(turbo_record.hypotheses),
-                            "sources": len(turbo_record.sources),
+                            "sources": turbo_report["sources"],
+                            "verified_count": turbo_report["verified_count"],
+                            "found_count": turbo_report["found_count"],
                             "quality_grade": turbo_record.quality_report.grade
                             if turbo_record.quality_report
                             else "N/A",
@@ -106,6 +113,9 @@ async def blast_turbofactory(
                             ),
                             quality_score=qscore,
                             sim_status=str(sim_st),
+                            sources_requested=bool(turbo_record.sources),
+                            verified_count=turbo_report["verified_count"],
+                            quality_report_missing=turbo_record.quality_report is None,
                         )
                         if child_st != "success":
                             child_partial = True

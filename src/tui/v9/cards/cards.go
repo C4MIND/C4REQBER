@@ -229,10 +229,12 @@ func ActionsFor(c Card) []Action {
 	}
 	// Per §23.6: action set depends on EngineStatus.
 	switch c.Sim.EngineStatus {
-	case "available", "success":
+	case "success", "ok", "completed":
 		if c.Sim.Evidence.Type == "image" && c.Sim.Evidence.ImageURL != "" {
 			actions = append(actions, Action{Key: "o", Label: "open plot", Kind: ActOpenPlot})
 		}
+	case "available":
+		// Engine on machine but sim not executed — no success glyph/actions.
 	case "skipped", "failed":
 		actions = append(actions, Action{Key: "f", Label: "fallback", Kind: ActSelectFallback})
 	case "unavailable":
@@ -259,9 +261,9 @@ func VerdictIcon(v string) string {
 // StatusIcon returns the user-facing glyph for a sim status.
 func StatusIcon(s string) string {
 	switch s {
-	case "available", "success":
+	case "success", "ok", "completed":
 		return "●"
-	case "partial", "stub", "slow":
+	case "available", "partial", "stub", "slow":
 		return "◐"
 	case "unavailable", "error", "failed":
 		return "○"

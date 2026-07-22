@@ -164,55 +164,32 @@ func HelpOverlayWith(width, height int, km *KeyMap) string {
 	}
 	titleStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("3"))
 	sectionStyle := lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("6"))
-	keyStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("2")).Width(14)
+	keyStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("2")).Width(16)
 	dimStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("8"))
-	boxStyle := lipgloss.NewStyle().Width(width-2).Padding(0, 1)
-
-	// Resolve platform-specific keys. Display "Cmd+L / Ctrl+L" if both
-	// are bound (e.g. macOS keeps Ctrl aliases for muscle memory).
-	langKey := FormatKeyList(km.Labels(ActLang))
-	tierKey := FormatKeyList(km.Labels(ActTier))
-	tabKey := km.Label(ActCycleMode)
-	telKey := km.Label(ActNewTab)
-	helpKey := km.Label(ActHelp)
-	cancelKey := km.Label(ActCancel)
-	quitKey := km.Label(ActQuit)
-	runKey := km.Label(ActRun)
-	setKey := FormatKeyList(km.Labels(ActSettings))
-	profKey := FormatKeyList(km.Labels(ActColorProfile))
-	reaKey := km.Label(ActReauth)
+	boxStyle := lipgloss.NewStyle().Width(width - 2).Padding(0, 1)
 
 	type entry struct{ key, desc string }
 	sections := []struct {
 		title   string
-		entries []entry
+		actions []Action
+		extra   []entry
 	}{
-		{"Navigation", []entry{
-			{tabKey, i18n.T("help.tab")},
-			{langKey, i18n.T("help.lang")},
-			{tierKey, i18n.T("tier.cycle")},
-			{telKey, i18n.T("help.telemetry")},
-			{helpKey, i18n.T("help.toggle")},
-			{cancelKey, i18n.T("help.cancel")},
-			{quitKey, i18n.T("help.quit")},
-		}},
-		{"Run", []entry{
-			{runKey, i18n.T("help.run")},
-			{"mouse", i18n.T("help.mouse")},
-			{profKey, i18n.T("profile.cycle")},
-			{setKey, i18n.T("settings.title")},
-			{reaKey, i18n.T("reauth.success")},
-		}},
-		{"Display", []entry{
+		{"Navigation", []Action{
+			ActRun, ActCancel, ActCycleMode, ActLang, ActTier, ActPalette,
+			ActFocusNext, ActFocusPrev, ActFocusFirst, ActFocusLast,
+			ActHelp, ActQuit,
+		}, nil},
+		{"Overlays", []Action{
+			ActSetupHub, ActSocial, ActModels, ActCapabilities, ActAgenda,
+			ActDebug, ActSettings, ActStatusBar,
+		}, nil},
+		{"Cards & search", []Action{
+			ActCopy, ActSearch, ActInstallHint, ActSelectFallback, ActOpenPlot, ActReauth,
+		}, nil},
+		{"Display", nil, []entry{
 			{"rain", i18n.T("help.rain")},
 			{"burst", i18n.T("help.burst")},
 			{"sparks", i18n.T("help.sparks")},
-		}},
-		{"Simulation", []entry{
-			{km.Label(ActCapabilities), i18n.T("sim.capabilities.title")},
-			{km.Label(ActInstallHint), i18n.T("sim.action.install")},
-			{km.Label(ActSelectFallback), i18n.T("sim.action.fallback")},
-			{km.Label(ActOpenPlot), i18n.T("sim.action.plot")},
 		}},
 	}
 
@@ -226,7 +203,17 @@ func HelpOverlayWith(width, height int, km *KeyMap) string {
 	for _, s := range sections {
 		b.WriteString(sectionStyle.Render(s.title))
 		b.WriteString("\n")
-		for _, e := range s.entries {
+		for _, a := range s.actions {
+			descKey := helpDescKey(a)
+			if descKey == "" || descKey == "help.hidden" {
+				continue
+			}
+			b.WriteString("  ")
+			b.WriteString(keyStyle.Render(FormatKeyList(km.Labels(a))))
+			b.WriteString(i18n.T(descKey))
+			b.WriteString("\n")
+		}
+		for _, e := range s.extra {
 			b.WriteString("  ")
 			b.WriteString(keyStyle.Render(e.key))
 			b.WriteString(e.desc)

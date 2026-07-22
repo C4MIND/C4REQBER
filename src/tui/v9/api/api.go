@@ -239,6 +239,10 @@ func (c *Client) FlashAndWait(ctx context.Context, problem, domain string) (map[
 			consecutiveErrors = 0
 			if js.Completed {
 				if js.Result != nil {
+					// Propagate job-level status into result for celebration policy
+					if _, ok := js.Result["status"]; !ok && js.Status != "" {
+						js.Result["status"] = js.Status
+					}
 					return js.Result, nil
 				}
 				return map[string]any{"job_id": jobID, "status": js.Status}, nil

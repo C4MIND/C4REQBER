@@ -651,9 +651,9 @@ Step 8.5: Formal Verification (summary)
 - For mission/pipeline work prefer free-tier LLM providers and models; rotate and probe keys until something works instead of stopping at the first failure; skip paid-only stacks (Kimi, Minimax, Claude, etc.) unless explicitly asked.
 - End-user production is `pip install` / `blast` / TUI v9 / MCP (optional `docker-compose.release.yml`) — not maintainer-Mac Docker, Traefik VPS hosting, or treating GitLab Environment Play as the product.
 - First public surface is CLI + TUI v9 + MCP; hide unfinished Desktop app from docs, landing, and marketing until it is real.
-- Prefer deep systemic analysis (and a chat report) before code when stuck or when asked; avoid repeated micro-fix loops that waste time.
+- Prefer deep systemic analysis (and a chat report) before code when stuck or when asked; fix/PRD plans must cover the full defect set (not a partial “do first” slice); wait for explicit approval before implementing; avoid repeated micro-fix loops that waste time.
 - Expect clear status plus time remaining on long CI/jobs; if a job is `pending` on a known runner for more than ~2 minutes, fix tags/runner immediately rather than waiting.
-- Do mechanical setup end-to-end yourself (install tools, GitLab UI clicks when Chrome is already logged in) — do not bounce routine steps back to the user.
+- Do mechanical setup end-to-end yourself (install tools, GitLab/PyPI UI) — use the user’s already-authenticated system Chrome, not Cursor’s embedded browser; do not bounce routine steps back to the user.
 - Demo GIF/video must show real TUI discovery with visible results; never record personal apps or private UI; wait for user visual approval before committing demo media.
 - Author/citation name is Selyutin I. (with Kovalev N.I.) — never invent alternate surnames like Figurov.
 - Keep user-facing copy and footers on GitLab as the canonical home; do not label the product as a GitHub project.
@@ -664,7 +664,7 @@ Step 8.5: Formal Verification (summary)
 
 - Local agent secrets: repo `.env.dontredact` (knowledge/API keys) and `~/.kilo` (LLM provider keys, including OpenCode free models).
 - Canonical GitLab repo is `cognitive-functors/c4reqber` (legacy `turbo-cdi` name/path may still appear in old registry/docs); public site is `https://cognitive-functors.gitlab.io/c4reqber/`.
-- GitHub `c4reqber` is a read-only promotion mirror via GitLab repository mirroring — push only to GitLab.
+- GitHub `c4reqber` is a read-only promotion mirror via GitLab repository mirroring — push only to GitLab; after a GitLab release lands, confirm the mirror synced.
 - CI for this project uses the project’s own Mac/Colima GitLab runners — do not borrow runners from unrelated projects (e.g. MacBook DSM).
 - `social-marketing/` is a local gitignored folder for Reddit/outreach drafts; do not commit it.
 - Landing splash should mirror the TUI splash (purple cube → morph → final animated C4R); final is reached by finishing the animation or an explicit skip/Enter — never dump straight to a static final on mobile or desktop.

@@ -62,6 +62,7 @@ class LLMGateway(Protocol):
         max_tokens: int = 2000,
         system_prompt: str | None = None,
         response_format: str | None = None,
+        phase: str | None = None,
     ) -> Any: ...
 
     async def chat(
@@ -139,6 +140,7 @@ class DefaultGateway:
         max_tokens: int = 2000,
         system_prompt: str | None = None,
         response_format: str | None = None,
+        phase: str | None = None,
     ) -> Any:
         t0 = time.monotonic()
         provider = "async_client"
@@ -150,6 +152,7 @@ class DefaultGateway:
                 max_tokens=max_tokens,
                 system_prompt=system_prompt,
                 response_format=response_format,
+                phase=phase,
             )
             _record_llm_call(provider, model or "default", "success", time.monotonic() - t0)
             return result

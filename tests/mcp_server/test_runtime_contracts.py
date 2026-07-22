@@ -28,8 +28,12 @@ async def test_c4_search_uses_orchestrator_result_shape(monkeypatch: pytest.Monk
 
     result = await mcp.c4_search("gravity")
 
-    assert result["status"] == "success"
-    assert result["data"] == [{"title": "A"}, {"title": "B"}]
+    # Unverified hits stay partial (HONESTY_CONTRACT) with sanitized cards.
+    assert result["status"] == "partial"
+    assert result["verified_count"] == 0
+    assert result["found_count"] == 2
+    assert [paper["title"] for paper in result["data"]] == ["A", "B"]
+    assert all(paper.get("verified") is False for paper in result["data"])
     assert result["metadata"]["total_found"] == 2
     assert result["metadata"]["source_names"] == ["arxiv"]
 
@@ -45,9 +49,10 @@ async def test_c4_search_honors_explicit_sources(monkeypatch: pytest.MonkeyPatch
 
     result = await mcp.c4_search("gravity", sources=["arxiv", "pubmed"])
 
-    assert result["status"] == "success"
-    assert [paper["_source"] for paper in result["data"]] == ["arxiv", "pubmed"]
+    assert result["status"] == "partial"
+    assert [paper["source"] for paper in result["data"]] == ["arxiv", "pubmed"]
     assert result["metadata"]["source_names"] == ["arxiv", "pubmed"]
+    assert result["verified_count"] == 0
 
 
 @pytest.mark.asyncio

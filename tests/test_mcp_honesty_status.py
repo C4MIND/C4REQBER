@@ -55,7 +55,15 @@ def test_plugin_requires_positive_provenance():
 
 def test_search_empty_is_partial():
     assert search_outer_status(total_found=0, sources_requested=False) == "partial"
+    # Without verified_count, non-empty search may still be success (legacy call sites).
     assert search_outer_status(total_found=3, sources_requested=True) == "success"
+    assert search_outer_status(total_found=3, sources_requested=True, verified_count=0) == "partial"
+    assert (
+        search_outer_status(total_found=3, sources_requested=False, verified_count=0) == "partial"
+    )
+    assert (
+        search_outer_status(total_found=3, sources_requested=False, verified_count=1) == "success"
+    )
 
 
 def test_hil_like_gate_fail():

@@ -126,7 +126,10 @@ async def c4_search(query: str, sources: list[str] | None = None) -> dict[str, A
         if source_report["unverified_hits"]:
             out["unverified_hits"] = truncated_unverified
         if status == "partial":
-            out["warnings"] = ["No papers found — empty search is not success"]
+            if not sanitized:
+                out["warnings"] = ["No papers found — empty search is not success"]
+            elif source_report["verified_count"] <= 0:
+                out["warnings"] = ["Hits found but none verified — not success"]
         return out
     except (AttributeError, ImportError, TypeError, ValueError) as e:
         logger.exception("MCP knowledge search failed")

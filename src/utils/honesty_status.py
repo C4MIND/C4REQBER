@@ -183,9 +183,10 @@ def search_outer_status(
     verified_count: int | None = None,
 ) -> str:
     """Empty / unverified literature hit is partial (not success)."""
+    del sources_requested  # retained for call-site clarity / future use
     if total_found <= 0:
         return "partial"
-    if sources_requested and verified_count is not None and verified_count <= 0:
+    if verified_count is not None and verified_count <= 0:
         return "partial"
     return "success"
 

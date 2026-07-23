@@ -23,6 +23,13 @@ _fail_or_soft() {
   exit 0
 }
 
+# Already present (e.g. CI artifact from tui-v9:build) — nothing to do.
+if _have_binary; then
+  echo "TUI binary already present under $BIN"
+  ls -la "$BIN"/c4tui-v9* 2>/dev/null || true
+  exit 0
+fi
+
 if [[ -n "${C4REQBER_TUI_PREBUILT:-}" && -f "${C4REQBER_TUI_PREBUILT}" ]]; then
   case "$(uname -s)" in
     MINGW*|MSYS*|CYGWIN*|Windows_NT) dest="$BIN/c4tui-v9.exe" ;;

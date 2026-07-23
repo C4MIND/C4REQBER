@@ -211,13 +211,17 @@ tui-v9:build:
     - cd src/tui/v9
     - go mod download
   script:
-    - go build -ldflags="-s -w" -o ../../bin/c4tui-v9-${CI_COMMIT_REF_SLUG} ./cmd/c4tui-v9
-    - go build -ldflags="-s -w" -o ../../bin/c4tui-v9 ./cmd/c4tui-v9
+    # cwd is src/tui/v9 — write into module bin/ (NOT ../../bin which is src/bin).
+    - mkdir -p bin
+    - go build -ldflags="-s -w" -o bin/c4tui-v9-${CI_COMMIT_REF_SLUG} ./cmd/c4tui-v9
+    - go build -ldflags="-s -w" -o bin/c4tui-v9 ./cmd/c4tui-v9
+    - test -x bin/c4tui-v9
+    - ls -la bin/
   artifacts:
-    when: always
+    when: on_success
     paths:
-      - bin/c4tui-v9
-      - bin/c4tui-v9-${CI_COMMIT_REF_SLUG}
+      - src/tui/v9/bin/c4tui-v9
+      - src/tui/v9/bin/c4tui-v9-${CI_COMMIT_REF_SLUG}
     expire_in: 30 days
   needs:
     - job: tui-v9-test
@@ -307,10 +311,10 @@ pypi-publish-prod:
   before_script:
     - bash scripts/ci/setup_python.sh
     - pip install build twine
-    # python:3.11-slim has no Go — consume tui-v9:build artifact via PREBUILT.
-    - test -f bin/c4tui-v9
-    - C4REQBER_TUI_PREBUILT="$CI_PROJECT_DIR/bin/c4tui-v9" C4REQBER_TUI_WHEEL_STRICT=1 bash scripts/ci/prepare_tui_wheel.sh
-    - test -f src/tui/v9/bin/c4tui-v9 -o -f src/tui/v9/bin/c4tui-v9.exe
+    # Artifact from tui-v9:build lands at src/tui/v9/bin/c4tui-v9 (module-local bin/).
+    - test -x src/tui/v9/bin/c4tui-v9
+    - C4REQBER_TUI_PREBUILT="$CI_PROJECT_DIR/src/tui/v9/bin/c4tui-v9" C4REQBER_TUI_WHEEL_STRICT=1 bash scripts/ci/prepare_tui_wheel.sh
+    - test -x src/tui/v9/bin/c4tui-v9
   script:
     - python -m build
     - twine check dist/*

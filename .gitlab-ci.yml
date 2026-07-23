@@ -222,6 +222,9 @@ tui-v9:build:
   needs:
     - job: tui-v9-test
   rules:
+    # Version tags always need a binary for pypi-publish-prod (python slim has no go).
+    - if: $CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/
+      allow_failure: false
     - changes:
         - src/tui/v9/**/*
 
@@ -304,8 +307,9 @@ pypi-publish-prod:
   before_script:
     - bash scripts/ci/setup_python.sh
     - pip install build twine
-    # Release wheels must ship a platform TUI binary — fail hard (no || true)
-    - C4REQBER_TUI_WHEEL_STRICT=1 bash scripts/ci/prepare_tui_wheel.sh
+    # python:3.11-slim has no Go — consume tui-v9:build artifact via PREBUILT.
+    - test -f bin/c4tui-v9
+    - C4REQBER_TUI_PREBUILT="$CI_PROJECT_DIR/bin/c4tui-v9" C4REQBER_TUI_WHEEL_STRICT=1 bash scripts/ci/prepare_tui_wheel.sh
     - test -f src/tui/v9/bin/c4tui-v9 -o -f src/tui/v9/bin/c4tui-v9.exe
   script:
     - python -m build
@@ -319,6 +323,8 @@ pypi-publish-prod:
   needs:
     - test-backend-checks
     - test-backend-suite
+    - job: tui-v9:build
+      artifacts: true
   artifacts:
     paths:
       - dist/

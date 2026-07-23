@@ -30,7 +30,8 @@ jobs:
           python -m pip install build twine
 
       - name: Build distribution
-        run: python -m build
+        # Wheel from tree first — sdist excludes TUI binaries (see build_pypi_artifacts.sh).
+        run: bash scripts/ci/build_pypi_artifacts.sh
 
       - name: Check distribution
         run: twine check dist/*

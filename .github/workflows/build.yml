@@ -38,7 +38,7 @@ jobs:
           tar czf dist/backend.tar.gz src/ requirements.txt pyproject.toml
 
       - name: Upload backend artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: backend-artifact
           path: dist/backend.tar.gz
@@ -54,7 +54,7 @@ jobs:
           tar czf dist/landing.tar.gz landing/
 
       - name: Upload landing artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: landing-artifact
           path: dist/landing.tar.gz
@@ -75,7 +75,7 @@ jobs:
           go build -o ../../../dist/c4tui-v9 ./cmd/c4tui-v9
 
       - name: Upload TUI artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: tui-artifact
           path: dist/c4tui-v9

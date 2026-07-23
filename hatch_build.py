@@ -1,8 +1,10 @@
 """Hatch build hook: include c4tui-v9 in the wheel only when present on disk.
 
-Run ``scripts/ci/prepare_tui_wheel.sh`` before ``python -m build`` on CI so the
-platform binary is force-included. Local builds without Go still succeed
-(Python-only wheel + runtime download).
+Run ``scripts/ci/prepare_tui_wheel.sh`` then ``scripts/ci/build_pypi_artifacts.sh``
+on CI so the platform binary is force-included. Important: build the wheel from
+the working tree (``python -m build --wheel``), not from the sdist — the sdist
+excludes binaries. Local builds without Go still succeed (Python-only wheel +
+runtime download).
 """
 
 from __future__ import annotations
@@ -24,6 +26,10 @@ class TuiBinaryBuildHook(BuildHookInterface):
             src = bin_dir / name
             if src.is_file() and src.stat().st_size > 0:
                 force[str(src)] = f"src/tui/v9/bin/{name}"
+                print(
+                    f"hatch tui-binary: force_include {src} "
+                    f"({src.stat().st_size} bytes) → src/tui/v9/bin/{name}"
+                )
 
 
 def get_build_hook() -> type[BuildHookInterface]:

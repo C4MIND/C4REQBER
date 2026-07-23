@@ -287,7 +287,8 @@ pypi-publish-test:
     # Platform Go binary into wheel when go is available (else runtime download)
     - bash scripts/ci/prepare_tui_wheel.sh || true
   script:
-    - python -m build
+    # Wheel from working tree first — see scripts/ci/build_pypi_artifacts.sh
+    - bash scripts/ci/build_pypi_artifacts.sh
     - twine check dist/*
     - twine upload --repository testpypi dist/*
   variables:
@@ -316,7 +317,8 @@ pypi-publish-prod:
     - C4REQBER_TUI_PREBUILT="$CI_PROJECT_DIR/src/tui/v9/bin/c4tui-v9" C4REQBER_TUI_WHEEL_STRICT=1 bash scripts/ci/prepare_tui_wheel.sh
     - test -x src/tui/v9/bin/c4tui-v9
   script:
-    - python -m build
+    # Wheel from working tree first (sdist excludes TUI binary).
+    - C4REQBER_TUI_WHEEL_STRICT=1 bash scripts/ci/build_pypi_artifacts.sh
     - twine check dist/*
     - twine upload dist/*
   variables:

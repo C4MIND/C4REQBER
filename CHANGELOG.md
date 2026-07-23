@@ -2,9 +2,19 @@
 
 > **Русская версия:** [CHANGELOG.ru.md](CHANGELOG.ru.md)
 
+## v5.7.8 (2026-07-23) — PyPI wheel ships c4tui-v9
+
+**PyPI:** [`c4reqber==5.7.8`](https://pypi.org/project/c4reqber/5.7.8/) · packaging / CI only (no product feature change).
+
+- **Root cause:** `python -m build` rebuilt the wheel **from the sdist**, and the sdist excludes `src/tui/v9/bin/c4tui-v9*`, so **5.7.7** on PyPI was Python-only (TUI fell back to runtime download).
+- **Fix:** [`scripts/ci/build_pypi_artifacts.sh`](scripts/ci/build_pypi_artifacts.sh) — `python -m build --wheel` from the working tree first, then `--sdist`; prod publish asserts the binary is inside the wheel (`C4REQBER_TUI_WHEEL_STRICT=1`).
+- **5.7.7** remains on PyPI (immutable). Prefer `pip install -U c4reqber` → **5.7.8**.
+
+---
+
 ## v9.20.0 (2026-07-22) — Zero-Asymmetry Product Lock
 
-**PyPI:** `c4reqber==5.7.7` · **W10 Windows live AISI:** waived by maintainer (optional external re-test later).
+**PyPI:** `c4reqber==5.7.7` (superseded by **5.7.8** for the TUI-in-wheel fix) · **W10 Windows live AISI:** waived by maintainer (optional external re-test later).
 
 Eliminates Flash/TUI/API asymmetry: one composed Flash contract, terminal honesty on SSE, celebration policy, and shared source/novelty/rate-limit rules across CLI, MCP, API, and TUI.
 

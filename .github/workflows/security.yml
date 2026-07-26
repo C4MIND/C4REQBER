@@ -28,7 +28,7 @@ jobs:
           pip install --no-cache-dir bandit
           bandit -q -r src -x src/tui,src/frontend -lll
           bandit -r src -x src/tui,src/frontend -f json -o bandit-report.json || true
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: bandit-report

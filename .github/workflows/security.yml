@@ -1,3 +1,7 @@
+# Mirror-only security scan (promotion GitHub).
+# Source of truth for gates: GitLab job `security-checks` in `.gitlab-ci.yml`.
+# Keep bandit / pip-audit flags aligned with that job.
+
 name: Security
 
 on:
@@ -8,38 +12,59 @@ on:
     - cron: "0 0 * * 0"
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   bandit:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.11"
-      - run: pip install bandit && bandit -r src/ -f json -o bandit-report.json
-      - uses: actions/upload-artifact@v4
+      # Match GitLab: high severity only; skip UI trees.
+      - run: |
+          pip install --no-cache-dir bandit
+          bandit -q -r src -x src/tui,src/frontend -lll
+          bandit -r src -x src/tui,src/frontend -f json -o bandit-report.json || true
+      - uses: actions/upload-artifact@v5
+        if: always()
         with:
           name: bandit-report
           path: bandit-report.json
+          if-no-files-found: ignore
 
   trivy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
     steps:
-      - uses: actions/checkout@v4
-      - uses: aquasecurity/trivy-action@master
+      - uses: actions/checkout@v5
+      - uses: aquasecurity/trivy-action@0.36.0
         with:
           scan-type: "fs"
+          scan-ref: "."
           format: "sarif"
           output: "trivy-results.sarif"
-      - uses: github/codeql-action/upload-sarif@v3
+          severity: "CRITICAL,HIGH"
+          exit-code: "1"
+      - uses: github/codeql-action/upload-sarif@v4
+        if: always() && hashFiles('trivy-results.sarif') != ''
+        continue-on-error: true
         with:
           sarif_file: "trivy-results.sarif"
 
   pip-audit:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.11"
-      - run: pip install pip-audit && pip-audit -r requirements.txt
+      # Match GitLab: audit the locked export, not a stale requirements.txt.
+      - run: |
+          pip install --no-cache-dir uv pip-audit
+          uv export --no-dev --no-emit-project --no-hashes --output-file /tmp/c4reqber-audit.txt
+          pip-audit --requirement /tmp/c4reqber-audit.txt --no-deps --disable-pip --progress-spinner off

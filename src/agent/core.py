@@ -273,14 +273,28 @@ You are an AI research and engineering assistant with deep access to the c4reqbe
         provider = self.config.provider
         try:
             from pydantic_ai import Agent
-            from pydantic_ai.models.openai import OpenAIModel
 
-            model = OpenAIModel(  # type: ignore[call-overload]
-                model_name=provider.model,
-                base_url=provider.api_base,
-                api_key=get_key("openrouter")
-                or os.environ.get("OPENROUTER_API_KEY", ""),  # central first
-            )
+            api_key = get_key("openrouter") or os.environ.get("OPENROUTER_API_KEY", "")
+            # pydantic-ai 2.x renamed OpenAIModel → OpenAIChatModel + OpenAIProvider.
+            try:
+                from pydantic_ai.models.openai import OpenAIChatModel
+                from pydantic_ai.providers.openai import OpenAIProvider
+
+                model = OpenAIChatModel(
+                    provider.model,
+                    provider=OpenAIProvider(
+                        base_url=provider.api_base,
+                        api_key=api_key,
+                    ),
+                )
+            except ImportError:  # pydantic-ai <2
+                from pydantic_ai.models.openai import OpenAIModel  # type: ignore[attr-defined]
+
+                model = OpenAIModel(  # type: ignore[call-overload]
+                    model_name=provider.model,
+                    base_url=provider.api_base,
+                    api_key=api_key,
+                )
 
             # Build system prompt from first message
             system = messages[0]["content"] if messages and messages[0]["role"] == "system" else ""

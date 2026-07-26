@@ -110,4 +110,4 @@ arviz>=0.14.0 # optional
 
 # LLM
 anthropic>=0.7.0
-pydantic-ai>=0.0.30
+pydantic-ai>=0.8.0,<2.0.0

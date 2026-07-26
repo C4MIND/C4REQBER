@@ -2,7 +2,7 @@
 
 **Terminal-first. MCP-native. One command to discovery.**
 
-> **Repositories:** Canonical source — [GitLab](https://gitlab.com/cognitive-functors/c4reqber). Read-only mirror — [GitHub](https://github.com/C4MIND/C4REQBER). **Site:** [cognitive-functors.gitlab.io/c4reqber](https://cognitive-functors.gitlab.io/c4reqber/). Issues and development on GitLab only.
+> **Repositories:** Canonical source — [GitLab](https://gitlab.com/cognitive-functors/c4reqber). Read-only mirror — [GitHub](https://github.com/C4MIND/C4REQBER). **Site:** [cognitive-functors.gitlab.io/c4reqber](https://cognitive-functors.gitlab.io/c4reqber/). Issues and development on GitLab only. **CI source of truth is GitLab** (`.gitlab-ci.yml`); GitHub Actions on the mirror are light promotion checks only (not the full test gate).
 
 [![Tests](https://img.shields.io/badge/tests-10078%20collected-yellowgreen)]()
 [![Lint](https://img.shields.io/badge/lint-41%20baseline%20%2B%20regression%20check-yellow)]()

@@ -68,7 +68,8 @@ class RedisCache:
         """Connect."""
         redis_url = os.getenv("REDIS_URL", "redis://localhost:6379")
         self.client = redis.from_url(  # type: ignore[no-untyped-call]
-            redis_url, decode_responses=True)
+            redis_url, decode_responses=True
+        )
 
     async def disconnect(self) -> None:
         if self.client:
@@ -129,28 +130,46 @@ class CacheManager:
     def __init__(self) -> None:
         self._backend: MemoryCache | RedisCache | None = None
         self._use_redis = os.getenv("CACHE_BACKEND", "memory").lower() == "redis"
+        # True when CACHE_BACKEND=redis but we fell back to memory (not healthy Redis)
+        self.degraded: bool = False
+        self.backend_name: str = "none"
 
     async def connect(self) -> None:
         """Connect."""
+        self.degraded = False
         if self._use_redis and HAS_REDIS:
             try:
                 redis_cache = RedisCache()
                 await redis_cache.connect()
                 if await redis_cache.ping():
                     self._backend = redis_cache
+                    self.backend_name = "redis"
                     return
             except (OSError, ConnectionError, TimeoutError):
                 pass
-        # Fallback to memory
+            # Wanted Redis but could not connect — memory fallback is degraded
+            self.degraded = True
+            self._backend = MemoryCache()
+            self.backend_name = "memory_fallback"
+            return
+        if self._use_redis and not HAS_REDIS:
+            self.degraded = True
+            self._backend = MemoryCache()
+            self.backend_name = "memory_fallback"
+            return
+        # Explicit memory backend
         self._backend = MemoryCache()
+        self.backend_name = "memory"
 
     async def disconnect(self) -> None:
         if isinstance(self._backend, RedisCache):
             await self._backend.disconnect()
 
     async def ping(self) -> bool:
-        """Ping."""
+        """Ping — False when Redis was requested but we are on memory fallback."""
         if not self._backend:
+            return False
+        if self.degraded:
             return False
         return await self._backend.ping()
 

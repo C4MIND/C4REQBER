@@ -413,11 +413,13 @@ def blast_simulate(
         return
 
     from src.simulations.runner_v2 import get_runner_v2
+    from src.utils.honesty_status import outer_status_from_sim_payload
 
     runner = get_runner_v2()
     hyp = {"text": hypothesis} if hypothesis else {}
     result = runner.run(engine, hyp)
-    status = result.get("status") if isinstance(result, dict) else getattr(result, "status", "?")
+    payload = result if isinstance(result, dict) else {"status": getattr(result, "status", "?")}
+    outer = outer_status_from_sim_payload(payload)
     console.print(
         json.dumps(
             result if isinstance(result, dict) else {"result": str(result)},
@@ -425,7 +427,8 @@ def blast_simulate(
             default=str,
         )
     )
-    if str(status).lower() in {"unavailable", "failed", "error", "skipped"} or (
+    # Same honesty gate as MCP c4_simulate — fallback engine_truth → exit 2
+    if outer in {"unavailable", "error", "partial"} or (
         isinstance(result, dict) and result.get("stub")
     ):
         raise typer.Exit(2)

@@ -1,4 +1,5 @@
 """c4reqber: Zenodo REST API Client — deposit, upload, publish, get DOI."""
+
 from __future__ import annotations
 
 import os
@@ -38,10 +39,21 @@ class ZenodoClient:
 
     # ── Core API ────────────────────────────────────────────────────
 
-    async def create_deposit(self, title: str, description: str = "", creators: list[dict[str, str]] | None = None, **meta: Any) -> dict[str, Any]:
+    async def create_deposit(
+        self,
+        title: str,
+        description: str = "",
+        creators: list[dict[str, str]] | None = None,
+        **meta: Any,
+    ) -> dict[str, Any]:
         """Create a new deposit. Returns deposit JSON with ``id``."""
         if self.dry_run:
-            return {"id": "dry-run-1", "doi": "10.5281/zenodo.dry-run", "title": title, "_dry_run": True}
+            return {
+                "id": "dry-run-1",
+                "title": title,
+                "status": "dry_run",
+                "_dry_run": True,
+            }
 
         payload: dict[str, Any] = {
             "metadata": {
@@ -57,7 +69,11 @@ class ZenodoClient:
     async def upload_file(self, deposit_id: str, filepath: Path) -> dict[str, Any]:
         """Upload a file to an existing deposit."""
         if self.dry_run:
-            return {"filename": filepath.name, "filesize": filepath.stat().st_size if filepath.exists() else 0, "_dry_run": True}
+            return {
+                "filename": filepath.name,
+                "filesize": filepath.stat().st_size if filepath.exists() else 0,
+                "_dry_run": True,
+            }
 
         if not filepath.exists():
             return {"error": f"File not found: {filepath}"}
@@ -74,12 +90,18 @@ class ZenodoClient:
         """Update deposit metadata."""
         if self.dry_run:
             return {"id": deposit_id, "_dry_run": True}
-        return await self._request("PUT", f"/deposit/depositions/{deposit_id}", json={"metadata": meta})
+        return await self._request(
+            "PUT", f"/deposit/depositions/{deposit_id}", json={"metadata": meta}
+        )
 
     async def publish(self, deposit_id: str) -> dict[str, Any]:
         """Publish a deposit. Returns published record with DOI."""
         if self.dry_run:
-            return {"id": deposit_id, "doi": f"10.5281/zenodo.{deposit_id}.dry-run", "conceptdoi": f"10.5281/zenodo.{deposit_id}", "_dry_run": True}
+            return {
+                "id": deposit_id,
+                "status": "dry_run",
+                "_dry_run": True,
+            }
 
         result = await self._request("POST", f"/deposit/depositions/{deposit_id}/actions/publish")
         return result
@@ -99,18 +121,30 @@ class ZenodoClient:
 
     # ── High-level flow ─────────────────────────────────────────────
 
-    async def publish_preprint(self, title: str, filepath: Path, description: str = "", creators: list[dict[str, str]] | None = None) -> dict[str, Any]:
+    async def publish_preprint(
+        self,
+        title: str,
+        filepath: Path,
+        description: str = "",
+        creators: list[dict[str, str]] | None = None,
+    ) -> dict[str, Any]:
         """Full flow: create deposit → upload file → publish → return DOI."""
         if not self.configured and not self.dry_run:
-            return {"error": "ZENODO_ACCESS_TOKEN not configured. Get token: https://zenodo.org/account/settings/applications/"}
+            return {
+                "error": "ZENODO_ACCESS_TOKEN not configured. Get token: https://zenodo.org/account/settings/applications/"
+            }
 
         # 1. Check for existing deposit with same title
-        existing = await self.list_deposits(query=f"title:\"{title[:100]}\"")
+        existing = await self.list_deposits(query=f'title:"{title[:100]}"')
         if existing:
             for dep in existing:
                 if dep.get("title", "").lower() == title.lower():
-                    return {"status": "exists", "doi": dep.get("doi", ""), "id": dep.get("id", ""),
-                            "message": "Deposit with this title already exists. Use update or skip."}
+                    return {
+                        "status": "exists",
+                        "doi": dep.get("doi", ""),
+                        "id": dep.get("id", ""),
+                        "message": "Deposit with this title already exists. Use update or skip.",
+                    }
 
         # 2. Create
         dep = await self.create_deposit(title=title, description=description, creators=creators)
@@ -148,15 +182,15 @@ class ZenodoClient:
                     if resp.status_code in (200, 201, 202):
                         return resp.json() if resp.text else {"status": "ok"}
                     if resp.status_code == 429:
-                        wait = min(2 ** attempt, 30)
+                        wait = min(2**attempt, 30)
                         time.sleep(wait)
                         continue
                     return {"error": f"HTTP {resp.status_code}: {resp.text[:200]}"}
             except httpx.TimeoutException:
                 last_error = "timeout"
-                time.sleep(2 ** attempt)
+                time.sleep(2**attempt)
             except Exception as e:
                 last_error = str(e)
                 if attempt < max_retries - 1:
-                    time.sleep(2 ** attempt)
+                    time.sleep(2**attempt)
         return {"error": f"Zenodo API failed after {max_retries} retries: {last_error}"}

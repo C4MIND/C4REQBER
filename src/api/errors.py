@@ -4,6 +4,7 @@ c4reqber: Centralized API error handling
 Provides a unified error response schema and exception handler
 for all v8 (and future) API routers.
 """
+
 from __future__ import annotations
 
 import os
@@ -14,7 +15,10 @@ from fastapi.responses import JSONResponse
 
 
 def _is_dev_mode() -> bool:
-    return os.getenv("DEV_MODE", "").lower() in ("1", "true", "yes")
+    """Detail leak only with DEV_MODE + bypass token (same gate as auth bypass)."""
+    if os.getenv("DEV_MODE", "").lower() not in ("1", "true", "yes"):
+        return False
+    return bool(os.getenv("DEV_MODE_BYPASS_TOKEN", "").strip())
 
 
 class C4APIError(Exception):
@@ -61,7 +65,9 @@ class ExternalServiceError(C4APIError):
     """Upstream service failed."""
 
     def __init__(self, message: str, detail: dict[str, Any] | None = None) -> None:
-        super().__init__(message, status_code=502, detail=detail, error_code="external_service_error")
+        super().__init__(
+            message, status_code=502, detail=detail, error_code="external_service_error"
+        )
 
 
 async def c4_api_exception_handler(request: Request, exc: Exception) -> JSONResponse:

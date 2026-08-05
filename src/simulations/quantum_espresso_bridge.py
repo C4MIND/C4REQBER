@@ -41,7 +41,17 @@ class QuantumEspressoBridge(BaseSimulationAdapter):
         def _run(data: dict[str, Any]) -> dict[str, Any]:
             input_file = data.get("input_file") or self._params.get("input_file")
             if input_file:
-                return self._run_pw_x(Path(str(input_file)).expanduser().resolve())
+                try:
+                    from src.utils.security_middleware import validate_sim_path
+
+                    return self._run_pw_x(validate_sim_path(str(input_file)))
+                except ValueError as exc:
+                    return {
+                        "status": "unavailable",
+                        "stub": True,
+                        "executed": False,
+                        "note": str(exc),
+                    }
 
             # AiiDA path only when explicitly requested with builder kwargs
             if data.get("use_aiida") or self._params.get("use_aiida"):

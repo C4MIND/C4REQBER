@@ -184,9 +184,17 @@ class DissertationGenerator:
                 ]
             )
 
-        # Simulation text
+        # Simulation text — only narrate REAL evidence when honesty status is success
         sim_text = ""
-        if simulation and simulation.get("status") == "success":
+        sim_ok = (
+            simulation
+            and simulation.get("status") == "success"
+            and not simulation.get("stub")
+            and not simulation.get("heuristic")
+            and not str(simulation.get("engine_truth") or "").startswith("not_")
+            and "fallback" not in str(simulation.get("engine_truth") or "").lower()
+        )
+        if sim_ok and simulation is not None:
             sim_text = f"""
 **Computational Simulation ({_sanitize_prompt_input(simulation.get("pattern_id", "N/A"), 100)}):**
 - Status: {_sanitize_prompt_input(str(simulation["status"]), 50)}
@@ -195,6 +203,11 @@ class DissertationGenerator:
 
 *⚠️ These are computational predictions, not empirical findings.*
 """
+        elif simulation is not None and simulation.get("status") in {"partial", "delegated"}:
+            sim_text = (
+                f"*Simulation status={simulation.get('status')} "
+                f"(fallback/heuristic/delegated) — not treated as computational evidence.*"
+            )
         else:
             sim_text = "*Computational simulation was not performed for this proposal. Future work should include numerical validation of the proposed hypotheses.*"
 

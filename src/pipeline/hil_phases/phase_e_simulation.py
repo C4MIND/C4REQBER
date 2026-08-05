@@ -118,19 +118,37 @@ class PhaseE_SimulationVerification:
                     interp = f"{pattern_id} delegated to remote GPU (vast.ai / NVIDIA Brev)"
                     print(f"      ✓ Simulation DELEGATED: {pattern_id} → remote GPU")
                 else:
-                    sim_status = "success"
-                    interp = f"{pattern_id} executed successfully in {exec_time:.2f}s."
-                    print(f"      ✓ REAL simulation complete: {pattern_id} ({exec_time:.2f}s)")
+                    from src.utils.honesty_status import outer_status_from_sim_payload
+
+                    # Merge bridge payload so engine_truth / fallback demote success
+                    honesty_payload = {
+                        **(result_data if isinstance(result_data, dict) else {}),
+                        "status": status,
+                        "engine": pattern_id,
+                    }
+                    sim_status = outer_status_from_sim_payload(honesty_payload)
+                    if sim_status == "success":
+                        interp = f"{pattern_id} executed successfully in {exec_time:.2f}s."
+                        print(f"      ✓ REAL simulation complete: {pattern_id} ({exec_time:.2f}s)")
+                    else:
+                        interp = (
+                            f"{pattern_id} finished with honesty status={sim_status} "
+                            f"(fallback/heuristic ≠ success)"
+                        )
+                        print(f"      ◐ Simulation {sim_status}: {pattern_id}")
 
                 return {
                     "pattern_id": pattern_id,
                     "parameters": params,
                     "status": sim_status,
-                    "stub": False,
-                    "executed": True,
+                    "stub": sim_status in {"unavailable", "error"},
+                    "executed": sim_status in {"success", "partial", "delegated"},
                     "metrics": metrics,
                     "raw_output": json.dumps(result_data, indent=2, default=str)[:500],
                     "interpretation": interp,
+                    "engine_truth": (
+                        result_data.get("engine_truth") if isinstance(result_data, dict) else None
+                    ),
                 }
             else:
                 error_msg = raw_result.get("error", "Unknown error")

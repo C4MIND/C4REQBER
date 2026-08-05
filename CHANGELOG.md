@@ -2,7 +2,18 @@
 
 > **Русская версия:** [CHANGELOG.ru.md](CHANGELOG.ru.md)
 
-## Unreleased — Wave-4 paranoid honesty / security (15–25 cycles)
+## Unreleased — Wave-5/6 dual-path honesty (Post–Wave-4 Audit Program)
+
+- **W5a TUI/SSE:** `sse_engine_status_from_sim_payload` shared mapper; discovery SSE + Go `simStatusString` demote `not_*` / stub / heuristic (no green on Newton NumPy / AMUSE→Rebound)
+- **W5b health:** orphan `src/api/health.py` → re-export routers SSOT; `docker-compose.yml` probe `/api/v1/health`
+- **W5c/d sims:** QE/Vina/LAMMPS `validate_sim_path`; `blast simulate` exit via `outer_status_from_sim_payload`
+- **W5e verify:** CVC5 `sat` ≠ `valid` (satisfiable flag only; unsat = valid)
+- **W5f Redis:** CacheManager/RateLimiter `degraded` + `memory_fallback` when Redis requested but down
+- **W5g Pages:** landing en.json API title → v5.7.8; capabilities “probe for availability”
+- **W6:** phase_e + dissertation honesty gates; agent `gather_flash_sources`; Zenodo dry-run omits DOI; cost reset on flash/turbo/MCP; DEV_MODE detail leak needs bypass token; flash surface defaults documented
+- **Tests:** `tests/test_deep_audit_wave5.py`
+
+### Unreleased — Wave-4 paranoid honesty / security (15–25 cycles)
 
 Deep audit wave after AISI flash fix. Fail-closed celebration, path/DOI quoting, dual-path auth, no dry-run green-fakes.
 

@@ -40,6 +40,12 @@ func TestSimStatusString(t *testing.T) {
 		{api.TypedEvent{Type: api.EventSimFinished, EngineStatus: "error"}, "error"},
 		{api.TypedEvent{Type: api.EventSimFinished, EngineStatus: "partial"}, "partial"},
 		{api.TypedEvent{Type: api.EventSimFinished}, "partial"}, // empty ≠ success
+		// I6: green engine_status demoted by provenance
+		{api.TypedEvent{Type: api.EventSimFinished, EngineStatus: "ok", EngineTruth: "not_newton_physics"}, "partial"},
+		{api.TypedEvent{Type: api.EventSimFinished, EngineStatus: "ok", EngineTruth: "rebound_not_amuse"}, "partial"},
+		{api.TypedEvent{Type: api.EventSimFinished, EngineStatus: "ok", EngineTruth: "legacy_fallback"}, "partial"},
+		{api.TypedEvent{Type: api.EventSimFinished, EngineStatus: "ok", Heuristic: true}, "partial"},
+		{api.TypedEvent{Type: api.EventSimFinished, EngineStatus: "ok", Stub: true}, "unavailable"},
 		{api.TypedEvent{Type: api.EventSimSkipped}, "skipped"},
 		{api.TypedEvent{Type: api.EventSimSkipped, EngineStatus: "error"}, "error"},
 		{api.TypedEvent{Type: api.EventSimBudgetExceeded}, "budget_exceeded"},

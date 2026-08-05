@@ -216,6 +216,13 @@ async def run_flash(
     except Exception as exc:
         logger.debug("run_flash apply_config_to_env: %s", exc)
 
+    try:
+        from src.llm.cost_tracker import get_cost_tracker
+
+        get_cost_tracker().reset()
+    except Exception as exc:
+        logger.debug("run_flash cost_tracker reset: %s", exc)
+
     from src.knowledge.flash_sources import format_source_card, gather_flash_sources
     from src.knowledge.orchestrator import source_names_from_result
     from src.llm.gateway import get_gateway

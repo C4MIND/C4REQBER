@@ -217,6 +217,12 @@ def cmd_turbo(
 ) -> None:
     """Generate paradigm-shifting research proposal."""
     _ensure_cli_ready()
+    try:
+        from src.llm.cost_tracker import get_cost_tracker
+
+        get_cost_tracker().reset()
+    except Exception:
+        pass
     if dry_run:
         console.print("[bold yellow]DRY RUN — no execution[/]")
         console.print(f"  Topic: {topic[:60]}")

@@ -3,6 +3,7 @@
 
 Install: pip install lammps
 """
+
 from __future__ import annotations
 
 import logging
@@ -55,6 +56,34 @@ class LammpsBridge(BaseSimulationAdapter):
                     "potential_energy": pe,
                     "note": "LJ melt demo completed 10 steps",
                 }
-            return {"lammps_version": version, "note": "custom input_script mode"}
+            script = data.get("input_script")
+            # Only accept filesystem scripts under the sim allowlist
+            if isinstance(script, str) and (
+                "/" in script or "\\" in script or script.endswith(".lmp")
+            ):
+                try:
+                    from src.utils.security_middleware import validate_sim_path
+
+                    safe = validate_sim_path(script)
+                    lmp.file(str(safe))
+                    return {
+                        "lammps_version": version,
+                        "executed": True,
+                        "input_script": str(safe),
+                        "note": "custom input_script executed",
+                    }
+                except ValueError as exc:
+                    return {
+                        "status": "unavailable",
+                        "stub": True,
+                        "executed": False,
+                        "note": str(exc),
+                    }
+            return {
+                "status": "partial",
+                "lammps_version": version,
+                "executed": False,
+                "note": "custom input_script mode without validated path — not executed",
+            }
 
         return self._run_wrapped(_run, input_data)

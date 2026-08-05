@@ -2,6 +2,7 @@
 
 Verifies SMT-LIB2 specifications via the cvc5 binary.
 """
+
 from __future__ import annotations
 
 import os
@@ -67,6 +68,7 @@ class CVC5Client:
             status = self._extract_sat_status(stdout, stderr)
             return {
                 "valid": valid,
+                "satisfiable": status == "sat",
                 "output": (stdout + stderr)[:500],
                 "language": "cvc5",
                 "status": status,
@@ -113,13 +115,15 @@ class CVC5Client:
 
     @staticmethod
     def _parse_result(stdout: str, stderr: str, returncode: int) -> bool:
+        """``sat`` is satisfiable, not formally verified (HONESTY: Z3/CVC5 sat ≠ verified).
+
+        Only ``unsat`` (refutation of negation / unsatisfiable claim) counts as valid.
+        """
         status = CVC5Client._extract_sat_status(stdout, stderr)
-        if status in ("sat", "unsat"):
+        if status == "unsat":
             return returncode == 0
-        combined = (stdout + stderr).lower()
-        if "error" in combined or "parse error" in combined:
-            return False
-        return returncode == 0 and status != "unknown"
+        # sat / unknown / error → not a proof
+        return False
 
     @staticmethod
     def _first_error(stdout: str, stderr: str, status: str) -> str:

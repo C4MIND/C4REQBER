@@ -104,6 +104,12 @@ async def blast_turbo(
     """
     try:
         _mcp_ready()
+        try:
+            from src.llm.cost_tracker import get_cost_tracker
+
+            get_cost_tracker().reset()
+        except Exception as exc:
+            logger.debug("blast_turbo cost reset: %s", exc)
         from src.core.profile_manager import UserProfileManager
         from src.pipeline.hil_pipeline import HILDiscoveryPipeline
 

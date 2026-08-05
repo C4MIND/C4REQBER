@@ -106,9 +106,11 @@ def test_docker_compose_test_uses_real_dockerfile() -> None:
 
 
 def test_health_liveness_not_memory_greenfake() -> None:
-    src = Path("src/api/health.py").read_text(encoding="utf-8")
-    assert "process_alive" in src
+    # SSOT is mounted routers.health (/api/v1/health*); orphan is a shim
+    src = Path("src/api/routers/health.py").read_text(encoding="utf-8")
     assert '"memory": True' not in src
+    shim = Path("src/api/health.py").read_text(encoding="utf-8")
+    assert "routers.health" in shim
 
 
 def test_opencitations_quotes_doi() -> None:

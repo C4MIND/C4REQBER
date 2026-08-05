@@ -64,6 +64,22 @@ _COMPUTE_EVIDENCE_KEYS = frozenset(
 )
 
 
+def sse_engine_status_from_sim_payload(result: Any) -> str:
+    """Map sim payload → SSE ``engine_status`` (shared by discovery emitters + MCP).
+
+    Uses :func:`outer_status_from_sim_payload` so TUI never sees green ``ok``
+    for Newton NumPy / AMUSE→Rebound / legacy_fallback stubs.
+    """
+    outer = outer_status_from_sim_payload(result if isinstance(result, dict) else {})
+    if outer == "success":
+        return "ok"
+    if outer == "error":
+        return "error"
+    if outer == "unavailable":
+        return "unavailable"
+    return "partial"
+
+
 def outer_status_from_sim_payload(result: Any) -> str:
     """Map PatternRunner / bridge payload → outer status."""
     if not isinstance(result, dict):

@@ -366,21 +366,30 @@ async def run_relevant_simulation(domain: str, hypothesis: dict[str, Any]) -> di
                         "hypothesis": hypothesis.get("text", "")[:100],
                     }
                 )
+                from src.utils.honesty_status import outer_status_from_sim_payload
+
                 data = getattr(sim, "data", None) or {}
                 if not isinstance(data, dict):
                     data = {}
                 status = getattr(sim, "status", "unavailable")
                 status_s = str(status).lower()
-                is_stub = (
-                    status_s in {"unavailable", "error", "partial", "failed"}
-                    or data.get("stub") is True
-                    or data.get("executed") is False
-                    or data.get("engine_truth") == "not_newton_physics"
-                )
-                results[pid] = {
+                payload = {
                     "status": status_s,
+                    "stub": data.get("stub") is True,
+                    "heuristic": bool(data.get("heuristic")),
+                    "backend": data.get("backend"),
+                    "engine": "newton",
+                    "engine_truth": data.get("engine_truth"),
+                    "executed": bool(data.get("executed")),
+                    "accelerated": data.get("accelerated"),
+                    "data": data,
+                }
+                outer = outer_status_from_sim_payload(payload)
+                is_stub = outer in {"unavailable", "error"} or payload["stub"]
+                results[pid] = {
+                    "status": outer if outer != "success" else status_s,
                     "stub": is_stub,
-                    "executed": bool(data.get("executed")) and not is_stub,
+                    "executed": bool(data.get("executed")) and outer == "success",
                     "backend": data.get("backend"),
                     "engine_truth": data.get("engine_truth"),
                     "final_state": data.get("note") or status_s,

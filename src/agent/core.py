@@ -343,10 +343,45 @@ You are an AI research and engineering assistant with deep access to the c4reqbe
             return {"result": msg, "messages": [{"role": "assistant", "content": msg}]}
 
         def knowledge_search(state: AgentState):
-            msg = self._call_llm(
-                [{"role": "user", "content": f"Search knowledge for: {user_input}"}]
-            )
-            return {"result": msg, "messages": [{"role": "assistant", "content": msg}]}
+            # I7: never LLM-hallucinate literature — real gather or honest unavailable
+            try:
+                import asyncio
+
+                from src.knowledge.flash_sources import gather_flash_sources
+
+                papers, _ctx, meta = asyncio.run(
+                    gather_flash_sources(user_input, deep=False, verify=True)
+                )
+                if not papers:
+                    msg = (
+                        "Knowledge search unavailable or empty "
+                        "(no verified/checkable papers returned)."
+                    )
+                    return {
+                        "result": msg,
+                        "status": "partial",
+                        "search_meta": meta,
+                        "messages": [{"role": "assistant", "content": msg}],
+                    }
+                lines = [
+                    f"- {p.get('title', '?')[:120]} ({p.get('source', '?')})"
+                    for p in papers[:8]
+                    if isinstance(p, dict)
+                ]
+                msg = "Knowledge search results:\n" + "\n".join(lines)
+                return {
+                    "result": msg,
+                    "status": "success",
+                    "search_meta": meta,
+                    "messages": [{"role": "assistant", "content": msg}],
+                }
+            except Exception as exc:
+                msg = f"Knowledge search unavailable: {type(exc).__name__}"
+                return {
+                    "result": msg,
+                    "status": "unavailable",
+                    "messages": [{"role": "assistant", "content": msg}],
+                }
 
         def solve_pipeline(state: AgentState):
             msg = self._call_llm([{"role": "user", "content": f"Solve problem: {user_input}"}])

@@ -62,6 +62,10 @@ type TypedEvent struct {
 	FallbackUsed   string      `json:"fallback_used,omitempty"`
 	PatternsTried  []string    `json:"patterns_tried,omitempty"`
 	Evidence       interface{} `json:"evidence,omitempty"`
+	// Honesty provenance (I6) — demote green even if engine_status says ok
+	Stub         bool   `json:"stub,omitempty"`
+	Heuristic    bool   `json:"heuristic,omitempty"`
+	EngineTruth  string `json:"engine_truth,omitempty"`
 
 	// Generic
 	Status string                 `json:"status,omitempty"`

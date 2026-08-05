@@ -651,6 +651,11 @@ async def run_relevant_simulation(
                         "hypothesis": hypothesis.get("text", "")[:100],
                     },
                 )
+                from src.utils.honesty_status import (
+                    outer_status_from_sim_payload,
+                    sse_engine_status_from_sim_payload,
+                )
+
                 status = sim_result.status if hasattr(sim_result, "status") else "unavailable"
                 if hasattr(status, "value"):
                     status = status.value
@@ -659,22 +664,28 @@ async def run_relevant_simulation(
                 if not isinstance(data, dict):
                     data = {}
                 backend = data.get("backend") or data.get("engine_truth") or engine
-                is_stub = (
-                    status_s in {"unavailable", "simulated", "error", "partial"}
-                    or bool(getattr(sim_result, "stub", False))
-                    or bool(data.get("stub"))
-                    or data.get("engine_truth") == "not_newton_physics"
-                )
-                is_heuristic = bool(data.get("heuristic")) or (
-                    data.get("engine_truth") == "not_newton_physics"
-                )
+                payload = {
+                    "status": status_s,
+                    "stub": bool(getattr(sim_result, "stub", False)) or bool(data.get("stub")),
+                    "heuristic": bool(data.get("heuristic")),
+                    "backend": backend,
+                    "engine": engine,
+                    "engine_truth": data.get("engine_truth"),
+                    "executed": bool(data.get("executed")),
+                    "accelerated": data.get("accelerated"),
+                    "data": data,
+                }
+                outer = outer_status_from_sim_payload(payload)
+                is_stub = outer in {"unavailable", "error"} or bool(payload["stub"])
+                is_heuristic = bool(payload["heuristic"]) or outer == "partial"
+                engine_status = sse_engine_status_from_sim_payload(payload)
                 final_state = (
                     str(sim_result.final_state)[:200]
                     if hasattr(sim_result, "final_state") and sim_result.final_state is not None
                     else data.get("note") or status_s
                 )
                 results[pid] = {
-                    "status": status_s,
+                    "status": outer if outer != "success" else status_s,
                     "final_state": final_state,
                     "time_steps": getattr(sim_result, "time_steps", 0),
                     "stub": is_stub,
@@ -692,11 +703,10 @@ async def run_relevant_simulation(
                             "engine": backend if backend != engine else engine,
                             "pattern": pid,
                             "verdict": status_s,
-                            "engine_status": "ok"
-                            if status_s in {"completed", "success"} and not is_stub
-                            else status_s,
+                            "engine_status": engine_status,
                             "stub": is_stub,
                             "heuristic": is_heuristic,
+                            "engine_truth": data.get("engine_truth"),
                             "backend": backend,
                         },
                     )

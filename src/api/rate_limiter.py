@@ -2,6 +2,7 @@
 C4REQBER API: Rate Limiter
 API protection with Redis-backed sliding window + WebSocket rate limiter.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -14,6 +15,7 @@ from typing import Any
 
 try:
     import redis.asyncio as redis
+
     _REDIS_AVAILABLE = True
 except (ImportError, ModuleNotFoundError):  # pragma: no cover
     _REDIS_AVAILABLE = False
@@ -35,12 +37,21 @@ class RateLimiter:
         self._redis_url = redis_url or os.getenv("REDIS_URL", "redis://localhost:6379")
         self._redis: Any = None
         self._use_redis = os.getenv("RATE_LIMIT_BACKEND", "memory").lower() == "redis"
+        # Honesty: True when RATE_LIMIT_BACKEND=redis but serving from memory
+        self.degraded: bool = False
+        self.backend_name: str = "memory"
 
     async def _get_redis(self) -> Any:
         """Lazy-connect to Redis."""
         if self._redis is not None:
             return self._redis
-        if not self._use_redis or not _REDIS_AVAILABLE:
+        if not self._use_redis:
+            self.backend_name = "memory"
+            self.degraded = False
+            return None
+        if not _REDIS_AVAILABLE:
+            self.degraded = True
+            self.backend_name = "memory_fallback"
             return None
         try:
             url = self._redis_url or "redis://localhost:6379"
@@ -48,9 +59,13 @@ class RateLimiter:
                 url, decode_responses=True
             )
             await self._redis.ping()
+            self.degraded = False
+            self.backend_name = "redis"
             return self._redis
-        except (ValueError, TypeError):
+        except (ValueError, TypeError, OSError, ConnectionError, TimeoutError):
             self._redis = None
+            self.degraded = True
+            self.backend_name = "memory_fallback"
             return None
 
     async def check_limit(
@@ -65,9 +80,7 @@ class RateLimiter:
             return await self._check_limit_redis(user_id, tier, window_seconds)
         return await self._check_limit_memory(user_id, tier, window_seconds)
 
-    async def _check_limit_redis(
-        self, user_id: str, tier: str, window_seconds: int
-    ) -> bool:
+    async def _check_limit_redis(self, user_id: str, tier: str, window_seconds: int) -> bool:
         now = time.time()
         key = f"rate_limit:{user_id}"
         limit = self.limits.get(tier, 100)
@@ -80,16 +93,12 @@ class RateLimiter:
         count = results[1]
         return count < limit  # type: ignore[no-any-return]
 
-    async def _check_limit_memory(
-        self, user_id: str, tier: str, window_seconds: int
-    ) -> bool:
+    async def _check_limit_memory(self, user_id: str, tier: str, window_seconds: int) -> bool:
         now = time.time()
         with self._lock:
             # Clean old requests and drop empty lists to prevent unbounded growth
             filtered = [
-                req_time
-                for req_time in self.requests[user_id]
-                if now - req_time < window_seconds
+                req_time for req_time in self.requests[user_id] if now - req_time < window_seconds
             ]
             if filtered:
                 self.requests[user_id] = filtered
@@ -166,7 +175,8 @@ class WebSocketRateLimiter:
         if redis_url and _REDIS_AVAILABLE:
             try:
                 self._redis = redis.from_url(  # type: ignore[no-untyped-call]
-            redis_url, decode_responses=True)
+                    redis_url, decode_responses=True
+                )
             except (ValueError, TypeError):
                 self._redis = None
 

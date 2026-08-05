@@ -300,6 +300,8 @@ async def flash_discovery(
     triz_principles = resolve_triz(problem, domain)
 
     await _update_phase(job_id, "C: Gaps", "Grounded flash + sources", 0.35)
+    # Intentional surface default: Discover/TUI flash always gathers sources
+    # (CLI/MCP blast_flash default with_sources=False). Documented in flash_contract.
     flash = await run_flash(
         problem,
         with_sources=True,

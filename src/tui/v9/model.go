@@ -684,6 +684,7 @@ func (m *model) handleSimEvent(te api.TypedEvent) {
 
 // simStatusString maps a typed sim event to the CardSimulation status enum.
 // Only real success (ok/success, not stub/partial/unavailable) paints green.
+// Fail-closed on stub/heuristic/fallback engine_truth (I6 dual-path with Python mapper).
 func simStatusString(te api.TypedEvent) string {
 	switch te.Type {
 	case api.EventSimStarted:
@@ -692,6 +693,18 @@ func simStatusString(te api.TypedEvent) string {
 		}
 		return "running"
 	case api.EventSimFinished:
+		if te.Stub {
+			return "unavailable"
+		}
+		et := strings.ToLower(strings.TrimSpace(te.EngineTruth))
+		fallbackTruth := strings.HasPrefix(et, "not_") ||
+			strings.Contains(et, "_not_") ||
+			strings.HasSuffix(et, "_not") ||
+			strings.Contains(et, "fallback") ||
+			strings.HasPrefix(et, "legacy")
+		if te.Heuristic || fallbackTruth {
+			return "partial"
+		}
 		st := strings.ToLower(strings.TrimSpace(te.EngineStatus))
 		switch st {
 		case "success", "ok", "completed":

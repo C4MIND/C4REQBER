@@ -130,6 +130,11 @@ def source_cards_from_papers(
     }
 
 
+# Surface defaults (intentional asymmetry — do not "fix" without product change):
+# - CLI / MCP ``blast_flash``: ``with_sources=False`` (fast path)
+# - API Discover / TUI Flash job: ``with_sources=True`` (composed grounded answer)
+
+
 def derive_terminal(result_status: str | None) -> tuple[TerminalEventType, str]:
     """Map result.status → (SSE event type, job status value).
 

@@ -3,6 +3,7 @@
 
 Install: conda install -c conda-forge vina  (or)  apt-get install autodock-vina
 """
+
 from __future__ import annotations
 
 import logging
@@ -35,24 +36,44 @@ class VinaBridge(BaseSimulationAdapter):
 
     def run(self, input_data: dict[str, Any] | None = None) -> SimulationResult:
         def _run(data: dict[str, Any]) -> dict[str, Any]:
-            receptor = data.get("receptor_pdbqt", "receptor.pdbqt")
-            ligand = data.get("ligand_pdbqt", "ligand.pdbqt")
+            from src.utils.security_middleware import validate_sim_path
+
+            try:
+                receptor = str(validate_sim_path(data.get("receptor_pdbqt", "receptor.pdbqt")))
+                ligand = str(validate_sim_path(data.get("ligand_pdbqt", "ligand.pdbqt")))
+            except ValueError as exc:
+                return {
+                    "status": "unavailable",
+                    "stub": True,
+                    "executed": False,
+                    "note": str(exc),
+                }
             center = data.get("center", [0.0, 0.0, 0.0])
             size = data.get("size", [20.0, 20.0, 20.0])
             exhaustiveness = data.get("exhaustiveness", 8)
 
             cmd = [
                 "vina",
-                "--receptor", receptor,
-                "--ligand", ligand,
-                "--center_x", str(center[0]),
-                "--center_y", str(center[1]),
-                "--center_z", str(center[2]),
-                "--size_x", str(size[0]),
-                "--size_y", str(size[1]),
-                "--size_z", str(size[2]),
-                "--exhaustiveness", str(exhaustiveness),
-                "--out", "docked.pdbqt",
+                "--receptor",
+                receptor,
+                "--ligand",
+                ligand,
+                "--center_x",
+                str(center[0]),
+                "--center_y",
+                str(center[1]),
+                "--center_z",
+                str(center[2]),
+                "--size_x",
+                str(size[0]),
+                "--size_y",
+                str(size[1]),
+                "--size_z",
+                str(size[2]),
+                "--exhaustiveness",
+                str(exhaustiveness),
+                "--out",
+                "docked.pdbqt",
             ]
             result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
             if result.returncode != 0:

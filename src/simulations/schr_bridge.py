@@ -786,9 +786,10 @@ class SchrBridge:
         Returns speedup metrics for pattern.
         """
         # Refuse fake speedup theater (time.sleep as "legacy").
+        # schr_available must reflect the real probe — never hardcode True.
         return {
             "pattern": pattern_id,
-            "schr_available": True,
+            "schr_available": bool(self._available),
             "device": self._device,
             "legacy_time": None,
             "schr_time": None,

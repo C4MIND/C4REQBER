@@ -156,9 +156,7 @@ class RigidBody(BasePattern, GPUMixin):
             self.bodies.append(body)
 
         # Add ground plane constraint
-        self.constraints.append(
-            {"type": "plane", "normal": np.array([0, 1, 0]), "offset": 0.0}
-        )
+        self.constraints.append({"type": "plane", "normal": np.array([0, 1, 0]), "offset": 0.0})
 
     def _quaternion_derivative(self, q: np.ndarray, omega: np.ndarray) -> np.ndarray:
         """
@@ -315,9 +313,7 @@ class RigidBody(BasePattern, GPUMixin):
 
             # Angular KE
             I_world = self._get_world_inertia(body)
-            kinetic += 0.5 * np.dot(
-                body.angular_velocity, I_world @ body.angular_velocity
-            )
+            kinetic += 0.5 * np.dot(body.angular_velocity, I_world @ body.angular_velocity)
 
             # Gravitational PE
             potential -= body.mass * np.dot(self.config.gravity, body.position)
@@ -331,7 +327,12 @@ class RigidBody(BasePattern, GPUMixin):
         Returns:
             Dictionary with final states, energy history, and constraint violations.
         """
-        from src.simulations.newton_bridge import NewtonBridge
+        from src.simulations.newton_bridge import (
+            NewtonBridge,
+            newton_result_as_dict,
+            newton_result_usable_for_pattern,
+        )
+
         bridge = NewtonBridge()
 
         if bridge.available:
@@ -340,7 +341,9 @@ class RigidBody(BasePattern, GPUMixin):
                 "n_bodies": self.config.n_bodies,
                 "dt": self.config.dt,
                 "n_steps": self.config.n_steps,
-                "gravity": self.config.gravity.tolist() if self.config.gravity is not None else [0.0, -9.81, 0.0],
+                "gravity": self.config.gravity.tolist()
+                if self.config.gravity is not None
+                else [0.0, -9.81, 0.0],
                 "damping": self.config.damping,
                 "use_quaternion": self.config.use_quaternion,
                 "constraint_solver": self.config.constraint_solver,
@@ -349,8 +352,8 @@ class RigidBody(BasePattern, GPUMixin):
             }
             if hypothesis:
                 newton_config.update(hypothesis)
-            result = bridge.run_simulation(newton_config)
-            if result.get("status") == "success":
+            result = newton_result_as_dict(bridge.run_simulation(newton_config))
+            if newton_result_usable_for_pattern(result, pattern_id=self.PATTERN_ID):
                 result["pattern_id"] = self.PATTERN_ID
                 return result
 
@@ -378,9 +381,7 @@ class RigidBody(BasePattern, GPUMixin):
             # Record energy
             if step % 10 == 0:
                 ke, pe, total = self._compute_energy()
-                energies.append(
-                    {"step": step + 1, "kinetic": ke, "potential": pe, "total": total}
-                )
+                energies.append({"step": step + 1, "kinetic": ke, "potential": pe, "total": total})
 
             # Track constraint violations
             violations = 0
@@ -399,9 +400,7 @@ class RigidBody(BasePattern, GPUMixin):
             "final_positions": final_positions,
             "final_velocities": final_velocities,
             "final_quaternions": final_quaternions,
-            "final_angular_velocities": np.array(
-                [b.angular_velocity for b in self.bodies]
-            ),
+            "final_angular_velocities": np.array([b.angular_velocity for b in self.bodies]),
             "trajectory": trajectory,
             "energies": energies,
             "constraint_violations": constraint_violations,

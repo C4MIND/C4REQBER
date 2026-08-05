@@ -33,6 +33,7 @@ logger = logging.getLogger(__name__)
 
 class HeatTransferMode(Enum):
     """HeatTransferMode."""
+
     CONDUCTION = "conduction"
     CONVECTION = "convection"
     RADIATION = "radiation"
@@ -135,12 +136,21 @@ class ThermalPattern(SimulationPattern):
         desc = hypothesis.description.lower()
 
         keywords = [
-            "thermal", "heat", "temperature",
-            "conduction", "convection", "radiation",
-            "cooling", "heating", "heat transfer",
-            "heat equation", "fourier",
-            "thermal conductivity", "diffusivity",
-            "hotspot", "heat sink",
+            "thermal",
+            "heat",
+            "temperature",
+            "conduction",
+            "convection",
+            "radiation",
+            "cooling",
+            "heating",
+            "heat transfer",
+            "heat equation",
+            "fourier",
+            "thermal conductivity",
+            "diffusivity",
+            "hotspot",
+            "heat sink",
         ]
 
         return any(kw in title or kw in desc for kw in keywords)
@@ -153,7 +163,12 @@ class ThermalPattern(SimulationPattern):
         simulation_id = f"thermal_{start_time.timestamp()}"
 
         # Try Newton Physics first
-        from src.simulations.newton_bridge import NewtonBridge
+        from src.simulations.newton_bridge import (
+            NewtonBridge,
+            newton_result_as_dict,
+            newton_result_usable_for_pattern,
+        )
+
         bridge = NewtonBridge()
 
         if bridge.available:
@@ -169,8 +184,8 @@ class ThermalPattern(SimulationPattern):
                 "heat_source": config.get("heat_source", 1000.0),
                 "simulation_time": config.get("simulation_time", 100.0),
             }
-            result = bridge.run_simulation(newton_config)
-            if result.get("status") == "success":
+            result = newton_result_as_dict(bridge.run_simulation(newton_config))
+            if newton_result_usable_for_pattern(result, pattern_id=self.PATTERN_ID):
                 end_time = datetime.now()
                 return SimulationResult(
                     simulation_id=simulation_id,
@@ -223,7 +238,9 @@ class ThermalPattern(SimulationPattern):
                 error_message=str(e),
             )
 
-    async def _steady_state_1d(self, hypothesis: Hypothesis, config: dict[str, Any]) -> dict[str, Any]:
+    async def _steady_state_1d(
+        self, hypothesis: Hypothesis, config: dict[str, Any]
+    ) -> dict[str, Any]:
         """1D steady-state heat conduction"""
 
         N = config.get("grid_size", 50)
@@ -240,10 +257,10 @@ class ThermalPattern(SimulationPattern):
         A = np.zeros((N, N))
         b = np.ones(N) * (-Q / k * dx**2)
 
-        for i in range(1, N-1):
-            A[i, i-1] = 1
+        for i in range(1, N - 1):
+            A[i, i - 1] = 1
             A[i, i] = -2
-            A[i, i+1] = 1
+            A[i, i + 1] = 1
 
         # Boundary conditions (Dirichlet)
         A[0, 0] = 1
@@ -278,7 +295,9 @@ class ThermalPattern(SimulationPattern):
 
         return {"metrics": metrics, "logs": logs}
 
-    async def _steady_state_2d(self, hypothesis: Hypothesis, config: dict[str, Any]) -> dict[str, Any]:
+    async def _steady_state_2d(
+        self, hypothesis: Hypothesis, config: dict[str, Any]
+    ) -> dict[str, Any]:
         """2D steady-state heat conduction"""
 
         N = config.get("grid_size", 50)
@@ -292,10 +311,10 @@ class ThermalPattern(SimulationPattern):
         T = np.ones((N, N)) * 20.0  # Initial guess
 
         # Boundary conditions
-        T[0, :] = 100.0   # Top: hot
-        T[-1, :] = 20.0   # Bottom: cold
-        T[:, 0] = 50.0    # Left
-        T[:, -1] = 50.0   # Right
+        T[0, :] = 100.0  # Top: hot
+        T[-1, :] = 20.0  # Bottom: cold
+        T[:, 0] = 50.0  # Left
+        T[:, -1] = 50.0  # Right
 
         # Iterative solution (Jacobi method)
         tol = 1e-6
@@ -305,11 +324,15 @@ class ThermalPattern(SimulationPattern):
             T_old = T.copy()
 
             # Interior points
-            for i in range(1, N-1):
-                for j in range(1, N-1):
-                    T[i, j] = 0.25 * (T_old[i+1, j] + T_old[i-1, j] +
-                                     T_old[i, j+1] + T_old[i, j-1] +
-                                     Q / k * dx**2)
+            for i in range(1, N - 1):
+                for j in range(1, N - 1):
+                    T[i, j] = 0.25 * (
+                        T_old[i + 1, j]
+                        + T_old[i - 1, j]
+                        + T_old[i, j + 1]
+                        + T_old[i, j - 1]
+                        + Q / k * dx**2
+                    )
 
             if np.max(np.abs(T - T_old)) < tol:
                 break
@@ -321,7 +344,7 @@ class ThermalPattern(SimulationPattern):
             "max_temperature": float(np.max(T)),
             "min_temperature": float(np.min(T)),
             "avg_temperature": float(np.mean(T)),
-            "center_temperature": float(T[N//2, N//2]),
+            "center_temperature": float(T[N // 2, N // 2]),
             "thermal_conductivity": k,
             "grid_size": N,
             "iterations": iteration + 1,
@@ -369,8 +392,8 @@ class ThermalPattern(SimulationPattern):
             T_old = T.copy()
 
             # Interior points (FTCS scheme)
-            for i in range(1, N-1):
-                T[i] = T_old[i] + alpha * dt / dx**2 * (T_old[i+1] - 2*T_old[i] + T_old[i-1])
+            for i in range(1, N - 1):
+                T[i] = T_old[i] + alpha * dt / dx**2 * (T_old[i + 1] - 2 * T_old[i] + T_old[i - 1])
 
             if step % 1000 == 0:
                 await asyncio.sleep(0)
@@ -378,7 +401,7 @@ class ThermalPattern(SimulationPattern):
         metrics = {
             "max_temperature": float(np.max(T)),
             "min_temperature": float(np.min(T)),
-            "final_temperature": float(T[N//2]),
+            "final_temperature": float(T[N // 2]),
             "thermal_diffusivity": float(alpha),
             "time_steps": n_steps,
             "analysis_type": "transient_1d",

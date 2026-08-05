@@ -1,4 +1,5 @@
 """Deep tests for CVC5 SMT-LIB2 client."""
+
 from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
@@ -42,8 +43,9 @@ class TestCVC5Normalization:
 
 
 class TestCVC5Parsing:
-    def test_sat_is_valid(self) -> None:
-        assert CVC5Client._parse_result("sat\n", "", 0) is True
+    def test_sat_is_not_a_proof(self) -> None:
+        """Honesty: sat = satisfiable, not formally verified (valid=False)."""
+        assert CVC5Client._parse_result("sat\n", "", 0) is False
         assert CVC5Client._extract_sat_status("sat", "") == "sat"
 
     def test_unsat_is_valid(self) -> None:
@@ -68,13 +70,13 @@ class TestCVC5ClientMocked:
         assert result["valid"] is False
         assert "not installed" in result["error"].lower()
 
-    def test_verify_sat_success(self) -> None:
+    def test_verify_sat_is_satisfiable_not_verified(self) -> None:
         client = CVC5Client()
         client._available = True
         mock_result = MagicMock(returncode=0, stdout="sat\n", stderr="")
         with patch("src.verification.cvc5_client.safe_subprocess_run", return_value=mock_result):
             result = client.verify(SAT_SMT)
-        assert result["valid"] is True
+        assert result["valid"] is False  # sat ≠ proof
         assert result["status"] == "sat"
         assert result["language"] == "cvc5"
 
@@ -96,14 +98,15 @@ class TestCVC5ClientMocked:
         assert result["valid"] is False
         assert result["error"]
 
-    def test_check_proof_mirrors_verify(self) -> None:
+    def test_check_proof_mirrors_verify_sat_not_success(self) -> None:
         client = CVC5Client()
         client._available = True
         mock_result = MagicMock(returncode=0, stdout="sat\n", stderr="")
         with patch("src.verification.cvc5_client.safe_subprocess_run", return_value=mock_result):
             result = client.check_proof(SAT_SMT)
-        assert result["success"] is True
-        assert result["errors"] == []
+        assert result["success"] is False  # mirrors valid=False for sat
+        assert result["status"] == "sat"
+        assert result["errors"]  # error message present when not a proof
 
 
 @pytest.mark.integration
@@ -113,8 +116,8 @@ class TestCVC5Integration:
         if not client.test_connection():
             pytest.skip("cvc5 not installed")
         result = client.verify(SAT_SMT)
-        assert result["valid"] is True
         assert result["status"] == "sat"
+        assert result["valid"] is False  # honesty: sat ≠ verified
 
     def test_real_cvc5_unsat_if_installed(self) -> None:
         client = CVC5Client()

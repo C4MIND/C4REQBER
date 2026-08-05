@@ -93,6 +93,100 @@ class NewtonResult:
     error_message: str = ""
 
 
+def newton_result_as_dict(nr: NewtonResult | dict[str, Any]) -> dict[str, Any]:
+    """Convert ``NewtonResult`` (or a legacy/mock dict) to pattern dict shape.
+
+    Patterns historically treated ``run_simulation`` as returning a mapping with
+    ``status`` / ``result`` keys. ``run_simulation`` returns a dataclass — call
+    this helper at the boundary instead of using ``.get`` on ``NewtonResult``.
+    Dict inputs (unit-test mocks) are normalized the same way.
+    """
+    if isinstance(nr, dict):
+        data_raw = nr.get("data")
+        data = dict(data_raw) if isinstance(data_raw, dict) else {}
+        metrics_raw = nr.get("metrics")
+        metrics = dict(metrics_raw) if isinstance(metrics_raw, dict) else {}
+        payload = data if data else metrics
+        # Preserve extra mock keys (e.g. displacements) into payload when useful
+        if not payload:
+            payload = {
+                k: v
+                for k, v in nr.items()
+                if k not in {"status", "mode", "execution_time", "error", "error_message", "stub"}
+                and not isinstance(v, (list, tuple))
+            }
+        return {
+            "status": nr.get("status", "error"),
+            "mode": nr.get("mode", ""),
+            "execution_time": nr.get("execution_time", 0.0),
+            "result": payload,
+            "data": data,
+            "metrics": metrics,
+            "error": nr.get("error") or nr.get("error_message") or "",
+            "error_message": nr.get("error_message") or nr.get("error") or "",
+            "stub": bool(nr.get("stub", False)),
+        }
+
+    data = dict(nr.data or {})
+    metrics = dict(nr.metrics or {})
+    # Prefer structured data payload; fall back to metrics for thin results.
+    payload = data if data else metrics
+    mode = nr.mode.value if hasattr(nr.mode, "value") else str(nr.mode)
+    return {
+        "status": nr.status,
+        "mode": mode,
+        "execution_time": nr.execution_time,
+        "result": payload,
+        "data": data,
+        "metrics": metrics,
+        "error": nr.error_message,
+        "error_message": nr.error_message,
+        "stub": bool(payload.get("stub", False)),
+    }
+
+
+# Patterns for which SolverXPBD falling-body / body_count payloads are in-domain.
+_NEWTON_BODY_PATTERNS = frozenset({"rigid_body", "soft_body", "cloth", "n_body"})
+
+
+def newton_result_usable_for_pattern(result: dict[str, Any], *, pattern_id: str = "") -> bool:
+    """True only when Newton returned a real domain success — not a generic XPBD drop.
+
+    SolverXPBD often returns ``status=success`` with ``fell``/``z_final`` body
+    metrics for any ``type=fluid|thermal|...`` config. Painting that as a CFD /
+    thermal / MD completion is a green-fake; patterns must fall through to legacy.
+    Rigid-body-like patterns may legitimately consume body XPBD payloads.
+    """
+    if result.get("status") != "success":
+        return False
+    if result.get("stub") is True:
+        return False
+    payload = result.get("result") or result.get("data") or {}
+    if not isinstance(payload, dict):
+        return False
+    pid = (pattern_id or "").lower()
+    body_ok = pid in _NEWTON_BODY_PATTERNS
+    # Generic falling-body / single-body XPBD probe — not domain physics for CFD/etc.
+    if not body_ok and payload.get("fell") is True:
+        return False
+    if not body_ok and "z_final" in payload and "z0" in payload and "body_count" in payload:
+        domain_markers = (
+            "max_velocity",
+            "velocity_field",
+            "temperature",
+            "pressure",
+            "wave_field",
+            "displacement",
+            "trajectory",
+            "rdf",
+            "energy_drift",
+            "positions_history",
+        )
+        if not any(k in payload for k in domain_markers):
+            return False
+    return True
+
+
 @runtime_checkable
 class PatternProtocol(Protocol):
     """Protocol for pattern objects that can be accelerated."""

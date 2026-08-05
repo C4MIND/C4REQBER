@@ -461,7 +461,7 @@ class TestSchrBridge:
                 "duration": 0.1,
             }
         )
-        assert result["status"] == "success"
+        assert result["status"] == "partial"
 
     def test_schr_run_qed_returns_dict(self):
         """Test run_qed returns dict."""

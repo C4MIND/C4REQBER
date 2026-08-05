@@ -909,7 +909,9 @@ class TestPercolationPattern:
         pattern_cls, _ = patched_percolation
         pattern = pattern_cls()
         h = Hypothesis(title="percolation", description="cluster analysis")
-        result = await pattern.run(h, {})
+        # Product defaults (L=100, 100 realizations) are too heavy for MockArray;
+        # keep a tiny lattice so the path still exercises parse→simulate→COMPLETED.
+        result = await pattern.run(h, {"lattice_size": 4, "n_realizations": 1, "n_p_values": 3})
         assert result.status == SimulationStatus.COMPLETED
 
     def test_find_clusters_union_find_2d(self, patched_percolation):

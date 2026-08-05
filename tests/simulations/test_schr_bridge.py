@@ -1,4 +1,5 @@
 """Tests for src/simulations/schr_bridge.py."""
+
 from __future__ import annotations
 
 import sys
@@ -132,17 +133,19 @@ class TestSchrodingerConfig:
         assert cfg.integrate is True
 
     def test_parse_custom_values(self, bridge_available):
-        cfg = bridge_available._parse_schrodinger_config({
-            "n_points": 256,
-            "domain_size": 20.0,
-            "dt": 0.0005,
-            "duration": 2.0,
-            "potential_type": "barrier",
-            "potential_strength": 5.0,
-            "initial_state": "plane_wave",
-            "boundary_conditions": "reflecting",
-            "integrate": False,
-        })
+        cfg = bridge_available._parse_schrodinger_config(
+            {
+                "n_points": 256,
+                "domain_size": 20.0,
+                "dt": 0.0005,
+                "duration": 2.0,
+                "potential_type": "barrier",
+                "potential_strength": 5.0,
+                "initial_state": "plane_wave",
+                "boundary_conditions": "reflecting",
+                "integrate": False,
+            }
+        )
         assert cfg.n_points == 256
         assert cfg.domain_size == 20.0
         assert cfg.dt == 0.0005
@@ -175,16 +178,18 @@ class TestQEDConfig:
         assert cfg.initial_state == "ground"
 
     def test_parse_custom_values(self, bridge_available):
-        cfg = bridge_available._parse_qed_config({
-            "n_modes": 16,
-            "n_photons_max": 8,
-            "n_levels": 8,
-            "coupling_strength": 2.5,
-            "detuning": 0.5,
-            "dt": 0.005,
-            "duration": 5.0,
-            "initial_state": "excited",
-        })
+        cfg = bridge_available._parse_qed_config(
+            {
+                "n_modes": 16,
+                "n_photons_max": 8,
+                "n_levels": 8,
+                "coupling_strength": 2.5,
+                "detuning": 0.5,
+                "dt": 0.005,
+                "duration": 5.0,
+                "initial_state": "excited",
+            }
+        )
         assert cfg.n_modes == 16
         assert cfg.n_photons_max == 8
         assert cfg.n_levels == 8
@@ -203,11 +208,22 @@ class TestQEDConfig:
 class TestFallbackSchrodinger:
     """Test fallback Schrödinger simulation (no schr/jax)."""
 
-    def test_fallback_integrate_true(self, bridge_unavailable):
-        cfg = SchrodingerConfig(n_points=64, domain_size=10.0, dt=0.01, duration=0.1, integrate=True)
+    def test_fallback_must_not_paint_success(self, bridge_unavailable):
+        """Anti green-fake: NumPy fallback must stay partial, never success."""
+        cfg = SchrodingerConfig(n_points=32, dt=0.01, duration=0.05, integrate=False)
         result = bridge_unavailable._fallback_schrodinger(cfg)
-        assert result["status"] == "success"
+        assert result["status"] == "partial"
+        assert result["status"] != "success"
+        assert result.get("engine_truth") == "not_schr"
+
+    def test_fallback_integrate_true(self, bridge_unavailable):
+        cfg = SchrodingerConfig(
+            n_points=64, domain_size=10.0, dt=0.01, duration=0.1, integrate=True
+        )
+        result = bridge_unavailable._fallback_schrodinger(cfg)
+        assert result["status"] == "partial"
         assert result["engine"] == "schr_fallback"
+        assert result.get("engine_truth") == "not_schr"
         assert result["device"] == "cpu"
         assert "wave_function" in result
         assert "probability_density" in result
@@ -219,37 +235,49 @@ class TestFallbackSchrodinger:
         assert result["potential_type"] == "harmonic"
 
     def test_fallback_integrate_false(self, bridge_unavailable):
-        cfg = SchrodingerConfig(n_points=64, domain_size=10.0, dt=0.01, duration=0.1, integrate=False)
+        cfg = SchrodingerConfig(
+            n_points=64, domain_size=10.0, dt=0.01, duration=0.1, integrate=False
+        )
         result = bridge_unavailable._fallback_schrodinger(cfg)
-        assert result["status"] == "success"
+        assert result["status"] == "partial"
         assert result["engine"] == "schr_fallback"
+        assert result.get("engine_truth") == "not_schr"
         assert "wave_function" in result
         assert "probability_density" in result
         assert "energy" in result
         assert "trajectory" not in result
 
     def test_fallback_well_potential(self, bridge_unavailable):
-        cfg = SchrodingerConfig(potential_type="well", n_points=32, dt=0.01, duration=0.05, integrate=False)
+        cfg = SchrodingerConfig(
+            potential_type="well", n_points=32, dt=0.01, duration=0.05, integrate=False
+        )
         result = bridge_unavailable._fallback_schrodinger(cfg)
-        assert result["status"] == "success"
+        assert result["status"] == "partial"
 
     def test_fallback_barrier_potential(self, bridge_unavailable):
-        cfg = SchrodingerConfig(potential_type="barrier", n_points=32, dt=0.01, duration=0.05, integrate=False)
+        cfg = SchrodingerConfig(
+            potential_type="barrier", n_points=32, dt=0.01, duration=0.05, integrate=False
+        )
         result = bridge_unavailable._fallback_schrodinger(cfg)
-        assert result["status"] == "success"
+        assert result["status"] == "partial"
 
     def test_fallback_custom_potential(self, bridge_unavailable):
-        cfg = SchrodingerConfig(potential_type="custom", n_points=32, dt=0.01, duration=0.05, integrate=False)
+        cfg = SchrodingerConfig(
+            potential_type="custom", n_points=32, dt=0.01, duration=0.05, integrate=False
+        )
         result = bridge_unavailable._fallback_schrodinger(cfg)
-        assert result["status"] == "success"
+        assert result["status"] == "partial"
 
     def test_run_schrodinger_unavailable(self, bridge_unavailable):
         result = bridge_unavailable.run_schrodinger({"n_points": 32, "duration": 0.05})
-        assert result["status"] == "success"
+        assert result["status"] == "partial"
         assert result["engine"] == "schr_fallback"
+        assert result.get("engine_truth") == "not_schr"
 
     def test_run_schrodinger_error_handling(self, bridge_unavailable):
-        with patch.object(bridge_unavailable, "_parse_schrodinger_config", side_effect=TypeError("bad config")):
+        with patch.object(
+            bridge_unavailable, "_parse_schrodinger_config", side_effect=TypeError("bad config")
+        ):
             result = bridge_unavailable.run_schrodinger({})
             assert result["status"] == "error"
             assert "bad config" in result["message"]
@@ -267,8 +295,9 @@ class TestFallbackQED:
     def test_fallback_ground_state(self, bridge_unavailable):
         cfg = QEDConfig(initial_state="ground", duration=0.1, dt=0.01)
         result = bridge_unavailable._fallback_qed(cfg)
-        assert result["status"] == "success"
+        assert result["status"] == "partial"
         assert result["engine"] == "schr_fallback"
+        assert result.get("engine_truth") == "not_schr"
         assert "photon_number" in result
         assert "atomic_population" in result
         assert "entanglement_entropy" in result
@@ -276,30 +305,33 @@ class TestFallbackQED:
     def test_fallback_excited_state(self, bridge_unavailable):
         cfg = QEDConfig(initial_state="excited", duration=0.1, dt=0.01)
         result = bridge_unavailable._fallback_qed(cfg)
-        assert result["status"] == "success"
+        assert result["status"] == "partial"
 
     def test_fallback_coherent_state(self, bridge_unavailable):
         cfg = QEDConfig(initial_state="coherent", duration=0.1, dt=0.01)
         result = bridge_unavailable._fallback_qed(cfg)
-        assert result["status"] == "success"
+        assert result["status"] == "partial"
 
     def test_fallback_zero_detuning(self, bridge_unavailable):
         cfg = QEDConfig(detuning=0.0, duration=0.1, dt=0.01)
         result = bridge_unavailable._fallback_qed(cfg)
-        assert result["status"] == "success"
+        assert result["status"] == "partial"
 
     def test_fallback_nonzero_detuning(self, bridge_unavailable):
         cfg = QEDConfig(detuning=1.0, duration=0.1, dt=0.01)
         result = bridge_unavailable._fallback_qed(cfg)
-        assert result["status"] == "success"
+        assert result["status"] == "partial"
 
     def test_run_qed_unavailable(self, bridge_unavailable):
         result = bridge_unavailable.run_qed({"duration": 0.1, "dt": 0.01})
-        assert result["status"] == "success"
+        assert result["status"] == "partial"
         assert result["engine"] == "schr_fallback"
+        assert result.get("engine_truth") == "not_schr"
 
     def test_run_qed_error_handling(self, bridge_unavailable):
-        with patch.object(bridge_unavailable, "_parse_qed_config", side_effect=TypeError("bad qed")):
+        with patch.object(
+            bridge_unavailable, "_parse_qed_config", side_effect=TypeError("bad qed")
+        ):
             result = bridge_unavailable.run_qed({})
             assert result["status"] == "error"
             assert "bad qed" in result["message"]
@@ -381,7 +413,11 @@ class TestAcceleratePattern:
         mock_pattern.config.t_max = 0.1
         mock_pattern.config.potential = "harmonic"
 
-        with patch.object(bridge_available, "run_schrodinger", return_value={"status": "success"}):
+        with patch.object(
+            bridge_available,
+            "run_schrodinger",
+            return_value={"status": "success", "engine": "schr"},
+        ):
             result = bridge_available.accelerate_pattern(mock_pattern, {"duration": 0.1})
             assert result["accelerated_by"] == "schr"
             assert result["pattern_id"] == "quantum_dynamics_test"
@@ -392,7 +428,9 @@ class TestAcceleratePattern:
         mock_pattern.config.coupling = 1.5
         mock_pattern.config.modes = 4
 
-        with patch.object(bridge_available, "run_qed", return_value={"status": "success"}):
+        with patch.object(
+            bridge_available, "run_qed", return_value={"status": "success", "engine": "schr"}
+        ):
             result = bridge_available.accelerate_pattern(mock_pattern, {})
             assert result["accelerated_by"] == "schr"
 
@@ -416,7 +454,9 @@ class TestExecuteSchrodinger:
     """Test _execute_schrodinger with mocked schr backend."""
 
     def test_execute_schrodinger_integrate_true(self, bridge_available):
-        cfg = SchrodingerConfig(n_points=32, domain_size=10.0, dt=0.01, duration=0.05, integrate=True)
+        cfg = SchrodingerConfig(
+            n_points=32, domain_size=10.0, dt=0.01, duration=0.05, integrate=True
+        )
         mock_solver = MagicMock()
         mock_psi = np.ones(32, dtype=complex) / np.sqrt(32)
         mock_solver.step.return_value = mock_psi
@@ -429,7 +469,9 @@ class TestExecuteSchrodinger:
         mock_jnp = MagicMock()
         mock_jnp.linspace.return_value = np.linspace(-5, 5, 32)
 
-        with patch.dict("sys.modules", {"schr": mock_schr_mod, "jax": MagicMock(), "jax.numpy": mock_jnp}):
+        with patch.dict(
+            "sys.modules", {"schr": mock_schr_mod, "jax": MagicMock(), "jax.numpy": mock_jnp}
+        ):
             result = bridge_available._execute_schrodinger(cfg)
             assert result["status"] == "success"
             assert result["engine"] == "schr"
@@ -437,7 +479,9 @@ class TestExecuteSchrodinger:
             assert "trajectory" in result
 
     def test_execute_schrodinger_integrate_false(self, bridge_available):
-        cfg = SchrodingerConfig(n_points=32, domain_size=10.0, dt=0.01, duration=0.05, integrate=False)
+        cfg = SchrodingerConfig(
+            n_points=32, domain_size=10.0, dt=0.01, duration=0.05, integrate=False
+        )
         mock_solver = MagicMock()
         mock_psi = np.ones(32, dtype=complex) / np.sqrt(32)
         mock_solver.step.return_value = mock_psi
@@ -448,7 +492,9 @@ class TestExecuteSchrodinger:
         mock_jnp = MagicMock()
         mock_jnp.linspace.return_value = np.linspace(-5, 5, 32)
 
-        with patch.dict("sys.modules", {"schr": mock_schr_mod, "jax": MagicMock(), "jax.numpy": mock_jnp}):
+        with patch.dict(
+            "sys.modules", {"schr": mock_schr_mod, "jax": MagicMock(), "jax.numpy": mock_jnp}
+        ):
             result = bridge_available._execute_schrodinger(cfg)
             assert result["status"] == "success"
             assert "trajectory" not in result
@@ -485,7 +531,9 @@ class TestExecuteQED:
         mock_jnp.outer.return_value = np.eye(16)
         mock_jnp.conj.return_value = np.zeros(16, dtype=complex)
 
-        with patch.dict("sys.modules", {"schr": mock_schr_mod, "jax": MagicMock(), "jax.numpy": mock_jnp}):
+        with patch.dict(
+            "sys.modules", {"schr": mock_schr_mod, "jax": MagicMock(), "jax.numpy": mock_jnp}
+        ):
             result = bridge_available._execute_qed(cfg)
             assert result["status"] == "success"
             assert result["engine"] == "schr"
@@ -511,12 +559,18 @@ class TestBenchmark:
     def test_benchmark_not_available(self, bridge_unavailable):
         result = bridge_unavailable.benchmark_legacy_vs_schr("quantum_test", {})
         assert result["schr_available"] is False
-        assert result["speedup"] == 1.0
+        assert result["speedup"] is None  # refuses synthetic speedup theater
+        assert "refuses synthetic" in result.get("note", "")
 
     def test_benchmark_available(self, bridge_available):
-        with patch.object(bridge_available, "run_schrodinger", return_value={"status": "success"}):
+        with patch.object(
+            bridge_available,
+            "run_schrodinger",
+            return_value={"status": "success", "engine": "schr"},
+        ):
             result = bridge_available.benchmark_legacy_vs_schr("quantum_test", {})
             assert result["schr_available"] is True
+            assert result["speedup"] is None
             assert "speedup" in result
 
     def test_benchmark_qed(self, bridge_available):

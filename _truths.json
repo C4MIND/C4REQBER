@@ -1,13 +1,13 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "generated_at": "2026-07-23T01:16:42Z",
-  "version_backend": "5.7.8",
+  "version_backend": "5.7.9",
   "version_tui": "v9.13.0",
   "git_head": "5f17ecf",
   "git_branch": "main",
   "python": {
     "loc": 229465,
-    "tests_collected": 10078
+    "tests_collected": 10166
   },
   "go": {
     "loc_tui_v9": 23893
@@ -39,6 +39,16 @@
   },
   "quality": {
     "mypy_baseline": 0,
-    "mypy_note": "regression-gated baseline; new errors fail CI"
+    "mypy_note": "regression-gated baseline; new errors fail CI",
+    "last_full_suite": {
+      "passed": 10045,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 115,
+      "xfailed": 5,
+      "xpassed": 1,
+      "gate": "scripts/ci/smart_pytest.sh",
+      "date": "2026-08-05"
+    }
   }
 }

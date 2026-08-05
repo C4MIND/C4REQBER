@@ -4,12 +4,7 @@ from __future__ import annotations
 
 import os
 
-
-# Audit 2026-06-22 (Chunk 5 fix-up): the dev-mode detail leak requires DEV_MODE=1
-# to be set. Without this, the handler returns detail={} in production-like
-# default, and the assertion on detail.exception_type fails.
-os.environ.setdefault("DEV_MODE", "1")
-
+import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
@@ -66,9 +61,23 @@ class TestC4APIErrorHandler:
         assert data["error_code"] == "validation_error"
         assert data["detail"]["field"] == "name"
 
-    def test_unexpected_error_fallback(self) -> None:
+    def test_unexpected_error_fallback(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """Detail leak requires DEV_MODE + DEV_MODE_BYPASS_TOKEN (same gate as auth)."""
+        monkeypatch.setenv("DEV_MODE", "1")
+        monkeypatch.setenv("DEV_MODE_BYPASS_TOKEN", "test-bypass-token")
         resp = client.get("/test-unexpected")
         assert resp.status_code == 500
         data = resp.json()
         assert data["error_code"] == "internal_error"
         assert data["detail"]["exception_type"] == "RuntimeError"
+
+    def test_unexpected_error_hides_detail_without_bypass_token(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setenv("DEV_MODE", "1")
+        monkeypatch.delenv("DEV_MODE_BYPASS_TOKEN", raising=False)
+        resp = client.get("/test-unexpected")
+        assert resp.status_code == 500
+        data = resp.json()
+        assert data["error_code"] == "internal_error"
+        assert data["detail"] == {}

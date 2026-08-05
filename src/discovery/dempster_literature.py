@@ -179,11 +179,19 @@ def _get_mnli_pipeline() -> Any | None:
     if os.path.isdir(local_hf):
         os.environ.setdefault("HF_HOME", local_hf)
 
+    model_id = "facebook/bart-large-mnli"
+    hf_home = os.environ.get("HF_HOME", local_hf)
+    snapshot_hub = os.path.join(hf_home, "hub", "models--facebook--bart-large-mnli")
+    # If weights already cached (or offline), never re-hit the Hub for a pytest/CI run
+    offline = os.environ.get("HF_HUB_OFFLINE", "").lower() in {"1", "true", "yes"}
+    local_only = offline or os.path.isdir(snapshot_hub)
+
     try:
         _MNLI_PIPE = pipeline(
             "zero-shot-classification",
-            model="facebook/bart-large-mnli",
+            model=model_id,
             device=-1,
+            local_files_only=local_only,
         )
         return _MNLI_PIPE
     except Exception as exc:

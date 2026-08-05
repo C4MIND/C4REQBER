@@ -32,10 +32,11 @@ logger = logging.getLogger(__name__)
 
 class FlowType(Enum):
     """FlowType."""
-    POTENTIAL = "potential"      # Inviscid, irrotational
-    STOKES = "stokes"           # Creeping flow
-    LAMINAR = "laminar"         # Low Reynolds number
-    TURBULENT = "turbulent"     # RANS approximation
+
+    POTENTIAL = "potential"  # Inviscid, irrotational
+    STOKES = "stokes"  # Creeping flow
+    LAMINAR = "laminar"  # Low Reynolds number
+    TURBULENT = "turbulent"  # RANS approximation
 
 
 @simulation_pattern(
@@ -103,12 +104,23 @@ class CFDPattern(SimulationPattern):
         desc = hypothesis.description.lower()
 
         keywords = [
-            "fluid", "flow", "aerodynamic", "hydrodynamic",
-            "navier-stokes", "reynolds number",
-            "turbulence", "laminar", "cfd",
-            "wind", "water flow", "airflow",
-            "drag", "lift", "pressure drop",
-            "pipe flow", "channel flow",
+            "fluid",
+            "flow",
+            "aerodynamic",
+            "hydrodynamic",
+            "navier-stokes",
+            "reynolds number",
+            "turbulence",
+            "laminar",
+            "cfd",
+            "wind",
+            "water flow",
+            "airflow",
+            "drag",
+            "lift",
+            "pressure drop",
+            "pipe flow",
+            "channel flow",
             "boundary layer",
         ]
 
@@ -122,7 +134,12 @@ class CFDPattern(SimulationPattern):
         simulation_id = f"cfd_{start_time.timestamp()}"
 
         # Try Newton Physics first
-        from src.simulations.newton_bridge import NewtonBridge
+        from src.simulations.newton_bridge import (
+            NewtonBridge,
+            newton_result_as_dict,
+            newton_result_usable_for_pattern,
+        )
+
         bridge = NewtonBridge()
 
         if bridge.available:
@@ -134,8 +151,8 @@ class CFDPattern(SimulationPattern):
                 "inlet_velocity": config.get("inlet_velocity", 1.0),
                 "domain_size": config.get("domain_size", 1.0),
             }
-            result = bridge.run_simulation(newton_config)
-            if result.get("status") == "success":
+            result = newton_result_as_dict(bridge.run_simulation(newton_config))
+            if newton_result_usable_for_pattern(result, pattern_id=self.PATTERN_ID):
                 # Convert Newton result to SimulationResult
                 end_time = datetime.now()
                 return SimulationResult(
@@ -186,7 +203,9 @@ class CFDPattern(SimulationPattern):
                 error_message=str(e),
             )
 
-    async def _potential_flow(self, hypothesis: Hypothesis, config: dict[str, Any]) -> dict[str, Any]:
+    async def _potential_flow(
+        self, hypothesis: Hypothesis, config: dict[str, Any]
+    ) -> dict[str, Any]:
         """2D potential flow using stream function"""
 
         N = config.get("grid_size", 50)
@@ -215,11 +234,11 @@ class CFDPattern(SimulationPattern):
             psi_old = psi.copy()
 
             # Interior points (SOR)
-            for i in range(1, N-1):
-                for j in range(1, N-1):
-                    psi[i, j] = (1 - omega) * psi[i, j] + \
-                               omega * 0.25 * (psi[i+1, j] + psi[i-1, j] +
-                                              psi[i, j+1] + psi[i, j-1])
+            for i in range(1, N - 1):
+                for j in range(1, N - 1):
+                    psi[i, j] = (1 - omega) * psi[i, j] + omega * 0.25 * (
+                        psi[i + 1, j] + psi[i - 1, j] + psi[i, j + 1] + psi[i, j - 1]
+                    )
 
             # Check convergence
             if np.max(np.abs(psi - psi_old)) < tol:
@@ -280,7 +299,7 @@ class CFDPattern(SimulationPattern):
         # Stokes stream function for cylinder
         # ψ = U_inf * sin(θ) * (r - R²/r)
 
-        theta = np.linspace(0, 2*np.pi, 100)
+        theta = np.linspace(0, 2 * np.pi, 100)
         r = np.linspace(R, L, 50)
         THETA, R_grid = np.meshgrid(theta, r)
 
@@ -324,8 +343,8 @@ class CFDPattern(SimulationPattern):
 
         # Velocity profile (parabolic)
         # u(r) = 2*U_avg * (1 - (2r/D)²)
-        r = np.linspace(-D/2, D/2, 50)
-        u_profile = 2 * U_avg * (1 - (2*r/D)**2)
+        r = np.linspace(-D / 2, D / 2, 50)
+        u_profile = 2 * U_avg * (1 - (2 * r / D) ** 2)
         u_profile = np.maximum(u_profile, 0)  # No negative velocities
 
         # Max velocity at center
@@ -358,7 +377,9 @@ class CFDPattern(SimulationPattern):
 
         return {"metrics": metrics, "logs": logs}
 
-    async def _turbulent_flow(self, hypothesis: Hypothesis, config: dict[str, Any]) -> dict[str, Any]:
+    async def _turbulent_flow(
+        self, hypothesis: Hypothesis, config: dict[str, Any]
+    ) -> dict[str, Any]:
         """Simplified turbulent flow using empirical correlations"""
 
         Re = config.get("reynolds_number", 10000.0)
@@ -373,20 +394,20 @@ class CFDPattern(SimulationPattern):
 
         # Turbulent friction factor (Blasius correlation for smooth pipes)
         if Re < 100000:
-            friction_factor = 0.316 / (Re ** 0.25)
+            friction_factor = 0.316 / (Re**0.25)
         else:
             # Prandtl-Karman
-            friction_factor = 1.0 / (1.8 * np.log10(Re) - 1.5)**2
+            friction_factor = 1.0 / (1.8 * np.log10(Re) - 1.5) ** 2
 
         # Pressure drop (Darcy-Weisbach)
         rho = 1000.0
-        delta_p = friction_factor * (L/D) * (rho * U_avg**2 / 2)
+        delta_p = friction_factor * (L / D) * (rho * U_avg**2 / 2)
 
         # Velocity profile (power law: u/u_max = (1 - 2r/D)^(1/n))
         n = 7  # Typical for turbulent flow
-        r = np.linspace(-D/2, D/2, 50)
+        r = np.linspace(-D / 2, D / 2, 50)
         # u_max ≈ 1.2 * U_avg for turbulent
-        1.2 * U_avg * (1 - np.abs(2*r/D))**(1/n)
+        1.2 * U_avg * (1 - np.abs(2 * r / D)) ** (1 / n)
 
         # Wall shear stress
         tau_wall = friction_factor * rho * U_avg**2 / 8

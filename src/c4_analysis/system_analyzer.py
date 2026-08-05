@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import os
 from collections import defaultdict
 from typing import Any
 
@@ -15,12 +16,30 @@ logger = logging.getLogger(__name__)
 
 # Hidden systemic dimension triggers — words that IMPLY systemicity
 IMPLICIT_SYSTEMIC = {
-    "why": 0.4, "how": 0.3, "solve": 0.5, "optimize": 0.6,
-    "balance": 0.7, "trade-off": 0.7, "system": 0.8, "network": 0.8,
-    "ecosystem": 0.9, "cycle": 0.6, "loop": 0.7, "chain": 0.5,
-    "interact": 0.6, "couple": 0.6, "depend": 0.7, "affect": 0.5,
-    "regulate": 0.6, "feedback": 0.9, "emerge": 0.7, "holistic": 0.8,
-    "complex": 0.5, "multi": 0.4, "inter": 0.3, "cross": 0.3,
+    "why": 0.4,
+    "how": 0.3,
+    "solve": 0.5,
+    "optimize": 0.6,
+    "balance": 0.7,
+    "trade-off": 0.7,
+    "system": 0.8,
+    "network": 0.8,
+    "ecosystem": 0.9,
+    "cycle": 0.6,
+    "loop": 0.7,
+    "chain": 0.5,
+    "interact": 0.6,
+    "couple": 0.6,
+    "depend": 0.7,
+    "affect": 0.5,
+    "regulate": 0.6,
+    "feedback": 0.9,
+    "emerge": 0.7,
+    "holistic": 0.8,
+    "complex": 0.5,
+    "multi": 0.4,
+    "inter": 0.3,
+    "cross": 0.3,
 }
 EXPLICIT_SYSTEMIC = SYSTEMIC_INDICATORS  # "causes", "leads to", etc. → 0.8+
 
@@ -75,17 +94,53 @@ class SystemAnalyzer:
             "sub_problems": routes,
             "critical_path": critical,
             "c4_state": self.classifier.classify(query)["c4_state"],
-            "analysis_depth": "deep" if systemicity > 0.6 else "moderate" if systemicity > 0.3 else "shallow",
+            "analysis_depth": "deep"
+            if systemicity > 0.6
+            else "moderate"
+            if systemicity > 0.3
+            else "shallow",
             "explanation": self._generate_explanation(systemicity, routes, critical),
         }
 
     def _extract_entities(self, query: str) -> list[str]:
         """Extract key conceptual entities from query."""
         # Remove stopwords
-        stopwords = {"the", "a", "an", "is", "are", "was", "were", "be", "been",
-                     "to", "of", "in", "for", "on", "with", "at", "by", "from",
-                     "and", "or", "but", "not", "this", "that", "it", "i", "we",
-                     "can", "could", "would", "should", "will", "may", "might"}
+        stopwords = {
+            "the",
+            "a",
+            "an",
+            "is",
+            "are",
+            "was",
+            "were",
+            "be",
+            "been",
+            "to",
+            "of",
+            "in",
+            "for",
+            "on",
+            "with",
+            "at",
+            "by",
+            "from",
+            "and",
+            "or",
+            "but",
+            "not",
+            "this",
+            "that",
+            "it",
+            "i",
+            "we",
+            "can",
+            "could",
+            "would",
+            "should",
+            "will",
+            "may",
+            "might",
+        }
         words = []
         for w in query.split():
             stripped = w.strip(".,;:!?()[]{}\"'")
@@ -98,7 +153,7 @@ class SystemAnalyzer:
         while i < len(words):
             # Try 2-word phrases
             if i + 1 < len(words):
-                phrase = f"{words[i]} {words[i+1]}"
+                phrase = f"{words[i]} {words[i + 1]}"
                 if len(phrase) > 5 and phrase in query:
                     entities.append(phrase)
                     i += 2
@@ -108,9 +163,7 @@ class SystemAnalyzer:
 
         return entities[:15]
 
-    def _build_dependency_graph(
-        self, query: str, entities: list[str]
-    ) -> dict[str, set[str]]:
+    def _build_dependency_graph(self, query: str, entities: list[str]) -> dict[str, set[str]]:
         """Build dependency graph between entities.
 
         Dependency detected when:
@@ -131,7 +184,7 @@ class SystemAnalyzer:
                     e1_pos = query.find(entities[i])
                     e2_pos = query.find(entities[j])
                     if e1_pos < e2_pos:
-                        between = query[e1_pos + len(entities[i]):e2_pos]
+                        between = query[e1_pos + len(entities[i]) : e2_pos]
                         if any(ind in between for ind in EXPLICIT_SYSTEMIC):
                             deps[entities[j]].add(entities[i])
 
@@ -147,8 +200,12 @@ class SystemAnalyzer:
 
     def _llm_deepen_deps(self, query: str, deps: dict[str, set[str]]) -> dict[str, set[str]]:
         """Use LLM to find hidden systemic dependencies not in surface text."""
+        # Smart/unit runs: C4_LLM_DEEPEN=0 keeps analyzer deterministic (no live LLM).
+        if os.environ.get("C4_LLM_DEEPEN", "1").lower() in ("0", "false", "no"):
+            return deps
         try:
             from src.plugins._llm_base import _llm_reason
+
             entities_str = ", ".join(list(deps.keys())[:8])
             sys = "You are a systems analyst. Find hidden dependencies between concepts. Output JSON: [[concept_a, depends_on_concept_b, why], ...]. Be brief."
             prompt = f"Query: {query[:400]}\nConcepts: {entities_str}\nWhat hidden systemic dependencies exist between these concepts? Output JSON array."
@@ -156,6 +213,7 @@ class SystemAnalyzer:
             if result:
                 import json
                 import re
+
                 match = re.search(r"\[.*\]", result, re.DOTALL)
                 if match:
                     for item in json.loads(match.group()):
@@ -205,14 +263,16 @@ class SystemAnalyzer:
 
         for i, entity in enumerate(entities):
             depends_on = list(deps.get(entity, set()))
-            sub_problems.append({
-                "entity": entity,
-                "depends_on": depends_on,
-                "dependency_count": len(depends_on),
-                "position": i,
-                "is_root": len(depends_on) == 0,
-                "is_leaf": entity not in [d for deps_set in deps.values() for d in deps_set],
-            })
+            sub_problems.append(
+                {
+                    "entity": entity,
+                    "depends_on": depends_on,
+                    "dependency_count": len(depends_on),
+                    "position": i,
+                    "is_root": len(depends_on) == 0,
+                    "is_leaf": entity not in [d for deps_set in deps.values() for d in deps_set],
+                }
+            )
 
         return sub_problems
 
@@ -243,9 +303,7 @@ class SystemAnalyzer:
             sp["engines"] = route["engines_engaged"]
         return sub_problems
 
-    def _critical_path(
-        self, routes: list[dict[str, Any]], deps: dict[str, set[str]]
-    ) -> list[str]:
+    def _critical_path(self, routes: list[dict[str, Any]], deps: dict[str, set[str]]) -> list[str]:
         """Find critical path: chain of most-dependent sub-problems."""
         if not routes:
             return []

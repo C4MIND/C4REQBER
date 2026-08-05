@@ -37,14 +37,15 @@ logger = logging.getLogger(__name__)
 @dataclass
 class WaveEquationConfig:
     """Configuration for wave equation simulation"""
-    dimension: str = "1d"       # "1d" or "2d"
-    c: float = 1.0              # Wave speed
-    L: float = 10.0             # Domain length
-    nx: int = 200               # Grid points
-    t_max: float = 5.0          # Simulation time
-    dt: float = 0.01            # Time step
+
+    dimension: str = "1d"  # "1d" or "2d"
+    c: float = 1.0  # Wave speed
+    L: float = 10.0  # Domain length
+    nx: int = 200  # Grid points
+    t_max: float = 5.0  # Simulation time
+    dt: float = 0.01  # Time step
     source_type: str = "gaussian"  # "gaussian", "sine", "pulse"
-    source_position: float = 5.0   # Source position (1D)
+    source_position: float = 5.0  # Source position (1D)
     source_amplitude: float = 1.0
     source_frequency: float = 1.0
 
@@ -124,10 +125,17 @@ class WaveEquationPattern(SimulationPattern):
         title = hypothesis.title.lower()
         desc = hypothesis.description.lower()
         keywords = [
-            "wave equation", "wave propagation", "acoustic wave",
-            "string vibration", "membrane vibration", "d'alembert",
-            "wave speed", "standing wave", "traveling wave",
-            "interference", "diffraction",
+            "wave equation",
+            "wave propagation",
+            "acoustic wave",
+            "string vibration",
+            "membrane vibration",
+            "d'alembert",
+            "wave speed",
+            "standing wave",
+            "traveling wave",
+            "interference",
+            "diffraction",
         ]
         return any(kw in title or kw in desc for kw in keywords)
 
@@ -139,7 +147,12 @@ class WaveEquationPattern(SimulationPattern):
         simulation_id = f"wave_{start_time.timestamp()}"
 
         # Try Newton Physics first
-        from src.simulations.newton_bridge import NewtonBridge
+        from src.simulations.newton_bridge import (
+            NewtonBridge,
+            newton_result_as_dict,
+            newton_result_usable_for_pattern,
+        )
+
         bridge = NewtonBridge()
 
         if bridge.available:
@@ -156,8 +169,8 @@ class WaveEquationPattern(SimulationPattern):
                 "source_amplitude": config.get("source_amplitude", 1.0),
                 "source_frequency": config.get("source_frequency", 1.0),
             }
-            result = bridge.run_simulation(newton_config)
-            if result.get("status") == "success":
+            result = newton_result_as_dict(bridge.run_simulation(newton_config))
+            if newton_result_usable_for_pattern(result, pattern_id=self.PATTERN_ID):
                 end_time = datetime.now()
                 return SimulationResult(
                     simulation_id=simulation_id,
@@ -252,11 +265,11 @@ class WaveEquationPattern(SimulationPattern):
 
         if cfg.source_type == "gaussian":
             sigma = L / 20
-            u = cfg.source_amplitude * np.exp(-((x - cfg.source_position) / sigma)**2)
+            u = cfg.source_amplitude * np.exp(-(((x - cfg.source_position) / sigma) ** 2))
         elif cfg.source_type == "sine":
             u = cfg.source_amplitude * np.sin(2 * np.pi * cfg.source_frequency * x / L)
         elif cfg.source_type == "pulse":
-            u[src_idx:src_idx+5] = cfg.source_amplitude
+            u[src_idx : src_idx + 5] = cfg.source_amplitude
 
         u_prev = u.copy()
 
@@ -270,7 +283,7 @@ class WaveEquationPattern(SimulationPattern):
 
             # Interior points
             for i in range(1, nx - 1):
-                u_new[i] = 2 * u[i] - u_prev[i] + cfl**2 * (u[i+1] - 2*u[i] + u[i-1])
+                u_new[i] = 2 * u[i] - u_prev[i] + cfl**2 * (u[i + 1] - 2 * u[i] + u[i - 1])
 
             # Absorbing boundary conditions (Mur)
             u_new[0] = u[1] + (cfl - 1) / (cfl + 1) * (u_new[1] - u[0])
@@ -299,7 +312,9 @@ class WaveEquationPattern(SimulationPattern):
             "cfl_number": float(cfl),
             "n_steps": n_steps,
             "final_energy": float(energy_history[-1]) if energy_history else 0.0,
-            "energy_drift": float(abs(energy_history[-1] - energy_history[0]) / energy_history[0]) if len(energy_history) > 1 else 0.0,
+            "energy_drift": float(abs(energy_history[-1] - energy_history[0]) / energy_history[0])
+            if len(energy_history) > 1
+            else 0.0,
             "dimension": "1d",
         }
 
@@ -344,7 +359,7 @@ class WaveEquationPattern(SimulationPattern):
         X, Y = np.meshgrid(x, y)
         cx, cy = L / 2, L / 2
         sigma = L / 10
-        u = cfg.source_amplitude * np.exp(-((X - cx)**2 + (Y - cy)**2) / (2 * sigma**2))
+        u = cfg.source_amplitude * np.exp(-((X - cx) ** 2 + (Y - cy) ** 2) / (2 * sigma**2))
         u_prev = u.copy()
 
         max_amplitude = np.max(np.abs(u))
@@ -354,10 +369,16 @@ class WaveEquationPattern(SimulationPattern):
 
             # Interior points
             u_new[1:-1, 1:-1] = (
-                2 * u[1:-1, 1:-1] - u_prev[1:-1, 1:-1]
-                + cfl**2 * (
-                    u[2:, 1:-1] - 2*u[1:-1, 1:-1] + u[:-2, 1:-1]
-                    + u[1:-1, 2:] - 2*u[1:-1, 1:-1] + u[1:-1, :-2]
+                2 * u[1:-1, 1:-1]
+                - u_prev[1:-1, 1:-1]
+                + cfl**2
+                * (
+                    u[2:, 1:-1]
+                    - 2 * u[1:-1, 1:-1]
+                    + u[:-2, 1:-1]
+                    + u[1:-1, 2:]
+                    - 2 * u[1:-1, 1:-1]
+                    + u[1:-1, :-2]
                 )
             )
 
@@ -451,8 +472,14 @@ class WaveEquationPattern(SimulationPattern):
             "category": cls.category,  # type: ignore[attr-defined]
             "description": cls.description,  # type: ignore[attr-defined]
             "parameters": [
-                {"name": p.name, "type": p.type, "default": p.default,
-                 "min": p.min, "max": p.max, "description": p.description}
+                {
+                    "name": p.name,
+                    "type": p.type,
+                    "default": p.default,
+                    "min": p.min,
+                    "max": p.max,
+                    "description": p.description,
+                }
                 for p in cls.parameters
             ],
             "references": [

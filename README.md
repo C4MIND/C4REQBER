@@ -4,10 +4,10 @@
 
 > **Repositories:** Canonical source — [GitLab](https://gitlab.com/cognitive-functors/c4reqber). Read-only mirror — [GitHub](https://github.com/C4MIND/C4REQBER). **Site:** [cognitive-functors.gitlab.io/c4reqber](https://cognitive-functors.gitlab.io/c4reqber/). Issues and development on GitLab only. **CI source of truth is GitLab** (`.gitlab-ci.yml`); GitHub Actions on the mirror are light promotion checks only (not the full test gate).
 
-[![Tests](https://img.shields.io/badge/tests-10078%20collected-yellowgreen)]()
+[![Tests](https://img.shields.io/badge/tests-10166%20collected-yellowgreen)]()
 [![Lint](https://img.shields.io/badge/lint-41%20baseline%20%2B%20regression%20check-yellow)]()
 [![Typecheck](https://img.shields.io/badge/typecheck-0%20mypy%20errors-brightgreen)]()
-[![Version](https://img.shields.io/badge/version-5.7.8-magenta)]()
+[![Version](https://img.shields.io/badge/version-5.7.9-magenta)]()
 [![TUI](https://img.shields.io/badge/TUI-v9.18%20honesty-blueviolet)]()
 [![Python](https://img.shields.io/badge/python-3.11%2B-blue)]()
 [![License](https://img.shields.io/badge/license-AGPL--3.0-green)]()

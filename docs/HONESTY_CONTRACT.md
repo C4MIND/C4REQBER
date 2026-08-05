@@ -149,6 +149,15 @@ HF_HOME="$(pwd)/.cache/huggingface" \
   -q
 ```
 
+**Full suite (no HF re-download):** use the smart gate — local MNLI cache, hub offline,
+short LLM timeouts, deterministic SystemAnalyzer deepen off:
+
+```bash
+bash scripts/ci/smart_pytest.sh
+```
+
+Do not paint Schr NumPy fallback as `success` or CVC5 `sat` as `valid`/`verified`.
+
 TUI:
 
 ```bash

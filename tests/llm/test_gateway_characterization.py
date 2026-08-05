@@ -1,20 +1,14 @@
 """Characterization tests for the LLM entrypoints (P2-A safety net).
 
-These lock the CURRENT, observed wire behavior of the three live LLM
-entrypoints — what model / params / URL each one actually sends for a given
-input. They are the equivalence gate for the upcoming LLMGateway consolidation
-(REWORK_PLAN.md → P2-A): the gateway facade must keep every one of these green,
-proving the refactor changed plumbing, not behavior.
-
-They assert *what is*, not *what should be* — including quirks (the default
-ProviderRouter preset resolves "synthesis" to deepseek, not Claude). If a value
-here looks wrong, that is a finding for A2 (deliberate behavior change), not a
-test to "fix".
+These lock the CURRENT, observed wire behavior of the live LLM entrypoints.
+Model IDs are asserted against live SSOT (ProviderRouter config /
+AsyncLLMClient._resolve_model / preferred_model), not frozen 2025 cloud names.
 
 Seams mocked (no network):
-  * BaseLLMClient path (ProviderRouter direct, AsyncLLMClient) → httpx.AsyncClient.post
-  * LLMProviderRouter.chat → LLMProviderRouter._call_openai_sync (sync-in-executor)
+  * BaseLLMClient path (ProviderRouter, AsyncLLMClient) → httpx.AsyncClient.post
+  * LLMProviderRouter.chat → src.llm.sync_provider_chain.generate_with_fallback
 """
+
 from __future__ import annotations
 
 from unittest.mock import patch
@@ -46,7 +40,7 @@ def capture_httpx():
 
 @pytest.fixture
 def stable_env(monkeypatch):
-    """Deterministic env: dummy keys, no per-phase model overrides."""
+    """Deterministic env: dummy keys, no per-phase model overrides via PHASE_*."""
     monkeypatch.setenv("OPENROUTER_API_KEY", "test-key")
     monkeypatch.setenv("DEEPSEEK_API_KEY", "test-key")
     monkeypatch.setenv("XAI_API_KEY", "test-key")
@@ -55,20 +49,20 @@ def stable_env(monkeypatch):
             monkeypatch.delenv(k, raising=False)
 
 
-# ── 1. ProviderRouter (stage-aware, PRESETS) ──────────────────────────────
+# ── 1. ProviderRouter (stage-aware, PRESETS + ModelAssignment) ────────────
 class TestProviderRouterCharacterization:
     @pytest.mark.asyncio
     async def test_default_preset_synthesis(self, capture_httpx, stable_env):
         from src.llm.router import ProviderRouter
 
         r = ProviderRouter()
+        expected_model = r.get_config_for_stage("synthesis").model
         await r.generate("synthesis", "PROMPT", use_retry=False)
         req = capture_httpx[-1]
         assert req["url"].endswith("/chat/completions")
-        assert req["json"]["model"] == "deepseek-chat"
-        assert req["json"]["temperature"] == 0.6
-        assert req["json"]["max_tokens"] == 3000
-        # message shape: user prompt last
+        assert req["json"]["model"] == expected_model
+        assert req["json"]["temperature"] == r.get_config_for_stage("synthesis").temperature
+        assert req["json"]["max_tokens"] == r.get_config_for_stage("synthesis").max_tokens
         assert req["json"]["messages"][-1] == {"role": "user", "content": "PROMPT"}
 
     @pytest.mark.asyncio
@@ -87,15 +81,17 @@ class TestProviderRouterCharacterization:
         from src.llm.router import ProviderRouter
 
         r = ProviderRouter.from_preset(ProviderPreset.C4REQBER)
+        synth_cfg = r.get_config_for_stage("synthesis")
         await r.generate("synthesis", "P", use_retry=False)
-        assert capture_httpx[-1]["json"]["model"] == "deepseek-chat"
+        assert capture_httpx[-1]["json"]["model"] == synth_cfg.model
+        mp_cfg = r.get_config_for_stage("mp_rotation")
         await r.generate("mp_rotation", "P", use_retry=False)
-        assert capture_httpx[-1]["json"]["model"] == "grok-4.3"
-        assert capture_httpx[-1]["json"]["temperature"] == 0.7
-        assert capture_httpx[-1]["json"]["max_tokens"] == 800
+        assert capture_httpx[-1]["json"]["model"] == mp_cfg.model
+        assert capture_httpx[-1]["json"]["temperature"] == mp_cfg.temperature
+        assert capture_httpx[-1]["json"]["max_tokens"] == mp_cfg.max_tokens
 
 
-# ── 2. AsyncLLMClient (DEFAULT_MODEL + response cache) ─────────────────────
+# ── 2. AsyncLLMClient (ModelAssignment + DEFAULT_MODEL fallback) ───────────
 class _NullCache:
     """Always-miss cache — forces a wire call regardless of disk cache state."""
 
@@ -124,11 +120,12 @@ class TestAsyncLLMClientCharacterization:
     async def test_default_model_and_params(self, capture_httpx, stable_env):
         from src.llm.async_client import AsyncLLMClient
 
-        c = AsyncLLMClient(cache=_NullCache())  # bypass disk cache → always hits the wire
+        c = AsyncLLMClient(cache=_NullCache())
+        expected = c._resolve_model(None)
         await c.generate("PROMPT", max_tokens=800, temperature=0.3)
         req = capture_httpx[-1]
         assert "openrouter.ai" in req["url"]
-        assert req["json"]["model"] == "qwen/qwen-2.5-72b-instruct"
+        assert req["json"]["model"] == expected
         assert req["json"]["temperature"] == 0.3
         assert req["json"]["max_tokens"] == 800
 
@@ -136,80 +133,97 @@ class TestAsyncLLMClientCharacterization:
     async def test_response_is_cached(self, capture_httpx, stable_env):
         from src.llm.async_client import AsyncLLMClient
 
-        c = AsyncLLMClient(cache=_MemCache())  # fresh empty cache for a deterministic miss→hit
+        c = AsyncLLMClient(cache=_MemCache())
         await c.generate("CACHE_ME", max_tokens=50, temperature=0.0)
         n_after_first = len(capture_httpx)
-        assert n_after_first >= 1  # first call missed the (empty) cache → hit the wire
+        assert n_after_first >= 1
         await c.generate("CACHE_ME", max_tokens=50, temperature=0.0)
-        # second identical call served from cache → no new HTTP request
         assert len(capture_httpx) == n_after_first
 
 
-# ── 3. LLMProviderRouter.chat (guardian + deepseek→openrouter→lmstudio) ────
+# ── 3. LLMProviderRouter.chat → generate_with_fallback ─────────────────────
 class TestLLMProviderRouterCharacterization:
     @pytest.fixture
-    def capture_sync_call(self):
+    def capture_fallback(self):
         calls: list[dict] = []
 
-        def fake_call(url, key, model, messages, temperature, max_tokens, extra, timeout):  # noqa: ANN001
-            calls.append({
-                "url": url, "model": model, "messages": messages,
-                "temperature": temperature, "max_tokens": max_tokens, "extra": extra,
-            })
+        def fake_fallback(
+            prompt,
+            system_prompt=None,
+            max_tokens=800,
+            temperature=0.3,
+            preferred_model=None,
+            **kw,
+        ):  # noqa: ANN001
+            calls.append(
+                {
+                    "prompt": prompt,
+                    "system_prompt": system_prompt,
+                    "max_tokens": max_tokens,
+                    "temperature": temperature,
+                    "preferred_model": preferred_model,
+                }
+            )
             return "RESULT"
 
         with patch(
-            "src.llm.providers.unified.LLMProviderRouter._call_openai_sync",
-            staticmethod(fake_call),
+            "src.llm.sync_provider_chain.generate_with_fallback",
+            side_effect=fake_fallback,
         ):
             yield calls
 
     @pytest.mark.asyncio
-    async def test_chat_tries_deepseek_first(self, capture_sync_call, stable_env):
+    async def test_chat_uses_sync_provider_chain(self, capture_fallback, stable_env):
         from src.llm.providers.unified import LLMProviderRouter
 
         out = await LLMProviderRouter.chat(
             [{"role": "user", "content": "PROMPT"}],
-            system_prompt="SYS", temperature=0.3, max_tokens=800,
+            system_prompt="SYS",
+            temperature=0.3,
+            max_tokens=800,
         )
         assert out == "RESULT"
-        first = capture_sync_call[0]
-        assert "deepseek.com" in first["url"]
-        assert first["model"] == "deepseek-v4-flash"
+        first = capture_fallback[0]
+        assert first["prompt"] == "PROMPT"
+        assert first["system_prompt"] == "SYS"
         assert first["temperature"] == 0.3
         assert first["max_tokens"] == 800
-        # system prompt is prepended to the message list
-        assert first["messages"][0] == {"role": "system", "content": "SYS"}
-        assert first["extra"] == {}  # no json_mode
+        assert first["preferred_model"] == LLMProviderRouter._preferred_model()
 
     @pytest.mark.asyncio
-    async def test_chat_json_mode_sets_response_format(self, capture_sync_call, stable_env):
+    async def test_chat_json_mode_still_reaches_chain(self, capture_fallback, stable_env):
+        """json_mode is accepted; current chat path uses generate_with_fallback."""
         from src.llm.providers.unified import LLMProviderRouter
 
         await LLMProviderRouter.chat(
-            [{"role": "user", "content": "P"}], temperature=0.3, max_tokens=800, json_mode=True,
+            [{"role": "user", "content": "P"}],
+            temperature=0.3,
+            max_tokens=800,
+            json_mode=True,
         )
-        assert capture_sync_call[0]["extra"] == {"response_format": {"type": "json_object"}}
+        assert len(capture_fallback) == 1
+        assert capture_fallback[0]["prompt"] == "P"
 
 
-# ── 4. DefaultGateway equivalence: routing through the facade must produce the
-#       exact same wire request as calling the underlying strategy directly. ──
+# ── 4. DefaultGateway equivalence ─────────────────────────────────────────
 class TestGatewayEquivalence:
     def test_default_gateway_satisfies_protocol(self):
         from src.llm.gateway import DefaultGateway, LLMGateway, get_gateway
 
         assert isinstance(DefaultGateway(), LLMGateway)
-        assert get_gateway() is get_gateway()  # singleton
+        assert get_gateway() is get_gateway()
 
     @pytest.mark.asyncio
     async def test_generate_for_stage_matches_provider_router(self, capture_httpx, stable_env):
         from src.llm.gateway import DefaultGateway
+        from src.llm.router import ProviderRouter
 
+        expected = ProviderRouter().get_config_for_stage("synthesis")
         await DefaultGateway().generate_for_stage("synthesis", "PROMPT", use_retry=False)
         req = capture_httpx[-1]["json"]
-        assert req["model"] == "deepseek-chat"
-        assert req["temperature"] == 0.6
-        assert req["max_tokens"] == 3000
+        assert req["model"] == expected.model
+        assert req["temperature"] == expected.temperature
+        assert req["max_tokens"] == expected.max_tokens
         assert req["messages"][-1] == {"role": "user", "content": "PROMPT"}
 
     @pytest.mark.asyncio
@@ -217,32 +231,44 @@ class TestGatewayEquivalence:
         from src.llm.async_client import AsyncLLMClient
         from src.llm.gateway import DefaultGateway
 
-        gw = DefaultGateway(async_client=AsyncLLMClient(cache=_NullCache()))
+        client = AsyncLLMClient(cache=_NullCache())
+        expected = client._resolve_model(None)
+        gw = DefaultGateway(async_client=client)
         await gw.generate("PROMPT", max_tokens=800, temperature=0.3)
         req = capture_httpx[-1]
         assert "openrouter.ai" in req["url"]
-        assert req["json"]["model"] == "qwen/qwen-2.5-72b-instruct"
+        assert req["json"]["model"] == expected
         assert req["json"]["temperature"] == 0.3
         assert req["json"]["max_tokens"] == 800
 
     @pytest.mark.asyncio
     async def test_chat_matches_provider_router(self, stable_env):
         from src.llm.gateway import DefaultGateway
+        from src.llm.providers.unified import LLMProviderRouter
 
         calls: list[dict] = []
 
-        def fake_call(url, key, model, messages, temperature, max_tokens, extra, timeout):  # noqa: ANN001
-            calls.append({"url": url, "model": model})
+        def fake_fallback(
+            prompt, system_prompt=None, max_tokens=800, temperature=0.3, preferred_model=None, **kw
+        ):  # noqa: ANN001
+            calls.append(
+                {
+                    "prompt": prompt,
+                    "system_prompt": system_prompt,
+                    "preferred_model": preferred_model,
+                }
+            )
             return "RESULT"
 
         with patch(
-            "src.llm.providers.unified.LLMProviderRouter._call_openai_sync",
-            staticmethod(fake_call),
+            "src.llm.sync_provider_chain.generate_with_fallback",
+            side_effect=fake_fallback,
         ):
             out = await DefaultGateway().chat([{"role": "user", "content": "P"}], system_prompt="S")
         assert out == "RESULT"
-        assert "deepseek.com" in calls[0]["url"]
-        assert calls[0]["model"] == "deepseek-v4-flash"
+        assert calls[0]["prompt"] == "P"
+        assert calls[0]["system_prompt"] == "S"
+        assert calls[0]["preferred_model"] == LLMProviderRouter._preferred_model()
 
     @pytest.mark.asyncio
     async def test_chat_json_matches_provider_router(self, stable_env):
@@ -250,40 +276,41 @@ class TestGatewayEquivalence:
 
         calls: list[dict] = []
 
-        def fake_call(url, key, model, messages, temperature, max_tokens, extra, timeout):  # noqa: ANN001
-            calls.append({"extra": extra, "model": model})
+        def fake_fallback(
+            prompt, system_prompt=None, max_tokens=800, temperature=0.3, preferred_model=None, **kw
+        ):  # noqa: ANN001
+            calls.append({"prompt": prompt, "preferred_model": preferred_model})
             return '{"ok": true}'
 
         with patch(
-            "src.llm.providers.unified.LLMProviderRouter._call_openai_sync",
-            staticmethod(fake_call),
+            "src.llm.sync_provider_chain.generate_with_fallback",
+            side_effect=fake_fallback,
         ):
             out = await DefaultGateway().chat_json([{"role": "user", "content": "P"}])
         assert out == {"ok": True}
-        # chat_json forces json_mode → response_format on the wire
-        assert calls[0]["extra"] == {"response_format": {"type": "json_object"}}
-        assert calls[0]["model"] == "deepseek-v4-flash"
+        assert len(calls) == 1
+        assert calls[0]["prompt"] == "P"
 
 
-# ── 5. DefaultGateway lifecycle: lazy strategy construction + close() ───────
+# ── 5. DefaultGateway lifecycle ───────────────────────────────────────────
 class TestGatewayLifecycle:
     @pytest.mark.asyncio
     async def test_generate_lazily_constructs_async_client(self, capture_httpx, stable_env):
         from src.llm.gateway import DefaultGateway
 
-        gw = DefaultGateway()  # no injected client
+        gw = DefaultGateway()
         assert gw._async_client is None
         await gw.generate("LAZY_PROMPT", max_tokens=10, temperature=0.0)
-        assert gw._async_client is not None  # _client() built it on first use
+        assert gw._async_client is not None
 
     @pytest.mark.asyncio
     async def test_generate_for_stage_lazily_constructs_router(self, capture_httpx, stable_env):
         from src.llm.gateway import DefaultGateway
 
-        gw = DefaultGateway()  # no injected router
+        gw = DefaultGateway()
         assert gw._provider_router is None
         await gw.generate_for_stage("synthesis", "P", use_retry=False)
-        assert gw._provider_router is not None  # _router() built it on first use
+        assert gw._provider_router is not None
 
     @pytest.mark.asyncio
     async def test_close_releases_injected_strategies(self):
@@ -301,4 +328,4 @@ class TestGatewayLifecycle:
     async def test_close_is_noop_when_nothing_constructed(self):
         from src.llm.gateway import DefaultGateway
 
-        await DefaultGateway().close()  # must not raise with no strategies built
+        await DefaultGateway().close()

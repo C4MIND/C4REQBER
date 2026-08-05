@@ -364,7 +364,12 @@ class NBodyGravity(BasePattern, GPUMixin):
         Returns:
             Dictionary with final state, energies, and trajectory data.
         """
-        from src.simulations.newton_bridge import NewtonBridge
+        from src.simulations.newton_bridge import (
+            NewtonBridge,
+            newton_result_as_dict,
+            newton_result_usable_for_pattern,
+        )
+
         bridge = NewtonBridge()
 
         if bridge.available:
@@ -383,8 +388,8 @@ class NBodyGravity(BasePattern, GPUMixin):
             }
             if hypothesis:
                 newton_config.update(hypothesis)
-            result = bridge.run_simulation(newton_config)
-            if result.get("status") == "success":
+            result = newton_result_as_dict(bridge.run_simulation(newton_config))
+            if newton_result_usable_for_pattern(result, pattern_id=self.PATTERN_ID):
                 result["pattern_id"] = self.PATTERN_ID
                 return result
 
@@ -420,9 +425,7 @@ class NBodyGravity(BasePattern, GPUMixin):
                 )
 
         final_ke, final_pe, final_total = self._compute_energy()
-        energy_drift = abs(final_total - energies[0]["total"]) / abs(
-            energies[0]["total"]
-        )
+        energy_drift = abs(final_total - energies[0]["total"]) / abs(energies[0]["total"])
 
         return {
             "pattern_id": self.PATTERN_ID,

@@ -12,16 +12,19 @@ class TestDepthBasedRouter:
         assert len(result) > 0
 
     def test_route_for_stage_one_balanced(self):
+        # route_for_stage honors models.json via phase A — not raw DEPTH_MODEL_MAP
         result = DepthBasedRouter.route_for_stage(1, "balanced")
-        expected = DepthBasedRouter.route(1, "balanced")
+        expected = DepthBasedRouter.route_for_pipeline_phase("A", "balanced")
         assert result == expected
         assert isinstance(result, str)
+        assert len(result) > 0
 
     def test_route_for_stage_twelve_premium(self):
         result = DepthBasedRouter.route_for_stage(12, "premium")
-        expected = DepthBasedRouter.route(3, "premium")
+        expected = DepthBasedRouter.route_for_pipeline_phase("G", "premium")
         assert result == expected
         assert isinstance(result, str)
+        assert len(result) > 0
 
     def test_estimate_cost_valid_inputs(self):
         cost = DepthBasedRouter.estimate_cost([1, 5, 9], "balanced", tokens_per_stage=4000)

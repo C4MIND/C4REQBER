@@ -201,9 +201,7 @@ class ClimateGCMPattern:
                         # Mix to remove instability
                         avg_T = (self.T[j, i, k] + self.T[j, i, k + 1]) / 2
                         heating[j, i, k] = (avg_T - self.T[j, i, k]) / cfg.dt * 0.1
-                        heating[j, i, k + 1] = (
-                            (avg_T - self.T[j, i, k + 1]) / cfg.dt * 0.1
-                        )
+                        heating[j, i, k + 1] = (avg_T - self.T[j, i, k + 1]) / cfg.dt * 0.1
 
         return heating, moistening
 
@@ -356,7 +354,12 @@ class ClimateGCMPattern:
 
     def run(self, hypothesis: dict[str, Any] = None) -> dict[str, Any]:  # type: ignore[assignment]
         """Run the GCM simulation with Newton (or fallback)."""
-        from src.simulations.newton_bridge import NewtonBridge
+        from src.simulations.newton_bridge import (
+            NewtonBridge,
+            newton_result_as_dict,
+            newton_result_usable_for_pattern,
+        )
+
         bridge = NewtonBridge()
 
         if bridge.available:
@@ -380,8 +383,8 @@ class ClimateGCMPattern:
             }
             if hypothesis:
                 newton_config.update(hypothesis)
-            result = bridge.run_simulation(newton_config)
-            if result.get("status") == "success":
+            result = newton_result_as_dict(bridge.run_simulation(newton_config))
+            if newton_result_usable_for_pattern(result, pattern_id=self.PATTERN_ID):
                 return result
 
         # Fallback to legacy implementation
@@ -504,9 +507,7 @@ if __name__ == "__main__":
     gcm = ClimateGCMPattern(config)
 
     result = gcm.run()
-    print(
-        f"Simulation complete. Final mean T: {result['mean_temperature_timeseries'][-1]:.2f} K"
-    )
+    print(f"Simulation complete. Final mean T: {result['mean_temperature_timeseries'][-1]:.2f} K")
     print(
         f"Precipitation range: {min(result['total_precipitation']):.2e} to {max(result['total_precipitation']):.2e} mm/day"
     )

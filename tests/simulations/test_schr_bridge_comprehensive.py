@@ -1,4 +1,5 @@
 """Comprehensive tests for SchrBridge — quantum mechanics engine adapter."""
+
 from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
@@ -155,17 +156,19 @@ class TestSchrBridgeParseConfig:
 
     def test_parse_schrodinger_config_custom(self):
         bridge = SchrBridge()
-        cfg = bridge._parse_schrodinger_config({
-            "n_points": 64,
-            "domain_size": 5.0,
-            "dt": 0.01,
-            "duration": 2.0,
-            "potential_type": "barrier",
-            "potential_strength": 2.0,
-            "initial_state": "plane_wave",
-            "boundary_conditions": "reflecting",
-            "integrate": False,
-        })
+        cfg = bridge._parse_schrodinger_config(
+            {
+                "n_points": 64,
+                "domain_size": 5.0,
+                "dt": 0.01,
+                "duration": 2.0,
+                "potential_type": "barrier",
+                "potential_strength": 2.0,
+                "initial_state": "plane_wave",
+                "boundary_conditions": "reflecting",
+                "integrate": False,
+            }
+        )
         assert cfg.n_points == 64
         assert cfg.domain_size == 5.0
         assert cfg.dt == 0.01
@@ -184,16 +187,18 @@ class TestSchrBridgeParseConfig:
 
     def test_parse_qed_config_custom(self):
         bridge = SchrBridge()
-        cfg = bridge._parse_qed_config({
-            "n_modes": 4,
-            "n_photons_max": 2,
-            "n_levels": 3,
-            "coupling_strength": 0.5,
-            "detuning": 0.1,
-            "dt": 0.005,
-            "duration": 5.0,
-            "initial_state": "excited",
-        })
+        cfg = bridge._parse_qed_config(
+            {
+                "n_modes": 4,
+                "n_photons_max": 2,
+                "n_levels": 3,
+                "coupling_strength": 0.5,
+                "detuning": 0.1,
+                "dt": 0.005,
+                "duration": 5.0,
+                "initial_state": "excited",
+            }
+        )
         assert cfg.n_modes == 4
         assert cfg.n_photons_max == 2
         assert cfg.n_levels == 3
@@ -209,21 +214,24 @@ class TestSchrBridgeRunSchrodinger:
         bridge = SchrBridge()
         bridge._available = False
         result = bridge.run_schrodinger({"n_points": 32, "duration": 0.1})
-        assert result["status"] == "success"  # fallback
+        assert result["status"] == "partial"  # honesty: fallback ≠ success
         assert result["engine"] == "schr_fallback"
+        assert result.get("engine_truth") == "not_schr"
 
     def test_run_schrodinger_fallback_integration(self):
         bridge = SchrBridge()
         bridge._available = False
-        result = bridge.run_schrodinger({
-            "n_points": 32,
-            "domain_size": 5.0,
-            "dt": 0.01,
-            "duration": 0.1,
-            "potential_type": "harmonic",
-            "integrate": True,
-        })
-        assert result["status"] == "success"
+        result = bridge.run_schrodinger(
+            {
+                "n_points": 32,
+                "domain_size": 5.0,
+                "dt": 0.01,
+                "duration": 0.1,
+                "potential_type": "harmonic",
+                "integrate": True,
+            }
+        )
+        assert result["status"] == "partial"
         assert "trajectory" in result
         assert "energy" in result
         assert "times" in result
@@ -231,15 +239,17 @@ class TestSchrBridgeRunSchrodinger:
     def test_run_schrodinger_fallback_single_step(self):
         bridge = SchrBridge()
         bridge._available = False
-        result = bridge.run_schrodinger({
-            "n_points": 32,
-            "domain_size": 5.0,
-            "dt": 0.01,
-            "duration": 0.1,
-            "potential_type": "well",
-            "integrate": False,
-        })
-        assert result["status"] == "success"
+        result = bridge.run_schrodinger(
+            {
+                "n_points": 32,
+                "domain_size": 5.0,
+                "dt": 0.01,
+                "duration": 0.1,
+                "potential_type": "well",
+                "integrate": False,
+            }
+        )
+        assert result["status"] == "partial"
         assert "wave_function" in result
         assert "energy" in result
 
@@ -268,20 +278,23 @@ class TestSchrBridgeRunQED:
         bridge = SchrBridge()
         bridge._available = False
         result = bridge.run_qed({"n_modes": 2, "duration": 1.0})
-        assert result["status"] == "success"  # fallback
+        assert result["status"] == "partial"  # honesty: fallback ≠ success
         assert result["engine"] == "schr_fallback"
+        assert result.get("engine_truth") == "not_schr"
 
     def test_run_qed_fallback(self):
         bridge = SchrBridge()
         bridge._available = False
-        result = bridge.run_qed({
-            "n_modes": 2,
-            "n_photons_max": 2,
-            "dt": 0.1,
-            "duration": 1.0,
-            "initial_state": "ground",
-        })
-        assert result["status"] == "success"
+        result = bridge.run_qed(
+            {
+                "n_modes": 2,
+                "n_photons_max": 2,
+                "dt": 0.1,
+                "duration": 1.0,
+                "initial_state": "ground",
+            }
+        )
+        assert result["status"] == "partial"
         assert "photon_number" in result
         assert "atomic_population" in result
         assert "entanglement_entropy" in result
@@ -317,8 +330,9 @@ class TestSchrBridgeFallbackMethods:
             integrate=True,
         )
         result = bridge._fallback_schrodinger(cfg)
-        assert result["status"] == "success"
+        assert result["status"] == "partial"
         assert result["engine"] == "schr_fallback"
+        assert result.get("engine_truth") == "not_schr"
         assert result["potential_type"] == "harmonic"
 
     def test_fallback_schrodinger_well(self):
@@ -332,7 +346,7 @@ class TestSchrBridgeFallbackMethods:
             integrate=True,
         )
         result = bridge._fallback_schrodinger(cfg)
-        assert result["status"] == "success"
+        assert result["status"] == "partial"
 
     def test_fallback_schrodinger_barrier(self):
         bridge = SchrBridge()
@@ -345,7 +359,7 @@ class TestSchrBridgeFallbackMethods:
             integrate=False,
         )
         result = bridge._fallback_schrodinger(cfg)
-        assert result["status"] == "success"
+        assert result["status"] == "partial"
 
     def test_fallback_schrodinger_custom(self):
         bridge = SchrBridge()
@@ -358,38 +372,39 @@ class TestSchrBridgeFallbackMethods:
             integrate=True,
         )
         result = bridge._fallback_schrodinger(cfg)
-        assert result["status"] == "success"
+        assert result["status"] == "partial"
 
     def test_fallback_qed_ground(self):
         bridge = SchrBridge()
         cfg = QEDConfig(n_modes=2, dt=0.1, duration=1.0, initial_state="ground")
         result = bridge._fallback_qed(cfg)
-        assert result["status"] == "success"
+        assert result["status"] == "partial"
         assert result["engine"] == "schr_fallback"
+        assert result.get("engine_truth") == "not_schr"
 
     def test_fallback_qed_excited(self):
         bridge = SchrBridge()
         cfg = QEDConfig(n_modes=2, dt=0.1, duration=1.0, initial_state="excited")
         result = bridge._fallback_qed(cfg)
-        assert result["status"] == "success"
+        assert result["status"] == "partial"
 
     def test_fallback_qed_coherent(self):
         bridge = SchrBridge()
         cfg = QEDConfig(n_modes=2, dt=0.1, duration=1.0, initial_state="coherent")
         result = bridge._fallback_qed(cfg)
-        assert result["status"] == "success"
+        assert result["status"] == "partial"
 
     def test_fallback_qed_with_detuning(self):
         bridge = SchrBridge()
         cfg = QEDConfig(n_modes=2, dt=0.1, duration=1.0, detuning=0.5, initial_state="ground")
         result = bridge._fallback_qed(cfg)
-        assert result["status"] == "success"
+        assert result["status"] == "partial"
 
     def test_fallback_qed_resonant(self):
         bridge = SchrBridge()
         cfg = QEDConfig(n_modes=2, dt=0.1, duration=1.0, detuning=0.0, initial_state="ground")
         result = bridge._fallback_qed(cfg)
-        assert result["status"] == "success"
+        assert result["status"] == "partial"
 
 
 class TestSchrBridgeInitialStates:
@@ -474,7 +489,9 @@ class TestSchrBridgePatternAcceleration:
         bridge._available = True
         bridge._device = "cpu"
         pattern = MockQuantumPattern()
-        with patch.object(bridge, "run_schrodinger", return_value={"status": "success"}) as mock_run:
+        with patch.object(
+            bridge, "run_schrodinger", return_value={"status": "success", "engine": "schr"}
+        ) as mock_run:
             result = bridge.accelerate_pattern(pattern, {"n_points": 32})
             assert result["pattern_id"] == "schrodinger"
             assert result["accelerated_by"] == "schr"
@@ -484,7 +501,9 @@ class TestSchrBridgePatternAcceleration:
         bridge = SchrBridge()
         bridge._available = True
         pattern = MockQEDPattern()
-        with patch.object(bridge, "run_qed", return_value={"status": "success"}) as mock_run:
+        with patch.object(
+            bridge, "run_qed", return_value={"status": "success", "engine": "schr"}
+        ) as mock_run:
             result = bridge.accelerate_pattern(pattern, {"n_modes": 2})
             assert result["pattern_id"] == "cavity_qed"
             assert result["accelerated_by"] == "schr"
@@ -512,7 +531,9 @@ class TestSchrBridgePatternAcceleration:
         pattern.config = MagicMock()
         pattern.config.coupling = 0.5
         pattern.config.modes = 4
-        with patch.object(bridge, "run_qed", return_value={"status": "success"}) as mock_run:
+        with patch.object(
+            bridge, "run_qed", return_value={"status": "success", "engine": "schr"}
+        ) as mock_run:
             result = bridge._accelerate_qed_pattern(pattern, {})
             call_args = mock_run.call_args[0][0]
             assert call_args["coupling_strength"] == 0.5
@@ -527,8 +548,8 @@ class TestSchrBridgeBenchmark:
         bridge._available = False
         result = bridge.benchmark_legacy_vs_schr("schrodinger", {})
         assert result["schr_available"] is False
-        assert result["speedup"] == 1.0
-        assert "not installed" in result["message"]
+        assert result["speedup"] is None  # refuses synthetic speedup theater
+        assert "refuses synthetic" in result.get("note", "")
 
     def test_benchmark_legacy_vs_schr_available(self):
         bridge = SchrBridge()

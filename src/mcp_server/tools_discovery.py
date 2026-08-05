@@ -274,28 +274,9 @@ async def c4_fingerprint(problem: str) -> dict[str, Any]:
         # Fallback: heuristic C4 engine
         if not HAS_TOOLS:
             return {"error": "C4 engine not available"}
-        space = C4Space()
-        try:
-            from src.c4.routing import FRARouter
+        from src.mcp_server.fingerprint_fallback import fra_or_heuristic_fingerprint
 
-            router = FRARouter()
-            state = router.classify_c4_state(problem)
-        except (ImportError, AttributeError):
-            state = space._heuristic_classify(problem)
-            return {
-                "problem": problem,
-                "state": list(state.to_tuple()),
-                "fingerprint": str(state),
-                "backend": "heuristic",
-                "heuristic": True,
-            }
-        return {
-            "problem": problem,
-            "state": list(state.to_tuple()),
-            "fingerprint": str(state),
-            "backend": "fra_router",
-            "heuristic": False,
-        }
+        return fra_or_heuristic_fingerprint(problem, C4Space())
     except (AttributeError, ImportError) as e:
         logger.warning("MCP tool optional dep missing: %s", e)
         return {"error": str(e)}

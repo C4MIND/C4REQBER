@@ -32,9 +32,18 @@ from src.c4.state import C4State
 
 # ── canned per-stage outputs the on_complete callbacks read ────────────────
 # Keyed by PipelineStage.value (stable; outlives the step free-fn names).
+# Synthesis must be ≥50 non-error-shaped words so the honesty abort gate in
+# PipelineExecutor does not fire during orchestration characterization.
+_LONG_SYNTHESIS = (
+    "This is a complete synthetic solution for the characterization harness that "
+    "deliberately exceeds fifty words so the executor honesty gate treating short "
+    "or error-shaped synthesis as failure will not abort the staged event stream "
+    "while stubs record the full autopilot sequence through validation and beyond "
+    "for every mode including deep-work formal verification and observer refinement."
+)
 _CANNED_OUTPUT: dict[str, dict] = {
     "prior_art": {"recommendation": "REC", "merged_sources": [], "sources": []},
-    "synthesis": {"solution": "SOL", "confidence": 0.8},
+    "synthesis": {"solution": _LONG_SYNTHESIS, "confidence": 0.8},
     "mp_rotation": {"perspectives": []},
     "qzrf_select": {"operators": ["op-a", "op-b"]},
     "isomorphism_search": {"found": True},
@@ -183,8 +192,33 @@ async def test_autopilot_runs_full_stage_sequence(monkeypatch):
     assert events[-1]["event"] == "complete"
     assert _completed_stages(events) == _FULL_ORDER
     # synthesis on_complete (_on_s8) wired solution + confidence onto the result
-    assert p._last_result.final_solution == "SOL"
+    assert p._last_result.final_solution == _LONG_SYNTHESIS
     assert p._last_result.confidence == 0.8
+
+
+@pytest.mark.asyncio
+async def test_short_synthesis_aborts_pipeline(monkeypatch):
+    """Honesty regression: short/error-shaped synthesis must pipeline_abort."""
+    rec: list[str] = []
+    _install_step_stubs(monkeypatch, rec)
+    # Override synthesis canned output after stubs installed
+    for spec in ex_mod.STEP_PLAN:
+        if spec["stage"] is PipelineStage.SYNTHESIS:
+            monkeypatch.setitem(
+                spec,
+                "make",
+                lambda p: _FakeStep(
+                    PipelineStage.SYNTHESIS,
+                    rec,
+                    extra={"solution": "SOL", "confidence": 0.8},
+                ),
+            )
+            break
+    p = _make_fake_pipeline()
+    events = await _drive(p, "autopilot")
+    assert events[-1]["event"] == "pipeline_abort"
+    assert p._last_result.confidence == 0.0
+    assert p._last_result.final_solution == ""
 
 
 @pytest.mark.asyncio
@@ -284,7 +318,7 @@ async def test_deep_work_adds_formal_verification_and_theorem_export(monkeypatch
     assert "formal_verification" in stages
     assert "theorem_export" in stages
     assert stages.index("formal_verification") > stages.index("synthesis")
-    assert proof_claims == ["SOL"]
+    assert proof_claims == [_LONG_SYNTHESIS]
 
 
 # ── observer O₂ low-confidence re-synthesis (self-review: the one edited path
@@ -338,10 +372,12 @@ async def test_o2_refinement_keeps_the_better_synthesis(monkeypatch):
             calls["n"] += 1
             rec.append("synthesis")
             conf = 0.5 if calls["n"] == 1 else 0.9  # refinement beats the first pass
+            # Keep ≥50 words so honesty abort does not fire before O₂.
+            sol = f"{_LONG_SYNTHESIS} refinement_pass_{calls['n']}"
             return PipelineStepResult(
                 stage=PipelineStage.SYNTHESIS,
                 status="completed",
-                output_data={"solution": f"SOL{calls['n']}", "confidence": conf},
+                output_data={"solution": sol, "confidence": conf},
             )
 
     for spec in ex_mod.STEP_PLAN:
@@ -354,4 +390,4 @@ async def test_o2_refinement_keeps_the_better_synthesis(monkeypatch):
 
     # the keep-better branch promoted the refinement result onto the final result
     assert p._last_result.confidence == 0.9
-    assert p._last_result.final_solution == "SOL2"
+    assert p._last_result.final_solution.endswith("refinement_pass_2")

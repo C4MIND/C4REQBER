@@ -2,6 +2,18 @@
 
 > **English version:** [CHANGELOG.md](CHANGELOG.md)
 
+## v5.7.9 (2026-08-05) — Зелёный suite + NewtonResult / honesty
+
+**PyPI:** [`c4reqber==5.7.9`](https://pypi.org/project/c4reqber/5.7.9/) · `pip install -U c4reqber`
+
+Умный полный pytest (HF offline / локальный MNLI): **10045 passed, 0 failed, 0 errors**.
+
+- Контракт `NewtonResult` (без `.get` на dataclass; XPBD-fall ≠ CFD success)
+- Schr: честный `schr_available`; fallback = `partial`
+- CVC5 `sat` ≠ `valid`; sanitize fail-closed; smart gate `scripts/ci/smart_pytest.sh`
+
+---
+
 ## v5.7.8 (2026-07-23) — PyPI wheel с c4tui-v9
 
 **PyPI:** [`c4reqber==5.7.8`](https://pypi.org/project/c4reqber/5.7.8/) · только packaging/CI (функционал продукта не менялся).

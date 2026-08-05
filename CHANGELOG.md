@@ -2,6 +2,30 @@
 
 > **Русская версия:** [CHANGELOG.ru.md](CHANGELOG.ru.md)
 
+## v5.7.9 (2026-08-05) — Suite green + NewtonResult / honesty test alignment
+
+**PyPI:** [`c4reqber==5.7.9`](https://pypi.org/project/c4reqber/5.7.9/) · `pip install -U c4reqber`
+
+Smart full pytest (HF offline / local MNLI, no Hub re-download): **10045 passed, 0 failed, 0 errors** (~16.5 min). Collected: 10166.
+
+### Product
+- **NewtonResult contract:** `newton_result_as_dict` + `newton_result_usable_for_pattern` — patterns no longer call `.get` on the dataclass; generic SolverXPBD falling-body payloads do not paint CFD/thermal/MD as complete
+- **Schr:** `benchmark_legacy_vs_schr` reports real `schr_available` (not hardcoded `True`); NumPy fallback stays `partial` / `engine_truth=not_schr`
+- **MNLI:** load with `local_files_only` when project HF cache exists / `HF_HUB_OFFLINE`
+- **LLM:** `C4_LLM_HTTP_TIMEOUT` + rotation cap for fail-fast CI; SystemAnalyzer `C4_LLM_DEEPEN=0` for deterministic unit runs
+- **MCP:** `tools_discovery.py` split (`fingerprint_fallback.py`) under 300-line gate
+
+### Tests / honesty (no green-fake)
+- CVC5 `sat` ≠ `valid`; Schr fallback tests expect `partial`; injection sanitize fail-closed; API unexpected-error detail needs `DEV_MODE_BYPASS_TOKEN`
+- Executor characterization: ≥50-word canned synthesis + abort regression for short SOL
+- LLM characterization asserts live SSOT models; mocks `generate_with_fallback` (not removed `_call_openai_sync`)
+- Gate: [`scripts/ci/smart_pytest.sh`](scripts/ci/smart_pytest.sh)
+
+### Also shipping (already on main since 5.7.8)
+- Deep-audit / honesty waves (verify COMPILED, engine_truth demotion, agenda novelty nulls, TUI papers count, behavioral Z3/health/MCP)
+
+---
+
 ## Unreleased — Wave-5/6 dual-path honesty (Post–Wave-4 Audit Program)
 
 - **W5a TUI/SSE:** `sse_engine_status_from_sim_payload` shared mapper; discovery SSE + Go `simStatusString` demote `not_*` / stub / heuristic (no green on Newton NumPy / AMUSE→Rebound)

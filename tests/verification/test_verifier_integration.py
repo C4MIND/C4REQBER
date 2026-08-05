@@ -27,9 +27,9 @@ class TestRealVerifierBackends:
         client = CVC5Client()
         if not client.test_connection():
             pytest.skip("cvc5 not installed")
-        assert (
-            client.verify("(declare-const x Int)\n(assert (> x 0))\n(check-sat)\n")["valid"] is True
-        )
+        sat = client.verify("(declare-const x Int)\n(assert (> x 0))\n(check-sat)\n")
+        assert sat["status"] == "sat"
+        assert sat["valid"] is False  # honesty: sat ≠ verified
 
     def test_tla_live(self) -> None:
         from src.verification.tla_client import TLAClient

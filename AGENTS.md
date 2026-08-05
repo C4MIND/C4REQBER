@@ -142,11 +142,13 @@ Updated 2026-07-18 (honesty / anti green-fake pass). **Rules SSOT:** [`docs/HONE
 ### Install & Quickstart
 
 ```bash
-pip install c4reqber           # PyPI — https://pypi.org/project/c4reqber/
+pip install -U c4reqber        # PyPI 5.7.9+ — https://pypi.org/project/c4reqber/
 blast setup                    # Interactive checkbox wizard — pick packages, auto-isolate incompatible ones
 blast setup --auto             # Non-interactive: install everything automatically
 blast solve "problem"         # 4-mode auto-router
 ```
+Full suite gate (HF offline / local MNLI): `bash scripts/ci/smart_pytest.sh` — **10045 passed** (2026-08-05).
+
 `blast setup` auto-detects your OS (Apple Silicon / Intel / Linux), scans installed packages, and lets you pick what to install. Python 3.14-incompatible packages (deepchem, unsloth, vllm, nashpy, flower) auto-install into isolated Python 3.12 environments via `uv`.
 
 ### MCP Server (for AI agents)

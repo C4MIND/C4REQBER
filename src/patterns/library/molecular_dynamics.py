@@ -297,7 +297,12 @@ class MolecularDynamicsPattern:
 
     def run(self, hypothesis: dict[str, Any] = None) -> dict[str, Any]:  # type: ignore[assignment]
         """Run molecular dynamics simulation with Newton (or fallback)"""
-        from src.simulations.newton_bridge import NewtonBridge
+        from src.simulations.newton_bridge import (
+            NewtonBridge,
+            newton_result_as_dict,
+            newton_result_usable_for_pattern,
+        )
+
         bridge = NewtonBridge()
 
         if bridge.available:
@@ -319,16 +324,15 @@ class MolecularDynamicsPattern:
             }
             if hypothesis:
                 newton_config.update(hypothesis)
-            result = bridge.run_simulation(newton_config)
-            if result.get("status") == "success":
+            result = newton_result_as_dict(bridge.run_simulation(newton_config))
+            if newton_result_usable_for_pattern(result, pattern_id=self.PATTERN_ID):
                 return result
 
         # Fallback to legacy implementation
         cfg = self.config
 
         logger.info(
-            f"Starting MD simulation: {cfg.n_atoms} atoms, "
-            f"{cfg.steps} steps, T={cfg.temperature}K"
+            f"Starting MD simulation: {cfg.n_atoms} atoms, {cfg.steps} steps, T={cfg.temperature}K"
         )
 
         for step in range(cfg.steps):

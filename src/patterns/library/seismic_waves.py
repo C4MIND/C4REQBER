@@ -101,9 +101,7 @@ class SeismicWavesPattern:
             w = np.array([1.0 / 6.0, 5.0 / 6.0, 5.0 / 6.0, 1.0 / 6.0])
         elif n == 5:
             xi = np.array([-1.0, -np.sqrt(3 / 7), 0.0, np.sqrt(3 / 7), 1.0])
-            w = np.array(
-                [1.0 / 10.0, 49.0 / 90.0, 32.0 / 45.0, 49.0 / 90.0, 1.0 / 10.0]
-            )
+            w = np.array([1.0 / 10.0, 49.0 / 90.0, 32.0 / 45.0, 49.0 / 90.0, 1.0 / 10.0])
         else:
             # Default to 4 points
             xi = np.array([-1.0, -0.5, 0.5, 1.0])
@@ -330,23 +328,11 @@ class SeismicWavesPattern:
                     fx[i, j, k] = (
                         mu_u[i, j, k]
                         * (
-                            (
-                                self.ux[i + 1, j, k]
-                                - 2 * self.ux[i, j, k]
-                                + self.ux[i - 1, j, k]
-                            )
+                            (self.ux[i + 1, j, k] - 2 * self.ux[i, j, k] + self.ux[i - 1, j, k])
                             / dx**2
-                            + (
-                                self.ux[i, j + 1, k]
-                                - 2 * self.ux[i, j, k]
-                                + self.ux[i, j - 1, k]
-                            )
+                            + (self.ux[i, j + 1, k] - 2 * self.ux[i, j, k] + self.ux[i, j - 1, k])
                             / dy**2
-                            + (
-                                self.ux[i, j, k + 1]
-                                - 2 * self.ux[i, j, k]
-                                + self.ux[i, j, k - 1]
-                            )
+                            + (self.ux[i, j, k + 1] - 2 * self.ux[i, j, k] + self.ux[i, j, k - 1])
                             / dz**2
                         )
                         + (lam_u[i, j, k] + mu_u[i, j, k]) * dux_dx
@@ -434,14 +420,17 @@ class SeismicWavesPattern:
     def _calculate_energy(self) -> float:
         """Calculate total kinetic energy"""
         ke = 0.5 * np.sum(self.rho * (self.vx**2 + self.vy**2 + self.vz**2))
-        ke *= (
-            (self.x[1] - self.x[0]) * (self.y[1] - self.y[0]) * (self.z[1] - self.z[0])
-        )
+        ke *= (self.x[1] - self.x[0]) * (self.y[1] - self.y[0]) * (self.z[1] - self.z[0])
         return ke  # type: ignore[no-any-return]
 
     def run(self, hypothesis: dict[str, Any] = None) -> dict[str, Any]:  # type: ignore[assignment]
         """Run the seismic wave simulation with Newton (or fallback)."""
-        from src.simulations.newton_bridge import NewtonBridge
+        from src.simulations.newton_bridge import (
+            NewtonBridge,
+            newton_result_as_dict,
+            newton_result_usable_for_pattern,
+        )
+
         bridge = NewtonBridge()
 
         if bridge.available:
@@ -474,8 +463,8 @@ class SeismicWavesPattern:
             }
             if hypothesis:
                 newton_config.update(hypothesis)
-            result = bridge.run_simulation(newton_config)
-            if result.get("status") == "success":
+            result = newton_result_as_dict(bridge.run_simulation(newton_config))
+            if newton_result_usable_for_pattern(result, pattern_id=self.PATTERN_ID):
                 return result
 
         # Fallback to legacy implementation
@@ -506,9 +495,7 @@ class SeismicWavesPattern:
                 self.history["kinetic_energy"].append(ke)
 
             if step % 1000 == 0:
-                logger.debug(
-                    f"Step {step}/{n_steps}, t={t:.3f}s, max|u|={max_disp:.4e}m"
-                )
+                logger.debug(f"Step {step}/{n_steps}, t={t:.3f}s, max|u|={max_disp:.4e}m")
 
         return self._format_output()
 
@@ -610,14 +597,13 @@ import unittest
 
 class TestSeismicWaves(unittest.TestCase):
     """TestSeismicWaves."""
+
     def test_initialization(self) -> None:
         """Test that pattern initializes correctly"""
         config = SeismicWavesConfig(nx=20, ny=20, nz=10, ngll=3)
         pattern = SeismicWavesPattern(config)
 
-        self.assertEqual(
-            pattern.ux.shape, (pattern.nx_total, pattern.ny_total, pattern.nz_total)
-        )
+        self.assertEqual(pattern.ux.shape, (pattern.nx_total, pattern.ny_total, pattern.nz_total))
         self.assertEqual(pattern.vp.shape, pattern.ux.shape)
 
     def test_gll_points(self) -> None:
@@ -729,9 +715,7 @@ class TestSeismicWaves(unittest.TestCase):
 
     def test_short_simulation(self) -> None:
         """Test running a short simulation"""
-        config = SeismicWavesConfig(
-            nx=15, ny=15, nz=8, duration=1.0, dt=0.001, output_interval=50
-        )
+        config = SeismicWavesConfig(nx=15, ny=15, nz=8, duration=1.0, dt=0.001, output_interval=50)
         pattern = SeismicWavesPattern(config)
 
         result = pattern.run()

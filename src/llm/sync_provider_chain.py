@@ -18,7 +18,15 @@ logger = logging.getLogger(__name__)
 
 _LOCAL_PROVIDERS = frozenset({"lm_studio", "ollama", "mlx"})
 # R9: cap rotation depth so 429 storms do not burn every free-tier key.
+# Read at call time via _max_rotation_depth() so smart_pytest can lower it.
 MAX_ROTATION_DEPTH = int(os.environ.get("C4_LLM_MAX_ROTATIONS", "8"))
+
+
+def _max_rotation_depth() -> int:
+    try:
+        return max(1, int(os.environ.get("C4_LLM_MAX_ROTATIONS", "8") or "8"))
+    except ValueError:
+        return 8
 
 
 def _parse_retry_after(response: httpx.Response) -> float | None:
@@ -299,13 +307,17 @@ def generate_with_fallback(
     saw_429 = False
     attempts = 0
 
-    with httpx.Client(timeout=120.0) as client:
+    # C4_LLM_HTTP_TIMEOUT: smart CI/pytest uses short values so hung providers
+    # fail fast instead of burning the full pytest-timeout budget.
+    _http_timeout = float(os.environ.get("C4_LLM_HTTP_TIMEOUT", "120") or "120")
+    with httpx.Client(timeout=_http_timeout) as client:
         idx = 0
         while idx < len(chain):
-            if attempts >= MAX_ROTATION_DEPTH:
+            rot_cap = _max_rotation_depth()
+            if attempts >= rot_cap:
                 logger.warning(
                     "LLM rotation cap reached (%d); stopping to avoid key burn",
-                    MAX_ROTATION_DEPTH,
+                    rot_cap,
                 )
                 break
             spec = chain[idx]

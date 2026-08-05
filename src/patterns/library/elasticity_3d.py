@@ -132,9 +132,7 @@ class HexahedralElement:
             xi_i = -1 if i % 2 == 0 else 1
             eta_i = -1 if (i // 2) % 2 == 0 else 1
             zeta_i = -1 if i < 4 else 1
-            N[i] = (
-                0.125 * (1 + xi_i * xi[0]) * (1 + eta_i * xi[1]) * (1 + zeta_i * xi[2])
-            )
+            N[i] = 0.125 * (1 + xi_i * xi[0]) * (1 + eta_i * xi[1]) * (1 + zeta_i * xi[2])
         return N
 
     def shape_function_derivatives_q1(self, xi: np.ndarray) -> np.ndarray:
@@ -524,7 +522,12 @@ class Elasticity3D(BasePattern):
         Returns:
             Dictionary with displacement field, pressures, and stress metrics.
         """
-        from src.simulations.newton_bridge import NewtonBridge
+        from src.simulations.newton_bridge import (
+            NewtonBridge,
+            newton_result_as_dict,
+            newton_result_usable_for_pattern,
+        )
+
         bridge = NewtonBridge()
 
         if bridge.available:
@@ -547,8 +550,8 @@ class Elasticity3D(BasePattern):
             }
             if hypothesis:
                 newton_config.update(hypothesis)
-            result = bridge.run_simulation(newton_config)
-            if result.get("status") == "success":
+            result = newton_result_as_dict(bridge.run_simulation(newton_config))
+            if newton_result_usable_for_pattern(result, pattern_id=self.PATTERN_ID):
                 result["pattern_id"] = self.PATTERN_ID
                 return result
 
@@ -600,8 +603,7 @@ class Elasticity3D(BasePattern):
                     (stresses[:, 0] - stresses[:, 1]) ** 2
                     + (stresses[:, 1] - stresses[:, 2]) ** 2
                     + (stresses[:, 2] - stresses[:, 0]) ** 2
-                    + 6
-                    * (stresses[:, 3] ** 2 + stresses[:, 4] ** 2 + stresses[:, 5] ** 2)
+                    + 6 * (stresses[:, 3] ** 2 + stresses[:, 4] ** 2 + stresses[:, 5] ** 2)
                 )
             ),
             "max_displacement": max_disp,

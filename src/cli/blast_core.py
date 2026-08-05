@@ -36,6 +36,17 @@ ensure_cli_utf8()
 console = Console(soft_wrap=True, legacy_windows=False)
 
 
+def _ensure_cli_ready() -> None:
+    """UTF-8 + secrets.env — safe for direct cmd_* callers (agent/daemon), not only Typer callback."""
+    ensure_cli_utf8()
+    try:
+        from src.config.paths import apply_config_to_env
+
+        apply_config_to_env()
+    except Exception as exc:
+        logger.debug("apply_config_to_env failed: %s", exc)
+
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # Mode A: blast solve — Problem Solving (UniversalSolvePipeline v2)
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -54,6 +65,7 @@ def cmd_solve(
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Show detailed output"),
 ) -> dict[str, Any]:
     """Solve a problem — 12-stage pipeline with observer (PRD, plans, blueprints, code)."""
+    _ensure_cli_ready()
     import asyncio
 
     from src.core.profile_manager import UserProfileManager
@@ -204,6 +216,7 @@ def cmd_turbo(
     ),
 ) -> None:
     """Generate paradigm-shifting research proposal."""
+    _ensure_cli_ready()
     if dry_run:
         console.print("[bold yellow]DRY RUN — no execution[/]")
         console.print(f"  Topic: {topic[:60]}")
@@ -339,6 +352,7 @@ def cmd_flash(
     ),
 ) -> None:
     """Get a quick answer (no pipeline, just fast LLM + optional web search)."""
+    _ensure_cli_ready()
     from src.knowledge.flash_runner import run_flash
 
     console.print(f"[bold]BLAST flash[/bold] — {get_mode_description('flash')}")
@@ -419,13 +433,18 @@ def cmd_flash(
                 f"     [dim]{verdict} — not a citation until CrossRef/OpenAlex confirm[/dim]"
             )
 
-    used_raw = search_meta.get("sources_used") or []
-    if isinstance(used_raw, int):
-        used: list[str] = []
-    elif isinstance(used_raw, list):
-        used = [str(x) for x in used_raw]
-    else:
-        used = []
+    from src.knowledge.orchestrator import source_names_from_result
+
+    # Flash meta uses list names; tolerate leaked orchestrator int via helper
+    used = source_names_from_result(
+        {
+            "source_names": search_meta.get("sources_used")
+            if isinstance(search_meta.get("sources_used"), list)
+            else search_meta.get("source_names"),
+            "sources_used": search_meta.get("sources_count", search_meta.get("sources_used")),
+            "source_stats": search_meta.get("source_stats") or {},
+        }
+    )
     errs = search_meta.get("errors") or {}
     if deep or with_sources:
         console.print(
@@ -503,6 +522,7 @@ def cmd_turbofactory(
     Each agent runs either UniversalSolvePipeline (solve), HILDiscoveryPipeline (turbo),
     or both (mixed) on a sub-problem, then results are synthesized.
     """
+    _ensure_cli_ready()
     from src.agents.pipeline import UniversalSolvePipeline
     from src.core.profile_manager import UserProfileManager
     from src.llm.gateway import get_gateway

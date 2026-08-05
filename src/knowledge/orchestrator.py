@@ -833,9 +833,12 @@ class MultiSourceSearcher:
         for p in papers:
             p["cross_validation_score"] = self._cross_validate_score(p)
 
+        names = sorted(sources_used)
         return {
             "total_papers": len(papers),
-            "sources_used": sorted(sources_used),
+            # Match search_all contract: sources_used = int count, source_names = list
+            "sources_used": len(names),
+            "source_names": names,
             "source_counts": source_counts,
             "errors": errors,
             "papers": papers[:200],

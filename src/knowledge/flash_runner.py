@@ -94,9 +94,13 @@ def flash_honesty_status(
     return status, warnings
 
 
-async def run_usp_context(question: str) -> dict[str, Any]:
-    """Optional USP cognitive components for deep flash."""
+async def run_usp_context(question: str) -> tuple[dict[str, Any], list[str]]:
+    """Optional USP cognitive components for deep flash.
+
+    Returns (context, failures) — failures named so deep flash can demote to partial.
+    """
     usp_context: dict[str, Any] = {}
+    failures: list[str] = []
     c4_state: Any = "unknown"
 
     try:
@@ -110,6 +114,7 @@ async def run_usp_context(question: str) -> dict[str, Any]:
             f"{len(impact_mapped.get('stakeholders', []))} stakeholders"
         )
     except Exception as exc:
+        failures.append("impact")
         logger.debug("IMPACT failed: %s", exc)
 
     try:
@@ -119,6 +124,7 @@ async def run_usp_context(question: str) -> dict[str, Any]:
         c4_state = c4_space.fingerprint(question)  # type: ignore[attr-defined]
         usp_context["c4_state"] = str(c4_state)
     except Exception as exc:
+        failures.append("c4")
         logger.debug("C4 fingerprint failed: %s", exc)
 
     try:
@@ -130,6 +136,7 @@ async def run_usp_context(question: str) -> dict[str, Any]:
         perspectives = mp_rotation.rotate(question, state=str(c4_state))  # type: ignore[attr-defined]
         usp_context["perspectives"] = [p.get("name", "") for p in perspectives[:3]]
     except Exception as exc:
+        failures.append("mp")
         logger.debug("MP rotation failed: %s", exc)
 
     try:
@@ -139,6 +146,7 @@ async def run_usp_context(question: str) -> dict[str, Any]:
         operators = qzrf.select(str(c4_state))  # type: ignore[attr-defined]
         usp_context["qzrf"] = operators[:5]
     except Exception as exc:
+        failures.append("qzrf")
         logger.debug("QZRF failed: %s", exc)
 
     try:
@@ -148,6 +156,7 @@ async def run_usp_context(question: str) -> dict[str, Any]:
         patterns = matrix.match(question)
         usp_context["patterns"] = [p[0].id for p in patterns[:3]]
     except Exception as exc:
+        failures.append("matrix_dream")
         logger.debug("MatrixDream failed: %s", exc)
 
     try:
@@ -157,6 +166,7 @@ async def run_usp_context(question: str) -> dict[str, Any]:
         cdi_result = cdi.analyze(question, context={"c4_state": str(c4_state)})  # type: ignore[attr-defined]
         usp_context["contradictions"] = len(cdi_result.get("contradictions", []))
     except Exception as exc:
+        failures.append("cdi")
         logger.debug("CDI failed: %s", exc)
 
     try:
@@ -166,9 +176,10 @@ async def run_usp_context(question: str) -> dict[str, Any]:
         tote_result = tote.validate(question)  # type: ignore[attr-defined]
         usp_context["tote_status"] = tote_result.get("status", "unknown")
     except Exception as exc:
+        failures.append("tote")
         logger.debug("TOTE failed: %s", exc)
 
-    return usp_context
+    return usp_context, failures
 
 
 def format_usp_section(usp_context: dict[str, Any]) -> str:
@@ -197,12 +208,22 @@ async def run_flash(
     format: str = "concise",
 ) -> dict[str, Any]:
     """Single flash implementation for CLI and MCP."""
+    # Defense in depth: secrets.env even when called outside blast_app callback
+    try:
+        from src.config.paths import apply_config_to_env
+
+        apply_config_to_env()
+    except Exception as exc:
+        logger.debug("run_flash apply_config_to_env: %s", exc)
+
     from src.knowledge.flash_sources import format_source_card, gather_flash_sources
+    from src.knowledge.orchestrator import source_names_from_result
     from src.llm.gateway import get_gateway
 
     usp_context: dict[str, Any] = {}
+    usp_failures: list[str] = []
     if deep:
-        usp_context = await run_usp_context(question)
+        usp_context, usp_failures = await run_usp_context(question)
 
     papers: list[dict[str, Any]] = []
     context = ""
@@ -231,15 +252,10 @@ async def run_flash(
             papers = []
             context = ""
 
-    # Defensive: never leave sources_used as an int in flash meta
+    # Defensive: normalize leaked orchestrator int → adapter name list
     used_raw = search_meta.get("sources_used")
-    if isinstance(used_raw, int):
-        search_meta["sources_used"] = []
-        search_meta.setdefault("errors", {})["sources_used_type"] = (
-            "sources_used was int (orchestrator count); expected list — normalized to []"
-        )
-    elif not isinstance(used_raw, list):
-        search_meta["sources_used"] = []
+    if not isinstance(used_raw, list):
+        search_meta["sources_used"] = source_names_from_result(search_meta)
 
     verified = [p for p in papers if p.get("verified")]
     verified_count = len(verified)
@@ -274,6 +290,10 @@ async def run_flash(
             temperature=0.3,
         )
         answer = (raw or "").strip() if isinstance(raw, str) else str(raw or "").strip()
+        # Providers that embed failures in content (e.g. "[MLX Error] ...") must not look successful
+        if answer.startswith(("[MLX Error]", "Batch error:", "[Error]")):
+            logger.warning("flash LLM returned error-shaped content: %s", answer[:120])
+            answer = ""
     except Exception as exc:
         from src.llm.errors import RateLimited
 
@@ -286,6 +306,9 @@ async def run_flash(
             try:
                 resp = await llm.generate(prompt, max_tokens=800, temperature=0.3)
                 answer = (getattr(resp, "content", None) or "").strip()
+                if answer.startswith(("[MLX Error]", "Batch error:", "[Error]")):
+                    logger.warning("flash LLM generate error-shaped content: %s", answer[:120])
+                    answer = ""
             except RateLimited as rl_exc:
                 rate_limited = True
                 logger.warning("flash LLM rate limited on generate: %s", rl_exc)
@@ -306,6 +329,10 @@ async def run_flash(
     for w in search_meta.get("warnings") or []:
         if w and w not in warnings:
             warnings.append(str(w))
+    if deep and usp_failures:
+        warnings.append(f"USP components failed: {', '.join(usp_failures)}")
+        if status == "success":
+            status = "partial"
     gather_errs = search_meta.get("errors") or {}
     if gather_errs and (with_sources or deep):
         # Gather/search defects must not paint success
@@ -338,6 +365,9 @@ async def run_flash(
                     status = "partial"
         except Exception as exc:
             logger.debug("flash quality gate failed: %s", exc)
+            warnings.append(f"quality gate unavailable: {type(exc).__name__}")
+            if status == "success":
+                status = "partial"
 
     cards = [format_source_card(p) for p in display_papers[:5]]
     unverified_hits = [format_source_card(p) for p in papers if not p.get("verified")][:5]

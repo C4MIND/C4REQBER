@@ -89,18 +89,34 @@ async def c4_search(query: str, sources: list[str] | None = None) -> dict[str, A
                 "metadata": {"query": query, "sources": sources},
             }
         searcher = MultiSourceSearcher()
+        search_errors: dict[str, str] = {}
         if sources:
             per_source = await asyncio.gather(
                 *(searcher.search_single(source, query) for source in sources)
             )
-            papers = [paper for result in per_source for paper in result]
+            papers = []
+            for src_id, result in zip(sources, per_source, strict=False):
+                for paper in result or []:
+                    if isinstance(paper, dict) and paper.get("error"):
+                        search_errors[str(src_id)] = str(paper["error"])[:200]
+                    elif isinstance(paper, dict):
+                        papers.append(paper)
             source_names = list(sources)
         else:
             search_result = await searcher.search_all(query)
-            papers = list(search_result.get("papers", []))
+            papers = [
+                p
+                for p in (search_result.get("papers") or [])
+                if isinstance(p, dict) and not p.get("error")
+            ]
             from src.knowledge.orchestrator import source_names_from_result
 
             source_names = source_names_from_result(search_result)
+            stats = search_result.get("source_stats") or {}
+            if isinstance(stats, dict):
+                for src_id, st in stats.items():
+                    if isinstance(st, dict) and st.get("ok") is False and st.get("error"):
+                        search_errors[str(src_id)] = str(st["error"])[:200]
 
         sanitized = [sanitize_biblio_row(p) for p in papers if isinstance(p, dict)]
         source_report = source_cards_from_papers(sanitized, sanitize=False)
@@ -111,6 +127,10 @@ async def c4_search(query: str, sources: list[str] | None = None) -> dict[str, A
             sources_requested=bool(sources),
             verified_count=source_report["verified_count"],
         )
+        if search_errors and not sanitized:
+            status = "error"
+        elif search_errors and status == "success":
+            status = "partial"
         out: dict[str, Any] = {
             "status": status,
             "data": truncated_verified or truncated_unverified,
@@ -123,8 +143,11 @@ async def c4_search(query: str, sources: list[str] | None = None) -> dict[str, A
                 "source_names": source_names,
                 "total_found": len(papers),
                 "returned": len(truncated_verified or truncated_unverified),
+                "errors": search_errors,
             },
         }
+        if search_errors:
+            out["errors"] = search_errors
         if source_report["unverified_hits"]:
             out["unverified_hits"] = truncated_unverified
         if status == "partial":

@@ -85,7 +85,24 @@ class CitationVerifier:
 
         tasks = [self._verify_single(cit, sources or []) for cit in citations]
         results = await asyncio.gather(*tasks, return_exceptions=True)
-        return [r for r in results if isinstance(r, CitationCheck)]
+        # Fail-closed: never drop exceptions (under-counts ERROR / inflates trust)
+        out: list[CitationCheck] = []
+        for i, r in enumerate(results):
+            if isinstance(r, CitationCheck):
+                out.append(r)
+                continue
+            cit = citations[i] if i < len(citations) else {}
+            err_name = type(r).__name__ if isinstance(r, BaseException) else "Error"
+            out.append(
+                CitationCheck(
+                    citation_id=str(cit.get("id") or f"[{i + 1}]"),
+                    title="",
+                    doi=None,
+                    verdict="ERROR",
+                    check_error=err_name,
+                )
+            )
+        return out
 
     # ── Extraction ───────────────────────────────────────────────────────
 

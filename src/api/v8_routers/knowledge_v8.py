@@ -7,6 +7,8 @@ searched live.
 
 from __future__ import annotations
 
+from typing import Any
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, field_validator
 
@@ -68,12 +70,27 @@ async def unified_search(req: UnifiedSearchRequest):
     names = source_names_from_result(result)
     papers = result.get("papers", [])
     count = result.get("sources_used")
+    stats_raw = result.get("source_stats")
+    stats: dict[str, Any] = stats_raw if isinstance(stats_raw, dict) else {}
+    errors = {
+        sid: str(st.get("error"))[:200]
+        for sid, st in stats.items()
+        if isinstance(st, dict) and st.get("ok") is False and st.get("error")
+    }
+    status = "success"
+    if errors and not papers:
+        status = "error"
+    elif errors or result.get("below_min_papers"):
+        status = "partial"
     return {
+        "status": status,
         "results": papers[: req.max_results],
         "total": len(papers),
         "query": req.query,
         "sources_used": names,
         "sources_count": count if isinstance(count, int) else len(names),
+        "errors": errors,
+        "below_min_papers": bool(result.get("below_min_papers")),
     }
 
 

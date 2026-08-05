@@ -10,6 +10,15 @@ Windows tester (c4reqber 5.7.8 / Win10 / Py3.12): `blast flash --sources` crashe
 - **Fix:** `source_names_from_result()` SSOT; flash/API/MCP normalize names; CLI prints `tavily=on|off|no_key` and `dedup=…`; missing ST → lexical fallback (info, not crash); UTF-8 console + ASCII mascot fallback for cp125x.
 - **Tests:** `tests/test_flash_sources.py` (orchestrator int shape + AISI gather), `tests/test_win_console_encoding.py`.
 
+### Wave-2 audit (10 angles) follow-ups
+
+- `cmd_*` / `run_flash` / MCP `blast_solve|turbo|flash` call `apply_config_to_env` (secrets.env not Typer-callback-only)
+- CitationVerifier dissertation path maps gather exceptions → `ERROR` (no silent drop)
+- Knowledge `/v8/knowledge/search` + MCP `c4_search` surface source `errors` / `status`
+- Legacy `typer_core.solve` fail-closed (hardcoded hypotheses removed)
+- Desktop launcher + legacy typer UTF-8; flash rejects `[MLX Error]` as empty answer
+- Tests: `tests/test_audit_wave2_honesty.py`
+
 ---
 
 ## v5.7.8 (2026-07-23) — PyPI wheel ships c4tui-v9

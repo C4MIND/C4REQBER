@@ -4,6 +4,7 @@ Robust: never crashes desktop on missing keys or partial config.
 
 Splash: Python rich banner (desktop port of terminal splash vibe) + full Go TUI v9 animated splash.
 """
+
 from __future__ import annotations
 
 import os
@@ -17,16 +18,20 @@ from rich.text import Text
 
 from src.cli.config_init import config_exists, run_init_wizard
 from src.cli.tui_launcher import launch_tui_v9
+from src.cli.win_console import ensure_cli_utf8
 from src.config.paths import apply_config_to_env as central_apply
 from src.llm.model_assignment import ModelAssignment
 
-console = Console()
+
+ensure_cli_utf8()
+console = Console(soft_wrap=True, legacy_windows=False)
 
 
 # Desktop version is sourced from the bundled Go TUI v9 binary at
 # runtime via the central `tui_v9_version()` helper (see src/cli/tui_launcher.py)
 # — a static "v9" string here would drift from the actual release the
 # user is running.  Pass it in via the launch_tui_v9() call instead.
+
 
 def render_desktop_splash(first_run: bool, version: str = "v9") -> None:
     """Upgraded desktop splash banner.
@@ -45,7 +50,7 @@ def render_desktop_splash(first_run: bool, version: str = "v9") -> None:
     art.append("   ▐▌  ▐▌   \n", style="magenta")
     art.append("  ▗▞▚▞▚▞▚▖  \n", style="bright_magenta")
     art.append("  ▐", style="magenta")
-    art.append("  ░░  ", style="cyan")   # hint of bloom/aurora energy
+    art.append("  ░░  ", style="cyan")  # hint of bloom/aurora energy
     art.append("▌  ", style="magenta")
     art.append("C4\n", style="bold green")
     art.append("   ▝▚▞▚▞▘   \n", style="bright_cyan")
@@ -73,10 +78,14 @@ def render_desktop_splash(first_run: bool, version: str = "v9") -> None:
 
     # Compose content
     content = Text.assemble(
-        art, "\n",
-        title, "\n",
-        sub, "\n",
-        motto, "\n\n",
+        art,
+        "\n",
+        title,
+        "\n",
+        sub,
+        "\n",
+        motto,
+        "\n\n",
         footer,
     )
 
@@ -117,6 +126,7 @@ def main() -> int:
 
     # Always ensure models.json (full settings even if user skipped wizard or deleted it)
     from src.config.paths import MODELS_JSON
+
     if not MODELS_JSON.exists():
         try:
             assignment = ModelAssignment.create_default("balanced")
@@ -138,6 +148,7 @@ def main() -> int:
         # drifts from the real release.
         try:
             from src.cli.tui_launcher import tui_v9_version
+
             ver = tui_v9_version()
         except Exception:
             ver = "v9"

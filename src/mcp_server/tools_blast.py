@@ -1,9 +1,23 @@
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from src.knowledge.flash_contract import source_cards_from_papers
 from src.mcp_server.honesty import outer_status_from_hil_like, record_field_status
+
+
+logger = logging.getLogger(__name__)
+
+
+def _mcp_ready() -> None:
+    """Load secrets.env for MCP tools even if server import-time apply was skipped."""
+    try:
+        from src.config.paths import apply_config_to_env
+
+        apply_config_to_env()
+    except Exception as exc:
+        logger.debug("MCP apply_config_to_env: %s", exc)
 
 
 async def blast_solve(
@@ -19,6 +33,7 @@ async def blast_solve(
     - 36 simulation engines (including 32 P1 adapters)
     """
     try:
+        _mcp_ready()
         from src.agents.pipeline import UniversalSolvePipeline
         from src.core.profile_manager import UserProfileManager
 
@@ -88,6 +103,7 @@ async def blast_turbo(
     - 36 simulation engines (including 32 P1 adapters + 4 Virtual Bio bridges)
     """
     try:
+        _mcp_ready()
         from src.core.profile_manager import UserProfileManager
         from src.pipeline.hil_pipeline import HILDiscoveryPipeline
 
@@ -159,15 +175,8 @@ async def blast_flash(
         deep: Run USP cognitive components (IMPACT, C4, MP, QZRF, CDI, TOTE)
     """
     try:
-        from src.config.paths import apply_config_to_env
+        _mcp_ready()
         from src.knowledge.flash_runner import run_flash
-
-        try:
-            apply_config_to_env()
-        except Exception as exc:
-            import logging
-
-            logging.getLogger(__name__).debug("apply_config_to_env: %s", exc)
 
         result = await run_flash(question, with_sources=with_sources, deep=deep, format="concise")
         out: dict[str, Any] = {

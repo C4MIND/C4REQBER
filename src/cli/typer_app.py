@@ -16,15 +16,20 @@ from rich.style import Style
 from rich.table import Table
 from rich.text import Text
 
+from src.cli.win_console import ensure_cli_utf8
+
+
+# Legacy turbo CLI (not the product `blast` entry). UTF-8 only — prefer `blast`.
+ensure_cli_utf8()
 
 app = typer.Typer(
     name="turbo",
-    help="C4REQBER v5.4 - Scientific Hypothesis Generation Platform",
+    help=("LEGACY turbo CLI (demo stubs disabled). Use product entry: blast / python -m src"),
     rich_markup_mode="rich",
     no_args_is_help=True,
     add_completion=False,
 )
-console = Console()
+console = Console(soft_wrap=True, legacy_windows=False)
 
 # ─── Cyberpunk color palette (synced with TUI v9) ──────────────────────────
 _COLORS = {

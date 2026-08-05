@@ -11,8 +11,7 @@ repos:
         args: ['--maxkb=500']
       - id: detect-private-key
       - id: check-merge-conflict
-      - id: no-commit-to-branch
-        args: ['--branch', 'main']
+      # Commits land on main directly (maintainer workflow). Feature branches optional.
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.15.12

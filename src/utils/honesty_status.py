@@ -64,6 +64,38 @@ _COMPUTE_EVIDENCE_KEYS = frozenset(
 )
 
 
+def is_fallback_engine_truth(engine_truth: Any) -> bool:
+    """True when engine_truth admits a stand-in (not_*, *_not_*, fallback/legacy)."""
+    t = str(engine_truth or "").lower()
+    return bool(t) and (
+        t.startswith("not_")
+        or "_not_" in t
+        or t.endswith("_not")
+        or "fallback" in t
+        or t.startswith("legacy")
+        or "legacy" in t
+    )
+
+
+def simulation_is_real_evidence(simulation: Any) -> bool:
+    """Whether a sim payload may be narrated as real computational evidence.
+
+    Aligns dissertation / quality gates: success + non-stub + non-heuristic +
+    non-fallback engine_truth.
+    """
+    if not isinstance(simulation, dict):
+        return False
+    if str(simulation.get("status") or "").lower() != "success":
+        return False
+    if simulation.get("stub") is True or simulation.get("heuristic") is True:
+        return False
+    if simulation.get("executed") is False:
+        return False
+    if is_fallback_engine_truth(simulation.get("engine_truth")):
+        return False
+    return True
+
+
 def sse_engine_status_from_sim_payload(result: Any) -> str:
     """Map sim payload → SSE ``engine_status`` (shared by discovery emitters + MCP).
 

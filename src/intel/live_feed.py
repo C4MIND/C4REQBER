@@ -395,6 +395,33 @@ class LiveFeed:
 
             pass
 
+    @staticmethod
+    def parse_arxiv_atom_entries(xml_text: str, category: str) -> list[dict[str, str]]:
+        """Parse arXiv Atom XML → abs URLs (never search-page stubs)."""
+        out: list[dict[str, str]] = []
+        for block in re.split(r"<entry>", xml_text)[1:]:
+            id_m = re.search(r"<id>https?://arxiv\.org/abs/([^<]+)</id>", block)
+            title_m = re.search(r"<title>(.*?)</title>", block, re.DOTALL)
+            if not id_m or not title_m:
+                continue
+            arxiv_id = id_m.group(1).strip()
+            title = re.sub(r"\s+", " ", title_m.group(1)).strip()
+            author_m = re.search(r"<name>(.*?)</name>", block)
+            author = (author_m.group(1)[:40] if author_m else "").strip()
+            label = (
+                f"[arXiv:{category}] {title} ({author})"
+                if author
+                else f"[arXiv:{category}] {title}"
+            )
+            out.append(
+                {
+                    "title": label,
+                    "url": f"https://arxiv.org/abs/{arxiv_id}",
+                    "source": "arxiv",
+                }
+            )
+        return out
+
     def _collect_arxiv(self) -> None:
         """Collect latest papers from arXiv (cs.AI, stat.ML, physics, q-bio)."""
         categories = ["cs.AI", "stat.ML", "physics.soc-ph", "q-bio.NC"]
@@ -406,22 +433,11 @@ class LiveFeed:
                     )
                     if r.status_code != 200:
                         continue
-                    # Parse entry blocks — use real /abs/ URLs, not search-page stubs
-                    for block in re.split(r"<entry>", r.text)[1:]:
-                        id_m = re.search(r"<id>https?://arxiv\.org/abs/([^<]+)</id>", block)
-                        title_m = re.search(r"<title>(.*?)</title>", block, re.DOTALL)
-                        if not id_m or not title_m:
-                            continue
-                        arxiv_id = id_m.group(1).strip()
-                        title = re.sub(r"\s+", " ", title_m.group(1)).strip()
-                        author_m = re.search(r"<name>(.*?)</name>", block)
-                        author = (author_m.group(1)[:40] if author_m else "").strip()
+                    for item in self.parse_arxiv_atom_entries(r.text, cat):
                         self._add_problem(
-                            title=f"[arXiv:{cat}] {title} ({author})"
-                            if author
-                            else f"[arXiv:{cat}] {title}",
-                            source="arxiv",
-                            url=f"https://arxiv.org/abs/{arxiv_id}",
+                            title=item["title"],
+                            source=item["source"],
+                            url=item["url"],
                             severity=0.7,
                         )
             except Exception:

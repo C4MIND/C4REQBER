@@ -184,16 +184,11 @@ class DissertationGenerator:
                 ]
             )
 
-        # Simulation text — only narrate REAL evidence when honesty status is success
+        # Simulation text — only narrate REAL evidence (shared honesty helper)
+        from src.utils.honesty_status import simulation_is_real_evidence
+
         sim_text = ""
-        sim_ok = (
-            simulation
-            and simulation.get("status") == "success"
-            and not simulation.get("stub")
-            and not simulation.get("heuristic")
-            and not str(simulation.get("engine_truth") or "").startswith("not_")
-            and "fallback" not in str(simulation.get("engine_truth") or "").lower()
-        )
+        sim_ok = simulation_is_real_evidence(simulation)
         if sim_ok and simulation is not None:
             sim_text = f"""
 **Computational Simulation ({_sanitize_prompt_input(simulation.get("pattern_id", "N/A"), 100)}):**

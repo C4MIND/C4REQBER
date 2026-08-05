@@ -155,11 +155,31 @@ def test_discovery_utils_bayesian_no_invented_samples():
     assert out.get("posterior_mean") is None
 
 
-def test_z3_sat_not_verified_status():
+@pytest.mark.asyncio
+async def test_z3_sat_not_verified_status():
     """Regression: hybrid verifier must not map SMT sat → verified."""
-    from pathlib import Path
 
-    src = Path("src/verification/hybrid_verifier.py").read_text(encoding="utf-8")
-    z3_block = src.split('if backend == "z3":', 1)[-1].split('if backend == "cvc5":', 1)[0]
-    assert 'norm_status = "verified"' not in z3_block
-    assert 'norm_status = "sat"' in z3_block
+    from src.pipeline.quality import QualityGates
+    from src.verification.hybrid_verifier import HybridVerifier
+
+    hv = HybridVerifier()
+    hv._cache = {}
+    hv.z3 = MagicMock()
+    hv.z3.formulate.return_value = {
+        "status": "sat",
+        "theorem_statement": "(assert true)",
+        "proof_strategy": "smt",
+    }
+
+    with patch.object(hv, "_select_backend", return_value="z3"):
+        out = await hv.verify(
+            {"title": "x > 0", "description": "numeric bound 5%"},
+            context={"preferred_backends": ["z3"]},
+        )
+
+    assert out.status == "sat"
+    assert out.status != "verified"
+    assert (out.timing_info or {}).get("not_a_proof") is True
+
+    gate = QualityGates().check_verification({"status": out.status, "backend": "z3"})
+    assert not (gate.passed and gate.score >= 1.0 and gate.message.startswith("PASS"))

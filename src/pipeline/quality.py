@@ -225,14 +225,11 @@ class QualityGates:
     @staticmethod
     def _is_fallback_engine_truth(sim: Any) -> bool:
         """True when engine_truth admits a stand-in (not_*, *_not_*, fallback/legacy)."""
+        from src.utils.honesty_status import is_fallback_engine_truth
+
         if isinstance(sim, dict):
-            truth = str(sim.get("engine_truth") or "")
-        else:
-            truth = str(getattr(sim, "engine_truth", "") or "") if sim else ""
-        t = truth.lower()
-        return bool(t) and (
-            t.startswith("not_") or "_not_" in t or "fallback" in t or "legacy" in t
-        )
+            return is_fallback_engine_truth(sim.get("engine_truth"))
+        return is_fallback_engine_truth(getattr(sim, "engine_truth", None) if sim else None)
 
     def check_simulation(self, sim: Any) -> GateResult:
         cfg = self.config

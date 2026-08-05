@@ -1,20 +1,14 @@
-"""MCP server smoke tests — verify every @server.tool decorator works.
+"""MCP server smoke tests — verify tools are registered AND invokable honestly.
 
-Audit 2026-06-22 H-1 follow-up: each of the 21 MCP tools should at least
-be callable with minimal arguments and return a structured dict.
-
-These tests use the fallback server (no real backend required). They
-catch: missing import, syntax errors at decorator time, wrong
-parameter names, return type contract violations.
-
-Run with: pytest tests/mcp_server/test_all_tools_smoke.py -v
+Audit follow-up: schema registration is necessary but not sufficient.
+Honesty tools must return non-success envelopes for stub/fallback/sorry paths.
 """
 
 from __future__ import annotations
 
-import asyncio
 import sys
 from pathlib import Path
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -78,22 +72,50 @@ def test_schema_properties_are_objects_or_arrays():
             )
 
 
-@pytest.mark.parametrize(
-    "tool_name",
-    [
-        "c4_search",
-        "c4_fingerprint",
-        "c4_verify",
-        "c4_bayesian",
-        "c4_export",
-        "c4_meta",
-    ],
-)
-def test_tools_callable_with_minimal_args(tool_name):
-    """Smoke-test that tools can be invoked (may return error envelope, but not crash)."""
-    server = _import_server_module()
-    fn = getattr(server, tool_name, None)
-    if fn is None:
-        pytest.skip(f"{tool_name} not in this build (optional deps)")
-    # We don't actually invoke (would hit real backends); just verify callable
-    assert callable(fn)
+@pytest.mark.asyncio
+async def test_c4_verify_sorry_is_not_success():
+    """Invoke path: placeholder proof must not paint verified/success."""
+    from src.mcp_server.tools_verify import c4_verify
+
+    out = await c4_verify("theorem T : True := by sorry", language="lean4")
+    assert isinstance(out, dict)
+    assert out.get("valid") is False or out.get("status") in {
+        "error",
+        "partial",
+        "unavailable",
+    }
+    assert out.get("status") != "success"
+    assert out.get("stamp") != "FORMALLY VERIFIED"
+
+
+@pytest.mark.asyncio
+async def test_c4_bayesian_empty_is_not_success():
+    """Invoke path: empty/prior-only must not invent success."""
+    from src.mcp_server import tools_analysis
+
+    out = await tools_analysis.c4_bayesian(models={})
+    assert isinstance(out, dict)
+    # Empty models → ValueError path or partial — never silent success
+    assert out.get("status") in {"partial", "unavailable", "error", "skipped"}
+    assert out.get("status") != "success"
+
+
+@pytest.mark.asyncio
+async def test_c4_simulate_fallback_truth_is_partial(monkeypatch: pytest.MonkeyPatch):
+    from src.mcp_server import tools_analysis
+
+    monkeypatch.setattr(
+        "src.simulations.runner_v2.get_runner_v2",
+        lambda: MagicMock(
+            run=lambda *a, **k: {
+                "status": "completed",
+                "executed": True,
+                "engine_truth": "not_newton_physics",
+                "stub": False,
+            }
+        ),
+    )
+    out = await tools_analysis.c4_simulate("newtonian", {"text": "h"})
+    assert isinstance(out, dict)
+    assert out.get("status") in {"partial", "unavailable", "error"}
+    assert out.get("status") != "success"

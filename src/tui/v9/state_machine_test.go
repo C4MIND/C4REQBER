@@ -370,6 +370,55 @@ func TestStateMachine_FlashResultOkNoCelebrate(t *testing.T) {
 	}
 }
 
+func TestApplyCelebrationPolicy_ToastAndBurst(t *testing.T) {
+	m := NewApp("http://test")
+	m.width, m.height = 80, 24
+
+	if got := m.applyCelebrationPolicy("success"); got != "done" {
+		t.Fatalf("success cardStatus=%q want done", got)
+	}
+	if m.toast != i18n.T("toast.complete") {
+		t.Errorf("success toast=%q want %q", m.toast, i18n.T("toast.complete"))
+	}
+	if !m.burst.Active() {
+		t.Error("success must trigger burst")
+	}
+
+	m2 := NewApp("http://test")
+	m2.width, m2.height = 80, 24
+	if got := m2.applyCelebrationPolicy("partial"); got != "partial" {
+		t.Fatalf("partial cardStatus=%q", got)
+	}
+	if m2.toast != i18n.T("toast.partial") {
+		t.Errorf("partial toast=%q", m2.toast)
+	}
+	if m2.burst.Active() {
+		t.Error("partial must not trigger burst")
+	}
+
+	m3 := NewApp("http://test")
+	if got := m3.applyCelebrationPolicy("ok"); got != "partial" {
+		t.Fatalf("ok must fail-closed to partial, got %q", got)
+	}
+	if m3.burst.Active() {
+		t.Error("ok must not trigger burst")
+	}
+	if m3.toast != i18n.T("toast.partial") {
+		t.Errorf("ok toast=%q want partial", m3.toast)
+	}
+
+	m4 := NewApp("http://test")
+	if got := m4.applyCelebrationPolicy("failed"); got != "error" {
+		t.Fatalf("failed cardStatus=%q", got)
+	}
+	if m4.toast != i18n.T("toast.failed") {
+		t.Errorf("failed toast=%q", m4.toast)
+	}
+	if m4.burst.Active() {
+		t.Error("failed must not trigger burst")
+	}
+}
+
 func TestHandleCompleteEventOkNoAchievement(t *testing.T) {
 	m := NewAppFresh("http://test")
 	m.handleCompleteEvent(api.TypedEvent{

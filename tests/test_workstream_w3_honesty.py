@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -12,11 +11,52 @@ from src.knowledge.orchestrator import MultiSourceSearcher
 from src.utils.honesty_status import outer_status_from_sim_payload
 
 
-def test_agent_search_no_fake_stub_string_in_blast_app() -> None:
-    src = Path("src/cli/blast_app.py").read_text(encoding="utf-8")
-    assert 'f"Search for: {query}' not in src
-    assert "gather_flash_sources" in src
-    assert "source_cards_from_papers" in src
+@pytest.mark.asyncio
+async def test_agent_search_empty_query_is_error() -> None:
+    from src.knowledge.agent_search import run_agent_search
+
+    out = await run_agent_search("  ", max_results=5)
+    assert out["status"] == "error"
+    assert out["verified_count"] == 0
+    assert "Search for:" not in json.dumps(out)
+
+
+@pytest.mark.asyncio
+async def test_agent_search_uses_gather_and_partition(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Real agent_search path — verified JSON, not fake success string."""
+
+    async def fake_gather(
+        question: str,
+        *,
+        deep: bool = False,
+        include_web: bool = True,
+        domain: str | None = None,
+        verify: bool = True,
+    ):
+        papers = [
+            {
+                "title": "Steel alloys review",
+                "authors": ["Smith"],
+                "year": 2023,
+                "doi": "10.1234/test.1",
+                "url": "https://doi.org/10.1234/test.1",
+                "_source": "openalex",
+                "verified": True,
+                "verify_verdict": "VERIFIED",
+            }
+        ]
+        return papers, "ctx", {"domain": "materials", "errors": {}, "found": 1, "verified": 1}
+
+    monkeypatch.setattr("src.knowledge.flash_sources.gather_flash_sources", fake_gather)
+
+    from src.knowledge.agent_search import run_agent_search
+
+    out = await run_agent_search("AISI 440C", max_results=10)
+    assert out["status"] == "success"
+    assert out["verified_count"] == 1
+    assert "Search for:" not in json.dumps(out)
 
 
 @pytest.mark.asyncio
@@ -98,7 +138,7 @@ def test_discovery_utils_dissertation_not_placeholder_prose() -> None:
 
 
 def test_live_feed_arxiv_abs_url_from_entry_xml() -> None:
-    import re
+    from src.intel.live_feed import LiveFeed
 
     sample = """
     <feed>
@@ -109,56 +149,8 @@ def test_live_feed_arxiv_abs_url_from_entry_xml() -> None:
       </entry>
     </feed>
     """
-    block = re.split(r"<entry>", sample)[1]
-    id_m = re.search(r"<id>https?://arxiv\.org/abs/([^<]+)</id>", block)
-    assert id_m
-    url = f"https://arxiv.org/abs/{id_m.group(1).strip()}"
-    assert url == "https://arxiv.org/abs/2301.00001v1"
-    assert "/search/?" not in url
-
-
-@pytest.mark.asyncio
-async def test_agent_search_json_shape_via_gather_mock(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Mirror agent_search wiring — verified JSON, not fake success string."""
-
-    async def fake_gather(
-        question: str,
-        *,
-        deep: bool = False,
-        include_web: bool = True,
-        domain: str | None = None,
-        verify: bool = True,
-    ):
-        papers = [
-            {
-                "title": "Steel alloys review",
-                "authors": ["Smith"],
-                "year": 2023,
-                "doi": "10.1234/test.1",
-                "url": "https://doi.org/10.1234/test.1",
-                "_source": "openalex",
-                "verified": True,
-                "verify_verdict": "VERIFIED",
-            }
-        ]
-        return papers, "ctx", {"domain": "materials", "errors": {}, "found": 1, "verified": 1}
-
-    monkeypatch.setattr("src.knowledge.flash_sources.gather_flash_sources", fake_gather)
-
-    from src.knowledge.flash_contract import source_cards_from_papers
-    from src.knowledge.flash_sources import gather_flash_sources
-
-    papers, _ctx, meta = await gather_flash_sources("AISI 440C", deep=False)
-    partitioned = source_cards_from_papers(papers, sanitize=False, limit=10)
-    payload = {
-        "status": "success" if partitioned["verified_count"] else "partial",
-        "sources": partitioned["sources"],
-        "verified_count": partitioned["verified_count"],
-        "found_count": partitioned["found_count"],
-        "search_meta": meta,
-    }
-    raw = json.dumps(payload)
-    parsed = json.loads(raw)
-    assert parsed["status"] == "success"
-    assert parsed["verified_count"] == 1
-    assert "Search for:" not in raw
+    items = LiveFeed.parse_arxiv_atom_entries(sample, "cs.AI")
+    assert len(items) == 1
+    assert items[0]["url"] == "https://arxiv.org/abs/2301.00001v1"
+    assert "/search/?" not in items[0]["url"]
+    assert "Sample Paper Title" in items[0]["title"]

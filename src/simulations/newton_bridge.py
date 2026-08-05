@@ -26,6 +26,41 @@ from typing import Any, Protocol, runtime_checkable
 logger = logging.getLogger(__name__)
 
 
+def newton_python_candidates(
+    *, platform_name: str | None = None, home: str | None = None
+) -> list[str]:
+    """Ordered candidate interpreters for Newton subprocess (incl. Windows Scripts/)."""
+    plat = platform_name or sys.platform
+    _home = home if home is not None else os.path.expanduser("~")
+    _venv_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".venv"))
+    if plat == "win32":
+        _repo_venv = os.path.join(_venv_dir, "Scripts", "python.exe")
+        _newton_local = os.path.join(_home, ".c4reqber", "envs", "newton", "Scripts", "python.exe")
+        _mlx = (
+            os.path.join(_home, "LocalProjects", "mlx-env", "Scripts", "python.exe"),
+            os.path.join(_home, "mlx-env", "Scripts", "python.exe"),
+        )
+    else:
+        _repo_venv = os.path.join(_venv_dir, "bin", "python")
+        _newton_local = os.path.join(_home, ".c4reqber", "envs", "newton", "bin", "python")
+        _mlx = (
+            os.path.join(_home, "LocalProjects/mlx-env/bin/python"),
+            os.path.join(_home, "mlx-env/bin/python"),
+        )
+    _env = (os.environ.get("NEWTON_PYTHON") or os.environ.get("C4_NEWTON_PYTHON") or "").strip()
+    return [
+        c
+        for c in (
+            _env,
+            _repo_venv,
+            *_mlx,
+            _newton_local,
+            *([] if plat == "win32" else ["/opt/homebrew/bin/python3.11"]),
+        )
+        if c
+    ]
+
+
 class NewtonMode(Enum):
     """Newton execution mode."""
 
@@ -113,36 +148,7 @@ class NewtonBridge:
         """Detect Newton via NEWTON_PYTHON / C4_NEWTON_PYTHON or common local venvs."""
         import shutil
 
-        _home = os.path.expanduser("~")
-        _venv_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".venv"))
-        if sys.platform == "win32":
-            _repo_venv = os.path.join(_venv_dir, "Scripts", "python.exe")
-            _newton_local = os.path.join(
-                _home, ".c4reqber", "envs", "newton", "Scripts", "python.exe"
-            )
-            _mlx_candidates = (
-                os.path.join(_home, "LocalProjects", "mlx-env", "Scripts", "python.exe"),
-                os.path.join(_home, "mlx-env", "Scripts", "python.exe"),
-            )
-        else:
-            _repo_venv = os.path.join(_venv_dir, "bin", "python")
-            _newton_local = os.path.join(_home, ".c4reqber", "envs", "newton", "bin", "python")
-            _mlx_candidates = (
-                os.path.join(_home, "LocalProjects/mlx-env/bin/python"),
-                os.path.join(_home, "mlx-env/bin/python"),
-            )
-        _env = (os.environ.get("NEWTON_PYTHON") or os.environ.get("C4_NEWTON_PYTHON") or "").strip()
-        _candidates = [
-            c
-            for c in (
-                _env,
-                _repo_venv,
-                *_mlx_candidates,
-                _newton_local,
-                *([] if sys.platform == "win32" else ["/opt/homebrew/bin/python3.11"]),
-            )
-            if c
-        ]
+        _candidates = newton_python_candidates()
         self._mlx_venv_python = ""
         for cand in _candidates:
             if os.path.isfile(cand) and (sys.platform == "win32" or os.access(cand, os.X_OK)):

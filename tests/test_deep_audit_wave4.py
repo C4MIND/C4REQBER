@@ -134,11 +134,40 @@ def test_docker_compose_test_uses_real_dockerfile() -> None:
     assert "src.api.server:app" in text
 
 
-def test_health_liveness_not_memory_greenfake() -> None:
-    src = Path("src/api/routers/health.py").read_text(encoding="utf-8")
-    assert '"memory": True' not in src
-    shim = Path("src/api/health.py").read_text(encoding="utf-8")
-    assert "routers.health" in shim
+def test_health_ready_redis_down_is_not_ready(monkeypatch: pytest.MonkeyPatch) -> None:
+    """CACHE_BACKEND=redis with failed ping → 503, never greenfake memory ok."""
+    from fastapi import FastAPI
+    from fastapi.testclient import TestClient
+
+    from src.api.errors import register_error_handlers
+    from src.api.routers import health as health_mod
+
+    monkeypatch.setenv("CACHE_BACKEND", "redis")
+
+    async def fake_db() -> tuple[str, str | None]:
+        return "ok", None
+
+    async def fake_cache() -> tuple[str, str | None]:
+        return "error", "redis unavailable: ConnectionError"
+
+    async def fake_llm() -> tuple[str, str | None]:
+        return "degraded", "no providers configured"
+
+    monkeypatch.setattr(health_mod, "_check_database", fake_db)
+    monkeypatch.setattr(health_mod, "_check_cache", fake_cache)
+    monkeypatch.setattr(health_mod, "_check_llm_providers", fake_llm)
+
+    app = FastAPI()
+    app.include_router(health_mod.router)
+    register_error_handlers(app)
+    client = TestClient(app, raise_server_exceptions=False)
+    resp = client.get("/api/v1/health/ready")
+    assert resp.status_code == 503
+    detail = resp.json().get("detail") or resp.json()
+    cache = (detail.get("services") or {}).get("cache") or {}
+    assert cache.get("status") == "error"
+    assert "redis" in str(cache.get("error") or "").lower()
+    assert detail.get("status") == "not_ready"
 
 
 @pytest.mark.asyncio

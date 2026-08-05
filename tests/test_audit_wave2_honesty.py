@@ -64,18 +64,24 @@ def test_source_names_helper_stable() -> None:
 
 
 def test_legacy_typer_solve_is_fail_closed() -> None:
-    """Legacy turbo solve/discover/explain must not paint fake theatre as success."""
-    import ast
-    from pathlib import Path
+    """Legacy turbo solve/discover/explain must Exit(2) — no fake hypotheses."""
+    from typer.testing import CliRunner
 
-    src = Path("src/cli/typer_core.py").read_text(encoding="utf-8")
-    assert src.count("typer.Exit(2)") >= 3
-    assert "sample_hypotheses" not in src
-    assert "time.sleep(0.05)" not in src
-    assert "time.sleep(0.04)" not in src
-    assert "Generated 12 novel hypotheses" not in src
-    tree = ast.parse(src)
-    assert tree is not None
+    from src.cli.typer_core import app
+
+    runner = CliRunner()
+    for args in (
+        ["solve", "increase battery life"],
+        ["discover", "improve heat"],
+        ["explain", "discovery_001"],
+    ):
+        result = runner.invoke(app, args)
+        assert result.exit_code == 2, (args, result.exit_code, result.output)
+        assert "sample_hypotheses" not in (result.output or "")
+        assert "Generated 12 novel" not in (result.output or "")
+        assert (
+            "disabled" in (result.output or "").lower() or "blast" in (result.output or "").lower()
+        )
 
 
 @pytest.mark.asyncio

@@ -83,12 +83,14 @@ def test_docker_compose_health_probe_aligned() -> None:
     assert 'http://localhost:8000/health"]' not in text
 
 
-def test_health_ssot_is_routers_health() -> None:
-    orphan = Path("src/api/health.py").read_text(encoding="utf-8")
-    assert "routers.health" in orphan
-    canon = Path("src/api/routers/health.py").read_text(encoding="utf-8")
-    assert 'prefix="/api/v1"' in canon
-    assert '"memory": True' not in canon
+def test_health_ssot_reexports_routers_health() -> None:
+    """Orphan shim must re-export the same router object as routers.health."""
+    from src.api import health as orphan
+    from src.api.routers import health as canon
+
+    assert orphan.router is canon.router
+    paths = [getattr(r, "path", "") for r in canon.router.routes]
+    assert any(p.endswith("/health") or p == "/health" for p in paths)
 
 
 def test_landing_en_api_title_matches_package() -> None:
@@ -199,26 +201,45 @@ def test_phase_e_fallback_truth_not_success() -> None:
     assert outer_status_from_sim_payload(honesty_payload) == "partial"
 
 
-def test_dissertation_sim_ok_gate_rejects_fallback() -> None:
-    """Reproduce dissertation sim_ok predicate on a fake partial sim."""
-    simulation = {
+def test_dissertation_sim_ok_gate_rejects_fallback(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Dissertation generate() must not narrate fallback sims as evidence."""
+    from src.publishing import dissertation as diss_mod
+    from src.publishing.dissertation import DissertationGenerator
+    from src.utils.honesty_status import simulation_is_real_evidence
+
+    fallback = {
         "status": "success",
         "stub": False,
         "heuristic": False,
         "engine_truth": "not_newton_physics",
         "pattern_id": "newtonian",
-        "interpretation": "fake",
-        "metrics": {},
+        "interpretation": "fake newton energy spike",
+        "metrics": {"e": 1},
     }
-    sim_ok = (
-        simulation
-        and simulation.get("status") == "success"
-        and not simulation.get("stub")
-        and not simulation.get("heuristic")
-        and not str(simulation.get("engine_truth") or "").startswith("not_")
-        and "fallback" not in str(simulation.get("engine_truth") or "").lower()
-    )
-    assert sim_ok is False
+    assert simulation_is_real_evidence(fallback) is False
+
+    prompts: list[str] = []
+
+    def fake_llm(prompt: str, **_k: Any) -> str:
+        prompts.append(prompt)
+        return "section body"
+
+    monkeypatch.setattr(diss_mod, "_llm_generate", fake_llm)
+    gen = DissertationGenerator.__new__(DissertationGenerator)
+    try:
+        DissertationGenerator.generate(
+            gen,
+            topic="test topic",
+            hypotheses=[{"title": "H", "description": "d"}],
+            sources=[],
+            simulation=fallback,
+        )
+    except diss_mod.DissertationGenerationError:
+        pass  # short stub LLM sections — prompts already captured
+    joined = "\n".join(prompts)
+    assert prompts, "expected LLM prompts to be built"
+    assert "fake newton energy spike" not in joined
+    assert "Computational Simulation (newtonian)" not in joined
 
 
 def test_flash_runner_resets_cost_tracker(monkeypatch: pytest.MonkeyPatch) -> None:

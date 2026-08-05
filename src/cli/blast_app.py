@@ -1210,75 +1210,9 @@ def blast_agent(
 
         @fallback.tool("agent_search")
         async def agent_search(query: str, max_results: int = 10) -> str:
-            from src.knowledge.flash_contract import source_cards_from_papers
-            from src.knowledge.flash_sources import gather_flash_sources
+            from src.knowledge.agent_search import run_agent_search_json
 
-            q = (query or "").strip()
-            if not q:
-                return json.dumps(
-                    {
-                        "status": "error",
-                        "message": "Search query cannot be empty.",
-                        "sources": [],
-                        "verified_count": 0,
-                        "found_count": 0,
-                    }
-                )
-
-            limit = max(1, min(int(max_results), 25))
-            try:
-                papers, _context, search_meta = await gather_flash_sources(
-                    q,
-                    deep=limit > 5,
-                    include_web=True,
-                )
-            except Exception as exc:
-                return json.dumps(
-                    {
-                        "status": "error",
-                        "message": f"Literature search unavailable: {exc}",
-                        "sources": [],
-                        "verified_count": 0,
-                        "found_count": 0,
-                        "search_meta": {"errors": {"gather": str(exc)[:200]}},
-                    }
-                )
-
-            papers = papers[:limit]
-            partitioned = source_cards_from_papers(papers, sanitize=False, limit=limit)
-            verified_count = int(partitioned["verified_count"])
-            found_count = int(partitioned["found_count"])
-            errors = search_meta.get("errors") or {}
-
-            if found_count == 0 and errors:
-                return json.dumps(
-                    {
-                        "status": "error",
-                        "message": "Literature search unavailable — all configured sources failed.",
-                        "sources": [],
-                        "unverified_hits": [],
-                        "verified_count": 0,
-                        "found_count": 0,
-                        "search_meta": search_meta,
-                    }
-                )
-
-            status = "success" if verified_count > 0 else "partial"
-            if found_count == 0:
-                status = "partial"
-
-            return json.dumps(
-                {
-                    "status": status,
-                    "query": q,
-                    "sources": partitioned["sources"],
-                    "unverified_hits": partitioned["unverified_hits"],
-                    "verified_count": verified_count,
-                    "found_count": found_count,
-                    "search_meta": search_meta,
-                },
-                ensure_ascii=False,
-            )
+            return await run_agent_search_json(query, max_results)
 
         @fallback.tool("agent_fingerprint")
         async def agent_fingerprint(problem: str) -> str:

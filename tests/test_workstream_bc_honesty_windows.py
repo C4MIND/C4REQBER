@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import ast
 import inspect
 import sys
 from pathlib import Path
@@ -68,14 +67,6 @@ def test_get_model_for_phase_reads_assignment(
 
 
 # ─── F4: synthesis init-before-branch (no UnboundLocal) ──────────────────────
-
-
-def test_step_08_synthesis_inits_response_and_usage_before_branch() -> None:
-    src = Path("src/agents/pipeline/steps/step_08_synthesis.py").read_text(encoding="utf-8")
-    assert "response = None" in src
-    assert "usage: dict[str, Any] = {}" in src or "usage: dict[" in src
-    # cost_tracker comes from context before the try that may fail
-    assert 'cost_tracker: Any = context.get("cost_tracker")' in src
 
 
 @pytest.mark.asyncio
@@ -184,16 +175,29 @@ def test_retry_model_for_provider_keeps_primary_model() -> None:
 # ─── F12: unchecked novelty null ─────────────────────────────────────────────
 
 
-def test_novelty_validator_unchecked_returns_null() -> None:
-    src = Path("src/discovery/novelty_validator.py").read_text(encoding="utf-8")
-    assert 'return {"semantic_novelty": None}' in src
-    assert 'result.get("novelty_score", 0.5)' not in src
+@pytest.mark.asyncio
+async def test_novelty_validator_unchecked_returns_null() -> None:
+    from src.discovery.novelty_validator import NoveltyValidator
 
+    v = NoveltyValidator()
 
-def test_step_08_default_novelty_is_null_not_half() -> None:
-    src = Path("src/agents/pipeline/steps/step_08_synthesis.py").read_text(encoding="utf-8")
-    assert "novelty_score: float | None = None" in src
-    assert "novelty_score = 0.5" not in src
+    class EmptyCrossRef:
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *a):
+            return None
+
+        async def search(self, *_a, **_k):
+            return []
+
+    with patch("src.knowledge.crossref_client.CrossRefClient", return_value=EmptyCrossRef()):
+        out = await v.check("hypothesis with empty literature", domain="general")
+
+    assert out.get("status") == "unchecked" or out.get("novelty_score") is None
+    assert out.get("novelty_score") is None
+    # Must not invent mid-range placeholder
+    assert out.get("novelty_score") != 0.5
 
 
 # ─── F7: secrets_store ship lock ─────────────────────────────────────────────
@@ -242,16 +246,19 @@ def test_find_tui_binary_checks_sibling_of_executable(
 
 
 def test_gitlab_ci_prod_publish_no_prepare_or_true() -> None:
+    """Prod publish must not swallow TUI wheel prepare failures with `|| true`."""
+    import re
+
     ci = Path(".gitlab-ci.yml").read_text(encoding="utf-8")
-    start = ci.index("pypi-publish-prod:")
-    # next top-level job or EOF
-    rest = ci[start + 1 :]
-    next_job = rest.find("\n\n")
-    block = ci[start : start + 1 + next_job] if next_job > 0 else ci[start:]
-    # Command must not swallow prepare failure
+    m = re.search(
+        r"(?ms)^pypi-publish-prod:\n(.*?)(?=^[a-zA-Z0-9_.-]+:|\Z)",
+        ci,
+    )
+    assert m, "pypi-publish-prod job block not found"
+    block = m.group(0)
     assert "prepare_tui_wheel.sh || true" not in block
     assert "C4REQBER_TUI_WHEEL_STRICT=1" in block
-    assert "test -f src/tui/v9/bin/c4tui-v9" in block
+    assert "src/tui/v9/bin/c4tui-v9" in block
 
 
 # ─── F9: package_manager uses sys.executable -m pip ───────────────────────────
@@ -323,21 +330,34 @@ def test_config_health_prints_lines(capsys: pytest.CaptureFixture[str]) -> None:
 
 
 def test_newton_bridge_candidates_include_windows_scripts() -> None:
-    src = Path("src/simulations/newton_bridge.py").read_text(encoding="utf-8")
-    assert (
-        'Scripts", "python.exe"' in src
-        or "Scripts/python.exe" in src
-        or 'Scripts", "python.exe"' in src
-    )
-    assert "bin" in src and "python" in src
+    from src.simulations.newton_bridge import newton_python_candidates
+
+    win = newton_python_candidates(platform_name="win32", home=r"C:\Users\tester")
+    assert any(p.replace("\\", "/").endswith("Scripts/python.exe") for p in win)
+    unix = newton_python_candidates(platform_name="linux", home="/home/tester")
+    assert any("/bin/python" in p for p in unix)
+    assert not any(p.endswith("Scripts/python.exe") for p in unix)
 
 
-def test_install_verifiers_win32_honest_skip() -> None:
+def test_install_verifiers_win32_honest_skip(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    import sys
+
+    from rich.console import Console
+
     from src.cli import blast_app
 
-    src = inspect.getsource(blast_app._install_verifiers)
-    assert 'sys.platform == "win32"' in src
-    assert "skipped on Windows" in src or "skip" in src.lower()
-    # Must return before painting green success on win32
-    tree = ast.parse(src)
-    assert any(isinstance(n, ast.Return) for n in ast.walk(tree))
+    monkeypatch.setattr(sys, "platform", "win32")
+    ran = {"n": 0}
+
+    def boom(*_a, **_k):
+        ran["n"] += 1
+        raise AssertionError("subprocess must not run on win32")
+
+    monkeypatch.setattr("subprocess.run", boom)
+    console = Console(force_terminal=False)
+    blast_app._install_verifiers(console)
+    out = capsys.readouterr().out
+    assert ran["n"] == 0
+    assert "skipped on Windows" in out or "Windows" in out

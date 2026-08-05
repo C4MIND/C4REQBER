@@ -23,10 +23,15 @@ class CitationCard(TypedDict, total=False):
 class FlashSearchMeta(TypedDict, total=False):
     domain: str
     sources_used: list[str]
+    sources_count: int
     errors: dict[str, Any]
     tavily: str
+    dedup: str
     found: int
     verified: int
+    checkable: int
+    warnings: list[str]
+    allowlist: list[str]
 
 
 class FlashResult(TypedDict, total=False):

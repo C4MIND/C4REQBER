@@ -24,6 +24,17 @@ CUBE_STATES = {
     "paradigm": "✦◈▣◈✦",
 }
 
+# ASCII fallbacks when stdout encoding cannot represent mascot glyphs (Win cp125x)
+CUBE_STATES_ASCII = {
+    "idle": "[.]",
+    "thinking": "[~]",
+    "processing": "[*]",
+    "discovery": "[+]",
+    "error": "[!]",
+    "done": "[OK]",
+    "paradigm": "[!!]",
+}
+
 CUBE_COMMENTS = {
     "idle": [
         "Z₃³ lattice stable. 27 states ready.",
@@ -332,8 +343,24 @@ class CubeMascot:
 
     def render(self, width: int = 40) -> str:
         """Render."""
-        cube = CUBE_STATES.get(self.state, CUBE_STATES["idle"])
+        try:
+            from src.cli.win_console import stdout_supports_unicode
+
+            use_unicode = stdout_supports_unicode()
+        except Exception:
+            use_unicode = True
+        states = CUBE_STATES if use_unicode else CUBE_STATES_ASCII
+        cube = states.get(self.state, states["idle"])
         comment = self.comment
+        # Strip rare glyphs from comments when console cannot encode them
+        if not use_unicode:
+            comment = (
+                comment.replace("◈", "*")
+                .replace("▣", "#")
+                .replace("✦", "*")
+                .replace("⚠", "!")
+                .replace("✓", "OK")
+            )
         if len(comment) > width - 12:
             comment = comment[: width - 15] + "..."
 
@@ -346,7 +373,8 @@ class CubeMascot:
             return f"{T.FG_WARNING}{cube}{RESET} {T.FG_WARNING}{comment}{RESET}"
         elif self.state == "discovery":
             if self._discovery_burst_frame > 0:
-                burst = "✦ " * (7 - self._discovery_burst_frame)
+                burst_glyph = "✦ " if use_unicode else "* "
+                burst = burst_glyph * (7 - self._discovery_burst_frame)
                 self._discovery_burst_frame -= 1
                 return f"{burst}{T.FG_ACCENT}{T.BOLD}{cube}{RESET} {T.FG_ACCENT}{comment}{RESET} {burst}"
             return f"{T.FG_ACCENT}{T.BOLD}{cube}{RESET} {T.FG_ACCENT}{comment}{RESET}"

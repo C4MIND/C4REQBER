@@ -17,14 +17,18 @@ blast flash --sources "find exactly one real peer reviewed publication specifica
 
 **Pass if:**
 
+- [ ] Does **not** crash with `flash gather failed: 'int' object is not iterable` (post-fix: `search_all` returns `sources_used` as int count — flash must use `source_names` / `source_names_from_result`)
 - [ ] Log does **not** show PubChem / ClinicalTrials / UCI ML / HF datasets errors for this query
 - [ ] Domain line mentions `materials_science` (or similar lit domain)
-- [ ] `tavily=on` if key present, else `tavily=no_key` (not silent mystery)
+- [ ] `tavily=on` if key present, else `tavily=no_key` (not silent mystery / not always `off` when Tavily is in allowlist)
+- [ ] Optional: `dedup=lexical_fallback` when `sentence-transformers` missing — quiet note, not a hard failure
 - [ ] Answer does **not** say “unable to identify / not found” when verified ≥ 1
 - [ ] Sources (verified) show full title + DOI and/or URL — only CitationVerifier-confirmed rows
 - [ ] Unverified raw hits (if any) are labeled **not counted**
+- [ ] Footer: `Search providers:` lists adapter ids when hits exist (not `(none)` solely due to gather TypeError)
 - [ ] Footer: `N verified sources` matches verified cards only (status-aware: `flash success` / `flash partial`, not always “complete”)
 - [ ] No `example.com` URLs; no AFLOW/PubChem spray errors for this materials query
+- [ ] No `UnicodeEncodeError: 'charmap'` on PowerShell for mascot/Rich output (UTF-8 reconfigure + ASCII glyph fallback)
 - [ ] On OpenRouter **429**: rotates or ends `partial` + `rate_limited` warning — never empty success
 
 ## TUI Flash (composed API — same contract as CLI)

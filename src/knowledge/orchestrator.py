@@ -12,6 +12,44 @@ from src.config import get_key
 
 from .cache import SearchCache
 from .config import DOMAIN_KEYWORDS, SOURCE_REGISTRY, _norm_title
+
+
+def source_names_from_result(result: dict[str, Any] | None) -> list[str]:
+    """Normalize MultiSourceSearcher.search_all payload → adapter id list.
+
+    Contract (SSOT):
+      sources_used  → int count of adapters that returned papers
+      source_names  → list[str] of those adapter ids
+
+    Flash historically treated sources_used as a list; list(5) raises
+    TypeError: 'int' object is not iterable (Windows tester, AISI 440C).
+    Accept list|tuple|set for mocks and older callers.
+    """
+    if not isinstance(result, dict):
+        return []
+    names = result.get("source_names")
+    if isinstance(names, (list, tuple, set)):
+        return [str(x) for x in names if x is not None and str(x).strip()]
+    used = result.get("sources_used")
+    if isinstance(used, (list, tuple, set)):
+        return [str(x) for x in used if x is not None and str(x).strip()]
+    # sources_used is an int count — recover names from per-source stats
+    stats = result.get("source_stats") or {}
+    if isinstance(stats, dict) and stats:
+        recovered: list[str] = []
+        for src_id, st in stats.items():
+            if not isinstance(st, dict):
+                continue
+            papers = st.get("papers")
+            if isinstance(papers, int) and papers > 0:
+                recovered.append(str(src_id))
+            elif isinstance(papers, list) and papers:
+                recovered.append(str(src_id))
+        if recovered:
+            return recovered
+    return []
+
+
 from .sources.arxiv import ArxivAdapter
 from .sources.base import BaseSourceAdapter
 from .sources.base_search import BaseSearchAdapter

@@ -146,6 +146,14 @@ class EmbeddingEngine:
 
 _engine = EmbeddingEngine()
 
+# Last semantic_deduplicate outcome — probed by flash meta / honesty logs.
+_LAST_DEDUP: dict[str, str] = {"mode": "none", "reason": ""}
+
+
+def last_dedup_meta() -> dict[str, str]:
+    """Return last dedup mode for search_meta (semantic | lexical_fallback | exact | none)."""
+    return dict(_LAST_DEDUP)
+
 
 def semantic_deduplicate(
     sources: list[dict[str, Any]], threshold: float = 0.85
@@ -153,17 +161,26 @@ def semantic_deduplicate(
     """Remove near-duplicate sources via embedding similarity.
 
     Falls back to lexical title Jaccard when sentence-transformers is unavailable.
+    Missing ST is expected on lean installs — quiet info, not a hard failure.
     """
+    global _LAST_DEDUP
     if len(sources) < 2:
+        _LAST_DEDUP = {"mode": "exact", "reason": "too_few"}
         return sources
 
     texts = [s.get("title", "") + " " + s.get("snippet", s.get("abstract", "")) for s in sources]
     try:
         vecs = _engine.embed(texts)
     except (RuntimeError, ImportError, ValueError, TypeError) as exc:
-        logger.warning(
-            "Semantic deduplication unavailable (%s); using lexical title fallback",
-            exc,
+        reason = "sentence_transformers_unavailable"
+        msg = str(exc).lower()
+        if "sentence" not in msg and "transformer" not in msg:
+            reason = type(exc).__name__.lower()
+        _LAST_DEDUP = {"mode": "lexical_fallback", "reason": reason}
+        # Info (not warning): optional dependency; lexical path is intentional.
+        logger.info(
+            "Semantic dedup unavailable (%s); using lexical title fallback",
+            type(exc).__name__,
         )
         return _lexical_deduplicate(sources, threshold=max(0.5, threshold - 0.2))
 
@@ -181,6 +198,7 @@ def semantic_deduplicate(
                 keep.append(i)
                 keep_vecs = np.vstack([keep_vecs, normalized[i : i + 1]])
 
+    _LAST_DEDUP = {"mode": "semantic", "reason": ""}
     logger.info(
         "Semantic dedup: %d → %d sources (threshold %.2f)", len(sources), len(keep), threshold
     )

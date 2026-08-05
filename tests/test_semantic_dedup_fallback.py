@@ -31,3 +31,8 @@ def test_semantic_deduplicate_fallback_when_embed_raises(monkeypatch) -> None:
     out = semantic_deduplicate(papers, threshold=0.85)
     assert isinstance(out, list)
     assert len(out) >= 1
+    from src.llm.embeddings import last_dedup_meta
+
+    meta = last_dedup_meta()
+    assert meta["mode"] == "lexical_fallback"
+    assert "sentence_transformers" in meta["reason"]

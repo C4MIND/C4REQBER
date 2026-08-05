@@ -98,7 +98,9 @@ async def c4_search(query: str, sources: list[str] | None = None) -> dict[str, A
         else:
             search_result = await searcher.search_all(query)
             papers = list(search_result.get("papers", []))
-            source_names = list(search_result.get("source_names", []))
+            from src.knowledge.orchestrator import source_names_from_result
+
+            source_names = source_names_from_result(search_result)
 
         sanitized = [sanitize_biblio_row(p) for p in papers if isinstance(p, dict)]
         source_report = source_cards_from_papers(sanitized, sanitize=False)

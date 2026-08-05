@@ -2,6 +2,16 @@
 
 > **Русская версия:** [CHANGELOG.ru.md](CHANGELOG.ru.md)
 
+## Unreleased — Flash gather int-iterable + Windows console (tester AISI 440C)
+
+Windows tester (c4reqber 5.7.8 / Win10 / Py3.12): `blast flash --sources` crashed after ~20s with `flash gather failed: 'int' object is not iterable`.
+
+- **Root cause:** `MultiSourceSearcher.search_all` returns `sources_used` as an **int count** (+ `source_names` list); flash did `list(sources_used)` → TypeError after a successful multi-source search.
+- **Fix:** `source_names_from_result()` SSOT; flash/API/MCP normalize names; CLI prints `tavily=on|off|no_key` and `dedup=…`; missing ST → lexical fallback (info, not crash); UTF-8 console + ASCII mascot fallback for cp125x.
+- **Tests:** `tests/test_flash_sources.py` (orchestrator int shape + AISI gather), `tests/test_win_console_encoding.py`.
+
+---
+
 ## v5.7.8 (2026-07-23) — PyPI wheel ships c4tui-v9
 
 **PyPI:** [`c4reqber==5.7.8`](https://pypi.org/project/c4reqber/5.7.8/) · packaging / CI only (no product feature change).

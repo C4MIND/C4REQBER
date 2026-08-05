@@ -4,12 +4,13 @@ All endpoints delegate to ``src.knowledge.orchestrator.MultiSourceSearcher``
 for live queries across 25+ real sources. No local DB — everything is
 searched live.
 """
+
 from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, field_validator
 
-from src.knowledge.orchestrator import MultiSourceSearcher
+from src.knowledge.orchestrator import MultiSourceSearcher, source_names_from_result
 
 
 router = APIRouter(prefix="/knowledge", tags=["v8-knowledge"])
@@ -26,22 +27,23 @@ def _get_searcher() -> MultiSourceSearcher:
 
 class UnifiedSearchRequest(BaseModel):
     """UnifiedSearchRequest."""
+
     query: str
     sources: list[str] | None = None
     max_results: int = 20
     sort_by: str | None = None
     category: str | None = None
 
-    @field_validator('sort_by')
+    @field_validator("sort_by")
     def sort_by_must_be_valid(cls, v):
         if v is not None and v not in ("relevance", "submittedDate"):
             raise ValueError('sort_by must be "relevance" or "submittedDate"')
         return v
 
-    @field_validator('query')
+    @field_validator("query")
     def query_must_not_be_empty(cls, v):
         if not v.strip():
-            raise ValueError('query must not be empty')
+            raise ValueError("query must not be empty")
         return v
 
 
@@ -63,12 +65,15 @@ async def unified_search(req: UnifiedSearchRequest):
         query=req.query,
         max_per_source=max(3, req.max_results // 5),
     )
+    names = source_names_from_result(result)
     papers = result.get("papers", [])
+    count = result.get("sources_used")
     return {
         "results": papers[: req.max_results],
         "total": len(papers),
         "query": req.query,
-        "sources_used": result.get("source_names", []) or result.get("sources_used", []),
+        "sources_used": names,
+        "sources_count": count if isinstance(count, int) else len(names),
     }
 
 
@@ -83,6 +88,7 @@ async def list_entries(query: str = "", limit: int = 20):
     # Without query: try ChromaDB for recent entries, fall back to empty
     try:
         from src.memory.chroma_store import get_chroma_store
+
         store = get_chroma_store()
         recent = store.get_recent("knowledge_entries", limit=limit)
         if recent:
@@ -152,10 +158,20 @@ async def list_categories():
                 d = d.strip()
                 if d and d not in categories:
                     categories.append(d)
-    return {"categories": sorted(categories)} if categories else {
-        "categories": [
-            "physics", "cs", "math", "biology", "chemistry",
-            "medicine", "engineering", "social_sciences",
-        ],
-        "note": "static list (source domain metadata not available)",
-    }
+    return (
+        {"categories": sorted(categories)}
+        if categories
+        else {
+            "categories": [
+                "physics",
+                "cs",
+                "math",
+                "biology",
+                "chemistry",
+                "medicine",
+                "engineering",
+                "social_sciences",
+            ],
+            "note": "static list (source domain metadata not available)",
+        }
+    )

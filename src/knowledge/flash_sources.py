@@ -166,7 +166,7 @@ async def gather_flash_sources(
     Never invents example.com URLs.
     Context for LLM uses verified papers only when any exist.
     """
-    from src.knowledge.orchestrator import MultiSourceSearcher
+    from src.knowledge.orchestrator import MultiSourceSearcher, source_names_from_result
 
     inferred = domain or infer_query_domain(question)
     allow = flash_source_allowlist(inferred, include_web=include_web)
@@ -177,9 +177,11 @@ async def gather_flash_sources(
         "sources_used": [],
         "errors": {},
         "tavily": "off",
+        "dedup": "unknown",
         "found": 0,
         "checkable": 0,
         "verified": 0,
+        "warnings": [],
     }
     try:
         result = await searcher.search_all(question, domain=inferred, include_web=include_web)
@@ -188,8 +190,10 @@ async def gather_flash_sources(
         meta["errors"]["search_all"] = str(exc)
         return [], "", meta
 
-    stats = result.get("source_stats") or {}
-    used: list[str] = list(result.get("sources_used") or [])
+    stats_raw = result.get("source_stats")
+    stats: dict[str, Any] = stats_raw if isinstance(stats_raw, dict) else {}
+    # search_all returns sources_used as int — never list(int)
+    used: list[str] = source_names_from_result(result)
     errors: dict[str, str] = {}
     for src_id, st in stats.items():
         if isinstance(st, dict):
@@ -200,16 +204,39 @@ async def gather_flash_sources(
                     used.append(src_id)
     meta["sources_used"] = used
     meta["errors"] = errors
-    if "tavily" in searcher._active_sources:  # noqa: SLF001 — intentional meta probe
+    meta["sources_count"] = (
+        result.get("sources_used") if isinstance(result.get("sources_used"), int) else len(used)
+    )
+
+    active = getattr(searcher, "_active_sources", {}) or {}
+    if "tavily" in active:
         meta["tavily"] = "on"
     elif "tavily" in allow:
+        # In allowlist but not activated → missing TAVILY_API_KEY
         meta["tavily"] = "no_key"
     else:
         meta["tavily"] = "off"
 
+    try:
+        from src.llm.embeddings import last_dedup_meta
+
+        dedup_info = last_dedup_meta()
+        meta["dedup"] = dedup_info.get("mode") or "unknown"
+        if meta["dedup"] == "lexical_fallback":
+            reason = dedup_info.get("reason") or "embeddings_unavailable"
+            meta["warnings"].append(
+                f"dedup=lexical_fallback ({reason}); install sentence-transformers for semantic dedup"
+            )
+    except Exception:
+        meta["dedup"] = "unknown"
+
     limit = 5 if deep else 3
-    raw = result.get("papers", [])[:limit]
-    papers = [sanitize_paper(p) for p in raw]
+    raw_papers = result.get("papers", [])
+    if not isinstance(raw_papers, list):
+        meta["errors"]["papers"] = f"expected list, got {type(raw_papers).__name__}"
+        raw_papers = []
+    raw = raw_papers[:limit]
+    papers = [sanitize_paper(p) for p in raw if isinstance(p, dict)]
     meta["found"] = len(papers)
     meta["checkable"] = sum(1 for p in papers if p.get("checkable"))
 

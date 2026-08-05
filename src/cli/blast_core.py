@@ -23,6 +23,7 @@ from rich.console import Console
 
 from src.agents.pipeline import UniversalSolvePipeline
 from src.cli.mode_router import auto_route, get_mode_description
+from src.cli.win_console import ensure_cli_utf8
 from src.utils.honesty_status import (
     mascot_state_from_outer_status,
     outer_status_from_hil_like,
@@ -31,7 +32,8 @@ from src.utils.honesty_status import (
 
 
 logger = logging.getLogger(__name__)
-console = Console()
+ensure_cli_utf8()
+console = Console(soft_wrap=True, legacy_windows=False)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -360,10 +362,18 @@ def cmd_flash(
     warnings = result.get("warnings") or []
 
     if deep or with_sources:
+        tavily_state = search_meta.get("tavily", "?")
+        dedup_state = search_meta.get("dedup", "?")
         console.print(
             f"[dim]Found {found_count} papers · verified {verified_count} · "
-            f"domain={search_meta.get('domain', '?')} · tavily={search_meta.get('tavily', '?')}[/dim]"
+            f"domain={search_meta.get('domain', '?')} · tavily={tavily_state} · "
+            f"dedup={dedup_state}[/dim]"
         )
+        if tavily_state == "no_key":
+            console.print(
+                "[yellow]Tavily in allowlist but inactive — set TAVILY_API_KEY "
+                "in ~/.c4reqber/secrets.env (or env)[/yellow]"
+            )
         if found_count and not verified_count:
             console.print(
                 "[yellow]0 verified sources (need DOI or real URL) — "
@@ -409,7 +419,13 @@ def cmd_flash(
                 f"     [dim]{verdict} — not a citation until CrossRef/OpenAlex confirm[/dim]"
             )
 
-    used = search_meta.get("sources_used") or []
+    used_raw = search_meta.get("sources_used") or []
+    if isinstance(used_raw, int):
+        used: list[str] = []
+    elif isinstance(used_raw, list):
+        used = [str(x) for x in used_raw]
+    else:
+        used = []
     errs = search_meta.get("errors") or {}
     if deep or with_sources:
         console.print(

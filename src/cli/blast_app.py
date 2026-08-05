@@ -29,11 +29,15 @@ from src.cli.blast_core import (
     cmd_turbofactory,
 )
 from src.cli.mode_router import get_mode_description
+from src.cli.win_console import ensure_cli_utf8
 from src.wasm.runtime import WASMPluginRuntime
 
 
 # Shared WASM runtime — persists loaded modules across CLI commands
 _wasm_runtime = WASMPluginRuntime()
+
+# UTF-8 before first Rich print — Windows cp125x otherwise raises charmap errors
+ensure_cli_utf8()
 
 app = typer.Typer(
     name="blast",
@@ -42,12 +46,14 @@ app = typer.Typer(
     no_args_is_help=True,
     add_completion=False,
 )
-console = Console()
+# soft_wrap avoids mid-glyph cut; legacy_windows=False prefers VT/UTF-8 paths
+console = Console(soft_wrap=True, legacy_windows=False)
 
 
 @app.callback()
 def _blast_startup(ctx: typer.Context) -> None:
     """Load ~/.c4reqber/secrets.env + config into env for all commands (incl. flash)."""
+    ensure_cli_utf8()
     try:
         from src.config.paths import apply_config_to_env
 

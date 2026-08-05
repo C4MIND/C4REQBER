@@ -211,8 +211,10 @@ async def run_flash(
         "sources_used": [],
         "errors": {},
         "tavily": "off",
+        "dedup": "unknown",
         "found": 0,
         "verified": 0,
+        "warnings": [],
     }
 
     if deep or with_sources:
@@ -222,9 +224,22 @@ async def run_flash(
             )
         except Exception as exc:
             logger.warning("flash gather failed: %s", exc)
-            search_meta["errors"]["gather"] = str(exc)
+            search_meta = {
+                **search_meta,
+                "errors": {**(search_meta.get("errors") or {}), "gather": str(exc)},
+            }
             papers = []
             context = ""
+
+    # Defensive: never leave sources_used as an int in flash meta
+    used_raw = search_meta.get("sources_used")
+    if isinstance(used_raw, int):
+        search_meta["sources_used"] = []
+        search_meta.setdefault("errors", {})["sources_used_type"] = (
+            "sources_used was int (orchestrator count); expected list — normalized to []"
+        )
+    elif not isinstance(used_raw, list):
+        search_meta["sources_used"] = []
 
     verified = [p for p in papers if p.get("verified")]
     verified_count = len(verified)
@@ -287,6 +302,19 @@ async def run_flash(
         deep=deep,
         usp_context=usp_context,
     )
+    # Propagate soft search warnings (e.g. lexical dedup fallback)
+    for w in search_meta.get("warnings") or []:
+        if w and w not in warnings:
+            warnings.append(str(w))
+    gather_errs = search_meta.get("errors") or {}
+    if gather_errs and (with_sources or deep):
+        # Gather/search defects must not paint success
+        if status == "success":
+            status = "partial"
+        if "gather" in gather_errs or "search_all" in gather_errs:
+            warnings.append(
+                f"source gather issue: {gather_errs.get('gather') or gather_errs.get('search_all')}"
+            )
     if rate_limited:
         status = "partial" if status == "success" else status
         if status == "error" and not answer.strip():

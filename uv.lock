@@ -560,7 +560,7 @@ wheels = [
 
 [[package]]
 name = "c4reqber"
-version = "5.7.4"
+version = "5.7.8"
 source = { editable = "." }
 dependencies = [
     { name = "aiofiles" },

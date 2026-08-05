@@ -7,6 +7,7 @@ All business logic, rate limiting, dedup, and source adapters live in
 
 This module provides the legacy ``MegaDatabase`` API for backward compatibility.
 """
+
 from __future__ import annotations
 
 import logging
@@ -20,6 +21,7 @@ from src.knowledge.orchestrator import MultiSourceSearcher as _RealSearcher
 
 class LicenseType:
     """Source license classification."""
+
     FREE = "free"
     RESTRICTED = "restricted"
     PAID = "paid"
@@ -31,6 +33,7 @@ class RateLimiter:
 
     def __init__(self, max_calls: int = 10, period: float = 1.0) -> None:
         import time
+
         self.max_calls = max_calls
         self.period = period
         self._calls: list[float] = []
@@ -46,17 +49,41 @@ class RateLimiter:
 
     def wait_available(self) -> None:
         import time
+
         while not self.acquire():
             time.sleep(self.period / self.max_calls)
 
 
 SOURCES = [
-    "arxiv", "pubmed", "crossref", "semantic_scholar", "openalex",
-    "doi", "orcid", "doaj", "europe_pmc", "dblp", "datacite",
-    "zenodo", "figshare", "brave", "core", "base", "unpaywall",
-    "oa_mg", "lens_org", "inspire_hep", "tavily", "exa",
-    "cinii", "github_datasets", "rsci", "scimatic", "arxivgg",
-    "crossref_funders", "bibsonomy",
+    "arxiv",
+    "pubmed",
+    "crossref",
+    "semantic_scholar",
+    "openalex",
+    "doi",
+    "orcid",
+    "doaj",
+    "europe_pmc",
+    "dblp",
+    "datacite",
+    "zenodo",
+    "figshare",
+    "brave",
+    "core",
+    "base",
+    "unpaywall",
+    "oa_mg",
+    "lens_org",
+    "inspire_hep",
+    "tavily",
+    "exa",
+    "cinii",
+    "github_datasets",
+    "rsci",
+    "scimatic",
+    "arxivgg",
+    "crossref_funders",
+    "bibsonomy",
 ]
 
 
@@ -177,11 +204,16 @@ class MegaDatabase:
 
     async def _fetch_by_doi(self, doi: str) -> dict[str, Any] | None:
         """Fetch paper by DOI via CrossRef API."""
+        from urllib.parse import quote
+
         import httpx
+
+        if ".." in doi or "?" in doi or "#" in doi:
+            return None
         try:
             async with httpx.AsyncClient(timeout=15) as client:
                 resp = await client.get(
-                    f"https://api.crossref.org/works/{doi}",
+                    f"https://api.crossref.org/works/{quote(doi, safe='')}",
                     headers={"User-Agent": "c4reqber/5.4.0 (mailto:research@c4reqber.dev)"},
                 )
                 if resp.status_code == 200:
@@ -190,9 +222,14 @@ class MegaDatabase:
                     return {
                         "doi": doi,
                         "title": (msg.get("title") or [""])[0],
-                        "authors": [a.get("given", "") + " " + a.get("family", "") for a in msg.get("author", [])],
+                        "authors": [
+                            a.get("given", "") + " " + a.get("family", "")
+                            for a in msg.get("author", [])
+                        ],
                         "abstract": msg.get("abstract", ""),
-                        "year": (msg.get("published-print") or msg.get("issued", {}) or {}).get("date-parts", [[None]])[0][0],
+                        "year": (msg.get("published-print") or msg.get("issued", {}) or {}).get(
+                            "date-parts", [[None]]
+                        )[0][0],
                         "source": "crossref",
                     }
         except Exception:
@@ -202,6 +239,7 @@ class MegaDatabase:
     async def _fetch_by_arxiv(self, arxiv_id: str) -> dict[str, Any] | None:
         """Fetch paper by arXiv ID via arXiv API."""
         import httpx
+
         try:
             async with httpx.AsyncClient(timeout=15) as client:
                 resp = await client.get(
@@ -209,6 +247,7 @@ class MegaDatabase:
                 )
                 if resp.status_code == 200:
                     import xml.etree.ElementTree as ET
+
                     root = ET.fromstring(resp.text)
                     ns = {"a": "http://www.w3.org/2005/Atom"}
                     entry = root.find("a:entry", ns)
@@ -227,6 +266,7 @@ class MegaDatabase:
     async def _fetch_by_pubmed(self, pmid: str) -> dict[str, Any] | None:
         """Fetch paper by PMID via PubMed API."""
         import httpx
+
         try:
             async with httpx.AsyncClient(timeout=15) as client:
                 resp = await client.get(
@@ -269,6 +309,7 @@ class MegaDatabase:
     async def close(self) -> None:
         """Cleanup (no-op, orchestrator handles lifecycle)."""
         pass
+
 
 # Backward compatibility alias
 MegaDB = MegaDatabase

@@ -74,6 +74,12 @@ def analyze(
 def execute(hypothesis: str, **kwargs: Any) -> dict[str, Any]:
     out = analyze(hypothesis, **kwargs).to_dict()
     out["executed"] = True
-    out["status"] = "success"
     out["llm_backed"] = False  # pure numeric update — not an LLM claim
+    evidence = out.get("evidence") or []
+    if not evidence:
+        out["status"] = "partial"
+        out["heuristic"] = True
+        out["note"] = "no evidence — prior only"
+    else:
+        out["status"] = "success"
     return out

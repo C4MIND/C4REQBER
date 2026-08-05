@@ -793,7 +793,7 @@ func (m *model) applyCelebrationPolicy(status string) string {
 	case "failed", "error", "aborted":
 		m.setToast(i18n.T("toast.failed"))
 		return "error"
-	case "success", "complete", "ok":
+	case "success", "complete":
 		m.setToast(i18n.T("toast.complete"))
 		m.burst.Trigger(m.width, m.height, m.width/2, m.height/2)
 		return "done"

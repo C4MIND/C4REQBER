@@ -18,7 +18,8 @@ from src.knowledge.flash_contract import (
 def test_derive_terminal_success_complete() -> None:
     assert derive_terminal("success") == ("complete", "complete")
     assert derive_terminal("complete") == ("complete", "complete")
-    assert derive_terminal("ok") == ("complete", "complete")
+    # Ambiguous "ok" must not celebrate (sim/news use ok without provenance)
+    assert derive_terminal("ok") == ("partial", "partial")
 
 
 def test_derive_terminal_partial_fail_closed() -> None:
@@ -33,6 +34,7 @@ def test_celebration_allowed() -> None:
     assert celebration_allowed("success") is True
     assert celebration_allowed("partial") is False
     assert celebration_allowed("") is False
+    assert celebration_allowed("ok") is False
 
 
 def test_count_verified_sources() -> None:
@@ -83,12 +85,13 @@ async def test_job_store_success_emits_complete() -> None:
 
 
 @pytest.mark.asyncio
-async def test_job_store_legacy_no_status_still_complete() -> None:
+async def test_job_store_legacy_no_status_is_partial() -> None:
+    """Missing status must not invent celebration (wave-4 honesty)."""
     store = JobStore(ttl_seconds=60)
     job = await store.create("one-click", {"problem": "x"})
     await store.set_complete(job.job_id, {"hypothesis": {"text": "h"}, "papers": []})
     got = await store.get(job.job_id)
     assert got is not None
-    assert got.status == JobStatus.COMPLETE
+    assert got.status == JobStatus.PARTIAL
     events = await store.drain_events(job.job_id, 0)
-    assert events[-1].event_type == "complete"
+    assert events[-1].event_type == "partial"

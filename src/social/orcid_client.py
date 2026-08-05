@@ -1,4 +1,5 @@
 """c4reqber: ORCID Client — register works (metadata) on ORCID records."""
+
 from __future__ import annotations
 
 import os
@@ -33,8 +34,12 @@ class ORCIDClient:
         async with httpx.AsyncClient() as c:
             resp = await c.post(
                 self.TOKEN_URL,
-                data={"client_id": self.client_id, "client_secret": self.client_secret,
-                      "grant_type": "client_credentials", "scope": "/activities/update /read-limited"},
+                data={
+                    "client_id": self.client_id,
+                    "client_secret": self.client_secret,
+                    "grant_type": "client_credentials",
+                    "scope": "/activities/update /read-limited",
+                },
                 headers={"Accept": "application/json"},
                 timeout=15,
             )
@@ -45,7 +50,7 @@ class ORCIDClient:
     async def add_work(self, orcid_id: str, work: dict[str, Any]) -> dict[str, Any]:
         """Add a work entry to an ORCID record."""
         if self.dry_run:
-            return {"status": "ok", "orcid": orcid_id, "_dry_run": True}
+            return {"status": "dry_run", "orcid": orcid_id, "_dry_run": True}
         if not self.configured:
             return {"error": "ORCID_CLIENT_ID and ORCID_CLIENT_SECRET required"}
 
@@ -56,14 +61,24 @@ class ORCIDClient:
         async with httpx.AsyncClient() as c:
             resp = await c.post(
                 f"{self.API_BASE}/{orcid_id}/work",
-                headers={"Authorization": f"Bearer {token}", "Content-Type": "application/vnd.orcid+json"},
+                headers={
+                    "Authorization": f"Bearer {token}",
+                    "Content-Type": "application/vnd.orcid+json",
+                },
                 json={
                     "title": {"title": {"value": work.get("title", "Untitled")}},
                     "type": work.get("type", "preprint"),
-                    "external-ids": {"external-id": [
-                        {"external-id-type": "doi", "external-id-value": work.get("doi", ""),
-                         "external-id-relationship": "self"}
-                    ]} if work.get("doi") else None,
+                    "external-ids": {
+                        "external-id": [
+                            {
+                                "external-id-type": "doi",
+                                "external-id-value": work.get("doi", ""),
+                                "external-id-relationship": "self",
+                            }
+                        ]
+                    }
+                    if work.get("doi")
+                    else None,
                 },
                 timeout=15,
             )

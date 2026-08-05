@@ -1,6 +1,7 @@
 """Phase 6: Quality and Output — Falsifier, gate re-evaluation, consensus meter,
 empirical validation, quality evaluation, dissertation generation, self-critique, export.
 """
+
 from __future__ import annotations
 
 import logging
@@ -35,6 +36,7 @@ async def run_quality_and_output(results, errors, abort_reasons) -> dict:
     hypothesis_text = results.get("hypothesis", {}).get("text", "")
     try:
         from src.discovery.falsifier import Falsifier
+
         f = Falsifier()
         falsify = f.check(hypothesis_text, domain)
         results["falsifier"] = falsify
@@ -51,7 +53,9 @@ async def run_quality_and_output(results, errors, abort_reasons) -> dict:
     logger.info("Consensus meter: %.3fs", time.perf_counter() - t_cm)
     t_emp = time.perf_counter()
     try:
-        results["empirical_validation"] = run_empirical_validation(problem, results.get("c4_path", {}))
+        results["empirical_validation"] = run_empirical_validation(
+            problem, results.get("c4_path", {})
+        )
     except Exception as e:
         results["empirical_validation"] = {"error": str(e)}
         errors.append(f"empirical_validation: {str(e)}")
@@ -83,12 +87,24 @@ async def run_quality_and_output(results, errors, abort_reasons) -> dict:
         except Exception as e:
             verification_results[lang] = {"verified": False, "error": str(e)[:200]}
     results["verification"] = verification_results
-    verified_count = sum(1 for v in verification_results.values() if isinstance(v, dict) and v.get("verified"))
+    verified_count = sum(
+        1 for v in verification_results.values() if isinstance(v, dict) and v.get("verified")
+    )
     results["verification_summary"] = f"{verified_count}/{len(verification_results)} provers passed"
-    logger.info("Formal verification: %d/6 passed in %.3fs", verified_count, time.perf_counter() - t_verify)
+    logger.info(
+        "Formal verification: %d/6 passed in %.3fs", verified_count, time.perf_counter() - t_verify
+    )
     try:
-        paper_parts = generate_paper(hypothesis=results.get("hypothesis", {}), papers=papers if isinstance(papers, list) else [], proof=results.get("proof", {}))
-        results["paper"] = {"latex_length": len(paper_parts.get("latex", "")), "references": paper_parts.get("reference_count", 0), "bibtex": paper_parts.get("bibtex", "")}
+        paper_parts = generate_paper(
+            hypothesis=results.get("hypothesis", {}),
+            papers=papers if isinstance(papers, list) else [],
+            proof=results.get("proof", {}),
+        )
+        results["paper"] = {
+            "latex_length": len(paper_parts.get("latex", "")),
+            "references": paper_parts.get("reference_count", 0),
+            "bibtex": paper_parts.get("bibtex", ""),
+        }
     except Exception as e:
         results["paper"] = {"latex_length": 0, "references": 0, "error": str(e)}
         errors.append(f"paper: {str(e)}")
@@ -97,9 +113,15 @@ async def run_quality_and_output(results, errors, abort_reasons) -> dict:
     novelty_result = results.get("novelty", {})
     if thresholds.get("require_self_critique") and hypothesis_text:
         try:
-            self_critique_result = await _run_self_critique(hypothesis_text, papers[:10], novelty_result.to_dict() if hasattr(novelty_result, 'to_dict') else novelty_result)
+            self_critique_result = await _run_self_critique(
+                hypothesis_text,
+                papers[:10],
+                novelty_result.to_dict() if hasattr(novelty_result, "to_dict") else novelty_result,
+            )
             if self_critique_result.get("recommendation") == "REJECT":
-                abort_reasons.append(f"SELF_CRITIQUE_REJECT: {self_critique_result.get('explanation', 'No explanation')}")
+                abort_reasons.append(
+                    f"SELF_CRITIQUE_REJECT: {self_critique_result.get('explanation', 'No explanation')}"
+                )
         except Exception as e:
             self_critique_result = {"error": str(e)}
     max_iterations = 3
@@ -110,17 +132,43 @@ async def run_quality_and_output(results, errors, abort_reasons) -> dict:
     sources_used_all: list[int] = [sources_used]
     while abort_reasons and iteration < max_iterations:
         iteration += 1
-        refinement_history.append({"iteration": iteration, "hypothesis": hypothesis_text[:300], "abort_reasons": list(abort_reasons), "gap_miner_score": gap_potential, "papers_found": papers_found})
+        refinement_history.append(
+            {
+                "iteration": iteration,
+                "hypothesis": hypothesis_text[:300],
+                "abort_reasons": list(abort_reasons),
+                "gap_miner_score": gap_potential,
+                "papers_found": papers_found,
+            }
+        )
         competing_hypotheses_data = results.get("competing_hypotheses", [])
         competing_texts = [h.get("text", "")[:200] for h in competing_hypotheses_data]
-        refined = await _refine_hypothesis_llm(problem=problem, hypothesis=hypothesis_text, abort_reasons=abort_reasons, top_papers=papers[:15] if isinstance(papers, list) else [], iteration=iteration, max_iterations=max_iterations, competing_hypotheses=competing_texts)
+        refined = await _refine_hypothesis_llm(
+            problem=problem,
+            hypothesis=hypothesis_text,
+            abort_reasons=abort_reasons,
+            top_papers=papers[:15] if isinstance(papers, list) else [],
+            iteration=iteration,
+            max_iterations=max_iterations,
+            competing_hypotheses=competing_texts,
+        )
         if refined.get("no_improvement"):
             break
         new_hypothesis = refined.get("refined_hypothesis", hypothesis_text)
         new_problem = refined.get("refined_problem", problem)
         try:
             from src.knowledge.orchestrator import MultiSourceSearcher
-            multi2 = MultiSourceSearcher(sources={'semantic_scholar', 'openalex', 'crossref', 'arxiv', 'pubmed', 'europe_pmc'})
+
+            multi2 = MultiSourceSearcher(
+                sources={
+                    "semantic_scholar",
+                    "openalex",
+                    "crossref",
+                    "arxiv",
+                    "pubmed",
+                    "europe_pmc",
+                }
+            )
             search_result2 = await multi2.search_all(new_problem, domain)
             if search_result2 is not None:
                 papers = search_result2.get("papers", papers)
@@ -132,8 +180,11 @@ async def run_quality_and_output(results, errors, abort_reasons) -> dict:
             logger.debug("MultiSourceSearcher unavailable in refinement: %s", e)
         try:
             from src.discovery.gap_miner import GapMiner
+
             gm2 = GapMiner()
-            gm2_result = await gm2.mine_for_discovery(new_problem, papers[:30] if isinstance(papers, list) else [])
+            gm2_result = await gm2.mine_for_discovery(
+                new_problem, papers[:30] if isinstance(papers, list) else []
+            )
             gap_potential = gm2_result.get("discovery_potential", gap_potential)
         except (ImportError, ModuleNotFoundError, RuntimeError, OSError) as e:
             logger.debug("GapMiner unavailable in refinement: %s", e)
@@ -141,6 +192,7 @@ async def run_quality_and_output(results, errors, abort_reasons) -> dict:
         recheck_result: dict[str, Any] | None = None
         try:
             from src.discovery.already_shifted import AlreadyShiftedDetector
+
             shift_detector_loop = AlreadyShiftedDetector()
             recheck_result = await shift_detector_loop.check(
                 hypothesis=hypothesis_text,
@@ -164,7 +216,12 @@ async def run_quality_and_output(results, errors, abort_reasons) -> dict:
                 ps_result = detect_paradigm_shift(papers, domain)
                 results["paradigm_shift"] = ps_result
                 shift_entry = dict(refinement_history[-1]) if refinement_history else {}
-                shift_entry.update({"paradigm_shift_rechecked": True, "ps_probability": ps_result.get("probability")})
+                shift_entry.update(
+                    {
+                        "paradigm_shift_rechecked": True,
+                        "ps_probability": ps_result.get("probability"),
+                    }
+                )
                 refinement_history.append(shift_entry)
             except Exception:
                 logger.exception("paradigm_shift detection in refinement loop failed")
@@ -178,32 +235,63 @@ async def run_quality_and_output(results, errors, abort_reasons) -> dict:
             if all_words:
                 domain_similarity = len(original_words & refined_words) / len(all_words)
                 if domain_similarity < 0.3:
-                    logger.warning("Domain drift detected: similarity=%.2f between '%s' and '%s'", domain_similarity, problem[:50], new_problem[:50])
-                    results["domain_drift"] = {"similarity": round(domain_similarity, 3), "original": problem, "refined": new_problem}
-                refinement_history.append({
-                    "iteration": iteration, "domain_similarity": round(domain_similarity, 3),
-                } if refinement_history else {"iteration": iteration, "domain_similarity": round(domain_similarity, 3)})
+                    logger.warning(
+                        "Domain drift detected: similarity=%.2f between '%s' and '%s'",
+                        domain_similarity,
+                        problem[:50],
+                        new_problem[:50],
+                    )
+                    results["domain_drift"] = {
+                        "similarity": round(domain_similarity, 3),
+                        "original": problem,
+                        "refined": new_problem,
+                    }
+                refinement_history.append(
+                    {
+                        "iteration": iteration,
+                        "domain_similarity": round(domain_similarity, 3),
+                    }
+                    if refinement_history
+                    else {"iteration": iteration, "domain_similarity": round(domain_similarity, 3)}
+                )
             # P0.2: Re-run FalsificationEngine on refined hypothesis
             try:
                 from src.discovery.falsification import FalsificationEngine
+
                 engine = FalsificationEngine()
-                refined_hypothesis_dict = results.get("hypothesis", {}).copy() if isinstance(results.get("hypothesis"), dict) else {}
+                refined_hypothesis_dict = (
+                    results.get("hypothesis", {}).copy()
+                    if isinstance(results.get("hypothesis"), dict)
+                    else {}
+                )
                 refined_hypothesis_dict["text"] = hypothesis_text
                 falsification_result = engine.check_falsifiability(refined_hypothesis_dict["text"])
                 results[f"falsification_iter{iteration}"] = falsification_result
                 is_falsifiable, reason = falsification_result
                 if not is_falsifiable:
                     abort_reasons.append(f"NOT_FALSIFIABLE(iter{iteration}): {reason}")
-                logger.info("Falsification re-checked: iter=%d, falsifiable=%s", iteration, is_falsifiable)
+                logger.info(
+                    "Falsification re-checked: iter=%d, falsifiable=%s", iteration, is_falsifiable
+                )
             except Exception:
                 logger.exception("falsification re-check in refinement loop failed")
             # P0.2: Re-run SelfCritique on refined hypothesis
             try:
-                critique = await _run_self_critique(hypothesis_text, papers[:10] if isinstance(papers, list) else [], novelty_result if isinstance(novelty_result, dict) else {})
+                critique = await _run_self_critique(
+                    hypothesis_text,
+                    papers[:10] if isinstance(papers, list) else [],
+                    novelty_result if isinstance(novelty_result, dict) else {},
+                )
                 results[f"self_critique_iter{iteration}"] = critique
                 if critique.get("verdict") == "REJECT":
-                    abort_reasons.append(f"SELF_CRITIQUE_REJECT(iter{iteration}): {critique.get('rationale', '')[:120]}")
-                logger.info("SelfCritique re-checked: iter=%d, verdict=%s", iteration, critique.get("verdict"))
+                    abort_reasons.append(
+                        f"SELF_CRITIQUE_REJECT(iter{iteration}): {critique.get('rationale', '')[:120]}"
+                    )
+                logger.info(
+                    "SelfCritique re-checked: iter=%d, verdict=%s",
+                    iteration,
+                    critique.get("verdict"),
+                )
             except Exception:
                 logger.exception("self_critique re-check in refinement loop failed")
         if gap_potential < thresholds["min_gap_miner_potential"]:
@@ -221,8 +309,34 @@ async def run_quality_and_output(results, errors, abort_reasons) -> dict:
         results["abort_type"] = abort_reasons[0].split(":")[0]
         results["refinement_iterations"] = iteration
         results["refinement_history"] = refinement_history
-        results["warning"] = f"DISCOVERY ABORTED after {iteration} refinement attempts. System detected insufficient evidence to claim discovery. See abort_reasons and refinement_history for details."
+        results["warning"] = (
+            f"DISCOVERY ABORTED after {iteration} refinement attempts. System detected insufficient evidence to claim discovery. See abort_reasons and refinement_history for details."
+        )
     if results.get("status") != "aborted":
-        results["status"] = "partial" if errors else "complete"
-    results.update({"pipeline_version": "8.2", "thresholds_applied": thresholds, "abort_reasons": abort_reasons, "abort_type": abort_reasons[0].split(":")[0] if abort_reasons else None, "papers_expanded": len(papers) if isinstance(papers, list) else 0, "multi_source_search": {"papers_found": papers_found, "sources_used": sources_used}, "citation_chase": citation_chase_result, "already_shifted": already_shifted_result, "self_critique": self_critique_result, "gap_miner_gate_passed": gap_potential >= thresholds["min_gap_miner_potential"]})
+        heuristic_blocks = False
+        for key in ("dempster_shafer", "ensemble", "simulation", "novelty"):
+            block = results.get(key)
+            if isinstance(block, dict) and (
+                block.get("heuristic") or block.get("stub") or block.get("fallback")
+            ):
+                heuristic_blocks = True
+                break
+        if errors or heuristic_blocks:
+            results["status"] = "partial"
+        else:
+            results["status"] = "complete"
+    results.update(
+        {
+            "pipeline_version": "8.2",
+            "thresholds_applied": thresholds,
+            "abort_reasons": abort_reasons,
+            "abort_type": abort_reasons[0].split(":")[0] if abort_reasons else None,
+            "papers_expanded": len(papers) if isinstance(papers, list) else 0,
+            "multi_source_search": {"papers_found": papers_found, "sources_used": sources_used},
+            "citation_chase": citation_chase_result,
+            "already_shifted": already_shifted_result,
+            "self_critique": self_critique_result,
+            "gap_miner_gate_passed": gap_potential >= thresholds["min_gap_miner_potential"],
+        }
+    )
     return results

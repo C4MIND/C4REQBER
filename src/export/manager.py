@@ -2,6 +2,7 @@
 C4REQBER: Export Module
 Export discoveries to various formats (PDF, Markdown, LaTeX, HTML)
 """
+
 from __future__ import annotations
 
 import json
@@ -151,9 +152,16 @@ class ExportManager:
         return str(filepath)
 
     def export_bibliography_latex(
-        self, references: list[dict], filename: str = "references.bib"  # type: ignore[type-arg]
+        self,
+        references: list[dict],
+        filename: str = "references.bib",  # type: ignore[type-arg]
     ) -> str:
-        """Export bibliography as LaTeX/BibTeX."""
+        """Export bibliography as LaTeX/BibTeX.
+
+        Raises ValueError on empty references — never write a success-looking empty .bib.
+        """
+        if not references:
+            raise ValueError("Cannot export empty bibliography")
         filepath = self.output_dir / filename
 
         with open(filepath, "w") as f:
@@ -167,9 +175,7 @@ class ExportManager:
 
     def _to_bibtex(self, ref: dict[str, Any]) -> str:
         """Convert reference to BibTeX."""
-        lines = [
-            f"@{ref.get('entry_type', 'article')}{{{ref.get('cite_key', 'unknown')},"
-        ]
+        lines = [f"@{ref.get('entry_type', 'article')}{{{ref.get('cite_key', 'unknown')},"]
         lines.append(f"  title = {{{ref.get('title', '')}}},")
 
         authors = ref.get("authors", [])

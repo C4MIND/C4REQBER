@@ -21,22 +21,26 @@ router = APIRouter(prefix="/news", tags=["v8-news"])
 
 
 @router.get("/ticker")
-async def news_ticker(limit: int = Query(50, ge=1, le=100), refresh: bool = False) -> dict[str, Any]:
+async def news_ticker(
+    limit: int = Query(50, ge=1, le=100), refresh: bool = False
+) -> dict[str, Any]:
     """Return combined news feed for the live ticker. Set refresh=true to re-aggregate."""
     storage = NewsStorage()
 
     if refresh:
         aggregator = NewsAggregator(storage)
         feed = await aggregator.get_ticker_feed(limit=limit)
-        return {"items": feed, "total": len(feed), "refreshed": True}
+        status = "ok" if feed else "empty"
+        return {"status": status, "items": feed, "total": len(feed), "refreshed": True}
 
     cached = storage.get_recent(limit=limit)
     if cached:
-        return {"items": cached, "total": len(cached), "refreshed": False}
+        return {"status": "ok", "items": cached, "total": len(cached), "refreshed": False}
 
     aggregator = NewsAggregator(storage)
     feed = await aggregator.get_ticker_feed(limit=limit)
-    return {"items": feed, "total": len(feed), "refreshed": True}
+    status = "ok" if feed else "empty"
+    return {"status": status, "items": feed, "total": len(feed), "refreshed": True}
 
 
 @router.get("/{news_id}")

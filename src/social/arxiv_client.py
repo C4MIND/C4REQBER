@@ -1,4 +1,5 @@
 """c4reqber: arXiv Submission Client — human-only, endorsement required."""
+
 from __future__ import annotations
 
 import os
@@ -35,7 +36,7 @@ class ArXivClient:
     async def check_endorsement(self) -> dict[str, Any]:
         """Check if user is endorsed for submission."""
         if self.dry_run:
-            return {"endorsed": True, "_dry_run": True}
+            return {"endorsed": False, "status": "dry_run", "_dry_run": True}
         if not self.configured:
             return {"endorsed": False, "error": "ARXIV_SUBMISSION_KEY not configured"}
 
@@ -50,10 +51,13 @@ class ArXivClient:
     async def submit(self, tex_source: str, metadata: dict[str, Any]) -> dict[str, Any]:
         """Submit to arXiv. REQUIRES PRIOR HUMAN REVIEW."""
         if not metadata.get("human_reviewed"):
-            return {"error": "arXiv requires human review before submission. This cannot be bypassed.", "code": "HUMAN_REVIEW_REQUIRED"}
+            return {
+                "error": "arXiv requires human review before submission. This cannot be bypassed.",
+                "code": "HUMAN_REVIEW_REQUIRED",
+            }
 
         if self.dry_run:
-            return {"status": "submitted", "id": "arxiv-dry-run", "_dry_run": True}
+            return {"status": "dry_run", "id": "arxiv-dry-run", "_dry_run": True}
         if not self.configured:
             return {"error": "ARXIV_SUBMISSION_KEY not configured"}
 

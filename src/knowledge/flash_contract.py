@@ -139,13 +139,13 @@ def derive_terminal(result_status: str | None) -> tuple[TerminalEventType, str]:
     st = (result_status or "").strip().lower()
     if st in {"failed", "error", "aborted"}:
         return "failed", "failed"
-    if st in {"success", "complete", "ok"}:
+    if st in {"success", "complete"}:
         return "complete", "complete"
-    # partial, missing, unknown → fail-closed (no celebration)
+    # partial, ok (ambiguous), missing, unknown → fail-closed (no celebration)
     return "partial", "partial"
 
 
 def celebration_allowed(result_status: str | None) -> bool:
     """True only for success/complete — TUI toast.complete + burst gate."""
     st = (result_status or "").strip().lower()
-    return st in {"success", "complete", "ok"}
+    return st in {"success", "complete"}

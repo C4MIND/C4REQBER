@@ -189,12 +189,8 @@ class JobStore:
         result_status = ""
         if isinstance(result, dict):
             result_status = str(result.get("status") or "")
+        # Missing/empty status → fail-closed partial (never invent celebration)
         event_type, job_status_value = derive_terminal(result_status)
-        # Empty status on legacy payloads that omit status → treat as complete
-        # only when result has no honesty status key at all and looks like
-        # classic one-click (has papers/hypothesis without status field).
-        if not result_status and isinstance(result, dict) and "status" not in result:
-            event_type, job_status_value = "complete", "complete"
 
         async with self._lock:
             job = self._jobs.get(job_id)

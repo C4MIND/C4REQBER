@@ -152,6 +152,15 @@ class AgdaBridge:
                 ],
             }
 
+        try:
+            module_name = self._validate_module_name(module_name)
+        except ValueError as exc:
+            return {
+                "success": False,
+                "output_path": None,
+                "errors": [{"file": "", "line": 0, "column": 0, "message": str(exc)}],
+            }
+
         agda_code = f"module {module_name} where\n\n{code}"
 
         with tempfile.TemporaryDirectory() as tmpdir:

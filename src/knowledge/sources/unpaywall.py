@@ -16,8 +16,13 @@ logger = logging.getLogger("c44tcdi.knowledge.multi_source")
 
 
 def _extract_doi(text: str) -> str | None:
-    m = re.search(r"(10\.\d{4,}/[^\s]+)", text)
-    return m.group(1).rstrip(".,;:") if m else None
+    m = re.search(r"(10\.\d{4,9}/[^\s?#]+)", text)
+    if not m:
+        return None
+    doi = m.group(1).rstrip(".,;:")
+    if ".." in doi or "/" not in doi:
+        return None
+    return doi
 
 
 class UnpaywallAdapter(BaseSourceAdapter):
@@ -29,12 +34,14 @@ class UnpaywallAdapter(BaseSourceAdapter):
 
     async def search(self, query: str, limit: int) -> list[dict[str, Any]]:
         """Search."""
+        from urllib.parse import quote
+
         doi = _extract_doi(query)
         if not doi:
             return []
 
         email = self.api_key or contact_email()
-        url = f"https://api.unpaywall.org/v2/{doi}"
+        url = f"https://api.unpaywall.org/v2/{quote(doi, safe='')}"
         params = {"email": email}
         async with httpx.AsyncClient(timeout=5.0) as client:
             resp = await client.get(url, params=params)

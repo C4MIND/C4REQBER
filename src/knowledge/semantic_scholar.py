@@ -129,12 +129,15 @@ class SemanticScholarClient:
         """
         await self._rate_limit()
 
+        from src.utils.security_middleware import quote_paper_id
+
         params = {"fields": fields or self.DEFAULT_FIELDS}
+        safe_id = quote_paper_id(paper_id)
 
         try:
             assert self._client is not None
             response = await self._client.get(
-                f"{self.BASE_URL}/paper/{paper_id}",
+                f"{self.BASE_URL}/paper/{safe_id}",
                 params=params,
             )
             response.raise_for_status()
@@ -161,7 +164,10 @@ class SemanticScholarClient:
         Returns:
             List of citing papers
         """
+        from src.utils.security_middleware import quote_paper_id
+
         await self._rate_limit()
+        safe_id = quote_paper_id(paper_id)
 
         params: dict[str, Any] = {
             "limit": min(max_results, 1000),
@@ -171,14 +177,13 @@ class SemanticScholarClient:
         try:
             assert self._client is not None
             response = await self._client.get(
-                f"{self.BASE_URL}/paper/{paper_id}/citations",
+                f"{self.BASE_URL}/paper/{safe_id}/citations",
                 params=params,
             )
             response.raise_for_status()
             data = response.json()
             return [
-                self._normalize_paper(item.get("citingPaper", {}))
-                for item in data.get("data", [])
+                self._normalize_paper(item.get("citingPaper", {})) for item in data.get("data", [])
             ]
         except Exception as e:
             logger.warning("Semantic Scholar citations error: %s", e)
@@ -201,7 +206,10 @@ class SemanticScholarClient:
         Returns:
             List of referenced papers
         """
+        from src.utils.security_middleware import quote_paper_id
+
         await self._rate_limit()
+        safe_id = quote_paper_id(paper_id)
 
         params: dict[str, Any] = {
             "limit": min(max_results, 1000),
@@ -211,7 +219,7 @@ class SemanticScholarClient:
         try:
             assert self._client is not None
             response = await self._client.get(
-                f"{self.BASE_URL}/paper/{paper_id}/references",
+                f"{self.BASE_URL}/paper/{safe_id}/references",
                 params=params,
             )
             response.raise_for_status()
@@ -309,7 +317,8 @@ class SemanticScholarClient:
             "year": paper.get("year") or 0,
             "abstract": paper.get("abstract", ""),
             "doi": paper.get("doi", ""),
-            "url": paper.get("url", "") or f"https://semanticscholar.org/paper/{paper.get('paperId', '')}",
+            "url": paper.get("url", "")
+            or f"https://semanticscholar.org/paper/{paper.get('paperId', '')}",
             "journal": journal_name,
             "citation_count": paper.get("citationCount", 0),
             "reference_count": paper.get("referenceCount", 0),
@@ -338,6 +347,7 @@ class SyncSemanticScholarClient:
         year_range: tuple[int, int] | None = None,
     ) -> list[dict[str, Any]]:
         """Search."""
+
         async def _search() -> list[dict[str, Any]]:
             async with SemanticScholarClient(self.api_key, self._timeout) as client:
                 return await client.search(query, max_results, year_range=year_range)
@@ -346,6 +356,7 @@ class SyncSemanticScholarClient:
 
     def get_paper(self, paper_id: str) -> dict[str, Any] | None:
         """Get paper."""
+
         async def _get() -> dict[str, Any] | None:
             async with SemanticScholarClient(self.api_key, self._timeout) as client:
                 return await client.get_paper(paper_id)
@@ -354,6 +365,7 @@ class SyncSemanticScholarClient:
 
     def get_citations(self, paper_id: str, max_results: int = 50) -> list[dict[str, Any]]:
         """Get citations."""
+
         async def _get() -> list[dict[str, Any]]:
             async with SemanticScholarClient(self.api_key, self._timeout) as client:
                 return await client.get_citations(paper_id, max_results)
@@ -362,6 +374,7 @@ class SyncSemanticScholarClient:
 
     def get_references(self, paper_id: str, max_results: int = 50) -> list[dict[str, Any]]:
         """Get references."""
+
         async def _get() -> list[dict[str, Any]]:
             async with SemanticScholarClient(self.api_key, self._timeout) as client:
                 return await client.get_references(paper_id, max_results)
@@ -370,6 +383,7 @@ class SyncSemanticScholarClient:
 
     def get_author(self, author_id: str) -> dict[str, Any] | None:
         """Get author."""
+
         async def _get() -> dict[str, Any] | None:
             async with SemanticScholarClient(self.api_key, self._timeout) as client:
                 return await client.get_author(author_id)

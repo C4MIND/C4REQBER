@@ -2,7 +2,16 @@
 
 > **Русская версия:** [CHANGELOG.ru.md](CHANGELOG.ru.md)
 
-## Unreleased — Flash gather int-iterable + Windows console (tester AISI 440C)
+## Unreleased — Wave-4 paranoid honesty / security (15–25 cycles)
+
+Deep audit wave after AISI flash fix. Fail-closed celebration, path/DOI quoting, dual-path auth, no dry-run green-fakes.
+
+- **Security:** `validate_path` → `is_relative_to`; `validate_sim_path` allowlist; paper/DOI `quote` (Crossref/Unpaywall/S2/OpenCitations/bioRxiv/citation verifier); Agda/Haskell module-name validation; OpenFOAM/GROMACS path gates; MCP `c4_autoresearch` confined to project root; JWT middleware uses `AuthManager.decode_token` (issuer + revocation); CSRF Bearer skip only after valid JWT; MCP SDK `_invoke` binds args into `validate_tool_input` (+ `c4_prove`); dissertation uses same sanitizer as MCP
+- **Honesty:** JobStore missing status → `partial`; phase-6 demotes heuristic blocks; empty BibTeX raises; LiveFeed `heuristic`+`method`; social dry-run ≠ ok/sent/submitted/endorsed; health dry-run → `unverified`; liveness `process_alive`; WASM stub not registered; Bayesian no-evidence → `partial`; novelty empty search → `novel: null`; flash missing status → `partial` (not success); celebration drops ambiguous `ok`; ranking omits unchecked novelty 0.5; plugin step demotes partial/heuristic; news `status=empty`
+- **Ops:** `docker-compose.test.yml` → real `Dockerfile` + `src.api.server:app`; Win isolated python prefers `Scripts/`; `solve_streaming` cost reset; agents_router no exception detail leak
+- **Tests:** `tests/test_deep_audit_wave4.py` + flash surface / job SSE updates
+
+### Unreleased — Flash gather int-iterable + Windows console (tester AISI 440C)
 
 Windows tester (c4reqber 5.7.8 / Win10 / Py3.12): `blast flash --sources` crashed after ~20s with `flash gather failed: 'int' object is not iterable`.
 

@@ -116,9 +116,19 @@ class CSRFProtectionMiddleware(BaseHTTPMiddleware):
         """Process the request, validating CSRF tokens as needed."""
         # Machine clients (TUI after login, MCP, curl with JWT) use Bearer auth —
         # double-submit CSRF is a browser-cookie concern only.
+        # Require a *valid* JWT — bare "Bearer x" must not skip CSRF (cookie theft).
         auth = request.headers.get("Authorization", "")
         if auth.startswith("Bearer ") and len(auth) > len("Bearer "):
-            return await call_next(request)
+            token = auth[len("Bearer ") :].strip()
+            if token:
+                try:
+                    from src.api.auth import AuthManager
+
+                    payload = await AuthManager().decode_token(token)
+                    if payload is not None:
+                        return await call_next(request)
+                except Exception:
+                    logger.debug("CSRF Bearer precheck failed; continuing CSRF path")
 
         # Skip CSRF for safe methods
         if request.method in ("GET", "HEAD", "OPTIONS"):

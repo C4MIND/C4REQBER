@@ -18,10 +18,13 @@ _PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 
 
 def _sanitize_prompt_input(text: str, max_len: int = 500) -> str:
-    text = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f]", "", str(text)[:max_len])
-    text = text.replace('"""', '"').replace("---", "-")
-    text = text.replace("\nIgnore", " ").replace("\nignore", " ")
-    return f"<user_input>{text}</user_input>"
+    """Same fail-closed contract as MCP / security_middleware (no dual-path weak sanitizer)."""
+    from src.security.prompt_sanitizer import SanitizerInput
+    from src.utils.security_middleware import sanitize_prompt
+
+    cleaned = sanitize_prompt(str(text), max_len=max_len)
+    cleaned = SanitizerInput.sanitize_text(cleaned)
+    return f"<user_input>{cleaned}</user_input>"
 
 
 def _sanitize_filename(name: str, max_len: int = 100) -> str:

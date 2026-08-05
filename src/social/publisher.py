@@ -88,7 +88,14 @@ class Publisher:
             description=metadata.get("abstract", "")[:2000],
             creators=authors if authors else None,
         )
-        status = "success" if "doi" in result else "failed"
+        if result.get("_dry_run"):
+            status = "dry_run"
+        elif "error" in result:
+            status = "failed"
+        elif "doi" in result:
+            status = "success"
+        else:
+            status = "failed"
         self.history.record("zenodo_publish", "zenodo", draft_id, status, doi=result.get("doi", ""))
         return result
 

@@ -371,7 +371,7 @@ def cmd_flash(
     quality_score = int(result.get("quality_score") or 0)
     verified_count = int(result.get("verified_count") or 0)
     found_count = int(result.get("found_count") or 0)
-    status = result.get("status") or "success"
+    status = result.get("status") or "partial"
     search_meta = result.get("search_meta") or {}
     warnings = result.get("warnings") or []
 

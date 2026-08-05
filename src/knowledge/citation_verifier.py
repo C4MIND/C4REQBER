@@ -329,7 +329,12 @@ class CitationVerifier:
     async def _check_crossref(self, doi: str) -> dict[str, Any]:
         """Resolve DOI via CrossRef. Returns {ok, error?}."""
         try:
-            url = f"{self.CROSSREF_BASE}/{doi}"
+            from urllib.parse import quote
+
+            from src.utils.security_middleware import validate_paper_id
+
+            safe_doi = quote(validate_paper_id(doi), safe="")
+            url = f"{self.CROSSREF_BASE}/{safe_doi}"
             resp = await self._client.get(url, params={"mailto": contact_email()})
             if resp.status_code == 200:
                 data = resp.json()

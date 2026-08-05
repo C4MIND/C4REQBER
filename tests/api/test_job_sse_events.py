@@ -47,7 +47,7 @@ async def test_drain_events_incremental():
 async def test_set_complete_emits_typed_complete_event():
     store = JobStore()
     job = await store.create("one-click", {"problem": "x"})
-    await store.set_complete(job.job_id, {"status": "ok"})
+    await store.set_complete(job.job_id, {"status": "success"})
     events = await store.drain_events(job.job_id, 0)
     assert any(e.event_type == "complete" for e in events)
     complete = next(e for e in events if e.event_type == "complete")

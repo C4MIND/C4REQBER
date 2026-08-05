@@ -1,4 +1,5 @@
 """c4reqber: Slack Webhook — post preprint links to Slack channels."""
+
 from __future__ import annotations
 
 import os
@@ -21,10 +22,12 @@ class SlackWebhook:
     def configured(self) -> bool:
         return bool(self.url)
 
-    async def send(self, text: str = "", blocks: list[dict[str, Any]] | None = None) -> dict[str, Any]:
+    async def send(
+        self, text: str = "", blocks: list[dict[str, Any]] | None = None
+    ) -> dict[str, Any]:
         """Send a message to Slack."""
         if self.dry_run:
-            return {"status": "sent", "_dry_run": True}
+            return {"status": "dry_run", "_dry_run": True}
         if not self.url:
             return {"error": "SLACK_WEBHOOK_URL not configured"}
 
@@ -46,6 +49,9 @@ class SlackWebhook:
             text=f"📄 *New Preprint:* <{url}|{title}>",
             blocks=[
                 {"type": "header", "text": {"type": "plain_text", "text": "📄 New Preprint"}},
-                {"type": "section", "text": {"type": "mrkdwn", "text": f"*<{url}|{title}>*\n{abstract[:500]}"}},
+                {
+                    "type": "section",
+                    "text": {"type": "mrkdwn", "text": f"*<{url}|{title}>*\n{abstract[:500]}"},
+                },
             ],
         )

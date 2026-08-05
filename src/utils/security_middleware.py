@@ -2,6 +2,7 @@
 
 Provides centralized input validation, prompt sanitization, and path traversal guards.
 """
+
 from __future__ import annotations
 
 import html
@@ -49,7 +50,9 @@ def sanitize_prompt(text: str, max_len: int = 500) -> str:
         text = text.replace(tag, f"[{tag.upper()}_REMOVED]")
 
     # Unicode bidirectional override characters
-    text = text.replace("\u202E", "").replace("\u202D", "").replace("\u200E", "").replace("\u200F", "")
+    text = (
+        text.replace("\u202e", "").replace("\u202d", "").replace("\u200e", "").replace("\u200f", "")
+    )
 
     # Nested backticks / code fences
     text = text.replace("`" * 3, "` ` `")
@@ -72,28 +75,61 @@ def validate_path(path: str | Path, allowed_base: Path | None = None) -> Path:
     """Validate that a path is within the allowed base directory.
 
     Raises ValueError if the path attempts directory traversal.
+    Uses Path.is_relative_to — never str.startswith (blocks ~/.c4reqber_evil).
     """
-    path_obj = Path(path).resolve()
+    path_obj = Path(path).expanduser().resolve()
     if allowed_base is None:
         allowed_base = Path(os.path.expanduser("~/.c4reqber")).resolve()
-    if not str(path_obj).startswith(str(allowed_base)):
+    else:
+        allowed_base = Path(allowed_base).expanduser().resolve()
+    if not path_obj.is_relative_to(allowed_base):
         raise ValueError(f"Path traversal detected: {path} is outside {allowed_base}")
+    return path_obj
+
+
+def validate_sim_path(path: str | Path) -> Path:
+    """Allow sim inputs only under ~/.c4reqber/sims, cwd, or system temp."""
+    import tempfile
+
+    path_obj = Path(path).expanduser().resolve()
+    if ".." in Path(path).expanduser().parts:
+        raise ValueError(f"Path traversal detected: {path}")
+    allowed = [
+        Path(os.path.expanduser("~/.c4reqber/sims")).resolve(),
+        Path.cwd().resolve(),
+        Path(tempfile.gettempdir()).resolve(),
+    ]
+    if not any(path_obj.is_relative_to(base) for base in allowed):
+        raise ValueError(f"Sim path outside allowlist (sims/cwd/tmp): {path}")
     return path_obj
 
 
 # ── Paper ID Validation ─────────────────────────────────────────────────────
 
-_PAPER_ID_RE = re.compile(r"^[A-Za-z0-9_-]+$")
+# Allow S2/OpenAlex-style IDs and DOI-ish forms; reject path/query injection.
+_PAPER_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:/-]{0,250}$")
 
 
 def validate_paper_id(paper_id: str) -> str:
-    """Validate a paper ID against allowed characters.
+    """Validate a paper/DOI id for URL path use.
 
-    Raises ValueError if the ID contains suspicious characters.
+    Rejects ``..``, ``?``, ``#``, and empty ids. Callers must still ``quote``.
     """
-    if not paper_id or not _PAPER_ID_RE.match(paper_id):
-        raise ValueError(f"Invalid paper ID: {paper_id}")
-    return paper_id
+    if not paper_id or not isinstance(paper_id, str):
+        raise ValueError("Invalid paper ID: empty")
+    pid = paper_id.strip()
+    if ".." in pid or "?" in pid or "#" in pid or "\\" in pid or "\x00" in pid:
+        raise ValueError(f"Invalid paper ID: {paper_id!r}")
+    if not _PAPER_ID_RE.match(pid):
+        raise ValueError(f"Invalid paper ID: {paper_id!r}")
+    return pid
+
+
+def quote_paper_id(paper_id: str) -> str:
+    """validate_paper_id + urllib.parse.quote for safe URL path segments."""
+    from urllib.parse import quote
+
+    return quote(validate_paper_id(paper_id), safe="")
 
 
 # ── Configurable LLM Model Validation ───────────────────────────────────────

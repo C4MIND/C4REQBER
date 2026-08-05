@@ -1,4 +1,5 @@
 """c4reqber: Social Platform Health Checker — validates all connected APIs."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -30,74 +31,93 @@ async def check_all(dry_run: bool = False) -> dict[str, Any]:
 
 async def _check_zenodo(dry_run: bool) -> dict[str, Any]:
     import os
+
     token = os.getenv("ZENODO_ACCESS_TOKEN")
     if not token:
         return {"healthy": False, "reason": "ZENODO_ACCESS_TOKEN not set"}
     if dry_run:
-        return {"healthy": True, "mode": "dry-run"}
+        return {"healthy": False, "unverified": True, "mode": "dry-run"}
     async with httpx.AsyncClient() as c:
-        r = await c.get("https://zenodo.org/api/deposit/depositions", params={"access_token": token})
+        r = await c.get(
+            "https://zenodo.org/api/deposit/depositions", params={"access_token": token}
+        )
     return {"healthy": r.status_code == 200}
 
 
 async def _check_twitter(dry_run: bool) -> dict[str, Any]:
     import os
+
     if not os.getenv("TWITTER_API_KEY"):
         return {"healthy": False, "reason": "TWITTER_API_KEY not set"}
     if dry_run:
-        return {"healthy": True, "mode": "dry-run"}
+        return {"healthy": False, "unverified": True, "mode": "dry-run"}
     async with httpx.AsyncClient() as c:
-        r = await c.get("https://api.twitter.com/2/users/me", headers={"Authorization": f"Bearer {os.getenv('TWITTER_ACCESS_TOKEN')}"})
+        r = await c.get(
+            "https://api.twitter.com/2/users/me",
+            headers={"Authorization": f"Bearer {os.getenv('TWITTER_ACCESS_TOKEN')}"},
+        )
     return {"healthy": r.status_code == 200}
 
 
 async def _check_mastodon(dry_run: bool) -> dict[str, Any]:
     import os
+
     if not os.getenv("MASTODON_ACCESS_TOKEN"):
         return {"healthy": False, "reason": "MASTODON_ACCESS_TOKEN not set"}
     if dry_run:
-        return {"healthy": True, "mode": "dry-run"}
-    return {"healthy": True, "note": "token present, full check requires instance URL"}
+        return {"healthy": False, "unverified": True, "mode": "dry-run"}
+    return {
+        "healthy": False,
+        "unverified": True,
+        "reason": "token present, no live probe",
+    }
 
 
 async def _check_reddit(dry_run: bool) -> dict[str, Any]:
     import os
+
     if not os.getenv("REDDIT_CLIENT_ID"):
         return {"healthy": False, "reason": "REDDIT_CLIENT_ID not set"}
     if dry_run:
-        return {"healthy": True, "mode": "dry-run"}
+        return {"healthy": False, "unverified": True, "mode": "dry-run"}
     async with httpx.AsyncClient() as c:
-        r = await c.get("https://www.reddit.com/api/v1/me", headers={"Authorization": f"Bearer {os.getenv('REDDIT_CLIENT_ID')}"})
+        r = await c.get(
+            "https://www.reddit.com/api/v1/me",
+            headers={"Authorization": f"Bearer {os.getenv('REDDIT_CLIENT_ID')}"},
+        )
     return {"healthy": r.status_code != 401}
 
 
 async def _check_discord(dry_run: bool) -> dict[str, Any]:
     import os
+
     url = os.getenv("DISCORD_WEBHOOK_URL")
     if not url:
         return {"healthy": False, "reason": "DISCORD_WEBHOOK_URL not set"}
     if dry_run:
-        return {"healthy": True, "mode": "dry-run"}
+        return {"healthy": False, "unverified": True, "mode": "dry-run"}
     return {"healthy": url.startswith("https://discord.com/api/webhooks/")}
 
 
 async def _check_slack(dry_run: bool) -> dict[str, Any]:
     import os
+
     url = os.getenv("SLACK_WEBHOOK_URL")
     if not url:
         return {"healthy": False, "reason": "SLACK_WEBHOOK_URL not set"}
     if dry_run:
-        return {"healthy": True, "mode": "dry-run"}
+        return {"healthy": False, "unverified": True, "mode": "dry-run"}
     return {"healthy": url.startswith("https://hooks.slack.com/")}
 
 
 async def _check_telegram(dry_run: bool) -> dict[str, Any]:
     import os
+
     token = os.getenv("TELEGRAM_BOT_TOKEN")
     if not token:
         return {"healthy": False, "reason": "TELEGRAM_BOT_TOKEN not set"}
     if dry_run:
-        return {"healthy": True, "mode": "dry-run"}
+        return {"healthy": False, "unverified": True, "mode": "dry-run"}
     async with httpx.AsyncClient() as c:
         r = await c.get(f"https://api.telegram.org/bot{token}/getMe")
     return {"healthy": r.status_code == 200 and r.json().get("ok")}
@@ -105,17 +125,27 @@ async def _check_telegram(dry_run: bool) -> dict[str, Any]:
 
 async def _check_orcid(dry_run: bool) -> dict[str, Any]:
     import os
+
     if not os.getenv("ORCID_CLIENT_ID"):
         return {"healthy": False, "reason": "ORCID_CLIENT_ID not set"}
     if dry_run:
-        return {"healthy": True, "mode": "dry-run"}
-    return {"healthy": True, "note": "token present, full check requires OAuth2 flow"}
+        return {"healthy": False, "unverified": True, "mode": "dry-run"}
+    return {
+        "healthy": False,
+        "unverified": True,
+        "reason": "token present, no live OAuth probe",
+    }
 
 
 async def _check_arxiv(dry_run: bool) -> dict[str, Any]:
     import os
+
     if not os.getenv("ARXIV_SUBMISSION_KEY"):
         return {"healthy": False, "reason": "ARXIV_SUBMISSION_KEY not set"}
     if dry_run:
-        return {"healthy": True, "mode": "dry-run"}
-    return {"healthy": True, "note": "token present, full endorsement check requires API call"}
+        return {"healthy": False, "unverified": True, "mode": "dry-run"}
+    return {
+        "healthy": False,
+        "unverified": True,
+        "reason": "token present, no live endorsement probe",
+    }

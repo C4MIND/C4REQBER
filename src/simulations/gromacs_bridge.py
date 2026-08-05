@@ -43,7 +43,17 @@ class GromacsBridge(BaseSimulationAdapter):
                     "executed": False,
                     "note": "Provide tpr= path to a GROMACS .tpr — MD not run",
                 }
-            tpr_path = Path(str(tpr)).expanduser().resolve()
+            try:
+                from src.utils.security_middleware import validate_sim_path
+
+                tpr_path = validate_sim_path(str(tpr))
+            except ValueError as exc:
+                return {
+                    "status": "unavailable",
+                    "stub": True,
+                    "executed": False,
+                    "note": str(exc),
+                }
             if not tpr_path.is_file():
                 return {
                     "status": "unavailable",

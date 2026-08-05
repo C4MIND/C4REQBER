@@ -232,23 +232,32 @@ def wasm_load(
     module = _wasm_runtime.load(wasm_bytes)
     funcs = _wasm_runtime.list_functions(module)
     plugin_name = wasm_file.stem
+    has_runtime = bool(_wasm_runtime._has_wasmtime)
 
-    console.print(f"[green]Loaded:[/] {wasm_file.name}")
+    if has_runtime:
+        console.print(f"[green]Loaded:[/] {wasm_file.name}")
+    else:
+        console.print(
+            f"[yellow]Loaded (stub):[/] {wasm_file.name} — "
+            "wasmtime missing; NOT registered in pipeline"
+        )
 
     # Parse exports to understand what functions are available
     exports = (
-        _wasm_runtime._parse_exports(wasm_bytes)
-        if not _wasm_runtime._has_wasmtime
-        else [(n, 0) for n in funcs]
+        _wasm_runtime._parse_exports(wasm_bytes) if not has_runtime else [(n, 0) for n in funcs]
     )
     console.print(
         f"  Exports: {[(n, 'func' if k == 0 else 'mem' if k == 2 else f'kind{k}') for n, k in exports]}"
     )
     console.print(
-        f"  Runtime: {'wasmtime' if _wasm_runtime._has_wasmtime else 'stub (pip install wasmtime for execution)'}"
+        f"  Runtime: {'wasmtime' if has_runtime else 'stub (pip install wasmtime for execution)'}"
     )
 
-    # Register with plugin registry → appears in pipeline
+    if not has_runtime:
+        console.print("  [dim]Honesty: stub modules are not added to PLUGIN_REGISTRY[/]")
+        return
+
+    # Register with plugin registry → appears in pipeline (real wasmtime only)
     from src.plugins.unified_registry import PLUGIN_REGISTRY, PluginInfo, ToolMetadata
     from src.wasm.runtime import WASMToolPlugin
 
@@ -915,10 +924,14 @@ def blast_social(
                 return
             plat_result = result.get("results", {}).get(canonical, {})
             status = plat_result.get("status", plat_result.get("error", "unknown"))
-            if status in {"posted", "sent", "dry_run"}:
+            if status in {"posted", "sent"}:
                 console.print(f"[green]{canonical}: {status}[/]")
-            elif status == "skipped":
-                console.print(f"[yellow]{canonical}: skipped — {plat_result.get('message', '')}[/]")
+            elif status in {"dry_run", "skipped"}:
+                console.print(
+                    f"[yellow]{canonical}: {status}"
+                    + (f" — {plat_result.get('message', '')}" if status == "skipped" else "")
+                    + "[/]"
+                )
             else:
                 console.print(
                     f"[red]{canonical}: {status} — "

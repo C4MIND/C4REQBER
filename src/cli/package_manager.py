@@ -20,14 +20,24 @@ logger = logging.getLogger(__name__)
 
 
 def _isolated_python(env_dir: str) -> str:
-    """Return venv python path (Unix bin/ or Windows Scripts/)."""
+    """Return venv python path (Unix bin/ or Windows Scripts/).
+
+    Prefer platform-native layout first so a stray Unix path on Win32
+    cannot shadow Scripts/python.exe.
+    """
     unix = os.path.join(env_dir, "bin", "python")
     win = os.path.join(env_dir, "Scripts", "python.exe")
+    if sys.platform == "win32":
+        if os.path.exists(win):
+            return win
+        if os.path.exists(unix):
+            return unix
+        return win
     if os.path.exists(unix):
         return unix
     if os.path.exists(win):
         return win
-    return unix if sys.platform != "win32" else win
+    return unix
 
 
 class PackageStatus(Enum):

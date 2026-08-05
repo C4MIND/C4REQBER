@@ -285,6 +285,7 @@ TOOL_STRING_ARGS: dict[str, list[str]] = {
     "c4_triz": ["problem"],
     "c4_fingerprint": ["problem"],
     "c4_verify": ["code", "language"],
+    "c4_prove": ["hypothesis", "language"],
     "c4_transfer": ["problem", "source_domain", "target_domain"],
     "c4_simulate": ["pattern_id"],
     "c4_bayesian": [],

@@ -180,7 +180,7 @@ async def blast_flash(
 
         result = await run_flash(question, with_sources=with_sources, deep=deep, format="concise")
         out: dict[str, Any] = {
-            "status": result.get("status", "success"),
+            "status": result.get("status") or "partial",
             "mode": "flash",
             "answer": result.get("answer", ""),
             "sources": result.get("sources") or [],

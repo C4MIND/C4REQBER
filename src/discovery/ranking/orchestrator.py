@@ -58,16 +58,18 @@ async def rank_hypotheses(
         cost = cost_model.estimate(hyp)
         costs.append(cost)
 
-    # Build criteria matrix (None novelty = unchecked → neutral 0.5 for MCDM only)
-    novelty_vals: list[float] = [
-        0.5 if p.get("novelty") is None else float(p["novelty"] or 0.5) for p in prior_scores
-    ]
+    # Build criteria matrix — never invent novelty 0.5 for unchecked (I4)
     criteria: dict[str, list[float]] = {
         "eig": eig_scores,
-        "novelty": novelty_vals,
         "plausibility": [float(p["plausibility"] or 0.0) for p in prior_scores],
         "falsifiability": [float(p["falsifiability"] or 0.0) for p in prior_scores],
     }
+    if any(p.get("novelty") is not None for p in prior_scores):
+        novelty_vals: list[float] = []
+        for p in prior_scores:
+            nov = p.get("novelty")
+            novelty_vals.append(float(nov) if isinstance(nov, (int, float)) else 0.0)
+        criteria["novelty"] = novelty_vals
 
     ranker = MCDMRanker()
     ranked = ranker.rank(hypotheses, criteria=criteria, costs=costs)

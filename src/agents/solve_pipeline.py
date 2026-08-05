@@ -233,6 +233,11 @@ class UniversalSolvePipeline(BasePipeline):
     ) -> AsyncGenerator[PipelineEvent, None]:
         """Solve streaming."""
         from src.agents.pipeline.executor import PipelineExecutor
+        from src.llm.cost_tracker import get_cost_tracker
+
+        # Same reset as solve() — prevent cumulative cost inflation across streams
+        self._cost_tracker = get_cost_tracker()
+        self._cost_tracker.reset()
 
         executor = PipelineExecutor(self)
         async for event in executor.execute(problem, mode, domain_hint, max_depth):

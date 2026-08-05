@@ -72,18 +72,16 @@ def _try_import_metrics():
 
 
 def _scan_messages(messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Sanitize each message's content. Returns sanitized list (or unchanged on import failure)."""
+    """Sanitize each message's content. Fail-closed on injection / missing sanitizer."""
     SanitizerInput = _try_import_sanitizer()
     if SanitizerInput is None:
-        return messages
+        raise RuntimeError("prompt sanitizer unavailable — refusing unsanitized LLM call")
     out = []
     for msg in messages:
         content = msg.get("content", "")
         if isinstance(content, str):
-            try:
-                content = SanitizerInput.sanitize_text(content)
-            except Exception as exc:
-                logger.debug("sanitizer failed: %s", exc)
+            # ValueError from sanitize_text = injection — must not fall through
+            content = SanitizerInput.sanitize_text(content)
         out.append({**msg, "content": content})
     return out
 

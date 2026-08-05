@@ -25,12 +25,13 @@ class ChromaVectorStore:
 
     def __init__(self, persist_dir: str | None = None) -> None:
         if persist_dir is not None:
-            # Path traversal guard: ensure persist_dir is within home directory
-            abs_dir = os.path.abspath(os.path.expanduser(persist_dir))
-            base = os.path.expanduser("~/.c4reqber")
-            if not abs_dir.startswith(os.path.abspath(base)):
+            from pathlib import Path
+
+            abs_dir = Path(persist_dir).expanduser().resolve()
+            base = Path("~/.c4reqber").expanduser().resolve()
+            if not abs_dir.is_relative_to(base):
                 raise ValueError(f"persist_dir must be under {base}: {persist_dir}")
-            self.persist_dir = abs_dir
+            self.persist_dir = str(abs_dir)
         else:
             self.persist_dir = os.path.expanduser("~/.c4reqber/chromadb")
         self._client = None
@@ -41,6 +42,7 @@ class ChromaVectorStore:
     def available(self) -> bool:
         try:
             import chromadb
+
             return True
         except ImportError:
             return False
@@ -48,6 +50,7 @@ class ChromaVectorStore:
     def _get_client(self):
         if not self._client and self.available:
             import chromadb
+
             os.makedirs(self.persist_dir, exist_ok=True)
             self._client = chromadb.PersistentClient(path=self.persist_dir)
         return self._client
@@ -59,6 +62,7 @@ class ChromaVectorStore:
                     client = self._get_client()
                     if client:
                         import chromadb.errors
+
                         try:
                             self._collections[name] = client.get_or_create_collection(name)
                         except chromadb.errors.ChromaError as e:
@@ -74,9 +78,7 @@ class ChromaVectorStore:
                                     return None
         return self._collections.get(name)
 
-    def add_knowledge(
-        self, query: str, results: list[dict], metadata: dict | None = None
-    ) -> None:
+    def add_knowledge(self, query: str, results: list[dict], metadata: dict | None = None) -> None:
         """Cache knowledge search results as embeddings."""
         if not self.available:
             return
@@ -120,6 +122,7 @@ class ChromaVectorStore:
             if not coll:
                 return
             import uuid
+
             coll.add(
                 documents=[text],
                 ids=[f"mem_{session_id}_{uuid.uuid4().hex[:8]}"],
@@ -148,7 +151,7 @@ class ChromaVectorStore:
 
     def _chunk_text(self, text: str, max_sentences: int = 3) -> list[str]:
         """Split text into sentence-based chunks."""
-        sentences = [s.strip() for s in re.split(r'[.!?]\s+', text) if s.strip()]
+        sentences = [s.strip() for s in re.split(r"[.!?]\s+", text) if s.strip()]
         chunks = []
         for i in range(0, len(sentences), max_sentences):
             chunk = " ".join(sentences[i : i + max_sentences])
@@ -178,24 +181,28 @@ class ChromaVectorStore:
                 # Store full abstract
                 ids.append(f"paper_{pid}")
                 docs.append(f"{title} {abstract}")
-                metas.append({
-                    "title": title,
-                    "year": str(p.get("year", "")),
-                    "source": p.get("source", ""),
-                    "chunk_type": "full",
-                })
+                metas.append(
+                    {
+                        "title": title,
+                        "year": str(p.get("year", "")),
+                        "source": p.get("source", ""),
+                        "chunk_type": "full",
+                    }
+                )
                 # Store sentence chunks for finer retrieval
                 chunks = self._chunk_text(abstract, max_sentences=3)
                 for ci, chunk in enumerate(chunks[:4]):
                     ids.append(f"paper_{pid}_chunk_{ci}")
                     docs.append(f"{title} {chunk}")
-                    metas.append({
-                        "title": title,
-                        "year": str(p.get("year", "")),
-                        "source": p.get("source", ""),
-                        "chunk_type": "chunk",
-                        "chunk_index": ci,
-                    })
+                    metas.append(
+                        {
+                            "title": title,
+                            "year": str(p.get("year", "")),
+                            "source": p.get("source", ""),
+                            "chunk_type": "chunk",
+                            "chunk_index": ci,
+                        }
+                    )
             if ids:
                 coll.add(documents=docs, ids=ids, metadatas=metas)
         except Exception as e:
@@ -212,7 +219,9 @@ class ChromaVectorStore:
             coll = self._get_collection("paper_embeddings")
             if not coll:
                 return []
-            results = coll.query(query_texts=[query], n_results=n_results, include=["documents", "metadatas"])
+            results = coll.query(
+                query_texts=[query], n_results=n_results, include=["documents", "metadatas"]
+            )
             if not results:
                 return []
             metadatas = results.get("metadatas", [[]])[0]
@@ -232,6 +241,10 @@ class ChromaVectorStore:
             return {"healthy": False, "error": "chromadb not installed"}
         try:
             self._get_client()
-            return {"healthy": True, "collections": list(self._collections.keys()), "persist_dir": self.persist_dir}
+            return {
+                "healthy": True,
+                "collections": list(self._collections.keys()),
+                "persist_dir": self.persist_dir,
+            }
         except Exception as e:
             return {"healthy": False, "error": str(e)}

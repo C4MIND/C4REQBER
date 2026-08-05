@@ -133,7 +133,16 @@ class BioRxivClient:
         if not HAS_HTTPX:
             return {}
 
-        url = f"{self.BASE_URL}/details/biorxiv/{doi}"
+        from urllib.parse import quote
+
+        from src.utils.security_middleware import validate_paper_id
+
+        try:
+            safe_doi = quote(validate_paper_id(doi), safe="")
+        except ValueError:
+            return {}
+
+        url = f"{self.BASE_URL}/details/biorxiv/{safe_doi}"
         try:
             response = await self._client.get(url)  # type: ignore[union-attr]
             response.raise_for_status()
@@ -179,7 +188,16 @@ class MedRxivClient(BioRxivClient):
         if not HAS_HTTPX:
             return {}
 
-        url = f"{self.BASE_URL}/details/medrxiv/{doi}"
+        from urllib.parse import quote
+
+        from src.utils.security_middleware import validate_paper_id
+
+        try:
+            safe_doi = quote(validate_paper_id(doi), safe="")
+        except ValueError:
+            return {}
+
+        url = f"{self.BASE_URL}/details/medrxiv/{safe_doi}"
         try:
             response = await self._client.get(url)  # type: ignore[union-attr]
             response.raise_for_status()

@@ -373,12 +373,21 @@ class PipelineExecutor:
                         "error": (last.error if last and last.error else "synthesis failed"),
                     }
                     result.confidence = 0.0
-                    break
+                    result.final_solution = ""
+                    return  # never fall through to event=complete
 
             # After synthesis: track stagnation for potential O₁ → O₂ shift
             if step_id == "s8" and self._observer_controller is not None:
+                nov: float | None = None
+                if result.steps:
+                    nov_blob = (result.steps[-1].output_data or {}).get("novelty") or {}
+                    if isinstance(nov_blob, dict) and nov_blob.get("score") is not None:
+                        try:
+                            nov = float(nov_blob["score"])
+                        except (TypeError, ValueError):
+                            nov = None
                 obs_metrics = {
-                    "novelty_score": result.confidence,
+                    "novelty_score": nov,  # None when unchecked — never alias confidence
                     "gap_potential": len(state.get("gap_results", [])),
                     "hypothesis_text": result.final_solution or "",
                 }
@@ -487,19 +496,31 @@ class PipelineExecutor:
                 claim = result.final_solution.strip() or problem.strip()
                 proof_result = await prover.prove(claim[:4000], "lean4")
                 proof = proof_result.proof
+                ok = bool(getattr(proof_result, "valid", False))
+                step_status = "completed" if ok else "partial"
                 result.steps.append(
                     PipelineStepResult(
                         stage=PipelineStage.FORMAL_VERIFICATION,
-                        status="completed",
-                        output_data={"proof": proof, "verifier": "lean4"},
+                        status=step_status,
+                        output_data={
+                            "proof": proof,
+                            "verifier": "lean4",
+                            "valid": ok,
+                            "stamp": "COMPILED" if ok else "",
+                            "verification_aligned": False,
+                        },
                         duration_ms=0,
                     )
                 )
                 yield {
                     "event": "step_complete",
                     "stage": "formal_verification",
-                    "status": "completed",
-                    "data": {"proof_generated": True, "verifier": "lean4"},
+                    "status": step_status,
+                    "data": {
+                        "proof_generated": ok,
+                        "verifier": "lean4",
+                        "stamp": "COMPILED" if ok else "",
+                    },
                 }
             except Exception as e:
                 self._logger.warning("Formal verification failed: %s", e)
@@ -512,16 +533,18 @@ class PipelineExecutor:
 
             yield {"event": "step_start", "stage": "theorem_export"}
             try:
+                # Honest: no exporter wired — never paint exported=True
                 result.theorem_export = {
-                    "exported": True,
+                    "exported": False,
                     "format": "lean4",
                     "problem": problem,
+                    "reason": "not_implemented",
                 }
                 yield {
                     "event": "step_complete",
                     "stage": "theorem_export",
-                    "status": "completed",
-                    "data": {"exported": True},
+                    "status": "skipped",
+                    "data": {"exported": False, "reason": "not_implemented"},
                 }
             except Exception as e:
                 self._logger.warning("Theorem export failed: %s", e)

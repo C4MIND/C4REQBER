@@ -29,11 +29,18 @@ async def c4_autoresearch(
         Report with best_metric, best_iteration, total_iterations, and trace.
     """
     try:
+        from pathlib import Path
+
         from src.operators.autoresearch import run_autoresearch
+        from src.utils.security_middleware import validate_path
+
+        # Refuse arbitrary filesystem paths (MCP must stay in project tree)
+        project_root = Path(__file__).resolve().parents[2]
+        safe_file = str(validate_path(file, allowed_base=project_root))
 
         report = await asyncio.to_thread(
             run_autoresearch,
-            file=file,
+            file=safe_file,
             metric=metric,
             max_iter=max_iter,
         )

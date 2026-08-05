@@ -62,7 +62,7 @@ class TelegramBot:
         self, text: str, reply_markup: dict[str, Any] | None = None
     ) -> dict[str, Any]:
         if self.dry_run:
-            return {"ok": True, "_dry_run": True}
+            return {"ok": False, "status": "dry_run", "_dry_run": True}
         if not self.configured:
             return {"error": "TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID not configured"}
 

@@ -11,7 +11,10 @@ from typing import Any, ClassVar
 logger = logging.getLogger(__name__)
 
 INJECTION_PATTERNS: list[tuple[str, str]] = [
-    (r"ignore\s+(all\s+)?(previous|prior|above)\s+(instructions?|prompts?|messages?)", "instruction_override"),
+    (
+        r"ignore\s+(all\s+)?(previous|prior|above)\s+(instructions?|prompts?|messages?)",
+        "instruction_override",
+    ),
     (r"\bsystem\s*:\s*", "system_prompt_hijack"),
     (r"<\|im_start\|>", "chatml_delimiter"),
     (r"<\|im_end\|>", "chatml_delimiter"),
@@ -48,6 +51,7 @@ def _hash_text(text: str) -> str:
 
 class SanitizerInput:
     """SanitizerInput."""
+
     _injection_regex: ClassVar[re.Pattern[str]] = re.compile(
         "|".join(f"(?:{pattern})" for pattern, _name in INJECTION_PATTERNS),
         re.IGNORECASE,
@@ -62,11 +66,16 @@ class SanitizerInput:
         """Detect injection."""
         if not isinstance(text, str):
             return False
-        if cls._injection_regex.search(text):
+        # Unescape HTML entities before regex (ignore&#32;previous → ignore previous)
+        import html
+        import unicodedata
+
+        normalized = unicodedata.normalize("NFKC", html.unescape(text))
+        if cls._injection_regex.search(normalized) or cls._injection_regex.search(text):
             return True
-        if cls._mcp_regex.search(text):
+        if cls._mcp_regex.search(normalized) or cls._mcp_regex.search(text):
             return True
-        if "\x00" in text:
+        if "\x00" in text or "\x00" in normalized:
             logger.warning(
                 "Prompt injection detected: null_byte_raw hash=%s",
                 _hash_text(text),

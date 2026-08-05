@@ -1,6 +1,7 @@
 """
 C4REQBER: Pipeline Step 04 — MP Rotation
 """
+
 from __future__ import annotations
 
 import logging
@@ -64,9 +65,7 @@ class MPRotationStep(PipelineStep):
                 perspectives = enhanced
             else:
                 logger.info("Using static MP profiles")
-                rotation_result = mp_rotation.analyze(
-                    problem, n_profiles=3, c4_state=c4_state
-                )
+                rotation_result = mp_rotation.analyze(problem, n_profiles=3, c4_state=c4_state)
                 perspectives = rotation_result.perspectives
                 enhanced = await _enhance_perspectives_with_llm(
                     problem, perspectives, provider_router
@@ -123,15 +122,17 @@ async def _enhance_perspectives_with_llm(
                 insights = [
                     line
                     for line in lines
-                    if line[0].isdigit()
-                    or line.startswith("-")
-                    or line.startswith("*")
+                    if line[0].isdigit() or line.startswith("-") or line.startswith("*")
                 ]
                 if not insights:
                     insights = lines[:3]
+                from src.llm.error_shaped import is_error_shaped_llm
+
+                if is_error_shaped_llm(content):
+                    continue  # keep static perspective confidence
                 perspectives[i].analysis = content
                 perspectives[i].key_insights = insights[:5]
-                perspectives[i].confidence = min(0.7 + len(insights) * 0.05, 0.95)
+                # Never invent confidence from bullet count — keep profile default
 
         return perspectives
     except (ConnectionError, TimeoutError, RuntimeError, ValueError) as e:

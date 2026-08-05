@@ -666,13 +666,21 @@ class HybridVerifier:
         """Compile Agda code."""
         # Extract module name from first line: "module Name where"
         import re
+        import shutil
 
         match = re.match(r"module\s+([\w.]+)", code.strip())
         module_name = match.group(1) if match else "Main"
+        # Reject path-escape / invalid Agda identifiers (same rule as AgdaBridge)
+        parts = module_name.split(".")
+        for part in parts:
+            if not re.fullmatch(r"[A-Z][a-zA-Z0-9_]*", part):
+                return {
+                    "status": "error",
+                    "error": f"Invalid Agda module name: {module_name}",
+                }
 
         # Agda requires filename path to match module name dots
         temp_dir = tempfile.mkdtemp()
-        parts = module_name.split(".")
         if len(parts) > 1:
             subdir = os.path.join(temp_dir, *parts[:-1])
             os.makedirs(subdir, exist_ok=True)
@@ -700,8 +708,7 @@ class HybridVerifier:
         except FileNotFoundError:
             return {"status": "not_installed", "error": "agda not found"}
         finally:
-            os.unlink(path)
-            os.rmdir(temp_dir)
+            shutil.rmtree(temp_dir, ignore_errors=True)
 
     def _compile_cvc5(self, code: str) -> dict[str, Any]:
         """Verify SMT-LIB2 via CVC5."""

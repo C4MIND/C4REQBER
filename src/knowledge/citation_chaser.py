@@ -37,6 +37,7 @@ class CitationChaser:
         self._semaphore = asyncio.Semaphore(self.MAX_CONCURRENT)
         self._rate_lock: asyncio.Lock | None = asyncio.Lock()
         self._last_request: float = 0.0
+        self._last_error: str | None = None
 
     async def chase(
         self,
@@ -76,7 +77,9 @@ class CitationChaser:
                     self._get_references(pid),
                 )
 
-                citation_graph[pid] = [self._extract_id(r) for r in references if self._extract_id(r)]
+                citation_graph[pid] = [
+                    self._extract_id(r) for r in references if self._extract_id(r)
+                ]
 
                 for cited_paper in citations + references:
                     cid = self._extract_id(cited_paper)
@@ -118,6 +121,11 @@ class CitationChaser:
             "r_squared": round(r_squared, 4),
             "total_time": total_time,
         }
+        if self._last_error:
+            result["error"] = self._last_error
+            result["partial"] = True
+            if self._last_error == "rate_limited":
+                result["rate_limited"] = True
         return result
 
     async def _rate_limit(self) -> None:
@@ -155,6 +163,7 @@ class CitationChaser:
     @staticmethod
     def _validate_paper_id(paper_id: str) -> str | None:
         import re
+
         # Normalise: strip surrounding whitespace, lowercase
         pid = paper_id.strip()
         # Some DOIs contain parentheses — strip them for S2 API
@@ -185,9 +194,11 @@ class CitationChaser:
                 if resp.status_code == 404:
                     return []
                 if resp.status_code == 429:
-                    wait = 2 ** attempt
+                    wait = 2**attempt
                     logger.debug("S2 citations 429, retry %d/%d after %ds", attempt + 1, 3, wait)
                     await asyncio.sleep(wait)
+                    if attempt == 2:
+                        self._last_error = "rate_limited"
                     continue
                 resp.raise_for_status()
                 data = resp.json() or {}
@@ -198,7 +209,9 @@ class CitationChaser:
                         "s2_id": c.get("citingPaper", {}).get("paperId", ""),
                         "year": c.get("citingPaper", {}).get("year"),
                         "citation_count": c.get("citingPaper", {}).get("citationCount", 0),
-                        "authors": [a.get("name") for a in c.get("citingPaper", {}).get("authors", [])],
+                        "authors": [
+                            a.get("name") for a in c.get("citingPaper", {}).get("authors", [])
+                        ],
                         "doi": (c.get("citingPaper", {}).get("externalIds") or {}).get("DOI", ""),
                         "abstract": c.get("citingPaper", {}).get("abstract", ""),
                         "publication_date": c.get("citingPaper", {}).get("publicationDate", ""),
@@ -206,8 +219,14 @@ class CitationChaser:
                     }
                     for c in (data.get("data") or [])
                 ]
-            except (TimeoutError, httpx.TimeoutException, httpx.HTTPError, json.JSONDecodeError) as e:
+            except (
+                TimeoutError,
+                httpx.TimeoutException,
+                httpx.HTTPError,
+                json.JSONDecodeError,
+            ) as e:
                 logger.debug("S2 citations error for %s: %s", paper_id, e)
+                self._last_error = type(e).__name__
                 if attempt < 2:
                     await asyncio.sleep(1.0)
         return []
@@ -234,9 +253,11 @@ class CitationChaser:
                 if resp.status_code == 404:
                     return []
                 if resp.status_code == 429:
-                    wait = 2 ** attempt
+                    wait = 2**attempt
                     logger.debug("S2 references 429, retry %d/%d after %ds", attempt + 1, 3, wait)
                     await asyncio.sleep(wait)
+                    if attempt == 2:
+                        self._last_error = "rate_limited"
                     continue
                 resp.raise_for_status()
                 data = resp.json() or {}
@@ -247,7 +268,9 @@ class CitationChaser:
                         "s2_id": r.get("citedPaper", {}).get("paperId", ""),
                         "year": r.get("citedPaper", {}).get("year"),
                         "citation_count": r.get("citedPaper", {}).get("citationCount", 0),
-                        "authors": [a.get("name") for a in r.get("citedPaper", {}).get("authors", [])],
+                        "authors": [
+                            a.get("name") for a in r.get("citedPaper", {}).get("authors", [])
+                        ],
                         "doi": (r.get("citedPaper", {}).get("externalIds") or {}).get("DOI", ""),
                         "abstract": r.get("citedPaper", {}).get("abstract", ""),
                         "publication_date": r.get("citedPaper", {}).get("publicationDate", ""),
@@ -256,8 +279,14 @@ class CitationChaser:
                     for r in (data.get("data") or [])
                     if r.get("citedPaper")
                 ]
-            except (TimeoutError, httpx.TimeoutException, httpx.HTTPError, json.JSONDecodeError) as e:
+            except (
+                TimeoutError,
+                httpx.TimeoutException,
+                httpx.HTTPError,
+                json.JSONDecodeError,
+            ) as e:
                 logger.debug("S2 references error for %s: %s", paper_id, e)
+                self._last_error = type(e).__name__
                 if attempt < 2:
                     await asyncio.sleep(1.0)
         return []
@@ -266,10 +295,18 @@ class CitationChaser:
         self,
         paper_id: str,
     ) -> list[dict[str, Any]]:
+        from urllib.parse import quote
+
+        from src.utils.security_middleware import validate_paper_id
+
         doi = paper_id if "/" in paper_id else ""
         if not doi:
             return []
-        url = f"https://opencitations.net/index/api/v2/citations/{doi}"
+        try:
+            safe_doi = quote(validate_paper_id(doi), safe="")
+        except ValueError:
+            return []
+        url = f"https://opencitations.net/index/api/v2/citations/{safe_doi}"
         try:
             await self._rate_limit()
             async with httpx.AsyncClient(timeout=self.timeout) as client:
@@ -298,10 +335,18 @@ class CitationChaser:
         self,
         paper_id: str,
     ) -> list[dict[str, Any]]:
+        from urllib.parse import quote
+
+        from src.utils.security_middleware import validate_paper_id
+
         doi = paper_id if "/" in paper_id else ""
         if not doi:
             return []
-        url = f"https://opencitations.net/index/api/v2/references/{doi}"
+        try:
+            safe_doi = quote(validate_paper_id(doi), safe="")
+        except ValueError:
+            return []
+        url = f"https://opencitations.net/index/api/v2/references/{safe_doi}"
         try:
             await self._rate_limit()
             async with httpx.AsyncClient(timeout=self.timeout) as client:
@@ -328,6 +373,7 @@ class CitationChaser:
 
     def _compute_citation_velocity(self, papers: list[dict[str, Any]]) -> float:
         import datetime
+
         current_year = datetime.datetime.now().year
         year_citations: dict[int, int] = defaultdict(int)
         year_counts: dict[int, int] = defaultdict(int)
@@ -369,6 +415,7 @@ class CitationChaser:
     def _deduplicate_by_id(self, papers: list[dict[str, Any]]) -> list[dict[str, Any]]:
         seen: dict[str, dict[str, Any]] = {}
         import hashlib
+
         for paper in papers:
             pid = self._extract_id(paper)
             if not pid:
@@ -448,12 +495,14 @@ class CitationChaser:
             cc = paper.get("citation_count", 0)
             is_seminal = cc >= self.seminal_threshold
 
-            year_events[year].append({
-                "title": title,
-                "first_author": first_author,
-                "citation_count": cc,
-                "is_seminal": is_seminal,
-            })
+            year_events[year].append(
+                {
+                    "title": title,
+                    "first_author": first_author,
+                    "citation_count": cc,
+                    "is_seminal": is_seminal,
+                }
+            )
 
         timeline: list[dict[str, Any]] = []
         for year in sorted(year_events.keys()):
@@ -465,12 +514,14 @@ class CitationChaser:
                 descriptions.append(
                     f"{e['first_author']} et al. '{e['title'][:80]}' ({e['citation_count']} citations){suffix}"
                 )
-            timeline.append({
-                "year": year,
-                "events": descriptions,
-                "paper_count": len(events),
-                "total_citations": sum(e["citation_count"] for e in events),
-            })
+            timeline.append(
+                {
+                    "year": year,
+                    "events": descriptions,
+                    "paper_count": len(events),
+                    "total_citations": sum(e["citation_count"] for e in events),
+                }
+            )
 
         return timeline
 

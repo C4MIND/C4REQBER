@@ -345,9 +345,9 @@ class SynthesisStep(PipelineStep):
             gap_scores = [g.get("novelty_score", 0) for g in (gap_results or [])]
             gap_boost = (sum(gap_scores) / max(len(gap_scores), 1) * 0.10) if gap_scores else 0.0
 
-            # 5. Quality gates
+            # 5. Quality gates — no consolation boost when gates fail
             quality_boost = (
-                0.10 if quality_gate_results and quality_gate_results.get("all_passed") else 0.05
+                0.10 if quality_gate_results and quality_gate_results.get("all_passed") else 0.0
             )
 
             # 6. Solution quality metrics
@@ -396,7 +396,7 @@ class SynthesisStep(PipelineStep):
                 - citation_penalty,
                 0.95,
             )
-            confidence = max(confidence, 0.35)  # floor
+            # No artificial floor — weak synthesis must stay low-confidence
 
             output_data = {
                 "solution": solution,

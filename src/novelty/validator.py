@@ -21,6 +21,7 @@ except ImportError:
 
 class NoveltyValidator:
     """NoveltyValidator."""
+
     def __init__(self) -> None:
         self.crossref_base = "https://api.crossref.org/works"
         self._client: Any = None
@@ -39,11 +40,26 @@ class NoveltyValidator:
         keywords = hypothesis[:200]
         try:
             async with httpx.AsyncClient(timeout=30.0) as c:
-                r = await c.get(f"{self.crossref_base}?query={keywords}&rows=10")
+                r = await c.get(
+                    self.crossref_base,
+                    params={"query": keywords, "rows": 10},
+                )
                 if r.status_code != 200:
-                    return {"status": "unchecked", "reason": f"API returned {r.status_code}"}
+                    return {
+                        "status": "unchecked",
+                        "reason": f"API returned {r.status_code}",
+                        "novel": None,
+                    }
 
                 papers = r.json().get("message", {}).get("items", [])
+                if not papers:
+                    # Empty search ≠ novel — I4 honesty (never invent novel=True)
+                    return {
+                        "status": "unchecked",
+                        "reason": "empty_search",
+                        "novel": None,
+                        "papers_checked": 0,
+                    }
                 similarities: list[dict[str, Any]] = []
                 for paper in papers[:10]:
                     title = paper.get("title", [""])[0] if paper.get("title") else ""

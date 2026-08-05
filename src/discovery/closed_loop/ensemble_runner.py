@@ -51,6 +51,11 @@ def _extract_scalar(result: Any) -> float | None:
         return None
     if result.get("heuristic") is True:
         return None
+    # Require real execution + completed-class status (bare score → refuse)
+    if result.get("executed") is not True:
+        return None
+    if status and status not in {"completed", "ok", "success"}:
+        return None
 
     candidates: list[Any] = [
         result.get("potential_energy"),

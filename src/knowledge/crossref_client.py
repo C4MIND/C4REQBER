@@ -85,11 +85,16 @@ class CrossRefClient:
         """
         await self._rate_limit()
 
+        from urllib.parse import quote
+
         doi_clean = doi.replace("https://doi.org/", "").replace("http://dx.doi.org/", "")
+        if ".." in doi_clean or "?" in doi_clean or "#" in doi_clean:
+            logger.warning("CrossRef DOI rejected (injection chars): %s", doi_clean[:80])
+            return None
 
         try:
             assert self._client is not None
-            response = await self._client.get(f"{self.BASE_URL}/works/{doi_clean}")
+            response = await self._client.get(f"{self.BASE_URL}/works/{quote(doi_clean, safe='')}")
             response.raise_for_status()
             data = response.json()
             return self._normalize_work(data.get("message", {}))

@@ -2,6 +2,7 @@
 C4REQBER: Health Check Endpoint
 Production health monitoring with real dependency checks.
 """
+
 from __future__ import annotations
 
 import sqlite3
@@ -23,6 +24,7 @@ _start_time = time.time()
 
 class HealthStatus(BaseModel):
     """HealthStatus."""
+
     status: str
     version: str
     uptime_seconds: float
@@ -32,6 +34,7 @@ class HealthStatus(BaseModel):
 
 class ReadinessStatus(BaseModel):
     """ReadinessStatus."""
+
     ready: bool
     checks: dict[str, bool]
 
@@ -50,14 +53,17 @@ def _check_database() -> bool:
 def _check_cache() -> bool:
     """Check cache backend availability."""
     import os
+
     cache_backend = os.getenv("CACHE_BACKEND", "memory")
     if cache_backend == "memory":
         return True
     if cache_backend == "redis":
         try:
             import redis
+
             r = redis.from_url(  # type: ignore[no-untyped-call]
-            os.getenv("REDIS_URL", "redis://localhost:6379"))
+                os.getenv("REDIS_URL", "redis://localhost:6379")
+            )
             r.ping()
             return True
         except (ConnectionError, TimeoutError, OSError):
@@ -69,6 +75,7 @@ def _check_llm_router() -> bool:
     """Check if at least one LLM provider is available."""
     try:
         from src.llm.router import get_llm_router  # type: ignore[attr-defined]
+
         router = get_llm_router()  # type: ignore[attr-defined,used-before-def]
         return len(router.providers) > 0
     except (ImportError, RuntimeError, ValueError):
@@ -85,7 +92,7 @@ async def health_check() -> Any:
         timestamp=datetime.now(UTC).isoformat(),
         checks={
             "api": True,
-            "memory": True,
+            "process_alive": True,
         },
     )
 

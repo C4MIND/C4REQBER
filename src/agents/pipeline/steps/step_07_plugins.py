@@ -1,6 +1,7 @@
 """
 C4REQBER: Pipeline Step 07 — Plugin Execution
 """
+
 from __future__ import annotations
 
 import logging
@@ -54,7 +55,22 @@ class PluginExecutionStep(PipelineStep):
             except Exception as e:
                 logger.warning("Plugin %s failed: %s", plugin_id, e)
 
-        status = "completed" if plugin_results else "skipped"
+        if not plugin_results:
+            status = "skipped"
+        else:
+            status = "completed"
+            for item in plugin_results:
+                pr = item.get("result") or {}
+                if not isinstance(pr, dict):
+                    continue
+                st = str(pr.get("status") or "").lower()
+                if (
+                    st in {"partial", "error", "unavailable", "failed"}
+                    or pr.get("heuristic")
+                    or pr.get("stub")
+                ):
+                    status = "partial"
+                    break
         return PipelineStepResult(
             stage=self.stage,
             status=status,

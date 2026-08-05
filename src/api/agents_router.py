@@ -2,6 +2,7 @@
 C4 Archetype Agents API Router
 27 cognitive state agents for universal problem solving
 """
+
 from __future__ import annotations
 
 import json
@@ -46,9 +47,7 @@ def _check_devil_rate_limit(request: Request) -> bool:
     window = 60  # 1 minute
     limit = 10
 
-    _devil_requests[client_ip] = [
-        t for t in _devil_requests[client_ip] if now - t < window
-    ]
+    _devil_requests[client_ip] = [t for t in _devil_requests[client_ip] if now - t < window]
     if len(_devil_requests[client_ip]) >= limit:
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
@@ -65,6 +64,7 @@ def _check_devil_rate_limit(request: Request) -> bool:
 
 class ArchetypeResponse(BaseModel):
     """ArchetypeResponse."""
+
     code: str
     time: str
     scale: str
@@ -79,6 +79,7 @@ class ArchetypeResponse(BaseModel):
 
 class TeamRequest(BaseModel):
     """TeamRequest."""
+
     task_codes: list[str]
     team_size: int = 3
     diversity_boost: bool = True
@@ -86,12 +87,14 @@ class TeamRequest(BaseModel):
 
 class TeamResponse(BaseModel):
     """TeamResponse."""
+
     agents: list[ArchetypeResponse]
     synergy_matrix: dict[str, Any]
 
 
 class CouncilRequest(BaseModel):
     """CouncilRequest."""
+
     problem: str
     agent_codes: list[str]
     language: str = "en"
@@ -99,18 +102,21 @@ class CouncilRequest(BaseModel):
 
 class CouncilResponse(BaseModel):
     """CouncilResponse."""
+
     prompt: str
     agents: list[ArchetypeResponse]
 
 
 class TaskAgentsRequest(BaseModel):
     """TaskAgentsRequest."""
+
     problem: str
     num_agents: int = 3
 
 
 class DevilAdvocateRequest(BaseModel):
     """DevilAdvocateRequest."""
+
     hypothesis: str
     agent_code: str = "666"
     depth: int = 3
@@ -118,6 +124,7 @@ class DevilAdvocateRequest(BaseModel):
 
 class DevilAdvocateResponse(BaseModel):
     """DevilAdvocateResponse."""
+
     critique: str
     weaknesses: list[str]
     counterarguments: list[str]
@@ -148,15 +155,9 @@ def _to_response(state: C4Archetype) -> ArchetypeResponse:
 
 @router.get("/", response_model=list[ArchetypeResponse])
 async def list_archetypes(
-    time: str | None = Query(
-        None, description="Filter by time: Past/Present/Future"
-    ),
-    scale: str | None = Query(
-        None, description="Filter by scale: Concrete/Abstract/Meta"
-    ),
-    agency: str | None = Query(
-        None, description="Filter by agency: Self/Other/System"
-    ),
+    time: str | None = Query(None, description="Filter by time: Past/Present/Future"),
+    scale: str | None = Query(None, description="Filter by scale: Concrete/Abstract/Meta"),
+    agency: str | None = Query(None, description="Filter by agency: Self/Other/System"),
 ) -> Any:
     """Get all 27 C4 archetypes with optional filtering."""
     agents = get_all_archetypes()
@@ -240,9 +241,7 @@ async def build_team(request: TeamRequest) -> Any:
 @router.post("/select", response_model=list[ArchetypeResponse])
 async def select_agents(request: TaskAgentsRequest) -> Any:
     """Select agents based on problem characteristics."""
-    agents = select_agents_for_task(
-        problem=request.problem, num_agents=request.num_agents
-    )
+    agents = select_agents_for_task(problem=request.problem, num_agents=request.num_agents)
     return [_to_response(a) for a in agents]
 
 
@@ -320,6 +319,9 @@ async def devil_advocate(
             agent_code=request.agent_code,
         )
     except Exception as e:
-        raise HTTPException(status_code=503, detail=f"LLM unavailable: {e}") from e
+        import logging
+
+        logging.getLogger(__name__).exception("LLM unavailable in agents_router")
+        raise HTTPException(status_code=503, detail="LLM unavailable") from e
     finally:
         await client.close()

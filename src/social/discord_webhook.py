@@ -1,4 +1,5 @@
 """c4reqber: Discord Webhook + Bot — post preprint links, interactive review."""
+
 from __future__ import annotations
 
 import os
@@ -21,10 +22,12 @@ class DiscordWebhook:
     def configured(self) -> bool:
         return bool(self.url)
 
-    async def send(self, content: str = "", embeds: list[dict[str, Any]] | None = None) -> dict[str, Any]:
+    async def send(
+        self, content: str = "", embeds: list[dict[str, Any]] | None = None
+    ) -> dict[str, Any]:
         """Send a message to Discord channel."""
         if self.dry_run:
-            return {"status": "sent", "_dry_run": True}
+            return {"status": "dry_run", "_dry_run": True}
         if not self.url:
             return {"error": "DISCORD_WEBHOOK_URL not configured"}
 
@@ -42,10 +45,14 @@ class DiscordWebhook:
 
     async def send_preprint(self, title: str, url: str, abstract: str = "") -> dict[str, Any]:
         """Post a preprint announcement with rich embed."""
-        return await self.send(embeds=[{
-            "title": title[:256],
-            "url": url,
-            "description": abstract[:2000] if abstract else f"New preprint: {title}",
-            "color": 0x00ffcc,
-            "fields": [{"name": "Platform", "value": "c4reqber", "inline": True}],
-        }])
+        return await self.send(
+            embeds=[
+                {
+                    "title": title[:256],
+                    "url": url,
+                    "description": abstract[:2000] if abstract else f"New preprint: {title}",
+                    "color": 0x00FFCC,
+                    "fields": [{"name": "Platform", "value": "c4reqber", "inline": True}],
+                }
+            ]
+        )

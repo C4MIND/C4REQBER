@@ -63,6 +63,8 @@ class Hypothesis:
     confidence: float  # 0.0-1.0
     domain: str
     generated_at: float = field(default_factory=time.time)
+    heuristic: bool = False
+    method: str = ""
 
 
 class LiveFeed:
@@ -130,6 +132,8 @@ class LiveFeed:
                             "confidence": h.confidence,
                             "domain": h.domain,
                             "generated_at": h.generated_at,
+                            "heuristic": h.heuristic,
+                            "method": h.method,
                         }
                         for h in list(self._hypotheses)[:30]
                     ],
@@ -315,10 +319,19 @@ class LiveFeed:
                 source_problems=problem_ids,
                 confidence=min(1.0, len(problem_ids) * 0.2),
                 domain=keyword,
+                heuristic=True,
+                method="keyword_cluster",
             )
 
     def _add_hypothesis(
-        self, title: str, source_problems: list[str], confidence: float, domain: str
+        self,
+        title: str,
+        source_problems: list[str],
+        confidence: float,
+        domain: str,
+        *,
+        heuristic: bool = False,
+        method: str = "",
     ) -> None:
         hid = f"hyp:{hash(title) % 1000000:06d}"
         with self._lock:
@@ -331,6 +344,8 @@ class LiveFeed:
                     source_problems=source_problems,
                     confidence=confidence,
                     domain=domain,
+                    heuristic=heuristic,
+                    method=method,
                 )
             )
 
@@ -444,6 +459,8 @@ class LiveFeed:
                         source_problems=source_problems,
                         confidence=min(1.0, citations / 100),
                         domain="semantic_scholar",
+                        heuristic=True,
+                        method="ss_trending_title",
                     )
         except Exception:
             logger.debug("Feed source failed", exc_info=True)

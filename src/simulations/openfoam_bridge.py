@@ -50,7 +50,17 @@ class OpenFOAMBridge(BaseSimulationAdapter):
                     "executed": False,
                     "note": "OpenFOAM case_dir required",
                 }
-            case_path = Path(str(case_dir)).expanduser().resolve()
+            try:
+                from src.utils.security_middleware import validate_sim_path
+
+                case_path = validate_sim_path(str(case_dir))
+            except ValueError as exc:
+                return {
+                    "status": "unavailable",
+                    "stub": True,
+                    "executed": False,
+                    "note": str(exc),
+                }
             if not case_path.is_dir():
                 return {
                     "status": "unavailable",

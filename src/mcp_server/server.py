@@ -98,10 +98,25 @@ _COMPAT_DEPENDENCIES = (
 
 async def _invoke(module: ModuleType, name: str, *args: Any, **kwargs: Any) -> dict[str, Any]:
     """Invoke a split implementation while preserving facade monkeypatch seams."""
+    import inspect
+
     current = globals()
     for dependency in _COMPAT_DEPENDENCIES:
         setattr(module, dependency, current[dependency])
-    return await getattr(module, name)(*args, **kwargs)
+    fn = getattr(module, name)
+    # Same sanitizer gate as fallback_protocol — bind *args so string params are scanned
+    try:
+        from src.mcp_server.fallback_protocol import validate_tool_input
+
+        bound = inspect.signature(fn).bind_partial(*args, **kwargs)
+        bound.apply_defaults()
+        cleaned = validate_tool_input(name, dict(bound.arguments))
+        return await fn(**cleaned)
+    except ValueError as exc:
+        return {"status": "error", "error": str(exc), "tool": name}
+    except TypeError:
+        # Signature mismatch / unexpected kwargs — call as originally shaped
+        return await fn(*args, **kwargs)
 
 
 @server.tool("c4_solve")

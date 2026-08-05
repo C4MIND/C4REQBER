@@ -280,6 +280,8 @@ async def run_flash(
         verified_count=verified_count,
     )
 
+    from src.llm.error_shaped import is_error_shaped_llm
+
     llm = get_gateway()
     answer = ""
     rate_limited = False
@@ -290,8 +292,7 @@ async def run_flash(
             temperature=0.3,
         )
         answer = (raw or "").strip() if isinstance(raw, str) else str(raw or "").strip()
-        # Providers that embed failures in content (e.g. "[MLX Error] ...") must not look successful
-        if answer.startswith(("[MLX Error]", "Batch error:", "[Error]")):
+        if is_error_shaped_llm(answer):
             logger.warning("flash LLM returned error-shaped content: %s", answer[:120])
             answer = ""
     except Exception as exc:
@@ -306,7 +307,7 @@ async def run_flash(
             try:
                 resp = await llm.generate(prompt, max_tokens=800, temperature=0.3)
                 answer = (getattr(resp, "content", None) or "").strip()
-                if answer.startswith(("[MLX Error]", "Batch error:", "[Error]")):
+                if is_error_shaped_llm(answer):
                     logger.warning("flash LLM generate error-shaped content: %s", answer[:120])
                     answer = ""
             except RateLimited as rl_exc:

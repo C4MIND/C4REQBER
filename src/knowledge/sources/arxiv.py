@@ -52,7 +52,9 @@ class ArxivAdapter(BaseSourceAdapter):
                 title_el = entry.find("atom:title", ns)
                 title = title_el.text.strip() if title_el is not None and title_el.text else ""
                 abstract_el = entry.find("atom:summary", ns)
-                abstract = abstract_el.text.strip() if abstract_el is not None and abstract_el.text else ""
+                abstract = (
+                    abstract_el.text.strip() if abstract_el is not None and abstract_el.text else ""
+                )
                 authors: list[str] = []
                 for author_el in entry.findall("atom:author", ns):
                     name_el = author_el.find("atom:name", ns)
@@ -74,19 +76,22 @@ class ArxivAdapter(BaseSourceAdapter):
                     if "doi.org" in href:
                         doi_link = href
                 doi = _extract_doi(doi_link) or ""
-                result.append({
-                    "title": title,
-                    "authors": authors,
-                    "year": year,
-                    "abstract": abstract,
-                    "doi": doi,
-                    "arxiv_id": arxiv_id,
-                    "venue": "arXiv",
-                    "citation_count": 0,
-                    "source": "arxiv",
-                    "source_name": "arXiv",
-                    "sources": ["arXiv"],
-                })
+                result.append(
+                    {
+                        "title": title,
+                        "authors": authors,
+                        "year": year,
+                        "abstract": abstract,
+                        "doi": doi,
+                        "arxiv_id": arxiv_id,
+                        "venue": "arXiv",
+                        "citation_count": 0,
+                        "source": "arxiv",
+                        "source_name": "arXiv",
+                        "sources": ["arXiv"],
+                    }
+                )
         except ET.ParseError as e:
             logger.debug("arXiv XML parse error: %s", e)
+            return [{"error": f"xml_parse: {e}"}]
         return result

@@ -562,7 +562,16 @@ class MultiSourceSearcher:
         except BaseException as e:
             logger.debug("Source %s error: %s", src_id, e)
             cb.record_failure()
-            return [{"error": str(e) or type(e).__name__}]
+            # Never leak api_key=… from httpx URL into search_meta / API responses
+            try:
+                from src.security.credential_guard import redact_credentials
+
+                msg = str(redact_credentials(str(e) or type(e).__name__))
+            except Exception:
+                msg = type(e).__name__
+            if "api_key=" in msg.lower() or "apikey=" in msg.lower():
+                msg = type(e).__name__
+            return [{"error": msg[:200]}]
 
     async def _rate_limit(self, src_id: str, cfg: dict[str, Any]) -> None:
         rate = cfg.get("rate_limit", 1.0)

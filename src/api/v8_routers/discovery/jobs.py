@@ -259,18 +259,22 @@ class JobStore:
 
 # Global job store: in-memory default; Redis when REDIS_URL is set (multi-replica).
 _job_store: JobStore | None = None
+_job_store_lock = __import__("threading").Lock()
 
 
 def get_job_store() -> JobStore:
     global _job_store
-    if _job_store is None:
-        import os
+    if _job_store is not None:
+        return _job_store
+    with _job_store_lock:
+        if _job_store is None:
+            import os
 
-        redis_url = os.getenv("REDIS_URL", "").strip()
-        if redis_url:
-            from src.api.v8_routers.discovery.job_store_redis import RedisJobStore
+            redis_url = os.getenv("REDIS_URL", "").strip()
+            if redis_url:
+                from src.api.v8_routers.discovery.job_store_redis import RedisJobStore
 
-            _job_store = RedisJobStore(redis_url)
-        else:
-            _job_store = JobStore()
-    return _job_store
+                _job_store = RedisJobStore(redis_url)
+            else:
+                _job_store = JobStore()
+        return _job_store

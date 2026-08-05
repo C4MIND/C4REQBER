@@ -356,12 +356,14 @@ class PipelineExecutor:
 
             # Abort solve pipeline when synthesis failed (no fake success)
             if step_id == "s8":
+                from src.llm.error_shaped import is_error_shaped_llm
+
                 sol = (result.final_solution or "").strip()
                 last = result.steps[-1] if result.steps else None
                 synth_failed = bool(
                     (last and last.error)
                     or not sol
-                    or "[LLM unavailable" in sol
+                    or is_error_shaped_llm(sol)
                     or len(sol.split()) < 50
                 )
                 if synth_failed:

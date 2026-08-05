@@ -424,13 +424,9 @@ Respond ONLY with JSON, no markdown formatting, no explanations."""
                         temperature=temperature,
                         max_tokens=max_tokens,
                     )
-                except (ConnectionError, TimeoutError, RuntimeError) as e:
-                    return LLMResponse(
-                        content=f"Batch error: {str(e)[:120]}",
-                        model=model or "error",
-                        usage={"prompt_tokens": 0, "completion_tokens": 0},
-                        latency_ms=0.0,
-                    )
+                except (ConnectionError, TimeoutError, RuntimeError):
+                    # Never paint provider failure as successful content
+                    raise
 
         tasks = [generate_with_limit(p) for p in prompts]
         return await asyncio.gather(*tasks)

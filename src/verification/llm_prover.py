@@ -123,25 +123,30 @@ class LLMProofResult:
     error: str = ""
 
     def to_dict(self) -> dict[str, Any]:
-        status = (
-            "success"
-            if self.valid
-            else (
-                "unavailable"
-                if self.error
-                and ("not installed" in self.error.lower() or "unavailable" in self.error.lower())
-                else "partial"
-            )
-        )
-        return {
+        # valid = compile/typecheck only — never paint outer success without alignment
+        if self.valid:
+            status = "partial"
+            stamp = "COMPILED"
+        elif self.error and (
+            "not installed" in self.error.lower() or "unavailable" in self.error.lower()
+        ):
+            status = "unavailable"
+            stamp = ""
+        else:
+            status = "partial"
+            stamp = ""
+        out: dict[str, Any] = {
             "language": self.language,
             "valid": self.valid,
             "status": status,
+            "stamp": stamp,
+            "verification_aligned": False,
             "proof": self.proof[:500] + "..." if len(self.proof) > 500 else self.proof,
             "iterations": len(self.iterations),
             "total_time_ms": round(self.total_time_ms, 1),
             "error": self.error or None,
         }
+        return out
 
 
 from src.verification.rag_retriever import ProofExampleRetriever

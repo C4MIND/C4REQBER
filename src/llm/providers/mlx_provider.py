@@ -28,7 +28,11 @@ class MLXProvider:
     """
 
     def __init__(self, model: str | None = None, timeout: float = 120.0) -> None:
-        self._model_name: str = model or os.getenv("MLX_MODEL", "mlx-community/Qwen2.5-7B-Instruct-4bit") or "mlx-community/Qwen2.5-7B-Instruct-4bit"
+        self._model_name: str = (
+            model
+            or os.getenv("MLX_MODEL", "mlx-community/Qwen2.5-7B-Instruct-4bit")
+            or "mlx-community/Qwen2.5-7B-Instruct-4bit"
+        )
         self.timeout = timeout
         self._model: Any = None
         self._tokenizer: Any = None
@@ -45,6 +49,7 @@ class MLXProvider:
         try:
             import mlx.core
             import mlx_lm
+
             return True
         except ImportError:
             return False
@@ -94,26 +99,17 @@ class MLXProvider:
     ) -> LLMResponse:
         """Generate text via mlx-lm. Returns LLMResponse."""
         import time as _time
+
         t0 = _time.perf_counter()
 
         effective_model: str = model or self._model_name
         if not self.available:
-            return LLMResponse(
-                content="",
-                model=effective_model,
-                usage={"prompt_tokens": 0, "completion_tokens": 0},
-                latency_ms=0.0,
-                provider="mlx",
+            raise RuntimeError(
+                "MLX provider unavailable (mlx-lm not installed or not Apple Silicon)"
             )
 
         if not self._load_model():
-            return LLMResponse(
-                content="[MLX Error] Failed to load model",
-                model=self._model_name,
-                usage={"prompt_tokens": 0, "completion_tokens": 0},
-                latency_ms=0.0,
-                provider="mlx",
-            )
+            raise RuntimeError(f"MLX failed to load model: {self._model_name}")
 
         try:
             import mlx_lm
@@ -133,26 +129,25 @@ class MLXProvider:
             return LLMResponse(
                 content=response_text,
                 model=self._model_name,
-                usage={"prompt_tokens": len(full_prompt) // 4, "completion_tokens": len(response_text) // 4},
+                usage={
+                    "prompt_tokens": len(full_prompt) // 4,
+                    "completion_tokens": len(response_text) // 4,
+                },
                 latency_ms=round(elapsed, 1),
                 provider="mlx",
             )
         except Exception as e:
             logger.error("MLX generate failed: %s", e)
-            return LLMResponse(
-                content=f"[MLX Error] {e}",
-                model=self._model_name,
-                usage={"prompt_tokens": 0, "completion_tokens": 0},
-                latency_ms=0.0,
-                provider="mlx",
-            )
+            raise RuntimeError(f"MLX generate failed: {e}") from e
 
     def _build_prompt(self, prompt: str, system_prompt: str | None = None) -> str:
         model_lower = self._model_name.lower()
         if "llama" in model_lower or "mistral" in model_lower:
             parts = []
             if system_prompt:
-                parts.append(f"<|start_header_id|>system<|end_header_id|>\n{system_prompt}<|eot_id|>")
+                parts.append(
+                    f"<|start_header_id|>system<|end_header_id|>\n{system_prompt}<|eot_id|>"
+                )
             parts.append(f"<|start_header_id|>user<|end_header_id|>\n{prompt}<|eot_id|>")
             parts.append("<|start_header_id|>assistant<|end_header_id|>\n")
             return "\n".join(parts)

@@ -62,7 +62,9 @@ class PubmedAdapter(BaseSourceAdapter):
                 title_el = article.find(".//ArticleTitle")
                 title = title_el.text.strip() if title_el is not None and title_el.text else ""
                 abstract_el = article.find(".//AbstractText")
-                abstract = abstract_el.text.strip() if abstract_el is not None and abstract_el.text else ""
+                abstract = (
+                    abstract_el.text.strip() if abstract_el is not None and abstract_el.text else ""
+                )
                 authors: list[str] = []
                 for author_el in article.findall(".//Author"):
                     last = author_el.find("LastName")
@@ -88,20 +90,25 @@ class PubmedAdapter(BaseSourceAdapter):
                     if eid_el.get("IdType") == "doi":
                         doi = eid_el.text.strip() if eid_el.text else ""
                 journal_el = article.find(".//Journal/Title")
-                journal = journal_el.text.strip() if journal_el is not None and journal_el.text else ""
-                result.append({
-                    "title": title,
-                    "authors": authors,
-                    "year": year,
-                    "abstract": abstract,
-                    "doi": doi,
-                    "pmid": pmid,
-                    "venue": journal,
-                    "citation_count": 0,
-                    "source": "pubmed",
-                    "source_name": "PubMed",
-                    "sources": ["PubMed"],
-                })
+                journal = (
+                    journal_el.text.strip() if journal_el is not None and journal_el.text else ""
+                )
+                result.append(
+                    {
+                        "title": title,
+                        "authors": authors,
+                        "year": year,
+                        "abstract": abstract,
+                        "doi": doi,
+                        "pmid": pmid,
+                        "venue": journal,
+                        "citation_count": 0,
+                        "source": "pubmed",
+                        "source_name": "PubMed",
+                        "sources": ["PubMed"],
+                    }
+                )
         except ET.ParseError as e:
             logger.debug("PubMed XML parse error: %s", e)
+            return [{"error": f"xml_parse: {e}"}]
         return result

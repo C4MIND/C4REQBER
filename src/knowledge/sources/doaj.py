@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -17,9 +18,11 @@ class DoajAdapter(BaseSourceAdapter):
     async def search(self, query: str, limit: int) -> list[dict[str, Any]]:
         """Search."""
         url = "https://doaj.org/api/v2/search/articles"
+        # Path segment must be encoded — never splice raw user query into URL path
+        safe_q = quote(query or "", safe="")
         async with httpx.AsyncClient(timeout=5.0) as client:
             resp = await client.get(
-                f"{url}/{query}",
+                f"{url}/{safe_q}",
                 params={
                     "pageSize": min(limit, 100),
                     "page": 1,
@@ -47,16 +50,18 @@ class DoajAdapter(BaseSourceAdapter):
             for ident in bibjson.get("identifier", []):
                 if isinstance(ident, dict) and ident.get("type") == "doi":
                     doi = ident.get("id", "")
-            result.append({
-                "title": title,
-                "authors": authors,
-                "year": year,
-                "abstract": abstract,
-                "doi": doi,
-                "venue": journal,
-                "citation_count": 0,
-                "source": "doaj",
-                "source_name": "DOAJ",
-                "sources": ["DOAJ"],
-            })
+            result.append(
+                {
+                    "title": title,
+                    "authors": authors,
+                    "year": year,
+                    "abstract": abstract,
+                    "doi": doi,
+                    "venue": journal,
+                    "citation_count": 0,
+                    "source": "doaj",
+                    "source_name": "DOAJ",
+                    "sources": ["DOAJ"],
+                }
+            )
         return result

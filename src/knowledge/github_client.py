@@ -99,7 +99,7 @@ class GitHubSearchClient:
 
         except Exception as e:
             logger.warning("GitHub code search error: %s", e)
-            return []
+            raise RuntimeError(f"GitHub code search failed: {e}") from e
 
     async def search_repos(self, query: str, max_results: int = 50) -> list[dict]:
         """
@@ -145,7 +145,7 @@ class GitHubSearchClient:
 
         except Exception as e:
             logger.warning("GitHub repo search error: %s", e)
-            return []
+            raise RuntimeError(f"GitHub repo search failed: {e}") from e
 
     async def get_readme(self, owner: str, repo: str) -> str:
         """

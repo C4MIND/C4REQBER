@@ -432,12 +432,17 @@ class HybridVerifier:
 
             if compile_result["status"] == "success":
                 total_ms = (time.perf_counter() - t0) * 1000
+                # Compile/typecheck ≠ claim-aligned proof (HONESTY: COMPILED, not VERIFIED)
                 vr = VerificationResult(
                     backend=backend,
-                    status="verified",
+                    status="compiled",
                     claim=claim[:200],
                     proof_code=proof_code,
-                    proof_text=f"Proof verified by {backend} compiler in {VerificationTimeoutManager.format_elapsed(total_ms / 1000)}.",
+                    proof_text=(
+                        f"Proof typechecked by {backend} compiler in "
+                        f"{VerificationTimeoutManager.format_elapsed(total_ms / 1000)} "
+                        "(COMPILED — claim alignment not verified)."
+                    ),
                     iterations=attempt,
                     execution_time_ms=total_ms,
                     timing_info={
@@ -445,6 +450,8 @@ class HybridVerifier:
                         "elapsed_ms": int(total_ms),
                         "attempts": attempt,
                         "was_killed": False,
+                        "stamp": "COMPILED",
+                        "verification_aligned": False,
                     },
                 )
                 self._cache[cache_key] = vr

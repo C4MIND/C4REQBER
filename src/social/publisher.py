@@ -25,7 +25,12 @@ class Publisher:
 
     async def publish(self, draft_id: str) -> dict[str, Any]:
         """Publish a draft: Zenodo upload → DOI → ORCID → social posts."""
-        draft_dir = CONFIG_DIR / "drafts" / draft_id
+        from src.config.draft_paths import safe_draft_dir
+
+        try:
+            draft_dir = safe_draft_dir(draft_id)
+        except ValueError:
+            return {"error": "invalid draft_id"}
         if not draft_dir.exists():
             return {"error": f"Draft not found: {draft_id}"}
 

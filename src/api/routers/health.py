@@ -2,6 +2,7 @@
 C4REQBER API: Health Router
 Production-ready health endpoints with per-service status checks.
 """
+
 from __future__ import annotations
 
 import os
@@ -35,17 +36,34 @@ async def _check_database() -> tuple[str, str | None]:
 
 
 async def _check_cache() -> tuple[str, str | None]:
-    """Check cache (Redis or memory) connectivity."""
+    """Check cache connectivity without green-faking Redis-down as memory ok."""
     try:
-        from src.api.cache import CacheManager
+        from src.api.cache import HAS_REDIS, CacheManager, RedisCache
 
+        want_redis = os.getenv("CACHE_BACKEND", "memory").lower() == "redis"
+        if want_redis:
+            if not HAS_REDIS:
+                return "error", "CACHE_BACKEND=redis but redis package missing"
+            redis_cache = RedisCache()
+            try:
+                await redis_cache.connect()
+                if await redis_cache.ping():
+                    return "ok", None
+                return "error", "redis ping failed"
+            except Exception as e:
+                return "error", f"redis unavailable: {type(e).__name__}"
+            finally:
+                try:
+                    await redis_cache.disconnect()
+                except Exception:
+                    pass
         cache = CacheManager()
         await cache.connect()
         if await cache.ping():
             return "ok", None
         return "error", "ping failed"
     except Exception as e:
-        return "error", str(e)
+        return "error", type(e).__name__
 
 
 async def _check_llm_providers() -> tuple[str, str | None]:

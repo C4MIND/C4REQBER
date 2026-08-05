@@ -89,9 +89,14 @@ def outer_status_from_sim_payload(result: Any) -> str:
         return "error" if inner in _SIM_ERROR else "unavailable"
     if inner in _SIM_UNAVAILABLE:
         return "unavailable"
-    # Fallback markers: not_* prefix OR *_not_* infix (e.g. rebound_not_amuse)
-    _fallback_truth = (
-        engine_truth.startswith("not_") or "_not_" in engine_truth or engine_truth.endswith("_not")
+    # Fallback markers: not_* / *_not_* / *fallback* / legacy
+    _et = engine_truth.lower()
+    _fallback_truth = bool(
+        _et.startswith("not_")
+        or "_not_" in _et
+        or _et.endswith("_not")
+        or "fallback" in _et
+        or _et.startswith("legacy")
     )
     if heuristic or inner in _SIM_PARTIAL or _fallback_truth:
         return "partial"
@@ -100,15 +105,12 @@ def outer_status_from_sim_payload(result: Any) -> str:
     ):
         return "partial"
     if inner in {"success", "completed", "ok"}:
-        # Positive provenance: explicit engine_truth, or named real engine
-        # without fallback tokens (bridges should set engine_truth on success).
-        if engine_truth and not (engine_truth.startswith("not_") or "_not_" in engine_truth):
+        # Positive provenance: non-fallback engine_truth required (not bare executed=True).
+        if engine_truth and not _fallback_truth:
             return "success"
         if any(tok in f"{engine} {backend}" for tok in ("fallback", "numpy", "stub")):
             return "partial"
-        if engine in _REAL_ENGINES or result.get("executed") is True:
-            return "success"
-        # Ambiguous bare success — refuse to invent green.
+        # Ambiguous bare success / executed-only — refuse to invent green.
         return "partial"
     if not inner:
         return "partial"

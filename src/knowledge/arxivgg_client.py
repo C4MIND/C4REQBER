@@ -46,7 +46,11 @@ class ArxivGGClient:
             await self._client.aclose()
 
     async def search(
-        self, query: str, max_results: int = 20, year_min: int | None = None, year_max: int | None = None
+        self,
+        query: str,
+        max_results: int = 20,
+        year_min: int | None = None,
+        year_max: int | None = None,
     ) -> list[dict[str, Any]]:
         """Search papers by keyword."""
         if not self._client:
@@ -71,7 +75,7 @@ class ArxivGGClient:
             return self._parse_results(data)
         except (TimeoutError, TypeError, httpx.HTTPError, json.JSONDecodeError) as e:
             logger.warning("arXiv.gg search error: %s", e)
-            return []
+            raise RuntimeError(f"arXiv.gg search failed: {e}") from e
 
     def _parse_results(self, data: dict[str, Any]) -> list[dict[str, Any]]:
         results = []
@@ -94,9 +98,7 @@ class ArxivGGClient:
             )
         return results
 
-    async def search_semantic(
-        self, query: str, max_results: int = 20
-    ) -> list[dict[str, Any]]:
+    async def search_semantic(self, query: str, max_results: int = 20) -> list[dict[str, Any]]:
         """Semantic search using vector similarity (requires embeddings)."""
         if not self._client:
             raise RuntimeError("Client not initialized. Use 'async with' context manager.")
@@ -113,7 +115,7 @@ class ArxivGGClient:
             return self._parse_results(data)
         except (TimeoutError, TypeError, httpx.HTTPError, json.JSONDecodeError) as e:
             logger.warning("arXiv.gg semantic search error: %s", e)
-            return []
+            raise RuntimeError(f"arXiv.gg semantic search failed: {e}") from e
 
     async def search_pdf(
         self, query: str, max_results: int = 50, fuzzy: bool = True
@@ -135,4 +137,4 @@ class ArxivGGClient:
             return self._parse_results(data)
         except (TimeoutError, TypeError, httpx.HTTPError, json.JSONDecodeError) as e:
             logger.warning("arXiv.gg PDF search error: %s", e)
-            return []
+            raise RuntimeError(f"arXiv.gg PDF search failed: {e}") from e

@@ -108,8 +108,18 @@ def finalize_plugin_result(result: dict[str, Any], llm_raw: str) -> dict[str, An
     - LLM text but empty/unparsed structure → ``llm_backed=True``, ``status=partial``
     - LLM missing → ``llm_backed=False``, ``status=partial`` (payload kept)
     """
+    from src.llm.error_shaped import is_error_shaped_llm
+
     out = dict(result)
-    backed = bool(llm_raw and str(llm_raw).strip())
+    raw = str(llm_raw).strip() if llm_raw else ""
+    if is_error_shaped_llm(raw):
+        out["llm_backed"] = False
+        out["status"] = "partial"
+        warnings = list(out.get("warnings") or [])
+        warnings.append("LLM returned error-shaped content; not counting as llm_backed")
+        out["warnings"] = warnings
+        return out
+    backed = bool(raw)
     out["llm_backed"] = backed
     if not backed:
         out["status"] = "partial"

@@ -4,6 +4,7 @@ c4reqber: P6 Source Adapters
 Wraps BaseP6Client-based sources (NCBI, PubChem, ChEMBL, Materials Project,
 Kaggle, AFLOW, UCI ML, Harvard Dataverse, re3data) into BaseSourceAdapter.
 """
+
 from __future__ import annotations
 
 import logging
@@ -44,7 +45,7 @@ class _P6Adapter(BaseSourceAdapter):
             return results
         except Exception as e:
             logger.warning("%s search error: %s", self._source_name, e)
-            return []
+            return [{"error": str(e)}]
 
 
 class NcbiEutilsAdapter(_P6Adapter):
@@ -57,6 +58,7 @@ class NcbiEutilsAdapter(_P6Adapter):
 
     def __init__(self, api_key: str | None = None) -> None:
         from .ncbi_eutils import NCBIEUtilsClient
+
         self._client_cls = NCBIEUtilsClient
         super().__init__(api_key)
 
@@ -68,7 +70,7 @@ class NcbiEutilsAdapter(_P6Adapter):
             return results
         except Exception as e:
             logger.warning("%s search error: %s", self._source_name, e)
-            return []
+            return [{"error": str(e)}]
 
 
 class PubchemAdapter(_P6Adapter):
@@ -79,6 +81,7 @@ class PubchemAdapter(_P6Adapter):
 
     def __init__(self, api_key: str | None = None) -> None:
         from .pubchem import PubChemClient
+
         self._client_cls = PubChemClient
         super().__init__(api_key)
 
@@ -90,7 +93,7 @@ class PubchemAdapter(_P6Adapter):
             return results
         except Exception as e:
             logger.warning("%s search error: %s", self._source_name, e)
-            return []
+            return [{"error": str(e)}]
 
 
 class ChemblAdapter(_P6Adapter):
@@ -101,6 +104,7 @@ class ChemblAdapter(_P6Adapter):
 
     def __init__(self, api_key: str | None = None) -> None:
         from .chembl import ChEMBLClient
+
         self._client_cls = ChEMBLClient
         super().__init__(api_key)
 
@@ -115,6 +119,7 @@ class MaterialsProjectAdapter(_P6Adapter):
 
     def __init__(self, api_key: str | None = None) -> None:
         from .materials_project import MaterialsProjectClient
+
         self._client_cls = MaterialsProjectClient
         super().__init__(api_key)
 
@@ -134,6 +139,7 @@ class KaggleAdapter(_P6Adapter):
 
     def __init__(self, api_key: str | None = None) -> None:
         from .kaggle import KaggleClient
+
         self._client_cls = KaggleClient
         super().__init__(api_key)
 
@@ -145,7 +151,7 @@ class KaggleAdapter(_P6Adapter):
             return results
         except Exception as e:
             logger.warning("%s search error: %s", self._source_name, e)
-            return []
+            return [{"error": str(e)}]
 
 
 class AflowAdapter(_P6Adapter):
@@ -156,6 +162,7 @@ class AflowAdapter(_P6Adapter):
 
     def __init__(self, api_key: str | None = None) -> None:
         from .aflow import AflowClient
+
         self._client_cls = AflowClient
         super().__init__(api_key)
 
@@ -168,6 +175,7 @@ class UciMlAdapter(_P6Adapter):
 
     def __init__(self, api_key: str | None = None) -> None:
         from .uci_ml import UciMlClient
+
         self._client_cls = UciMlClient
         super().__init__(api_key)
 
@@ -182,6 +190,7 @@ class HarvardDataverseAdapter(_P6Adapter):
 
     def __init__(self, api_key: str | None = None) -> None:
         from .harvard_dataverse import HarvardDataverseClient
+
         self._client_cls = HarvardDataverseClient
         super().__init__(api_key)
 
@@ -194,11 +203,13 @@ class Re3dataAdapter(_P6Adapter):
 
     def __init__(self, api_key: str | None = None) -> None:
         from .re3data import Re3dataClient
+
         self._client_cls = Re3dataClient
         super().__init__(api_key)
 
 
 # ─── NEW ADAPTERS (2026-05-31 batch) ─────────────────────────────────────────
+
 
 class StringDbAdapter(_P6Adapter):
     """STRING DB — protein-protein interaction networks."""
@@ -208,6 +219,7 @@ class StringDbAdapter(_P6Adapter):
 
     def __init__(self, api_key: str | None = None) -> None:
         from .string_db import StringDbClient
+
         self._client_cls = StringDbClient
         super().__init__(api_key)
 
@@ -220,6 +232,7 @@ class ClinicalTrialsAdapter(_P6Adapter):
 
     def __init__(self, api_key: str | None = None) -> None:
         from .clinicaltrials import ClinicalTrialsClient
+
         self._client_cls = ClinicalTrialsClient
         super().__init__(api_key)
 
@@ -232,6 +245,7 @@ class GbifAdapter(_P6Adapter):
 
     def __init__(self, api_key: str | None = None) -> None:
         from .gbif import GbifClient
+
         self._client_cls = GbifClient
         super().__init__(api_key)
 
@@ -244,6 +258,7 @@ class AllenBrainAdapter(_P6Adapter):
 
     def __init__(self, api_key: str | None = None) -> None:
         from .allen_brain import AllenBrainClient
+
         self._client_cls = AllenBrainClient
         super().__init__(api_key)
 
@@ -256,6 +271,7 @@ class UsgsAdapter(_P6Adapter):
 
     def __init__(self, api_key: str | None = None) -> None:
         from .usgs import UsgsClient
+
         self._client_cls = UsgsClient
         super().__init__(api_key)
 
@@ -268,6 +284,7 @@ class OrcidAdapter(_P6Adapter):
 
     def __init__(self, api_key: str | None = None) -> None:
         from .orcid import OrcidClient
+
         self._client_cls = OrcidClient
         # OrcidClient reads credentials from env directly; pass no api_key
         super(_P6Adapter, self).__init__(api_key)
@@ -284,21 +301,20 @@ class NoaaAdapter(_P6Adapter):
 
     def __init__(self, api_key: str | None = None) -> None:
         from .noaa import NOAAClient
+
         self._client_cls = NOAAClient
         super().__init__(api_key)
 
     async def search(self, query: str, limit: int) -> list[dict[str, Any]]:
         """Search weather stations by location query."""
         try:
-            results = await self._client.search_stations(
-                location=query, limit=limit
-            )
+            results = await self._client.search_stations(location=query, limit=limit)
             for r in results:
                 r["source"] = self._source_name
             return results
         except Exception as e:
             logger.warning("%s search error: %s", self._source_name, e)
-            return []
+            return [{"error": str(e)}]
 
 
 class CernOpenDataAdapter(_P6Adapter):
@@ -309,6 +325,7 @@ class CernOpenDataAdapter(_P6Adapter):
 
     def __init__(self, api_key: str | None = None) -> None:
         from .cern_opendata import CernOpenDataClient
+
         self._client_cls = CernOpenDataClient
         super().__init__(api_key)
 
@@ -321,6 +338,7 @@ class OeisAdapter(_P6Adapter):
 
     def __init__(self, api_key: str | None = None) -> None:
         from .oeis import OeisClient
+
         self._client_cls = OeisClient
         super().__init__(api_key)
 
@@ -333,6 +351,7 @@ class ConceptNetAdapter(_P6Adapter):
 
     def __init__(self, api_key: str | None = None) -> None:
         from .conceptnet import ConceptNetClient
+
         self._client_cls = ConceptNetClient
         super().__init__(api_key)
 
@@ -345,6 +364,7 @@ class UsptoPatentsviewAdapter(_P6Adapter):
 
     def __init__(self, api_key: str | None = None) -> None:
         from .uspto_patentsview import UsptoPatentsviewClient
+
         self._client_cls = UsptoPatentsviewClient
         super().__init__(api_key)
 
@@ -357,6 +377,7 @@ class HuggingFaceDatasetsAdapter(_P6Adapter):
 
     def __init__(self, api_key: str | None = None) -> None:
         from .huggingface_datasets import HuggingFaceDatasetsClient
+
         self._client_cls = HuggingFaceDatasetsClient
         super().__init__(api_key)
 
@@ -369,6 +390,7 @@ class OpenReviewAdapter(_P6Adapter):
 
     def __init__(self, api_key: str | None = None) -> None:
         from .openreview import OpenReviewClient
+
         self._client_cls = OpenReviewClient
         super().__init__(api_key)
 
@@ -383,6 +405,7 @@ class OpenFdaAdapter(_P6Adapter):
 
     def __init__(self, api_key: str | None = None) -> None:
         from .openfda import OpenFdaClient
+
         self._client_cls = OpenFdaClient
         super().__init__(api_key)
 
@@ -397,6 +420,7 @@ class NasaEarthdataAdapter(_P6Adapter):
 
     def __init__(self, api_key: str | None = None) -> None:
         from .nasa_earthdata import NasaEarthdataClient
+
         self._client_cls = NasaEarthdataClient
         super().__init__(api_key)
 
@@ -409,6 +433,7 @@ class CyberLeninkaAdapter(_P6Adapter):
 
     def __init__(self, api_key: str | None = None) -> None:
         from .cyberleninka import CyberLeninkaClient
+
         self._client_cls = CyberLeninkaClient
         super().__init__(api_key)
 
@@ -421,5 +446,6 @@ class MathNetRuAdapter(_P6Adapter):
 
     def __init__(self, api_key: str | None = None) -> None:
         from .mathnet_ru import MathNetRuClient
+
         self._client_cls = MathNetRuClient
         super().__init__(api_key)

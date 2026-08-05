@@ -19,6 +19,16 @@ Windows tester (c4reqber 5.7.8 / Win10 / Py3.12): `blast flash --sources` crashe
 - Desktop launcher + legacy typer UTF-8; flash rejects `[MLX Error]` as empty answer
 - Tests: `tests/test_audit_wave2_honesty.py`
 
+### Wave-3 deep audit (adapters / formal / sim / security)
+
+- Knowledge adapters: XML parse / P6 / GitHub / arXiv.gg fail → `[{"error":…}]` or raise (not silent `[]`)
+- MLX + batch LLM raise instead of error-as-content; plugin finalize uses `is_error_shaped_llm`
+- HybridVerifier / LLMProver / MCP `c4_verify`: compile → `COMPILED`/`partial`, reject `sorry`/`admit`
+- Sim honesty: `legacy_fallback` + bare `executed=True` → outer `partial`
+- Security: `safe_draft_dir` (draft_id traversal), DOAJ query encode, orchestrator redacts `api_key=`
+- Race/health: locked `get_job_store`; readiness does not green-fake Redis-down as memory OK
+- Tests: `tests/test_deep_audit_wave3.py`
+
 ---
 
 ## v5.7.8 (2026-07-23) — PyPI wheel ships c4tui-v9

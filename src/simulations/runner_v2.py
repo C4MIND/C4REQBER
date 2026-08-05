@@ -450,6 +450,8 @@ class PatternRunnerV2(PatternRunner):
             legacy_result = self._run_legacy(pattern_id, instance, hypothesis)
             legacy_result["fallback_reason"] = str(e)
             legacy_result["accelerated"] = False
+            legacy_result["engine_truth"] = "legacy_fallback"
+            legacy_result["status"] = "partial"
             return legacy_result
 
     def run_batch(

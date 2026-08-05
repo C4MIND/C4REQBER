@@ -205,15 +205,25 @@ async def c4_social(action: str, draft_id: str = "", platform: str = "") -> dict
         return {"drafts": result}
 
     if action == "preview" and draft_id:
-        draft_dir = Path.home() / ".c4reqber" / "drafts" / draft_id
+        from src.config.draft_paths import safe_draft_dir
+
+        try:
+            draft_dir = safe_draft_dir(draft_id)
+        except ValueError:
+            return {"error": "invalid draft_id", "status": "error"}
         md = draft_dir / "dissertation.md"
         if md.exists():
             return {"draft_id": draft_id, "content": md.read_text(encoding="utf-8")[:5000]}
         return {"error": f"Draft {draft_id} not found"}
 
     if action == "publish" and draft_id:
+        from src.config.draft_paths import safe_draft_dir
         from src.social.publisher import Publisher
 
+        try:
+            safe_draft_dir(draft_id)
+        except ValueError:
+            return {"error": "invalid draft_id", "status": "error"}
         pub = Publisher()
         result = await pub.publish(draft_id)
         return result.get("steps", result)

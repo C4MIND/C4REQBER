@@ -38,6 +38,8 @@ class AgentResponse:
     tool_calls: list[ToolCall] = field(default_factory=list)
     sub_agents: list[str] = field(default_factory=list)
     duration_sec: float = 0.0
+    status: str = "success"
+    meta: dict[str, Any] = field(default_factory=dict)
 
 
 class AgentCore:
@@ -388,8 +390,21 @@ You are an AI research and engineering assistant with deep access to the c4reqbe
             return {"result": msg, "messages": [{"role": "assistant", "content": msg}]}
 
         def verify_formal(state: AgentState):
-            msg = self._call_llm([{"role": "user", "content": f"Formally verify: {user_input}"}])
-            return {"result": msg, "messages": [{"role": "assistant", "content": msg}]}
+            # Dual-path honesty: real verifier only — never LLM prose as "FORMALLY VERIFIED"
+            out = self.run_formal_verify(user_input)
+            stamp = out.get("stamp") or "none"
+            status = str(out.get("status") or "partial")
+            msg = (
+                f"Formal verification [{status}] stamp={stamp} "
+                f"aligned={bool(out.get('verification_aligned'))}. "
+                f"{out.get('error') or ''}"
+            ).strip()
+            return {
+                "result": msg,
+                "status": status,
+                "verify_meta": out,
+                "messages": [{"role": "assistant", "content": msg, "type": "tool"}],
+            }
 
         def merge_result(state: AgentState):
             return state
@@ -453,12 +468,60 @@ You are an AI research and engineering assistant with deep access to the c4reqbe
                 if msg.get("role") == "sub_agent":
                     sub_agents_data.append(str(msg.get("content", ""))[:80])
 
+        outer_status = str(result.get("status") or "success")
+        verify_meta = result.get("verify_meta")
+        if isinstance(verify_meta, dict):
+            # Verify intent must never paint outer success without alignment
+            if not verify_meta.get("verification_aligned"):
+                outer_status = str(verify_meta.get("status") or "partial")
         return AgentResponse(
             content=content or "Processing complete.",
             duration_sec=time.perf_counter() - t0,
             tool_calls=tool_calls_data,
             sub_agents=sub_agents_data,
+            status=outer_status,
+            meta={"verify_meta": verify_meta} if isinstance(verify_meta, dict) else {},
         )
+
+    def run_formal_verify(self, claim: str, language: str = "lean4") -> dict[str, Any]:
+        """Invoke MCP/hybrid formal path — never LLM-only verification theatre."""
+        from src.mcp_server.tools_verify import c4_verify
+
+        async def _run() -> dict[str, Any]:
+            return await c4_verify(claim[:4000], language=language)
+
+        try:
+            try:
+                asyncio.get_running_loop()
+            except RuntimeError:
+                out = asyncio.run(_run())
+            else:
+                import concurrent.futures
+
+                with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+                    out = pool.submit(asyncio.run, _run()).result(timeout=120)
+        except Exception as exc:
+            return {
+                "valid": False,
+                "status": "unavailable",
+                "stamp": "",
+                "verification_aligned": False,
+                "verified": False,
+                "error": f"{type(exc).__name__}: {exc}",
+            }
+
+        out = (
+            dict(out) if isinstance(out, dict) else {"status": "unavailable", "error": "bad result"}
+        )
+        out["verified"] = False
+        if out.get("stamp") == "FORMALLY VERIFIED" and not out.get("verification_aligned"):
+            out["stamp"] = "COMPILED"
+            out["status"] = "partial"
+        if out.get("valid") and not out.get("verification_aligned"):
+            out.setdefault("stamp", "COMPILED")
+            if out.get("status") in {None, "", "success"}:
+                out["status"] = "partial"
+        return out
 
     # ── Message Processing ─────────────────────────────────────────────────
 

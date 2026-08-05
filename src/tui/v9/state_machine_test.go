@@ -273,7 +273,7 @@ func TestStateMachine_SSEEvent_Completed(t *testing.T) {
 	m := NewApp("http://test")
 	m.running = true
 	m.jobID = "test-job"
-	data := `{"status":"complete","phase":"G: Quality","progress":1.0,"result":{"hypothesis":{"text":"truncated 17-nt guides","source":"v8","novelty_score":0.87},"papers":[{"title":"P1","year":2020,"venue":"Nature","doi":"10.1","citation_count":100,"source":"openalex"}]}}`
+	data := `{"status":"complete","phase":"G: Quality","progress":1.0,"result":{"hypothesis":{"text":"truncated 17-nt guides","source":"v8","novelty_score":0.87},"sources":[{"title":"P1","year":2020,"venue":"Nature","doi":"10.1","citation_count":100,"source":"openalex"}]}}`
 	u, _ := m.Update(apiSSEEventMsg(api.SSEEvent{Event: "phase", Data: data}))
 	mm := u.(*model)
 	if mm.running {
@@ -287,6 +287,26 @@ func TestStateMachine_SSEEvent_Completed(t *testing.T) {
 	}
 	if mm.lastPapersCount != 1 {
 		t.Errorf("lastPapersCount = %d, want 1", mm.lastPapersCount)
+	}
+}
+
+func TestHandleCompleteEvent_UnverifiedPapersNotCounted(t *testing.T) {
+	m := NewApp("http://test")
+	m.running = true
+	m.handleCompleteEvent(api.TypedEvent{
+		Type:   api.EventComplete,
+		Status: "success",
+		Result: map[string]any{
+			"status": "success",
+			"papers": []any{
+				map[string]any{"title": "Raw1", "year": "2020", "source": "arxiv"},
+				map[string]any{"title": "Raw2", "year": "2021", "source": "arxiv"},
+				map[string]any{"title": "Raw3", "year": "2022", "source": "arxiv"},
+			},
+		},
+	})
+	if m.lastPapersCount != 0 {
+		t.Errorf("lastPapersCount=%d want 0 (unverified papers must not count)", m.lastPapersCount)
 	}
 }
 
@@ -333,6 +353,32 @@ func TestStateMachine_FlashResultPartialNoCelebrate(t *testing.T) {
 	mm := u.(*model)
 	if mm.completedDisc != 0 {
 		t.Errorf("partial flash must not increment completedDisc, got %d", mm.completedDisc)
+	}
+}
+
+func TestStateMachine_FlashResultOkNoCelebrate(t *testing.T) {
+	// Ambiguous "ok" must not unlock AchFirstDiscovery (wave-5 hatch)
+	m := NewApp("http://test")
+	data := map[string]any{
+		"status": "ok",
+		"answer": "ambiguous",
+	}
+	u, _ := m.Update(flashResultMsg{result: data})
+	mm := u.(*model)
+	if mm.completedDisc != 0 {
+		t.Errorf("status=ok must not increment completedDisc, got %d", mm.completedDisc)
+	}
+}
+
+func TestHandleCompleteEventOkNoAchievement(t *testing.T) {
+	m := NewAppFresh("http://test")
+	m.handleCompleteEvent(api.TypedEvent{
+		Type:   api.EventComplete,
+		Status: "ok",
+		Result: map[string]any{"answer": "x", "status": "ok"},
+	})
+	if m.completedDisc != 0 {
+		t.Errorf("handleCompleteEvent(ok) completedDisc=%d, want 0", m.completedDisc)
 	}
 }
 

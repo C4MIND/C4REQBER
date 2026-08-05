@@ -23,7 +23,7 @@ class ResearchQuestion:
 
     text: str
     strategy: str  # 'gap', 'conflict', 'extension', 'surprise'
-    novelty_score: float
+    novelty_score: float | None  # None until literature-scored (never invent 0.5/0.8)
     impact_potential: float
     user_alignment: float = 0.5
 
@@ -31,11 +31,15 @@ class ResearchQuestion:
         return {
             "text": self.text,
             "strategy": self.strategy,
-            "novelty_score": round(self.novelty_score, 3),
+            "novelty_score": (None if self.novelty_score is None else round(self.novelty_score, 3)),
             "impact_potential": round(self.impact_potential, 3),
             "user_alignment": round(self.user_alignment, 3),
             "heuristic": True,
-            "note": "novelty/impact scores are fixed heuristics, not model estimates",
+            "novelty_unchecked": self.novelty_score is None,
+            "note": (
+                "novelty_score is null until literature check; "
+                "impact/alignment are ranking heuristics only"
+            ),
         }
 
 
@@ -72,9 +76,11 @@ class AgendaGenerator:
         conflict_questions = self._conflict_driven(recent_results)
         questions.extend(conflict_questions)
 
-        # Sort by composite score and return top N
+        # Rank without inventing novelty — null novelty contributes 0 to sort only
         questions.sort(
-            key=lambda q: q.novelty_score * 0.4 + q.impact_potential * 0.4 + q.user_alignment * 0.2,
+            key=lambda q: (
+                (q.novelty_score or 0.0) * 0.4 + q.impact_potential * 0.4 + q.user_alignment * 0.2
+            ),
             reverse=True,
         )
         return questions[:n_questions]
@@ -96,7 +102,7 @@ class AgendaGenerator:
                     ResearchQuestion(
                         text=f"What is the relationship between {n1} and {n2}?",
                         strategy="gap",
-                        novelty_score=0.7,
+                        novelty_score=None,
                         impact_potential=0.6,
                     )
                 )
@@ -117,7 +123,7 @@ class AgendaGenerator:
                 ResearchQuestion(
                     text=f"Does the finding '{hyp[:80]}...' generalize to other populations or contexts?",
                     strategy="extension",
-                    novelty_score=0.5,
+                    novelty_score=None,
                     impact_potential=0.7,
                 )
             )
@@ -135,7 +141,7 @@ class AgendaGenerator:
                 ResearchQuestion(
                     text=f"How can we reconcile the hypotheses: '{hypotheses[0][:60]}...' and '{hypotheses[1][:60]}...'?",
                     strategy="conflict",
-                    novelty_score=0.8,
+                    novelty_score=None,
                     impact_potential=0.7,
                 )
             )

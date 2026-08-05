@@ -222,6 +222,18 @@ class QualityGates:
 
     # ── Step 4: Simulation Quality ────────────────────────────────────
 
+    @staticmethod
+    def _is_fallback_engine_truth(sim: Any) -> bool:
+        """True when engine_truth admits a stand-in (not_*, *_not_*, fallback/legacy)."""
+        if isinstance(sim, dict):
+            truth = str(sim.get("engine_truth") or "")
+        else:
+            truth = str(getattr(sim, "engine_truth", "") or "") if sim else ""
+        t = truth.lower()
+        return bool(t) and (
+            t.startswith("not_") or "_not_" in t or "fallback" in t or "legacy" in t
+        )
+
     def check_simulation(self, sim: Any) -> GateResult:
         cfg = self.config
         good_statuses = {"success", "delegated", "completed", "ok"}
@@ -233,11 +245,16 @@ class QualityGates:
                 or sim.get("executed") is False
                 or sim.get("heuristic") is True
                 or str(sim_status).lower() in {"unavailable", "partial", "simulated"}
+                or self._is_fallback_engine_truth(sim)
             )
         else:
             sim_status = getattr(sim, "status", "") if sim else ""
             sim_metrics = getattr(sim, "metrics", {}) if sim else {}
-            is_stub = bool(getattr(sim, "stub", False)) or getattr(sim, "executed", True) is False
+            is_stub = (
+                bool(getattr(sim, "stub", False))
+                or getattr(sim, "executed", True) is False
+                or self._is_fallback_engine_truth(sim)
+            )
 
         if sim_status == "timeout":
             exec_time = sim_metrics.get("execution_time", 0) if sim_metrics else 0
@@ -329,8 +346,17 @@ class QualityGates:
 
         # Real proof / consistency only — never inflate skipped/partial to PASS 1.0
         pass_statuses = {"verified", "consistent", "success", "proved"}
-        soft_statuses = {"partial", "not_applicable", "skipped", "sat", "unsat", "uncertain"}
-        # "sat"/"unsat" = SMT model-finding, not claim proved — soft evidence only
+        soft_statuses = {
+            "partial",
+            "not_applicable",
+            "skipped",
+            "sat",
+            "unsat",
+            "uncertain",
+            "compiled",
+            "checked",
+        }
+        # "sat"/"unsat"/"compiled"/"checked" = model-find/typecheck, not claim proved
 
         if verif_status in pass_statuses:
             return GateResult(

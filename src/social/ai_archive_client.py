@@ -1,4 +1,5 @@
 """c4reqber: ai-archive.io MCP Bridge — submit AI-friendly preprints."""
+
 from __future__ import annotations
 
 import os
@@ -26,10 +27,12 @@ class AIArchiveClient:
     def configured(self) -> bool:
         return bool(self.api_key)
 
-    async def submit_paper(self, title: str, abstract: str, content: str, authors: list[dict[str, str]] | None = None) -> dict[str, Any]:
+    async def submit_paper(
+        self, title: str, abstract: str, content: str, authors: list[dict[str, str]] | None = None
+    ) -> dict[str, Any]:
         """Submit a paper to ai-archive.io."""
         if self.dry_run:
-            return {"id": "ai-arxiv-dry-run", "status": "submitted", "_dry_run": True}
+            return {"id": "ai-arxiv-dry-run", "status": "dry_run", "_dry_run": True}
         if not self.api_key:
             return {"error": "AI_ARCHIVE_API_KEY not configured. Get key: https://ai-archive.io"}
 
@@ -43,8 +46,12 @@ class AIArchiveClient:
         async with httpx.AsyncClient() as c:
             resp = await c.post(
                 f"{self.API}/papers",
-                headers={"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"},
-                json=payload, timeout=30,
+                headers={
+                    "Authorization": f"Bearer {self.api_key}",
+                    "Content-Type": "application/json",
+                },
+                json=payload,
+                timeout=30,
             )
             if resp.status_code in (200, 201):
                 return resp.json()

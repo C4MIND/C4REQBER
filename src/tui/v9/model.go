@@ -849,20 +849,23 @@ func (m *model) handleCompleteEvent(te api.TypedEvent) {
 				m.lastQuality = novelty
 			}
 		}
-		// Prefer verified sources cards; fall back to papers
+		// Achievements count verified sources only (I3). Raw papers may display
+		// as cards but must not unlock Paper Trail.
 		srcList, _ := te.Result["sources"].([]any)
-		if len(srcList) == 0 {
-			srcList, _ = te.Result["papers"].([]any)
-		}
 		m.lastPapersCount = len(srcList)
-		for i, p := range srcList {
+		displayList := srcList
+		if len(displayList) == 0 {
+			displayList, _ = te.Result["papers"].([]any)
+		}
+		for i, p := range displayList {
 			if i >= 5 {
 				break
 			}
 			pm, _ := p.(map[string]any)
 			m.appendCard(Card{Kind: CardPaper, Title: fieldString(pm, "title"), Body: fmt.Sprintf("%s · %s", fieldString(pm, "year"), fieldString(pm, "source")), Meta: []cards.MetaKV{{Key: "doi", Value: fieldString(pm, "doi")}, {Key: "url", Value: fieldString(pm, "url")}, {Key: "source", Value: fieldString(pm, "source")}}, Time: time.Now(), Status: cardStatus})
 		}
-		if st == "complete" || st == "success" || st == "ok" {
+		// Align with applyCelebrationPolicy — never unlock on ambiguous "ok"/partial
+		if cardStatus == "done" {
 			m.completedDisc++
 			m.checkAchievements()
 		}

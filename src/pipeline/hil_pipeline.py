@@ -55,6 +55,14 @@ class HILDiscoveryPipeline(BasePipeline):
         cfg = self.config
         record = DiscoveryRecord(topic=topic, config=cfg, user_profile=self.user_profile)
 
+        # Per-discovery cost session (same contract as flash / solve)
+        try:
+            from src.llm.cost_tracker import get_cost_tracker
+
+            get_cost_tracker().reset()
+        except ImportError as exc:
+            logger.debug("HIL cost_tracker reset skipped: %s", exc)
+
         # ── Architecture: CQRS command dispatch ────────────────────
         try:
             from src.architecture.cqrs import CommandHandler, CqrsBus, StartDiscoveryCommand

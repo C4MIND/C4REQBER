@@ -291,15 +291,42 @@ class HybridVerifier:
                     return vr
                 result = cvc5_client.verify(code)
                 elapsed_ms = (time.perf_counter() - t0) * 1000
+                # CVC5 sat/unsat = model-finding, not claim-aligned proof (same as Z3)
+                sat_raw = result.get("status") or (
+                    "sat"
+                    if result.get("satisfiable")
+                    else ("unsat" if result.get("valid") is False else "uncertain")
+                )
+                if result.get("satisfiable") is True or sat_raw == "sat":
+                    norm_status = "sat"
+                    proof_note = "CVC5 sat (satisfiable) — not a proof of the claim"
+                elif sat_raw == "unsat":
+                    norm_status = "unsat"
+                    proof_note = (
+                        "CVC5 unsat — interpret relative to encoding; not claim-aligned verified"
+                    )
+                elif result.get("valid"):
+                    norm_status = "checked"
+                    proof_note = "CVC5 check succeeded without claim-alignment gate"
+                else:
+                    norm_status = "failed"
+                    proof_note = result.get("output", "")[:200]
                 vr = VerificationResult(
                     backend="cvc5",
-                    status="verified" if result.get("valid") else "failed",
+                    status=norm_status,
                     claim=claim[:200],
                     proof_code=code[:500],
-                    proof_text=result.get("output", "")[:200],
+                    proof_text=proof_note,
                     error_message=result.get("error") or "",
                     iterations=1,
                     execution_time_ms=elapsed_ms,
+                    timing_info={
+                        "backend": "cvc5",
+                        "elapsed_ms": int(elapsed_ms),
+                        "smt_raw": sat_raw,
+                        "not_a_proof": True,
+                        "verification_aligned": False,
+                    },
                 )
                 self._cache[cache_key] = vr
                 return vr
@@ -313,15 +340,28 @@ class HybridVerifier:
                 if code:
                     result = tla_client.verify(code)
                     elapsed_ms = (time.perf_counter() - t0) * 1000
+                    # Model-check ≠ claim-aligned formal verification
+                    ok = bool(result.get("valid"))
                     vr = VerificationResult(
                         backend="tla",
-                        status="verified" if result.get("valid") else "failed",
+                        status="checked" if ok else "failed",
                         claim=claim[:200],
                         proof_code=code[:500],
-                        proof_text=result.get("output", "")[:200],
+                        proof_text=(
+                            "TLC model-check succeeded (checked — claim alignment not verified)"
+                            if ok
+                            else (result.get("output", "")[:200] or "TLC failed")
+                        ),
                         error_message=result.get("error") or "",
                         iterations=1,
                         execution_time_ms=elapsed_ms,
+                        timing_info={
+                            "backend": "tla",
+                            "elapsed_ms": int(elapsed_ms),
+                            "stamp": "COMPILED" if ok else "",
+                            "not_a_proof": True,
+                            "verification_aligned": False,
+                        },
                     )
                     self._cache[cache_key] = vr
                     return vr
@@ -335,15 +375,27 @@ class HybridVerifier:
                 if code:
                     result = alloy_client.verify(code)
                     elapsed_ms = (time.perf_counter() - t0) * 1000
+                    ok = bool(result.get("valid"))
                     vr = VerificationResult(
                         backend="alloy",
-                        status="verified" if result.get("valid") else "failed",
+                        status="checked" if ok else "failed",
                         claim=claim[:200],
                         proof_code=code[:500],
-                        proof_text=result.get("output", "")[:200],
+                        proof_text=(
+                            "Alloy model-check succeeded (checked — claim alignment not verified)"
+                            if ok
+                            else (result.get("output", "")[:200] or "Alloy failed")
+                        ),
                         error_message=result.get("error") or "",
                         iterations=1,
                         execution_time_ms=elapsed_ms,
+                        timing_info={
+                            "backend": "alloy",
+                            "elapsed_ms": int(elapsed_ms),
+                            "stamp": "COMPILED" if ok else "",
+                            "not_a_proof": True,
+                            "verification_aligned": False,
+                        },
                     )
                     self._cache[cache_key] = vr
                     return vr

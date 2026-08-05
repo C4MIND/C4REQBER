@@ -29,9 +29,6 @@ class WrfBridge(BaseSimulationAdapter):
 
     def run(self, input_data: dict[str, Any] | None = None) -> SimulationResult:
         def _run(data: dict[str, Any]) -> dict[str, Any]:
-            import wrf
-            from netCDF4 import Dataset
-
             wrf_file = data.get("wrfout") or self._params.get("wrfout")
             if not wrf_file:
                 return {
@@ -39,9 +36,25 @@ class WrfBridge(BaseSimulationAdapter):
                     "stub": True,
                     "executed": False,
                     "backend": "wrf-python",
-                    "wrfpython_version": wrf.__version__,
                     "note": "Provide wrfout NetCDF — wrf-python alone does not run WRF",
                 }
+            # Validate before importing heavy deps — path hatch must not require wrf installed
+            try:
+                from src.utils.security_middleware import validate_sim_path
+
+                wrf_file = str(validate_sim_path(str(wrf_file)))
+            except ValueError as exc:
+                return {
+                    "status": "unavailable",
+                    "stub": True,
+                    "executed": False,
+                    "backend": "wrf-python",
+                    "note": str(exc),
+                }
+
+            import wrf
+            from netCDF4 import Dataset
+
             with Dataset(wrf_file) as nc:
                 t2 = wrf.getvar(nc, "T2")
                 return {

@@ -52,8 +52,9 @@ class TestAgendaGenerator:
         graph = nx.Graph()
         graph.add_nodes_from(["A", "B", "C"])
         questions = gen.generate(graph, [], n_questions=3)
-        scores = [q.novelty_score * 0.4 + q.impact_potential * 0.4 for q in questions]
+        scores = [(q.novelty_score or 0.0) * 0.4 + q.impact_potential * 0.4 for q in questions]
         assert scores == sorted(scores, reverse=True)
+        assert all(q.novelty_score is None for q in questions)
 
 
 class TestFeasibilityChecker:

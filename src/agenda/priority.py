@@ -26,8 +26,10 @@ class PriorityScorer:
         - 20% impact potential
         - 20% user alignment
         """
+        # Unchecked novelty (None) must not invent mid-range evidence — contribute 0
+        novelty = 0.0 if question.novelty_score is None else float(question.novelty_score)
         return (
-            0.30 * question.novelty_score
+            0.30 * novelty
             + 0.30 * feasibility.tractability_score
             + 0.20 * question.impact_potential
             + 0.20 * question.user_alignment

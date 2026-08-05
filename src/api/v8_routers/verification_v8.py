@@ -296,6 +296,37 @@ class LeanVerifyRequest(BaseModel):
     proof: str = "sorry"
 
 
+def _typecheck_payload(
+    method: str,
+    *,
+    ok: bool,
+    errors: list[Any] | None = None,
+    extra: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Compiler/model-check success is COMPILED — never claim-aligned verified."""
+    errs = [e for e in (errors or []) if e]
+    payload: dict[str, Any] = {
+        "verified": False,
+        "compiled": ok,
+        "stamp": "COMPILED" if ok else "",
+        "verification_aligned": False,
+        "status": "partial" if ok else "failed",
+        "errors": errs,
+        "method": method,
+    }
+    if ok:
+        payload["note"] = (
+            "Typecheck/model-check success is COMPILED, not FORMALLY VERIFIED "
+            "(claim alignment not proven)"
+        )
+    if extra:
+        payload.update(extra)
+        # Never let extras flip verified=True without alignment
+        payload["verified"] = False
+        payload["verification_aligned"] = False
+    return payload
+
+
 @router.post("/verify")
 async def verify_code(req: VerifyRequest) -> dict[str, Any]:
     """Verify code using specified formal method (legacy endpoint)."""
@@ -315,11 +346,9 @@ async def verify_code(req: VerifyRequest) -> dict[str, Any]:
                 )
             result = lean_client.verify_theorem(req.code, req.proof)
             err = result.get("error", "")
-            payload = {
-                "verified": result.get("valid", False),
-                "errors": [err] if err else [],
-                "method": "lean4",
-            }
+            payload = _typecheck_payload(
+                "lean4", ok=bool(result.get("valid")), errors=[err] if err else []
+            )
         elif req.formal_method == "coq":
             from src.verification.coq_client import CoqClient
 
@@ -330,11 +359,11 @@ async def verify_code(req: VerifyRequest) -> dict[str, Any]:
                 )
             result = coq_client.check_proof(req.code)
             err = str(result.get("error", result.get("output", "")))
-            payload = {
-                "verified": result.get("valid", False),
-                "errors": [err] if not result.get("valid") else [],
-                "method": "coq",
-            }
+            payload = _typecheck_payload(
+                "coq",
+                ok=bool(result.get("valid")),
+                errors=[err] if not result.get("valid") else [],
+            )
         elif req.formal_method == "agda":
             from src.verification.agda_bridge import AgdaBridge
 
@@ -345,11 +374,11 @@ async def verify_code(req: VerifyRequest) -> dict[str, Any]:
                 )
             result = agda_client.type_check(req.code)
             err = str(result.get("error", ""))
-            payload = {
-                "verified": result.get("success", False),
-                "errors": [err] if not result.get("success") else [],
-                "method": "agda",
-            }
+            payload = _typecheck_payload(
+                "agda",
+                ok=bool(result.get("success")),
+                errors=[err] if not result.get("success") else [],
+            )
         elif req.formal_method == "z3":
             try:
                 import z3
@@ -364,6 +393,10 @@ async def verify_code(req: VerifyRequest) -> dict[str, Any]:
                     payload = {
                         "verified": False,
                         "satisfiable": True,
+                        "compiled": False,
+                        "stamp": "",
+                        "verification_aligned": False,
+                        "status": "sat",
                         "errors": [],
                         "method": "z3",
                         "note": "z3.sat means satisfiable, not formally verified",
@@ -372,6 +405,10 @@ async def verify_code(req: VerifyRequest) -> dict[str, Any]:
                     payload = {
                         "verified": False,
                         "satisfiable": False,
+                        "compiled": False,
+                        "stamp": "",
+                        "verification_aligned": False,
+                        "status": "unsat",
                         "errors": ["unsat"],
                         "method": "z3",
                         "note": "unsat without explicit proof-goal semantics",
@@ -382,18 +419,28 @@ async def verify_code(req: VerifyRequest) -> dict[str, Any]:
                         "satisfiable": None,
                         "errors": [str(check)],
                         "method": "z3",
+                        "status": "uncertain",
+                        "verification_aligned": False,
                     }
             except Exception as exc:
-                payload = {"verified": False, "errors": [str(exc)], "method": "z3"}
+                payload = {
+                    "verified": False,
+                    "errors": [str(exc)],
+                    "method": "z3",
+                    "status": "failed",
+                    "verification_aligned": False,
+                }
         elif req.formal_method == "hoare":
             from src.verification.hoare_verifier import HoareVerifier
 
             hv = HoareVerifier()
             hoare_result = hv.verify(req.code)
-            payload = {
-                "verified": hoare_result.valid,
-                "errors": [hoare_result.error] if hoare_result.error else [],
-            }
+            # WP success without claim-alignment gate → COMPILED, not VERIFIED
+            payload = _typecheck_payload(
+                "hoare",
+                ok=bool(hoare_result.valid),
+                errors=[hoare_result.error] if hoare_result.error else [],
+            )
         elif req.formal_method == "dafny":
             from src.verification.dafny_client import DafnyClient
 
@@ -403,10 +450,11 @@ async def verify_code(req: VerifyRequest) -> dict[str, Any]:
                     "Dafny not installed", status_code=501, error_code="dafny_not_installed"
                 )
             result = dc.verify(req.code)
-            payload = {
-                "verified": result.get("valid", False),
-                "errors": [str(result.get("output", ""))] if not result.get("valid") else [],
-            }
+            payload = _typecheck_payload(
+                "dafny",
+                ok=bool(result.get("valid")),
+                errors=[str(result.get("output", ""))] if not result.get("valid") else [],
+            )
         elif req.formal_method == "cvc5":
             from src.verification.cvc5_client import CVC5Client
 
@@ -416,10 +464,23 @@ async def verify_code(req: VerifyRequest) -> dict[str, Any]:
                     "CVC5 not installed", status_code=501, error_code="cvc5_not_installed"
                 )
             result = cvc5_client.verify(req.code)
+            sat_status = result.get("status") or (
+                "sat"
+                if result.get("satisfiable")
+                else ("failed" if not result.get("valid") else "checked")
+            )
             payload = {
-                "verified": result.get("valid", False),
+                "verified": False,
+                "compiled": False,
+                "stamp": "",
+                "verification_aligned": False,
+                "status": sat_status
+                if result.get("valid") or sat_status in {"sat", "unsat"}
+                else "failed",
+                "satisfiable": result.get("satisfiable"),
                 "errors": [result.get("error", "")] if not result.get("valid") else [],
                 "method": "cvc5",
+                "note": "CVC5 sat/model-check ≠ claim-aligned formal verification",
             }
         elif req.formal_method in ("tla", "tla+"):
             from src.verification.tla_client import TLAClient
@@ -430,11 +491,14 @@ async def verify_code(req: VerifyRequest) -> dict[str, Any]:
                     "TLA+ TLC not installed", status_code=501, error_code="tla_not_installed"
                 )
             result = tla_client.verify(req.code)
-            payload = {
-                "verified": result.get("valid", False),
-                "errors": [result.get("error", "")] if not result.get("valid") else [],
-                "method": "tla",
-            }
+            payload = _typecheck_payload(
+                "tla",
+                ok=bool(result.get("valid")),
+                errors=[result.get("error", "")] if not result.get("valid") else [],
+                extra={
+                    "note": "TLC model-check success is COMPILED/checked, not claim-aligned verified"
+                },
+            )
         elif req.formal_method == "alloy":
             from src.verification.alloy_client import AlloyClient
 
@@ -444,11 +508,14 @@ async def verify_code(req: VerifyRequest) -> dict[str, Any]:
                     "Alloy not installed", status_code=501, error_code="alloy_not_installed"
                 )
             result = alloy_client.verify(req.code)
-            payload = {
-                "verified": result.get("valid", False),
-                "errors": [result.get("error", "")] if not result.get("valid") else [],
-                "method": "alloy",
-            }
+            payload = _typecheck_payload(
+                "alloy",
+                ok=bool(result.get("valid")),
+                errors=[result.get("error", "")] if not result.get("valid") else [],
+                extra={
+                    "note": "Alloy model-check success is COMPILED/checked, not claim-aligned verified"
+                },
+            )
         else:
             raise ValidationError(f"Unsupported formal method: {req.formal_method}")
     except C4APIError:

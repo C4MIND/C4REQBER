@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -56,13 +57,56 @@ async def test_c4_verify_rejects_sorry() -> None:
     assert "sorry" in (out.get("error") or "").lower()
 
 
-def test_doaj_encodes_query_path() -> None:
-    src = Path("src/knowledge/sources/doaj.py").read_text(encoding="utf-8")
-    assert "quote(query" in src
-    assert 'f"{url}/{query}"' not in src
+@pytest.mark.asyncio
+async def test_doaj_encodes_query_path() -> None:
+    """Path segment must be URL-encoded — raw '/' or spaces must not appear unescaped."""
+    from src.knowledge.sources.doaj import DoajAdapter
+
+    captured: dict[str, str] = {}
+
+    class FakeResp:
+        def raise_for_status(self) -> None:
+            return None
+
+        def json(self) -> dict:
+            return {"results": []}
+
+    class FakeClient:
+        async def __aenter__(self) -> FakeClient:
+            return self
+
+        async def __aexit__(self, *args: object) -> None:
+            return None
+
+        async def get(self, url: str, params: dict | None = None) -> FakeResp:
+            captured["url"] = url
+            return FakeResp()
+
+    with patch("src.knowledge.sources.doaj.httpx.AsyncClient", return_value=FakeClient()):
+        await DoajAdapter().search("foo/bar baz", limit=5)
+
+    assert "url" in captured
+    # Encoded path segment — not a raw slash splice into the API path
+    assert "foo/bar" not in captured["url"].split("articles/", 1)[-1]
+    assert "foo%2Fbar" in captured["url"] or "foo%2Fbar%20baz" in captured["url"]
 
 
-def test_hybrid_verifier_compile_is_compiled_not_verified() -> None:
-    src = Path("src/verification/hybrid_verifier.py").read_text(encoding="utf-8")
-    assert 'status="compiled"' in src
-    assert "COMPILED" in src
+@pytest.mark.asyncio
+async def test_hybrid_verifier_compile_is_compiled_not_verified() -> None:
+    """Compile/typecheck success must stamp COMPILED, never paint verified."""
+    from src.verification.hybrid_verifier import HybridVerifier
+
+    hv = HybridVerifier()
+    hv.reasoner = MagicMock()
+    hv.reasoner.generate_proof = AsyncMock(return_value="theorem T : True := by trivial")
+    hv._compile = MagicMock(return_value={"status": "success"})  # type: ignore[method-assign]
+
+    out = await hv.verify(
+        {"title": "lemma algebra identity", "description": "number theory proof"},
+        context={"preferred_backends": ["lean4"]},
+    )
+    assert out.status == "compiled"
+    assert out.status != "verified"
+    assert (out.timing_info or {}).get("stamp") == "COMPILED"
+    assert (out.timing_info or {}).get("verification_aligned") is False
+    assert "COMPILED" in (out.proof_text or "")

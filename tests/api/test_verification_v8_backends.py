@@ -1,4 +1,5 @@
 """API tests for POST /v8/verification/verify — CVC5/TLA+/Alloy routes."""
+
 from __future__ import annotations
 
 from unittest.mock import patch
@@ -40,7 +41,15 @@ def test_verify_endpoint_dispatches_new_backends(method: str, code: str, patch_t
         )
     assert resp.status_code == 200, resp.text
     body = resp.json()
-    assert body.get("verified") is True
+    # Typecheck/model-check ≠ claim-aligned formal verification
+    assert body.get("verified") is False
+    assert body.get("verification_aligned") is False
+    if method == "cvc5":
+        # SMT sat/model-find path — not COMPILED stamp, never verified
+        assert body.get("status") in {"sat", "unsat", "checked", "failed", "partial"}
+        assert body.get("compiled") is not True or body.get("stamp") != "FORMALLY VERIFIED"
+    else:
+        assert body.get("stamp") == "COMPILED" or body.get("compiled") is True
 
 
 def test_verify_endpoint_cvc5_not_installed_returns_501() -> None:

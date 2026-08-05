@@ -17,6 +17,7 @@ router = APIRouter(prefix="/novelty", tags=["v8-novelty"])
 
 class NoveltyCheckRequest(BaseModel):
     """NoveltyCheckRequest."""
+
     hypothesis: str
     domain: str = "general"
     keywords: list[str] = []
@@ -25,6 +26,7 @@ class NoveltyCheckRequest(BaseModel):
 
 class NoveltyPass(BaseModel):
     """NoveltyPass."""
+
     pass_name: str
     papers_checked: int
     closest_match: dict[str, Any] | None = None
@@ -36,8 +38,9 @@ class NoveltyPass(BaseModel):
 
 class NoveltyCheckResponse(BaseModel):
     """NoveltyCheckResponse."""
+
     status: str
-    overall_novelty_score: float
+    overall_novelty_score: float | None
     passes: list[dict[str, Any]]
     closest_papers: list[dict[str, Any]]
     recommendation: str
@@ -53,8 +56,7 @@ class ThreePassNoveltyValidator:
         self.min_similarity_threshold = 0.3
         self.pass_threshold = 0.5
 
-    async def validate(self, hypothesis: str, domain: str,
-                       keywords: list[str]) -> dict[str, Any]:
+    async def validate(self, hypothesis: str, domain: str, keywords: list[str]) -> dict[str, Any]:
         """Validate."""
         errors: list[str] = []
         passes: list[dict[str, Any]] = []
@@ -62,39 +64,60 @@ class ThreePassNoveltyValidator:
         t1 = time.perf_counter()
         p1 = await self._pass1_broad_scan(hypothesis, keywords)
         p1["time_seconds"] = round(time.perf_counter() - t1, 3)
-        passes.append({
-            "pass_name": "broad_scan",
-            "papers_checked": p1["papers_checked"],
-            "overlap_detected": p1["overlap_detected"],
-            "closest_similarity": p1["max_similarity"],
-            "time_seconds": p1["time_seconds"],
-        })
+        passes.append(
+            {
+                "pass_name": "broad_scan",
+                "papers_checked": p1["papers_checked"],
+                "overlap_detected": p1["overlap_detected"],
+                "closest_similarity": p1["max_similarity"],
+                "time_seconds": p1["time_seconds"],
+            }
+        )
 
         candidates = p1.get("potential_overlaps", [])[:5]
 
         t2 = time.perf_counter()
         p2 = await self._pass2_deep_dive(hypothesis, candidates)
         p2["time_seconds"] = round(time.perf_counter() - t2, 3)
-        passes.append({
-            "pass_name": "deep_dive",
-            "papers_checked": p2["papers_analyzed"],
-            "overlap_detected": p2["overlap_detected"],
-            "closest_similarity": p2.get("overall_overlap_score", 0.0),
-            "time_seconds": p2["time_seconds"],
-        })
+        passes.append(
+            {
+                "pass_name": "deep_dive",
+                "papers_checked": p2["papers_analyzed"],
+                "overlap_detected": p2["overlap_detected"],
+                "closest_similarity": p2.get("overall_overlap_score", 0.0),
+                "time_seconds": p2["time_seconds"],
+            }
+        )
 
         overlapping = p2.get("overlapping_claims", [])
 
         t3 = time.perf_counter()
         p3 = await self._pass3_citation_context(overlapping)
         p3["time_seconds"] = round(time.perf_counter() - t3, 3)
-        passes.append({
-            "pass_name": "citation_context",
-            "papers_checked": p3["papers_analyzed"],
-            "overlap_detected": p3["is_established_paradigm"],
-            "closest_similarity": 0.0,
-            "time_seconds": p3["time_seconds"],
-        })
+        passes.append(
+            {
+                "pass_name": "citation_context",
+                "papers_checked": p3["papers_analyzed"],
+                "overlap_detected": p3["is_established_paradigm"],
+                "closest_similarity": 0.0,
+                "time_seconds": p3["time_seconds"],
+            }
+        )
+
+        papers_checked = sum(int(p.get("papers_checked") or 0) for p in passes)
+        if papers_checked == 0 and not candidates:
+            # Empty corpus / search failure → unchecked, never invent PASS@1.0
+            return {
+                "status": "UNCHECKED",
+                "overall_novelty_score": None,
+                "passes": passes,
+                "closest_papers": [],
+                "recommendation": (
+                    "NOVELTY UNCHECKED — no literature hits to score against; do not treat as PASS"
+                ),
+                "total_time_seconds": 0,
+                "errors": errors,
+            }
 
         score = self._compute_overall_score(passes)
         recommendation = self._generate_recommendation(passes, score)
@@ -118,8 +141,11 @@ class ThreePassNoveltyValidator:
         async def search_s2() -> list[dict[str, Any]]:
             """Search s2."""
             url = "https://api.semanticscholar.org/graph/v1/paper/search"
-            params: dict[str, Any] = {"query": query[:300], "limit": 50,
-                      "fields": "title,abstract,year,authors,citationCount"}
+            params: dict[str, Any] = {
+                "query": query[:300],
+                "limit": 50,
+                "fields": "title,abstract,year,authors,citationCount",
+            }
             async with httpx.AsyncClient(timeout=self.client_timeout) as c:
                 r = await c.get(url, params=params)
                 if r.status_code == 200:
@@ -129,16 +155,24 @@ class ThreePassNoveltyValidator:
         async def search_openalex() -> list[dict[str, Any]]:
             """Search openalex."""
             url = "https://api.openalex.org/works"
-            params: dict[str, Any] = {"search": query[:300], "per_page": 50, "sort": "cited_by_count:desc"}
+            params: dict[str, Any] = {
+                "search": query[:300],
+                "per_page": 50,
+                "sort": "cited_by_count:desc",
+            }
             async with httpx.AsyncClient(timeout=self.client_timeout) as c:
                 r = await c.get(url, params=params)
                 if r.status_code == 200:
                     results = r.json().get("results", [])
-                    return [{"title": w.get("title", ""),
-                             "year": w.get("publication_year"),
-                             "doi": w.get("doi", ""),
-                             "cited_by": w.get("cited_by_count", 0)}
-                            for w in results]
+                    return [
+                        {
+                            "title": w.get("title", ""),
+                            "year": w.get("publication_year"),
+                            "doi": w.get("doi", ""),
+                            "cited_by": w.get("cited_by_count", 0),
+                        }
+                        for w in results
+                    ]
                 return []
 
         s2_results, oa_results = await asyncio.gather(search_s2(), search_openalex())
@@ -156,13 +190,15 @@ class ThreePassNoveltyValidator:
             overlap = len(hypo_words & text_words) / max(len(hypo_words), 1)
 
             if overlap > self.min_similarity_threshold:
-                overlaps.append({
-                    "title": p.get("title", ""),
-                    "year": p.get("year", ""),
-                    "similarity": round(overlap, 3),
-                    "source": "s2" if "paperId" in p else "openalex",
-                    "citation_count": p.get("citationCount") or p.get("cited_by", 0),
-                })
+                overlaps.append(
+                    {
+                        "title": p.get("title", ""),
+                        "year": p.get("year", ""),
+                        "similarity": round(overlap, 3),
+                        "source": "s2" if "paperId" in p else "openalex",
+                        "citation_count": p.get("citationCount") or p.get("cited_by", 0),
+                    }
+                )
 
         overlaps.sort(key=lambda x: x["similarity"], reverse=True)
 
@@ -174,7 +210,9 @@ class ThreePassNoveltyValidator:
             "time_seconds": 0,
         }
 
-    async def _pass2_deep_dive(self, hypothesis: str, candidate_papers: list[dict[str, Any]]) -> dict[str, Any]:
+    async def _pass2_deep_dive(
+        self, hypothesis: str, candidate_papers: list[dict[str, Any]]
+    ) -> dict[str, Any]:
         overlapping_claims: list[dict[str, Any]] = []
         analyzed = 0
         claims_compared = 0
@@ -209,8 +247,12 @@ class ThreePassNoveltyValidator:
             abstract = sem_abstracts.get(cp.get("paperId", ""), "")
             text = f"{title}. {abstract}"
 
-            sentences = [s.strip() for s in text.replace("\n", " ").split(".") if len(s.strip()) > 20]
-            hypo_sentences = [s.strip() for s in hypothesis.replace("\n", " ").split(".") if len(s.strip()) > 10]
+            sentences = [
+                s.strip() for s in text.replace("\n", " ").split(".") if len(s.strip()) > 20
+            ]
+            hypo_sentences = [
+                s.strip() for s in hypothesis.replace("\n", " ").split(".") if len(s.strip()) > 10
+            ]
 
             for hs in hypo_sentences[:5]:
                 for sent in sentences[:10]:
@@ -221,13 +263,19 @@ class ThreePassNoveltyValidator:
                         continue
                     overlap = len(hs_words & sent_words) / len(hs_words)
                     if overlap > self.pass_threshold:
-                        overlapping_claims.append({
-                            "paper": title[:100],
-                            "claim": sent[:200],
-                            "overlap": round(overlap, 3),
-                        })
+                        overlapping_claims.append(
+                            {
+                                "paper": title[:100],
+                                "claim": sent[:200],
+                                "overlap": round(overlap, 3),
+                            }
+                        )
 
-        overall = sum(c["overlap"] for c in overlapping_claims) / max(len(overlapping_claims), 1) if overlapping_claims else 0.0
+        overall = (
+            sum(c["overlap"] for c in overlapping_claims) / max(len(overlapping_claims), 1)
+            if overlapping_claims
+            else 0.0
+        )
 
         return {
             "papers_analyzed": analyzed,
@@ -238,7 +286,9 @@ class ThreePassNoveltyValidator:
             "time_seconds": 0,
         }
 
-    async def _pass3_citation_context(self, overlapping_claims: list[dict[str, Any]]) -> dict[str, Any]:
+    async def _pass3_citation_context(
+        self, overlapping_claims: list[dict[str, Any]]
+    ) -> dict[str, Any]:
         if not overlapping_claims:
             return {
                 "papers_analyzed": 0,
@@ -257,8 +307,11 @@ class ThreePassNoveltyValidator:
             """Search citations."""
             nonlocal citations_found
             url = "https://api.semanticscholar.org/graph/v1/paper/search"
-            params: dict[str, Any] = {"query": title[:200], "limit": 5,
-                      "fields": "title,citations.title,citations.abstract"}
+            params: dict[str, Any] = {
+                "query": title[:200],
+                "limit": 5,
+                "fields": "title,citations.title,citations.abstract",
+            }
             async with httpx.AsyncClient(timeout=self.client_timeout) as c:
                 r = await c.get(url, params=params)
                 if r.status_code == 200:
@@ -269,11 +322,36 @@ class ThreePassNoveltyValidator:
                 return []
 
         sentiment_keywords = {
-            "supports": ["support", "confirm", "validate", "agree", "consistent", "demonstrat", "show"],
-            "refutes": ["refute", "contradict", "fail", "challenge", "disagree", "inconsistent",
-                        "cannot", "does not", "no evidence"],
-            "extends": ["extend", "build", "further", "advance", "generalize", "beyond",
-                        "improve", "develop"],
+            "supports": [
+                "support",
+                "confirm",
+                "validate",
+                "agree",
+                "consistent",
+                "demonstrat",
+                "show",
+            ],
+            "refutes": [
+                "refute",
+                "contradict",
+                "fail",
+                "challenge",
+                "disagree",
+                "inconsistent",
+                "cannot",
+                "does not",
+                "no evidence",
+            ],
+            "extends": [
+                "extend",
+                "build",
+                "further",
+                "advance",
+                "generalize",
+                "beyond",
+                "improve",
+                "develop",
+            ],
             "replicates": ["replicat", "reproduc", "repeat", "same result", "confirm findings"],
         }
 
@@ -297,14 +375,19 @@ class ThreePassNoveltyValidator:
         total = sum(consensus.values())
         if total == 0:
             dominant = "unclear"
-        elif consensus["supports"] + consensus["replicates"] > consensus["refutes"] + consensus["extends"]:
+        elif (
+            consensus["supports"] + consensus["replicates"]
+            > consensus["refutes"] + consensus["extends"]
+        ):
             dominant = "accepted"
         elif consensus["refutes"] > consensus["supports"]:
             dominant = "contested"
         else:
             dominant = "unclear"
 
-        paradigm = (consensus["supports"] + consensus["replicates"]) >= total * 0.6 if total > 0 else False
+        paradigm = (
+            (consensus["supports"] + consensus["replicates"]) >= total * 0.6 if total > 0 else False
+        )
 
         return {
             "papers_analyzed": len(paper_titles),
@@ -316,8 +399,12 @@ class ThreePassNoveltyValidator:
         }
 
     def _compute_overall_score(self, passes: list[dict[str, Any]]) -> float:
-        p1_score = 1.0 - min(passes[0].get("closest_similarity", 0) * 1.5, 1.0) if len(passes) > 0 else 1.0
-        p2_score = 1.0 - min(passes[1].get("closest_similarity", 0) * 2.0, 1.0) if len(passes) > 1 else 1.0
+        p1_score = (
+            1.0 - min(passes[0].get("closest_similarity", 0) * 1.5, 1.0) if len(passes) > 0 else 1.0
+        )
+        p2_score = (
+            1.0 - min(passes[1].get("closest_similarity", 0) * 2.0, 1.0) if len(passes) > 1 else 1.0
+        )
         p3_penalty = 0.25 if len(passes) > 2 and passes[2].get("overlap_detected", False) else 0.0
 
         raw = (p1_score * 0.3 + p2_score * 0.5) - p3_penalty
@@ -357,14 +444,22 @@ async def check_novelty(request: NoveltyCheckRequest) -> dict[str, Any]:
         )
         elapsed = time.perf_counter() - t0
         result["total_time_seconds"] = round(elapsed, 3)
-        result["status"] = "OVERLAP_DETECTED" if result.get("overall_novelty_score", 1.0) < 0.8 else "PASS"
+        score = result.get("overall_novelty_score")
+        # Missing/null score must never default to 1.0 → PASS
+        if score is None or result.get("status") == "UNCHECKED":
+            result["status"] = "UNCHECKED"
+            result["overall_novelty_score"] = None
+        elif score < 0.8:
+            result["status"] = "OVERLAP_DETECTED"
+        else:
+            result["status"] = "PASS"
         return result
     except (ImportError, AttributeError, RuntimeError) as e:
         logger.warning("novelty validator failed: %s", e)
         errors.append(str(e))
         return {
             "status": "ERROR",
-            "overall_novelty_score": 0.0,
+            "overall_novelty_score": None,
             "passes": [],
             "recommendation": f"Validation failed: {e}",
             "total_time_seconds": round(time.perf_counter() - t0, 3),
@@ -383,7 +478,9 @@ async def quick_novelty_check(hypothesis: str, domain: str = "general") -> dict[
     t0 = time.perf_counter()
     validator = ThreePassNoveltyValidator()
     try:
-        p1 = await validator._pass1_broad_scan(hypothesis, [h.strip() for h in hypothesis.split()[:10]])
+        p1 = await validator._pass1_broad_scan(
+            hypothesis, [h.strip() for h in hypothesis.split()[:10]]
+        )
         elapsed = round(time.perf_counter() - t0, 3)
 
         overlaps = p1.get("potential_overlaps", [])
@@ -400,16 +497,21 @@ async def quick_novelty_check(hypothesis: str, domain: str = "general") -> dict[
             "top_overlaps": overlaps[:5],
             "time_seconds": elapsed,
             "recommendation": (
-                "FRESH — pursue this idea" if max_sim < 0.1 else
-                "LIKELY NOVEL — verify with deep search" if max_sim < 0.3 else
-                "POTENTIAL OVERLAP — need deeper check" if max_sim < 0.5 else
-                "OVERLAP DETECTED — similar ideas exist" if max_sim < 0.8 else
-                "NOT NOVEL — this has been published"
+                "FRESH — pursue this idea"
+                if max_sim < 0.1
+                else "LIKELY NOVEL — verify with deep search"
+                if max_sim < 0.3
+                else "POTENTIAL OVERLAP — need deeper check"
+                if max_sim < 0.5
+                else "OVERLAP DETECTED — similar ideas exist"
+                if max_sim < 0.8
+                else "NOT NOVEL — this has been published"
             ),
         }
     except (ImportError, AttributeError, RuntimeError) as e:
         logger.warning("novelty check failed: %s", e)
         raise HTTPException(status_code=500, detail=f"Novelty check failed: {e}") from e
+
 
 @router.post("/quick")
 async def quick_novelty_check_post(request: NoveltyCheckRequest) -> dict[str, Any]:
@@ -439,16 +541,21 @@ async def quick_novelty_check_post(request: NoveltyCheckRequest) -> dict[str, An
             "top_overlaps": overlaps[:5],
             "time_seconds": elapsed,
             "recommendation": (
-                "FRESH — pursue this idea" if max_sim < 0.1 else
-                "LIKELY NOVEL — verify with deep search" if max_sim < 0.3 else
-                "POTENTIAL OVERLAP — need deeper check" if max_sim < 0.5 else
-                "OVERLAP DETECTED — similar ideas exist" if max_sim < 0.8 else
-                "NOT NOVEL — this has been published"
+                "FRESH — pursue this idea"
+                if max_sim < 0.1
+                else "LIKELY NOVEL — verify with deep search"
+                if max_sim < 0.3
+                else "POTENTIAL OVERLAP — need deeper check"
+                if max_sim < 0.5
+                else "OVERLAP DETECTED — similar ideas exist"
+                if max_sim < 0.8
+                else "NOT NOVEL — this has been published"
             ),
         }
     except (ImportError, AttributeError, RuntimeError) as e:
         logger.warning("novelty check failed: %s", e)
         raise HTTPException(status_code=500, detail=f"Novelty check failed: {e}") from e
+
 
 @router.get("/already-published")
 async def check_already_published(hypothesis: str, domain: str = "general") -> dict[str, Any]:
